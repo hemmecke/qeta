@@ -1,0 +1,669 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2017  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{The Samba Algorithm}
+\author{Ralf Hemmecke}
+\date{10-Dec-2015}
+\maketitle
+\begin{abstract}
+This code implements the \algoSamba{} algorithm from
+\cite{Hemmecke:DancingSambaRamanujan:2018}.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This code is based on the article
+\cite{Hemmecke:DancingSambaRamanujan:2018} by Ralf Hemmecke.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Common category for the \algoSamba{} algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev category QETACAT QEtaComputationCategory
+++ QEtaComputationCategory provides the functions necessary for the
+++ internal functioning of basis elements and critical elements.
+++ This category is an abstraction of the functionality to implement
+++ variants of the samba algorithm from an article of Ralf Hemmecke
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+QEtaComputationCategory(C: EuclideanDomain, F: QEtaAlgebra C): Category == with
+--    update!: (F, Z, %) -> Void
+--      ++ update!(u, grdt, x) adds u to the basis and updates the critical
+--      ++ elements. The argument grdt is considered to be the grade of a
+--      ++ special basis element.
+    initialize: (F, List F) -> %
+      ++ initialize(t, basis) creates a new structure ready to be processed.
+      ++ Assume that qetaGrade(t)>0.
+    criticalElements?: % -> Boolean
+      ++ criticalElements?(x) returns true if x represents a structure that
+      ++ still contains critical elements.
+    basisElements: % -> List F
+      ++ basisElements(x) returns the basis elements that are stored
+      ++ in the structure x.
+    oneStepComputation!: (F, %) -> %
+      ++ oneStepComputation!(t, x) computes one step of the computation.
+      ++ It extracts a critical element and removes it from the list of
+      ++ critical elements. Then it reduces it and updates the basis and
+      ++ the critical elements if the reduction did not end with 0.
+      ++ It should hold criticalElements?(x), otherwise the result is undefined.
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Restricted reduction}
+
+According to \cite{Hemmecke:DancingSambaRamanujan:2018}, we use a
+restricted reduction for the algorithm \algoSamba.
+
+An element $x$ is not reducible by $b$ not only when its grade is
+bigger than that of $b$, but also with the grades are equal and the
+(Euclidean) size of the leading coefficient of $x$ is smaller than
+that of $b$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package QETARED QEtaReduction
+++ QEtaReduction implements the restricted reduction as described in
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+QEtaReduction(C, F): Exports == Implementation where
+  C: EuclideanDomain
+  F: QEtaAlgebra C
+  H ==> XHashTable(Z, List F)
+  Exports ==> with
+    topReducible?: (F, F) -> Boolean
+      ++ topReducible?(u, b) returns true iff there exists f in F such that
+      ++ for v = u - f*b and lc = leadingCoefficient:
+      ++ (grade u > grade v or
+      ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
+    reduce: (F, F, List F) -> F
+      ++ reduce(u, t, basis) returns an element v such that v is not reducible
+      ++ modulo t and basis and "u reduces modulo t and basis to v".
+      ++ We assume that qetaLeadingCoefficient(t)=1 and no element of the
+      ++ basis has a qetaGrade that is divisible by the qetaGrade of t.
+    reduce: (F, F, H) -> F
+      ++ reduce(u, t, h) returns an element v such that v is not reducible
+      ++ modulo t and basis and "u reduces modulo t and basis to v" where
+      ++ basis is given by the lists of h. These element lists of h are
+      ++ assumed to be sorted by greaterGrade?.
+      ++ We assume that qetaLeadingCoefficient(t)=1 and no element of the
+      ++ basis has a qetaGrade that is divisible by the qetaGrade of t.
+    greaterGrade?: (F, F) -> Boolean
+      ++ greaterGrade?(x, y) returns qetaGrade(x)>qetaGrade(y).
+  Implementation ==> add
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
+    greaterGrade?(x: F, y: F): Boolean == grade x > grade y
+    topReducible?(u: F, b: F): Boolean ==
+        --assert(not zero? b)
+        --assert(not zero? u)
+        grdu: Z := grade u
+        grdb: Z := grade b
+        grdu < grdb => false
+        lcu: C := leadingCoefficient u
+        lcb: C := leadingCoefficient b
+        euclideanSize lcu >= euclideanSize lcb
+
+    -- Return an element b from the basis or b=1 such that
+    -- grade u - grade b is divisible by grdt or return "failed" if no such
+    -- b exists.
+    -- This functions corresponds to the function "select_{t,basis}(u)" as
+    -- in Definition 2.6 of \cite{Hemmecke:DancingSambaRamanujan:2018}.
+    -- That reducer yields the element with biggest possible grade is
+    -- ensured by the requirement that "basis" is appropriately sorted by
+    -- greaterGrade?.
+    reducer(u: F, basis: H, grdt: Z): Union(F, "failed") ==
+        zero? u => "failed"
+        i: Z := positiveRemainder(grade u, grdt)
+        -- if zero? i there is no corresponding element in basis, but
+        -- we can use the element 1, i.e. we reduce u by a power of t.
+        zero? i => return (1$F)::Union(F, "failed")
+        candidates: List F := elt(basis, i, empty())
+            -- candidates contains all basis elements b with
+            -- positiveRemainder(grade b, grdt) = i in the same order
+            -- as given in basis.
+        for b in candidates repeat
+            if topReducible?(u, b) then return b::Union(F, "failed")
+        "failed"
+
+    -- reduce(u, t, basis) returns an element v such that
+    -- a*u = v + ft(t) + sum_b fb(t)*b where b runs over all elements
+    -- of basis, fi(t) is a polynomial in C[t], and a is a unit in C.
+    -- We assume that leadingCoefficient(t)=1.
+    -- Furthermore, we assume that the elements of basis are lists that
+    -- are sorted by greaterGrade?.
+    reduce(u: F, t: F, basis: H): F ==
+        --assert(grade(t)>0)
+        --assert(one? leadingCoefficient t)
+        --assert grade(b)>0 for all x in basis
+        --assert(not zero? positiveRemainder(grade(b), grade t) for all b in basis)
+        grdt: Z := grade t
+        while not ((r := reducer(u, basis, grdt)) case "failed") repeat
+            grdu: Z := grade u
+            v: F := r :: F
+            j: Z := ((grdu - grade v) exquo grdt) :: Z
+            v: F := v*t^(qcoerce(j)@N)
+            -- cc: Record(quotient: C, remainder: C)
+            cc := divide(leadingCoefficient u, leadingCoefficient v)
+            u := u - (cc.quotient)*v
+            uca := unitNormal leadingCoefficient u
+            u := (uca.associate)*u
+        uca := unitNormal leadingCoefficient u
+        u := (uca.associate)*u
+        return u
+
+    reduce(u: F, t: F, bas: List F): F ==
+        grdu: Z := grade u
+        grdt: Z := grade t
+        basis: H := table()
+        for b in bas repeat -- fill the table
+            i: Z := positiveRemainder(grade b, grdt) -- This is not zero!
+            l: List F := elt(basis, i, empty())
+            basis.i := sort(greaterGrade?, cons(b, l))
+        reduce(u, t, basis)
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{\underline{S}ub\underline{A}lgebra%
+         \underline{M}odule\underline{B}asis%
+         \underline{A}lgorithm}
+
+See \cite{Hemmecke:DancingSambaRamanujan:2018} for the specification
+of \algoSamba{}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+)abbrev package QETAABAS QEtaAlgebraBasis
+++ QEtaAlgebraBasis implements the algorithm Samba from an article of
+++ Ralf Hemmecke:
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+QEtaAlgebraBasis(C, F, Y): Exports == Implementation where
+  C: EuclideanDomain
+  F: QEtaAlgebra C
+  Y: QEtaComputationCategory(C, F)
+  Exports ==> with
+    algebraBasis: (F, List F) -> List F
+      ++ algebraBasis(t, m) returns a list z such that
+      ++ C[t, m] and the C[t]-module generated by 1 and z are equal as sets.
+      ++ Assume that qetaGrade(t)>0.
+  Implementation ==> add
+    import from QEtaReduction(C, F)
+    algebraBasis(t: F, m: List F): List F ==
+        --assert(not empty? m)
+        --assert(qetaGrade t > 0)
+        y: Y := initialize(t, m)
+        while criticalElements? y repeat y := oneStepComputation!(t, y)
+        return reverse! sort(greaterGrade?, basisElements y)
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algorithm \algoSamba: naive version}
+
+The list of product is precomputed, but only extended and never
+cleared. That leads to a lot of computations, because some products
+can become superfluous with the removal of their respective factor
+from the basis.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev domain QETAC1 QEtaComputation1
+++ QEtaComputation1 implements a variant of the algorithm Samba
+++ from an article of Ralf Hemmecke:
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ In this variant, the critical elements are products of basis elements
+++ and certain S-polynomials. Critical elements are elements of F.
+++ Note that all products are computed and considered even though some
+++ of the products are not relevant anymore, because the (former) basis element
+++ is no longer in the basis.
+++TODO: This implementation does not exactly follow the above article, since
+++      line 13 (computation of the set S) is missing.
+QEtaComputation1(C: EuclideanDomain, F: QEtaAlgebra C): _
+  QEtaComputationCategory(C, F) == add
+    H ==> XHashTable(Z, List F)
+    Rep ==> Record(be: H, ce: H)
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
+    xx ==> rep x
+    import from QEtaReduction(C, F)
+
+    basisElements(x: %): List F == concat entries(xx.be)
+
+    -- Destructively updates basis and critical elements
+    update!(u: F, grdt: Z, x: %): Void() ==
+        --assert(grade u > 0)
+        --assert(grade t > 0)
+        --assert(not zero?(positiveRemainder(grade u, grade t)
+        --assert(not topReducible?(u, b) for all b in basis)
+        grdu: Z := grade u
+
+        -- update basis
+        -- Since u is not top-reducible by any basis element, we can add
+        -- u to the basis. We move elements that become top-reducible by u
+        -- from the basis into the critical elements.
+        i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
+        basis: H := xx.be
+        criticalElements: H := xx.ce
+        potentiallyReducible: List F := elt(basis, i, empty())
+        irr: List F := empty()
+
+        for b in potentiallyReducible repeat
+            if topReducible?(b, u) then
+                -- add b to criticalElements
+                grdb: Z := grade b
+                l := elt(xx.ce, grdb, empty())
+                criticalElements.grdb := cons(b, l)
+            else
+                irr := cons(b, irr)
+        basis.i := sort(greaterGrade?, cons(u, irr))
+
+        -- update critical elements with products
+        -- Add u*b for every basis element b (including u).
+        for l in entries basis repeat
+            for b in l repeat
+                v: F := u*b
+                --assert(not zero? v) -- currently no zero divisors allowed
+                grdv: Z := grade v
+                l: List F := elt(criticalElements, grdv, empty())
+                criticalElements.grdv := cons(v, l)
+        return void()
+
+    initialize(t: F, m: List F): % ==
+        --assert(qetaGrade t > 0)
+        x: % := per [table(), table()]
+        grdt: Z := qetaGrade t
+        for mi in m repeat
+            u := reduce(mi, t, xx.be)
+            if not zero? u then update!(u, grdt, x)
+        return x
+
+    criticalElements?(x: %): Boolean == not empty?(xx.ce)
+
+    -- extract the minimal element from h and remove it
+    extractCriticalElement!(x: %): F ==
+        --assert(criticalElements? x)
+        h: H := xx.ce
+        g: Z := reduce(min, indices h)$List(Z) -- minimal key = minimal grade
+        u: F := first h.g -- the element of this grade
+        l: List F := rest(h.g) -- remove u
+        if empty? l then remove!(g, h) else h.g := l
+        return u
+
+    oneStepComputation!(t: F, x: %): % ==
+        grdt: Z := grade t
+        u: F := extractCriticalElement! x
+        u := reduce(u, t, xx.be)
+        if not zero? u then update!(u, grdt, x)
+        return x
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algorithm \algoSamba: using pairs as critical elements}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We recompute the set of critical elements after each extension of the
+basis.
+
+Basis elements that become reducible are put into a separate list of
+critical elements that will not be discarded after each extension.
+)endif
+
+)abbrev domain QETAC2 QEtaComputation2
+++ QEtaComputation2 implements a variant of the algorithm Samba
+++ from an article of Ralf Hemmecke:
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ In this variant, the critical elements are the basis elements that
+++ became reducible and products of basis elements. Products are kept as
+++ pairs and will only be evaluated when the critical element is considered.
+++ The pairs are only computed when there are no reducible basis elements left
+++ to consider.
+QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
+  C: EuclideanDomain
+  F: QEtaAlgebra C
+  Implementation ==> add
+    H ==> XHashTable(Z, List F)
+    FF ==> Record(f1: F, f2: F)
+    Products ==> XHashTable(Z, List FF)
+    Rep ==> Record(be: H, cbe: List F, havepairs?: Boolean, pairs: Products)
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
+    xx ==> rep x
+    import from QEtaReduction(C, F)
+    import from Rep
+
+    basisElements(x: %): List F == concat entries xx.be
+
+    -- Destructively updates basis and critical elements
+    update!(u: F, grdt: Z, x: %): Void() ==
+        --assert(grade u > 0)
+        --assert(grdt > 0)
+        --assert(not zero?(positiveRemainder(grade u, grdt)
+        --assert(not topReducible?(u, b) for all b in basis)
+        grdu: Z := grade u
+
+        -- update basis
+        -- Since u is not top-reducible by any basis element, we can add
+        -- u to the basis. We move elements that become top-reducible by u
+        -- from the basis into the critical elements.
+        i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
+        basis: H := xx.be
+        potentiallyReducible: List F := elt(basis, i, empty())
+        red: List F := empty()
+        irr: List F := empty()
+
+        for b in potentiallyReducible repeat
+            if topReducible?(b, u) then
+                -- add b to criticalElements
+                red := cons(b, red)
+            else
+                irr := cons(b, irr)
+        basis.i := sort(greaterGrade?, cons(u, irr))
+        red := concat(red, xx.cbe)
+        xx.cbe := sort(greaterGrade?, red)
+        xx.havepairs? := false
+        return void()
+
+    initialize(t: F, m: List F): % ==
+        --assert(qetaGrade t > 0)
+        x: % := per [table(), empty(), false, empty()]
+        grdt: Z := qetaGrade t
+        for mi in m repeat
+            u := reduce(mi, t, xx.be)
+            if not zero? u then update!(u, grdt, x)
+        return x
+
+    criticalElements?(x: %): Boolean ==
+        not empty?(xx.cbe) => true
+        if xx.havepairs? then not empty?(xx.pairs) else not empty?(xx.be)
+
+    computePairs!(t: F, x: %): Void ==
+        --assert(not empty?(xx.be)) -- so there is at least one product
+        basis: List F := basisElements x
+        products: Products := table()
+        while not empty? basis repeat
+            b: F := first basis
+            grdb: Z := grade b
+            for e in basis repeat
+                g := grdb + grade e
+                products.g := cons([b, e], elt(products, g, empty()))
+            basis := rest basis
+        -- Additionally, we have to add products of the form t^j*b
+        -- where qetaGrade(b)+j*d=qetaGrade(b') and b, b' in x.be
+        -- b different from b' and j>0 is minimal with that property.
+        -- That corresponds to the set S (line 13) in the algorithm samba
+        -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
+        d: Z := qetaGrade t
+        for bek in entries(xx.be) repeat
+            -- bek = all basis elements of same grade k (mod d)
+            -- bek is non-empty and sorted by greaterGrade?
+            b := first bek
+            bas := rest bek
+            g: Z := qetaGrade b
+            while not empty? bas repeat
+                b := first bas
+                e: Z := qetaGrade b
+                j: Z := ((g - e) exquo d) :: Z
+                tj: F := t^(qcoerce(j)@N)
+                products.g := cons([tj, b], elt(products, g, empty()))
+                bas := rest bas
+                g := e
+        xx.pairs := products
+        xx.havepairs? := true
+        void()
+
+    oneStepComputation!(t: F, x: %): % ==
+        --assert(criticalElements? x)
+        grdt: Z := grade t
+        not empty?(xx.cbe) =>
+            u: F := first(xx.cbe)
+            xx.cbe := rest(xx.cbe)
+            if not zero?(u := reduce(u, t, xx.be)) then update!(u, grdt, x)
+            return x
+        if not xx.havepairs? then --assert(not empty?(xx.be))
+            computePairs!(t, x)
+        p: Products := xx.pairs
+        --assert(not empty? indices p)
+        g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+        r: FF := first(p.g) -- the element of this grade
+        l: List FF := rest(p.g) -- remove u
+        if empty? l then remove!(g, p) else p.g := l
+        if not zero?(u := reduce(r.f1 * r.f2, t, xx.be)) then
+            update!(u, grdt, x)
+        return x
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algorithm \algoSamba: extended version using pairs as
+  critical elements}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We recompute the set of critical elements after each extension of the
+basis.
+
+Basis elements that become reducible are put into a separate list of
+critical elements that will not be discarded after each extension.
+
+Because computation of the relation part can be quite costly and we do
+not want to collect zero relations, we first try to reduce an element
+without the attached relations part and redo the computation including
+the attached relations part only if the result is non-zero.
+
+Otherwise the steps in the computation are similar to QEtaComputation2.
+)endif
+
+)abbrev domain QETACX QEtaExtendedComputation
+++ QEtaExtendedComputation implements a variant of the algorithm Samba
+++ from an article of Ralf Hemmecke:
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ In this variant, the critical elements are the basis elements that
+++ became reducible and products of basis elements. Products are kept as
+++ pairs and will only be evaluated when the critical element is considered.
+++ The pairs are only computed (and considered as critical elements)
+++ when there are no reducible basis elements left consider.
+++ Since computation might be time-consuming, we assume that the domain F
+++ contains a light representation (domain L) of its elements so that
+++ if zero?(reduceL(first u, first t, [first b for b in basisElements x])), then
+++ zero?(reduceF(u, t, basisElements x)) where
+++ reduceL ==> reduce$QEtaReduction(C, L) and
+++ reduceF ==> reduce$QEtaReduction(C, F).
+QEtaExtendedComputation(C, L, F): QEtaComputationCategory(C, F)
+ == Implementation where
+  C: EuclideanDomain
+  L: QEtaAlgebra C
+  F: QEtaAlgebra C with (first: % -> L)
+  Implementation ==> add
+    H ==> XHashTable(Z, List F)
+    HL ==> XHashTable(Z, List L)
+    FF ==> Record(f1: F, f2: F)
+    Products ==> XHashTable(Z, List FF)
+    Rep ==> Record(bel: HL, be: H, cbe: List F,_
+                   havepairs?: Boolean, pairs: Products)
+    -- bel contains the L part of elements of be.
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
+    xx ==> rep x
+    import from QEtaReduction(C, F)
+    import from Rep
+
+    basisElements(x: %): List F == concat entries xx.be
+
+    -- Destructively updates basis and critical elements
+    update!(u: F, grdt: Z, x: %): Void() ==
+        --assert(grade u > 0)
+        --assert(grdt > 0)
+        --assert(not zero?(positiveRemainder(grade u, grdt)
+        --assert(not topReducible?(u, b) for all b in basis)
+        grdu: Z := grade u
+
+        -- update basis
+        -- Since u is not top-reducible by any basis element, we can add
+        -- u to the basis. We move elements that become top-reducible by u
+        -- from the basis into the critical elements.
+        i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
+        basis: H := xx.be
+        potentiallyReducible: List F := elt(basis, i, empty())
+        red: List F := empty()
+        irr: List F := empty()
+
+        for b in potentiallyReducible repeat
+            if topReducible?(b, u) then
+                -- add b to criticalElements
+                red := cons(b, red)
+            else
+                irr := cons(b, irr)
+        basis.i := sort(greaterGrade?, cons(u, irr))
+        xx.bel.i := [first b for b in basis.i]
+        red := concat(red, xx.cbe)
+        xx.cbe := sort(greaterGrade?, red)
+        xx.havepairs? := false
+        return void()
+
+    initialize(t: F, m: List F): % ==
+        --assert(qetaGrade t > 0)
+        x: % := per [table(), table(), empty(), false, empty()]
+        grdt: Z := qetaGrade t
+        for mi in m repeat
+            u := reduce(mi, t, xx.be)
+            if not zero? u then update!(u, grdt, x)
+        return x
+
+    criticalElements?(x: %): Boolean ==
+        not empty?(xx.cbe) => true
+        if xx.havepairs? then not empty?(xx.pairs) else not empty?(xx.be)
+
+    computePairs!(t: F, x: %): Void ==
+        --assert(not empty?(xx.be)) -- so there is at least one product
+        basis: List F := basisElements x
+        products: Products := table()
+        while not empty? basis repeat
+            b: F := first basis
+            grdb: Z := grade b
+            for e in basis repeat
+                g := grdb + grade e
+                products.g := cons([b, e], elt(products, g, empty()))
+            basis := rest basis
+        -- Additionally, we have to add products of the form t^j*b
+        -- where qetaGrade(b)+j*d=qetaGrade(b') and b, b' in x.be
+        -- b different from b' and j>0 is minimal with that property.
+        -- That corresponds to the set S (line 13) in the algorithm samba
+        -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
+        d: Z := qetaGrade t
+        for bek in entries(xx.be) repeat
+            -- bek = all basis elements of same grade k (mod d)
+            -- bek is non-empty and sorted by greaterGrade?
+            b := first bek
+            bas := rest bek
+            g: Z := qetaGrade b
+            while not empty? bas repeat
+                b := first bas
+                e: Z := qetaGrade b
+                j: Z := ((g - e) exquo d) :: Z
+                tj: F := t^(qcoerce(j)@N)
+                products.g := cons([tj, b], elt(products, g, empty()))
+                bas := rest bas
+                g := e
+        xx.pairs := products
+        xx.havepairs? := true
+        void()
+
+    -- We first reduce in L and only when there is a non-zero result
+    -- we redo the computation in F.
+    -- Here we assume that the computation in L is much faster.
+    oneStepComputation!(t: F, x: %): % ==
+        --assert(criticalElements? x)
+        reduceL ==> reduce$QEtaReduction(C, L)
+        grdt: Z := grade t
+        not empty?(xx.cbe) =>
+            u: F := first(xx.cbe)
+            xx.cbe := rest(xx.cbe)
+            if not zero? reduceL(first u, first t, xx.bel) then
+                u := reduce(u, t, xx.be)
+                update!(u, grdt, x)
+            return x
+        if not xx.havepairs? then --assert(not empty?(xx.be))
+            computePairs!(t, x)
+        p: Products := xx.pairs
+        --assert(not empty? indices p)
+        g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+        r: FF := first(p.g) -- the element of this grade
+        l: List FF := rest(p.g) -- remove u
+        if empty? l then remove!(g, p) else p.g := l
+        if not zero? reduceL(first(r.f1)*first(r.f2), first t, xx.bel) then
+            u := reduce(r.f1 * r.f2, t, xx.be)
+            update!(u, grdt, x)
+        return x
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

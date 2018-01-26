@@ -1,0 +1,159 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2018  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Compare relations with the table of Michael Somos}
+\author{Ralf Hemmecke}
+\date{14-Feb-2016}
+\maketitle
+\begin{abstract}
+
+The code below helps to compare the relation from Somos' table and the
+results from \code{etaRelations} by translating the notation back and
+forth.
+
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The following code contains some helper routines to check entries from
+the table of relations among $\eta$-function as collected by Michael
+Somos with the relations computed by the \code{QEta} package
+(programmed in FriCAS\footnote{FriCAS~1.3.2~\cite{FriCAS}}) as
+described in \cite{Hemmecke:DancingSambaRamanujan:2018}.
+
+
+\url{http://eta.math.georgetown.edu/etal/}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+First of all for debugging.
+)endif
+
+OF==>OutputForm
+dbgPrint(x,y) ==> display(([x::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 77)
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+UP ==> SparseUnivariatePolynomial C
+SQ ==> SquareMatrix(n, Q)
+DQ ==> DirectProduct(n, Q)
+VZ ==> Vector Z
+VQ ==> Vector Q
+LSym ==> List Symbol
+
+)abbrev package SOMOS CheckSomos
+CheckSomos: Exports == Implementation where
+  Pol ==> Polynomial Z
+  LPol ==> List Pol
+  Exports ==> with
+    toEta: (N, Pol) -> Pol
+        ++ toEta(m, p) expresses the p (given as a polynomial in variables
+        ++ ui and q where the ui correspond to the Euler functions of level m
+        ++ https://en.wikipedia.org/wiki/Euler_function) into an expression
+        ++ in variables Ei (corresponding to eta(i*tau)).
+        ++ The ui and Ei correspond to level m.
+    fromEta: (N, Pol) -> Pol
+        ++ fromEta(m, p) expresses a polynomial p in variables Ei
+        ++ (corresponding to eta(i*tau)) in terms of variables q and ui
+        ++ where the ui correspond to the Euler functions of level m.
+        ++ https://en.wikipedia.org/wiki/Euler_function).
+    member?: (N, Pol, LPol) -> Boolean
+        ++ member?(m, s, gb) returns true if s is in the ideal given by the
+        ++ (assumed degrevlex) Groebner bases gb for the eta relations of
+        ++ level m.
+  Implementation ==> add
+    -- toEta(level, p) works by substituting E_d*t^d for u_d and
+    -- t^(-24) for q. This gives a polynomial in t and the E
+    -- variables. If everything is OK, the result should be a
+    -- polynomial in the E variables times a power of t. We only
+    -- return the factor that does not involve t.
+    toEta(level: N, p: Pol): Pol ==
+        import from QAuxiliaryTools
+        FPol ==> Fraction Pol
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        usyms: LSym := indexedSymbols("u", divs)
+        esyms: LSym := indexedSymbols("E", divs)
+        fc(c: Z): FPol == c::FPol
+        syms: LSym := cons("q"::Symbol, usyms)
+        evals: List FPol := [e::Pol::FPol for e in esyms]
+        symt: Symbol := "t"::Symbol
+        t: Pol := symt::Pol
+        tt := t::FPol -- 1/q = t^24
+        vals: List FPol := [e*tt^d for e in evals for d in divs]
+        vals := cons(inv(tt^24), vals)
+        z: FPol := eval(p, fc, syms, vals)$PolynomialEvaluation(Z, FPol)
+        if not one? denom z then error "toEta: denominator is not 1"
+        x: Pol := numer z
+        z: Union(Pol, "failed") := x exquo t
+        k: N := 0
+        while z case Pol repeat
+            k := k + 1
+            x := z :: Pol
+            z := x exquo t
+        if member?(symt, variables x) then
+           dbgPrint("debug message: toEta$CheckSomos contains t", x)
+        return x
+
+    fromEta(level: N, p: Pol): Pol ==
+        import from QAuxiliaryTools
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        usyms: LSym := indexedSymbols("u", divs)
+        esyms: LSym := indexedSymbols("E", divs)
+        fc(c: Z): Pol == c::Pol
+        uvals: LPol := [u::Pol for u in usyms]
+        symt: Symbol := "t"::Symbol
+        t: Pol := symt::Pol
+        vals: LPol := [u*t^(qcoerce(d)@N) for u in uvals for d in divs]
+        x: Pol := eval(p, fc, esyms, vals)$PolynomialEvaluation(Z, Pol)
+        return x
+
+    member?(level: N, somos: Pol, gb: LPol): Boolean ==
+        E ==> HomogeneousDirectProduct(dim, N)
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        esyms: LSym := indexedSymbols("E", divs)$QAuxiliaryTools
+        dim: N := #esyms
+        lp: LPol := normalForms([somos], gb, esyms)$QEtaGroebner(Z, E)
+        p: Pol := first lp
+        zero? p
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

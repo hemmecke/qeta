@@ -1,0 +1,317 @@
+###################################################################
+#
+# Eta relations
+# Copyright 2015-2018,  Ralf Hemmecke <ralf@hemmecke.org>
+#
+###################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###################################################################
+# Compute the eta relations and generate also intermediate data.
+#
+# Note that generated files that don't count as "results" will be put
+# into the subdirectory "tmp/". That directory can always be removed.
+###################################################################
+# Warning: Spaces in path or file names are not supported!
+###################################################################
+MKDIR_P=mkdir -p
+
+# We assume that make is executed from the directory where THIS Makefile
+# is located.
+BIN=${ROOT}/bin
+DIR=${ROOT}/etafiles
+VARIANT=Hemmecke
+SOMOS=${ROOT}/somos
+DV=${DIR}/${VARIANT}
+
+LEVELS= 4 6 8 9 10 12 14 15 16 18 20 21 22 24 25 26 27 28 30 \
+    32 33 34 35 36 38 39 40 42 44 45 46 48 49 50 51 52 54 55 \
+    56 57 58 60 62 63 64 121 169 289 361 529 841 961
+
+CRASHLEVELS_etaQuotientMonoidExponentVectors=42 60
+CRASHLEVELS_etaQuotientIdealGenerators=33 38 39 46 51 55 57 58 62 289 361 529 841 961 \
+    ${CRASHLEVELS_etaQuotientMonoidExponentVectors} \
+    # still crashing
+CRASHLEVELS_etaLaurentIdealGenerator=\
+    ${CRASHLEVELS_etaQuotientIdealGenerators} \
+    # still crashing
+CRASHLEVELS_etaRelations= 48 52\
+    ${CRASHLEVELS_etaLaurentIdealGenerators} \
+    # Takes too long (with slimgb).
+
+LEVELS_EQMEV= \
+    ${filter-out ${CRASHLEVELS_etaQuotientMonoidExponentVectors}, ${LEVELS}}
+LEVELS_EQIG= \
+    ${filter-out ${CRASHLEVELS_etaQuotientIdealGenerators}, ${LEVELS_EQMEV}}
+LEVELS_ELIG= \
+    ${filter-out ${CRASHLEVELS_etaLaurentIdealGenerators}, ${LEVELS_EQIG}}
+LEVELS_ER=${filter-out ${CRASHLEVELS_etaRelations}, ${LEVELS_ELIG}}
+
+# The exponent vectors that generate the monoid of eta-quotients.
+EQMEV=etaQuotientMonoidExponentVectors
+EQMEVINPUT=$(patsubst %, ${DV}/${EQMEV}%.input,${LEVELS_EQMEV})
+EQMEVOUT=  $(patsubst %, ${DV}/${EQMEV}%.out,  ${LEVELS_EQMEV})
+
+# Relations via an algebra basis in terms of eta-quotients.
+EQIG=etaQuotientIdealGenerators
+EQIGINPUT=$(patsubst %, ${DV}/${EQIG}%.input,${LEVELS_EQIG})
+EQIGOUT=  $(patsubst %, ${DV}/${EQIG}%.out,  ${LEVELS_EQIG})
+
+# Replace the variables in the etaQuotientIdealGenerators
+# by the respective eta variables (E) and their inverses (Y).
+ELIG=etaLaurentIdealGenerators
+ELIGINPUT=$(patsubst %, ${DV}/${ELIG}%.input,${LEVELS_ELIG})
+ELIGOUT=  $(patsubst %, ${DV}/${ELIG}%.out,  ${LEVELS_ELIG})
+
+# Eliminate the inverses from the etaLaurentIdealGenerators.
+ER=etaRelations
+ERINPUT=$(patsubst %, ${DV}/${ER}%.input,${LEVELS_ER})
+EROUT=  $(patsubst %, ${DV}/${ER}%.out,  ${LEVELS_ER})
+
+ALLINPUT= ${EQMEVINPUT} ${EQIGINPUT} ${ELIGINPUT} ${ERINPUT}
+ALLOUT=   ${EQMEVOUT}   ${EQIGOUT}   ${ELIGOUT}   ${EROUT}
+ALLTMP=${patsubst %.out,%.tmp,${ALLOUT}}
+all: er
+allall: ${ALLINPUT}
+eqmev: ${EQMEVINPUT}
+eqig: ${EQIGINPUT}
+elig: ${ELIGINPUT}
+er: ${ERINPUT}
+
+# Note that a modified version of FriCAS is needed that does not
+# require variables in the GroebnerPackage.
+# https://github.com/hemmecke/fricas/commits/poly
+FRICAS=FRICAS_INITFILE='' fricas -nosman
+
+###################################################################
+# The following stuff is only relevant inside tmp/
+%.compile: %.spad
+	echo ")compile $<" >> etacompile.input
+	grep '^)abbrev' $< \
+        | sed -e 's/^.abbrev[ ]*domain[ \t]*[A-Z0-9]*[ \t]*/    --D /' \
+              -e 's/^.abbrev[ ]*category[ \t]*[A-Z0-9]*[ \t]*/    --C /' \
+              -e 's/^.abbrev[ ]*package[ \t]*[A-Z0-9]*[ \t]*/    --P /' \
+	>> etacompile.input
+	echo >> etacompile.input
+	echo "-- )compile $<" >> qetalibs.input
+	grep '^)abbrev' $< \
+	| awk '{print};/category/ {print $$1, $$2, $$3"-", $$4}' \
+	| sed -e 's/^.abbrev[ ]*domain[ \t]*/)lib /' \
+	      -e 's/^.abbrev[ ]*category[ \t]*/)lib /' \
+	      -e 's/^.abbrev[ ]*package[ \t]*/)lib /' \
+	      -e 's/[ \t][ \t]*[^ \t]*$$//' \
+	>> qetalibs.input
+	echo >> qetalibs.input
+	touch $@
+
+qetadom.compile: qfunct.compile
+qetatool.compile: qfunct.compile
+qetasamba.compile: qetadom.compile
+qetaradu.compile: qetadom.compile qetatool.compile
+qetaicat.compile: qetatool.compile qetaqmev.compile
+qetair.compile: qeta3hdp.compile qetaicat.compile qetaradu.compile
+qetais.compile: qeta3hdp.compile qetaicat.compile qetasamba.compile
+qetaih.compile: qetaicat.compile qetasamba.compile
+qetarel.compile: qetaqrelr.compile qetaqrels.compile qetaqrelh.compile
+qetasomos.compile: qetadom.compile qetatool.compile
+
+compile-spad:
+	-rm etacompile.input ${patsubst %,%.compile, ${SPADFILES}}
+	${MAKE} ${patsubst %,%.compile, ${SPADFILES}}
+	echo ')read etacompile.input' | ${FRICAS} | tee $@
+
+# Compilation of needed packages
+qetalibs.input etacompile.input: ${patsubst %, %.compile, ${SPADFILES}}
+
+define COMPUTE_OUT_GENERIC
+	$(MKDIR_P) $$TARGET_DIR/log \
+	&& N=$* \
+	&& echo "(($$CMD))(($$N))" \
+	&& xterm -T "$$CMD $$N" -e "$$EXEC 2>&1 | tee $$TARGET_DIR/log/$$CMD$$N.log"
+#	&& echo "TITLE: $$CMD $$N" && bash -c "$$EXEC 2>&1 | tee $$TARGET_DIR/log/$$CMD$$N.log"
+	mv $(subst .out,.tmp,$@) $@
+endef
+
+define COMPUTE_OUT
+	TARGET_DIR=${DV} \
+	&& CMD=$(subst eta,,$(subst $*.out,,$(@F))) \
+	&& EXEC="${BIN}/eta.sh $$CMD $* DIR=${DIR} VARIANT=${VARIANT}" \
+	&& ${COMPUTE_OUT_GENERIC}
+endef
+
+#.PRECIOUS: %.out
+${DV}/${EQMEV}%.out: compile-spad
+	${COMPUTE_OUT}
+${DV}/${EQIG}%.out: ${DV}/${EQMEV}%.input
+	${COMPUTE_OUT}
+${DV}/${ELIG}%.out: ${DV}/${EQIG}%.input
+	${COMPUTE_OUT}
+${DV}/${ER}%.out: ${DV}/${ELIG}%.input ${DV}/${EQMEV}%.input
+	${COMPUTE_OUT}
+
+###################################################################
+DS=${DIR}/Somos
+clean:
+	-rm *.compile etacompile.input qetalibs.input compile-spad
+	-rm ${DS}/etarelationlevels.txt somoslevels.txt
+
+distclean:
+	-rm $(ALLTMP)
+	-rm $(ALLOUT)
+	-rm $(ALLINPUT)
+
+###################################################################
+# express relations of Somos http://eta.math.georgetown.edu/etal/
+# in terms of the eta relations that we have computed.
+
+CHECKSOMOS_OUT=$(patsubst %, ${DS}/checksomos%.out, ${CHECKSOMOS_LEVELS})
+CHECKSOMOS_INPUT=$(patsubst %, ${DS}/checksomos%.input, ${CHECKSOMOS_LEVELS})
+FRICASSOMOS_INPUT=$(patsubst %, ${DS}/fricassomos%.input, ${CHECKSOMOS_LEVELS})
+RUNFRICASSOMOS_OUT=$(patsubst %, ${DS}/runfricassomos%.out, ${CHECKSOMOS_LEVELS})
+
+somoslevels.txt: ${ROOT}/somos/somos.input
+	grep '^h(' $< \
+	| sed 's/h([qtx]//;s/_.*//' \
+	| sort -n -u \
+	| tr '\n' ' ' \
+	> $@
+
+${DS}/etarelationlevels.txt: somoslevels.txt
+	${MKDIR_P} ${@D}
+	for l in $$(cat $<); do \
+	    if test -r ${DV}/etaRelations$$l.input; then printf "$$l "; fi; \
+	done \
+	> $@
+
+checksomos: ${DS}/etarelationlevels.txt
+	CHECKSOMOS_LEVELS=$$(cat ${DS}/etarelationlevels.txt); \
+	echo "==:: $$CHECKSOMOS_LEVELS"; \
+	${MAKE} CHECKSOMOS_LEVELS="$$CHECKSOMOS_LEVELS" checksomos_input
+
+checksomos_input: ${FRICASSOMOS_INPUT}
+
+${CHECKSOMOS_OUT}: ${DS}/checksomos%.out: compile-spad ${DS}/etarelationlevels.txt
+	${BIN}/checksomos.sh $* DIR=${DIR} VARIANT=${VARIANT} SOMOS="${SOMOS}" > $@
+
+${CHECKSOMOS_INPUT}: ${DS}/checksomos%.input: ${DS}/checksomos%.out compile-spad ${DS}/etarelationlevels.txt
+	cat $< \
+	| awk -e '/-- eta relations --/ {p=1}' \
+	    -e 'p==0 {next}' \
+	    -e '/-- .* --/ {sub(/^.*-- /, "-- "); print; next}' \
+	    -e '{sub(/^.* -> /,"")}' \
+	    -e '/^   / || /^Void/ {next}' \
+	    -e '{l=l$$0}' \
+	    -e '/_$$/ {sub(/_$$/,"",l); next}' \
+	    -e '{gsub(/\*1\*/,"*",l); if(l!=""){print l";"}; l=""}' \
+        > $@
+
+${FRICASSOMOS_INPUT}: ${DS}/fricassomos%.input: ${DS}/checksomos%.input
+	awk -e '/-- Relation relations --/ {rr=1; print; l="relationRelations := [_"; next}' \
+	    -e 'rr==0 {print; next}' \
+	    -e '{sub(/;$$/,",_",l); print l; l=$$0}' \
+	    -e 'END {sub(/;$$/,"];",l);print l}' \
+	  $< > $@
+
+runfricassomos: ${DS}/etarelationlevels.txt
+	CHECKSOMOS_LEVELS=$$(cat ${DS}/etarelationlevels.txt); \
+	echo "==:: $$CHECKSOMOS_LEVELS"; \
+	${MAKE} CHECKSOMOS_LEVELS="$$CHECKSOMOS_LEVELS" runfricassomos_out
+
+runfricassomos_out: ${RUNFRICASSOMOS_OUT}
+
+${RUNFRICASSOMOS_OUT}: ${DS}/runfricassomos%.out: ${DS}/fricassomos%.input
+	echo === $< ===
+	(echo ")r $<"; \
+	 echo "# relationRelations"; \
+	 echo "removeDuplicates relationRelations" \
+	) | fricas -nosman > $@
+
+
+###################################################################
+# compute Groebner basis i Q[E] of eta relations from Somos
+# http://eta.math.georgetown.edu/etal/
+# Then reduce the true etaRelations GB with this "Somos relations ideal"
+# in order to find elements that Somos does not have.
+SEG=somosEtaGroebner
+SEGINPUT=$(patsubst ${DV}/${ER}%.input,${DS}/${SEG}%.input,${ERINPUT})
+SEGOUT=  $(patsubst ${DV}/${ER}%.out,${DS}/${SEG}%.out,${EROUT})
+ALLINPUT+=${SEGINPUT}
+
+${SEGOUT}: ${DS}/${SEG}%.out: #${DV}/${ER}%.input
+	TARGET_DIR="${DS}" && CMD="${SEG}" \
+	&& EXEC="${BIN}/somosgb.sh $* DIR=${DIR} SOMOS=${SOMOS}" \
+	&& ${COMPUTE_OUT_GENERIC}
+
+seg: ${SEGINPUT}
+
+###################################################################
+# compute Groebner basis in Q[Y,E] of eta relations from Somos
+# http://eta.math.georgetown.edu/etal/ and the inverse relations Y*E=1
+# and intersect with Q[E].
+# Then reduce the true etaRelations GB with this "Somos relations ideal"
+# in order to find elements that Somos does not have.
+SLG=somosLaurentGroebner
+SLGINPUT=$(patsubst ${DS}/${SEG}%.input,${DS}/${SLG}%.input,${SEGINPUT})
+SLGOUT=  $(patsubst ${DS}/${SEG}%.out,${DS}/${SLG}%.out,${SEGOUT})
+ALLINPUT+=${SLGINPUT}
+
+${SLGOUT}: ${DS}/${SLG}%.out: ${DS}/${SEG}%.input
+	TARGET_DIR="${DS}" && CMD="${SLG}" \
+	&& EXEC="${BIN}/somosgb.sh $* DIR=${DIR} SOMOS=${SOMOS} IDEAL=Laurent" \
+	&& ${COMPUTE_OUT_GENERIC}
+
+slg: ${SLGINPUT}
+
+###################################################################
+# compare the Groebner basis obtained via seg
+# with the true Groebner basis of the eta relations
+# in order to find elements that Somos does not have.
+CEG=compareEtaGroebner
+CEGOUT=$(patsubst ${DS}/${SEG}%.out,${DS}/${CEG}%.out,${SEGOUT})
+${CEGOUT}: ${DS}/${CEG}%.out:
+	if test -r ${DS}/${SEG}$*.input -a -r ${DV}/etaRelations$*.input; then \
+	  ${BIN}/comparerelations.sh $* ${DS}/${SEG}$*.input ${DV}/etaRelations$*.input --12 --21 > $@; \
+	fi
+ceg: ${CEGOUT}
+
+###################################################################
+# compare the (Laurent) Groebner basis obtained via slg
+# with the true Groebner basis of the eta relations
+# in order to find elements that Somos does not have.
+CLG=compareLaurentGroebner
+CLGOUT=$(patsubst ${DS}/${SLG}%.out,${DS}/${CLG}%.out,${SLGOUT})
+${CLGOUT}: ${DS}/${CLG}%.out:
+	if test -r ${DS}/${SLG}$*.input -a -r ${DV}/etaRelations$*.input; then \
+	  ${BIN}/comparerelations.sh $* ${DS}/${SLG}$*.input ${DV}/etaRelations$*.input --12 --21 > $@; \
+	fi
+clg: ${CLGOUT}
+
+###################################################################
+# Generic recipe to translate an .out file (sage or fricas) to a .input file.
+${ALLINPUT}: %.input: %.out
+	perl -e 'while (<>) {' \
+	     -e '  if ($$P) {' \
+	     -e '    chomp;' \
+	     -e '    s/^\(\d+\).* -> //;' \
+	     -e '    if (! /_$$/ and ! /^ *$$/) {s/$$/;\n/};' \
+	     -e '    s/_//g;' \
+	     -e '    if (! /^ *$$/) {print;}' \
+	     -e '  } elsif (/^  *Time: .* sec$$/) {' \
+	     -e '    s/^  *Time: /--Time: /;' \
+	     -e '    s/^--Time:.*=/--Time:/;' \
+	     -e '    $$P=1; print;' \
+	     -e '  } elsif (/^Time: *CPU.*Wall:/) {' \
+	     -e '    s/^Time: *CPU/--Time: /;' \
+	     -e '    $$P=1; print;}' \
+	     -e '}' \
+	$< | grep -v '^-- ' > $@

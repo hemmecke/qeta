@@ -1,0 +1,450 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2018  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Computing with Dedekind Eta Functions as $q$-series}
+\author{Ralf Hemmecke}
+\date{10-Dec-2015}
+\maketitle
+\begin{abstract}
+We implement functionality to compute with Dedekind $\eta$-functions.
+
+The code below deals with a expansions of $\eta$-quotients at infinity
+in terms of $q$-series. These $\eta$-quotients generate an algebra over
+some ring $C$, the category of all such algebras is implemented via
+\code{QEtaAlgebra(C)}. A domain intended to record algebraic
+operations is given by \code{QEtaExtendedAlgebra}.
+
+Modular function that are $\eta$-quotients and have a pole (if any)
+only at infinity, can be represented by univariate Laurent series that
+have the property that they are zero of their order is positive. This
+domain is implemented via \code{Finite0Series}. In other words, in
+contrast to \spadtype{UnivariateLaurentSeries}, it can be checked in
+finite time whether an element of \code{Finite0Series} is zero or not.
+\code{Finite0Series(C, q, 0)} form a \code{QEtaAlgebra(C)}.
+
+  An auxiliary domain \code{Monomials} is introduced that adds
+  variable names so that a an element of a \code{DirectProduct} can be
+  shown as a product of variables raised to some power.
+
+
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This code is based on the article \cite{Radu:RamanujanKolberg:2015} by
+Silviu Radu.
+
+It implements prerequisite domains for the computation of relations
+among $\eta$-functions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+LSym ==> List Symbol
+OF ==> OutputForm
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Eta quotient expansions at infity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The domain \texttt{EtaQuotient} implements a representation for $\eta$
+functions (in terms of $q$) and products and quotients of $\eta$
+functions.
+
+\begin{Hemmecke}
+Since in general $\eta$ functions can be expressed as Laurent series in
+$q^{\frac1{24}}$, they also can be added.
+However, for efficiency reasons (and since it is enough for our purpose),
+we express an $\eta$-quotient as a Laurent series in $q$ with a prefactor
+that is a power of $q^{\frac1{24}}$, we only can add $\eta$-quotient
+that have the same prefactor. So, we implement only a partial addition.
+This partial addition is completely sufficient in our context, since we
+know in advance that summands have the same prefactor.
+\end{Hemmecke}
+)endif
+
+)abbrev domain ETAQUOT EtaQuotient
+++ EtaQuotient implements the (multiplicative) group of eta-functions
+++ in their expansion at infinity.
+++ Elements can be represented as Laurent series in q with a prefactor
+++ of q^(n/24), (n=0,...,23).
+++ Note that this domain keeps the "fractional part" always separate from
+++ the "series part" even when the fractional part is an integer.
+EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
+  Join(Group, CoercibleTo OutputForm) with
+    -- Note that e = \prod_{k=1}^\infty (1-q^{kn}) has integer coefficients
+    -- and that the inverse of this series has integer coefficients, as well.
+    -- Therefore, it is not a lie that we assert "Group".
+    eta: P -> %
+      ++ eta(n) returns q^(n/24)*\prod_{k=1}^\infty (1-q^{kn}).
+    q24: Z -> %
+      ++ q24(n) returns q^(n/24).
+    coerce: C -> %
+      ++ coerce(c) returns an element of this domain corresponding to c.
+    prefactor: % -> N
+      ++ prefactor(x) returns the exponent times 24 of the fractional q
+      ++ power of x where q is the variable of L. The returned value is
+      ++ in the range 0..23, because integer powers of q are moved to the
+      ++ series part.
+    etaQuotient: (List Z, List Z) -> %
+      ++ etaQuotient(divs, r) returns the $\eta$-quotient
+      ++ product(eta(divs.i)^(r.i),i=1..#divs).
+      ++ It is assumed that the lengths of the input lists are equal.
+    series: % -> L
+      ++ series(x) returns the Laurent series part of x.
+      ++ x = q24(prefactor x)*series(x)
+    retract: % -> L
+      ++ retract(x) aborts with error if prefactor is not divisible by 24.
+      ++ Otherwise it returns q^r*series(x) where r=prefactor(x)/24 and q is
+      ++ the variable of L.
+    etaPower: (P, Z) -> %
+      ++ etaPower(d, e) returns eta(d)^e.
+
+    -- This function (toEta) is for checking and actually does not
+    -- necessarily yield an element of %.
+    -- For example, E2 + E3 would mean to add Laurent series with different
+    -- prefactors which is not supported by our "+" function and also not
+    -- by the chosen representation of the domain. We expect the polynomial
+    -- p to have the property that each monomial leads to Laurent series with
+    -- the same prefactor.
+    -- In this sense the function is only partial.
+    -- However, we intend only to use it to check whether
+    -- zero?(series toEta p).
+    -- Furthermore, toEta(p) aborts with error if Laurent series with
+    -- different prefactor are about to be added, since that cannot be
+    -- represented in %.
+    toEta: Polynomial C -> %
+      ++ toEta(p) assumes that all variables are of the form Ei with the
+      ++ letter E and a positive number i. In the polynomial p the powers
+      ++ Ei^ni will be replaced by eta(i)^ni.
+      ++ If l is the leading monomial p, then it is
+      ++ assumed that prefactor(toEta(l))=prefactor(toEta(m)) for every
+      ++ monomial m of p.
+      ++ If
+  == add
+    Rep ==> Record(fractExpo: N, ser: L)
+    new(n: Z, s: L): % ==
+        r: Z := positiveRemainder(n, 24)
+        q: Z := ((n-r) exquo 24)::Z
+        return per [qcoerce(r)@N, monomial(1, q) * s]
+    prefactor(x: %): N == rep(x).fractExpo
+    series(x: %): L == rep(x).ser
+    1: % == new(0, 1$L)
+    coerce(c: C): % == new(0, c::L)
+    retract(x: %): L ==
+        e: Z := prefactor x
+        not zero? e => error "cannot retract"
+        return series x
+    eta(n: P): % == new(n, eulerFunction(n)$QFunctions(C, L))
+    etaPower(n: P, e: Z): % ==
+        import from RepeatedSquaring(%)
+        zero? e => 1
+        e > 0 => expt(eta n, qcoerce(e)@PositiveInteger)
+        inv(expt(eta n, qcoerce(-e)@PositiveInteger))
+    q24(n: Z): % == new(n, 1$L)
+    ((x: %) * (y: %)): % ==
+        new(prefactor x + prefactor y, series x * series y)
+    inv(x: %): % == new(- prefactor x, recip(series x)::L)
+    etaQuotient(divs: List Z, r: List Z): % ==
+        import from List %
+        reduce(_*, [etaPower(d::P, e) for d in divs for e in r], 1)
+    hashUpdate!(h: HashState, x: %): HashState ==
+        hashUpdate!(hashUpdate!(h, prefactor x), series x)
+    coerce(x: %): OutputForm ==
+        q: OutputForm := (variable(0$L)$L)::OutputForm
+        r: Q := prefactor(x)/24
+        zero? r => (series x)::OutputForm
+        e: OutputForm := r::OutputForm
+        q^e * (series x)::OutputForm
+
+    -- The following functions are only used in etaRelationsEliminate.sh
+    -- to check that the relations represent indeed the zero power
+    -- series.
+    --:TODO: Move the functions below into etaRelationsEliminate.sh!
+    -- These functions should not be used otherwise. In fact,
+    -- toEta: Polynomial(C)->% should not be exported, but rather live
+    -- in a separate package.
+
+    -- Given a symbol of the form Ei, delete the letter E and parse i
+    -- as a positive integer.
+    idx(x: Symbol): P ==
+        s: String := delete(string x, 1)
+        qcoerce(integer(parse(s)@InputForm)$InputForm)@P
+    toEtaMonomial(m: Polynomial C): % ==
+        --assert(not zero? m)
+        --assert(zero? reductum m)
+        syms: LSym := variables m
+        l: List N := degree(m, syms)
+        e: % := 1
+        for s in syms for x in l repeat e := e*etaPower(idx s, x)
+        new(prefactor e, leadingCoefficient(m) * series(e))
+    ((x: %) + (y: %)): % == -- This is a partial function!!!
+        prefactor x ~= prefactor y => error "Cannot add. Unequal prefactor."
+        new(prefactor x, series x + series y)
+    toEta(p: Polynomial C): % ==
+        --assert(all variables are of the form En where n is some integer)
+        zero? p => (0$C)::%
+        -- To get the correct prefactor we cannot start with r:=0.
+        r: % := toEtaMonomial leadingMonomial p
+        while not zero?(p := reductum p) repeat
+            r := r + toEtaMonomial leadingMonomial p
+        return r
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The category of $\setZ$-graded algebras}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This category represents $\setZ$-graded $C$-algebras that have a
+concept of leading coefficient. Among such algebras are $C((t))$
+(univariate Laurent series) and $C$-subalgebras of $C((t))$, \ie,
+$C[t]$ (univariate polynomial algebras) and $C[t,t^{-1}]$ (univariate
+Laurent polynomials).
+
+
+)endif
+)abbrev category QETAALG QEtaAlgebra
+++ QEtaAlgebra(C) lists the minimal signatures for running the functions in
+++ the QEtaPackage.
+++ Mathematically seen is it a C-algebra that is Z-graded. Simplest example
+++ is a univariate polynomial ring over C, but since it is expected that
+++ respective domains will be created on the fly, we list here only
+++ the functions that are actually used in QEtaPackage.
+QEtaAlgebra(C: CommutativeRing): Category == CoercibleTo OutputForm with
+    0: %
+      ++ 0 is the neutral element with respect to +.
+    1: %
+      ++ 1 is the neutral element with respect to *.
+    zero?: % -> Boolean
+      ++ zero?(x) returns true if x is the neutral element with respect to +.
+    _+: (%, %) -> %
+      ++ Commutative addition.
+    _-: (%, %) -> %
+      ++ Inverse operation to addition.
+    _*: (%, %) -> %
+      ++ Commutative multiplication
+    _*: (C, %) -> %
+      ++ Multiplication by a coefficient.
+    _^: (%, N) -> %
+      ++ Exponentiation (repeated multiplication)
+    qetaGrade: % -> Z
+      ++ qetaGrade(x) returns the grade of an element.
+      ++ The qetaGrade of 0 is undefined.
+      ++ Any element x with qetaGrade(x)<0 will be considered to be zero.
+    qetaCoefficient: (%, Z) -> C
+      ++ qetaCoefficient(x, n) returns the coefficient corresponding
+      ++ to grade n.
+    qetaLeadingCoefficient: % -> C
+      ++ qetaLeadingCoefficient(x) returns qetaCoefficient(x, grade x).
+      ++ The qetaLeadingCoefficient of 0 is undefined.
+
+)if LiterateDoc
+In \cite{Radu:RamanujanKolberg:2015}, the computations are done in
+a subclass of Laurent series, namely those that are identically zero
+if their order is greater than zero.
+
+)endif
+
+)abbrev domain FIN0SER Finite0Series
+++ Finite0Series represents Laurent series such that if
+++ x is such a series and order(x)>0 then x=0.
+++ Quotients of Dedekind eta functions that are modular functions
+++ that only have a pole (if any) at infinity,
+++ can be represented as such series.
+-- We need the center parameter, because SPAD cannot yet pass
+-- non-integer constants to constructors.
+-- https://www.mail-archive.com/fricas-devel@googlegroups.com/msg08670.html
+Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
+  UTS ==> UnivariateTaylorSeries(C, var, cen)
+  ULS ==> UnivariateLaurentSeries(C, var, cen)
+  Exports ==> Join(UnivariateLaurentSeriesConstructorCategory(C, UTS),
+                   QEtaAlgebra C) with
+    coerce: Variable(var) -> %
+      ++ \spad{coerce(var)} converts the series variable \spad{var} into a
+      ++ Laurent series.
+    coerce: ULS -> %
+    coerce: % -> ULS
+  Impl ==> ULS add
+    Rep ==> ULS
+    Rec ==> Record(expon: Z, ps: UTS) -- hack!!!
+    coerce(v : Variable(var)): % == monomial(1, 1)
+    coerce(s: ULS): % == per s
+    coerce(x: %): ULS == rep x
+    zero?(x: %): Boolean ==
+        d: Z := degree x -- (x pretend Rec).expon
+        d > 0 => true
+        not zero? coefficient(rep x, d) => false
+        -- remove zeroes until order becomes positive
+        rec: Rec := (removeZeroes(1-d, x)) pretend Rec
+        xrec := x pretend Rec
+        xrec.expon := rec.expon
+        xrec.ps    := rec.ps
+        xrec.expon > 0 or empty? coefficients(xrec.ps)
+    qetaGrade(x: %): Z ==
+        zero? x => -1 -- destructively set x
+        -order(x, 0)
+    qetaCoefficient(x: %, k: Z): C == coefficient(x, -k)
+    qetaLeadingCoefficient(x: %): C ==
+        zero? x => 0 -- destructively set x
+        leadingCoefficient x
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{A domain for recording algebra operation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev domain QETAEALG QEtaExtendedAlgebra
+++ The domain QEtaExtendedAlgebra(C, A, B) behaves like the given
+++ QEtaAlgebra A, but every algebra operation is executed on the
+++ (hidden) B part as well and can later be extracted.
+QEtaExtendedAlgebra(_
+    C: GcdDomain,_
+    A: QEtaAlgebra C,_
+    B: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)_
+  ): Join(QEtaAlgebra(C), Monoid, AbelianGroup) with
+    embed: (A, B) -> %
+    first: % -> A
+    second: % -> B
+ == add
+    Rep ==> Record(aa: A, bb: B)
+    -- local functions
+    embed(a: A, b: B): % == per [a, b]
+    first(x: %): A == rep(x).aa
+    second(x: %): B == rep(x).bb
+    coerce(x: %): OutputForm == ([first(x)::OF, second(x)::OF]$List(OF))::OF
+    0: % == embed(0$A, 0$B)
+    1: % == embed(1$A, 1$B)
+    zero?(x: %): Boolean == zero? first x
+    ((x: %) + (y: %)): % == embed(first x + first y, second x + second y)
+    ((x: %) - (y: %)): % == embed(first x - first y, second x - second y)
+    ((x: %) * (y: %)): % == embed(first x * first y, second x * second y)
+    ((c: C) * (x: %)): % == embed(c * first x, c * second x)
+    ((x: %) ^ (n: N)): % == embed(first(x)^n, second(x)^n)
+    qetaGrade(x: %): Z == qetaGrade first x
+    qetaCoefficient(x: %, n: Z): C == qetaCoefficient(first x, n)
+    qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient first x
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{An exponent domain that comes with variable names}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Turn various kinds of direct products into something that prints as
+powerproducts with exponent vectors being the entries of the direct
+product element.
+)endif
+
+)abbrev domain MONOMS Monomials
+Monomials(_
+  dim: N,_
+  D: DirectProductCategory(dim, N),_
+  vl: LSym_
+ ): Join(DirectProductCategory(dim, N), OrderedAbelianMonoidSup) == D add
+    --assert(dim = # vl)
+    coerce(x: %): OutputForm ==
+        vs: LSym := vl
+        zero? x => (1$Integer)::OutputForm
+        fst: Boolean := true
+        k: N := 1
+        while zero?(x.k) repeat
+            vs := rest vs
+            k := k + 1
+        --assert(k<=dim)
+        o: OutputForm := (first vs)::OutputForm
+        if x.k > 1 then o := o ^ ((x.k)::OutputForm)
+        for i in k+1..dim for v in rest vs | not zero?(x.i) repeat
+            oo: OutputForm := v::OutputForm
+            if x.i > 1 then oo := oo ^ ((x.i)::OutputForm)
+            o := o * oo
+        return o
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Unused domains}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The following domains seem unused.
+
+\begin{verbcode}
+)abbrev domain QETAUPOL QEtaUnivariatePolynomial
+++ Like Finite0Series, but as univariate polynomial.
+QEtaUnivariatePolynomial(C: CommutativeRing, var: Symbol): Join(_
+  UnivariatePolynomialCategory(C) with (_
+    coerce : Variable(var) -> %;_
+    fmecg : (%, NonNegativeInteger, C, %) -> %),_
+  QEtaAlgebra C)
+ == UnivariatePolynomial(var, C) add
+    qetaGrade(x: %): Z == degree(rep x)::Z
+    qetaCoefficient(x: %, n: Z): C ==
+        n < 0 => 0
+        coefficient(rep x, qcoerce(n)@N)
+    qetaLeadingCoefficient(x: %): C == leadingCoefficient rep x
+\end{verbcode}
+
+\begin{verbcode}
+)abbrev domain QETAPOLY QEtaPolynomial
+++ That is a cheating domain, because we never ever call qetaGrade,
+++ qetaCoefficient, or qetaLeadingCoefficient from this domain.
+QEtaPolynomial(C: CommutativeRing): Join(_
+  PolynomialCategory(C, IndexedExponents Symbol, Symbol), QEtaAlgebra C)
+ == Polynomial C add
+    qetaGrade(x: %): Z == error "QEtaPolynomial: not implemented"
+    qetaCoefficient(x: %, n: Z): C == error "QEtaPolynomial: not implemented"
+    qetaLeadingCoefficient(x: %): C == error "QEtaPolynomial: not implemented"
+\end{verbcode}
+
+\bibliography{qeta}
+\end{document}
+)endif

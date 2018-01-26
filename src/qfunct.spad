@@ -1,0 +1,285 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QFunctions
+--- Copyright (C) 2014-2015,  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\begin{document}
+\title{An implementation of functions related to $q$-calculus}
+\author{Ralf Hemmecke}
+\date{17-Nov-2014}
+\maketitle
+\begin{abstract}
+This package implements a number of well known q-functions like
+qPochhammer, as infinite Laurent series.
+\end{abstract}
+
+\tableofcontents
+
+\section{Overview}
+
+For a reference see, for example, \cite{wiki:Q-Pochhammer_symbol:2017}.
+
+In general we have:
+\begin{align*}
+(a; q)_n &=
+    \begin{cases}
+    1&\text{if $n=0$}\\
+    \prod_{k=0}^{n-1} (1-a q^k)& \text{if $n>0$}\\
+    \left(\prod_{k=1}^{-n} (1-\frac{a}{q^k})\right)^{-1}& \text{if $n<0$}\\
+    \end{cases}\\
+(a; q)_{-n} &= \frac{1}{(aq^{-n}; q)_n}\qquad\text{if $n>0$}\\
+(a; q) &= \prod_{k=0}^\infty (1-a q^k)
+\end{align*}
+
+Our package is not overly general, but covers cases that are often
+used. Let $R$ be a ring, $q$ an indeterminate over $R$, and $R((q))$
+be the domain of Laurent series in $q$.
+
+Since by instantiation of the package, the type of the Laurent series
+$R((q))$ is fixed, we do not allow arbitrary substitutions for $a$ and
+$q$ in $(a;q)$. In fact, our package only computes $q$-Pochhammer
+symbols of the form $(c q^r; q^s)$ where $c\in R\setminus\{0\}$, $r
+\in \setZ$, $s\in\setN\setminus\{0\}$.
+
+Of course, by choosing a more general coefficient ring at instatiation
+time, one can cover more cases.
+
+For the finite case, we can compute $(c q^r, q^s)_n$ for $n\ge0$.
+
+Note that if $s<0$ and $n>0$, then
+\begin{align*}
+(c q^r; q^s)_{n} &= \prod_{k=0}^{n-1} (1-c q^{r+sk})\\
+                 &= \prod_{k=0}^{n-1} (1-c q^{r+s(n-1)-sk})\\
+                 &= (c q^{r+s(n-1)}; q^{-s})_n.
+\end{align*}
+Thus, we can allow $s\in\setZ$.
+
+Since, we only require a ring as package parameter and not a field, in
+general, we cannot compute the (finite) $q$-Pochhammer symbol for
+negative $n$, but note that
+\begin{align*}
+(c q^r; q^s)_{-n} &= \frac{1}{(cq^{r-sn}; q^s)_n}.
+\end{align*}
+And inversion can be done in the Laurent series ring by the user.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+
+Let $R$ be a ring and $i\in\setN$, $r, s \in \setZ$, $s>0$, $c_k\in R$
+for all $k\in\setN$, $f_i = \prod_{k=i}^{\infty}(1+c_k q^{r+sk})$.
+Then
+\[
+  f_i = (1+c_i q^{r+si}) \cdot \prod_{k=i+1}^{\infty} (1+c_k q^{r+sk})
+      = (1+c_i q^{r+si})\cdot f_{i+1}.
+\]
+
+Define $g_i$ by $f_i = 1+q^{r+si} g_i$. Then we have
+\begin{align*}
+f_i = 1+q^{r+si} g_i
+    &=(1+c_i q^{r+si})\cdot f_{i+1}\\
+    &=(1+c_i q^{r+si})\cdot (1+q^{r+s(i+1)} g_{i+1})\\
+    &=1+c_i q^{r+si}+ q^{r+s(i+1)} g_{i+1} + c_i q^{r+si+r+s(i+1)} g_{i+1}.
+\end{align*}
+Hence
+\begin{align*}
+g_i &=c_i + q^s g_{i+1} + c_i q^{r+s(i+1)} g_{i+1}\\
+    &=c_i + q^s(g_{i+1} + q^{r+si} c_i g_{i+1}).
+\end{align*}
+
+For the infinite case we have $c_i=c$ for all $i\in\setN$.
+For the finite case, we have $c_i=c$ for all $0\le i < n$ and $c_i=0$
+for all $i\ge n$.
+
+For the infinite case, we turn the above recursion into
+\begin{align*}
+g(r, s) &=c + q^s g(r+s, s) + c q^{r+s} g(r+s, s)\\
+    &=c + q^s(g(r+s, s) + q^r c g(r+s, s)).
+\end{align*}
+This is then implemented by the function \texttt{qPochhammerAux}.
+
+
+)endif
+
+)abbrev package QFUN QFunctions
+++ Author: Ralf Hemmecke
+++ Description:
+++ Implement qPochhammer and friends.
+QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
+  N ==> NonNegativeInteger
+  P ==> PositiveInteger
+  Z ==> Integer
+  Rec ==> Record(k: Z, c: R)
+  S ==> Stream Rec
+  C ==> with
+    qPochhammer: () -> L
+        ++ qPochhammer() = qPochhammer(1, 1, 1)
+    qPochhammer: R -> L
+        ++ qPochhammer(c) = qPochhammer(c, 0, 1)
+    eulerFunction: P -> L
+        ++ For s>0, eulerFunction(s) = qPochhammer(1, s, s).
+        ++ https://en.wikipedia.org/wiki/Euler_function
+        ++ We use the Pentagonal number theorem to speed up
+        ++ its computation.
+        ++ https://en.wikipedia.org/wiki/Pentagonal_number_theorem
+        ++ eulerFunction(s) =
+        ++   1 + \sum_{n>0} (-1)^n (q^(s*n*(3*n+1)/2) + q^(s*n*(3*n-1)/2))
+    partitionSeries: P -> L
+        ++ partitionSeries(s) returns the partition generating series, i.e.,
+        ++ the coefficient of $q^(s*n)$ is the number of partitions of $n$
+        ++ (where $q$ is the variable from $L$).
+        ++ It holds: partitionSeries(s)*eulerFunction(s)=1.
+    qPochhammer: (R, N) -> L
+        ++ qPochhammer(c, n) = qPochhammer(c, 0, 1, n)
+    qPochhammer: (R, Z, P) -> L
+        ++ qPochhammer(c, r, s) returns the Laurent series given by
+        ++ \[(c\cdot q^r, q^s)=
+        ++ \[\prod_{k=0}^{\infty} (1-c\cdot q^r \cdot (q^s)^k)\]
+        ++ where q=monomial(1,1)$L.
+    qPochhammer: (R, Z, Z, N) -> L
+        ++ qPochhammer(c, r, s, n) returns the Laurent series
+        ++ $(c\cdot q^r, q^s)_n$ given by 1, if n=0;
+        ++ and
+        ++ \[\prod_{k=0}^{n-1} (1-c\cdot q^s \cdot (q^r)^k),\] otherwise,
+        ++ where q=monomial(1,1)$L.
+
+  I ==> add
+    qPochhammer(): L == qPochhammer(1, 1, 1)
+    qPochhammer(c: R): L == qPochhammer(c, 0, 1)
+    qPochhammer(c: R, n: N): L == qPochhammer(c, 0, 1, n)
+
+    -- prepend(n, c, st) returns a stream whose first n elements are
+    -- c followed by the original stream st.
+    -- Input condition: n>=0.
+    prepend(n: Z, c: R, st: Stream R): Stream R == delay
+        zero? n => st
+        concat(c, prepend(n-1, c, st))
+
+    -- computes x + c * y
+    plus(x: Stream R, c: R, y: Stream R): Stream R == delay
+        empty? x => map((k: R): R +-> c*k, y)
+        empty? y => x
+        concat(frst x + c*frst(y), plus(rst x, c, rst y))
+
+    -- This computes x+c*q^n*y.
+    -- Input condition: n>=0.
+    qpauxrec(x: Stream R, c: R, n: Z, y: Stream R): Stream R == delay
+        zero? n => plus(x, c, y)
+        empty? x => prepend(n, 0$R, map((k: R): R +-> c*k, y))
+        concat(frst x, qpauxrec(rst x, c, n-1, y))
+
+    -- This computes (1+c*q^n)*g.
+    -- Input condition: n>=0.
+    qpaux(c: R, n: Z, g: Stream R): Stream R == qpauxrec(g, c, n, g)
+
+    -- Computes g_i from description above or rather g(r,s), but we
+    -- needed a count n, so that we know when to abort the recursion.
+    -- Input condition: r>=0, s>0, n>=0.
+    qPochhammerAuxN(c: R, r: Z, s: Z, n: Z): Stream R == delay
+        zero? n => empty()$Stream(R)
+        g: Stream R := qPochhammerAuxN(c, r+s, s, n-1)
+        empty? g => concat(c, g)
+        concat(c, prepend(s-1, 0, qpaux(c, r, g)))
+
+    -- This computes (c*q^r; q^s)_n.
+    -- Input condition: r>=0, s>0, n>=0.
+    qPochhammerPos(c: R, r: Z, s: Z, n: Z): L ==
+        zero? c => 1$L
+        1 + laurent(r, qPochhammerAuxN(-c, r, s, n))
+
+    -- This computes (c*q^r; q^s)_n.
+    -- Input condition. n>=0.
+    -- It is intended for the case r<0, r+s<0, ...,r+s*(n-1)<0.
+    qPochhammerNeg(c: R, r: Z, s: Z, n: Z): L ==
+        zero? n => 1$L
+        c: R := -c
+        l: L := 1 + monomial(c, r)
+        for i in 1..n-1 repeat l := l + monomial(c, r+s*i)*l
+        l
+
+    -- This computes (c*q^r; q^s)_n for n>=0.
+    qPochhammer(c: R, r: Z, s: Z, n: N): L ==
+        zero? n => 1$L
+        -- assert(n>0)
+        zero? r =>
+            cc: R := 1-c
+            zero? cc => 0$L
+            cc * qPochhammer(c, s, s, qcoerce(n-1)@N)
+        zero? s => (1 + monomial(-c, r))^n -- s=0 is supposed to be a rare case
+        s < 0 =>
+            r > 0 => qPochhammer(c, r+s*(n-1), -s, n)
+            qPochhammerNeg(c, r, s, n)
+        -- assert(s>0)
+        r > 0 => qPochhammerPos(c, r, s, n)
+        -- assert(r<0)
+        j: Z := (-r) quo s -- j >= 0 -- find splitting point pos/neg
+        -- assert(r+s*j<=0)
+        cc: R := -c
+        j >= n => qPochhammerNeg(c, r, s, n)
+        zero?(r+s*j) => -- we have an R-factor in the middle
+            cc: R := 1-c
+            zero? cc => 0$L
+            ln: L := qPochhammerNeg(c, r, s, j)
+            lp: L := qPochhammerPos(c, r+s*(j+1), s, qcoerce(n-1-j)@N)
+            cc * ln * lp
+        ln: L := qPochhammerNeg(c, r, s, j+1)
+        lp: L := qPochhammerPos(c, r+s*(j+1), s, qcoerce(n-1-j)@N)
+        ln * lp
+
+    -- Computes g_i from description above or rather g(r,s).
+    -- Input condition: r>0, s>0.
+    qPochhammerAux(c: R, r: Z, s: Z): Stream R == delay
+        concat(c, prepend(s-1, 0, qpaux(c, r, qPochhammerAux(c, r+s, s))))
+
+    -- This computes (a*q^r; q^s)_\infty.
+    qPochhammer(a: R, r: Z, s: P): L ==
+        zero? a => 1$L
+        zero? r =>
+            aa: R := 1-a
+            zero? aa => 0$L
+            aa * qPochhammer(a, s, s)
+        RX ==> SparseUnivariatePolynomial R
+        a := -a
+        p: RX := 1
+        while r < 0 repeat
+              p := p + monomial(a, qcoerce(-r)@N)$RX * p
+              r := r + s
+        l: L := 1 + laurent(r, qPochhammerAux(a, r, s))
+        one? p => l
+        terms: S :=
+            [[-degree m, leadingCoefficient m]$Rec for m in monomials p]::S
+        l*series(terms)$L
+
+    -- This computes (q^s; q^s)_\infty.
+    -- Input condition: s>0.
+    -- eulerFunction(s: P): L == 1 + laurent(s, qPochhammerAux(-1, s, s))
+    -- Faster version of eulerFunctions building on the Pentagonal number
+    -- theorem.
+    eulerStream(s: P, n: Z, m: Z, z: S): S == delay
+        r: R := if even? n then 1 else -1
+        cons([s*m, r], cons([s*(2*n+1+m), -r], eulerStream(s, n+1, m+3*n+2, z)))
+    eulerFunction(s: P): L == series eulerStream(s, 0, 0, empty()$S)
+    partitionSeries(s: P): L == recip(eulerFunction s)::L
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

@@ -1,0 +1,64 @@
+\usepackage{literatedoc}
+\usepackage{amsmath,amsthm,amssymb}
+\theoremstyle{plain}
+\newtheorem{Theorem}{Theorem}[section]
+\newtheorem{Lemma}[Theorem]{Lemma}
+
+% Typeset directories and filenames.
+\DeclareUrlCommand\PathName{\urlstyle{sf}}
+\DeclareUrlCommand\code{\urlstyle{tt}}
+
+\newcommand{\Ideal}[2][]{\langle#2\rangle_{#1}}
+\newcommand{\Set}[1]{\left\{#1\right\}}
+\newcommand{\SetDef}[2]{\Set{{#1}\left|\,\vphantom{#1}{#2}\right.}}
+
+\newcommand{\setN}{\mathbb{N}}
+\newcommand{\setZ}{\mathbb{Z}}
+\newcommand{\GB}{Gr\"obner basis}
+\newcommand{\eg}{e.\,g.}
+\newcommand{\ie}{i.\,e.}
+
+\newcommand{\algo}{\textsf}
+\newcommand{\algoSamba}{\algo{samba}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Define \defsequentialEnvironment (ToDo)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcounter{seqEnvCounter}
+\setcounter{seqEnvCounter}{0}
+\newcounter{@ToDo:}%
+\newcommand{\numberenvironment}[1]{%
+  \refstepcounter{@#1}{\bfseries{#1}}
+  \addtocounter{@#1}{-1}\hyperlink{#1\roman{@#1}}{$\triangleleft$}
+  \addtocounter{@#1}{1}{\bfseries\arabic{@#1}}\hypertarget{#1\roman{@#1}}{}
+  \addtocounter{@#1}{1}\hyperlink{#1\roman{@#1}}{$\triangleright$}%
+  \addtocounter{@#1}{-1}}
+
+\newcommand{\defSequentialEnvironment}[1]{%
+  \newcounter{@#1}%
+  \newenvironment{#1}%
+  {\begin{ColoredBackground}{#1}%
+    \typeout{WARNING: ToDo environment #1}%
+    \setlength{\leftmargin}{\ifnum0<\value{seqEnvCounter}2ex\else0pt\fi}%
+    \addtocounter{seqEnvCounter}{1}%
+    \parindent0pt\parskip\smallskipamount
+    \advance\linewidth -\leftmargin
+    \advance\@totalleftmargin \leftmargin
+    \parshape \@ne \@totalleftmargin \linewidth
+    \numberenvironment{ToDo:}%
+    \numberenvironment{#1}%
+  }%
+  {\addtocounter{seqEnvCounter}{-1}\end{ColoredBackground}}%
+}
+
+\usepackage{color}
+\usepackage{framed}[2003/07/21 v 0.8a]%
+\newenvironment{ColoredBackground}[1]%
+  {\def\FrameCommand{\colorbox[rgb]{1,0.3,0.3}}%
+   \trivlist\item\MakeFramed{}}%
+  {\endMakeFramed\endtrivlist}
+
+\defSequentialEnvironment{Hemmecke}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{alphaurl}

@@ -1,0 +1,530 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2018  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Eta Quotients}
+\author{Ralf Hemmecke}
+\date{10-Dec-2015}
+\maketitle
+\begin{abstract}
+We compute a monoid basis for the set of $\eta$-quotients that are
+modular functions and have a (multiple) pole, if any, at infinity
+only.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Indroduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $N$ be a positive natural number and define a $\Gamma_0(N)$ as a
+subgroup of the special linear group $SL_2(\setZ)$ as follows.
+\begin{gather*}
+\Gamma_0(N) := \SetDef{  \begin{pmatrix}
+    a & b\\
+    c & d
+  \end{pmatrix} \in SL_2(\setZ)}{N|c}
+\end{gather*}
+As in \cite{Radu:RamanujanKolberg:2015}, let $K(N)$ denote the set of
+modular functions for $\Gamma_0(N)$ and $K^\infty(N)$ the set of
+modular functions have a (multiple) pole, if any, at infinity only.
+Furthermore, let $E(N)$ be the set of $\eta$-quotients that are
+modular functions, and let $E^\infty(N) := E(N)\cap K^\infty(N)$.
+
+This file contains code to compute a (finite) monoid basis for
+$E^\infty(N)$ in two variants.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us start with a few common macros.
+
+First of all for debugging.
+)endif
+OF==>OutputForm
+display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, _
+                                   ":="::Symbol::OF, y::OF]$List(OF)))
+
+)if LiterateDoc
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+SQ ==> Matrix Q -- SquareMatrix(n, Q)
+MZ ==> Matrix Z
+VZ ==> Vector Z
+VQ ==> Vector Q
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{First version as given by Radu}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+From the proof of Lemma~25 of the article
+\cite{Radu:RamanujanKolberg:2015} we can extract a simple algorithm to
+compute a basis for the monoid $E^\infty(N)$.
+
+As in \cite{Radu:RamanujanKolberg:2015}, we first determine $\kappa_1,
+\ldots, \kappa_n$ where $n+1$ is the number of divisors of $N$. We are
+left with testing a finite number of elements $x \in \setN^{n}$
+(namely $\prod_{k=1}^n (\kappa_k -1)$) whether they fulfil certain
+properties. In order to keep the set of generators small, we dismiss
+generators that are combinations of other generators, \ie, we only
+keep ``irreducible'' elements.
+
+
+The domain \texttt{NModuleBasis(n)} is only an auxiliary domain
+that represents the generators of a submodule of $\setN^n$.
+
+The use of \texttt{VZ} instead of \texttt{Vector(N)} has only be done
+for convenience. Negative vector entries are not allowed.
+)endif
+
+)abbrev domain NMODBAS NModuleBasis
+++ NModuleBasis(n) represents the generators of an N-submodule of N^n.
+NModuleBasis(n: N): with
+    empty: () -> %
+      ++ empty() represents the empty module basis.
+    members: % -> List VZ
+      ++ members(x) returns a basis of the (sub-)module such that no element
+      ++ is a N-linear combination of the other elements.
+    insert: (VZ, %) -> %
+      ++ insert(v, x) returns a new basis z such that z=x if v is already
+      ++ a N-linear combination of the elements of x. Otherwise, z is the
+      ++ union of v with all elements from x that are not an N-multiple of v.
+      ++ assert(v.i>0 for i in 1..n)
+    reducible?: (VZ, %) -> Boolean
+    reduce: (VZ, %) -> VZ
+    sup: % -> VZ
+      ++ sup(x) returns a minimal (w.r.t reducibility) element that
+      ++ is reducible by every element of x.
+      ++ If x is empty, it returns the zero vector.
+      ++ sup(x) is the supremum (w.r.t. reducibility) of all elements in x.
+    supSum: % -> Z
+      ++ supSum(x) returns the sum of the entries of sup(x).
+  == add
+    Rep ==> List VZ
+    -- local functions
+    -- We do not expect big differences between a and b so a dumb loop
+    -- will do.
+    reducibleBy?(a: VZ, b: VZ): Boolean ==
+        for i in 1..n repeat if qelt(a, i) < qelt(b, i) then return false
+        true
+    reduceBy!(a: VZ, b: VZ): VZ ==
+        while reducibleBy?(a, b) repeat
+            for i in 1..n repeat qsetelt!(a, i, qelt(a, i) - qelt(b, i))
+        return a
+
+    -- exported functions
+    empty(): % == per(empty()$Rep)
+    construct(l: List VZ): % == per l
+    members(x: %): List VZ == rep x
+    insert(vz: VZ, x: %): % ==
+        --assert(not reducible?(vz, x))
+        per cons(vz, [f for f in rep x | not reducibleBy?(f, vz)])
+    reducible?(vz: VZ, x: %): Boolean ==
+        for f in rep x repeat if reducibleBy?(vz, f) then return true
+        false
+    reduce(vz: VZ, x: %): VZ ==
+        cz: VZ := copy vz
+        for f in rep x repeat cz := reduceBy!(cz, f)
+        cz
+    sup(x: %): VZ ==
+        r: VZ := new(n, 0)$VZ
+        for f in rep x repeat for i in 1..n repeat r.i := max(r.i, f.i)
+        r
+    supSum(x: %): Z ==
+       s: Z := 0
+       for i in 1..n repeat
+           r: Z := 0
+           for f in rep x repeat r := max(r, f.i)
+           s := s + r
+       return s
+
+
+)abbrev package QETAQMEV QEtaQuotientMonoidExponentVectors
+++ QEtaQuotientMonoidExponentVectors helps to do computations with eta functions
+++ and quotients of eta functions expressed in terms of the q-series.
+QEtaQuotientMonoidExponentVectors: with
+    etaQuotientMonoidExponentVectors: P -> List List Z
+      ++ etaQuotientMonoidExponentVectors(m) returns Z-vectors $r$ (of
+      ++ dimension n+1, where #(divisors m)=n+1) that correspond to
+      ++ the formula (16) from \cit{Radu:RamanujanKolberg:2015}, i.e.
+      ++ (together with the zero vector) they describe the monoid
+      ++ E^\infty(m).
+  == add
+    -- domain constant vdivs for "determineKappas"
+    vdivs24: VZ := vector(divisors(24)$IntegerNumberTheoryFunctions)
+
+    -- These are the conditions given on page 2 of
+    -- \cite{Radu:RamanujanKolberg:2015}.
+    -- Note that the given r does not have an entry corresponding to the
+    -- divisor 1. This entry will be computed on the fly (r0) via the
+    -- relation that w(r)=0.
+    -- Furthermore, if an r with non-integer entries is given, it
+    -- automatically means that the conditions are not fulfilled.
+    rConditions?(n: N, vdivs: VZ, rtilde: VQ): Boolean ==
+        --assert(divs1=delete!(divisors(m)$IntegerNumberTheoryFunctions, 1)
+        --assert(n+1 = #divs)
+        --assert(n = #r)
+        n1: P := qcoerce(n + 1)@P
+        r0: Z := 0
+        for i in 1..n repeat
+            if not one? denom(rtilde.i) then return false
+            r0 := r0 - numer(rtilde.i)
+        -- Compute numbers for conditions 2, 3, 4.
+        a: Z := r0
+        b: Z := r0 * vdivs.n1
+        c: Factored Z := 1
+        for i in 1..n repeat
+            ri: Z := numer(rtilde.i)
+            d := vdivs(i+1)
+            a := a + ri * d           -- sigma_\infty
+            b := b + ri * vdivs(n1-i) -- sigma_0
+            c := c * factor(d)^(qcoerce(abs(ri))@N)
+        -- Check conditions 2, 3, 4.
+        not zero? positiveRemainder(a, 24) => false
+        not zero? positiveRemainder(b, 24) => false
+        for fe in factors c repeat if odd?(fe.exponent) then return false
+        return true
+
+    -- Compute the inverse of A_N as given in Lemma 25 on page 235 of
+    -- \cite{Radu:RamanujanKolberg:2015}, but in a variant.
+    -- Difference is:
+    -- Radu:RamanujanKolberg:2015: for j in 2..n+1
+    -- used here:                  for j in 1..n
+    -- and the definition of the function a.
+    a(m: Z, di: Z, dj: Z): Q == -- di==c, dj==delta
+       diprime: Z := (m exquo di)::Z
+       diprime/dj * ((gcd(di, dj)^2 - dj) / (24*gcd(diprime, di)))
+    inverseAMatrix(m: P, n: N, d: VZ): SQ ==
+        amat: SQ := matrix [[a(m, d.i, d.j) for j in 2..n+1] for i in 1..n]
+        -- Signature is inverse: SQ -> Union(SQ, "failed"), but we know
+        -- that this matrix is regular.
+        inverse(amat)::SQ
+    determineKappas(n: N, vdivs: VZ, ainv: SQ): VZ ==
+        -- Determine the kappa_j (vkappas.j) in such a way that
+        -- ainv * kappa.j * unitVector(j)
+        -- is an integer vector.
+        vkappas: VZ := new(n, 0)
+        rkappaj: VQ := new(n, 0)
+        rtilde: VQ := new(n, 0)
+        for j in 1..n repeat
+            -- denominator over the j-th column
+            kappa: Z := lcm([denom qelt(ainv, i, j) for i in 1..n]$(List Z))
+            -- We multiply the columns of ainv with the respective
+            -- denominator of the row, so that the result will be an
+            -- integer matrix linv.
+            for i in 1..n repeat rkappaj.i := kappa * qelt(ainv, i, j)
+            -- Determine the kappa_i in such a way that
+            -- ainv * kappa.i * unitVector(i) fulfils the relations.
+            -- We do this by checking all relevant multiples up to 24.
+            -- The kappas are the factors that make everything denominator free
+            -- and let the (extension of the) images of the unitvectors
+            -- fulfil all conditions from R^*(m) given on page 2 of
+            -- \cite{Radu:RamanujanKolberg:2015}. Compare also with Lemma 25
+            -- on page 12.
+            for d in 1..8 repeat -- 8=#divisors(24) -- 1, 2, 3, 4, 6, 8, 12, 24
+                delta: Z := vdivs24.d
+                for i in 1..n repeat qsetelt!(rtilde, i, delta * rkappaj.i)
+                if rConditions?(n, vdivs, rtilde) then
+                    qsetelt!(vkappas, j, delta * kappa)
+                    break -- out of 'for d' loop
+        vkappas
+
+    -- an auxiliary function to compute ainv*vz but get the types right
+    mult(n: N, ainv: SQ, vz: VZ): VQ ==
+        vq: VQ := new(n, 0)
+        for i in 1..n repeat -- row index
+            ri: Q := vz.1 * ainv(i, 1)
+            for j in 2..n repeat ri := ri + vz.j * qelt(ainv, i, j)
+            qsetelt!(vq, i, ri)
+        return vq
+
+    -- Recursively distribute deg over the entries 1..i of vz
+    -- such that each entry is smaller than the respective kappa entry.
+    vectorsAux(deg: Z, i: Z, kappa: VZ, vz: VZ): List VZ ==
+        --assert(i>=1)
+        --assert(i<=#vz)
+        --assert(i<=#kappa)
+        --assert(deg>=0)
+        --assert(kappa.i>0 for i in 1..i)
+        zero? deg => return cons(copy vz, empty()) -- nothing more to distribute
+        z: List VZ := empty()
+        one? i => -- base case of the recursion
+            deg < kappa.1 =>
+                vz.1 := deg
+                return cons(copy vz, z)
+            return z
+        --assert(i>1)
+        i = 2 => -- we know the base case and can do faster, no recurse
+            for e in max(0, deg - kappa.1 + 1) .. min(deg, kappa.2 - 1) repeat
+                e2: Z := deg - e
+                v: VZ := copy vz
+                qsetelt!(v, 2, e)
+                qsetelt!(v, 1, e2)
+                z := cons(v, z)
+            return z
+
+        for e in 0..min(deg, kappa.i - 1) repeat
+            s: List VZ := vectorsAux(deg-e, i-1, kappa, vz)
+            while not empty? s repeat
+                v := first s
+                s := rest s
+                qsetelt!(v, i, e)
+                z := cons(v, z)
+        return z
+
+    vectors(deg: Z, n: N, kappa: VZ): List VZ ==
+        -- Distribute deg over the entries from 1 to n.
+        vectorsAux(deg, n, kappa, new(n, 0)$VZ)
+
+    monoidGenerators(n: N, vdivs: VZ, ainv: SQ, vkappas: VZ): List VZ ==
+        -- We can form a Groebner basis (consider the vectors
+        -- as exponent vectors of polynomials). We only need to consider
+        -- elements that are not yet in this Groebner basis.
+        mgb: NModuleBasis(n) := empty()
+        for i in 1..n repeat
+            v: VZ := new(n, 0)
+            v.i := vkappas.i
+            mgb := insert(v, mgb)
+        dg: Z := 1 -- We go by increasing degree to fill up mgb.
+        -- generate all elements of "degree" dg
+
+        while dg < supSum mgb repeat
+            vs: List VZ := vectors(dg, n, vkappas)
+            for v in vs | not reducible?(v, mgb) repeat
+                rtilde: VQ := mult(n, ainv, v)
+                if rConditions?(n, vdivs, rtilde) then mgb := insert(v, mgb)
+            dg := dg + 1
+        members mgb
+
+    rvec(n: N, v: VZ, ainv: SQ): VZ ==
+        rr: VQ := mult(n, ainv, v)
+        r: VZ := new(n+1, 0)
+        r0: Z := 0
+        for i in 1..n repeat
+            if not one? denom qelt(rr, i) then error "not integer vector"
+            rri: Z := numer qelt(rr, i)
+            qsetelt!(r, i+1, rri)
+            r0 := r0 - rri
+        qsetelt!(r, 1, r0)
+        r
+
+    -- x < y if the total degree of the absolute value of the entries
+    -- is smaller or if the absolute value of the sum of the negative
+    -- entries is smaller. We break ties by the revlex order.
+    ascend(x: List Z, y: List Z): Boolean ==
+        --assert(#x=#y)
+        tx: Z := reduce(_+, [abs e for e in x])
+        ty: Z := reduce(_+, [abs e for e in y])
+        tx < ty => true
+        tx > ty => false
+        tx: Z := reduce(_+, [e for e in x | e < 0])
+        ty: Z := reduce(_+, [e for e in y | e < 0])
+        tx > ty => true -- note that 0 < - tx < - ty
+        tx < ty => false
+        -- break ties by revlex order over Z^n where n=#x=#y.
+        for ex in reverse x for ey in reverse y repeat
+            if ex < ey then return false
+            if ex > ey then return true
+        false -- x=y
+
+    -- exported functions
+    etaQuotientMonoidExponentVectors(m: P): List List Z ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        n: N := # rest divs
+        vdivs: VZ := vector divs
+        --assert(m>1)
+        --assert(divs = sort(<, divs))
+        -- We first set up the nxn-matrix A_d according to Lemma 25 of
+        -- Radu \cite{Radu:RamanujanKolberg:2015}.
+        ainv: SQ := inverseAMatrix(m, n, vdivs)
+        vkappas: VZ := determineKappas(n, vdivs, ainv)
+        monoidgens: List VZ := monoidGenerators(n, vdivs, ainv, vkappas)
+        eqgens: List VZ := [rvec(n, v, ainv) for v in monoidgens]
+        sort(ascend, [entries x for x in eqgens])
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Alternative version using 4ti2}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A description of which data has to be fed to the program
+\textsf{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}} is described in
+\cite{Hemmecke+Radu:EtaRelations:2018}, in particular in Section~6 and
+Section~8.
+
+)endif
+
+)abbrev package QMEV4TI2 QEtaQuotientMonoidExponentVectors4ti2
+++ QEtaQuotientMonoidExponentVectors4ti2 helps to do computations with
+++ eta functions and quotients of eta functions expressed in terms of
+++ the q-series.
+QEtaQuotientMonoidExponentVectors4ti2: with
+    etaQuotientMonoidExponentVectors: P -> List List Z
+      ++ etaQuotientMonoidExponentVectors(m) returns Z-vectors $r$ (of
+      ++ dimension n, where n=#(divisors m)) that correspond to
+      ++ the formula (16) from \cite{Radu:RamanujanKolberg:2015}, i.e.
+      ++ (together with the zero vector) they describe the monoid
+      ++ E^\infty(m).
+  == add
+    -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
+    a(m: Z, di: Z, dj: Z): Z == -- di==c, dj==delta
+       diprime: Z := (m exquo di)::Z
+       num: Z := diprime * (gcd(di, dj)^2)
+       den: Z := dj * gcd(diprime, di)
+       (num exquo den)::Z -- can prove that this cannot fail
+
+    primePower(d: P, p: P): Z ==
+        import from Factored Z
+        fl: List Record(factor: Z, exponent: Z) := factors factor d
+        for fe in fl repeat
+            if fe.factor = p then return fe.exponent
+        return 0
+
+    monoidGenerators(m: P, n: N, d: VZ): List VZ ==
+        fl: List Record(factor: Z, exponent: Z) := factors factor m
+        cols: P := qcoerce(n + 2 + #fl)@P
+        rows: P := cols
+        mat: MZ := new(rows, cols, 0)
+        for i in 1..n-1 repeat -- do not include row for d.j=m
+            for j in 1..n repeat qsetelt!(mat, i, j, a(m, d.i, d.j))
+        -- sum(r(d.i), i=1..n)=0
+        for j in 1..n repeat qsetelt!(mat, n, j, 1)
+        -- sum(d.i * r(d.i), i=1..n+1) = 0 (mod 24)
+        for j in 1..n repeat qsetelt!(mat, n+1, j, d.j)
+        qsetelt!(mat, n+1, n+1, 24) -- additional variable for (mod 24)
+        -- sum(d.(n+2-i) * r(d.i), i=1..n+1) = 0 (mod 24)
+        for j in 1..n repeat qsetelt!(mat, n+2, j, d(n+1-j))
+        qsetelt!(mat, n+2, n+2, 24) -- additional variable for (mod 24)
+        -- product is rational square
+        for i in 1..#fl for fe in fl repeat
+            k := n+2+i
+            p: P := qcoerce(fe.factor)@P
+            for j in 2..n repeat -- for all divisors > 1
+                qsetelt!(mat, k, j, primePower(qcoerce(d.j)@P, p))
+            qsetelt!(mat, k, k, 2) -- additional variable for (mod 2)
+        r1: N := random(10^20); -- the seems to be always the same
+        r2: N := random(10^20); -- temporary filename
+        baseName: String := concat ["4ti2-", string m, "-", string r2]
+
+        -- create .mat
+        fn: FileName := filename("", baseName, "mat")
+        tf: TextFile := open(fn, "output")$TextFile
+        writeLine!(tf, concat [string rows, " ", string cols])
+        for i in 1..rows repeat
+            s: String := string qelt(mat, i, 1)
+            for j in 2..cols repeat
+                s := concat(concat(s, " "), string qelt(mat, i, j))
+            writeLine!(tf, s)
+        close! tf
+
+        -- create .rhs
+        fn := filename("", baseName, "rhs")
+        tf := open(fn, "output")$TextFile
+        writeLine!(tf, concat("1 ", string rows))
+        s := string 0
+        for i in 2..rows repeat s := concat(s, " 0")
+        writeLine!(tf, s)
+        close! tf
+
+        -- create .rel
+        fn := filename("", baseName, "rel")
+        tf := open(fn, "output")$TextFile
+        writeLine!(tf, concat("1 ", string rows))
+        s := ">"
+        for i in 2..n-1 repeat s := concat(s, " >")
+        for i in n..rows repeat s:= concat(s, " =")
+        writeLine!(tf, s)
+        close! tf
+
+        command: String := concat("system /usr/bin/4ti2-zsolve ", baseName)
+        systemCommand(command)$MoreSystemCommands
+
+        -- read back the .zhom file
+        -- the zinhom file should only contain zeroes.
+        fn := filename("", baseName, "zhom")
+        f: File Z := open(fn, "input")
+        rows := (read! f)::P
+        cols := (read! f)::P
+        result: List(VZ) := empty()$List(VZ)
+        for i in 1..rows repeat
+            v: VZ := new(n, 0)
+            for j in 1..n repeat v.j := read! f
+            for j in n+1..cols repeat read! f -- ignore those values
+            result := cons(v, result)
+        close! f
+        return result
+
+    -- x < y if the total degree of the absolute value of the entries
+    -- is smaller or if the absolute value of the sum of the negative
+    -- entries is smaller. We break ties by the revlex order.
+    ascend(x: List Z, y: List Z): Boolean ==
+        --assert(#x=#y)
+        tx: Z := reduce(_+, [abs e for e in x])
+        ty: Z := reduce(_+, [abs e for e in y])
+        tx < ty => true
+        tx > ty => false
+        tx: Z := reduce(_+, [e for e in x | e < 0])
+        ty: Z := reduce(_+, [e for e in y | e < 0])
+        tx > ty => true -- note that 0 < - tx < - ty
+        tx < ty => false
+        -- break ties by revlex order over Z^n where n=#x=#y.
+        for ex in reverse x for ey in reverse y repeat
+            if ex < ey then return false
+            if ex > ey then return true
+        false -- x=y
+
+    -- exported functions
+    etaQuotientMonoidExponentVectors(m: P): List List Z ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        n: N := # divs
+        vdivs: VZ := vector divs
+        monoidgens: List VZ := monoidGenerators(m, n, vdivs)
+        sort(ascend, [entries x for x in monoidgens])
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

@@ -1,0 +1,259 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2017  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Computation of Polynomial Relations among Dedekind Eta
+  Functions}
+\author{Ralf Hemmecke}
+\date{10-Dec-2015}
+\maketitle
+
+\begin{abstract}
+
+Based on articles by Hemmecke and Radu, we compute relations among
+$\eta$-functions of a given level $N$. We provide several variants of
+this computation. The category \code{QEtaIdealCategory} is an attempt
+to abstract identical code. The main difference of the variants is in
+the computation of generators of the ideal of relations among $\eta$
+quotients.
+
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This code is based on \cite{Hemmecke+Radu:EtaRelations:2018}. In fact,
+the following code was used to develop the results of this article.
+
+The code here is very close to what is written in
+\cite{Hemmecke+Radu:EtaRelations:2018}, \ie, from a list of generators
+of $R^\infty(N)$ we compute generators of the ideal $J^{(M)}$ by the
+function \code{etaQuotientIdealGenerators}.
+
+Then \code{etaLaurentIdealGenerators} substitutes the $M$ variables by
+the $E$ and $Y$ variables so that eventually we have $\chi'(H^L)\cup
+U$ in the notation of \cite{Hemmecke+Radu:EtaRelations:2018}.
+
+Eventually, the function, \code{etaRelations} takes the output of
+\code{etaLaurentIdealGenerators} and eliminates the $Y$ variables by
+computing a \GB{} with respect to block order, separately degrevlex in
+the $Y$ and $E$ variables.
+
+The variants to compute the generators of $J^{(M)}$ are abstracted
+into the function \code{relationsIdealGenerators}, which is
+implemented in the respective package.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+LSym ==> List Symbol
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Package category for the computation of relations among
+Dedekind $\eta$-functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev category QETAIDC QEtaIdealCategory
+QEtaIdealCategory(C, L): Category == Exports where
+  C: EuclideanDomain
+  L: Join(UnivariateLaurentSeriesCategory C, QEtaAlgebra C)
+  Pol ==> Polynomial C
+  LPol ==> List Pol
+  Exports ==> with
+    relationsIdealGenerators: List L -> LPol
+        ++ relationsIdealGenerators(qseries) returns
+        ++ a set of generators of the ideal of all relations among
+        ++ the given qseries.
+        ++ We assume that qseries is a list of Laurent series in q that
+        ++ correspond to modular functions having a pole (if any) at
+        ++ infinity only.
+    etaQuotientIdealGenerators: (P, List List Z) -> LPol
+        ++ etaQuotientIdealGenerators(level, rgens) returns polynomials
+        ++ in the variables M_i (where i runs from 1 to #rgens)
+        ++ that generate the ideal of all relations
+        ++ of the eta-quotients of the given level
+        ++ where rgens is assumed to be the exponents of the eta-quotients
+        ++ given by etaQuotientMonoidExponentVectors(level) from the package
+        ++ QEtaQuotientMonoidExponentVector.
+        ++ It is assumed that each entry in rgens has length equal to
+        ++ the number of divisors of level.
+        ++ The samba algorithm is used in its extended form in order to
+        ++ also get an representation of resulting algebra basis in terms
+        ++ of the original elements.
+        ++ Algoritm samba is described in: Ralf Hemmecke,
+        ++ "Dancing Samba with Ramanujan Partition Congruences",
+        ++ Journal of Symbolic Computation, 84, 2018.
+        ++ See Hemmecke+Radu:EtaRelations:2018 for
+        ++ more detail.
+    etaQuotientIdealGenerators: P -> LPol
+        ++ etaQuotientIdealGenerators(level) returns
+        ++ etaQuotientIdealGenerators(level, rgens) where rgens is given by
+        ++ etaQuotientMonoidExponentVectors(level) from the package
+        ++ QEtaQuotientMonoidExponentVector.
+    etaLaurentIdealGenerators: (P, List List Z, LPol) -> LPol
+        ++ etaLaurentIdealGenerators(level, rgens, eqigens) computes
+        ++ eqigens := etaQuotientIdealGenerators(level, rgens)
+        ++ and replaces each of the M_i by the corresponding product of
+        ++ E_d and Y_d variables given by rgens.i. Positive entries in
+        ++ rgens.i correspond to E variables and negative entries to
+        ++ Y variables, the Y variables correspond to inverses of eta
+        ++ functions.
+        ++ The generators E_d*Y_d-1 for each divisor of level are also
+        ++ added to the resulting polynomials from above.
+    etaLaurentIdealGenerators: P -> LPol
+        ++ etaLaurentIdealGenerators(level) returns
+        ++ etaLaurentIdealGenerators(level, rgens, eqigens) for
+        ++ rgens := etaQuotientMonoidExponentVectors(level) and
+        ++ eqigens := etaQuotientIdealGenerators(level, rgens)
+    etaRelations: (P, LPol) -> LPol
+        ++ etaRelations(level, eligens) eliminates the Y variables from the
+        ++ input and returns the resulting Groebner basis.
+    etaRelations: P -> LPol
+        ++ etaRelations(n) returns
+        ++ etaRelations(n, etaLaurentIdealGenerators(n)).
+        ++ The result describes the ideal of all relations among the
+        ++ eta-functions of level n.
+    laurentRelations: P -> LPol
+        ++ laurentRelations(level) returns laurentRelations(esyms, ysyms) where
+        ++ esyms and ysyms correspond to the variables indexed by the
+        ++ divisors of level.
+    laurentRelations: (LSym, LSym) -> LPol
+        ++ laurentRelations(esyms, ysyms) returns
+        ++ [e*y-1 for e in esyms for y in ysyms].
+   add
+    RGENS ==> etaQuotientMonoidExponentVectors$QEtaQuotientMonoidExponentVectors
+
+    -- auxiliary functions
+    -- Return the "quotient" for the respective r vector where "quotient"
+    -- is to be understood as using E for positive and Y for negative r entries.
+    etaQuotientMonomial(esyms: LSym, ysyms:LSym, r: List Z): Pol ==
+        p: Pol := 1
+        for e in esyms for y in ysyms for expo in r repeat
+            expo > 0 => p := p * monomial(1$Pol, e, qcoerce(expo)@N)
+            expo < 0 => p := p * monomial(1$Pol, y, qcoerce(abs expo)@N)
+        return p
+
+    laurentRelations(esyms: LSym, ysyms: LSym): LPol ==
+        lpol: LPol := empty()
+        for e in esyms for y in ysyms repeat
+            lpol := cons(monomial(1$Pol, [e, y], [1, 1]) - 1$Pol, lpol)
+        lpol
+
+    laurentRelations(level: P): LPol ==
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        esyms: LSym := indexedSymbols("E", divs)$QAuxiliaryTools
+        ysyms: LSym := indexedSymbols("Y", divs)$QAuxiliaryTools
+        laurentRelations(esyms, ysyms)
+
+    -- exported functions
+    etaQuotientIdealGenerators(level: P, rgens: List List Z): LPol ==
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        etaquotgens: List EtaQuotient(C, L) := _
+            [etaQuotient(divs, r) for r in rgens]
+        -- Build in some safety check.
+        for x in etaquotgens repeat
+            if not zero? prefactor x then error "nonzero prefactor"
+        -- We know that retract will not fail, so we get Laurent series.
+        eqgens: List L := [retract x for x in etaquotgens]
+        relationsIdealGenerators eqgens
+
+    etaQuotientIdealGenerators(level: P): LPol ==
+        rgens: List List Z := RGENS(level)
+        etaQuotientIdealGenerators(level, rgens)
+
+    etaLaurentIdealGenerators(level: P, rgens: List List Z, eqigens: LPol): LPol ==
+        -- substitute the yemPolynomial for the respective M_i variable
+        PE ==> PolynomialEvaluation(C, Pol)
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        msyms: LSym := indexedSymbols("M", #rgens)$QAuxiliaryTools
+        ysyms: LSym := indexedSymbols("Y", divs)$QAuxiliaryTools
+        esyms: LSym := indexedSymbols("E", divs)$QAuxiliaryTools
+        etaQuotientMonomials := _
+            [etaQuotientMonomial(esyms, ysyms, r) for r in rgens]
+        fc(c: C): Pol == c::Pol
+        gens: LPol := _
+            [eval(x, fc, msyms, etaQuotientMonomials)$PE for x in eqigens]
+        -- now reduce modulo E*Y=1.
+        yerels: LPol := laurentRelations(esyms, ysyms)
+        syms: LSym := concat(ysyms, esyms)
+        dim: N := # syms
+        dim1: N := # ysyms
+        E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
+        nfs: LPol := normalForms(gens, yerels, syms)$QEtaGroebner(C, E)
+        concat(yerels, nfs)
+
+    etaLaurentIdealGenerators(level: P): LPol ==
+        rgens: List List Z := RGENS(level)
+        eqigens: LPol := etaQuotientIdealGenerators(level, rgens)
+        etaLaurentIdealGenerators(level, rgens, eqigens)
+
+    etaRelations(level: P, eligens: LPol): LPol ==
+        -- We only need to eliminate the Y_d variables from the
+        -- etaLaurentIdealGenerators.
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        ysyms: LSym := indexedSymbols("Y", divs)$QAuxiliaryTools
+        esyms: LSym := indexedSymbols("E", divs)$QAuxiliaryTools
+        syms: LSym := concat(ysyms, esyms)
+        dim: N := # syms
+        dim1: N := # ysyms
+        E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
+        gb := groebner(eligens, syms)$QEtaGroebner(C, E)
+        -- take only the polys that do not invole any Y variable
+        xPolynomials(gb, char "E")$PolynomialTool(C)
+
+    etaRelations(level: P): LPol ==
+        eligens: LPol := etaLaurentIdealGenerators(level)
+        etaRelations(level, eligens)
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

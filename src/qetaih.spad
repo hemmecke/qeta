@@ -1,0 +1,180 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2017  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Computation of polynomial relations among Dedekind Eta
+Functions---Variant Hemmecke}
+\author{Ralf Hemmecke}
+\date{03-Aug-2017}
+\maketitle
+\begin{abstract}
+
+Based on articles of Radu and Hemmecke, we compute the polynomial
+relations among Dedekind $\eta$-functions.
+
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This code is based on \cite{Radu:RamanujanKolberg:2015},
+\cite{Hemmecke:DancingSambaRamanujan:2018}, and
+\cite{Hemmecke+Radu:EtaRelations:2018}.
+
+Here we implement the variant that is described in
+\cite[Chapter~7]{Hemmecke+Radu:EtaRelations:2018} where only one
+\GB{} computation is needed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+)endif
+OF==>OutputForm
+display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, _
+                                   ":="::Symbol::OF, y::OF]$List(OF)))
+
+)if LiterateDoc
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+LSym ==> List Symbol
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Variant Hemmecke}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Most things are generically implemented as a default package in the
+category \code{QEtaIdealCategory}.
+
+The function \code{relationsIdealGenerators} computes $J^{(M)}$ as
+described in \cite[Chapter~7]{Hemmecke+Radu:EtaRelations:2018}.
+)endif
+
+)abbrev package QETAIH QEtaIdealHemmecke
+QEtaIdealHemmecke(C, L): Exports == Implementation where
+  C: EuclideanDomain
+  L: Join(UnivariateLaurentSeriesCategory C, QEtaAlgebra C)
+  Pol ==> Polynomial C
+  LPol ==> List Pol
+  Exports ==> QEtaIdealCategory(C, L)
+  Implementation ==> add
+    relationsIdealGenerators(mgens: List L): LPol ==
+        X ==> QEtaExtendedAlgebra(C, L, Pol);
+        QEAB ==> QEtaAlgebraBasis(C, X, QEtaExtendedComputation(C, L, X))
+        xreduce(x,t,bas) ==> reduce(x, t, bas)$QEtaReduction(C, X)
+        import from Pol
+
+        msyms: LSym := indexedSymbols("M", #mgens)$QAuxiliaryTools
+        xmgens: List X := [embed(x, m::Pol) for x in mgens for m in msyms]
+        xt: X := first xmgens
+        xzgens: List X := algebraBasis(xt, rest xmgens)$QEAB
+        -- Now we have the algebra basis together with how it relates to the
+        -- originally given elements.
+        vPrint("xzgens", xzgens)
+        -- Each of the original given elements must be representable in
+        -- the algebra basis.
+        xmpols: List X := [xreduce(xx, xt, xzgens) for xx in xmgens]
+        -- So this reduction should result in 0 in the first component
+        -- and a relation among the initially given elements.
+        vPrint("xmpols", xmpols)
+        -- Safety check
+        for x in xmpols | not zero? first x repeat
+            error "polynomialRelations: non-zero-reduction"
+
+        -- Also the products of the elements in the algebra basis
+        -- should be representable by a Q[t]-linear relation of the elements
+        -- in the algebra basis where t = first(xt).
+        -- We do the whole computation with the relations part attached and
+        -- thus obtain another set of relations among the intitial
+        -- elements.
+        xpgens: List X := empty() -- generators of the product relations
+        l: List X := xzgens -- don't modify xzgens
+        while not empty? l repeat
+            zi: X := first l
+            for zj in l repeat
+                p: X := xreduce(zi*zj, xt, xzgens)
+                --safety check
+                --assert(zero?(first p))
+                not zero? first p =>
+                    error "polynomialRelations: non-zero-product-reduction"
+                xpgens := cons(p, xpgens)
+            l := rest l
+
+        vPrint("xpgens", xpgens)
+
+        mpols: LPol := [second xx for xx in xmpols]
+        pgens: LPol := [second xx for xx in xpgens]
+
+        mpgens: LPol := concat(mpols, pgens)
+        -- Now we already have all the relations.
+        -- To make them look nicer, we can compute a degrevlex
+        -- Groebner basis. since we are actually not interested in a
+        -- Groebner basis, but rather in a set of generators of the
+        -- respective ideal, it is enough to return these generators.
+
+        vPrint("mpgens", mpgens)
+
+        -- We build in a safety check, ie., plug in the respective series
+        -- and check whether the result is zero.
+        fc(c: C): L == c::L
+        PE ==> PolynomialEvaluation(C, L)
+        vPrint("mysyms", msyms)
+        evalmpgens: List L := [eval(x, fc, msyms, mgens)$PE for x in mpgens]
+        vPrint("evalmpgens", evalmpgens)
+        vPrint("zerompgens", [zero? x for x in evalmpgens])
+        dim: P := qcoerce(#mgens)@P
+        -- There is no need to compute a Groebner basis.
+        -- mrels: LPol := groebner(dim, msyms, mpgens)
+        mrels: LPol := [x for x in mpgens|not zero? x]
+        vPrint("mrels", mrels)
+        vPrint("lenmrels", #mrels)
+        vPrint("totaldegmrels", [totalDegree x for x in mrels])
+        return mrels
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
