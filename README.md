@@ -42,7 +42,6 @@ and put
 ```
 PATH=SOMEDIR/install/bin:$PATH
 export PATH
-
 ```
 into your `.bashrc` in order to call `fricas` from anywhere on the
 bash prompt.
@@ -91,7 +90,7 @@ Compute eta relations of levels 4, 6, 8, and 9 into
 `etafiles/Hemmecke/etaRelations*.input`.
 
 ```
-make LEVELS='4 6 8 9 10' -j4 er
+make LEVELS='4 6 8 9 -j4 er
 ```
 
 ### Compute eta relations in a FriCAS session
