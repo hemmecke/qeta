@@ -1,0 +1,23 @@
+P==>PositiveInteger
+Z==>Integer
+Q==>Fraction Z
+OF==>OutputForm
+dbgPrint(a, b) ==> print([a::Symbol::OF,b::OF]$List(OF)::OF)
+
+cusps2(level: P): List List Q == (_
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions;_
+        dbgPrint("divs", divs);_
+        result: List List Q := empty();_
+        for c in divs repeat (_
+            dbgPrint("c", c);_
+            g: Z := gcd(c, (level exquo c)::Z);_
+            dbgPrint("g", g);_
+            sc: List Q := empty();_
+            for y in 1..g | one? gcd(y, g) repeat (_
+                dbgPrint("y", y);_
+                candidates := [a for a in 1..c | one? gcd(a, c) and zero? positiveRemainder(a-y, g)];_
+                dbgPrint("cand", candidates);_
+                if empty? candidates then error "no candidates";_
+                sc := cons((first candidates)/c, sc));_
+            result := cons(concat([c, g, eulerPhi g],sc), result));_
+        result)
