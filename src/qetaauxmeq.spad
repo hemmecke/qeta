@@ -1,0 +1,278 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Eta Quotients}
+\author{Ralf Hemmecke}
+\date{26-Jan-2018}
+\maketitle
+\begin{abstract}
+We compute a monoid basis for the set of $\eta$-quotients that are
+modular functions and have a (multiple) pole, if any, at infinity
+only.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Indroduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $N$ be a positive natural number and define a $\Gamma_0(N)$ as a
+subgroup of the special linear group $SL_2(\setZ)$ as follows.
+\begin{gather*}
+\Gamma_0(N) := \SetDef{  \begin{pmatrix}
+    a & b\\
+    c & d
+  \end{pmatrix} \in SL_2(\setZ)}{N|c}
+\end{gather*}
+As in \cite{Radu:RamanujanKolberg:2015}, let $K(N)$ denote the set of
+modular functions for $\Gamma_0(N)$ and $K^\infty(N)$ the set of
+modular functions have a (multiple) pole, if any, at infinity only.
+Furthermore, let $E(N)$ be the set of $\eta$-quotients that are
+modular functions, and let $E^\infty(N) := E(N)\cap K^\infty(N)$.
+
+This file contains code to compute a (finite) monoid basis for
+$E^\infty(N)$ in two variants.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us start with a few common macros.
+
+First of all for debugging.
+)endif
+OF==>OutputForm
+display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, _
+                                   ":="::Symbol::OF, y::OF]$List(OF)))
+
+)if LiterateDoc
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+MZ ==> Matrix Z -- will be a square matrix
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Auxiliary package to check modularity of $\eta$ quotients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Here we mainly deal with the sets $R^*(N)$ and $R^\infty(N)$ from
+\cite{Hemmecke+Radu:EtaRelations:2018}.
+
+The function \code{matrixLigozat} computes the respective matrix $A_N$
+whereas \code{rStarConditions} checks which of the conditions for an
+$r$ vector to correspond to a modular $\eta$-quotient is violated.
+
+width of a cusp \cite[Lemma~2.37]{Radu:PhD:2010} and
+\cite[Definition~2.9]{Radu:PhD:2010}
+
+
+)endif
+
+)abbrev package QAUXMEQ QAuxiliaryModularEtaQuotientPackage
+++ QModularEtaQuotientAux helps to do computations with
+++ eta quotients that are modular functions and have a pole only
+++ at infinity.
+QAuxiliaryModularEtaQuotientPackage: with
+    matrixLigozat: P -> MZ
+      ++ matrixLigozat(m) returns the (n,n) matrix with entries a(m,di,dj)
+      ++ given by Notation 3.2.6 in \cite{Ligozat:CourbesModulaires:1975}
+      ++ where di and dj run over all positive divisors of m.
+      ++ This matrix is A_N as described after Theorem 5.2 in
+      ++ \cite{Hemmecke+Radu:EtaRelations:2018}.
+    rStarConditions: (P, List Z) -> Z
+      ++ rStarConditions returns 0 if all conditions are fulfilled.
+      ++ Otherwise it returns a positive number in the range 1 to 4 that
+      ++ corresponds to the condition that is not met.
+    upsilon: (Z, Z, Z, Z) -> Z
+      ++ upsilon(a,b,c,d) returns z such that exp(2\pi*i*z/24) is a
+      ++ multiplier in the transformation of an eta function by the
+      ++ matrix [[a,b],[c,d]] from SL_2(Z).
+      ++ A definition can be found in \cite[Lemma~2.27]{Radu:PhD:2010}.
+    width: (P, Z) -> P
+      ++ width(m, c) returns the width of the cusp a/c for Gamma_0(m)
+      ++ and some a. The width is independent of a and given by
+      ++ m/gcd(c^2,m).
+      ++ \cite[Lemma~2.37]{Radu:PhD:2010}
+    splitMatrix: MZ -> Record(red: MZ, triang: MZ)
+      ++ splitMatrix(mat) splits mat according to
+      ++ \cide[Lemma~4.8]{Radu:PhD:2010}.
+    cusps2: P -> List Q
+      ++ According to
+      ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
+      ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
+      ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
+      ++ cusps(m) returns all the cusps for Gamma_0(m)$
+-------------------------------------------------------------------
+-- Temporarily exported
+-------------------------------------------------------------------
+    jacobiUpperStar: (Z, Z) -> Z
+    jacobiLowerStar: (Z, Z) -> Z
+
+  == add
+    -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
+    -- a(m, di, dj) here corresponds to a_m(di, dj) in
+    -- \cite[Notation 3.2.6]{Ligozat:CourbesModulaires:1975}.
+    a(m: Z, di: Z, dj: Z): Z == -- di==c, dj==delta
+        diprime: Z := (m exquo di)::Z
+        num: Z := diprime * (gcd(di, dj)^2)
+        den: Z := dj * gcd(diprime, di)
+        (num exquo den)::Z -- can prove that this cannot fail
+
+    matrixLigozat(m: P): MZ ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        n: N := # divs
+        mat: MZ := new(n, n, 0)
+        for i in 1..n for di in divs repeat -- do not include row for d.j=m
+            for j in 1..n for dj in divs repeat qsetelt!(mat, i, j, a(m, di, dj))
+        mat
+
+    -- These are the conditions (1) to (4) of
+    -- \cite{Hemmecke+Radu:EtaRelations:2018} that have to be fulfilled
+    -- by a vector r to lie in R^*(N).
+    rStarConditions(m: P, r: List Z): Z ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        rdivs: List Z := reverse divs
+        s: Z := 0
+        a: Z := 0
+        b: Z := 0
+        c: Factored Z := 1
+        for ri in r for d in divs for rd in rdivs repeat
+            s := s + ri
+            a := a + ri * d  -- sigma_\infty
+            b := b + ri * rd -- sigma_0
+            c := c * factor(d)^(qcoerce(abs(ri))@N)
+        -- Check conditions 1, 2, 3, 4.
+        not zero? s => 1
+        not zero? positiveRemainder(a, 24) => 2
+        not zero? positiveRemainder(b, 24) => 3
+        for fe in factors c repeat if odd?(fe.exponent) then return 4
+        return 0
+
+    jacobiLowerStar(c: Z, d: Z): Z == -- result either 1 or -1
+        zero? c => sign(d) -- note that d ~= 0 in this case.
+        s: Z := if c>0 then 1 else -1   -- s := (-1)^((sign(c) - 1)/2)
+        s    := if d>0 then s else -s   -- s := s * (-1)^((sign(d) - 1)/2)
+        s * jacobi(c, abs(d))$IntegerNumberTheoryFunctions
+
+    jacobiUpperStar(c: Z, d: Z): Z ==
+        zero? c => 1
+        jacobi(c, abs(d))$IntegerNumberTheoryFunctions
+
+    upsilon(a: Z, b: Z, c: Z, d: Z): Z ==
+        u: Z := c*(a+d)-b*d*(c^2-1)-3*c
+        v: Z := 3*(d-1)*(c-1)
+        odd? c =>
+            if jacobiUpperStar(d, c) > 0 then u else u+6
+        if jacobiLowerStar(c, d) > 0 then u-v else u-v+6
+
+)if false
+
+    splitMatrix(mat: MZ): Record(red: MZ, trian: MZ) ==
+        LLZ ==> List List Z
+        exgcd: EXGCD := extendedEuclidean(mat(1,1),mat(2,1))
+        g: Z := exgcd.generator
+        x: Z := exgcd.coef1
+        y: Z := exgcd.coef2
+        a: Z := (mat(1,1) exquo g) :: Z
+        c: Z := (mat(2,1) exquo g) :: Z
+        m1: LLZ := [[a, -y], [c, x]]
+        m2: LLZ := [[g, mat(1,2)*x + mat(2,2)*y], [0, (det(mat) exquo g)::Z]]
+        [matrix m1, matrix m2]
+)endif
+
+)if LiterateDoc
+
+We use \cite[Lemma~2.45]{Radu:PhD:2010} to compute the cusps of
+$\Gamma_0(N)$ as the set of all $\frac{a}{c}$ such that $c|N$ and
+$a\in X_c$.
+
+)endif
+
+)if false
+    cuspsphd(level: P): List Q ==
+        -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by c and
+        -- N replaced by level.
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        result: List Q := empty()
+        for c in divs repeat
+            -- Let's compute the list corresponding to $X_c$.
+            g := gcd(c, level/c)
+            X := [a for a in 1..g | one? gcd(a, c)]
+            s: XHashTable(P, List P) := empty()
+            sc: List P := [1]
+      ++ sc will have to contain exactly g entries.
+
+            for x in 2..g | gcd(x, g)=1 repeat
+                for a in 1..c | gcd(a, c)=1 repeat -- the candidates
+                    mustadd? := true
+                    for h in sc | zero? positiveRemainder?(a-h, g) repeat
+                       mustadd? := false
+                       break
+                    if mustadd? then sc := cons(a, sc)
+)endif
+
+)if false
+
+    cusps2(level: P): List List Q == (_
+        -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by c and
+        -- N replaced by level.
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions;_
+        result: List List Q := empty();_
+        for c in divs repeat (_
+            g: Z := gcd(c, (level exquo c)::Z);_
+            sc: List Q := empty();_
+            for y in 1..g | one? gcd(y, g) repeat (_
+                candidates := [a for a in 1..c | one? gcd(a, c) and zero? positiveRemainder(a-y, g)];_
+                if empty? candidates then error "no candidates";_
+                sc := cons((first candidates)/c, sc));_
+            result := cons(concat([c, g, eulerPhi g],sc), result));_
+        result)
+
+)endif
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
