@@ -91,6 +91,7 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 MZ ==> Matrix Z -- will be a square matrix
+EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,9 +142,15 @@ QAuxiliaryModularEtaQuotientPackage: with
     splitMatrix: MZ -> Record(red: MZ, triang: MZ)
       ++ splitMatrix(mat) splits mat according to
       ++ \cide[Lemma~4.8]{Radu:PhD:2010}.
-    cusps2: P -> List Q
+    cusps2: P -> List MZ
       ++ According to
       ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
+      ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
+      ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
+      ++ cusps(m) returns all the cusps for Gamma_0(m)$
+    cuspsphd: P -> List List Q
+      ++ According to
+      ++ \cite[Lemma~2.45]{Radu:PhD:2010},
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
       ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
       ++ cusps(m) returns all the cusps for Gamma_0(m)$
@@ -254,7 +261,7 @@ $a\in X_c$.
 )endif
 
 )if false
-    cuspsphd(level: P): List Q ==
+    cuspsphd(level: P): List List Q == (_
         -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by c and
         -- N replaced by level.
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
@@ -276,24 +283,24 @@ $a\in X_c$.
                     if mustadd? then sc := cons(a, sc)
 )endif
 
-)if false
-
-    cusps2(level: P): List List Q == (_
-        -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by c and
-        -- N replaced by level.
-        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions;_
-        result: List List Q := empty();_
-        for c in divs repeat (_
-            g: Z := gcd(c, (level exquo c)::Z);_
-            sc: List Q := empty();_
-            for y in 1..g | one? gcd(y, g) repeat (_
-                candidates := [a for a in 1..c | one? gcd(a, c) and zero? positiveRemainder(a-y, g)];_
-                if empty? candidates then error "no candidates";_
-                sc := cons((first candidates)/c, sc));_
-            result := cons(concat([c, g, eulerPhi g],sc), result));_
-        result)
-
-)endif
+    cusps2(level: P): List MZ ==
+        -- We use
+        -- \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016}
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        result: List MZ := empty()
+        for c in divs repeat
+            g: Z := gcd(c, (level exquo c)::Z)
+            for y in 1..g | one? gcd(y, g) repeat
+                candidates: List Z := [a for a in 1..c | _
+                    one? gcd(a, c) and zero? positiveRemainder(a-y, g)]
+                if empty? candidates then error "no candidates"
+                a: Z := first candidates
+                exgcd: EXGCD := extendedEuclidean(a, c)
+                d: Z := exgcd.coef1
+                b: Z := exgcd.coef2
+                m: MZ := matrix [[a, b], [c, d]]
+                result := cons(m, result)
+        result
 
 )if LiterateDoc
 \bibliography{qeta}
