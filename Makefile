@@ -36,7 +36,7 @@ BIN=${ROOT}/bin
 all: er
 SPADFILES=qfunct qetaqmev qetadom qetatool qetasamba qetaradu \
   qetaicat qetaih qeta3hdp qetair qetais qetasomos \
-  qetafun
+  qetaauxmeq qetafun
 
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
 PREREQS_SAGE=etagb.sage
