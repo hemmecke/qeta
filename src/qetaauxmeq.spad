@@ -290,17 +290,20 @@ $a\in X_c$.
         result: List MZ := empty()
         for c in divs repeat
             g: Z := gcd(c, (level exquo c)::Z)
+            candidates: List Z := [a for a in 1..c | one? gcd(a, c)]
             for y in 1..g | one? gcd(y, g) repeat
-                candidates: List Z := [a for a in 1..c | _
-                    one? gcd(a, c) and zero? positiveRemainder(a-y, g)]
-                if empty? candidates then error "no candidates"
-                a: Z := first candidates
+                a: Z := -1 -- not yet assigned
+                for t in candidates | zero? positiveRemainder(t-y, g) repeat
+                    a := t
+                    break
+                if a<0 then error "cusps: no candidates"
+                -- now compute other two matrix entries (b and d)
                 exgcd: EXGCD := extendedEuclidean(a, c)
                 d: Z := exgcd.coef1
-                b: Z := exgcd.coef2
+                b: Z := -exgcd.coef2
                 m: MZ := matrix [[a, b], [c, d]]
                 result := cons(m, result)
-        result
+        reverse! result
 
 )if LiterateDoc
 \bibliography{qeta}
