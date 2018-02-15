@@ -92,6 +92,7 @@ Z ==> Integer
 Q ==> Fraction Z
 MZ ==> Matrix Z -- will be a square matrix
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
+Rec ==> Record(red: MZ, triang: MZ)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -139,7 +140,7 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ and some a. The width is independent of a and given by
       ++ m/gcd(c^2,m).
       ++ \cite[Lemma~2.37]{Radu:PhD:2010}
-    splitMatrix: MZ -> Record(red: MZ, triang: MZ)
+    splitMatrix: MZ -> Rec
       ++ splitMatrix(mat) splits mat according to
       ++ \cide[Lemma~4.8]{Radu:PhD:2010}.
     cusps2: P -> List MZ
@@ -237,20 +238,19 @@ QAuxiliaryModularEtaQuotientPackage: with
 
     upsilon(m: MZ): Z == upsilon(m(1,1), m(1,2), m(2,1), m(2,2))
 
-)if false
-
-    splitMatrix(mat: MZ): Record(red: MZ, trian: MZ) ==
-        LLZ ==> List List Z
+    splitMatrix(mat: MZ): Rec ==
+        LZ ==> List Z
+        LLZ ==> List LZ
         exgcd: EXGCD := extendedEuclidean(mat(1,1),mat(2,1))
         g: Z := exgcd.generator
         x: Z := exgcd.coef1
         y: Z := exgcd.coef2
         a: Z := (mat(1,1) exquo g) :: Z
         c: Z := (mat(2,1) exquo g) :: Z
-        m1: LLZ := [[a, -y], [c, x]]
-        m2: LLZ := [[g, mat(1,2)*x + mat(2,2)*y], [0, (det(mat) exquo g)::Z]]
-        [matrix m1, matrix m2]
-)endif
+        u: Z := (determinant(mat) exquo g)::Z
+        m1: LLZ := [[a, -y], [c, x]]$LLZ
+        m2: LLZ := [[g, mat(1,2)*x + mat(2,2)*y], [0, u]]$LLZ
+        [matrix m1, matrix m2]$Rec
 
 )if LiterateDoc
 
