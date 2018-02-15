@@ -148,7 +148,7 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
       ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
       ++ cusps(m) returns all the cusps for Gamma_0(m)$
-    cuspsphd: P -> List List Q
+    cuspsphd: P -> List MZ
       ++ According to
       ++ \cite[Lemma~2.45]{Radu:PhD:2010},
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
@@ -260,28 +260,26 @@ $a\in X_c$.
 
 )endif
 
-)if false
-    cuspsphd(level: P): List List Q == (_
-        -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by c and
-        -- N replaced by level.
+    cuspsphd(level: P): List MZ ==
+        -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by
+        -- c and N replaced by level.
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        result: List Q := empty()
+        result: List MZ := empty()
         for c in divs repeat
             -- Let's compute the list corresponding to $X_c$.
-            g := gcd(c, level/c)
-            X := [a for a in 1..g | one? gcd(a, c)]
-            s: XHashTable(P, List P) := empty()
-            sc: List P := [1]
-      ++ sc will have to contain exactly g entries.
+            g: Z := gcd(c, (level exquo c)::Z)
+            for x in 1..g | one? gcd(x, g) repeat
+                a: Z := x
+                while not one? gcd(a, c) repeat a := a + g;
+                -- The variable a corresponds to an element of X_\delta
+                -- from \cite[Lemma~2.45]{Radu:PhD:2010}.
+                exgcd: EXGCD := extendedEuclidean(a, c)
+                d: Z := exgcd.coef1
+                b: Z := -exgcd.coef2
+                m: MZ := matrix [[a, b], [c, d]]
+                result := cons(m, result)
+        reverse! result
 
-            for x in 2..g | gcd(x, g)=1 repeat
-                for a in 1..c | gcd(a, c)=1 repeat -- the candidates
-                    mustadd? := true
-                    for h in sc | zero? positiveRemainder?(a-h, g) repeat
-                       mustadd? := false
-                       break
-                    if mustadd? then sc := cons(a, sc)
-)endif
 
     cusps2(level: P): List MZ ==
         -- We use
