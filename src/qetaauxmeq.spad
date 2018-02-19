@@ -140,9 +140,10 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ and some a. The width is independent of a and given by
       ++ m/gcd(c^2,m).
       ++ \cite[Lemma~2.37]{Radu:PhD:2010}
-    splitMatrix: MZ -> Rec
-      ++ splitMatrix(mat) splits mat according to
+    splitMatrix: (MZ, Z) -> Rec
+      ++ splitMatrix(mat, delta) splits mat according to
       ++ \cide[Lemma~4.8]{Radu:PhD:2010}.
+      ++ not quite: we split [[delta*a, delta*b], [c,d]].
     cusps2: P -> List MZ
       ++ According to
       ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
@@ -238,18 +239,22 @@ QAuxiliaryModularEtaQuotientPackage: with
 
     upsilon(m: MZ): Z == upsilon(m(1,1), m(1,2), m(2,1), m(2,2))
 
-    splitMatrix(mat: MZ): Rec ==
+    splitMatrix(mat: MZ, delta: Z): Rec ==
         LZ ==> List Z
         LLZ ==> List LZ
-        exgcd: EXGCD := extendedEuclidean(mat(1,1),mat(2,1))
+        a: Z := delta*mat(1,1)
+        b: Z := delta*mat(1,2)
+        c: Z := mat(2,1)
+        d: Z := mat(2,2)
+        exgcd: EXGCD := extendedEuclidean(a, c)
         g: Z := exgcd.generator
-        x: Z := exgcd.coef1
-        y: Z := exgcd.coef2
-        a: Z := (mat(1,1) exquo g) :: Z
-        c: Z := (mat(2,1) exquo g) :: Z
-        u: Z := (determinant(mat) exquo g)::Z
-        m1: LLZ := [[a, -y], [c, x]]$LLZ
-        m2: LLZ := [[g, mat(1,2)*x + mat(2,2)*y], [0, u]]$LLZ
+        d1: Z :=  exgcd.coef1
+        b1: Z := -exgcd.coef2
+        a1: Z := (a exquo g) :: Z
+        c1: Z := (c exquo g) :: Z
+        u: Z := (delta exquo g)::Z
+        m1: LLZ := [[a1, b1], [c1, d1]]$LLZ
+        m2: LLZ := [[g, b*d1 - d*b1], [0, u]]$LLZ
         [matrix m1, matrix m2]$Rec
 
 )if LiterateDoc
