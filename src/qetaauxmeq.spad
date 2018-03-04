@@ -135,7 +135,7 @@ QAuxiliaryModularEtaQuotientPackage: with
     upsilon: MZ -> Z
       ++ upsilon(m) for a matrix m from SL_2(Z) returns
       ++ upsilon(m(1,1), m(1,2), m(2,1), m(2,2)).
-    width: (P, Z) -> P
+    width: (P, Z) -> Z
       ++ width(m, c) returns the width of the cusp a/c for Gamma_0(m)
       ++ and some a. The width is independent of a and given by
       ++ m/gcd(c^2,m).
@@ -161,6 +161,7 @@ QAuxiliaryModularEtaQuotientPackage: with
 -------------------------------------------------------------------
     jacobiUpperStar: (Z, Z) -> Z
     jacobiLowerStar: (Z, Z) -> Z
+    vv: (P, P, MZ) -> Q
 
   == add
     -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
@@ -237,7 +238,9 @@ QAuxiliaryModularEtaQuotientPackage: with
         odd? c => if jacobiUpperStar(d, c) > 0 then r(u) else r(u+12)
         if jacobiLowerStar(c, d) > 0 then r(u-v) else r(u-v+12)
 
-    upsilon(m: MZ): Z == upsilon(m(1,1), m(1,2), m(2,1), m(2,2))
+    upsilon(mat: MZ): Z == upsilon(mat(1,1), mat(1,2), mat(2,1), mat(2,2))
+
+    width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
 
     splitMatrix(mat: MZ, delta: Z): Rec ==
         LZ ==> List Z
@@ -307,6 +310,13 @@ $a\in X_c$.
                 m: MZ := matrix [[a, b], [c, d]]
                 result := cons(m, result)
         reverse! result
+
+    vv(m: P, delta: P, mat: MZ): Q ==
+        c: Z := mat(2, 1)
+        h: Z := gcd(delta, c)
+        r: Rec := splitMatrix(mat, delta)
+        t := r.triang
+        width(m, mat(2,1)) * h * t(1, 2) / delta
 
 )if LiterateDoc
 \bibliography{qeta}
