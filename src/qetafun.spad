@@ -270,11 +270,44 @@ For the following definition see \cite[Lemma~2.37]{Radu:PhD:2010} and
   is called the \emph{width of $\gamma$ with respect to $\Gamma_0(N)$}.
 \end{Definition}
 
+
+\begin{Definition}
+  For any $c, \delta \in\Delta$, $r\in R(N)$ let us define
+  \begin{align}
+    a_N(c, \delta) &:= \frac{N/c}{\gcd(N/c, c)}
+                       \frac{\gcd(c,\delta)^2}{\delta},\notag\\
+    \ord_c^N(r) &:= \frac{1}{24}\sum_{\delta\in\Delta} a_N(c, \delta) \, r_\delta,
+    \label{eq:order-r}
+    \intertext{and}
+    g_r(\tau) &:= \prod_{\delta\in\Delta} \eta(\delta\tau)^{r_\delta}.
+    \label{eq:etaquotient}
+  \end{align}
+\end{Definition}
+
+With $\ord_\gamma^N$ as defined in \cite{Radu:RamanujanKolberg:2015},
+Theorem~23 of \cite{Radu:RamanujanKolberg:2015} turns into
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Theorem}\label{thm:order}
+  Let $\gamma =
+  \bigl(
+  \begin{smallmatrix}
+    a & b\\
+    c & d
+  \end{smallmatrix}
+  \bigr)
+  \in SL_2(\setZ)$ with $c\in\Delta$.
+  If $r \in R^*(N)$, then
+  $\ord_\gamma^N(g_r) = \ord_c^N(r)$.
+\end{Theorem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For a proof we refer to
+\cite[Proposition~3.2.8]{Ligozat:CourbesModulaires:1975}.
+
 We want to show that we can express $g_r(\gamma\tau)$ as a Laurent
-series in $x=q^{1/\omega_\gamma}$.
+series in $x:=q^{1/\omega_\gamma}$.
 
 Because of \eqref{eq:tau_delta}, we have
-\begin{align*}
+\begin{align}
   \exp(2\pi i \tau_\delta)
   &=
     \exp
@@ -284,7 +317,7 @@ Because of \eqref{eq:tau_delta}, we have
     \exp
     \left(2\pi i
     \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}
-    \right)\\
+    \right)\notag\\
   &=
     \exp
     \left(2\pi i
@@ -293,16 +326,17 @@ Because of \eqref{eq:tau_delta}, we have
     \exp
     \left(2\pi i
     \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}
-    \right)
-\end{align*}
+    \right)\label{eq:exp-tau_delta}
+\end{align}
 
-Let us show that $u := \frac{\omega_\gamma h_\delta^2}{\delta}$ is an integer.
+Let us show that $u_\delta := \frac{\omega_\gamma h_\delta^2}{\delta}$
+is an integer.
 
 If $p$ is a prime that divides $N$, \ie, $N=N'p^\alpha$ for some
 $\alpha>0$, and $\delta = \delta' p^m$, $c=c' p^k$ with
 $\gcd(p,N')=\gcd(p,\delta')=\gcd(p,c')=1$, then
 \begin{align*}
-  u
+  u_\delta
   &=
   \frac{N}{\gcd(c^2,N)} \frac{\gcd(\delta,c)^2}{\delta}\\
   &=
@@ -313,7 +347,7 @@ $\gcd(p,N')=\gcd(p,\delta')=\gcd(p,c')=1$, then
   \frac{N' \gcd(\delta', c')^2}{\gcd(c'^2, N') \delta'}
 \end{align*}
 If we can show that $e:=\alpha + 2 \min(m,k) - m - \min(2k,
-\alpha)\ge0$ then it follows $u\in\setN$.
+\alpha)\ge0$ then it follows $u_\delta\in\setN$.
 
 There are several cases to consider:
 \begin{itemize}
@@ -337,6 +371,93 @@ $\prod_{\delta\in\Delta} h_\delta^{r_\delta/2}$ to consider.
 According to Silviu's hint, we might need to use
 $\zeta := \exp\left(2\pi i \frac{\gcd(N,c)}{4N} \right)$.
 
+
+Let us investigate
+\begin{align}
+  \prod_{\delta\in\Delta}  \eta(\tau_\delta)^{r_\delta}
+  &=
+  \prod_{\delta\in\Delta}
+    \left(
+    \exp\left({\frac{\pi i\tau_\delta}{12}}\right)
+    \prod_{n=1}^{\infty}(1-q_\delta^n)
+    \right)^{r_\delta}\notag\\
+  &=
+  \prod_{\delta\in\Delta}
+    \left(
+    \exp\left({\frac{2 \pi i\tau_\delta}{24}}\right)
+    \right)^{r_\delta}
+    \cdot
+  \prod_{\delta\in\Delta}
+    \left(
+    \prod_{n=1}^{\infty}(1-q_\delta^n)
+    \right)^{r_\delta}\label{eq:eta-tau_delta-r_delta}
+\end{align}
+where $q_\delta=\exp(2 \pi i \tau_\delta)$.
+
+We express the series in terms of the ``canonical'' variable
+$x:=\exp(2 \pi i \tau/\omega_\gamma)$.
+
+Let
+$v_\delta := (\delta b d_\delta - d b_\delta)
+\frac{4N}{\lcm(\delta,c)}$. ((We use the definition
+$\zeta := \exp\left(2\pi i \frac{\gcd(N,c)}{4N} \right)$.))
+
+Because $\delta$ and $c$ are (positive) divisors of $N$, it follows
+$v_\delta \in \setZ$.
+
+Therefore, \eqref{eq:exp-tau_delta} turns into
+$q_\delta = \exp(2 \pi i \tau_\delta) = x^{u_\delta} \zeta^{v_\delta}$.
+
+It is clear that the second factor of \eqref{eq:eta-tau_delta-r_delta}
+is a Taylor series in $x$ with coefficients in $\setQ[\zeta]$.
+
+The first factor is
+\begin{gather*}
+  \prod_{\delta\in\Delta} (x^{u_\delta/24} \zeta^{v_\delta/24})^{r_\delta}.
+\end{gather*}
+
+For this to be a non-fractional power of $x$, we must have
+\begin{align*}
+  \sum_{\delta\in\Delta} u_\delta r_\delta
+  &=
+    \sum_{\delta\in\Delta} \frac{\omega_\gamma h_\delta^2}{\delta} r_\delta\\
+  &=
+    \sum_{\delta\in\Delta}
+    \frac{N}{\gcd(c^2, N)} \frac{\gcd(\delta,c)^2}{\delta} r_\delta\\
+  &=
+    \sum_{\delta\in\Delta}
+    \frac{\gcd(\delta, c)^2}{\gcd(c^2, N)} \frac{N r_\delta}{\delta}
+    \equiv 0\pmod{24}
+\end{align*}
+
+
+For this to be a non-fractional power of $x$, we must have
+\begin{align*}
+  \prod_{\delta\in\Delta}  \eta(\tau_\delta)^{r_\delta}
+  &=
+  \prod_{\delta\in\Delta}
+    x^{u_\delta/24} \zeta^{v_\delta/24}
+  \prod_{\delta\in\Delta}
+    \left(
+    \prod_{n=1}^{\infty}(1-q_\delta^n)
+    \right)^{r_\delta}\\
+  &=
+  \prod_{\delta\in\Delta}  \eta
+    \left(
+    \frac{h_\delta\tau+\delta b d_\delta-d b_\delta}{\delta/h_\delta}
+    \right)^{r_\delta}\\
+  &=
+  \prod_{\delta\in\Delta}  \eta
+    \left(
+    u_\delta\frac{\tau}{\omega_\gamma}
+    + \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}
+    \right)^{r_\delta}\\
+  &=
+    \left(
+    u_\delta\frac{\tau}{\omega_\gamma}
+    + \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}
+    \right)^{r_\delta}\\
+\end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
