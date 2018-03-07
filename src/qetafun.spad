@@ -21,6 +21,7 @@
 )if LiterateDoc
 \documentclass{article}
 \usepackage{qeta}
+\usepackage{showlabels}
 % Euler totient function
 \newcommand{\eulerphi}{\varphi}
 
@@ -97,6 +98,10 @@ For $\delta\in\Delta$ we consider the functions
 None of these functions is identically zero.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We define $R(N)$ to be the set of integer tuples
+$r = (r_{\delta_1}, \ldots,
+r_{\delta_n})\in \setZ^n$.
+
 By $R^*(N)$ we denote the subset of all tuples
 $r=(r_\delta)_{\delta\in\Delta}$ of $R(N)$ that fulfil the following
 conditions.
@@ -109,10 +114,6 @@ conditions.
 
 Note that $R^*(N)$ is an additive monoid. It even is an additive group.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
 
 Let's look at the transformation of the $\eta$-function (see
 \cite[Lemma~2.27]{Radu:PhD:2010}.
@@ -218,69 +219,28 @@ Furthermore,
 \end{align*}
 
 Thus, we have
-\begin{align*}
+\begin{gather}
 \eta_\delta(\gamma\tau)
-  &=
-    \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)
-    \,
-    \left(\frac{h_\delta}{\delta}(c \tau+d)\right)^{1/2}
-    \,
-    \eta(\tau_\delta).
-\end{align*}
+=
+\upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)
+\,
+\left(\frac{h_\delta}{\delta}(c \tau+d)\right)^{1/2}
+\,
+\eta(\tau_\delta).
+\label{eq:eta_delta(gamma*tau)}
+\end{gather}
 
-Let
-\begin{align*}
-    g_r(\tau) &:= \prod_{\delta\in\Delta} \eta_\delta(\tau)^{r_\delta}.
-\end{align*}
-Then for $r \in R^*(N)$ we have
-\begin{align*}
-  g_r(\gamma \tau)
-  &=
-    \prod_{\delta\in\Delta}  \left(
-    \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)
-    \,
-    \left(\frac{h_\delta}{\delta}(c \tau+d)\right)^{1/2}
-    \,
-    \eta(\tau_\delta)\right)^{r_\delta}
-\end{align*}
-
-Because of \eqref{eq:sum=0} and \eqref{eq:productsquare} we can write
-\begin{align*}
-  g_r(\gamma \tau)
-  &=
-    \prod_{\delta\in\Delta} h_\delta^{r_\delta/2}
-    \,
-    \biggl(\prod_{\delta\in\Delta} \delta^{r_\delta}\biggr)^{-1/2}
-    \prod_{\delta\in\Delta}  \left(
-    \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)
-    \,
-    \eta(\tau_\delta)\right)^{r_\delta}\\
-\end{align*}
-
-For the following definition see \cite[Lemma~2.37]{Radu:PhD:2010} and
-\cite[Definition~2.9]{Radu:PhD:2010}.
-
-\begin{Definition}
-  Let
-  $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)
-  \in SL_2(\setZ)$ and $N$ be a positive integer. Then
-  \begin{gather}
-    \omega_\gamma = \frac{N}{\gcd(c^2, N)}
-  \end{gather}
-  is called the \emph{width of $\gamma$ with respect to $\Gamma_0(N)$}.
-\end{Definition}
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}
   For any $c, \delta \in\Delta$, $r\in R(N)$ let us define
   \begin{align}
-    a_N(c, \delta) &:= \frac{N/c}{\gcd(N/c, c)}
+    a_N(c, \delta) &:= \frac{N}{\gcd(N, c^2)}
                        \frac{\gcd(c,\delta)^2}{\delta},\notag\\
     \ord_c^N(r) &:= \frac{1}{24}\sum_{\delta\in\Delta} a_N(c, \delta) \, r_\delta,
     \label{eq:order-r}
     \intertext{and}
     g_r(\tau) &:= \prod_{\delta\in\Delta} \eta(\delta\tau)^{r_\delta}.
-    \label{eq:etaquotient}
+    \label{eq:g_r(tau)}
   \end{align}
 \end{Definition}
 
@@ -303,12 +263,74 @@ Theorem~23 of \cite{Radu:RamanujanKolberg:2015} turns into
 For a proof we refer to
 \cite[Proposition~3.2.8]{Ligozat:CourbesModulaires:1975}.
 
-We want to show that we can express $g_r(\gamma\tau)$ as a Laurent
-series in $x:=q^{1/\omega_\gamma}$.
+For the following definition see \cite[Lemma~2.37]{Radu:PhD:2010} and
+\cite[Definition~2.9]{Radu:PhD:2010}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\label{def:width}
+  Let
+  $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)
+  \in SL_2(\setZ)$ and $N$ be a positive integer. Then
+  \begin{gather}
+    \omega_\gamma = \frac{N}{\gcd(c^2, N)}
+  \end{gather}
+  is called the \emph{width of $\gamma$ with respect to $\Gamma_0(N)$}.
+\end{Definition}
+
+For the following let us fix $r \in R^*(N)$ and
+$\gamma =
+  \bigl(
+  \begin{smallmatrix}
+    a & b\\
+    c & d
+  \end{smallmatrix}
+  \bigr)
+  \in SL_2(\setZ)$ with $c \in \Delta$.
+
+From \eqref{eq:eta_delta(gamma*tau)} follows
+\begin{align}
+  g_r(\gamma \tau)
+  &=
+  \prod_{\delta\in\Delta}  \left(
+    \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)
+    \,
+    \left(\frac{h_\delta}{\delta}(c \tau+d)\right)^{1/2}
+    \,
+    \eta(\tau_\delta)\right)^{r_\delta},\notag\\
+  %
+  \intertext{and because of \eqref{eq:sum=0} and
+    \eqref{eq:productsquare}, we can write}
+  g_r(\gamma \tau)
+  &=
+  \prod_{\delta\in\Delta} h_\delta^{r_\delta/2}
+  \,
+  \biggl(\prod_{\delta\in\Delta} \delta^{r_\delta}\biggr)^{-1/2}
+  \prod_{\delta\in\Delta}
+    \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)^{r_\delta}
+  \prod_{\delta\in\Delta} \eta(\tau_\delta)^{r_\delta}
+  \label{eq:g_r(gamma*tau)}
+\end{align}
+
+
+For
+$\gamma =
+\bigl(
+\begin{smallmatrix}
+  a & b\\
+  c & d
+\end{smallmatrix}
+\bigr) \in SL_2(\setZ)$
+we want to show that we can expand $g_r(\gamma\tau)$ as a Laurent
+series in $x:=q^{1/\omega_\gamma}=\exp(2\pi i \tau/\omega_\gamma)$
+with coefficients from $\setQ(\xi)$ where
+$\xi := \exp\left(\frac{2\pi i c}{24N} \right)$.
+
+Since we are only interested in expansions at the cusps, we can assume
+$0<c\in\Delta$.
 
 Because of \eqref{eq:tau_delta}, we have
 \begin{align}
-  \exp(2\pi i \tau_\delta)
+  q_\delta = \exp(2\pi i \tau_\delta)
   &=
     \exp
     \left(2\pi i
@@ -321,17 +343,27 @@ Because of \eqref{eq:tau_delta}, we have
   &=
     \exp
     \left(2\pi i
-    \frac{\omega_\gamma h_\delta^2}{\delta} \frac{\tau}{\omega_\gamma}
+    \frac{\tau}{\omega_\gamma}
+    \cdot
+    \frac{\omega_\gamma h_\delta^2}{\delta}
     \right)
     \exp
     \left(2\pi i
-    \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}
-    \right)\label{eq:exp-tau_delta}
+    \frac{c}{4N}
+    \cdot
+    \frac{4 N \gcd(\delta,c)(\delta b d_\delta-d b_\delta)}{c \, \delta}
+    \right)\notag\\
+  &= x^{u_\delta} \xi^{24 v_\delta}
+\label{eq:q_delta}
 \end{align}
+for $u_\delta := \frac{\omega_\gamma h_\delta^2}{\delta}$ and
+$v_\delta := (\delta b d_\delta - d b_\delta) \frac{N}{\lcm(\delta,c)}$.
+Clearly, $v_\delta\in \setZ$.
 
-Let us show that $u_\delta := \frac{\omega_\gamma h_\delta^2}{\delta}$
-is an integer.
-
+\begin{Lemma}
+  $u_\delta \in \setN$.
+\end{Lemma}
+\begin{proof}
 If $p$ is a prime that divides $N$, \ie, $N=N'p^\alpha$ for some
 $\alpha>0$, and $\delta = \delta' p^m$, $c=c' p^k$ with
 $\gcd(p,N')=\gcd(p,\delta')=\gcd(p,c')=1$, then
@@ -347,32 +379,24 @@ $\gcd(p,N')=\gcd(p,\delta')=\gcd(p,c')=1$, then
   \frac{N' \gcd(\delta', c')^2}{\gcd(c'^2, N') \delta'}
 \end{align*}
 If we can show that $e:=\alpha + 2 \min(m,k) - m - \min(2k,
-\alpha)\ge0$ then it follows $u_\delta\in\setN$.
+\alpha)\ge0$ then $u_\delta\in\setN$ follows by repeating the above
+process for every prime divisor of $N$.
 
 There are several cases to consider:
 \begin{itemize}
-\item $m\le k \le \alpha$, $2k \le \alpha$. Then
-  $e=\alpha+2m-m-2k=(\alpha-2k)+m\ge0$
-\item $m\le k \le \alpha < 2k$. Then
-  $e=\alpha+2m-m-\alpha=m\ge0$
+\item $0\le m\le k \le \alpha$, $2k \le \alpha$. Then
+  $e=\alpha+2m-m-2k=(\alpha-2k)+m\ge0$.
+\item $0\le m\le k \le \alpha < 2k$. Then
+  $e=\alpha+2m-m-\alpha=m\ge0$.
 
-\item $k\le m \le \alpha$, $2k \le \alpha$. Then
-  $e=\alpha+2k-m-2k=\alpha-m\ge0$
-\item $k\le m \le \alpha < 2k$. Then
-  $e=\alpha+2k-m-\alpha=2k-m\ge0$
+\item $0\le k\le m \le \alpha$, $2k \le \alpha$. Then
+  $e=\alpha+2k-m-2k=\alpha-m\ge0$.
+\item $0\le k\le m \le \alpha < 2k$. Then
+  $e=\alpha+2k-m-\alpha=2k-m\ge0$.
 \end{itemize}
+\end{proof}
 
-Let $\zeta := \exp\left(2\pi i \frac{\gcd(N,c)}{N} \right)$, then
-$g_r(\gamma\tau)$ is a Laurent series in $x$ with coefficients in
-$Q(\zeta)$.
-
-WAIT... There is still to consider the upsilon and the
-$\prod_{\delta\in\Delta} h_\delta^{r_\delta/2}$ to consider.
-According to Silviu's hint, we might need to use
-$\zeta := \exp\left(2\pi i \frac{\gcd(N,c)}{4N} \right)$.
-
-
-Let us investigate
+Let us investigate the last product in \eqref{eq:g_r(gamma*tau)}.
 \begin{align}
   \prod_{\delta\in\Delta}  \eta(\tau_\delta)^{r_\delta}
   &=
@@ -387,77 +411,56 @@ Let us investigate
     \exp\left({\frac{2 \pi i\tau_\delta}{24}}\right)
     \right)^{r_\delta}
     \cdot
+  \prod_{\delta\in\Delta}\prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}\notag\\
+  &=
+  \prod_{\delta\in\Delta} (x^{u_\delta/24} \xi^{v_\delta})^{r_\delta}
+    \cdot
+  \prod_{\delta\in\Delta}\prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}\notag\\
+  &=
+  \prod_{\delta\in\Delta} x^{r_\delta u_\delta/24}
+  \cdot
+  \prod_{\delta\in\Delta} \xi^{r_\delta v_\delta}
+  \cdot
+  \prod_{\delta\in\Delta}\prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}\notag\\
+  &=
+  x^{\ord^N_c(r)}
+  \cdot
+  \prod_{\delta\in\Delta} \xi^{r_\delta v_\delta}
+  \cdot
   \prod_{\delta\in\Delta}
-    \left(
-    \prod_{n=1}^{\infty}(1-q_\delta^n)
-    \right)^{r_\delta}\label{eq:eta-tau_delta-r_delta}
+    \prod_{n=1}^{\infty}(1-x^{n u_\delta} \xi^{24 n
+    v_\delta})^{r_\delta}.
+  \label{eq:prod(eta(tau_delta)^r_delta)}
 \end{align}
-where $q_\delta=\exp(2 \pi i \tau_\delta)$.
+For the last equality, we have used \eqref{eq:order-r} and the fact
+that $u_\delta=a_N(c,\delta)$.
 
-We express the series in terms of the ``canonical'' variable
-$x:=\exp(2 \pi i \tau/\omega_\gamma)$.
-
-Let
-$v_\delta := (\delta b d_\delta - d b_\delta)
-\frac{4N}{\lcm(\delta,c)}$. ((We use the definition
-$\zeta := \exp\left(2\pi i \frac{\gcd(N,c)}{4N} \right)$.))
-
-Because $\delta$ and $c$ are (positive) divisors of $N$, it follows
-$v_\delta \in \setZ$.
-
-Therefore, \eqref{eq:exp-tau_delta} turns into
-$q_\delta = \exp(2 \pi i \tau_\delta) = x^{u_\delta} \zeta^{v_\delta}$.
-
-It is clear that the second factor of \eqref{eq:eta-tau_delta-r_delta}
-is a Taylor series in $x$ with coefficients in $\setQ[\zeta]$.
-
-The first factor is
-\begin{gather*}
-  \prod_{\delta\in\Delta} (x^{u_\delta/24} \zeta^{v_\delta/24})^{r_\delta}.
-\end{gather*}
-
-For this to be a non-fractional power of $x$, we must have
-\begin{align*}
-  \sum_{\delta\in\Delta} u_\delta r_\delta
+Now, putting \eqref{eq:eta_delta(gamma*tau)} and
+\eqref{eq:prod(eta(tau_delta)^r_delta)} together gives
+\begin{align}
+  g_r(\gamma \tau)
   &=
-    \sum_{\delta\in\Delta} \frac{\omega_\gamma h_\delta^2}{\delta} r_\delta\\
-  &=
-    \sum_{\delta\in\Delta}
-    \frac{N}{\gcd(c^2, N)} \frac{\gcd(\delta,c)^2}{\delta} r_\delta\\
-  &=
-    \sum_{\delta\in\Delta}
-    \frac{\gcd(\delta, c)^2}{\gcd(c^2, N)} \frac{N r_\delta}{\delta}
-    \equiv 0\pmod{24}
-\end{align*}
-
-
-For this to be a non-fractional power of $x$, we must have
-\begin{align*}
-  \prod_{\delta\in\Delta}  \eta(\tau_\delta)^{r_\delta}
-  &=
+  \prod_{\delta\in\Delta} h_\delta^{r_\delta/2}
+  \,
+  \biggl(\prod_{\delta\in\Delta} \delta^{r_\delta}\biggr)^{-1/2}
   \prod_{\delta\in\Delta}
-    x^{u_\delta/24} \zeta^{v_\delta/24}
+    \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)^{r_\delta}
+  \prod_{\delta\in\Delta} \eta(\tau_\delta)^{r_\delta}\notag\\
+  &=
+  \prod_{\delta\in\Delta} h_\delta^{r_\delta/2}
+  \,
+  \biggl(\prod_{\delta\in\Delta} \delta^{r_\delta}\biggr)^{-1/2}
   \prod_{\delta\in\Delta}
-    \left(
-    \prod_{n=1}^{\infty}(1-q_\delta^n)
-    \right)^{r_\delta}\\
-  &=
-  \prod_{\delta\in\Delta}  \eta
-    \left(
-    \frac{h_\delta\tau+\delta b d_\delta-d b_\delta}{\delta/h_\delta}
-    \right)^{r_\delta}\\
-  &=
-  \prod_{\delta\in\Delta}  \eta
-    \left(
-    u_\delta\frac{\tau}{\omega_\gamma}
-    + \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}
-    \right)^{r_\delta}\\
-  &=
-    \left(
-    u_\delta\frac{\tau}{\omega_\gamma}
-    + \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}
-    \right)^{r_\delta}\\
-\end{align*}
+    \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)^{r_\delta}
+  \cdot
+  \prod_{\delta\in\Delta} \xi^{r_\delta v_\delta}
+  \cdot
+  x^{\ord^N_c(r)}
+  \prod_{\delta\in\Delta}
+    \prod_{n=1}^{\infty}(1-x^{n u_\delta} \xi^{24 n v_\delta})^{r_\delta}.
+  \label{eq:g_r(gamma*tau)2}
+\end{align}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -501,7 +504,6 @@ ModularEtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
             )
     eta(n: P): % == per(n::Rep)
     coerce(x: %): OutputForm == rep(x)::OutputForm
-
 
 )if LiterateDoc
 \bibliography{qeta}
