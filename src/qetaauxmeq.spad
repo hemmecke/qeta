@@ -144,13 +144,13 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ splitMatrix(mat, delta) splits mat according to
       ++ \cide[Lemma~4.8]{Radu:PhD:2010}.
       ++ not quite: we split [[delta*a, delta*b], [c,d]].
-    cusps2: P -> List MZ
+    cusps2: P -> List Q
       ++ According to
       ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
       ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
       ++ cusps(m) returns all the cusps for Gamma_0(m)$
-    cuspsphd: P -> List MZ
+    cusps: P -> List Q
       ++ According to
       ++ \cite[Lemma~2.45]{Radu:PhD:2010},
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
@@ -180,6 +180,8 @@ QAuxiliaryModularEtaQuotientPackage: with
         for i in 1..n for di in divs repeat -- do not include row for d.j=m
             for j in 1..n for dj in divs repeat qsetelt!(mat, i, j, a(m, di, dj))
         mat
+
+--    order(r: List Z, c: Z)
 
     -- These are the conditions (1) to (4) of
     -- \cite{Hemmecke+Radu:EtaRelations:2018} that have to be fulfilled
@@ -218,7 +220,7 @@ QAuxiliaryModularEtaQuotientPackage: with
         j: Z := jacobi(c, abs(d))$IntegerNumberTheoryFunctions
         if c>0 or d>0 then j else -j -- c=0 or d=0 does not happen
 
-    jacobiUpperStar(c: Z, d: Z): Z ==
+    jacobiUpperStar(c: Z, d: Z): Z == -- result either 1 or -1
         --assert(one? gcd(c,d))
         --aaawer(odd? d)
         -- See \cite[Def.~2.26]{Radu:PhD:2010}.
@@ -267,12 +269,16 @@ $\Gamma_0(N)$ as the set of all $\frac{a}{c}$ such that $c|N$ and
 $a\in X_c$.
 
 )endif
+    smallerCusp(x: Q, y: Q): Boolean ==
+      denom x < denom y => true
+      denom x > denom y => false
+      numer x < numer y
 
-    cuspsphd(level: P): List MZ ==
+    cusps(level: P): List Q ==
         -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by
         -- c and N replaced by level.
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        result: List MZ := empty()
+        result: List Q := empty()
         for c in divs repeat
             -- Let's compute the list corresponding to $X_c$.
             g: Z := gcd(c, (level exquo c)::Z)
@@ -281,19 +287,19 @@ $a\in X_c$.
                 while not one? gcd(a, c) repeat a := a + g;
                 -- The variable a corresponds to an element of X_\delta
                 -- from \cite[Lemma~2.45]{Radu:PhD:2010}.
-                exgcd: EXGCD := extendedEuclidean(a, c)
-                d: Z := exgcd.coef1
-                b: Z := -exgcd.coef2
-                m: MZ := matrix [[a, b], [c, d]]
-                result := cons(m, result)
-        reverse! result
+--                exgcd: EXGCD := extendedEuclidean(a, c)
+--                d: Z := exgcd.coef1
+--                b: Z := -exgcd.coef2
+
+                result := cons(a/c, result)
+        sort!(smallerCusp, result)
 
 
-    cusps2(level: P): List MZ ==
+    cusps2(level: P): List Q ==
         -- We use
         -- \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016}
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        result: List MZ := empty()
+        result: List Q := empty()
         for c in divs repeat
             g: Z := gcd(c, (level exquo c)::Z)
             candidates: List Z := [a for a in 1..c | one? gcd(a, c)]
@@ -304,12 +310,12 @@ $a\in X_c$.
                     break
                 if a<0 then error "cusps: no candidates"
                 -- now compute other two matrix entries (b and d)
-                exgcd: EXGCD := extendedEuclidean(a, c)
-                d: Z := exgcd.coef1
-                b: Z := -exgcd.coef2
-                m: MZ := matrix [[a, b], [c, d]]
-                result := cons(m, result)
-        reverse! result
+--                exgcd: EXGCD := extendedEuclidean(a, c)
+--                d: Z := exgcd.coef1
+--                b: Z := -exgcd.coef2
+--                m: MZ := matrix [[a, b], [c, d]]
+                result := cons(a/c, result)
+        sort!(smallerCusp, result)
 
     vv(m: P, delta: P, mat: MZ): Q ==
         c: Z := mat(2, 1)
