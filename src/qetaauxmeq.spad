@@ -140,10 +140,6 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ and some a. The width is independent of a and given by
       ++ m/gcd(c^2,m).
       ++ \cite[Lemma~2.37]{Radu:PhD:2010}
-    splitMatrix: (MZ, Z) -> Rec
-      ++ splitMatrix(mat, delta) splits mat according to
-      ++ \cide[Lemma~4.8]{Radu:PhD:2010}.
-      ++ not quite: we split [[delta*a, delta*b], [c,d]].
     cusps2: P -> List Q
       ++ According to
       ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
@@ -156,14 +152,34 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
       ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
       ++ cusps(m) returns all the cusps for Gamma_0(m)$
+    splitMatrix: (MZ, Z) -> Rec
+      ++ splitMatrix(mat, delta) returns a record rec that contains
+      ++ two matrices rec.red=m1 and rec.triang=m2 such that mat=m1*m2
+      ++ according to \cide[Lemma~4.8]{Radu:PhD:2010}, but in a variation
+      ++ as described in qetafun.spad, i.e., such that 0<=m2(1,2)<delta/g
+      ++ where g = gcd(mat(1,1), mat(2,1)).
+    cuspToMatrix: (P, Q) -> MZ
+      ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]] such
+      ++ that splitMatrix(gamma, m) returns two matrices [m1, m2] with
+      ++ m1*m2 = [[m*a, c], m*b, d]] and m1 being in SL_2(Z) and m2 being
+      ++ a triangular matrix with 0 <= m2(1,2) < m/c.
 -------------------------------------------------------------------
 -- Temporarily exported
 -------------------------------------------------------------------
     jacobiUpperStar: (Z, Z) -> Z
     jacobiLowerStar: (Z, Z) -> Z
     vv: (P, P, MZ) -> Q
+    coprimePart: (Z, Z) -> Z
 
   == add
+    -- Auxiliary functions
+    coprimePart(n: Z, c: Z): Z ==
+       -- coPrime(n, c) splits n into u*v such that gcd(u,c)=1 and returns u.
+       -- We assume that all input numbers are positive.
+       u := n
+       while (g := gcd(u, c)) > 1 repeat u := (u exquo g)::Z
+       u
+
     -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
     -- a(m, di, dj) here corresponds to a_m(di, dj) in
     -- \cite[Notation 3.2.6]{Ligozat:CourbesModulaires:1975}.
@@ -247,20 +263,43 @@ QAuxiliaryModularEtaQuotientPackage: with
     splitMatrix(mat: MZ, delta: Z): Rec ==
         LZ ==> List Z
         LLZ ==> List LZ
-        a: Z := delta*mat(1,1)
-        b: Z := delta*mat(1,2)
+        a: Z := mat(1,1) * delta
+        b: Z := mat(1,2) * delta
         c: Z := mat(2,1)
         d: Z := mat(2,2)
         exgcd: EXGCD := extendedEuclidean(a, c)
         g: Z := exgcd.generator
-        d1: Z :=  exgcd.coef1
-        b1: Z := -exgcd.coef2
+        d0: Z :=  exgcd.coef1 -- initial value for d1
+        b0: Z := -exgcd.coef2 -- initial value for b1
         a1: Z := (a exquo g) :: Z
         c1: Z := (c exquo g) :: Z
-        u: Z := (delta exquo g)::Z
-        m1: LLZ := [[a1, b1], [c1, d1]]$LLZ
-        m2: LLZ := [[g, b*d1 - d*b1], [0, u]]$LLZ
-        [matrix m1, matrix m2]$Rec
+        a2: Z := g
+        d2: Z := (delta exquo g)::Z
+        -- Now try to find s such that 0 <= b*d1 - d*b1 - s*d2 < d2.
+        b2init: Z := b*d0 - d*b0
+        b2: Z := positiveRemainder(b2init, d2)
+        s: Z := ((b2init - b2) exquo d2) :: Z
+        b1: Z := b0 + s * a1
+        d1: Z := d0 + s * c1
+        m1: MZ := matrix([[a1, b1], [c1, d1]]$LLZ)
+        m2: MZ := matrix([[g, b2], [0, d2]]$LLZ)
+        [m1, m2]$Rec
+
+    cuspToMatrix(m: P, cusp: Q): MZ ==
+        a: Z := numer cusp
+        c: Z := denom cusp
+        exgcd: EXGCD := extendedEuclidean(a, c)
+        g: Z := exgcd.generator
+        dprime: Z :=  exgcd.coef1
+        -- bprime: Z := -exgcd.coef2 -- ((not needed ))
+        mc: Z := (m exquo c) :: Z
+        u: Z := coprimePart(mc, c)
+        -- v: Z := (mc exquo u) :: Z -- ((not meeded here))
+        t: Z := mulmod(dprime, invmod(u, c), c)
+        d: Z := t*u
+        -- s: Z := ((t*u - dprime) exquo c) :: Z
+        b := ((a*d -1) exquo c) :: Z -- instead of s we use that det=1
+        matrix [[a, b], [c, d]]
 
 )if LiterateDoc
 
