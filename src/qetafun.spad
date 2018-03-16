@@ -161,12 +161,33 @@ Therefore
 Note that $h_\delta=\gcd(\delta, c)$, because $\gcd(a,c)=1$ and,
 furthermore,
 
-\begin{align*}
+\begin{align}
 \begin{pmatrix}a\delta&b\delta\\c&d\end{pmatrix}
 &=\begin{pmatrix}a_\delta&b_\delta\\c_\delta&d_\delta\end{pmatrix}
   \begin{pmatrix}h_\delta&\delta b d_\delta-d b_\delta\\
                  0      &\delta / h_\delta\end{pmatrix}.
-\end{align*}
+\label{eq:naive-matrix-split}
+\end{align}
+Note that for any integer $s$ whe have:
+\begin{align}
+\begin{pmatrix}a\delta&b\delta\\c&d\end{pmatrix}
+&=\begin{pmatrix}a_\delta&b_\delta\\c_\delta&d_\delta\end{pmatrix}
+  \begin{pmatrix}1& s\\0&1\end{pmatrix}
+  \begin{pmatrix}1&-s\\0&1\end{pmatrix}
+  \begin{pmatrix}
+    h_\delta&\delta b d_\delta-d b_\delta\\
+    0      &\delta / h_\delta\end{pmatrix}
+  \\
+&=
+  \begin{pmatrix}
+    a_\delta&b_\delta + a_\delta s\\
+    c_\delta&d_\delta + c_\delta s
+  \end{pmatrix}
+  \begin{pmatrix}h_\delta&\delta b d_\delta-d b_\delta-s \delta / h_\delta\\
+                 0      &\delta / h_\delta\end{pmatrix}.
+\end{align}
+Therefore, we can choose $b_\delta$ and $d_\delta$ in such a way that
+$0 \le \delta b d_\delta-d b_\delta < \delta/h_\delta$.
 
 If we set
 \begin{gather}
@@ -276,6 +297,7 @@ For the following definition see \cite[Lemma~2.37]{Radu:PhD:2010} and
   \end{gather}
   is called the \emph{width of $\gamma$ with respect to $\Gamma_0(N)$}.
 \end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 For the following let us fix $r \in R^*(N)$ and
 $\gamma =
@@ -349,9 +371,9 @@ Because of \eqref{eq:tau_delta}, we have
     \right)
     \exp
     \left(2\pi i
-    \frac{c}{4N}
+    \frac{c}{24N}
     \cdot
-    \frac{4 N \gcd(\delta,c)(\delta b d_\delta-d b_\delta)}{c \, \delta}
+    \frac{24 N \gcd(\delta,c)(\delta b d_\delta-d b_\delta)}{c \, \delta}
     \right)\notag\\
   &= x^{u_\delta} \xi^{24 v_\delta}
 \label{eq:q_delta}
@@ -360,9 +382,11 @@ for $u_\delta := \frac{\omega_\gamma h_\delta^2}{\delta}$ and
 $v_\delta := (\delta b d_\delta - d b_\delta) \frac{N}{\lcm(\delta,c)}$.
 Clearly, $v_\delta\in \setZ$.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Lemma}
   $u_\delta \in \setN$.
 \end{Lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{proof}
 If $p$ is a prime that divides $N$, \ie, $N=N'p^\alpha$ for some
 $\alpha>0$, and $\delta = \delta' p^m$, $c=c' p^k$ with
@@ -395,6 +419,7 @@ There are several cases to consider:
   $e=\alpha+2k-m-\alpha=2k-m\ge0$.
 \end{itemize}
 \end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Let us investigate the last product in \eqref{eq:g_r(gamma*tau)}.
 \begin{align}
@@ -460,6 +485,125 @@ Now, putting \eqref{eq:eta_delta(gamma*tau)} and
     \prod_{n=1}^{\infty}(1-x^{n u_\delta} \xi^{24 n v_\delta})^{r_\delta}.
   \label{eq:g_r(gamma*tau)2}
 \end{align}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Root of unity reduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Note that any modular function (in particular $g_r$) can be expressed
+as a rational function $f$ in $j$ and $j_N$ where
+$j_N(\tau):=j(N\tau)$ and $j$ is Klein's $j$-invariant, \ie,
+$g_r(\tau)=f(j, j_N)(\tau) := f(j(\tau), j(N\tau))$.
+
+Let $\frac{a}{c}$ be a cusp of $\Gamma_0(N)$.
+%
+We can choose $b$ and $d$ such that
+%
+$\gamma := \bigl(
+\begin{smallmatrix}
+  a & b\\
+  c & d
+\end{smallmatrix}
+\bigr) \in SL_2(\setZ)$ and $\gamma\infty=\frac{a}{c}$.
+%
+Klein's $j$-function is invariant under any modular transformation.
+%
+Let us consider the transformation of $j_N$ by $\gamma$.
+%
+According to \eqref{eq:tau_delta} for $\delta=N$, $j_N(\gamma\tau)$
+can be expanded into a Laurent series in
+$x=q^{1/\omega_\gamma}=\exp(2\pi i \tau/\omega_\gamma)$ with
+coefficients from $\setQ(\xi)$ where $\xi$ is a $\frac{N}{c}$-th root
+of unity.
+%
+Since there is some freedom to choose such $b$ and $d$, we show in the
+following, how we can obtain an expansion of $j_N(\gamma\tau)$ and
+therefore (via $f$) an expansion $g_r(\gamma\tau)$ into a Laurent
+series in $x$ with coefficients in $\setQ(\xi)$ where $\xi$ is a
+$v$-th root of unity and $1 \leq v \le N/c$ and $v<N/c$ if $c<N$.
+
+Let
+$\gamma' = \bigl(
+\begin{smallmatrix}
+  a & b'\\
+  c & d'
+\end{smallmatrix}
+\bigr) \in SL_2(\setZ)$, then also
+\begin{align*}
+  \gamma
+  &:=
+    \begin{pmatrix}
+      a & b' + as\\
+      c & d' + cs
+    \end{pmatrix}
+  =
+    \begin{pmatrix}
+      a & b'\\
+      c & d'
+    \end{pmatrix}
+    \begin{pmatrix}
+      1 & s\\
+      0 & 1
+    \end{pmatrix}
+    \in SL_2(\setZ)
+\end{align*}
+for any $s\in\setZ$.
+
+For the transformation of $j_N$, we split the matrix as in
+\eqref{eq:naive-matrix-split} with $\delta=N$.
+\begin{align*}
+  \begin{pmatrix}
+    N a & N(b' + as)\\
+    c & d' + cs
+  \end{pmatrix}
+      &=
+  \begin{pmatrix}
+    N a/c & -1\\
+    1     &  0
+  \end{pmatrix}
+  \begin{pmatrix}
+    c & cs+d'\\
+    0 & N/c
+  \end{pmatrix}
+\end{align*}
+into an element of $SL_2(Z)$ and a triangular matrix.
+%
+Then we determine natural numbers $u$ and $v$ such that $u v = N/c$
+and $\gcd(c, u)=1$. Thus, we can find $s \in \setZ$ such that
+$s \equiv -d'c^{-1} \pmod{u}$, \ie, $cs + d' = tu$ for some integer
+$t$ with $0\le t<c$.
+%
+Thus,
+\begin{gather*}
+  \begin{pmatrix}
+    c & cs+d'\\
+    0 & N/c
+  \end{pmatrix} \tau
+  =
+  \begin{pmatrix}
+    c & u t\\
+    0 & u v
+  \end{pmatrix} \tau
+  =
+  \frac{c^2}{N} \tau + \frac{t}{v}
+  =
+ \frac{\omega_\gamma c^2}{N} \frac{\tau}{\omega_\gamma} + \frac{t}{v}
+  =
+ \frac{c}{\gcd(c,N/c)} \frac{\tau}{\omega_\gamma} + \frac{t}{v}
+  .
+\end{gather*}
+Note that $u=N/c$ and $v=1$, if $N$ is squarefree.
+
+With the particular $s$ from above, we define $b:=b'+as$, $d:=d'+cs$
+and take
+%
+$\gamma = \bigl(
+\begin{smallmatrix}
+  a & b\\
+  c & d
+\end{smallmatrix}
+\bigr)$ as the transformation matrix that belongs to the cusp
+$\frac{a}{c}$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
