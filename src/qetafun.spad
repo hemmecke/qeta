@@ -606,18 +606,23 @@ LSym ==> List Symbol
 OF ==> OutputForm
 
 )abbrev domain SYMBETAP SymbolicEtaPower
-SymbolicEtaPower(): _
+SymbolicEtaPower: _
   Join(CoercibleTo OutputForm) with
     eta: (P, MZ, P, Z) -> % -- gamma=[[a,b],[c,d]], m=level, delta, r_delta
-    gcdPower: % -> Q       -- h_delta^(r_delta)
-    deltaPower: % -> Q     -- delta^(r_delta)
-    upsilonExponent: % -> Z24 -- exponent of a 24th root of unity (0..23)
-    udelta: % -> Z         -- width*gcd(delta,c)^2/delta
-    vdelta: % -> Z         -- exponent for the (c/(24m)-th root of unity (\xi)
-    acdelta: % -> Z        -- a(c, delta)
-    eta: P -> %
-      ++ eta(n) returns q^(n/24)*\prod_{k=1}^\infty (1-q^{kn}).
-      ++ eta(n) = eta(1, 1, 1, 1)
+      ++ eta(m, gamma, delta, rdelta) represents the expansion of
+      ++ \eta_\delta(\gamma\tau)^{r_\delta} in terms of
+      ++ x = \exp(2\pi i\tau/w) where w=width(m, c) and
+      ++ gamma=cupsToMatrix(m, a/) for  some cusp a/c.
+    rationalCoefficient: % -> Q -- (h_delta/delta)^(r_delta)
+    upsilonExponent: % -> Z24 -- r_delta*kappa_delta
+    udelta: % -> Z         -- rdelta * width*gcd(delta,c)^2/delta
+    vdelta: % -> Z         -- rdelta * b2*(m/lcm(c,delta)
+    rdelta: % -> Z         -- rdelta
+    _*: (%, %) -> %
+      ++ This is a partial multiplication. x*y is only applicable
+      ++ if both eta powers belong to the same level, gamma, and delta.
+      ++ If x=eta(m, gamma, delta, rx), y=eta(m, gamma, delta, ry), then
+      ++ z=x*y is the same as eta(m, gamma, delta, rx + ry).
   == add
     Rep ==> Record(
               flevel: P,  -- level \Gamma_0(lev)
@@ -632,6 +637,10 @@ SymbolicEtaPower(): _
             )
     Rec ==> Record(red: MZ, triang: MZ)
     QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
     eta(m: P, gamma: MZ, delta: P, rdelta: Z): % ==
         c: Z := gamma(2, 1)
         --assert(c>0)
@@ -641,21 +650,29 @@ SymbolicEtaPower(): _
         gamma2: MZ := rec.triang
         kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
         b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
-        udelta: Z := aLigozat(m, c, delta)
+        udelta: Z := aLigozat(m, c, delta)$QAuxMEQ
         a2: Z := gamma2(1, 1); wgamma: Z := width(m, c)
         --assert(udelta = ((a2*wgamma exquo d2) :: Z))
-        if not (udelta = ((a2*wgamma exquo d2) :: Z)) then
+        if not (udelta = (((a2*wgamma) exquo d2) :: Z)) then
             error "udelta does not match"
         vdelta: Z := b2 * ((m exquo lcm(c, delta))::Z)
         xired: Q := b2/d2
-        repr: Rep := [
-            m, gamma, delta, rdelta, hdelta, kappa, udelta, vdelta, xired
-          ]
-        per repr
+        per [m, gamma, delta, rdelta, hdelta, kappa, udelta, vdelta, xired]
 
-    unitMatrix: MZ := matrix [[1,0],[0,1]]
-    eta(delta: P): % == eta(1, unitMatrix, delta, 1)
+    import from MZ
+    rdelta(x: %): Z == xx.frdelta
+    rationalCoefficient(x: %): Q == (xx.fhdelta / xx.fdelta)^rdelta(x)
+    upsilonExponent(x: %): Z24 == rdelta(x) * xx.fkappa
+    udelta(x: %): Z == rdelta(x) * xx.fudelta
+    vdelta(x: %): Z == rdelta(x) * xx.fvdelta
     coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    ((x: %) * (y: %)): % ==
+        xx.flevel ~= yy.flevel => error "SymbolicEtaPower: not same level"
+        xx.fgamma ~= yy.fgamma => error "SymbolicEtaPower: not same gamma"
+        xx.fdelta ~= yy.fdelta => error "SymbolicEtaPower: not same delta"
+        per [xx.flevel, xx.fgamma, xx.fdelta, rdelta(x)+rdelta(y),
+             xx.fhdelta, xx.fkappa, xx.fudelta, xx.fvdelta, xx.fxired]
 
 )if LiterateDoc
 \bibliography{qeta}
