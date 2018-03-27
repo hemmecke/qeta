@@ -91,6 +91,7 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 MZ ==> Matrix Z -- will be a square matrix
+Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 Rec ==> Record(red: MZ, triang: MZ)
 
@@ -117,8 +118,12 @@ width of a cusp \cite[Lemma~2.37]{Radu:PhD:2010} and
 ++ eta quotients that are modular functions and have a pole only
 ++ at infinity.
 QAuxiliaryModularEtaQuotientPackage: with
+    aLigozat: (P, Z, Z) -> Z
+      ++ aLigozat(m, c, delta) computes an entry of the matrix of
+      ++ Ligozat corresponding to the index (c, delta) counted in
+      ++ divisors.
     matrixLigozat: P -> MZ
-      ++ matrixLigozat(m) returns the (n,n) matrix with entries a(m,di,dj)
+      ++ matrixLigozat(m) returns the (n,n) matrix with entries a_m(di,dj)
       ++ given by Notation 3.2.6 in \cite{Ligozat:CourbesModulaires:1975}
       ++ where di and dj run over all positive divisors of m.
       ++ This matrix is A_N as described after Theorem 5.2 in
@@ -127,14 +132,14 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ rStarConditions returns 0 if all conditions are fulfilled.
       ++ Otherwise it returns a positive number in the range 1 to 4 that
       ++ corresponds to the condition that is not met.
-    upsilon: (Z, Z, Z, Z) -> Z
-      ++ upsilon(a,b,c,d) returns z \in {0..23} such that exp(\pi*i*z/12)
-      ++ is a multiplier in the transformation of an eta function by the
-      ++ matrix [[a,b],[c,d]] from SL_2(Z).
+    upsilonExponent: (Z, Z, Z, Z) -> Z24
+      ++ upsilonExponent(a,b,c,d) returns z \in {0..23} such that
+      ++ exp(\pi*i*z/12) is a multiplier in the transformation of an
+      ++ eta function by the matrix [[a,b],[c,d]] from SL_2(Z).
       ++ A definition can be found in \cite[Lemma~2.27]{Radu:PhD:2010}.
-    upsilon: MZ -> Z
-      ++ upsilon(m) for a matrix m from SL_2(Z) returns
-      ++ upsilon(m(1,1), m(1,2), m(2,1), m(2,2)).
+    upsilonExponent: MZ -> Z24
+      ++ upsilonExponent(m) for a matrix m from SL_2(Z) returns
+      ++ upsilonExponent(m(1,1), m(1,2), m(2,1), m(2,2)).
     width: (P, Z) -> Z
       ++ width(m, c) returns the width of the cusp a/c for Gamma_0(m)
       ++ and some a. The width is independent of a and given by
@@ -181,9 +186,9 @@ QAuxiliaryModularEtaQuotientPackage: with
        u
 
     -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
-    -- a(m, di, dj) here corresponds to a_m(di, dj) in
+    -- aLigozat(m, di, dj) here corresponds to a_m(di, dj) in
     -- \cite[Notation 3.2.6]{Ligozat:CourbesModulaires:1975}.
-    a(m: Z, di: Z, dj: Z): Z == -- di==c, dj==delta
+    aLigozat(m: P, di: Z, dj: Z): Z == -- di==c, dj==delta
         diprime: Z := (m exquo di)::Z
         num: Z := diprime * (gcd(di, dj)^2)
         den: Z := dj * gcd(diprime, di)
@@ -194,7 +199,8 @@ QAuxiliaryModularEtaQuotientPackage: with
         n: N := # divs
         mat: MZ := new(n, n, 0)
         for i in 1..n for di in divs repeat -- do not include row for d.j=m
-            for j in 1..n for dj in divs repeat qsetelt!(mat, i, j, a(m, di, dj))
+            for j in 1..n for dj in divs repeat
+              qsetelt!(mat, i, j, aLigozat(m, di, dj))
         mat
 
 --    order(r: List Z, c: Z)
@@ -248,15 +254,16 @@ QAuxiliaryModularEtaQuotientPackage: with
         zero? c => 1
         jacobi(c, abs(d))$IntegerNumberTheoryFunctions
 
-    upsilon(a: Z, b: Z, c: Z, d: Z): Z ==
+    upsilonExponent(a: Z, b: Z, c: Z, d: Z): Z24 ==
         u: Z := c*(a+d)-b*d*(c^2-1)-3*c
         v: Z := 3*(d-1)*(c-1)
-        r(x) ==> positiveRemainder(x, 24)
+        r(x) ==> x :: Z24
         -- Note that we exp(2*\pi*i*n/24)=exp(\pi*i)=-1 for n=12.
         odd? c => if jacobiUpperStar(d, c) > 0 then r(u) else r(u+12)
         if jacobiLowerStar(c, d) > 0 then r(u-v) else r(u-v+12)
 
-    upsilon(mat: MZ): Z == upsilon(mat(1,1), mat(1,2), mat(2,1), mat(2,2))
+    upsilonExponent(mat: MZ): Z24 ==
+        upsilonExponent(mat(1,1), mat(1,2), mat(2,1), mat(2,2))
 
     width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
 
