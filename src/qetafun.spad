@@ -690,7 +690,7 @@ SymbolicEtaPower: _
     yy ==> rep y
     hh ==> xx.fht
 
-    eta(m: P, cusps: LQ, gammas: LMZ, delta: P, rdelta: Z): % ==
+    etaPower(m: P, cusps: LQ, gammas: LMZ, delta: P, rdelta: Z): % ==
         ht: HT := empty()
         for cusp in cusps for gamma in gammas repeat
             ht.cusp := eta(m, gamma, qcoerce(delta)@P)$SymbolicEta
@@ -730,10 +730,24 @@ SymbolicEtaQuotient:
       ++ rationalPrefactor(x) returns the first product in
       ++ eq:g_r(gamma*tau)
     xiExponent: (%, Q) -> Z --sum_\delta rdelta*vdelta
+
+    order: % -> XHashTable(Q, Z)
+      ++ order(x) returns the order of the expansion in terms of
+      ++ x = \exp(2\pi i\tau/w) where w is the width of the cusp.
+      ++ It corresponds to the fourth product of eq:g_r(gamma*tau).
+    xi24Exponent: % -> XHashTable(Q, Z24)
+      ++ xi24Exponent(x) returns the exponent for the prefactor of
+      ++ the 24th root of unity.
+      ++ It corresponds to the second product of eq:g_r(gamma*tau).
+    rationalPrefactor: % -> XHashTable(Q, Q)
+      ++ rationalPrefactor(x) returns the first product in
+      ++ eq:g_r(gamma*tau)
+    xiExponent: % -> XHashTable(Q, Z) --sum_\delta rdelta*vdelta
  == add
     HT ==> XHashTable(Z, SymbolicEtaPower)
     Rep ==> Record(
-              flevel: P,  -- level \Gamma_0(lev)
+              flevel: P,  -- level \Gamma_0(level)
+              fcusps: LQ, -- all cusps of \Gamma_0(level)
               fht: HT -- delta to eta power mapping
             )
     import from Rep
@@ -746,7 +760,7 @@ SymbolicEtaQuotient:
         for delta in divs for rdelta in r repeat
             deltaP: P := qcoerce(delta)@P
             ht.delta := etaPower(m, cusps, gammas, deltaP, rdelta)
-        per [m, ht]
+        per [m, cusps, ht]
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     order(x: %, cusp: Q): Z ==
@@ -777,6 +791,28 @@ SymbolicEtaQuotient:
         m: Z := xx.flevel
         t: Z := 24*((m exquo c)::Z)
         positiveRemainder(kappa, t)
+
+-------------------------------------------------------------------
+    order(x: %): XHashTable(Q, Z) ==
+        h: XHashTable(Q, Z) := empty()
+        for cusp in xx.fcusps repeat h.cusp := order(x, cusp)
+        h
+
+    xi24Exponent(x: %): XHashTable(Q, Z24) ==
+        h: XHashTable(Q, Z24) := empty()
+        for cusp in xx.fcusps repeat h.cusp := xi24Exponent(x, cusp)
+        h
+
+    rationalPrefactor(x: %): XHashTable(Q, Q) ==
+        h: XHashTable(Q, Q) := empty()
+        for cusp in xx.fcusps repeat h.cusp := rationalPrefactor(x, cusp)
+        h
+
+    xiExponent(x: %): XHashTable(Q, Z) ==
+        -- exponent for (24*level/c)-th root of unity
+        h: XHashTable(Q, Z) := empty()
+        for cusp in xx.fcusps repeat h.cusp := xiExponent(x, cusp)
+        h
 
 
 )if LiterateDoc
