@@ -1,0 +1,68 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QFunctions
+--- Copyright (C) 2018,  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\begin{document}
+\title{Caching powers of an element}
+\author{Ralf Hemmecke}
+\date{03-Apr-2018}
+\maketitle
+\begin{abstract}
+This package implements a cache for powers of an element.
+\end{abstract}
+)endif
+
+P ==> PositiveInteger
+Z ==> Integer
+
+)abbrev package CPOWER CachedPower
+++ Author: Ralf Hemmecke
+++ Description:
+++ Cache for powers of an element
+CachedPower(S: SemiGroup, s: S): with
+    power: P -> S
+    getCache: () -> XHashTable(Z, S)
+  == add
+    cache: XHashTable(Z, S) := empty()
+    --auxiliary function pow
+    pow(x:S, n: Z): S ==
+        print(n::OutputForm)
+        one? n => x
+        key?(n, cache) => cache.n
+        odd? n and key?(n-1, cache) => cache.n := x*cache(n-1)
+        n2: P := qcoerce(shift(n, -1))@P -- n2 := floor(n/2)
+        z: S := pow(x, n2) -- set cache recursively
+        n2 := 2*n2
+        z := z * z
+        if odd? n then
+            cache(n-1) := z -- also remember the even part (it was not known)
+            z := x*z
+        cache.n := z
+
+    --exported function power
+    power(n: P): S == pow(s, n::Z)
+    getCache(): XHashTable(Z, S) == cache
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

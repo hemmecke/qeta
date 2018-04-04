@@ -34,7 +34,7 @@ BIN=${ROOT}/bin
 ###################################################################
 # toplevel targets
 all: er
-SPADFILES=qfunct qetaqmev qetadom qetatool qetasamba qetaradu \
+SPADFILES=qfunct cachedpow qetaqmev qetadom qetatool qetasamba qetaradu \
   qetaicat qetaih qeta3hdp qetair qetais qetasomos \
   qetaauxmeq qetafun
 
