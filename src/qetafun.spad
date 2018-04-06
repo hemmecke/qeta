@@ -667,6 +667,12 @@ SymbolicEtaPower: _
       ++ if both eta powers belong to the same level, gamma, and delta.
       ++ If x=eta(m, gamma, delta, rx), y=eta(m, gamma, delta, ry), then
       ++ z=x*y is the same as eta(m, gamma, delta, rx + ry).
+    xrat: (%, Q) -> Q
+    xkappa: (%, Q) -> Z24
+    xudelta: (%, Q) -> Z
+    xvdelta: (%, Q) -> Q
+    xunityPower: (%, Q) -> Q
+
  == add
     HT ==> XHashTable(Q, SymbolicEta)
     Rep ==> Record(
@@ -699,6 +705,12 @@ SymbolicEtaPower: _
         xx.fdelta ~= yy.fdelta => error "SymbolicEtaPower: not same delta"
         per [xx.flevel, xx.fdelta, rdelta(x)+rdelta(y), hh]
 
+    xrat(x: %, cusp: Q): Q == rationalPrefactor(hh.cusp)
+    xkappa(x: %, cusp: Q): Z24 == upsilonExponent(hh.cusp)
+    xudelta(x: %, cusp: Q): Z == udelta(hh.cusp)
+    xvdelta(x: %, cusp: Q): Q == vdelta(hh.cusp)
+    xunityPower(x: %, cusp: Q): Q == unityPower(hh.cusp)
+
 -------------------------------------------------------------------
 )abbrev domain SYMBETAQ SymbolicEtaQuotient
 SymbolicEtaQuotient:
@@ -725,6 +737,12 @@ SymbolicEtaQuotient:
       ++ eq:g_r(gamma*tau)
     unityPower: % -> XHashTable(Q, Q)
       ++ sum_\delta rdelta*(vdelta+Kappa_delta)/24
+    rdelta: (%, Z) -> Z
+    xrat: (%, Q, Z) -> Q
+    xkappa: (%, Q, Z) -> Z24
+    xudelta: (%, Q, Z) -> Z
+    xvdelta: (%, Q, Z) -> Q
+    xunityPower: (%, Q, Z) -> Q
  == add
     HT ==> XHashTable(Z, SymbolicEtaPower)
     Rep ==> Record(
@@ -781,7 +799,12 @@ SymbolicEtaQuotient:
         h: XHashTable(Q, Q) := empty()
         for cusp in xx.fcusps repeat h.cusp := unityPower(x, cusp)
         h
-
+    rdelta(x: %, delta: Z): Z == rdelta(xx.fht.delta)
+    xrat(x: %, cusp: Q, delta: Z): Q == xrat(xx.fht.delta, cusp)
+    xkappa(x: %, cusp: Q, delta: Z): Z24 == xkappa(xx.fht.delta, cusp)
+    xudelta(x: %, cusp: Q, delta: Z): Z == xudelta(xx.fht.delta, cusp)
+    xvdelta(x: %, cusp: Q, delta: Z): Q == xvdelta(xx.fht.delta, cusp)
+    xunityPower(x: %, cusp: Q, delta: Z): Q == xunityPower(xx.fht.delta, cusp)
 
 )if LiterateDoc
 \bibliography{qeta}
