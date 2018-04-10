@@ -409,7 +409,8 @@ QEtaQuotientMonoidExponentVectors4ti2: with
       ++ (together with the zero vector) they describe the monoid
       ++ E^\infty(m).
   == add
-    -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
+    -- Compute B_N and A^\infty_N as in
+    -- \cite{Hemmecke+Radu:EtaRelations:2018}.
     -- a(m, di, dj) here corresponds to a_m(di, dj) in
     -- \cite[Notation 3.2.6]{Ligozat:CourbesModulaires:1975}.
     a(m: Z, di: Z, dj: Z): Z == -- di==c, dj==delta
@@ -520,11 +521,105 @@ QEtaQuotientMonoidExponentVectors4ti2: with
 
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
-        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions --$
         n: N := # divs
         vdivs: VZ := vector divs
         monoidgens: List VZ := monoidGenerators(m, n, vdivs)
         sort(ascend, [entries x for x in monoidgens])
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Compute a basis for $R^*(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A description of which data has to be fed to the program
+\textsf{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}} is described in
+\cite{Hemmecke+Radu:EtaRelations:2018}, in particular in Section~6 and
+Section~8.
+
+In the following, we compute just a basis for $R^*(N)$ (not
+$R^\infty(N)$. In fact, it is sufficient to compute a basis for the
+nullspace for the matrix $B_N$ (see
+\cite[Section~6]{Hemmecke+Radu:EtaRelations:2018}).
+
+)endif
+
+)abbrev package QMEVSTAR QEtaQuotientMonoidExponentVectorsStar
+++ QEtaQuotientMonoidExponentVectorsStar helps to do computations with
+++ eta functions and quotients of eta functions expressed in terms of
+++ the q-series.
+QEtaQuotientMonoidExponentVectorsStar: with
+    etaQuotientMonoidExponentVectors: P -> List List Z
+      ++ etaQuotientMonoidExponentVectors(m) returns Z-vectors $r$ (of
+      ++ dimension n, where n=#(divisors m)). These vectors form a
+      ++ Z-basis of $R^*(N)$ as defined in
+      ++ \cite{Hemmecke+Radu:EtaRelations:2018}).
+  == add
+    -- Compute B_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
+    primePower(d: P, p: P): Z ==
+        import from Factored Z
+        fl: List Record(factor: Z, exponent: Z) := factors factor d
+        for fe in fl repeat
+            if fe.factor = p then return fe.exponent
+        return 0
+
+    monoidGenerators(m: P, n: N, d: VZ): List VZ ==
+        fl: List Record(factor: Z, exponent: Z) := factors factor m
+        cols: P := qcoerce(n + 2 + #fl)@P
+        rows: P := qcoerce(3 + #fl)@P
+        mat: MZ := new(rows, cols, 0)
+        -- sum(r(d.i), i=1..n)=0
+        for j in 1..n repeat qsetelt!(mat, 1, j, 1)
+        -- sum(d.i * r(d.i), i=1..n+1) = 0 (mod 24)
+        for j in 1..n repeat qsetelt!(mat, 2, j, d.j)
+        qsetelt!(mat, 2, n+1, 24) -- additional variable for (mod 24)
+        -- sum(d.(n+2-i) * r(d.i), i=1..n+1) = 0 (mod 24)
+        for j in 1..n repeat qsetelt!(mat, 3, j, d(n+1-j))
+        qsetelt!(mat, 3, n+2, 24) -- additional variable for (mod 24)
+        -- product is rational square
+        for i in 1..#fl for fe in fl repeat
+            k := n+2+i
+            p: P := qcoerce(fe.factor)@P
+            for j in 2..n repeat -- for all divisors > 1
+                qsetelt!(mat, i+3, j, primePower(qcoerce(d.j)@P, p))
+            qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
+        vPrint("mat", mat)
+        ns: List VZ := nullSpace mat
+        --vPrint("ns", ns)
+        [elt(v, 1..n) for v in ns]
+
+    -- x < y if the total degree of the absolute value of the entries
+    -- is smaller or if the absolute value of the sum of the negative
+    -- entries is smaller. We break ties by the revlex order.
+    ascend(x: List Z, y: List Z): Boolean ==
+        --assert(#x=#y)
+        tx: Z := reduce(_+, [abs e for e in x])
+        ty: Z := reduce(_+, [abs e for e in y])
+        tx < ty => true
+        tx > ty => false
+        tx: Z := reduce(_+, [e for e in x | e < 0])
+        ty: Z := reduce(_+, [e for e in y | e < 0])
+        tx > ty => true -- note that 0 < - tx < - ty
+        tx < ty => false
+        -- break ties by revlex order over Z^n where n=#x=#y.
+        for ex in reverse x for ey in reverse y repeat
+            if ex < ey then return false
+            if ex > ey then return true
+        false -- x=y
+
+    -- exported functions
+    etaQuotientMonoidExponentVectors(m: P): List List Z ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        n: N := # divs
+        vdivs: VZ := vector divs
+        monoidgens: List VZ := monoidGenerators(m, n, vdivs)
+        --vPrint("mgens", monoidgens)
+        mat: MZ := matrix [entries v for v in monoidgens]
+        --vPrint("mat", mat);
+        lat: MZ := LLL(mat)$LLLReduction
+        --vPrint("lat", lat);
+        --print(lat::OutputForm)
+        sort(ascend, listOfLists lat)
 
 )if LiterateDoc
 \bibliography{qeta}

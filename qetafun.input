@@ -1,23 +1,38 @@
-P==>PositiveInteger
-Z==>Integer
-Q==>Fraction Z
+)r qetalibs
+)r etamacros
+QMEVS==>QEtaQuotientMonoidExponentVectorsStar
+eqmevs==>etaQuotientMonoidExponentVectors$QMEVS
+
 OF==>OutputForm
 dbgPrint(a, b) ==> print([a::Symbol::OF,b::OF]$List(OF)::OF)
 
-cusps2(level: P): List List Q == (_
-        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions;_
-        dbgPrint("divs", divs);_
-        result: List List Q := empty();_
-        for c in divs repeat (_
-            dbgPrint("c", c);_
-            g: Z := gcd(c, (level exquo c)::Z);_
-            dbgPrint("g", g);_
-            sc: List Q := empty();_
-            for y in 1..g | one? gcd(y, g) repeat (_
-                dbgPrint("y", y);_
-                candidates := [a for a in 1..c | one? gcd(a, c) and zero? positiveRemainder(a-y, g)];_
-                dbgPrint("cand", candidates);_
-                if empty? candidates then error "no candidates";_
-                sc := cons((first candidates)/c, sc));_
-            result := cons(concat([c, g, eulerPhi g],sc), result));_
-        result)
+dem(m: P, r: List Z): SymbolicEtaQuotient == (_
+  divs := divisors m;_
+  cusps := cuspsOfGamma0 m;_
+  dbgPrint("================== r", r);_
+  dbgPrint("cusps", cusps);_
+  e := etaQuotient(m, divs, r)$SymbolicEtaQuotient;_
+  o := order e;_
+  u := unityPower e;_
+  f := rationalPrefactor e;_
+  dbgPrint("order", [o.c for c in cusps]);_
+  dbgPrint("roots", [u.c for c in cusps]);_
+  dbgPrint("sqrtR", [sqrt(f.c) for c in cusps]);_
+  e_
+)
+
+
+demo(m) == (_
+  he: XHashTable(List Z, SymbolicEtaQuotient) := empty();_
+  rs := eqmev m;_
+  for r in rs repeat he.r := dem(m, r);_
+  he_
+)
+
+demos(m) == (_
+  he: XHashTable(List Z, SymbolicEtaQuotient) := empty();_
+  rs := eqmevs m;_
+  dbgPrint("EQMEVS", rs);_
+  for r in rs repeat he.r := dem(m, r);_
+  he_
+)
