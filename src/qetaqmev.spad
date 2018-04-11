@@ -550,6 +550,7 @@ nullspace for the matrix $B_N$ (see
 ++ the q-series.
 QEtaQuotientMonoidExponentVectorsStar: with
     etaQuotientMonoidExponentVectors: P -> List List Z
+    etaQuotientMonoidExponentVectorsX: P -> List List Z
       ++ etaQuotientMonoidExponentVectors(m) returns Z-vectors $r$ (of
       ++ dimension n, where n=#(divisors m)). These vectors form a
       ++ Z-basis of $R^*(N)$ as defined in
@@ -585,7 +586,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
             qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
         vPrint("mat", mat)
         ns: List VZ := nullSpace mat
-        --vPrint("ns", ns)
+        vPrint("ns", ns)
         [elt(v, 1..n) for v in ns]
 
     -- x < y if the total degree of the absolute value of the entries
@@ -615,11 +616,40 @@ QEtaQuotientMonoidExponentVectorsStar: with
         monoidgens: List VZ := monoidGenerators(m, n, vdivs)
         --vPrint("mgens", monoidgens)
         mat: MZ := matrix [entries v for v in monoidgens]
-        --vPrint("mat", mat);
         lat: MZ := LLL(mat)$LLLReduction
         --vPrint("lat", lat);
         --print(lat::OutputForm)
         sort(ascend, listOfLists lat)
+
+    MQ ==> Matrix Q
+    toMQ(x: MZ): MQ == matrix [[e::Q for e in l] for l in listOfLists x]
+    etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        n: N := # divs
+        vdivs: VZ := vector divs
+        monoidgens: List VZ := monoidGenerators(m, n, vdivs)
+        vPrint("mgens", monoidgens)
+        mat: MZ := matrix [entries v for v in monoidgens]
+        vPrint("mat", mat);
+        ligozat: MZ := matrixLigozat(m)$QAuxiliaryModularEtaQuotientPackage
+        ligozat := transpose ligozat
+        vPrint("ligozat", ligozat);
+        ords := mat * ligozat
+        vPrint("ords", ords)
+        lords: MZ := LLL(ords)$LLLReduction
+        vPrint("lords", lords)
+        lordsq: MQ := toMQ(lords)
+        ligozatq: MQ := toMQ ligozat
+        iligozatq: MQ := inverse(toMQ ligozat)::MQ
+        lmat: MQ := lordsq*iligozatq
+        llmat: List List Q := listOfLists(lmat)
+        vPrint("llmat", llmat)
+        d: Z := lcm [denom x for x in concat llmat]
+        vPrint("lcmDenom", d)
+        lat: List List Z := [[numer(d*q) for q in l] for l in llmat]
+        vPrint("lat", lat)
+        --sort(ascend, listOfLists lat)
+        sort(ascend, lat)
 
 )if LiterateDoc
 \bibliography{qeta}
