@@ -636,20 +636,12 @@ QEtaQuotientMonoidExponentVectorsStar: with
         vPrint("ligozat", ligozat);
         ords := mat * ligozat
         vPrint("ords", ords)
-        lords: MZ := LLL(ords)$LLLReduction
-        vPrint("lords", lords)
-        lordsq: MQ := toMQ(lords)
-        ligozatq: MQ := toMQ ligozat
-        iligozatq: MQ := inverse(toMQ ligozat)::MQ
-        lmat: MQ := lordsq*iligozatq
-        llmat: List List Q := listOfLists(lmat)
-        vPrint("llmat", llmat)
-        d: Z := lcm [denom x for x in concat llmat]
-        vPrint("lcmDenom", d)
-        lat: List List Z := [[numer(d*q) for q in l] for l in llmat]
+        rec: Record(lll: MZ, trf: MZ) := extendedLLL(ords)$LLLReduction
+        t: MZ := rec.trf
+        vPrint("rec", rec)
+        lat: MZ := t*mat
         vPrint("lat", lat)
-        --sort(ascend, listOfLists lat)
-        sort(ascend, lat)
+        sort(ascend, listOfLists lat)
 
 )if LiterateDoc
 \bibliography{qeta}
