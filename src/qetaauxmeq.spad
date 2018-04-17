@@ -18,9 +18,6 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------
 
-OF==>OutputForm
-dbgPrint(x,y) ==> display(([x::Symbol::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 77)
-
 )if LiterateDoc
 \documentclass{article}
 \usepackage{qeta}
@@ -99,9 +96,7 @@ Let us start with a few common macros.
 First of all for debugging.
 )endif
 OF==>OutputForm
-display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
-vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, _
-                                   ":="::Symbol::OF, y::OF]$List(OF)))
+dbgPrint(x,y) ==> -42 -- display(([x::Symbol::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 77)
 
 )if LiterateDoc
 These two technical macros are necessary to distinguish between Rep
@@ -123,6 +118,7 @@ MZ ==> Matrix Z -- will be a square matrix
 Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 Rec ==> Record(red: MZ, triang: MZ)
+Pol ==> SparseUnivariatePolynomial Z
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -225,12 +221,12 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ that splitMatrix(gamma, m) returns two matrices [m1, m2] with
       ++ m1*m2 = [[m*a, c], m*b, d]] and m1 being in SL_2(Z) and m2 being
       ++ a triangular matrix with 0 <= m2(1,2) < m/c.
-    rationalSquareRoot: Q -> Record(rat: Q, rootOf: Z)
+    rationalSquareRoot: Q -> Record(rat: Q, rootOf: P)
       ++ if z = rationalSquareRoot(x) then x = (z.rat)^2 * z.root
-    squareRoot: P -> Record(root: P, elem: List Q)
+    squareRoot: P -> Record(root: P, elem: Pol)
       -- numer elem = coefficient
       -- denom elem = exponent for "root"-th root of unity
-    square: Record(root: Z, elem: List Q) -> Vector Z
+    square: Record(root: P, elem: Pol) -> Vector Z
 -------------------------------------------------------------------
 -- Temporarily exported
 -------------------------------------------------------------------
@@ -444,7 +440,7 @@ $a\in X_c$.
             z := (x.fctr)^e * z
         return z
 
-    rationalSquareRoot(x: Q): Record(rat: Q, rootOf: Z) ==
+    rationalSquareRoot(x: Q): Record(rat: Q, rootOf: P) ==
         import from FL
         fden: Factored Z := factor denom x
         fnum: Factored Z := factor numer x
@@ -455,39 +451,33 @@ $a\in X_c$.
         fl := factorList fnum
         r: Z := 1
         for x in fl | odd? (x.xpnt) repeat r := x.fctr * r
-        return [squarePart(fl)/squarePart(factorList fden), r]
+        return [squarePart(fl)/squarePart(factorList fden), qcoerce(r)@P]
 
-    square(x: Record(root: Z, elem: List Q)): Vector Z ==
-        Pol ==> SparseUnivariatePolynomial(Z)
+    square(x: Record(root: P, elem: Pol)): Vector Z ==
         pol: Pol := cyclotomic(x.root)$CyclotomicPolynomialPackage
         C ==> SimpleAlgebraicExtension(Z, Pol, pol)
-        g: C := generator()$C
-        z: C := 0
-        for e in x.elem repeat
-            n: P := qcoerce(denom e)@P
-            z := z + numer(e)*g^n
-        dbgPrint("elem", z)
-        dbgPrint("square", z*z)
+        z: C := convert(x.elem)@C
+--        dbgPrint("elem", z)
+--        dbgPrint("square", z*z)
         convert(z*z)@Vector(Z)
 
-    squareRoot(x: P): Record(root: P, elem: List Q) ==
+    squareRoot(x: P): Record(root: P, elem: Pol) ==
         -- x is a radical integer (squarefree)
-        Pol ==> SparseUnivariatePolynomial(Z)
-        -- x is a radical integer (squarefree)
-        x = 2 => [8, [-1/3, 1/1]]
+        t: Pol := monomial(1, 1)
+        x = 2 => [8, -t^3+1]
         n: P := x
         if even? x or positiveRemainder(x, 4)=3 then n := 4*n
         pol: Pol := (cyclotomic(n)$CyclotomicPolynomialPackage)
         S ==> SimpleAlgebraicExtension(Z, Pol, pol)
         sr: S := squareRoot(x, generator()$S)$GaussRoot(S)
-        dbgPrint("sr", sr)
+--        dbgPrint("sr", sr)
         p: Pol := convert(sr)@Pol
-        dbgPrint("p", p)
+--        dbgPrint("p", p)
         if even? x then p := (p exquo 4)::Pol
-        z: S := convert(p)@S
-        dbgPrint("s2", sr*sr)
-        dbgPrint("z2", z*z)
-        [n, [1/7, 1/2]]
+--        z: S := convert(p)@S
+--        dbgPrint("s2", sr*sr)
+--        dbgPrint("z2", z*z)
+        [n, p]
 
 
 
