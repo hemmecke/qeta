@@ -1,27 +1,64 @@
 )r qetalibs
 )r etamacros
+
+OF==>OutputForm
+dbgPrint(a, b) ==> MyPrint([a::Symbol::OF,b::OF]$List(OF)::OF)
+MyPrint(x)==> print(x)
+
 QMEVS==>QEtaQuotientMonoidExponentVectorsStar
 eqmevs==>etaQuotientMonoidExponentVectors$QMEVS
 eqmevx==>etaQuotientMonoidExponentVectorsX$QMEVS
 
-OF==>OutputForm
-dbgPrint(a, b) ==> print([a::Symbol::OF,b::OF]$List(OF)::OF)
+S ==> Symbol
+E ==> Expression Z
+expr x ==> x :: S :: E
+SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix E)
 
-dem(m: P, r: List Z): SymbolicEtaQuotient == (_
+rsr ==> rationalSquareRoot$QAuxiliaryModularEtaQuotientPackage
+isr ==> squareRoot$QAuxiliaryModularEtaQuotientPackage
+Pol ==> SparseUnivariatePolynomial Z
+Rec ==> Record(root: P, elem: Pol)
+
+
+symEtaMat(m: P, r: List Z): SymEtaMat == (_
   divs := divisors m;_
+  n: N := # divs; _
   cusps := cuspsOfGamma0 m;_
-  dbgPrint("================== r", r);_
-  dbgPrint("cusps", cusps);_
+  nrows: N := 4 + n; _
+  ncols: N := 2 + # cusps; _
+  mat: Matrix E := new(nrows, ncols, 0); _
+  mat(1, 1) := expr "cusps"; _
+  mat(2, 1) := expr "order"; _
+  mat(3, 1) := expr "roots"; _
+  mat(4, 1) := expr "sqrtR"; _
+  for i in 1..n for delta in divs repeat mat(i+4, 1) := delta :: E; _
   e := etaQuotient(m, divs, r)$SymbolicEtaQuotient;_
   o := order e;_
   u := unityPower e;_
   f := rationalPrefactor e;_
-  dbgPrint("order", [o.c for c in cusps]);_
-  dbgPrint("roots", [u.c for c in cusps]);_
-  dbgPrint("sqrtR", [sqrt(f.c) for c in cusps]);_
-  e_
+  maxu := 1;_
+  maxs := 1;_
+  for j in 3..ncols for cusp in cusps repeat (_
+    mat(1, j) := cusp; _
+    mat(2, j) := o.cusp; _
+    mat(3, j) := u.cusp; maxu := lcm(maxu, denom(u.cusp)); _
+    mat(4, j) := sqrt(f.cusp); _
+    for i in 1..n for delta in divs repeat (_
+      mat(i+4, j) := xvdelta(e, cusp, delta) _
+    );_
+    rr: Record(rat: Q, rootOf: P) := rsr(f.cusp); _
+    z: P := rr.rootOf; _
+    r: Rec := isr z;_
+    maxs := lcm(maxs, r.root) _
+  );_
+  mat(1, 2) := if maxu < maxs then -1 else 0; _
+  mat(2, 2) := rootOfUnity e; _
+  mat(3, 2) := maxu; _
+  mat(4, 2) := maxs; _
+  [e, mat] _
 )
 
+-------------------------------------------------------------------
 
 demo(m) == (_
   he: XHashTable(List Z, SymbolicEtaQuotient) := empty();_
@@ -42,6 +79,28 @@ demox(m) == (_
   he: XHashTable(List Z, SymbolicEtaQuotient) := empty();_
   rs := eqmevx m;_
   dbgPrint("EQMEVX", rs);_
-  for r in rs repeat he.r := dem(m, r);_
+  for r in rs repeat (_
+    emat := symEtaMat(m, r);_
+    he.r := emat.symetaquo;_
+    dbgPrint("============================================= r", r);_
+    MyPrint((emat.data)::OF)_
+  );_
   he_
+)
+
+-------------------------------------------------------------------
+
+roottest m == (_
+  he: XHashTable(List Z, Z) := empty();_
+  rs := eqmevx m;_
+  dbgPrint("EQMEVX", rs);_
+  for r in rs repeat (_
+    emat := symEtaMat(m, r);_
+    dbgPrint("============================================= r", r);_
+    mat: Matrix E := emat.data; _
+    mat := mat(1..4, 1..2);_
+    he.r := mat(1, 2)::Z;_
+    MyPrint((mat)::OF)_
+  );_
+  set parts he_
 )

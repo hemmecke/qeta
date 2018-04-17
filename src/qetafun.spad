@@ -661,7 +661,7 @@ SymbolicEtaPower: _
     rationalPrefactor: (%, Q) -> Q -- (h_delta/delta)^(r_delta)
     udelta: (%, Q) -> Z     -- rdelta * width*gcd(delta,c)^2/delta
     unityPower: (%, Q) -> Q -- rdelta * (b2/d2+kappa_delta)/24
-    rdelta: % -> Z         -- rdelta
+    rdelta: % -> Z          -- rdelta
     _*: (%, %) -> %
       ++ This is a partial multiplication. x*y is only applicable
       ++ if both eta powers belong to the same level, gamma, and delta.
@@ -720,6 +720,8 @@ SymbolicEtaQuotient:
       ++ g_r(\gamma\tau) in terms of
       ++ x = \exp(2\pi i\tau/w) where w=width(m, c) and
       ++ gamma=cupsToMatrix(m, a/) for  some cusp a/c.
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
     order: (%, Q) -> Z
       ++ order(x) returns the order of the expansion in terms of
       ++ x = \exp(2\pi i\tau/w) where w is the width of the cusp.
@@ -737,6 +739,11 @@ SymbolicEtaQuotient:
       ++ eq:g_r(gamma*tau)
     unityPower: % -> XHashTable(Q, Q)
       ++ sum_\delta rdelta*(vdelta+Kappa_delta)/24
+    rootOfUnity: % -> P
+      ++ rootOfUnity(x) returns the minimal n such that the n-th
+      ++ root of unity in the coefficient ring would be enough
+      ++ to express the Laurent series expansions at all cusps of
+      ++ Gamma0(level x).
     rdelta: (%, Z) -> Z
     xrat: (%, Q, Z) -> Q
     xkappa: (%, Q, Z) -> Z24
@@ -753,6 +760,7 @@ SymbolicEtaQuotient:
     import from Rep
     xx ==> rep x
 
+    level(x : %): P == xx.flevel
     etaQuotient(m: P, divs: LZ, r: LZ): % ==
         cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
         gammas: LMZ := [cuspToMatrix(m, cusp)$QAuxMEQ for cusp in cusps]
@@ -799,12 +807,23 @@ SymbolicEtaQuotient:
         h: XHashTable(Q, Q) := empty()
         for cusp in xx.fcusps repeat h.cusp := unityPower(x, cusp)
         h
+
     rdelta(x: %, delta: Z): Z == rdelta(xx.fht.delta)
     xrat(x: %, cusp: Q, delta: Z): Q == xrat(xx.fht.delta, cusp)
     xkappa(x: %, cusp: Q, delta: Z): Z24 == xkappa(xx.fht.delta, cusp)
     xudelta(x: %, cusp: Q, delta: Z): Z == xudelta(xx.fht.delta, cusp)
     xvdelta(x: %, cusp: Q, delta: Z): Q == xvdelta(xx.fht.delta, cusp)
     xunityPower(x: %, cusp: Q, delta: Z): Q == xunityPower(xx.fht.delta, cusp)
+    rootOfUnity(x: %): P ==
+        lcmP(a, b) ==> qcoerce(lcm(a::Integer, b::Integer))@P
+        p: P := 1
+        ht: HT := xx.fht
+        for delta in keys ht repeat
+            h := ht.delta
+            for cusp in xx.fcusps repeat p := lcmP(p, denom xvdelta(h, cusp))
+        for cusp in xx.fcusps repeat
+            p := lcmP(p, denom(unityPower(x, cusp)))
+        return p
 
 )if LiterateDoc
 \bibliography{qeta}
