@@ -34,8 +34,8 @@ BIN=${ROOT}/bin
 ###################################################################
 # toplevel targets
 all: er
-SPADFILES=qfunct cachedpow qetaqmev qetadom qetatool qetasamba qetaradu \
-  qetaicat qetaih qeta3hdp qetair qetais qetasomos \
+SPADFILES=qfunct cachedpow qetasqrt qetaqmev qetadom qetatool qetasamba \
+	qetaradu qetaicat qetaih qeta3hdp qetair qetais qetasomos \
   qetaauxmeq qetafun
 
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input

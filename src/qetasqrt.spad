@@ -1,0 +1,149 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Eta Quotients}
+\author{Ralf Hemmecke}
+\date{19-Apr-2018}
+\maketitle
+\begin{abstract}
+We find representations of (integer) roots in terms of roots
+of unity.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Representing square roots by roots of unity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+According to \cite[Section~IV.3]{Lang:AlgebraicNumberTheory:1986} we
+have
+\begin{gather}
+  \sum_{k=0}^{b-1} \unityPower{\frac{k^2}{m}}
+  =
+  \begin{cases}
+    (1+i)\sqrt{b} & \text{if $b \equiv 0 \pmod{4}$},\\
+    \sqrt{b}      & \text{if $b \equiv 1 \pmod{4}$},\\
+    0             & \text{if $b \equiv 2 \pmod{4}$},\\
+    i\sqrt{b}     & \text{if $b \equiv 3 \pmod{4}$},
+  \end{cases}
+  \label{eq:GaussSum}
+\end{gather}
+where $\unityPower{x} := \exp(2\pi i x)$.
+%
+Note that
+$2=\left(\unityPower{\frac{1}{8}}+\unityPower{-\frac{1}{8}}\right)^2$.
+
+If $b\equiv 2 \pmod{4}$, then $b'=4b$ with $b'\equiv 0 \pmod{4}$.
+Then, we can compute $\sqrt{b}$ by computing $\sqrt{b'}$ and
+dividing by $\sqrt{2}$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us start with a few common macros.
+
+First of all for debugging.
+)endif
+OF==>OutputForm
+dbgPrint(x,y) ==> -42 -- display(([x::Symbol::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 77)
+
+)if LiterateDoc
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+MZ ==> Matrix Z -- will be a square matrix
+Z24 ==> IntegerMod 24
+EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
+Rec ==> Record(red: MZ, triang: MZ)
+Pol ==> SparseUnivariatePolynomial Z
+
+)abbrev package GAUSSRT GaussRoot
+++ GaussRoot(R, r, n) provides functions to express a square root
+++ of a positive radical integer in terms of r (a n-th root of unity).
+++ A radical integer is an integer that is not divisible by a square
+++ of a prime.
+GaussRoot(R: Ring, r: R, n: P): with
+    squareRoot: P -> R
+        -- squareRoot(p) returns an element z in R such that
+        -- z^2=r. It returns 0, if such an element z cannot be found in R.
+        ++ x is a radical integer (squarefree)
+  == add
+    minSquareRootOfUnity(x: P): P ==
+        -- x is a radical integer (squarefree)
+        -- See \cite[Section~IV.3]{Lang:AlgebraicNumberTheory:1986}.
+        x = 2 => 8
+        positiveRemainder(x, 4)=1 => x
+        4*x
+
+    -- gaussSumm corresponds to G(1, b) in
+    -- \cite[Section~IV.3]{Lang:AlgebraicNumberTheory:1986}.
+    -- We can achieve G(a, b) by calling gaussSum(g^a, b).
+    gaussSum(g: R, b: P): R ==
+        z: R := 1
+        for k in 1 .. qcoerce(b-1)@N repeat z := z + g^(k^2)
+        return z
+
+    squareRoot(x: P): R ==
+        -- x>0 is a radical integer (squarefree)
+        one? x => 1$R
+        b: P := minSquareRootOfUnity x
+        -- need a b-th primitive root of unity for sqrt(x)
+        s: Union(Z, "failed") := n exquo b
+        s case "failed" => 0$R -- no b-th root of unity available
+        k: P := qcoerce(s::Z)@P
+        g: R := r^k -- g is a primitive b-th root of unity
+        x = 2 => return g-g^3 -- g is a primitive 8-th root of unity
+        m: Z := positiveRemainder(x, 4)
+        m=1 => return gaussSum(g, x)
+        m=3 => return - g^x * gaussSum(g^4, x) -- G(4, x)/i = -i*G(4, x)
+        --assert(even? x)
+        --assert(b = 4*x)
+        y: P := qcoerce(shift(x, -1))@P -- y := x/2
+        -- now we compute sqrt(y) and multiply with sqrt(2).
+        return squareRoot(y) * squareRoot(2)
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
