@@ -75,7 +75,7 @@ demos(m) == (_
   he_
 )
 
-demox(m) == (_
+demox(m: P): XHashTable(List Z, SymbolicEtaQuotient) == (_
   he: XHashTable(List Z, SymbolicEtaQuotient) := empty();_
   rs := eqmevx m;_
   dbgPrint("EQMEVX", rs);_
@@ -90,7 +90,7 @@ demox(m) == (_
 
 -------------------------------------------------------------------
 
-roottest m == (_
+roottest(m: P): Set Z== (_
   he: XHashTable(List Z, Z) := empty();_
   rs := eqmevx m;_
   dbgPrint("EQMEVX", rs);_
@@ -104,3 +104,39 @@ roottest m == (_
   );_
   set parts he_
 )
+
+unityroots(m: P): List P == (_
+  divs: List P := [qcoerce(delta)@P for delta in divisors m];_
+  rs := eqmevx m;_
+  l: List P := empty(); _
+  for r in rs repeat (_
+    e := etaQuotient(m, divs, r)$SymbolicEtaQuotient;_
+    l := cons(rootOfUnity e, l) _
+  );_
+  l_
+)
+
+m := 25
+mx: P := lcm unityroots(m)
+PolC ==> SparseUnivariatePolynomial C
+polc: PolC := cyclotomic(mx)$CyclotomicPolynomialPackage
+CX ==> SimpleAlgebraicExtension(C, PolC, polc)
+x: Symbol := "x"::Symbol
+LX ==> UnivariateLaurentSeries(CX, x, 0)
+xi := generator()$CX
+EQX ==> EtaQuotientX(C, mx, CX, xi, LX)
+divs: List P := [qcoerce(d)@P for d in divisors m]
+rs := eqmevx m
+lse: List SymbolicEtaQuotient := [etaQuotient(m, divs, r) for r in rs];
+le: List EQX := [etaQuotient e for e in lse]
+[etaQuotient(divs, r)$ETA for r in rs]
+
+squaretest(y: P): P == (_
+  b:= minSquareRootOfUnity y;_
+  pol := cyclotomic(b)$CyclotomicPolynomialPackage;_
+  Pol ==> SparseUnivariatePolynomial Z;_
+  CX ==> SimpleAlgebraicExtension(Z, Pol, pol);_
+  g := generator()$CX;_
+  s := squareRoot(y)$GaussRoot(CX, g, b);_
+  retract(s*s)@Z_
+ )
