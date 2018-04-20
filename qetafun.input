@@ -16,12 +16,12 @@ SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix E)
 
 rsr ==> rationalSquareRoot$QAuxiliaryModularEtaQuotientPackage
 isr ==> squareRoot$QAuxiliaryModularEtaQuotientPackage
-Pol ==> SparseUnivariatePolynomial Z
-Rec ==> Record(root: P, elem: Pol)
+PZ ==> SparseUnivariatePolynomial Z
+Rec ==> Record(root: P, elem: PZ)
 
 
 symEtaMat(m: P, r: List Z): SymEtaMat == (_
-  divs := divisors m;_
+  divs: List P := [qcoerce(d)@P for d in divisors m];_
   n: N := # divs; _
   cusps := cuspsOfGamma0 m;_
   nrows: N := 4 + n; _
@@ -48,8 +48,7 @@ symEtaMat(m: P, r: List Z): SymEtaMat == (_
     );_
     rr: Record(rat: Q, rootOf: P) := rsr(f.cusp); _
     z: P := rr.rootOf; _
-    r: Rec := isr z;_
-    maxs := lcm(maxs, r.root) _
+    maxs := lcm(maxs, minSquareRootOfUnity z) _
   );_
   mat(1, 2) := if maxu < maxs then -1 else 0; _
   mat(2, 2) := rootOfUnity e; _
@@ -116,29 +115,29 @@ unityroots(m: P): List P == (_
   l_
 )
 
+
+squaretest(y: P): P == (_
+  b:= minSquareRootOfUnity y;_
+  pz := cyclotomic(b)$CyclotomicPolynomialPackage;_
+  CX ==> SimpleAlgebraicExtension(Z, PZ, pZ);_
+  g := generator()$CX;_
+  s := squareRoot(y)$GaussRoot(CX, g, b);_
+  retract(s*s)@Z_
+ )
+
 m := 25
 mx: P := lcm unityroots(m)
 PQ ==> SparseUnivariatePolynomial Q
-polc: PolC := cyclotomic(mx)$CyclotomicPolynomialPackage
-PL ==> PolynomialCategoryLifting(N,SingletonAsOrderedSet, C, PolC, PQ)
-polq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, polc)$PL
-CX := SimpleAlgebraicExtension(Q, PQ, polq)
-x: Symbol := "x"::Symbol
-LX := UnivariateLaurentSeries(CX, x, 0)
+pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage
+PL ==> PolynomialCategoryLifting(N,SingletonAsOrderedSet, C, PZ, PQ)
+pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL
+CX := SimpleAlgebraicExtension(Q, PQ, pq)
+xsym: Symbol := "x"::Symbol
+LX := UnivariateLaurentSeries(CX, xsym, 0)
 xi := generator()$CX
 EQX := EtaQuotientX(Q, mx, CX, xi, LX)
 divs: List P := [qcoerce(d)@P for d in divisors m]
 rs := eqmevx m
 lse: List SymbolicEtaQuotient := [etaQuotient(m, divs, r) for r in rs];
-le: List EQX := [etaQuotient(e)$EQX for e in lse]
+le: List EQX := [etaQuotient(e)$EQX for e in lse];
 [etaQuotient(divs, r)$ETA for r in rs]
-
-squaretest(y: P): P == (_
-  b:= minSquareRootOfUnity y;_
-  pol := cyclotomic(b)$CyclotomicPolynomialPackage;_
-  Pol ==> SparseUnivariatePolynomial Z;_
-  CX ==> SimpleAlgebraicExtension(Z, Pol, pol);_
-  g := generator()$CX;_
-  s := squareRoot(y)$GaussRoot(CX, g, b);_
-  retract(s*s)@Z_
- )

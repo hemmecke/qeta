@@ -774,6 +774,7 @@ SymbolicEtaQuotient:
     level(x: %): P == xx.flevel
     cusps(x: %): LQ == xx.fcusps
     divisors(x: %): LP == xx.fdivs
+
     etaQuotient(m: P, divs: LP, r: LZ): % ==
         cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
         gammas: LMZ := [cuspToMatrix(m, cusp)$QAuxMEQ for cusp in cusps]
@@ -861,8 +862,8 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
     symbolicEtaQuotient: % -> SymbolicEtaQuotient
     expansion: (%, Q) -> LX
   Implementation ==> add
-    Rep ==> Record(symetaquo: SymbolicEtaQuotient,
-                   expansions: XHashTable(Q, LX))
+    Rep ==> Record(fsymetaquo: SymbolicEtaQuotient,
+                   fexpansions: XHashTable(Q, LX))
     xx ==> rep x
 
     q: Symbol := "q"::Symbol
@@ -915,9 +916,9 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
         for cusp in cusps e repeat h.cusp := etaQuotientExpansion(e, cusp)
         per [e, h]
 
-    order(x: %, cusp: Q): Z == order(xx.expansions.cusp)
-    expansion(x: %, cusp: Q): LX == xx.expansions.cusp
-
+    order(x: %, cusp: Q): Z == order(xx.fexpansions.cusp)
+    expansion(x: %, cusp: Q): LX == xx.fexpansions.cusp
+    symbolicEtaQuotient(x: %): SymbolicEtaQuotient == xx.fsymetaquo
 
 )if LiterateDoc
 \bibliography{qeta}
