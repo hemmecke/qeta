@@ -118,17 +118,19 @@ unityroots(m: P): List P == (_
 
 m := 25
 mx: P := lcm unityroots(m)
-PolC ==> SparseUnivariatePolynomial C
+PQ ==> SparseUnivariatePolynomial Q
 polc: PolC := cyclotomic(mx)$CyclotomicPolynomialPackage
-CX ==> SimpleAlgebraicExtension(C, PolC, polc)
+PL ==> PolynomialCategoryLifting(N,SingletonAsOrderedSet, C, PolC, PQ)
+polq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, polc)$PL
+CX := SimpleAlgebraicExtension(Q, PQ, polq)
 x: Symbol := "x"::Symbol
-LX ==> UnivariateLaurentSeries(CX, x, 0)
+LX := UnivariateLaurentSeries(CX, x, 0)
 xi := generator()$CX
-EQX ==> EtaQuotientX(C, mx, CX, xi, LX)
+EQX := EtaQuotientX(Q, mx, CX, xi, LX)
 divs: List P := [qcoerce(d)@P for d in divisors m]
 rs := eqmevx m
 lse: List SymbolicEtaQuotient := [etaQuotient(m, divs, r) for r in rs];
-le: List EQX := [etaQuotient e for e in lse]
+le: List EQX := [etaQuotient(e)$EQX for e in lse]
 [etaQuotient(divs, r)$ETA for r in rs]
 
 squaretest(y: P): P == (_

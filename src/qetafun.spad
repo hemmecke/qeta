@@ -840,13 +840,16 @@ SymbolicEtaQuotient:
 
 -------------------------------------------------------------------
 )abbrev domain ETAQX EtaQuotientX
-EtaQuotientX(C: Join(Algebra Q, IntegralDomain)
-             mx: P,
-             CX: Algebra C,
-             xi: CX,
-             LX: UnivariateLaurentSeriesCategory CX
- ): SemiGroup with
+EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
+  C: Join(Algebra Q, IntegralDomain)
+  mx: P
+  CX: Algebra C
+  xi: CX
+  LX: UnivariateLaurentSeriesCategory CX
+  LC ==> SparseUnivariateLaurentSeries(C, q, 0)
+  Exports ==> SemiGroup with
     --assert(one? xi^mx)
+    etaQuotientExpansion: (SymbolicEtaQuotient, Q) -> LX
     etaQuotient: SymbolicEtaQuotient -> %
       ++ etaQuotient(s) represents the expansion of
       ++ g_r(\tau) in terms of x = \exp(2\pi i\tau/w) where
@@ -856,13 +859,13 @@ EtaQuotientX(C: Join(Algebra Q, IntegralDomain)
       ++ x = \exp(2\pi i\tau/w) where w is the width of the cusp.
       ++ It corresponds to the fourth product of eq:g_r(gamma*tau).
     symbolicEtaQuotient: % -> SymbolicEtaQuotient
-  == add
+    expansion: (%, Q) -> LX
+  Implementation ==> add
     Rep ==> Record(symetaquo: SymbolicEtaQuotient,
-                   expansion: XHashTable(Q, LX))
+                   expansions: XHashTable(Q, LX))
     xx ==> rep x
 
     q: Symbol := "q"::Symbol
-    LC ==> SparseUnivariateLaurentSeries(C, q, 0)
     ef: LC := eulerFunction(1)$QFunctions(C, LC)
     cache: XHashTable(Z, LC) := getCache()$CachedPower(LC, ef)
 
@@ -871,51 +874,49 @@ EtaQuotientX(C: Join(Algebra Q, IntegralDomain)
     RecC ==> Record(k: Z, c: C)
     RecX ==> Record(k: Z, c: CX)
     SFCX ==> StreamFunctions2(RecC, RecX)
+
     f(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
-        dbgPrint("=========== fff", x)
         xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
         cc: C := x.c
         cx: CX := xi^xiPower
         cx := cc * cx
         [u*x.k, cx]
 
-    expansion(s: LC, u: P, v: N): LX ==
-        dbgPrint("=========== expansion", s)
+    substitute(s: LC, u: P, v: N): LX ==
         stc: Stream RecC := terms s
         stx: Stream RecX := map(f(u, v), stc)$SFCX
         series(stx)$LX
 
     etaQuotientExpansion(e: SymbolicEtaQuotient, cusp: Q): LX ==
-        dbgPrint("=========== etaQuotientExpansion", cusp)
         m: P := level e
         divs: LP := divisors e
         s: LX := 1
         for delta in divs | not zero? (rd: Z := rdelta(e, delta)) repeat
             pow: P := qcoerce(abs rd)@P
-
             es := power(pow)$CachedPower(LC, ef)
             if rd < 0 then es := recip(es)::LC
             u: P := xudelta(e, cusp, delta)
             v: N := qcoerce(numer(mx * xvdelta(e, cusp, delta)))@N
-            s := s * expansion(es, u, v)
-        f: Q := rationalPrefactor(e, cusp)
+            s := s * substitute(es, u, v)
+        fq: Q := rationalPrefactor(e, cusp)
         import from QAuxiliaryModularEtaQuotientPackage
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(f)
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)
         q: Q := rr.rat
         p: P := rr.rootOf
         pf: CX := (q::C::CX) * squareRoot(p)$GaussRoot(CX, xi, mx)
-        -- We are still missing the upsilon part
-        -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        monomial(pf, ord) * s
+        q := mx*unityPower(e, cusp)
+        ord: Z := order(e, cusp)
+        n: N := qcoerce(positiveRemainder(numer q, mx))@N
+        pf := xi^n*pf
+        monomial(pf, ord)$LX * s
 
     etaQuotient(e: SymbolicEtaQuotient): % ==
-        dbgPrint("=========== etaQuotientExpansion", e)
         h:  XHashTable(Q, LX) := empty()
         for cusp in cusps e repeat h.cusp := etaQuotientExpansion(e, cusp)
         per [e, h]
 
-    order(x: %, cusp: Q): Z == order(xx.expansion.cusp)
-    expansion(x: %, cusp: Q): LX == xx.expansion.cusp
+    order(x: %, cusp: Q): Z == order(xx.expansions.cusp)
+    expansion(x: %, cusp: Q): LX == xx.expansions.cusp
 
 
 )if LiterateDoc
