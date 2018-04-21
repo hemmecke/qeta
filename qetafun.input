@@ -141,3 +141,19 @@ rs := eqmevx m
 lse: List SymbolicEtaQuotient := [etaQuotient(m, divs, r) for r in rs];
 le: List EQX := [etaQuotient(e)$EQX for e in lse];
 [etaQuotient(divs, r)$ETA for r in rs]
+
+cs: List Q := cusps(lse.1)
+r: List P := [qcoerce(t)@P for t in members(vector rs.1 + vector rs.2)]
+sesum := etaQuotient(m, divs, r);
+esum := etaQuotient(sesum)$EQX;
+lesum := le.1 * le.2
+cmp(x: EQX, y: EQX, n: P, cusp: Q): Boolean == (_
+  ex:=expansion(x, cusp); _
+  ey:=expansion(y, cusp); _
+  ox: Z := order(ex);_
+  oy: Z := order(ey);_
+  ox ~= oy => false;_
+  for k in ox..ox+n repeat if ex.k ~= ey.k then return false;_
+  return true_
+)
+[cmp(esum, lesum, 20, cusp) for cusp in cs]

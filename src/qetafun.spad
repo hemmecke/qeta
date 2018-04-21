@@ -919,13 +919,22 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
     symbolicEtaQuotient: % -> SymbolicEtaQuotient
     expansion: (%, Q) -> LX
   Implementation ==> add
-    Rep ==> Record(fsymetaquo: SymbolicEtaQuotient,
-                   fexpansions: XHashTable(Q, LX))
+    HT ==> XHashTable(Q, LX)
+    Rep ==> Record(fsymetaquo: SymbolicEtaQuotient, fexpansions: HT)
     xx ==> rep x
 
     q: Symbol := "q"::Symbol
     ef: LC := eulerFunction(1)$QFunctions(C, LC)
     cache: XHashTable(Z, LC) := getCache()$CachedPower(LC, ef)
+
+    ((x: %) = (y: %)): Boolean == symbolicEtaQuotient x = symbolicEtaQuotient y
+    ((x: %) * (y: %)): % ==
+        seqx: SymbolicEtaQuotient := symbolicEtaQuotient x
+        symetaquo := seqx * symbolicEtaQuotient y
+        expansions: HT := empty()
+        for cusp in cusps seqx repeat
+            expansions.cusp := expansion(x, cusp) * expansion(y, cusp)
+        per [symetaquo, expansions]
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
