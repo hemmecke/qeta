@@ -597,9 +597,10 @@ LMZ ==> List MZ
 OF ==> OutputForm
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
-)abbrev domain SYMBETA SymbolicEta
-SymbolicEta: _
-  Join(CoercibleTo OutputForm) with
+)abbrev domain SYMBEDC SymbolicEtaDeltaAtCusp
+++ SymbolicEtaDeltaAtCusp collects data for the expansion of
+++ eta_delta at a specific cusp.
+SymbolicEtaDeltaAtCusp: SetCategory with
     eta: (P, MZ, P) -> % -- gamma=[[a,b],[c,d]], m=level, delta, r_delta
       ++ eta(m, gamma, delta, rdelta) represents the expansion of
       ++ \eta_\delta(\gamma\tau)^{r_\delta} in terms of
@@ -654,11 +655,26 @@ SymbolicEta: _
     vdelta(x: %): Q == xx.fvdelta
     unityPower(x: %): Q == xx.funityPower
     coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.frat)
+        h := hashUpdate!(h, xx.fkappa)
+        h := hashUpdate!(h, xx.fudelta)
+        h := hashUpdate!(h, xx.fvdelta)
+        h := hashUpdate!(h, xx.funityPower)
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.frat ~= yy.frat => false
+        xx.fkappa ~= yy.fkappa => false
+        xx.fudelta ~= yy.fudelta => false
+        xx.fvdelta ~= yy.fvdelta => false
+        xx.funityPower = yy.funityPower
 
 -------------------------------------------------------------------
-)abbrev domain SYMBETAP SymbolicEtaPower
-SymbolicEtaPower: _
-  Join(CoercibleTo OutputForm) with
+)abbrev domain SYMBEDP SymbolicEtaDeltaPower
+++ SymbolicEtaDeltaPower collects data for the expansion of eta_delta^rdelta
+++ at all cusps of Gamma_0(level).
+SymbolicEtaDeltaPower: SetCategory with
     etaPower: (P, LQ, LMZ, P, Z) -> %
     rationalPrefactor: (%, Q) -> Q -- (h_delta/delta)^(r_delta)
     udelta: (%, Q) -> Z     -- rdelta * width*gcd(delta,c)^2/delta
@@ -676,12 +692,12 @@ SymbolicEtaPower: _
     xunityPower: (%, Q) -> Q
 
  == add
-    HT ==> XHashTable(Q, SymbolicEta)
+    HT ==> XHashTable(Q, SymbolicEtaDeltaAtCusp)
     Rep ==> Record(
               flevel: P,  -- level \Gamma_0(lev)
               fdelta: Z,  -- we expand \eta_\delta(\gamma\tau)
               frdelta: Z, -- the respective divisor of level
-              fht: HT     -- mapping from cusp to SumbolicEtaPowerAtCusp
+              fht: HT     -- cusp to eta_delta at cusp mapping
             )
     import from Rep
     xx ==> rep x
@@ -691,7 +707,7 @@ SymbolicEtaPower: _
     etaPower(m: P, cusps: LQ, gammas: LMZ, delta: P, rdelta: Z): % ==
         ht: HT := empty()
         for cusp in cusps for gamma in gammas repeat
-            ht.cusp := eta(m, gamma, qcoerce(delta)@P)$SymbolicEta
+            ht.cusp := eta(m, gamma, delta)$SymbolicEtaDeltaAtCusp
         per [m, delta, rdelta, ht]
 
     import from MZ
@@ -701,9 +717,15 @@ SymbolicEtaPower: _
     unityPower(x: %, cusp: Q): Q == rdelta(x) * unityPower(hh.cusp)
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fdelta ~= yy.fdelta => false
+        xx.frdelta ~= yy.frdelta => false
+        xx.fht = yy.fht
+
     ((x: %) * (y: %)): % ==
-        xx.flevel ~= yy.flevel => error "SymbolicEtaPower: not same level"
-        xx.fdelta ~= yy.fdelta => error "SymbolicEtaPower: not same delta"
+        xx.flevel ~= yy.flevel => error "SymbolicEtaDeltaAtCusp: not same level"
+        xx.fdelta ~= yy.fdelta => error "SymbolicEtaDeltaAtCusp: not same delta"
         per [xx.flevel, xx.fdelta, rdelta(x)+rdelta(y), hh]
 
     xrat(x: %, cusp: Q): Q == rationalPrefactor(hh.cusp)
@@ -711,11 +733,17 @@ SymbolicEtaPower: _
     xudelta(x: %, cusp: Q): P == udelta(hh.cusp)
     xvdelta(x: %, cusp: Q): Q == vdelta(hh.cusp)
     xunityPower(x: %, cusp: Q): Q == unityPower(hh.cusp)
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fdelta)
+        h := hashUpdate!(h, xx.frdelta)
+        for cusp in sort keys(xx.fht) repeat h := hashUpdate!(h, xx.fht)
+        h
 
 -------------------------------------------------------------------
 )abbrev domain SYMBETAQ SymbolicEtaQuotient
 SymbolicEtaQuotient:
-  Join(Group, CoercibleTo OutputForm) with
+  Join(SemiGroup, CoercibleTo OutputForm) with
     etaQuotient: (P, LP, LZ) -> %
       ++ etaQuotient(m, divs, r) represents the collection
       ++ (over all cusps) of the expansion of
@@ -761,20 +789,22 @@ SymbolicEtaQuotient:
     xvdelta: (%, Q, P) -> Q
     xunityPower: (%, Q, P) -> Q
  == add
-    HT ==> XHashTable(P, SymbolicEtaPower)
+    HT ==> XHashTable(P, SymbolicEtaDeltaPower)
     Rep ==> Record(
               flevel: P,  -- level \Gamma_0(level)
               fcusps: LQ, -- all cusps of \Gamma_0(level)
               fdivs: LP,  -- all divisors of level that are given at creation
-              fht: HT     -- delta to eta power mapping
+              fht: HT     -- delta to eta_delta^rdelta mapping
             )
     import from Rep
     xx ==> rep x
+    yy ==> rep y
 
     level(x: %): P == xx.flevel
     cusps(x: %): LQ == xx.fcusps
     divisors(x: %): LP == xx.fdivs
 
+    -- divs must be ALL divisors of m sorted ascendingly
     etaQuotient(m: P, divs: LP, r: LZ): % ==
         cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
         gammas: LMZ := [cuspToMatrix(m, cusp)$QAuxMEQ for cusp in cusps]
@@ -785,6 +815,33 @@ SymbolicEtaQuotient:
         per [m, cusps, divs, ht]
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fcusps)
+        ht: HT := xx.fht
+        for delta in xx.fdivs repeat
+            h := hashUpdate!(hashUpdate!(h, delta), ht.delta)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        level x ~= level y => false
+        cusps x ~= cusps y => false
+        xx.fht = yy.fht
+
+    ((x: %) * (y: %)): % ==
+        xm: P := level x
+        ym: P := level y
+        xm ~= ym => error "SymbolicEtaQuotient: different levels"
+        divs: LP := xx.fdivs
+        divs ~= yy.fdivs =>
+            error "SymbolicEtaQuotient: different divisors"
+        xht := xx.fht
+        yht := yy.fht
+        ht: HT := empty()
+        for delta in divs repeat ht.delta := xht.delta * yht.delta
+        per [xm, cusps x, divs, ht]$Rep
+
     order(x: %, cusp: Q): Z ==
         z: Z := 0
         ht: HT := xx.fht
