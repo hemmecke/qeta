@@ -918,6 +918,7 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
       ++ It corresponds to the fourth product of eq:g_r(gamma*tau).
     symbolicEtaQuotient: % -> SymbolicEtaQuotient
     expansion: (%, Q) -> LX
+    expansions: % -> XHashTable(Q, LX)
   Implementation ==> add
     HT ==> XHashTable(Q, LX)
     Rep ==> Record(fsymetaquo: SymbolicEtaQuotient, fexpansions: HT)
@@ -984,7 +985,110 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
 
     order(x: %, cusp: Q): Z == order(xx.fexpansions.cusp)
     expansion(x: %, cusp: Q): LX == xx.fexpansions.cusp
+    expansions(x: %): XHashTable(Q, LX) == xx.fexpansions
     symbolicEtaQuotient(x: %): SymbolicEtaQuotient == xx.fsymetaquo
+
+-------------------------------------------------------------------
+)abbrev domain ADD2MUL AddToMul
+++ AddToMul turns an additive monoid into a multiplicative Monoid
+AddToMul(A: AbelianMonoid): Exports == Implementation where
+  Exports ==> Monoid with
+    coerce: A -> %
+    coerce: % -> A
+    if A has OrderedAbelianMonoid then OrderedMonoid
+  Implementation ==> add
+    Rep ==> A
+    import from A
+    coerce(a: A): % == per a
+    coerce(x: %): A == rep x
+    1: % == per 0
+    ((x: %) * (y: %)): % == per(rep x + rep y)
+    ((x: %) ^ (n: N)): % == per(n * rep x)
+    ((x: %) = (y: %)): Boolean == rep x = rep y
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, rep x)
+    rightRecip(x: %): Union(%, "failed") == if one? x then 1 else "failed"
+    leftRecip(x: %): Union(%, "failed") == if one? x then 1 else "failed"
+    if A has OrderedAbelianMonoid then
+        ((x: %) < (y: %)): Boolean == rep x < rep y
+
+-------------------------------------------------------------------
+)abbrev domain ETAQXA EtaQuotientExpansionAlgebra
+EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
+  C: IntegralDomain
+  L: UnivariateLaurentSeriesCategory C
+  m: P -- level
+  Exports ==> CoercibleTo OutputForm with
+    0: %
+      ++ 0 is the neutral element with respect to +.
+    1: %
+      ++ 1 is the neutral element with respect to *.
+    zero?: % -> Boolean
+      ++ zero?(x) returns true if x is the neutral element with respect to +.
+    _+: (%, %) -> %
+      ++ Commutative addition.
+    _-: (%, %) -> %
+      ++ Inverse operation to addition.
+    _*: (%, %) -> %
+      ++ Commutative multiplication
+    _*: (C, %) -> %
+      ++ Multiplication by a coefficient.
+    _^: (%, N) -> %
+      ++ Exponentiation (repeated multiplication)
+    etaQuotient: (LZ, XHashTable(Q, L)) -> %
+      ++ etaQuotient(r, t) creates an element that corresponds to
+      ++ the eta quotient with exponent vector r and whose
+      ++ expansions at all the cusps or Gamma_0(m) is given by t.
+    orders: % -> LZ
+  Implementation ==> add
+    divs: LP := [qcoerce(d)@P for d in divisors(m)$IntegerNumberTheoryFunctions]
+    ndivs: N := # divs
+    cusps: LQ := cuspsOfGamma0(m)$QAuxiliaryModularEtaQuotientPackage
+    ncusps: N := #cusps
+    RVector ==> DirectProduct(ndivs, Z)
+    MRVector ==> AddToMul RVector
+    EQR ==> MonoidRing(C, MRVector) -- EtaQuotientRepresentation
+    Expansions ==> DirectProduct(ncusps, L)
+    Rep ==> Record(eqr: EQR, fexpansions: Expansions)
+    xx ==> rep x
+    yy ==> rep y
+
+    coerce(x: %): OutputForm == xx::OutputForm
+    0: % == per [0, 0]
+    1: % ==
+        r: MRVector := 1
+        e: Expansions := 1
+        per [r::EQR, e]
+
+    zero?(x: %): Boolean ==
+        e := xx.fexpansions
+        for i in 1..ncusps repeat
+            order(e.i) < 0 => return false
+            not zero? e.i.0 => return false
+        return true
+
+    ((x: %) + (y: %)): % ==
+        per [xx.eqr + yy.eqr, xx.fexpansions + yy.fexpansions]
+
+    ((x: %) * (y: %)): % ==
+        per [xx.eqr * yy.eqr, xx.fexpansions * yy.fexpansions]
+
+    ((c: C) * (x: %)): % ==
+        r: EQR := c * xx.eqr
+        e: Expansions := map((l:L):L +-> c*l, xx.fexpansions)
+        per [r, e]
+
+    ((x: %) ^ (n: N)): % == per [xx.eqr ^ n, xx.fexpansions ^ n]
+
+    etaQuotient(r: LZ, t: XHashTable(Q, L)): % ==
+        rv: Vector Z := vector r
+        mrv: MRVector := directProduct(rv)$RVector::MRVector
+        e: Expansions := directProduct vector [t.c for c in cusps]
+        per [mrv::EQR, e]
+
+    orders(x: %): LZ ==
+        d: Expansions := xx.fexpansions
+        [order(d.i) for i in 1..ncusps]
 
 )if LiterateDoc
 \bibliography{qeta}
