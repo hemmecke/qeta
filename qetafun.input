@@ -10,13 +10,14 @@ eqmevs==>etaQuotientMonoidExponentVectors$QMEVS
 eqmevx==>etaQuotientMonoidExponentVectorsX$QMEVS
 
 S ==> Symbol
-E ==> Expression Z
-expr x ==> x :: S :: E
-SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix E)
+EZ ==> Expression Z
+expr x ==> x :: S :: EZ
+SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix EZ)
 
 rsr ==> rationalSquareRoot$QAuxiliaryModularEtaQuotientPackage
 isr ==> squareRoot$QAuxiliaryModularEtaQuotientPackage
 PZ ==> SparseUnivariatePolynomial Z
+PQ ==> SparseUnivariatePolynomial Q
 Rec ==> Record(root: P, elem: PZ)
 
 
@@ -26,12 +27,12 @@ symEtaMat(m: P, r: List Z): SymEtaMat == (_
   cusps := cuspsOfGamma0 m;_
   nrows: N := 4 + n; _
   ncols: N := 2 + # cusps; _
-  mat: Matrix E := new(nrows, ncols, 0); _
+  mat: Matrix EZ := new(nrows, ncols, 0); _
   mat(1, 1) := expr "cusps"; _
   mat(2, 1) := expr "order"; _
   mat(3, 1) := expr "roots"; _
   mat(4, 1) := expr "sqrtR"; _
-  for i in 1..n for delta in divs repeat mat(i+4, 1) := delta :: E; _
+  for i in 1..n for delta in divs repeat mat(i+4, 1) := delta :: EZ; _
   e := etaQuotient(m, divs, r)$SymbolicEtaQuotient;_
   o := order e;_
   u := unityPower e;_
@@ -96,7 +97,7 @@ roottest(m: P): Set Z== (_
   for r in rs repeat (_
     emat := symEtaMat(m, r);_
     dbgPrint("============================================= r", r);_
-    mat: Matrix E := emat.data; _
+    mat: Matrix EZ := emat.data; _
     mat := mat(1..4, 1..2);_
     he.r := mat(1, 2)::Z;_
     MyPrint((mat)::OF)_
@@ -126,9 +127,8 @@ squaretest(y: P): P == (_
  )
 
 -- compute the basis of eta quotients in terms of expansions
-m := 25
+m := 56
 mx: P := lcm unityroots(m)
-PQ ==> SparseUnivariatePolynomial Q
 pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage
 PL ==> PolynomialCategoryLifting(N,SingletonAsOrderedSet, C, PZ, PQ)
 pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL
@@ -142,38 +142,3 @@ rs := eqmevx m
 lse: List SymbolicEtaQuotient := [etaQuotient(m, divs, r) for r in rs];
 le: List EQX := [etaQuotient(e)$EQX for e in lse];
 [etaQuotient(divs, r)$ETA for r in rs]
-
--- Check whether the product of two eta quotients is equal to the
--- eta quotient that corresponds to the sum of the r-vectors.
-cs: List Q := cusps(lse.1)
-r: List P := [qcoerce(t)@P for t in members(vector rs.1 + vector rs.2)]
-sesum := etaQuotient(m, divs, r);
-esum := etaQuotient(sesum)$EQX;
-lesum := le.1 * le.2
-cmp(x: EQX, y: EQX, n: P, cusp: Q): Boolean == (_
-  ex:=expansion(x, cusp); _
-  ey:=expansion(y, cusp); _
-  ox: Z := order(ex);_
-  oy: Z := order(ey);_
-  ox ~= oy => false;_
-  for k in ox..ox+n repeat if ex.k ~= ey.k then return false;_
-  return true_
-)
-[cmp(esum, lesum, 20, cusp) for cusp in cs]
-
--- Check a domain that can be used to track the representation of the
--- series in terms of eta functions.
-ndivs: N := # divs
-RVector ==> DirectProduct(ndivs, Z)
-MRVector ==> AddToMul RVector
-EQR ==> MonoidRing(CX, MRVector) -- EtaQuotientRepresentation
-rvs: List RVector := [directProduct(vector r)$RVector for r in rs]
-mrvs: List MRVector := [r::MRVector for r in rvs]
-rms: List EQR := [r::EQR for r in mrvs]
-rm := (1+xi)*rms.1 + (1-xi)*rms.2
-rm^5
-
-EQXA ==> EtaQuotientExpansionAlgebra(CX, LX, m)
-eas := [etaQuotient(r, expansions e)$EQXA for r in rs for e in le]
-[orders(ea) for ea in eas]
-eas.1*(eas.1 + 3* (eas.2)^3)
