@@ -564,7 +564,12 @@ QEtaQuotientMonoidExponentVectorsStar: with
             if fe.factor = p then return fe.exponent
         return 0
 
-    monoidGenerators(m: P, n: N, d: VZ): List VZ ==
+    -- nullSpace(m) returns the vectors that generate
+    -- R^*(m) over Z.
+    nullSpace(m: P): List VZ ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        n: N := # divs
+        d: VZ := vector divs
         fl: List Record(factor: Z, exponent: Z) := factors factor m
         cols: P := qcoerce(n + 2 + #fl)@P
         rows: P := qcoerce(3 + #fl)@P
@@ -610,26 +615,20 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
-        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
-        n: N := # divs
-        vdivs: VZ := vector divs
-        monoidgens: List VZ := monoidGenerators(m, n, vdivs)
+        gens: List VZ := nullSpace m
         --vPrint("mgens", monoidgens)
-        mat: MZ := matrix [entries v for v in monoidgens]
+        mat: MZ := matrix [entries v for v in gens]
         lat: MZ := LLL(mat)$LLLReduction
-        --vPrint("lat", lat);
-        --print(lat::OutputForm)
-        sort(ascend, listOfLists lat)
+        ll: List List Z := listOfLists lat
+        ll2: List List Z := [[-x for x in l] for l in ll]
+        sort(ascend, concat(ll, ll2))
 
     MQ ==> Matrix Q
     toMQ(x: MZ): MQ == matrix [[e::Q for e in l] for l in listOfLists x]
     etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
-        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
-        n: N := # divs
-        vdivs: VZ := vector divs
-        monoidgens: List VZ := monoidGenerators(m, n, vdivs)
-        vPrint("mgens", monoidgens)
-        mat: MZ := matrix [entries v for v in monoidgens]
+        gens: List VZ := nullSpace m
+        vPrint("mgens", gens)
+        mat: MZ := matrix [entries v for v in gens]
         vPrint("mat", mat);
         ligozat: MZ := matrixLigozat(m)$QAuxiliaryModularEtaQuotientPackage
         ligozat := transpose ligozat
@@ -641,7 +640,9 @@ QEtaQuotientMonoidExponentVectorsStar: with
         vPrint("rec", rec)
         lat: MZ := t*mat
         vPrint("lat", lat)
-        sort(ascend, listOfLists lat)
+        ll: List List Z := listOfLists lat
+        ll2: List List Z := [[-x for x in l] for l in ll]
+        sort(ascend, concat(ll, ll2))
 
 )if LiterateDoc
 \bibliography{qeta}

@@ -1040,6 +1040,8 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
       ++ the eta quotient with exponent vector r and whose
       ++ expansions at all the cusps or Gamma_0(m) is given by t.
     orders: % -> LZ
+      ++ orders(x) returns the order at each cusp. If the order at a cusp
+      ++ is positive, then 1 is returned.
   Implementation ==> add
     divs: LP := [qcoerce(d)@P for d in divisors(m)$IntegerNumberTheoryFunctions]
     ndivs: N := # divs
@@ -1063,7 +1065,7 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
     zero?(x: %): Boolean ==
         e := xx.fexpansions
         for i in 1..ncusps repeat
-            order(e.i) < 0 => return false
+            order(e.i, 0) < 0 => return false
             not zero? e.i.0 => return false
         return true
 
@@ -1088,7 +1090,7 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
 
     orders(x: %): LZ ==
         d: Expansions := xx.fexpansions
-        [order(d.i) for i in 1..ncusps]
+        [order(d.i, 1) for i in 1..ncusps]
 
 )if LiterateDoc
 \bibliography{qeta}
