@@ -407,14 +407,14 @@ $a\in X_c$.
         width(m, mat(2,1)) * h * t(1, 2) / delta
 
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
-    FL ==> Record(flg: fUnion, fctr: Z, xpnt: Z)
+    FL ==> Record(flag: fUnion, factor: Z, exponent: N)
     squarePart(fl: List FL): Z ==
         -- if fl = factorList factor x and z=squarePart(fl) then
         -- z^2*r=expand(fl) for some squarefree r.
         z: Z := 1
         for x in fl repeat
-            e: P := qcoerce(shift(x.xpnt, -1))@P
-            z := (x.fctr)^e * z
+            e: P := qcoerce(shift(x.exponent, -1))@P
+            z := (x.factor)^e * z
         return z
 
     rationalSquareRoot(x: Q): Record(rat: Q, rootOf: P) ==
@@ -422,12 +422,12 @@ $a\in X_c$.
         fden: Factored Z := factor denom x
         fnum: Factored Z := factor numer x
         fl: List FL := factorList fden
-        for x in fl | odd?(x.xpnt) repeat
-            fnum := x.fctr * fnum
-            fden := x.fctr * fden
+        for x in fl | odd?(x.exponent) repeat
+            fnum := x.factor * fnum
+            fden := x.factor * fden
         fl := factorList fnum
         r: Z := 1
-        for x in fl | odd? (x.xpnt) repeat r := x.fctr * r
+        for x in fl | odd? (x.exponent) repeat r := x.factor * r
         return [squarePart(fl)/squarePart(factorList fden), qcoerce(r)@P]
 
     square(x: Record(root: P, elem: Pol)): Vector Z ==
