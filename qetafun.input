@@ -1,5 +1,6 @@
 )r qetalibs
 )r etamacros
+)set stream calculate 1
 
 OF==>OutputForm
 dbgPrint(a, b) ==> MyPrint([a::Symbol::OF,b::OF]$List(OF)::OF)
@@ -8,6 +9,7 @@ MyPrint(x)==> print(x)
 QMEVS==>QEtaQuotientMonoidExponentVectorsStar
 eqmevs==>etaQuotientMonoidExponentVectors$QMEVS
 eqmevx==>etaQuotientMonoidExponentVectorsX$QMEVS
+lc ==> leadingCoefficient
 
 S ==> Symbol
 EZ ==> Expression Z
@@ -130,11 +132,6 @@ squaretest(y: P): P == (_
   retract(s*s)@Z_
  )
 
-
-
-
-
-
 -------------------------------------------------------------------
 -------------------------------------------------------------------
 -- Find idea how to modify the SAMBA algorithm.
@@ -189,10 +186,10 @@ v := u + 16*t2 + (-1)*t3 --  - [8, 0, - 8] + [24, - 24, 0] + 16 [16, - 24, 8]
 
 
 
---- level 6 -------------------------------------------------------
---)if LEVEL6
+--- level 25 -------------------------------------------------------
+--)if LEVEL25
 -- compute the basis of eta quotients in terms of expansions
-level := m := 6
+level := m := 25
 mx: P := lcm unityroots(m)
 pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage
 pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL
@@ -205,28 +202,59 @@ le := [etaQuotient(e)$EQX for e in lse];
 -- [etaQuotient(divs, r)$ETA for r in rs]
 eas := [etaQuotient(r, expansions e)$EQXA for e in le for r in rs]
 ords := [orders ea for ea in eas]
+cusps := cuspsOfGamma0(m)
+
+products(l: List EQXA): List EQXA == (_
+  empty? l => [1];_
+  u := first l; ll := rest l;_
+  empty? ll => [u*u];_
+  l1 := [u*v for v in l];_
+  l2 := products rest l;_
+  concat!(l1, l2)_
+)
+
 )fin
 
 -- Try to run some samba-like procedure
-t := [eas.1, eas.3, eas.2, eas.4];
-c := [eas.5, eas.6];
+t := [eas.1, eas.3, eas.2];
+c := [eas.4];
 p := empty()$List EQXA
 s := empty()$List EQXA
 bas := [1$EQXA]
 u := first c, c := rest c
-[[orders x for x in p], [orders u], [orders x for x in bas]]
-v := u + (-9)*t.2 + 8*bas.1 -- 8 + [9, - 9, - 3, 3] - 9 [1, - 5, 5, - 1]
+[[orders u], [orders x for x in t], [orders x for x in p], [orders x for x in bas]]
+v := u + (-25)*t.1 + (-1)*t.3
+t := concat(t, v);
 
-u := first c, c := rest c
-v := u + (-9)*t.1 + (-1)*bas.1 -- - 1 + [- 9, 9, 3, - 3] - 9 [- 5, 1, - 1, 5]
-orders v
+p := products t;
+[[orders u, orders v], [orders x for x in t], [orders x for x in p], [orders x for x in bas]]
 
-p := concat [[t1*t2 for t2 in t] for t1 in t]; #p
-[[orders x for x in p], [orders u], [orders x for x in bas]]
+u := first p; p := rest p;
+v := u + (-1)*t.1^2
+
+u := first p; p := rest p;
+v := u + (-leadingCoefficient(u,2)/leadingCoefficient(t.2,2))*t.2
+
+[[orders u, orders v], [orders x for x in t], [orders x for x in p], [orders x for x in bas]]
+
+t := concat(t, v)
+
+-- reduce an element from the t basis
+u := t.2
+v := u + (-1)*lc(u,3)/lc(t.5,3)*t.5
+t := concat(t, v);
+
+[[orders u, orders v], [orders x for x in t], [orders x for x in p], [orders x for x in bas]]
+
 p := rest p;
 
-u := first c, c := rest c
-v := u + (-9)*t.1 + (-1)* bas.1 -- - 1 + [- 9, 9, 3, - 3] - 9 [- 5, 1, - 1, 5]
+u := t.1
+v := u + (-1)*lc(u,1)/lc(t.4,1)^2*t.4^2
+v := v + (-1)*lc(v,1)/lc(t.4,1)*t.4
+v := v + (-1)*lc(v,6)/lc(t.3,6)*t.3
+v := v + 1/25*bas.1 -- zero
+
+[[orders u, orders v], [orders x for x in t], [orders x for x in p], [orders x for x in bas]]
 
 --)endif
---- end level 6 ---------------------------------------------------
+--- end level 25 ---------------------------------------------------

@@ -1042,6 +1042,8 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
     orders: % -> LZ
       ++ orders(x) returns the order at each cusp. If the order at a cusp
       ++ is positive, then 1 is returned.
+    leadingCoefficient: (%, Z) -> C
+    series: (%, Z) -> L
   Implementation ==> add
     divs: LP := [qcoerce(d)@P for d in divisors(m)$IntegerNumberTheoryFunctions]
     ndivs: N := # divs
@@ -1091,6 +1093,12 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
     orders(x: %): LZ ==
         d: Expansions := xx.fexpansions
         [order(d.i, 1) for i in 1..ncusps]
+    leadingCoefficient(x: %, i: Z): C ==
+        d: Expansions := xx.fexpansions
+        leadingCoefficient(d.i)
+    series(x: %, i: Z): L ==
+        d: Expansions := xx.fexpansions
+        d.i
 
 )if LiterateDoc
 \bibliography{qeta}
