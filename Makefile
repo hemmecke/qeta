@@ -35,8 +35,8 @@ BIN=${ROOT}/bin
 # toplevel targets
 all: er
 SPADFILES=qfunct cachedpow qetasqrt qetaqmev qetadom qetatool qetasamba \
-	qetaradu qetaicat qetaih qeta3hdp qetair qetais qetasomos \
-  qetaauxmeq qetafun
+  qetaradu qetaicat qetaih qeta3hdp qetair qetais qetasomos \
+  qetaauxmeq qetapowersamba qetafun
 
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
 PREREQS_SAGE=etagb.sage

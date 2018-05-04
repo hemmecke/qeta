@@ -1019,23 +1019,7 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
   C: IntegralDomain
   L: UnivariateLaurentSeriesCategory C
   m: P -- level
-  Exports ==> CoercibleTo OutputForm with
-    0: %
-      ++ 0 is the neutral element with respect to +.
-    1: %
-      ++ 1 is the neutral element with respect to *.
-    zero?: % -> Boolean
-      ++ zero?(x) returns true if x is the neutral element with respect to +.
-    _+: (%, %) -> %
-      ++ Commutative addition.
-    _-: (%, %) -> %
-      ++ Inverse operation to addition.
-    _*: (%, %) -> %
-      ++ Commutative multiplication
-    _*: (C, %) -> %
-      ++ Multiplication by a coefficient.
-    _^: (%, N) -> %
-      ++ Exponentiation (repeated multiplication)
+  Exports ==> XEtaAlgebra C with
     etaQuotient: (LZ, XHashTable(Q, L)) -> %
       ++ etaQuotient(r, t) creates an element that corresponds to
       ++ the eta quotient with exponent vector r and whose
@@ -1043,13 +1027,13 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
     orders: % -> LZ
       ++ orders(x) returns the order at each cusp. If the order at a cusp
       ++ is positive, then 1 is returned.
-    leadingCoefficient: (%, Z) -> C
-    series: (%, Z) -> L
+    leadingCoefficient: (%, P) -> C
+    series: (%, P) -> L
   Implementation ==> add
     divs: LP := [qcoerce(d)@P for d in divisors(m)$IntegerNumberTheoryFunctions]
     ndivs: N := # divs
     cusps: LQ := cuspsOfGamma0(m)$QAuxiliaryModularEtaQuotientPackage
-    ncusps: N := #cusps
+    ncusps: P := qcoerce(#cusps)@P
     RVector ==> DirectProduct(ndivs, Z)
     MRVector ==> AddToMul RVector
     EQR ==> MonoidRing(C, MRVector) -- EtaQuotientRepresentation
@@ -1057,6 +1041,12 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
     Rep ==> Record(eqr: EQR, fexpansions: Expansions)
     xx ==> rep x
     yy ==> rep y
+
+    etaQuotient(r: LZ, t: XHashTable(Q, L)): % ==
+        rv: Vector Z := vector r
+        mrv: MRVector := directProduct(rv)$RVector::MRVector
+        e: Expansions := directProduct vector [t.c for c in cusps]
+        per [mrv::EQR, e]
 
     coerce(x: %): OutputForm == xx::OutputForm
     0: % == per [0, 0]
@@ -1085,21 +1075,24 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
 
     ((x: %) ^ (n: N)): % == per [xx.eqr ^ n, xx.fexpansions ^ n]
 
-    etaQuotient(r: LZ, t: XHashTable(Q, L)): % ==
-        rv: Vector Z := vector r
-        mrv: MRVector := directProduct(rv)$RVector::MRVector
-        e: Expansions := directProduct vector [t.c for c in cusps]
-        per [mrv::EQR, e]
-
+    maxIndex(): P == ncusps
+    qetaIndex(x: %): P ==
+        --assert(not zero? x)
+        maxGrade := -1 -- dummy value
+        idx: N := 0
+        for kn in ncusps .. 1 by -1 repeat
+            k: P := qcoerce(kn)@P
+            if (mx := qetaGrade(x, k)) > maxGrade then
+                maxGrade := mx
+                idx := k
+        return qcoerce(idx)@P
+    qetaGrade(x: %, k: P): Z == - order(xx.fexpansions.k)
+    leadingCoefficient(x: %, k: P): C == leadingCoefficient(xx.fexpansions.k)
+    qetaLeadingCoefficient(x: %, k: P): C == leadingCoefficient(x, k)
+    series(x: %, k: P): L == xx.fexpansions.k
     orders(x: %): LZ ==
         d: Expansions := xx.fexpansions
         [order(d.i, 1) for i in 1..ncusps]
-    leadingCoefficient(x: %, i: Z): C ==
-        d: Expansions := xx.fexpansions
-        leadingCoefficient(d.i)
-    series(x: %, i: Z): L ==
-        d: Expansions := xx.fexpansions
-        d.i
 
 )if LiterateDoc
 \bibliography{qeta}

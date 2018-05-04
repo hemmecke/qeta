@@ -1,0 +1,702 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+\newcommand{\euclideanSize}{\varphi}
+\newcommand{\degreeSize}{\psi}
+\newcommand{\eps}{\varepsilon}
+\DeclareMathOperator{\lc}{lc} % leading coefficient
+\DeclareMathOperator{\initial}{in} % initial = coefficient * power product
+
+\DeclareMathOperator{\zero}{zero} % zero testing
+\DeclareMathOperator{\true}{true} % zero testing
+\DeclareMathOperator{\false}{false} % zero testing
+
+\DeclareMathOperator{\select}{select}
+\DeclareMathOperator{\reduce}{reduce}
+\DeclareMathOperator{\oneStepReduce}{red}
+\DeclareMathOperator{\reducible}{reducible}
+
+\newcommand{\FunSelect}[2]{\select_{{#1},{#2}}}
+\newcommand{\FunReduce}[3][]{\reduce^{#1}_{{#2},{#3}}}
+
+\newcommand{\applySelect}[3]{\FunSelect{#2}{#3}({#1})}
+\newcommand{\applyReduce}[4][]{\FunReduce[#1]{#3}{#4}({#2})}
+\newcommand{\applyOneStepReduce}[3]{\oneStepReduce(#1, #2, #3)}
+
+\newcommand{\RelReduce}[2][]{\mathrel{\rightarrow_{#2}^{#1}}}
+\newcommand{\canBeReducedTo}[4][]{#3\RelReduce[#1]{#2}{#4}}
+
+\newcommand{\RelFunReduce}[2][]{\mathrel{\mapsto_{#2}^{#1}}}
+\newcommand{\reducesTo}[4][]{#3\RelFunReduce[#1]{#2}{#4}}
+
+\newcommand{\RelLessThanLex}{\mathrel{<_{\textsf{lex}}}}
+\newcommand{\ltLex}[2]{#1\RelLessThanLex{#2}}
+\newcommand{\RelLessEqualLex}{\mathrel{\le_{\textsf{lex}}}}
+\newcommand{\leLex}[2]{#1\RelLessEqualLex{#2}}
+
+\newcommand{\RelDivisibilityN}{\sqsubseteq}
+\newcommand{\dividesN}[2]{#1\RelDivisibilityN{#2}}
+\newcommand{\RelProperDivisibilityN}{\sqsubset}
+\newcommand{\dividesProperlyN}[2]{#1\RelProperDivisibilityN{#2}}
+
+\newcommand{\RelDivisibility}[1]{\trianglelefteq_{#1}}
+\newcommand{\divides}[3][]{#2\RelDivisibility{#1}#3}
+\newcommand{\RelProperDivisibility}[1]{\vartriangleleft_{#1}}
+\newcommand{\dividesProperly}[3][]{#2\RelProperDivisibility{#1}#3}
+
+%\usepackage{rhxterm} % define \useterm and \defineterm
+\def\defineterm{\emph}
+\def\useterm{}
+\newcommand{\defineNotation}[2][$$]{%
+  \ensuremath{#2}\index{#1@\ensuremath{#2}}}
+
+\newtheorem{Remark}[Theorem]{Remark}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{The PowerSamba Algorithm}
+\author{Ralf Hemmecke}
+\date{26-Apr-2018}
+\maketitle
+\begin{abstract}
+This code implements the \algoPowerSamba{} algorithm.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This code is based on the article
+\cite{Hemmecke:DancingSambaRamanujan:2018} by Ralf Hemmecke but uses
+newer ideas in order to work not only for rings of the form $R=C[x]$,
+but also for modules of the form $R=C[x]^r$.
+%
+In fact, it works for a $C$-module $M$ and a (multi-)degree function:
+$\deg: M \to \setZ^r \cup \Set{\infty}$ with the condition that
+$\deg(m) < 0$ ($<$ in each component), then $m=0$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Definitions and Notations}%
+\label{sec:Definitions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $\setN$ denote the natural numbers (including 0).
+%
+Let $C$ be a computable Euclidean domain and let
+$\euclideanSize: C\setminus\Set{0} \to \setN\setminus\Set{0}$ be a
+Euclidean size function (also known as Euclidean degree or simply
+Euclidean function) on $C$.
+%
+At the moment we assume $M=C[x]^r$. We shall see later, that everything
+also works in a more general context.
+%
+Let $M^*=M\setminus\Set{0}$.
+%
+For $f=\sum_{k=0}^r c_k x^k \in C[x]$, we denote by
+$\initial(f)=c_r x^r$, $\lc(f)=c_r$, $\deg(f)=r$ the initial, the
+leading coefficient and the degree of $f$. In particular, we define
+$\initial(0)=0$, $\lc(0)=0$, $\deg(0)=-\infty$.
+
+\begin{Definition}%
+\label{def:Ordering}%
+\label{def:degreeSize}%
+  Let $\RelLessThanLex$ and $\RelDivisibilityN$ be two relation on
+  $\setN^2$ defined by
+  \begin{align*}
+  \ltLex{(n_1,n_2)}{(n_1',n_2')} &\iff n_1 < n_1' \lor (n_1 = n_1' \land n_2< n_2')\\
+  \dividesN{(n_1,n_2)}{(n_1',n_2')} &\iff n_1\le n_1' \land n_2\le n_2',
+  \end{align*}
+  for $n_1, n_2, n_1', n_2' \in \setN$.
+%
+  We denote by $\RelLessEqualLex$ the reflexive closure of
+  $\RelLessThanLex$.
+%
+  Let $\degreeSize: R^* \to \setN^2$ be defined by
+  $\degreeSize(f)=(\deg(f), \euclideanSize(\lc f))$.
+%
+  Let $d\in\setN\setminus\Set{0}$, $n, n' \in \setZ$. By
+  $n \equiv_d n'$ we denote that $n$ and $n'$ are
+  \defineterm{congruent modulo $d$}, \ie, that there exists
+  $a\in\setZ$ such that $n=n'+ad$.
+%
+  Let $u, b\in R^*$. We say that $u$ is \defineterm{reducible by $b$
+    modulo $d$} (denoted by $\divides[d]{b}{u}$) if and only if
+  \begin{gather*}
+    \degreeSize(b) \sqsubseteq \degreeSize(u) \land \deg u \equiv_d
+    \deg b.
+  \end{gather*}
+\end{Definition}
+
+In general, from $\divides[d]{b}{u}$ and $\divides[d]{u}{b}$ follows
+only $\degreeSize(b) = \degreeSize(u)$, but neither $b=u$ nor
+$\initial(b) = \initial(u)$.
+
+\begin{Definition}\label{def:ReductionRelation}
+  For $u, t, b\in R^*$, $u'\in R$, the relation
+  $\canBeReducedTo{t, b}{u}{u'}$ holds (in words: $u$
+  \defineterm{reduces in one step modulo $t$ and $b$} to $u'$) if and
+  only if there exist $c\in C$ and $a\in\setN$ such that
+  $u = c t^a b + u'$ and either $u'=0$ or
+  $\ltLex{\degreeSize(u')}{\degreeSize(u)}$.
+
+  If $B=\Set{b_1, \ldots, b_r}\subset R^*$, then
+  $\canBeReducedTo{t, B}{u}{u'}$ holds (in words: $u$ \defineterm{can
+    be reduced in one step modulo $t$ and $B$} to $u'$) if and only if
+  there exists $b \in B$ such that $\canBeReducedTo{t, b}{u}{u'}$.
+\end{Definition}
+
+\begin{Remark}\label{remark:oneStepReduce}
+  Clearly, if $\canBeReducedTo{t, b}{u}{u'}$, then
+  $\divides[d]{b}{u}$.
+  %
+  Conversely, let us assume $\divides[d]{b}{u}$ where $d=\deg t>0$.
+  Then $a=\frac{\deg u - \deg b}{d}\in\setN$ and
+  $\euclideanSize(\lc(b)) \le \euclideanSize(\lc(u))$.
+  %
+  Furthermore, since $C$ is a Euclidean domain, there exists $c\in C$
+  such that $\lc(u) = c \lc(b) + r$ with either $r=0$ or
+  $\euclideanSize(r) < \euclideanSize(\lc(b))$.
+  %
+  Thus, if the operations in $C$ are computable, we can compute
+  $(a,c)\in \setN\times C$ and $u'=u - ct^ab$ such that either $u'=0$
+  or $u'\ne0$ and $lc(u')=r$, \ie,
+  $\ltLex{\degreeSize(u')}{\degreeSize(u)}$, in other words, we can
+  compute $u'$ with $\canBeReducedTo{t, b}{u}{u'}$.
+
+  In general, Euclidean division does not necessarily yield unique $c$
+  and $r$ with the above properties. Consider, for example, the
+  Gaussian integers $C=\setZ[i]$ with $\euclideanSize(a+bi)=a^2+b^2$.
+  Then $3 = (1-i)\cdot(1+i) + 1 = (2-i)\cdot(1+i)-i$ are two different
+  Euclidean division steps of $3$ by $1+i$.
+
+  In order to make the reduction functional, we assume a computable
+  function $\oneStepReduce$ such that
+  $\ltLex{\degreeSize(u-ct^ab)}{\degreeSize(u)}$ for
+  $(a, c) = \applyOneStepReduce{u}{t}{b}$ if $u-ct^ab\ne0$.
+\end{Remark}
+
+\begin{Definition}
+  For $d\in \setN\setminus\Set{0}$, a set $B\subseteq R^*$ is called
+  \defineterm{interreduced modulo $d$}, if for any $b, b' \in B$,
+  $b\ne b'$ neither $\divides[d]{b}{b'}$ nor $\divides[d]{b'}{b}$
+  holds.
+\end{Definition}
+
+\begin{Remark}\label{remark:abmiguity}
+  Suppose that the set $B\subseteq R^*$ is \useterm{interreduced
+    modulo $d$}. If $C$ is a field, then $\euclideanSize(c)=1$ for any
+  $c\in C\setminus\Set{0}$. It follows that for any $u\in R^*$ there
+  is at most one $b\in B$ such that $\divides[d]{b}{u}$.
+
+  In general, however, for $u\in R^*$ it is still possible that there
+  exist $b, b' \in B$, with $b\ne b'$, $\divides[d]{b}{u}$, and
+  $\divides[d]{b'}{u}$. For example, consider $C=\setZ$,
+  $\euclideanSize(z)=\abs{z}$. If $b, b' \in B$, $b \ne b'$ with
+  $\deg b = d + \deg b'$,
+  $\euclideanSize(\lc b) < \euclideanSize(\lc b')$, and $u\in R^*$ is
+  such that $\deg u = \deg b$ and
+  $\euclideanSize(\lc u) = \euclideanSize(\lc b')$. To be more
+  concrete, consider $t=x^2$, \ie, $d=2$ and $u=3x^5$, $b=3x^3$,
+  $b'=2x^5$. Then $u=tb+0=b'+x^5$.
+\end{Remark}
+
+To remove such ambiguity as described in
+Remark~\ref{remark:abmiguity}, we introduce a reduction relation where
+among possible multiple choices, the element is preferred that has
+maximal degree in $x$.
+
+\begin{Definition}
+  Let $t, u \in R^*$, $d=\deg t>0$, $B \subset R^*$ be
+  \useterm{interreduced modulo $d$}, and let there exist $b \in B$
+  with $\divides[d]{b}{u}$. We denote by
+  \defineNotation[select]{\applySelect{u}{t}{B}} the element $b \in B$
+  such that
+  $\deg b = \max \SetDef{\deg b'}{b'\in B\land \divides[d]{b'}{u}}$.
+
+  We say that the relation $\reducesTo{t,B}{u}{u'}$ holds if and only
+  if $\canBeReducedTo{t,b}{u}{u'}$ and $u'= u-ct^ab$ for
+  $b = \applySelect{u}{t}{B}$ and
+  $(a, c) = \applyOneStepReduce{u}{t}{b}$.
+%
+  By $\RelFunReduce[*]{t ,B}$ we denote the reflexive and transitive
+  closure of $\RelFunReduce{t,B}$.
+  %
+  By \defineNotation[reduce]{\applyReduce{u}{t}{B}}, we denote the
+  $u'\in R$ such that $\reducesTo[*]{t, B}{u}{u'}$ and there does
+  not exist $b\in B$ with $\divides[d]{b}{u'}$.
+  %
+  If $u' = \applyReduce{u}{t}{B}$, we say $u$ \defineterm{reduces
+    modulo $t$ and $B$} to $u'$.
+\end{Definition}
+
+\begin{Remark}
+  Under the assumption that $B$ is finite, $\divides[d]{b}{u}$ is
+  decidable algorithmically and the function $\oneStepReduce$ from
+  Remark~\ref{remark:oneStepReduce} is computable, also
+  $\FunSelect{t}{B}$ and $\FunReduce{t}{B}$ are computable.
+\end{Remark}
+
+\begin{Remark}
+  By keeping track of the individual reduction steps, it is clear that
+  if $u' = \applyReduce{u}{t}{B}$, then for every $b\in B$ there
+  exists $p_b\in C[x]$ such that
+  \begin{gather}
+    u = u' + \sum_{b\in B} p_b(t) b\label{eq:repr-u}
+  \end{gather}
+  and
+  $\degreeSize(u) = \max_{\RelLessThanLex} (\Set{\degreeSize(u')} \cup
+  \SetDef{\degreeSize(p_b(t)b)}{b\in B, p_b\ne0})$.
+  In particular, we want to emphasize that there is no summand $s$ on
+  the right-hand side of~\eqref{eq:repr-u} with
+  $\ltLex{\degreeSize(u)}{\degreeSize(s)}$.
+\end{Remark}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Common category for elements in the the
+  \algoPowerSamba{} algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+)abbrev category XETAALG XEtaAlgebra
+++ A domain implementing XEtaAlgebra(C) is supposed to work like the
+++ direct product of n=maxIndex() copies of a QEtaAlgebra.
+XEtaAlgebra(C: CommutativeRing): Category == CoercibleTo OutputForm with
+    0: %
+      ++ 0 is the neutral element with respect to +.
+    1: %
+      ++ 1 is the neutral element with respect to *.
+    zero?: % -> Boolean
+      ++ zero?(x) returns true if x is the neutral element with respect to +.
+    _+: (%, %) -> %
+      ++ Commutative addition.
+    _-: (%, %) -> %
+      ++ Inverse operation to addition.
+    _*: (%, %) -> %
+      ++ Commutative multiplication
+    _*: (C, %) -> %
+      ++ Multiplication by a coefficient.
+    _^: (%, N) -> %
+      ++ Exponentiation (repeated multiplication)
+    maxIndex: () -> P
+      ++ maxIndex() returns the number of components of this domain.
+    qetaIndex: % -> P
+      ++ qetaIndex(x) for nonzero x returns k such that
+      ++ qetaGrade(x, k) = max(qetaGrade(x, j) | j in components x)
+      ++ and k is maximal with this property.
+    qetaGrade: (%, P) -> Z
+      ++ qetaGrade(x, k) returns the grade with the first nonzero entry
+      ++ in the k-th component.
+    qetaLeadingCoefficient: (%, P) -> C
+      ++ qetaLeadingCoefficient(x, k) returns the coefficient
+      ++ in the k-th component corresponding to qetaGrade(x).
+      ++ The qetaLeadingCoefficient of 0 is undefined.
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Common category for the \algoPowerSamba{} algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev category XETACAT XEtaComputationCategory
+XEtaComputationCategory(C: EuclideanDomain, F: XEtaAlgebra C): Category == with
+--    update!: (F, Z, %) -> Void
+--      ++ update!(u, grdt, x) adds u to the basis and updates the critical
+--      ++ elements. The argument grdt is considered to be the grade of a
+--      ++ special basis element.
+    initialize: List F -> %
+      ++ initialize(basis) creates a new structure ready to be processed.
+    criticalElements?: % -> Boolean
+      ++ criticalElements?(x) returns true if x represents a structure that
+      ++ still contains critical elements.
+    basisElements: % -> List F
+      ++ basisElements(x) returns the basis elements that are stored
+      ++ in the structure x.
+    multipliers: % -> List F
+      ++ multipliers(x) return the elements that can be used in power
+      ++ bigger than 1 during the reduction.
+    oneStepComputation!: % -> %
+      ++ oneStepComputation!(t, x) computes one step of the computation.
+      ++ It extracts a critical element and removes it from the list of
+      ++ critical elements. Then it reduces it and updates the basis and
+      ++ the critical elements if the reduction did not end with 0.
+      ++ It should hold criticalElements?(x), otherwise the result is undefined.
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Restricted reduction}
+
+According to \cite{Hemmecke:DancingSambaRamanujan:2018}, we use a
+restricted reduction for the algorithm \algoSamba.
+
+An element $x$ is not reducible by $b$ not only when its grade is
+bigger than that of $b$, but also with the grades are equal and the
+(Euclidean) size of the leading coefficient of $x$ is smaller than
+that of $b$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package XETARED XEtaReduction
+XEtaReduction(C, n, F): Exports == Implementation where
+  C: EuclideanDomain
+  n: P -- dimension for "coefficient ring" C^n
+  F: XEtaAlgebra C
+  H ==> XHashTable(Z, List F)
+  V ==> Vector H
+  MUL ==> XHashTable(P, F)
+  Exports ==> with
+    topReducible?: (F, F, P) -> Boolean
+      ++ topReducible?(u, b) returns true iff there exists f in F such that
+      ++ for v = u - f*b and lc = leadingCoefficient:
+      ++ (grade u > grade v or
+      ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
+    reduce: (F, List F, List F) -> F
+      ++ reduce(u, ts, basis) returns an element v such that
+      ++ v is not reducible modulo ts and basis and
+      ++ "u reduces modulo ts and basis to v".
+    reduce: (F, MUL, V) -> F
+      ++ reduce(u, ts, h) returns an element v such that v is not reducible
+      ++ modulo ts and basis and "u reduces modulo ts and basis to v" where
+      ++ basis is given by the lists of h. These element lists of h are
+      ++ assumed to be sorted by greaterGrade?.
+    greaterGrade?: P -> (F, F) -> Boolean
+      ++ greaterGrade?(x, y) returns qetaGrade(x)>qetaGrade(y).
+  Implementation ==> add
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
+
+    greaterGrade?(k: P): (F, F) -> Boolean == (x: F, y: F): Boolean +->
+        qetaGrade(x, k) > qetaGrade(y, k)
+
+
+    topReducible?(u: F, b: F, k: P): Boolean ==
+        --assert(not zero? leadingCoefficient(b, k))
+        --assert(not zero? leadingCoefficient(u, k))
+        grdu: Z := grade(u, k)
+        grdb: Z := grade(b, k)
+        grdu < grdb => false
+        lcu: C := leadingCoefficient(u, k)
+        lcb: C := leadingCoefficient(b, k)
+        euclideanSize lcu >= euclideanSize lcb
+
+    -- Return an element b from the basis or b=1 such that
+    -- grade u - grade b is divisible by grdt or return "failed" if no such
+    -- b exists.
+    -- This functions corresponds to the function "select_{t,basis}(u)" as
+    -- in Definition 2.6 of \cite{Hemmecke:DancingSambaRamanujan:2018}.
+    -- That reducer yields the element with biggest possible grade is
+    -- ensured by the requirement that "basis" is appropriately sorted by
+    -- greaterGrade?.
+    reducer(u: F, basis: H, grdtk: Z, k: P): Union(F, "failed") ==
+        --assert(not zero? u)
+        i: Z := positiveRemainder(grade(u, k), grdtk)
+        -- if zero? i there is no corresponding element in basis, but
+        -- we can use the element 1, i.e. we reduce u by a power of tj.
+        zero? i => return (1$F)::Union(F, "failed")
+        candidates: List F := elt(basis, i, empty())
+            -- candidates contains all basis elements b with
+            -- positiveRemainder(grade b, grdt) = i in the same order
+            -- as given in basis.
+        for b in candidates repeat
+            if topReducible?(u, b, k) then return b::Union(F, "failed")
+        "failed"
+
+    selectReducer(u: F, t: MUL, basis: V): Union(F, "failed") ==
+        --assert(not zero? u)
+--        for k in n .. 1 | grade(u, k) > 0 and key?(k, t) repeat
+        for kn in n..1 by -1 | key?(k := qcoerce(kn)@P, t) repeat
+            tk := t.k
+            grdtk := grade(tk, k)
+            bask: H := basis.k
+            r: Union(F, "failed") := reducer(u, bask, grdtk, k)
+            r case F =>
+                b: F := r :: F
+                grduk: Z := grade(u, k)
+                j: Z := ((grduk - grade(b, k)) exquo grdtk) :: Z
+                v: F := b*tk^(qcoerce(j)@N)
+                -- cc: Record(quotient: C, remainder: C)
+                cc := divide(leadingCoefficient(u, k), leadingCoefficient(v, k))
+                return ((- cc.quotient)*v) :: Union(F, "failed")
+        "failed"
+
+    -- reduce(u, t, basis) returns an element v such that
+    -- a*u = v + ft(t) + sum_b fb(t)*b where b runs over all elements
+    -- of basis, fi(t) is a polynomial in C[t], and a is a unit in C.
+    -- We assume that leadingCoefficient(t)=1.
+    -- Furthermore, we assume that the elements of basis are lists that
+    -- are sorted by greaterGrade?.
+    reduce(u: F, t: MUL, basis: V): F ==
+        --?assert(grade(t)>0)
+        --?assert(one? leadingCoefficient t) (we can achieve this!!! perhaps)
+        --?assert grade(b)>0 for all x in basis
+        --?assert(not zero? positiveRemainder(grade(b), grade t) for all b in basis)
+        while (r := selectReducer(u, t, basis)) case F repeat
+            u := u + (r :: F)
+        return u
+
+    reduce(u: F, mul: List F, bas: List F): F ==
+        basis: V := new(n, table())
+        for k in 1..n repeat basis.k := table() -- new table for each entry
+        t: MUL := empty()
+        --assert that all multipliers have different index.
+        for m in mul repeat
+            k: P := qetaIndex m
+            if key?(k, t) then error "reduce: index already taken"
+            t.k := m
+        --assert(sort keys t = [1..n])
+        for b in bas repeat -- fill the table
+            k: P := qetaIndex b
+            i: Z := positiveRemainder(grade(b, k), grade(t.k, k))
+            l: List F := elt(basis.k, i, empty())
+            basis.k.i := sort(greaterGrade? k, cons(b, l))
+        reduce(u, t, basis)
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{\underline{S}ub\underline{A}lgebra%
+         \underline{M}odule\underline{B}asis%
+         \underline{A}lgorithm}
+
+See \cite{Hemmecke:DancingSambaRamanujan:2018} for the specification
+of \algoSamba{}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+)abbrev package XETAABAS XEtaAlgebraBasis
+++ QEtaAlgebraBasis implements the algorithm Samba from an article of
+++ Ralf Hemmecke:
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+XEtaAlgebraBasis(C, F, Y): Exports == Implementation where
+  C: EuclideanDomain
+  F: XEtaAlgebra C
+  Y: XEtaComputationCategory(C, F)
+  Exports ==> with
+    algebraBasis: List F -> Record(mul: List F, bas: List F)
+      ++ algebraBasis(m) returns a list t and a list z such that
+      ++ C[m] and the C[t]-module generated by 1 and z are equal as sets.
+  Implementation ==> add
+    import from QEtaReduction(C, F)
+    algebraBasis(m: List F): Record(mul: List F, bas: List F) ==
+        --?assert(not empty? m)
+        --?assert(qetaGrade t > 0)
+        y: Y := initialize m
+        while criticalElements? y repeat y := oneStepComputation! y
+        return [multipliers y, basisElements y]
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algorithm \algoPowerSamba}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev domain XETAC XEtaComputation
+XEtaComputation(C, n, F): XEtaComputationCategory(C, F)
+ == Implementation where
+  C: EuclideanDomain
+  n: P -- dimension for "coefficient ring" C^n
+  F: XEtaAlgebra C
+  Implementation ==> add
+    H ==> XHashTable(Z, List F)
+    V ==> Vector H
+    MUL ==> XHashTable(P, F)
+    FF ==> Record(f1: F, f2: F)
+    Products ==> XHashTable(Z, List FF)
+    Rep ==> Record(mul: MUL, be: V, cbe: List F,_
+                   havepairs?: Boolean, pairs: Products)
+    -- bel contains the L part of elements of be.
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
+    xx ==> rep x
+    import from XEtaReduction(C, n, F)
+    import from Rep
+
+    multipliers(x: %): List F == entries xx.mul
+    basisElements(x: %): List F == concat [concat entries xx.be.k for k in 1..n]
+
+    -- Destructively updates multipliers, basis, and critical elements
+    update!(u: F, x: %): Void() ==
+        --assert(not zero? u)
+        --u is not top reducible by x
+        --assert(every?(x+->x, concat [[not topReducible?(u, b, k) for all b in xx.be.k] for all k in keys(xx.mul)]))
+        k: P := qetaIndex u
+        grduk: Z := grade(u, k)
+        not key?(k, xx.mul) =>
+            -- we've found a new multiplier
+            xx.mul.k := u -- destructive
+            -- Note that there should not yet be a basis element b
+            -- with qetaIndex(b)=k.
+            -- Note that some basis elements might become reducible, but
+            -- not necessarily top reducible by the new element.
+            -- It is not yet clear whethe we should reduce
+            -- multipliers and basis elements by the new multiplier.
+
+        tk: F := xx.mul.k
+        grdtk := grade(tk, k)
+        -- update basis
+        -- Since u is not top-reducible by any basis element, we can add
+        -- u to the basis. We move elements that become top-reducible by u
+        -- from the basis into the critical elements.
+        i: Z := positiveRemainder(grduk, grdtk) -- This is not zero!
+        bas: H := xx.be.k
+        potentiallyReducible: List F := elt(bas, i, empty())
+        red: List F := empty()
+        irr: List F := empty()
+
+        for b in potentiallyReducible repeat
+            if topReducible?(b, u, k) then
+                -- add b to criticalElements
+                red := cons(b, red)
+            else
+                irr := cons(b, irr)
+        bas.i := sort(greaterGrade? k, cons(u, irr))
+        red := concat(red, xx.cbe)
+        xx.cbe := sort(greaterGrade? k, red)
+        xx.havepairs? := false
+        return void()
+
+    initialize(m: List F): % ==
+        basis: V := new(n, table())
+        for k in 1..n repeat basis.k := table() -- new table for each entry
+        x: % := per [table(), basis, empty(), false, empty()]
+        for mi in m repeat
+            u := reduce(mi, xx.mul, xx.be)
+            if not zero? u then update!(u, x)
+        return x
+
+    criticalElements?(x: %): Boolean ==
+        not empty?(xx.cbe) => true
+        xx.havepairs? => not empty?(xx.pairs)
+        -- make sure that there are basis elements.
+        for k in 1..n repeat if not empty?(xx.be.k) then return true
+        false -- there are no basis elements
+
+    computePairs!(x: %): Void ==
+        --assert(not empty?(xx.be)) -- so there is at least one product
+        basElts: List F := basisElements x
+        products: Products := table()
+        while not empty? basElts repeat
+            b: F := first basElts
+            for e in basElts repeat
+                maxGrade: Z := -1 -- dummy, because there is at least one >= 0.
+                for kn in 1..n repeat
+                    k: P := qcoerce(kn)@P
+                    g: Z := grade(b, k) + grade(e, k)
+                    if g > maxGrade then maxGrade := g
+                products.maxGrade := cons([b, e], elt(products, g, empty()))
+            basElts := rest basElts
+-------------------------------------------------------------------
+--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-------------------------------------------------------------------
+)if false
+        -- Additionally, we have to add products of the form t^j*b
+        -- where qetaGrade(b)+j*d=qetaGrade(b') and b, b' in x.be
+        -- b different from b' and j>0 is minimal with that property.
+        -- That corresponds to the set S (line 13) in the algorithm samba
+        -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
+        d: Z := qetaGrade t
+        for bek in entries(xx.be) repeat
+            -- bek = all basis elements of same grade k (mod d)
+            -- bek is non-empty and sorted by greaterGrade?
+            b := first bek
+            bas := rest bek
+            g: Z := qetaGrade b
+            while not empty? bas repeat
+                b := first bas
+                e: Z := qetaGrade b
+                j: Z := ((g - e) exquo d) :: Z
+                tj: F := t^(qcoerce(j)@N)
+                products.g := cons([tj, b], elt(products, g, empty()))
+                bas := rest bas
+                g := e
+)endif
+-------------------------------------------------------------------
+--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-------------------------------------------------------------------
+        xx.pairs := products
+        xx.havepairs? := true
+        void()
+
+    -- We first reduce in L and only when there is a non-zero result
+    -- we redo the computation in F.
+    -- Here we assume that the computation in L is much faster.
+    oneStepComputation!(x: %): % ==
+        --assert(criticalElements? x)
+        not empty?(xx.cbe) =>
+            u: F := first(xx.cbe)
+            xx.cbe := rest(xx.cbe)
+            u := reduce(u, xx.mul, xx.be)
+            if not zero? u then update!(u, x)
+            return x
+        if not xx.havepairs? then --assert(not empty? baisElements x)
+            computePairs! x
+        p: Products := xx.pairs
+        --assert(not empty? indices p)
+        g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+        r: FF := first(p.g) -- the element of this grade
+        l: List FF := rest(p.g) -- remove u
+        if empty? l then remove!(g, p) else p.g := l
+        if not zero? (u := reduce(r.f1 * r.f2, xx.mul, xx.be)) then
+            update!(u, x)
+        return x
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
