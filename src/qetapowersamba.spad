@@ -499,13 +499,17 @@ XEtaReduction(C, n, F): Exports == Implementation where
         zero? u => "failed"
         -- First check top-reducibility for biggest grade.
         k: P := qetaIndex u
+        xdbgPrint("selred k", k)
         not grade(u, k) > 0 => -- u is constant and non-zero
             ((-leadingCoefficient(u, 1))*1$F)::Union(F, "failed")
         r: Union(F, "failed") := selectReducerForIndex(u, t, basis, k)
+        xdbgPrint("selred r", r case F)
         r case F => return r
         for kn in n..1 by -1 | kn ~= k and grade(u, qcoerce(kn)@P, 0) > 0 repeat
             kp: P := qcoerce(kn)@P
+            xdbgPrint("selred kp", kp)
             r := selectReducerForIndex(u, t, basis, kp)
+            xdbgPrint("selred rp", r case F)
             r case F => return r
         "failed"
 
@@ -524,10 +528,7 @@ XEtaReduction(C, n, F): Exports == Implementation where
         --?assert grade(b)>0 for all x in basis
         --?assert(not zero? positiveRemainder(grade(b), grade t) for all b in basis)
         while (r := selectReducer(u, t, basis)) case F repeat
-            xdbgPrint("red r", r)
             u := u + (r :: F)
-            xdbgPrint("red u", u)
-        xdbgPrint("RED return", u)
         return u
 
     reduce(u: F, mul: List F, bas: List F): F ==
@@ -778,11 +779,8 @@ XEtaComputation(C, n, F): Exports
         if empty? l then remove!(g, p) else p.g := l
         xdbgPrint("one p", p)
         u := reduce(r.f1 * r.f2, xx.mul, xx.be)
-        xdbgPrint("one u", u)
-        xdbgPrint("one not zero", not zero? u)
+        xdbgPrint("one ug", qetaGrades u)
         if not zero? u then update!(u, x)
-        xdbgPrint("one srep", x)
-        s := srep x
         xdbgPrint("one return", srep x)
         return x
 
