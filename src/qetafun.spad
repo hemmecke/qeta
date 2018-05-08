@@ -1087,12 +1087,14 @@ EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
                 idx := k
         return qcoerce(idx)@P
     qetaGrade(x: %, k: P): Z == - order(xx.fexpansions.k)
+    qetaGrade(x: %, k: P, mn: Z): Z == - order(xx.fexpansions.k, -mn)
     leadingCoefficient(x: %, k: P): C == leadingCoefficient(xx.fexpansions.k)
     qetaLeadingCoefficient(x: %, k: P): C == leadingCoefficient(x, k)
     series(x: %, k: P): L == xx.fexpansions.k
-    orders(x: %): LZ ==
+    qetaGrades(x: %): LZ ==
         d: Expansions := xx.fexpansions
-        [order(d.i, 1) for i in 1..ncusps]
+        zero? d => [0 for i in 1..ncusps]
+        [- order(d.i) for i in 1..ncusps]
 
 )if LiterateDoc
 \bibliography{qeta}

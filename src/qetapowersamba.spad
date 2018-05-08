@@ -18,6 +18,11 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------
 
+OF==>OutputForm
+dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
+--dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 770)
+xdbgPrint(x,y) ==> rhx:="42"
+
 )if LiterateDoc
 \documentclass{article}
 \usepackage{qeta}
@@ -330,15 +335,24 @@ XEtaAlgebra(C: CommutativeRing): Category == CoercibleTo OutputForm with
       ++ maxIndex() returns the number of components of this domain.
     qetaIndex: % -> P
       ++ qetaIndex(x) for nonzero x returns k such that
-      ++ qetaGrade(x, k) = max(qetaGrade(x, j) | j in components x)
+      ++ qetaGrade(x, k) = max [qetaGrade(x, j) for j in 1..maxIndex()]
       ++ and k is maximal with this property.
+      ++ qetaIndex(0) is undefined.
     qetaGrade: (%, P) -> Z
       ++ qetaGrade(x, k) returns the grade with the first nonzero entry
-      ++ in the k-th component.
+      ++ in the k-th component. If the grade is not bounded from below
+      ++ this function might run into an infinite loop.
+      ++ qetaGrade(0, k) is undefined.
+    qetaGrade: (%, P, Z) -> Z
+      ++ qetaGrade(x, k, mn) returns the maximum of qetaGrade(x, k) and
+      ++ mn.
     qetaLeadingCoefficient: (%, P) -> C
       ++ qetaLeadingCoefficient(x, k) returns the coefficient
       ++ in the k-th component corresponding to qetaGrade(x).
       ++ The qetaLeadingCoefficient of 0 is undefined.
+    qetaGrades: % -> List Z
+      ++ qetaGrades(x) returns [qetaGrade(x, k) for k in 1..maxIndex())]
+      ++ for nonzero x and [0 for k in 1..maxIndex()] for x=0.
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -347,7 +361,8 @@ XEtaAlgebra(C: CommutativeRing): Category == CoercibleTo OutputForm with
 )endif
 
 )abbrev category XETACAT XEtaComputationCategory
-XEtaComputationCategory(C: EuclideanDomain, F: XEtaAlgebra C): Category == with
+XEtaComputationCategory(C: EuclideanDomain, F: XEtaAlgebra C): Category ==
+  CoercibleTo OutputForm with
 --    update!: (F, Z, %) -> Void
 --      ++ update!(u, grdt, x) adds u to the basis and updates the critical
 --      ++ elements. The argument grdt is considered to be the grade of a
@@ -368,8 +383,11 @@ XEtaComputationCategory(C: EuclideanDomain, F: XEtaAlgebra C): Category == with
       ++ It extracts a critical element and removes it from the list of
       ++ critical elements. Then it reduces it and updates the basis and
       ++ the critical elements if the reduction did not end with 0.
-      ++ It should hold criticalElements?(x), otherwise the result is undefined.
-
+      ++ It should hold criticalElements?(x), otherwise the result
+      ++ is undefined.
+    postProcess!: % -> %
+      ++ postProcess!(x) postprocesses the result. It might interreduce
+      ++ the basis or do other kinds of cleanup.
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Restricted reduction}
@@ -390,15 +408,21 @@ XEtaReduction(C, n, F): Exports == Implementation where
   C: EuclideanDomain
   n: P -- dimension for "coefficient ring" C^n
   F: XEtaAlgebra C
-  H ==> XHashTable(Z, List F)
-  V ==> Vector H
   MUL ==> XHashTable(P, F)
+    -- There should be multipliers for each component k
+    -- This is the mapping from k to multiplier.
+    -- Let gk be grade(mul.k, k)
+  H ==> XHashTable(Z, List F)
+    -- For each component k and each i from 1 to gk-1 there should
+    -- be a basisElement b such that grade(b, k) = i mod gk
+  V ==> Vector H -- mapping k -> H
   Exports ==> with
     topReducible?: (F, F, P) -> Boolean
-      ++ topReducible?(u, b) returns true iff there exists f in F such that
-      ++ for v = u - f*b and lc = leadingCoefficient:
-      ++ (grade u > grade v or
-      ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
+      ++ topReducible?(u, b, k) returns true iff there exists f in F
+      ++ such that for v = u - f*b and lc = leadingCoefficient:
+      ++ (grade(u, k) > grade(v, k) or
+      ++ (grade(u, k) = grade(v, k) and
+      ++ euclideanSize lc(u, k) > euclideanSize lc(v, k)
     reduce: (F, List F, List F) -> F
       ++ reduce(u, ts, basis) returns an element v such that
       ++ v is not reducible modulo ts and basis and
@@ -417,8 +441,15 @@ XEtaReduction(C, n, F): Exports == Implementation where
     greaterGrade?(k: P): (F, F) -> Boolean == (x: F, y: F): Boolean +->
         qetaGrade(x, k) > qetaGrade(y, k)
 
-
     topReducible?(u: F, b: F, k: P): Boolean ==
+        -- This is a very special test for top-reducibility.
+        -- We already know that there is an appropriate element
+        -- t.k (see seectReducer) that can potentially reduce
+        -- u. But we must check whether the grade of b is actually
+        -- greater than that of u in the k-th component and
+        -- whether the leading coefficient of u can be reduced.
+        --assert(not zero? u)
+        --assert(qetaIndex u = k)
         --assert(not zero? leadingCoefficient(b, k))
         --assert(not zero? leadingCoefficient(u, k))
         grdu: Z := grade(u, k)
@@ -429,14 +460,14 @@ XEtaReduction(C, n, F): Exports == Implementation where
         euclideanSize lcu >= euclideanSize lcb
 
     -- Return an element b from the basis or b=1 such that
-    -- grade u - grade b is divisible by grdt or return "failed" if no such
-    -- b exists.
-    -- This functions corresponds to the function "select_{t,basis}(u)" as
+    -- grade(u,k) - grade(b,k) is divisible by grdtk
+    -- or return "failed" if no such b exists.
+    --? This functions corresponds to the function "select_{t,basis}(u)" as
     -- in Definition 2.6 of \cite{Hemmecke:DancingSambaRamanujan:2018}.
     -- That reducer yields the element with biggest possible grade is
     -- ensured by the requirement that "basis" is appropriately sorted by
     -- greaterGrade?.
-    reducer(u: F, basis: H, grdtk: Z, k: P): Union(F, "failed") ==
+    selectBasisReducer(u: F, basis: H, grdtk: Z, k: P): Union(F, "failed") ==
         --assert(not zero? u)
         i: Z := positiveRemainder(grade(u, k), grdtk)
         -- if zero? i there is no corresponding element in basis, but
@@ -444,28 +475,38 @@ XEtaReduction(C, n, F): Exports == Implementation where
         zero? i => return (1$F)::Union(F, "failed")
         candidates: List F := elt(basis, i, empty())
             -- candidates contains all basis elements b with
-            -- positiveRemainder(grade b, grdt) = i in the same order
+            -- positiveRemainder(grade(b,k), grdtk) = i in the same order
             -- as given in basis.
         for b in candidates repeat
             if topReducible?(u, b, k) then return b::Union(F, "failed")
         "failed"
 
-    selectReducer(u: F, t: MUL, basis: V): Union(F, "failed") ==
+    selectReducerForIndex(u: F, t: MUL, basis: V, k: P): Union(F, "failed") ==
         --assert(not zero? u)
---        for k in n .. 1 | grade(u, k) > 0 and key?(k, t) repeat
-        for kn in n..1 by -1 | key?(k := qcoerce(kn)@P, t) repeat
-            tk := t.k
-            grdtk := grade(tk, k)
-            bask: H := basis.k
-            r: Union(F, "failed") := reducer(u, bask, grdtk, k)
-            r case F =>
-                b: F := r :: F
-                grduk: Z := grade(u, k)
-                j: Z := ((grduk - grade(b, k)) exquo grdtk) :: Z
-                v: F := b*tk^(qcoerce(j)@N)
-                -- cc: Record(quotient: C, remainder: C)
-                cc := divide(leadingCoefficient(u, k), leadingCoefficient(v, k))
-                return ((- cc.quotient)*v) :: Union(F, "failed")
+        not key?(k, t) => return "failed"
+        tk := t.k
+        grdtk := grade(tk, k)
+        bask: H := basis.k
+        r: Union(F, "failed") := selectBasisReducer(u, bask, grdtk, k)
+        r case "failed" => return "failed"
+        b: F := r :: F
+        j: Z := ((grade(u, k) - grade(b, k)) exquo grdtk) :: Z
+        v: F := b*tk^(qcoerce(j)@N)
+        cc := divide(leadingCoefficient(u, k), leadingCoefficient(v, k))
+        return ((- cc.quotient)*v) :: Union(F, "failed")
+
+    selectReducer(u: F, t: MUL, basis: V): Union(F, "failed") ==
+        zero? u => "failed"
+        -- First check top-reducibility for biggest grade.
+        k: P := qetaIndex u
+        not grade(u, k) > 0 => -- u is constant and non-zero
+            ((-leadingCoefficient(u, 1))*1$F)::Union(F, "failed")
+        r: Union(F, "failed") := selectReducerForIndex(u, t, basis, k)
+        r case F => return r
+        for kn in n..1 by -1 | kn ~= k and grade(u, qcoerce(kn)@P, 0) > 0 repeat
+            kp: P := qcoerce(kn)@P
+            r := selectReducerForIndex(u, t, basis, kp)
+            r case F => return r
         "failed"
 
     -- reduce(u, t, basis) returns an element v such that
@@ -475,12 +516,18 @@ XEtaReduction(C, n, F): Exports == Implementation where
     -- Furthermore, we assume that the elements of basis are lists that
     -- are sorted by greaterGrade?.
     reduce(u: F, t: MUL, basis: V): F ==
+        xdbgPrint("RED u", u)
+        xdbgPrint("RED t", t)
+        xdbgPrint("RED basis", basis)
         --?assert(grade(t)>0)
         --?assert(one? leadingCoefficient t) (we can achieve this!!! perhaps)
         --?assert grade(b)>0 for all x in basis
         --?assert(not zero? positiveRemainder(grade(b), grade t) for all b in basis)
         while (r := selectReducer(u, t, basis)) case F repeat
+            xdbgPrint("red r", r)
             u := u + (r :: F)
+            xdbgPrint("red u", u)
+        xdbgPrint("RED return", u)
         return u
 
     reduce(u: F, mul: List F, bas: List F): F ==
@@ -524,18 +571,21 @@ XEtaAlgebraBasis(C, F, Y): Exports == Implementation where
   F: XEtaAlgebra C
   Y: XEtaComputationCategory(C, F)
   Exports ==> with
+    algebraBasisComputation: List F -> Y
     algebraBasis: List F -> Record(mul: List F, bas: List F)
       ++ algebraBasis(m) returns a list t and a list z such that
       ++ C[m] and the C[t]-module generated by 1 and z are equal as sets.
   Implementation ==> add
     import from QEtaReduction(C, F)
-    algebraBasis(m: List F): Record(mul: List F, bas: List F) ==
+    algebraBasisComputation(m: List F): Y ==
         --?assert(not empty? m)
         --?assert(qetaGrade t > 0)
         y: Y := initialize m
         while criticalElements? y repeat y := oneStepComputation! y
+        return postProcess! y
+    algebraBasis(m: List F): Record(mul: List F, bas: List F) ==
+        y: Y := algebraBasisComputation m
         return [multipliers y, basisElements y]
-
 
 
 )if LiterateDoc
@@ -546,18 +596,28 @@ XEtaAlgebraBasis(C, F, Y): Exports == Implementation where
 )endif
 
 )abbrev domain XETAC XEtaComputation
-XEtaComputation(C, n, F): XEtaComputationCategory(C, F)
+XEtaComputation(C, n, F): Exports
  == Implementation where
   C: EuclideanDomain
   n: P -- dimension for "coefficient ring" C^n
   F: XEtaAlgebra C
+
+  LZ ==> List Z
+  SH ==> XHashTable(Z, List(LZ))
+  SV ==> Vector SH
+  SMUL ==> XHashTable(P, LZ)
+  SRep ==> Record(smul: SMUL, sbe: SV, ce: List LZ,_
+                  havepairs?: Boolean, pairs: N)
+
+  Exports ==> XEtaComputationCategory(C, F) with
+    srep: % -> SRep
   Implementation ==> add
     H ==> XHashTable(Z, List F)
     V ==> Vector H
     MUL ==> XHashTable(P, F)
     FF ==> Record(f1: F, f2: F)
     Products ==> XHashTable(Z, List FF)
-    Rep ==> Record(mul: MUL, be: V, cbe: List F,_
+    Rep ==> Record(mul: MUL, be: V, ce: List F,_
                    havepairs?: Boolean, pairs: Products)
     -- bel contains the L part of elements of be.
     grade ==> qetaGrade$F
@@ -566,26 +626,34 @@ XEtaComputation(C, n, F): XEtaComputationCategory(C, F)
     import from XEtaReduction(C, n, F)
     import from Rep
 
+    coerce(x: %): OutputForm == xx::OutputForm
+    srep(x: %): SRep ==
+        xmul: SMUL := table()
+        for k in keys xx.mul repeat xmul.k := qetaGrades xx.mul.k
+        xbe: SV := new(n, table())
+        for kn in 1..n repeat
+            k: P := qcoerce(kn)@P
+            xbe.k := table() -- new table for each entry
+            bek := xx.be.k
+            for j in keys bek repeat xbe.k.j := [qetaGrades f for f in bek.j]
+        xce: List LZ := [qetaGrades f for f in xx.ce]
+        [xmul, xbe, xce, xx.havepairs?, #(xx.pairs)]
+
     multipliers(x: %): List F == entries xx.mul
     basisElements(x: %): List F == concat [concat entries xx.be.k for k in 1..n]
 
     -- Destructively updates multipliers, basis, and critical elements
     update!(u: F, x: %): Void() ==
+        xdbgPrint("UPD u", u)
         --assert(not zero? u)
         --u is not top reducible by x
         --assert(every?(x+->x, concat [[not topReducible?(u, b, k) for all b in xx.be.k] for all k in keys(xx.mul)]))
         k: P := qetaIndex u
+        xdbgPrint("UPD k", k)
         grduk: Z := grade(u, k)
-        not key?(k, xx.mul) =>
-            -- we've found a new multiplier
-            xx.mul.k := u -- destructive
-            -- Note that there should not yet be a basis element b
-            -- with qetaIndex(b)=k.
-            -- Note that some basis elements might become reducible, but
-            -- not necessarily top reducible by the new element.
-            -- It is not yet clear whethe we should reduce
-            -- multipliers and basis elements by the new multiplier.
-
+        not key?(k, xx.mul) => xx.mul.k := u -- we've found a new multiplier
+        -- Now we look at every potentially reducible element in
+        -- the basis and move such element to the critical element list.
         tk: F := xx.mul.k
         grdtk := grade(tk, k)
         -- update basis
@@ -593,6 +661,7 @@ XEtaComputation(C, n, F): XEtaComputationCategory(C, F)
         -- u to the basis. We move elements that become top-reducible by u
         -- from the basis into the critical elements.
         i: Z := positiveRemainder(grduk, grdtk) -- This is not zero!
+        xdbgPrint("UPD i", i)
         bas: H := xx.be.k
         potentiallyReducible: List F := elt(bas, i, empty())
         red: List F := empty()
@@ -605,22 +674,27 @@ XEtaComputation(C, n, F): XEtaComputationCategory(C, F)
             else
                 irr := cons(b, irr)
         bas.i := sort(greaterGrade? k, cons(u, irr))
-        red := concat(red, xx.cbe)
-        xx.cbe := sort(greaterGrade? k, red)
+        red := concat(red, xx.ce)
+        xx.ce := sort(greaterGrade? k, red)
         xx.havepairs? := false
         return void()
 
     initialize(m: List F): % ==
+        xdbgPrint("init", m)
         basis: V := new(n, table())
         for k in 1..n repeat basis.k := table() -- new table for each entry
         x: % := per [table(), basis, empty(), false, empty()]
+        xdbgPrint("init x", rep x)
         for mi in m repeat
+            xdbgPrint("init mi", mi)
             u := reduce(mi, xx.mul, xx.be)
+            xdbgPrint("init x", x)
             if not zero? u then update!(u, x)
+        xdbgPrint("init ret", x)
         return x
 
     criticalElements?(x: %): Boolean ==
-        not empty?(xx.cbe) => true
+        not empty?(xx.ce) => true
         xx.havepairs? => not empty?(xx.pairs)
         -- make sure that there are basis elements.
         for k in 1..n repeat if not empty?(xx.be.k) then return true
@@ -628,17 +702,19 @@ XEtaComputation(C, n, F): XEtaComputationCategory(C, F)
 
     computePairs!(x: %): Void ==
         --assert(not empty?(xx.be)) -- so there is at least one product
+        xdbgPrint("pairs x", x)
         basElts: List F := basisElements x
+        xdbgPrint("pairs be", basElts)
         products: Products := table()
         while not empty? basElts repeat
             b: F := first basElts
             for e in basElts repeat
-                maxGrade: Z := -1 -- dummy, because there is at least one >= 0.
+                gmax: Z := -1 -- dummy, because there is at least one >= 0.
                 for kn in 1..n repeat
                     k: P := qcoerce(kn)@P
                     g: Z := grade(b, k) + grade(e, k)
-                    if g > maxGrade then maxGrade := g
-                products.maxGrade := cons([b, e], elt(products, g, empty()))
+                    if g > gmax then gmax := g
+                products.gmax := cons([b, e], elt(products, gmax, empty()))
             basElts := rest basElts
 -------------------------------------------------------------------
 --!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -670,30 +746,51 @@ XEtaComputation(C, n, F): XEtaComputationCategory(C, F)
 -------------------------------------------------------------------
         xx.pairs := products
         xx.havepairs? := true
+        xdbgPrint("pairs ret", x)
         void()
 
     -- We first reduce in L and only when there is a non-zero result
     -- we redo the computation in F.
     -- Here we assume that the computation in L is much faster.
     oneStepComputation!(x: %): % ==
+        dbgPrint("oneStep", srep x)
+
         --assert(criticalElements? x)
-        not empty?(xx.cbe) =>
-            u: F := first(xx.cbe)
-            xx.cbe := rest(xx.cbe)
+        not empty?(xx.ce) =>
+            u: F := first(xx.ce)
+            xx.ce := rest(xx.ce)
             u := reduce(u, xx.mul, xx.be)
             if not zero? u then update!(u, x)
+            xdbgPrint("one creturn", srep x)
             return x
         if not xx.havepairs? then --assert(not empty? baisElements x)
             computePairs! x
+            xdbgPrint("one pairs", xx)
+
         p: Products := xx.pairs
         --assert(not empty? indices p)
         g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+        xdbgPrint("one g", g)
         r: FF := first(p.g) -- the element of this grade
+        xdbgPrint("one r", r)
         l: List FF := rest(p.g) -- remove u
+        xdbgPrint("one l", l)
         if empty? l then remove!(g, p) else p.g := l
-        if not zero? (u := reduce(r.f1 * r.f2, xx.mul, xx.be)) then
-            update!(u, x)
+        xdbgPrint("one p", p)
+        u := reduce(r.f1 * r.f2, xx.mul, xx.be)
+        xdbgPrint("one u", u)
+        xdbgPrint("one not zero", not zero? u)
+        if not zero? u then update!(u, x)
+        xdbgPrint("one srep", x)
+        s := srep x
+        xdbgPrint("one return", srep x)
         return x
+
+    postProcess!(x: %): % == x
+        -- Here we go through the list of all basis elements temporarily
+        -- remove this elemenr from the basis and reduce it with respect
+        -- to the remaining basis.
+        -- Note that no top-reduction should occur
 
 
 )if LiterateDoc

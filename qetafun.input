@@ -1,6 +1,6 @@
 )r qetalibs
 )r etamacros
-)set stream calculate 1
+)set stream calculate 2
 
 OF==>OutputForm
 dbgPrint(a, b) ==> MyPrint([a::Symbol::OF,b::OF]$List(OF)::OF)
@@ -16,7 +16,6 @@ EZ ==> Expression Z
 expr x ==> x :: S :: EZ
 SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix EZ)
 PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ)
-CX ==> SimpleAlgebraicExtension(Q, PQ, pq)
 LX ==> UnivariateLaurentSeries(CX, xsym, 0)
 EQX ==> EtaQuotientX(Q, mx, CX, xi, LX)
 EQXA ==> EtaQuotientExpansionAlgebra(CX, LX, level)
@@ -132,6 +131,7 @@ squaretest(y: P): P == (_
   retract(s*s)@Z_
  )
 
+
 -------------------------------------------------------------------
 -------------------------------------------------------------------
 -- Find idea how to modify the SAMBA algorithm.
@@ -139,21 +139,46 @@ squaretest(y: P): P == (_
 -------------------------------------------------------------------
 
 --- level 4 -------------------------------------------------------
-)if LEVEL4
 -- compute the basis of eta quotients in terms of expansions
-level := m := 4
+level := m := 60
 mx: P := lcm unityroots(m)
-pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage
-pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL
+if mx > 2 then (_
+    pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage;_
+    pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL;_
+    CX := SimpleAlgebraicExtension(Q, PQ, pq);_
+    xi := generator()$CX_
+) else (_
+    CX := Q;_
+    xi := -1_
+)
 xsym: Symbol := "x"::Symbol
-xi := generator()$CX
 divs: List P := [qcoerce(d)@P for d in divisors m]
 rs := eqmevx m
 lse := [etaQuotient(m, divs, r)$ SymbolicEtaQuotient for r in rs];
 le := [etaQuotient(e)$EQX for e in lse];
 -- [etaQuotient(divs, r)$ETA for r in rs]
 eas := [etaQuotient(r, expansions e)$EQXA for e in le for r in rs]
-ords := [orders ea for ea in eas]
+grds := [qetaGrades  ea for ea in eas]
+
+-- set up structures for computation of algebraBasis
+
+cusps: List Q := cuspsOfGamma0(level)
+ncusps: P := qcoerce(#cusps)@P
+
+F ==> EQXA
+Y ==> XEtaComputation(CX, ncusps, F)
+y := algebraBasisComputation(eas)$XEtaAlgebraBasis(CX, F, Y)
+[qetaGrades x for x in multipliers y]
+[qetaGrades x for x in basisElements y]
+)fin
+
+
+
+
+
+
+
+
 
 -- Try to run some samba-like procedure
 t1 := eas.1; t2:=eas.3; t3:=eas.2;
@@ -185,6 +210,8 @@ v := u + 16*t2 + (-1)*t3 --  - [8, 0, - 8] + [24, - 24, 0] + 16 [16, - 24, 8]
 --- end level 4 ---------------------------------------------------
 
 
+)fin
+
 
 --- level 25 -------------------------------------------------------
 --)if LEVEL25
@@ -201,7 +228,7 @@ lse := [etaQuotient(m, divs, r)$ SymbolicEtaQuotient for r in rs];
 le := [etaQuotient(e)$EQX for e in lse];
 -- [etaQuotient(divs, r)$ETA for r in rs]
 eas := [etaQuotient(r, expansions e)$EQXA for e in le for r in rs]
-ords := [orders ea for ea in eas]
+grds := [qetaGrades ea for ea in eas]
 cusps := cuspsOfGamma0(m)
 
 products(l: List EQXA): List EQXA == (_
