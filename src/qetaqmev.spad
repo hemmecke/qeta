@@ -70,9 +70,8 @@ Let us start with a few common macros.
 First of all for debugging.
 )endif
 OF==>OutputForm
-display77(x) ==> 12 -- display((x::OF)::LinearOutputFormat, 77)
-vPrint(x,y) ==> one?(1) -- display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, _
-                   --                ":="::Symbol::OF, y::OF]$List(OF)))
+display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
 
 )if LiterateDoc
 These two technical macros are necessary to distinguish between Rep
@@ -538,7 +537,7 @@ A description of which data has to be fed to the program
 Section~8.
 
 In the following, we compute just a basis for $R^*(N)$ (not
-$R^\infty(N)$. In fact, it is sufficient to compute a basis for the
+$R^\infty(N)$). In fact, it is sufficient to compute a basis for the
 nullspace for the matrix $B_N$ (see
 \cite[Section~6]{Hemmecke+Radu:EtaRelations:2018}).
 
@@ -566,7 +565,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     -- nullSpace(m) returns the vectors that generate
     -- R^*(m) over Z.
-    nullSpace(m: P): List VZ ==
+    rStarConditionMatrix(m: P): MZ ==
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
         n: N := # divs
         d: VZ := vector divs
@@ -590,9 +589,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
                 qsetelt!(mat, i+3, j, primePower(qcoerce(d.j)@P, p))
             qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
         vPrint("mat", mat)
-        ns: List VZ := nullSpace mat
-        vPrint("ns", ns)
-        [elt(v, 1..n) for v in ns]
+        return mat
 
     -- x < y if the total degree of the absolute value of the entries
     -- is smaller or if the absolute value of the sum of the negative
@@ -613,9 +610,16 @@ QEtaQuotientMonoidExponentVectorsStar: with
             if ex > ey then return true
         false -- x=y
 
+    integerNullSpace(mat: MZ): List VZ ==
+        import from SmithNormalForm(Z, VZ, VZ, MZ)
+        SmithForm ==> Record(Smith: MZ, leftEqMat: MZ, rightEqMat: MZ)
+        s: SmithForm := completeSmith mat
+        [v*transpose(s.rightEqMat) for v in nullSpace(s.Smith)]
+
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
-        gens: List VZ := nullSpace m
+        rStar: MZ := rStarConditionMatrix m
+        gens: List VZ := integerNullSpace rStar
         --vPrint("mgens", monoidgens)
         mat: MZ := matrix [entries v for v in gens]
         lat: MZ := LLL(mat)$LLLReduction
@@ -623,12 +627,12 @@ QEtaQuotientMonoidExponentVectorsStar: with
         ll2: List List Z := [[-x for x in l] for l in ll]
         sort(ascend, concat(ll, ll2))
 
-    MQ ==> Matrix Q
-    toMQ(x: MZ): MQ == matrix [[e::Q for e in l] for l in listOfLists x]
     etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
-        gens: List VZ := nullSpace m
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        rStar: MZ := rStarConditionMatrix m
+        gens: List VZ := integerNullSpace rStar
         vPrint("mgens", gens)
-        mat: MZ := matrix [entries v for v in gens]
+        mat: MZ := matrix [[x for x in entries v for d in divs] for v in gens]
         vPrint("mat", mat);
         ligozat: MZ := matrixLigozat(m)$QAuxiliaryModularEtaQuotientPackage
         ligozat := transpose ligozat
