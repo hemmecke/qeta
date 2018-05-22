@@ -54,7 +54,7 @@ QEtaKolberg: Exports == Implementation where
   Exports ==> with
     kappa: P -> P
     chiExponent: (P, Z, List N) -> Z
-    orbit: (P, Z, P, N) -> List N
+    orbit: (Z, P, N) -> List N
 
   Implementation ==> add
     chiExponent(m: P, sigmaInfty: Z, orb: List N): Z ==
@@ -66,24 +66,54 @@ QEtaKolberg: Exports == Implementation where
     kappa(m: P): P == -- gcd(1-m^2, 24) -- m = level
         (even? m => 1; 8) * (zero? positiveRemainder(m, 3) => 1; 3)
 
+    circleBar(a2: Z, sigmaInfty: Z, m: P, t: N): N ==
+        --assert(one? positiveRemainder(a2, 24))
+        z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
+        qcoerce(z)@N
+
     -- The following function computes P_{m,r}(t).
-    orbit(level: P, sigmaInfty: Z, m: P, t: N): List N ==
+    orbit(sigmaInfty: Z, m: P, t: N): List N ==
         k: P := kappa m
-        orb: List Z := empty()
         g := gcd(k*(24*t + sigmaInfty), 24*m)
         w: Z := qcoerce((24*m exquo g)::Z)@P
-        dbgPrint("w", w)
-        s: Set Z := set [positiveRemainder(a^2, w) for a in 0..w-1 | one? gcd(a, w)]
-        dbgPrint("gcd(w,24)", gcd(w,24));
-        for a in members s repeat
-            b: Z := a
-            while not one? positiveRemainder(b, 24) repeat b := b + w
-            orb := cons(b, orb)
-        dbgPrint("orb", sort orb)
-        l: List Z := sort [positiveRemainder(t*a+(((a-1) exquo 24)::Z)*sigmaInfty, m) for a in orb]
-        return (l pretend List N)
+        sw: List Z := empty()
+        for a in 0..w-1 | one? gcd(a, w) repeat
+            a2 := positiveRemainder(a^2, w)
+            if not member?(a2, sw) then sw := cons(a2, sw)
+        s: List Z := empty()
+        --assert(one? gcd(w, 24)) -- proof
+        --choose a representative (mod w) that is divisible by 24
+        for a2 in sw repeat
+            u: Z := a2
+            while not one? positiveRemainder(u, 24) repeat u := u + w
+            s := cons(u, s)
+        sort [circleBar(a2, sigmaInfty, m, t) for a2 in s]
 
 )if LiterateDoc
 \bibliography{qeta}
 \end{document}
+)endif
+
+)if false
+
+
+    relationRamanujanKolberg(level: P, m: P, t: N, r: RVector):
+--        Record(s: RVector, t: List(N), rhs: MonoidRing(C, MRVector))
+        List N
+      ==
+        empty()
+
+    -- See \cite[Thm.~45]{Radu:RamanujanKolberg:2015}.
+    -- m = m, t=t, M=ilevel, N=level
+    coFactorConditions(level: P, ilevel: P, m: P, t: Z, r: List Z): MZ ==
+        --assert(#r=#divisors(ilevel))
+        --assert(zero? postiveRemainder(level, ilevel))
+        -- DeltaStar-Conditions
+        -- \cite[Def.~34]{Radu:RamanujanKolberg:2015} must be fulfilled.
+        p := orbit(level, sigmainfty, m, t, r)
+        orbitSize := #p
+        divs: List P := [qcoerce(d)@P for d in divisors(level)]
+        k: P := kappa m
+        c1 := orbitSize * reduce(_+, r)
+        c2 := chiExponent(m, r, orb)
 )endif
