@@ -26,6 +26,50 @@ xdbgPrint(x,y) ==> rhx:="42"
 )if LiterateDoc
 \documentclass{article}
 \usepackage{qeta}
+\usepackage{showlabels}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Expanding Dedekind Eta Functions into $q$-series}
+\author{Ralf Hemmecke}
+\date{26-Jan-2018}
+\maketitle
+\begin{abstract}
+
+  Find a cofactor to turn a function related to a $q$-series into a
+  modular function.
+
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We try to find all missing parts to find a Ramanujan-Kolberg relation
+as defined in \cite[p.~227]{Radu:RamanujanKolberg:2015}.
+
+Assume that we are given a series
+\begin{gather*}
+  \sum_{n=0}^\infty a(n) q^n
+  =
+  \prod_{\delta|M}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+\end{gather*}
+and want to express $\sum_{n=0}^\infty a(mn+t) q^n$ where $m$ and $M$
+are a positive integers with $m|M$, $r\in R(M)$, and
+$t\in\Set{0,\ldots,m-1}$ as a $\setQ$-linear combination of
+eta-quotients and (maybe) an appropriate power of
+$q^{1/24}=\unityPower{\frac{\tau}{24}}$.
+
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -47,7 +91,9 @@ Now some abbreviations for common domains.
 P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
-
+MZ ==> Matrix Integer
+Rec ==> Record(red: MZ, triang: MZ, tg: Z)
+EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 
 )abbrev package QETAKOL QEtaKolberg
 QEtaKolberg: Exports == Implementation where
@@ -55,6 +101,14 @@ QEtaKolberg: Exports == Implementation where
     kappa: P -> P
     chiExponent: (P, Z, List N) -> Z
     orbit: (Z, P, N) -> List N
+    splitMatrix: (MZ, Z, Z, Z) -> Rec
+      ++ splitMatrix(gamma, delta, m, t) returns a record rec that
+      ++ contains two matrices rec.red=m1 and rec.triang=m2 such that
+      ++ for gamma = matrix [[a, b], [c, d]] and
+      ++ W=matrix [[delta(a+ct), delta(b+dt)],[cm, dn]] it holds
+      ++ W=m1*m2 according to \cide[Lemma~4.8]{Radu:PhD:2010}, but
+      ++ in a variation as described in qetafun.spad, i.e., such that
+      ++ 0<=m2(1,2)<deltam where g = gcd(mat(1,1), mat(2,1)).
 
   Implementation ==> add
     chiExponent(m: P, sigmaInfty: Z, orb: List N): Z ==
@@ -88,6 +142,46 @@ QEtaKolberg: Exports == Implementation where
             while not one? positiveRemainder(u, 24) repeat u := u + w
             s := cons(u, s)
         sort [circleBar(a2, sigmaInfty, m, t) for a2 in s]
+
+    splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==
+        LZ ==> List Z
+        LLZ ==> List LZ
+        --assert(delta>0)
+        --assert(m>0)
+        --assert(one? determinat(gamma))
+        --assert(zero? positiveRemainder(c*m, delta))
+
+        a: Z := gamma(1,1);   b: Z := gamma(1,2)
+        c: Z := gamma(2,1);   d: Z := gamma(2,2)
+
+        act: Z := a + c*t;    bdt := b + d*t
+
+        -- matrix W
+        A: Z := delta * act;  B: Z := delta * bdt
+        C: Z := c*m;          D: Z := d*m
+
+        exgcd: EXGCD := extendedEuclidean(act, C)
+        g: Z := exgcd.generator
+        --assert(one? g) -- sanity check
+        if not one? g then error "splitMatrix: gcd is not 1"
+
+        a1: Z := act
+        c1: Z := (C exquo delta) :: Z -- cm/delta
+
+        d1i: Z    :=  exgcd.coef1 -- initial value for d1
+        bstari: Z := -exgcd.coef2 -- initial value for bstar
+
+        -- Now try to find s such that 0 <= bdt*d1 - D*b1 - s*d2 < d2.
+        tgammai: Z := bdt*d1i - D*bstari -- initial value
+        tgamma: Z := positiveRemainder(tgammai, m) -- = t_\gamma
+        s: Z := ((tgammai - tgamma) exquo m) :: Z
+        b1: Z := delta * (bstari + act * s)
+        d1: Z := d1i + delta * s * c1
+
+        m1: MZ := matrix([[a1, b1], [c1, d1]]$LLZ)
+        m2: MZ := matrix([[delta, delta * tgamma], [0, m]]$LLZ)
+        [m1, m2, tgamma]$Rec
+
 
 )if LiterateDoc
 \bibliography{qeta}

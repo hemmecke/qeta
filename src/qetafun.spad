@@ -49,8 +49,21 @@ functions for $\Gamma_0(N)$ at all cusps into $q$-series.
 \tableofcontents
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Overview}
+\section{Notation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{gather}
+  GL_2^+(\setZ)
+  :=
+  \SetDef{  \begin{pmatrix}
+    a & b\\
+    c & d
+  \end{pmatrix}}{a,b,c,d\in\setZ \land ad-bc>0}
+\end{gather}
+
+\begin{gather}
+  SL_2(\setZ) := \SetDef{\gamma\in GL_2^+(\setZ)}{\det(\gamma)=1}
+\end{gather}
 
 Let $N$ be a positive natural number and define a $\Gamma_0(N)$ as a
 subgroup of the special linear group $SL_2(\setZ)$ as follows.
@@ -58,23 +71,8 @@ subgroup of the special linear group $SL_2(\setZ)$ as follows.
 \Gamma_0(N) := \SetDef{  \begin{pmatrix}
     a & b\\
     c & d
-  \end{pmatrix} \in SL_2(\setZ)}{N|c}
+  \end{pmatrix} \in SL_2(\setZ)}{\divides{N}{c}}
 \end{gather*}
-
-According to
-\cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
-there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
-$\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
-
-In the following we always deal with quotients of $\eta$-functions of
-level $N$ that are modular functions for $\Gamma_0(N)$.
-
-We implement a domain that deals with such quotients and their
-$q$-expansion at all cusps ($q=e^{2\pi i \tau})$.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Dedekind $\eta$-function}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\label{def:epsilon}
@@ -125,19 +123,302 @@ conditions.
 \end{align}
 
 Note that $R^*(N)$ is an additive monoid. It even is an additive group.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+According to
+\cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
+there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
+$\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
+
+In the following we always deal with quotients of $\eta$-functions of
+level $N$ that are modular functions for $\Gamma_0(N)$.
+
+We implement a domain that deals with such quotients and their
+$q$-expansion at all cusps ($q=e^{2\pi i \tau})$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Transformations of the Dedekind $\eta$-function}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Let's look at the transformation of the $\eta$-function (see
-\cite[Lemma~2.27]{Radu:PhD:2010}.
+\cite[Lemma~2.27]{Radu:PhD:2010}).
 
 Let $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 SL_2(\setZ)$, then
-\begin{gather*}
+\begin{gather}
 \eta(\gamma\tau) =
 \eta\left(\frac{a\tau+b}{c\tau+d}\right) =
-(c\tau+d)^{1/2}\,\upsilon_\eta(a,b,c,d)\,\eta(\tau)
+(c\tau+d)^{1/2}\,\upsilon_\eta(\gamma)\,\eta(\tau)
+\label{eq:eta-transformation}
+\end{gather}
+where $\upsilon(\gamma) := \upsilon_\eta(a,b,c,d)$ as defined as in
+\cite[Lemma~2.27]{Radu:PhD:2010}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $\eta$ under $GL_2^+(\setZ)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let
+$W=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right) \in
+GL_2^+(\setZ)$.
+%
+Then for $h=\gcd(A, C)>0$, $a':=\frac{A}{h}$, $c':=\frac{C}{h}$ we
+have $\gcd(a', c')=1$ and thus can find $b'$ and $d'$ such that
+$a'd'-b'c'=1$.
+
+
+\ie,
+$W'=\left(\begin{smallmatrix}a'&b'\\c'&d'\end{smallmatrix}\right)\in
+SL_2(\setZ)$.
+%
+Let
+\begin{gather*}
+  W':=\begin{pmatrix}a'&b'\\c'&d'\end{pmatrix}
+  \qquad
+  W''
+  :=
+  \begin{pmatrix}
+    h &B d'-D b'\\
+    0 & \det(W) / h
+  \end{pmatrix}.
+\end{gather*}
+Then $W\in SL_2(\setZ)$ and $W = W' W''$.
+
+
+Note that for any integer $s$ whe have:
+\begin{align}
+W = \begin{pmatrix}A&B\\C&D\end{pmatrix}
+&=\begin{pmatrix}a'&b'\\c'&d'\end{pmatrix}
+  \begin{pmatrix}1& s\\0&1\end{pmatrix}
+  \begin{pmatrix}1&-s\\0&1\end{pmatrix}
+  \begin{pmatrix}h &B d'- D b'\\0 &\det(W) / h\end{pmatrix}
+  \\
+&=
+  \begin{pmatrix} a'&b' + a' s\\ c'&d' + c' s \end{pmatrix}
+  \begin{pmatrix}
+    h &B d'- D b'- s \det(W) / h\\
+    0 &\det(W) / h\end{pmatrix}.
+\end{align}
+Therefore, we can choose $b'$ and $d'$ in such a way that
+$0 \le B d'-D b' < \det(W)/h$.
+
+Let $\tau' := W''\tau = \frac{h}{\det(W)}(h\tau + B d'- D b')$, then
+$\tau'\in\setH$ and
+\begin{gather}
+\eta(W\tau) =
+\eta(W'\tau') =
+(c'\tau+d')^{1/2}\,\upsilon_\eta(W')\,\eta(\tau')
+\label{eq:eta-W-transformation}
+\end{gather}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $\eta_{\delta,m,t}$ under $\Gamma_0(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Given a positive integer $m$ and $t\in\Set{0,\ldots,m-1}$, a positive
+integer $M$, and $r \in R(M)$ such that
+\begin{gather*}
+  \sum_{n=0}^\infty a(n) q^n
+  =
+  \prod_{\divides{\delta}{M}}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+  =
+  \prod_{\delta|M}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+\end{gather*}
+is the generating function for the sequence $(a(n))_{n\in\setN}$.
+
+In order to algorithmically find a Ramanujan-Kolberg relation for
+$\sum_{n=0}^\infty a(m n + t)$ we restrict the choice of $N$ in such a
+way, that
+\begin{gather}
+  \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
+  \label{eq:p|m=>p|N}\\
+  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
+    $\divides{\delta}{mN}$.}
+  \label{eq:delta|M=>delta|mN}
+\end{gather}
+
+For the above conditions see (13) and (14) in
+\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
+Section~4.2 in \cite{Radu:PhD:2010}.
+
+Let $m$ and $N$ be a positive integers,
+$t \in \Set{0,\ldots,m-1}$, and $\divides{\delta}{M}$.
+%
+We define
+\begin{gather}
+\eta_{\delta,m,t}(\tau) := \eta
+\left(
+  \begin{pmatrix}\delta& \delta t\\0&m\end{pmatrix} \tau
+\right).
+\end{gather}
+
+Let $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\Gamma_0(N)$.
+%
+Then
+\begin{align}
+  \eta_{\delta,m,t}(\gamma \tau)
+  &:= \eta
+\left(
+  \begin{pmatrix}\delta& \delta t\\0&m\end{pmatrix}
+  \gamma
+  \tau
+\right)
+=
+\eta(W \tau)
+\end{align}
+where
+\begin{align}
+  W &:=
+  \begin{pmatrix}
+    \delta (a + c t) & \delta (b + d t)\\
+    c m                   & d m
+  \end{pmatrix}.
+\end{align}
+
+Let's apply the splitting of $W=W'W''$ into a matrix
+$W'\in SL_2(\setZ)$ and an upper triangular matrix $W''$ as in the
+previous section and compare with the proof of Lemma~2.2 of
+\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009}.
+
+We get
+%
+$\det(W) = \delta m$, because $\det(\gamma)=1$.
+
+Furthermore,
+$h = \gcd(\delta(a + c t), \delta \frac{cm}{\delta})=\delta$,
+%
+$a' = a + c t$, and
+%
+$c' = \frac{cm}{\delta}$.
+%
+From \eqref{eq:delta|M=>delta|mN} and $\divides{N}{c}$ follows
+$\divides{\delta}{mc}$ and $c'\in \setZ$.
+
+Note that $\gcd(a,c)=1$. Thus $\gcd(a + c t, c)=1$ and because of
+$\divides{N}{c}$,
+% ($\gamma \in \Gamma_0(N)$)
+it follows $\gcd(a + c t, N)=1$.
+%
+Then \eqref{eq:p|m=>p|N} implies $\gcd(a + c t, m)=1$.
+%
+Therefore $\gcd(a + c t, cm)=1$ and we can find $b^*$ and $d'$ such
+that $(a + c t) d' - b^* cm =1$. It also holds $\gcd(a', c')=1$ and we
+can choose $b'=\delta b^*$ such that $\det(W')=1$ for
+\begin{gather*}
+  W'= \begin{pmatrix}a'&b'\\c'&d'\end{pmatrix}
+  = \begin{pmatrix}a+ct& \delta b^*\\cm/\delta&d'\end{pmatrix}.
 \end{gather*}
 
+For the matrix $W''$ we obtain
+\begin{gather}
+  W''
+  =
+  \begin{pmatrix}
+    \delta & \delta ((b + d t) d' - d m b^*)\\
+    0      & m
+  \end{pmatrix}
+  =
+  \begin{pmatrix}
+    \delta & \delta t_\gamma\\
+    0      & m
+  \end{pmatrix}.
+\end{gather}
+where $t_\gamma := (b + d t) d' - d m b^*$.
+
+Note that
+\begin{align*}
+  W = W'\cdot W''
+  &=
+    \begin{pmatrix}a'& b'\\c'&d'\end{pmatrix}
+    \cdot
+    \begin{pmatrix}1& \delta s\\0&1\end{pmatrix}
+    \begin{pmatrix}1&-\delta s\\0&1\end{pmatrix}
+    \begin{pmatrix}\delta&0\\0&1\end{pmatrix}
+    \begin{pmatrix}1&t_\gamma\\0&m\end{pmatrix}\\
+  &=
+    \begin{pmatrix}a'& b' + a'\delta s\\c'&d' + c' \delta s\end{pmatrix}
+    \cdot
+    \begin{pmatrix}\delta&0\\0&1\end{pmatrix}
+    \begin{pmatrix}1&-s\\0&1\end{pmatrix}
+    \begin{pmatrix}1&t_\gamma\\0&m\end{pmatrix}\\
+  &=
+    \begin{pmatrix}a'& \delta(b^* + (a+ct)s)\\c'&d' + c m s\end{pmatrix}
+    \cdot
+    \begin{pmatrix}\delta&0\\0&1\end{pmatrix}
+    \begin{pmatrix}1&t_\gamma-sm\\0&m\end{pmatrix}
+\end{align*}
+
+
+Clearly, we can choose $s\in\setZ$ such that
+$0 \le t_\gamma - sm < m$.
+%
+In the following, we assume that already in the first place we have
+chosen $b^*$ and $d'$ in such a way that $0\le t_\gamma < m$.
+
+Note that $t_\gamma$ does depend on $\gamma$, $t$, and $m$, but it
+does not depend on $\delta$.
+
+With $\tau':=W''\tau$ we have
+\begin{align*}
+  c'\tau'+d'
+  &=
+  c'
+    \left(
+    \frac{\delta\tau+\delta(b + d t) d' - d m b'}{m}
+    \right) + d'\\
+  &=
+    \frac{cm}{\delta}
+    \left(
+    \frac{\delta\tau+\delta(b + d t) d'}{m}
+    \right)  - d b' c' + d'\\
+  &=
+    c\tau + c(b + d t) d' - d (a' d' -1) + d'\\
+  &=
+    c\tau + d + c(b + d t) d' - d a' d' + d'\\
+  &=
+    c\tau + d + [c(b + d t) - d (a + c t) + 1]d'\\
+  &=
+    c\tau + d
+\end{align*}
+and thus
+\begin{align*}
+  \eta_{\delta,m,t}(\gamma \tau)
+  &= \eta(W \tau) = \eta(W'W''\tau) = \eta(W'\tau')\\
+  &= (c'\tau'+d')^{1/2} \, \upsilon(W') \, \eta(\tau')\\
+  &= K \, \eta(\tau') = K \, \eta(W''\tau)
+   = K \, \eta
+    \left(
+    \begin{pmatrix}
+      \delta & \delta t_\gamma\\
+      0      & m
+    \end{pmatrix}
+    \tau
+    \right)\\
+  &= K \, \eta_{\delta,m,t_\gamma}(\tau)
+\end{align*}
+where $K = (c\tau+d)^{1/2}\, \upsilon(W')$ and
+$t_\gamma:=(b + d t) d' - d m b^*$.
+
+We want to emphasize that $0\le t_\gamma$ does only depend on $\gamma$ and $t$.
+
+CONTINUE HERE
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $\eta_\delta$ under $SL_2(\setZ)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let $\delta \in \setN\setminus\Set{0}$.
 
 \begin{gather*}
@@ -215,7 +496,7 @@ then
   =
   (c_\delta\tau_\delta+d_\delta)^{1/2}
   \,
-  \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)
+  \upsilon(\gamma_\delta)
   \,
   \eta(\tau_\delta).
 \end{gather*}
@@ -262,7 +543,7 @@ Thus, we have
 \end{gather}
 where $\kappa_\delta \in \Set{0,\ldots,23}$ is defined by
 $\unityPower{\frac{\kappa_\delta}{24}}
-:= \upsilon_\eta(a_\delta,b_\delta,c_\delta,d_\delta)$.
+:= \upsilon(\gamma_\delta)$.
 
 
 
