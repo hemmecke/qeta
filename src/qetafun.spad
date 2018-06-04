@@ -111,6 +111,12 @@ None of these functions is identically zero.
 We define $R(N)$ to be the set of integer tuples
 $r = (r_{\delta_1}, \ldots,
 r_{\delta_n})\in \setZ^n$.
+%
+For $r\in R(N)$ let
+\begin{align}
+  g_r(\tau) &:= \prod_{\delta\in\Delta} \eta(\delta\tau)^{r_\delta}.
+  \label{eq:etaquotient}
+\end{align}
 
 By $R^*(N)$ we denote the subset of all tuples
 $r=(r_\delta)_{\delta\in\Delta}$ of $R(N)$ that fulfil the following
@@ -162,6 +168,7 @@ where $\upsilon(\gamma) := \upsilon_\eta(a,b,c,d)$ as defined as in
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $\eta$ under $GL_2^+(\setZ)$}
+\label{sec:eta-transformation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Let
@@ -219,19 +226,46 @@ $\tau'\in\setH$ and
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Transformation of $\eta_{\delta,m,t}$ under $\Gamma_0(N)$}
+\subsection{Transformation of $h_{r,m,t}$ under $\Gamma_0(N)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a positive integer $m$ and $t\in\Set{0,\ldots,m-1}$, a positive
 integer $M$, and $r \in R(M)$ such that
 \begin{gather*}
+  f(\tau)
+  =
   \sum_{n=0}^\infty a(n) q^n
   =
   \prod_{\divides{\delta}{M}}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
   =
   \prod_{\delta|M}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+  =
+  \unityPower{-\frac{\tau}{24} \sum_{\delta|M}\delta r_\delta} g_r(\tau)
 \end{gather*}
 is the generating function for the sequence $(a(n))_{n\in\setN}$.
+
+Let $U_m$ be an operation on functions $\setH\to\setC$ so that
+\begin{gather*}
+  (U_m\phi)(\tau) := \sum_{\lambda=0}^{m-1}
+  \phi\left(\frac{\tau+\lambda}{m}\right).
+\end{gather*}
+Let $f_t(\tau):=\unityPower{-t\tau}f(\tau)$, then
+\begin{align*}
+  (U_mf_t)(\tau)
+  &=
+    \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)\\
+  &=
+    \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{t\tau+t\lambda}{m}
+                -\frac{\tau+\lambda}{24m} \sum_{\delta|M}\delta r_\delta}
+    g_r\left(\frac{\tau+\lambda}{m}\right)\\
+  &=
+    \unityPower{-\frac{\tau}{24m}\left(24t+\sum_{\delta|M}\delta r_\delta\right)}
+    \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{t\lambda}{m}}
+    g_r\left(\frac{\tau+\lambda}{m}\right)\\
+\end{align*}
+
 
 In order to algorithmically find a Ramanujan-Kolberg relation for
 $\sum_{n=0}^\infty a(m n + t)$ we restrict the choice of $N$ in such a
@@ -243,6 +277,11 @@ way, that
     $\divides{\delta}{mN}$.}
   \label{eq:delta|M=>delta|mN}
 \end{gather}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Transformation of $\eta_{\delta,m,t}$ under $\Gamma_0(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 For the above conditions see (13) and (14) in
 \cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
@@ -285,8 +324,8 @@ where
 
 Let's apply the splitting of $W=W'W''$ into a matrix
 $W'\in SL_2(\setZ)$ and an upper triangular matrix $W''$ as in the
-previous section and compare with the proof of Lemma~2.2 of
-\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009}.
+Section~\ref{sec:eta-transformation} and compare with the proof of
+Lemma~2.2 of \cite{Radu:AlgorithmicApproachRamanujanCongruences:2009}.
 
 We get
 %
@@ -407,7 +446,8 @@ and thus
 where $K = (c\tau+d)^{1/2}\, \upsilon(W')$ and
 $t_\gamma:=(b + d t) d' - d m b^*$.
 
-We want to emphasize that $0\le t_\gamma$ does only depend on $\gamma$ and $t$.
+We want to emphasize that $0\le t_\gamma < m$ does only depend on
+$\gamma$ and $t$.
 
 CONTINUE HERE
 
