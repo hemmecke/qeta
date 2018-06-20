@@ -70,4 +70,9 @@ export BIBINPUTS=$P/:$BIBINPUTS
 pdflatex $N.tex
 bibtex $N.aux
 echo `pwd`/$N.pdf
-$EXECUTE evince $N.pdf&
+if ! (ps aux | grep -v grep | grep "okular $N.pdf"); then
+    echo start okular
+    $EXECUTE okular $N.pdf&
+else
+    echo okular already running
+fi
