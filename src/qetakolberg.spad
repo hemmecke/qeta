@@ -69,6 +69,47 @@ $q^{1/24}=\unityPower{\frac{\tau}{24}}$.
 
 
 
+In order to algorithmically find a Ramanujan-Kolberg relation for
+$\sum_{n=0}^\infty a(m n + t)$ we restrict the choice of $N$ in such a
+way, that
+\begin{gather}
+  \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
+  \label{eq:p|m=>p|N}\\
+  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
+    $\divides{\delta}{mN}$.}
+  \label{eq:delta|M=>delta|mN}
+\end{gather}
+
+For the above conditions see (13) and (14) in
+\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
+Section~4.2 in \cite{Radu:PhD:2010} or
+\cite[Def.~34]{Radu:RamanujanKolberg:2015}.
+
+\begin{Definition}\cite[Def.~35]{Radu:RamanujanKolberg:2015}
+  Let $\Delta^*$ be the set of all tuples $(m, M, N, t, r)$ such that
+  $m,M,N\in\setN\setminus\Set{0}$, $t \in \setN$,
+  $r = (r_\delta)_{\divides{\delta}{M}}$, $r_\delta\in\setZ$ and for
+  $\kappa:=\gcd(1-m^2, 24)$, $\kappa\ge1$ and
+  $w' := \gcd(\kappa(24t + \sum_{\divides{\delta}{M}} \delta r_\delta),24m)$,
+  $w := \frac{24m}{w'}$ the following conditions hold.
+  \begin{gather}
+  \text{for every prime $p$: }  \divides{p}{m} \implies \divides{p}{N},
+  \label{eq:p|m=>p|N}\\
+  \divides{\delta}{M} \land r_\delta\ne0 \implies \divides{\delta}{mN}
+  \label{eq:delta|M=>delta|mN}\\
+  \kappa \frac{m N^2}{M} \sum_{\divides{\delta}{M}} \frac{M}{\delta}
+    r_\delta \equiv_{24} 0,\\
+  \kappa N \sum_{\divides{\delta}{M}} r_\delta \equiv_8 0,\\
+  \divides{w}{N},\\
+  \divides{2}{m} \implies (\kappa N \equiv_4 0 \land \divides{8}{N e})
+  \lor
+  (\divides{2}{e} \land \divides{8}{N(u-1)})
+\end{gather}
+where $e, u\in\setZ$ are such that $u$ is odd and
+$\prod_{\divides{\delta}{M}} \delta^{\abs{r_\delta}}=2^e u$.
+\end{Definition}
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,7 +132,8 @@ Now some abbreviations for common domains.
 P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
-MZ ==> Matrix Integer
+VZ ==> Vector Z
+MZ ==> Matrix Z
 Rec ==> Record(red: MZ, triang: MZ, tg: Z)
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 
@@ -100,28 +142,41 @@ QEtaKolberg: Exports == Implementation where
   Exports ==> with
     kappa: P -> P
     chiExponent: (P, Z, List N) -> Z
+      ++ chiExponent(m, sigmaInfinity) computes e such that
+      ++ $\exp(2\pi i e / 24) = \chi_{m,r}(t)$
+      ++ where $\chi_{m,r}(t)$ is defined as in
+      ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015}.
+      ++ We assume $sigmaInfinity = \sum_{\delta|N} \delta r_\delta$.
     orbit: (Z, P, N) -> List N
+      ++ orbit(sigmaInfinity, m, t) computes the elements of
+      ++ $P_{m,r}(t)$ as defined in
+      ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015} and
+      ++ \cite[Lemma 4.35]{Radu:PhD:2010}.
+      ++ We assume $sigmaInfinity = \sum_{\delta|N} \delta r_\delta$.
     splitMatrix: (MZ, Z, Z, Z) -> Rec
       ++ splitMatrix(gamma, delta, m, t) returns a record rec that
       ++ contains two matrices rec.red=m1 and rec.triang=m2 such that
       ++ for gamma = matrix [[a, b], [c, d]] and
       ++ W=matrix [[delta(a+ct), delta(b+dt)],[cm, dn]] it holds
-      ++ W=m1*m2 according to \cide[Lemma~4.8]{Radu:PhD:2010}, but
+      ++ W=m1*m2 according to \cite[Lemma~4.8]{Radu:PhD:2010}, but
       ++ in a variation as described in qetafun.spad, i.e., such that
       ++ 0<=m2(1,2)<deltam where g = gcd(mat(1,1), mat(2,1)).
-
+    etaCoFactor: (P, P, P, N, List Z) -> Record(particular : Union(VZ, "failed"), basis : List VZ) -- List Z
+      ++ etaCoFactor(m, mm, nn, t, r) returns a list s such that
+      ++ #s=#divisors(nn) such that s fulfills (34)-(37) of Theorem 45
+      ++ of \cite{Radu:RamanujanKolberg:2015}.
   Implementation ==> add
     chiExponent(m: P, sigmaInfty: Z, orb: List N): Z ==
-        s: Z := 0
-        for t in orb repeat s := s + 24*t
-        s := s + sigmaInfty * #orb
-        positiveRemainder((1-m^2)*((s exquo m)::Z), 24)
+        s: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
+        positiveRemainder((((1-m^2)*s) exquo m)::Z, 24)
 
     kappa(m: P): P == -- gcd(1-m^2, 24) -- m = level
+        ++ \cite[Def.~35]{Radu:RamanujanKolberg:2015}
         (even? m => 1; 8) * (zero? positiveRemainder(m, 3) => 1; 3)
 
     circleBar(a2: Z, sigmaInfty: Z, m: P, t: N): N ==
         --assert(one? positiveRemainder(a2, 24))
+        -- \cite[Def.~41]{Radu:RamanujanKolberg:2015}
         z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
         qcoerce(z)@N
 
@@ -181,6 +236,60 @@ QEtaKolberg: Exports == Implementation where
         m1: MZ := matrix([[a1, b1], [c1, d1]]$LLZ)
         m2: MZ := matrix([[delta, delta * tgamma], [0, m]]$LLZ)
         [m1, m2, tgamma]$Rec
+
+    primePower(d: P, p: P): N ==
+        import from Factored Z
+        fl: List Record(factor: Z, exponent: N) := factors factor d
+        for fe in fl repeat
+            if fe.factor = p then return fe.exponent
+        return 0
+
+    etaCoFactor(m: P, mm: P, nn: P, t: N, r: List Z): Record(particular : Union(VZ, "failed"), basis : List VZ) ==
+        -- etaCoFactor(m, mm, nn, t, r) this computes the
+        -- $s_\delta$ with $\delta|N$ from Theorem 45
+        -- of \cite{Radu:RamanujanKolberg:2015}
+        -- where we here use mm=M, nn=N.
+        -- Setup matrix. Then solve inhomogeneous system.
+        QEQMEVS ==> QEtaQuotientMonoidExponentVectorsStar
+        mat: MZ := rStarConditionMatrix(nn)$QEQMEVS
+        nc: N := ncols mat
+        divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
+        d: VZ := vector divs
+        n: N := # divs
+        w: Z := 0
+        sigmaInfty: Z := 0
+        sigma0: Z := 0
+        for j in 1..n for rdelta in r repeat
+            w := w + rdelta
+            sigmaInfty := sigmaInfty + d.j * rdelta
+            sigma0 := sigma0 + d(n+1-j) * rdelta
+        -- Compute P_{m,r}(t).
+        orb: List N := orbit(sigmaInfty, m, t)
+        orbitSize: Z := # orb
+        nu: Z := chiExponent(m, sigmaInfty, orb)
+
+        v: Vector Z := new(nc, 0)
+        v.1 := - orbitSize * w
+        v.2 := - (nu + orbitSize * m * sigmaInfty)
+        v.3 := sigma0
+        fl: List Record(factor: Z, exponent: N) := factors factor nn
+        -- Determine the cofactor according to (37) of
+        -- \cite{Radu:RamanujanKolberg:2015} for each prime separately.
+        if even? orbitSize then
+            for i in 1..#fl for fe in fl repeat qsetelt!(v, n+i+2, 0)
+        else
+            for i in 1..#fl for fe in fl repeat
+                p: P := qcoerce(fe.factor)@P
+                em: N := primePower(m, p)
+                -- for all divisors of mm > 1
+                e: Z := if odd? first r then em else 0 -- case: delta=1
+                for j in 2..n for rdelta in rest r | odd? rdelta repeat
+                    -- Mod 2 only odd rdelta is relevant.
+                    e := em + primePower(qcoerce(d.j)@P, p)
+                qsetelt!(v, n+i+2, e)
+        -- Now we have a matrix mat and a right-hand side v and need to
+        -- solve mat*x=v for x.
+        diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
 
 )if LiterateDoc
