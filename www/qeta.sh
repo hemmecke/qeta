@@ -47,8 +47,8 @@ SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix EZ);
 PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ);
 CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
 LX ==> UnivariateLaurentSeries(CX, xsym, 0);
-EQX ==> EtaQuotientX(Q, mx, CX, xi, LX);
-EQXA ==> EtaQuotientExpansionAlgebra(CX, LX, level);
+MEQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
+MEQXA ==> ModularEtaQuotientExpansionAlgebra(CX, LX, level);
 
 PZ ==> SparseUnivariatePolynomial Z;
 PQ ==> SparseUnivariatePolynomial Q;
@@ -74,9 +74,9 @@ xi := generator()\$CX;
 divs: List P := [qcoerce(d)@P for d in divisors m];
 rs := $rvectors;
 lse := [etaQuotient(m, divs, r)\$SymbolicEtaQuotient for r in rs]
-le := [etaQuotient(e)\$EQX for e in lse];
-eas := [etaQuotient(r, expansions e)\$EQXA for e in le for r in rs];
-ords := [orders ea for ea in eas]
+le := [etaQuotient(e)\$MEQ for e in lse];
+eas := [etaQuotient(r, expansions e)\$MEQXA for e in le for r in rs];
+ords := [qetaGrades ea for ea in eas]
 
 vPrint("OUTPUT STARTS HERE", level)
 vPrint("level", level)

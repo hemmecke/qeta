@@ -58,7 +58,9 @@ print <<EOF;
     <dt>Level: </dt>
     <dd><input name="level" value="$level" size=3 /></dd>
 
-    <dt>Exponent vectors (leave empty to get a monoid basis): </dt>
+    <dt>Exponent vectors (leave empty to get a monoid basis).
+    </ br>
+    Resulting eta quotient must be a modular function for Gamma_0(level).</dt>
     <dd><input name="rvectors" value="$rvectors" size=40 /></dd>
     </dl>
 
