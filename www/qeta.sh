@@ -73,10 +73,6 @@ xsym: Symbol := "x"::Symbol;
 xi := generator()\$CX;
 divs: List P := [qcoerce(d)@P for d in divisors m];
 rs := $rvectors;
-lse := [etaQuotient(m, divs, r)\$SymbolicEtaQuotient for r in rs]
-le := [etaQuotient(e)\$MEQ for e in lse];
-eas := [etaQuotient(r, expansions e)\$MEQXA for e in le for r in rs];
-ords := [qetaGrades ea for ea in eas]
 
 vPrint("OUTPUT STARTS HERE", level)
 vPrint("level", level)
@@ -84,7 +80,16 @@ vPrint("divisors", divs)
 vPrint("exponent vectors", rs)
 vPrint("maximal root of unity", mx)
 vPrint("Expansion at cusps", cuspsOfGamma0 m)
-
-eas
+QAMEQP ==> QAuxiliaryModularEtaQuotientPackage
+lerr := [r for r in rs | not zero? rStarConditions(m, r)$QAMEQP];
+if not empty? lerr then (_
+    vPrint("ERROR: exponent vectors", lerr);_
+    display("do not correspond to modular functions"::Symbol::OF::LinearOutputFormat, 77))_
+else (_
+    lse := [etaQuotient(m, divs, r)\$SymbolicEtaQuotient for r in rs];_
+    le := [etaQuotient(e)\$MEQ for e in lse];_
+    eas := [etaQuotient(r, expansions e)\$MEQXA for e in le for r in rs];_
+    ords := [qetaGrades ea for ea in eas];_
+    eas)
 
 EOF
