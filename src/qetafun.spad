@@ -1,6 +1,6 @@
 -------------------------------------------------------------------
 ---
---- FriCAS QEta
+--- FriCAS QEtaa
 --- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
@@ -1427,13 +1427,18 @@ SymbolicEtaQuotient:
         return p
 
 -------------------------------------------------------------------
-)abbrev domain ETAQX EtaQuotientX
-EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
-  C: Join(Algebra Q, IntegralDomain)
-  mx: P
+)abbrev domain METAQ ModularEtaQuotient
+++ ModularEtaQuotient(C, mx, CX, xi, LX) represents the semigroup
+++ of eta-quotients that are modular functions for Gamma_0(N).
+++ In fact, this domain is meant to do computation for a specific N,
+++ but is actually implementing the union over all N.
+++ Only modular functions of the same level can be multiplied.
+ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
+  C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
+  mx: P -- mx-th root of unity needed.
   CX: Algebra C
-  xi: CX
-  LX: UnivariateLaurentSeriesCategory CX
+  xi: CX --primitive mx-th root of unity.
+  LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
   LC ==> SparseUnivariateLaurentSeries(C, q, 0)
   Exports ==> SemiGroup with
     --assert(one? xi^mx)
@@ -1462,7 +1467,7 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
     ((x: %) = (y: %)): Boolean == symbolicEtaQuotient x = symbolicEtaQuotient y
     ((x: %) * (y: %)): % ==
         seqx: SymbolicEtaQuotient := symbolicEtaQuotient x
-        symetaquo := seqx * symbolicEtaQuotient y
+        symetaquo := seqx * symbolicEtaQuotient y -- With same-level-check!
         expansions: HT := empty()
         for cusp in cusps seqx repeat
             expansions.cusp := expansion(x, cusp) * expansion(y, cusp)
@@ -1481,6 +1486,7 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
         cx := cc * cx
         [u*x.k, cx]
 
+    -- In the series s(q) replace q by q^u*xi^v.
     substitute(s: LC, u: P, v: N): LX ==
         stc: Stream RecC := terms s
         stx: Stream RecX := map(f(u, v), stc)$SFCX
@@ -1489,8 +1495,13 @@ EtaQuotientX(C, mx, CX, xi, LX): Exports == Implementation where
     etaQuotientExpansion(e: SymbolicEtaQuotient, cusp: Q): LX ==
         m: P := level e
         divs: LP := divisors e
+        -- check whether the exponent vectors (rdelta) lead to a
+        -- modular function, i.e., rStarConditions must be fulfilled.
+        r: List Z := [rdelta(e, delta) for delta in divs]
+        not zero? rStarConditions(m, r)$QAuxiliaryModularEtaQuotientPackage =>
+            error "etaQuotientExpansion: not a modular function"
         s: LX := 1
-        for delta in divs | not zero? (rd: Z := rdelta(e, delta)) repeat
+        for delta in divs for rd in r | not zero? rd repeat
             pow: P := qcoerce(abs rd)@P
             es := power(pow)$CachedPower(LC, ef)
             if rd < 0 then es := recip(es)::LC
@@ -1544,8 +1555,10 @@ AddToMul(A: AbelianMonoid): Exports == Implementation where
         ((x: %) < (y: %)): Boolean == rep x < rep y
 
 -------------------------------------------------------------------
-)abbrev domain ETAQXA EtaQuotientExpansionAlgebra
-EtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
+)abbrev domain METAQXA ModularEtaQuotientExpansionAlgebra
+++ ModularEtaQuotientExpansionAlgebra(C, L, m) represents the algebra of
+++ eta quotients that are modular functions for Gamma_0(m).
+ModularEtaQuotientExpansionAlgebra(C, L, m): Exports == Implementation where
   C: IntegralDomain
   L: UnivariateLaurentSeriesCategory C
   m: P -- level
