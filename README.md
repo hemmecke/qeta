@@ -1,6 +1,6 @@
 # QEta 1.0.0
 
-The QEta Project is connected two articles.
+The QEta Project is connected to 3 articles.
 
 It implements the `samba` algorithm from
 
@@ -14,14 +14,20 @@ eta functions of level N as described in
 [Ralf Hemmecke and Silviu Radu: Construction of all Polynomial Relations
   among Dedekind Eta Functions of Level N](http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf)
 
+Furthermore the result about eta relations are used in
+
+[Ralf Hemmecke, Silviu Radu, and Liangjie Ye: The Generators of all
+Polynomial Relations among Jacobi Theta
+Functions](http://www.risc.jku.at/publications/download/risc_5719/thetarelations.pdf)
+
 ### Prerequisites
 
-In order to use this package you need [FriCAS] 1.3.2. In fact, the
+In order to use this package you need [FriCAS] 1.3.4. In fact, the
 package has been created on top of the
 [master-hemmecke](https://github.com/hemmecke/fricas/commits/master-hemmecke)
 branch of a clone of the FriCAS repository.
 
-We assume that [SBCL] is installed in version 1.3.21 or higher.
+We assume that [SBCL] is installed in version 1.4.5 or higher.
 
 ```
 cd SOMEDIR
