@@ -1,6 +1,7 @@
+)clear complete
 )r qetalibs
 )r etamacros
-)set stream calculate 10
+)set stream calculate 4
 
 QMEVS==>QEtaQuotientMonoidExponentVectorsStar;
 eqmevx==>etaQuotientMonoidExponentVectorsX$QMEVS;
@@ -8,40 +9,46 @@ eqmevx==>etaQuotientMonoidExponentVectorsX$QMEVS;
 S ==> Symbol;
 EZ ==> Expression Z;
 expr x ==> x :: S :: EZ;
-SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix EZ);
+PZ ==> SparseUnivariatePolynomial Z;
+PQ ==> SparseUnivariatePolynomial Q;
 PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ);
 CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
 LX ==> UnivariateLaurentSeries(CX, xsym, 0);
-EQX ==> EtaQuotientX(Q, mx, CX, xi, LX);
-EQXA ==> EtaQuotientExpansionAlgebra(CX, LX, level);
+MZ ==> Matrix Z -- consider only 2x2 matricies
+SL2Z ==> MZ -- matrices with determinant = 1
+QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
+SEQG ==> SymbolicEtaQuotientGamma
+MEQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
+MEQX ==> ModularEtaQuotientExpansions(CX, LX, level);
 
-PZ ==> SparseUnivariatePolynomial Z;
-PQ ==> SparseUnivariatePolynomial Q;
-Rec ==> Record(root: P, elem: PZ);
-
-unityroots(m: P): List P == (_
+unityroots(m: P, rs: List List Z): List List P == (_
   divs: List P := [qcoerce(delta)@P for delta in divisors m];_
-  rs := eqmevx m;_
-  l: List P := empty(); _
+  cusps: List Q := cuspsOfGamma0(m)$QAuxMEQ;_
+  l: List List P := empty(); _
   for r in rs repeat (_
-    e := etaQuotient(m, divs, r)$SymbolicEtaQuotient;_
-    l := cons(rootOfUnity e, l) _
+      lp: List P := empty();_
+      for cusp in cusps repeat (_
+          gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ;_
+          e: SEQG := etaQuotient(m, divs, r, gamma);_
+          lp := cons(minRootOfUnity e, lp) _
+      );_
+      l := cons(lp, l) _
   );_
   l_
 );
 
-level := m := 22;
-mx: P := lcm unityroots(m);
+level := m := 4;
+minroots := unityroots(m, eqmevx m)
+mx: P := lcm [lcm l for l in minroots]
 pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage;
 pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL;
 xsym: Symbol := "x"::Symbol;
 xi := generator()$CX;
 divs: List P := [qcoerce(d)@P for d in divisors m];
-rs := eqmevx m;
-lse := [etaQuotient(m, divs, r)$SymbolicEtaQuotient for r in rs]
-le := [etaQuotient(e)$EQX for e in lse];
-eas := [etaQuotient(r, expansions e)$EQXA for e in le for r in rs];
-ords := [orders ea for ea in eas]
+rs := [[-24, 24, 0], [24, -24, 0]]
+le := [etaQuotient(m, r)$MEQ for r in rs];
+ees := [expansions(e)::MEQX for e in le];
+ords := [qetaGrades ea for ea in ees]
 
 vPrint("OUTPUT STARTS HERE", level)
 vPrint("level", level)
@@ -50,4 +57,4 @@ vPrint("exponent vectors", rs)
 vPrint("maximal root of unity", mx)
 vPrint("Expansion at cusps", cuspsOfGamma0 m)
 
-eas
+[[r, ex] for r in rs for ex in ees]

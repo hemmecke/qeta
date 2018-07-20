@@ -43,30 +43,37 @@ eqmevx==>etaQuotientMonoidExponentVectorsX\$QMEVS;
 S ==> Symbol;
 EZ ==> Expression Z;
 expr x ==> x :: S :: EZ;
-SymEtaMat ==> Record(symetaquo: SymbolicEtaQuotient, data: Matrix EZ);
+PZ ==> SparseUnivariatePolynomial Z;
+PQ ==> SparseUnivariatePolynomial Q;
 PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ);
 CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
 LX ==> UnivariateLaurentSeries(CX, xsym, 0);
+MZ ==> Matrix Z -- consider only 2x2 matricies
+SL2Z ==> MZ -- matrices with determinant = 1
+QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
+SEQG ==> SymbolicEtaQuotientGamma
 MEQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
-MEQXA ==> ModularEtaQuotientExpansionAlgebra(CX, LX, level);
+MEQX ==> ModularEtaQuotientExpansions(CX, LX, level);
 
-PZ ==> SparseUnivariatePolynomial Z;
-PQ ==> SparseUnivariatePolynomial Q;
-Rec ==> Record(root: P, elem: PZ);
-
-unityroots(m: P): List P == (_
+unityroots(m: P, rs: List List Z): List List P == (_
   divs: List P := [qcoerce(delta)@P for delta in divisors m];_
-  rs := eqmevx m;_
-  l: List P := empty(); _
+  cusps: List Q := cuspsOfGamma0(m)$QAuxMEQ;_
+  l: List List P := empty(); _
   for r in rs repeat (_
-    e := etaQuotient(m, divs, r)\$SymbolicEtaQuotient;_
-    l := cons(rootOfUnity e, l) _
+      lp: List P := empty();_
+      for cusp in cusps repeat (_
+          gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ;_
+          e: SEQG := etaQuotient(m, divs, r, gamma);_
+          lp := cons(minRootOfUnity e, lp) _
+      );_
+      l := cons(lp, l) _
   );_
   l_
 );
 
 level := m := $level;
-mx: P := lcm unityroots(m);
+minroots := unityroots(m, eqmevx m)
+mx: P := lcm [lcm l for l in minroots]
 pz: PZ := cyclotomic(mx)\$CyclotomicPolynomialPackage;
 pq: PQ := map(n+->monomial(1$Q,1$N)\$PQ, c+->c::Q::PQ, pz)\$PL;
 xsym: Symbol := "x"::Symbol;
@@ -79,17 +86,15 @@ vPrint("level", level)
 vPrint("divisors", divs)
 vPrint("exponent vectors", rs)
 vPrint("maximal root of unity", mx)
-vPrint("Expansion at cusps", cuspsOfGamma0 m)
+
 QAMEQP ==> QAuxiliaryModularEtaQuotientPackage
-lerr := [r for r in rs | not zero? rStarConditions(m, r)$QAMEQP];
+lerr := [r for r in rs | not zero? rStarConditions(m, r)\$QAuxMEQ];
 if not empty? lerr then (_
     vPrint("ERROR: exponent vectors", lerr);_
     display("do not correspond to modular functions"::Symbol::OF::LinearOutputFormat, 77))_
 else (_
-    lse := [etaQuotient(m, divs, r)\$SymbolicEtaQuotient for r in rs];_
-    le := [etaQuotient(e)\$MEQ for e in lse];_
-    eas := [etaQuotient(r, expansions e)\$MEQXA for e in le for r in rs];_
-    ords := [qetaGrades ea for ea in eas];_
-    eas)
+    vPrint("Expansion at cusps", cuspsOfGamma0 m);_
+    le := [etaQuotient(m, r)\$MEQ for r in rs];_
+    ees := [expansions(e)::MEQX for e in le])
 
 EOF
