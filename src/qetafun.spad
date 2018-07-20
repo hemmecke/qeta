@@ -1419,6 +1419,29 @@ SymbolicEtaQuotientGamma:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{EtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+If $N\in\setN$, $r\in R(N)$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, and \code{y = etaQuotient(N, divs, r, gamma)} and
+\code{e = etaQuotient(y)}, then $e$ represents the tuple
+\begin{gather}
+  \left(
+  \underbrace{y}_{\texttt{symbolicEtaQuotient}}
+  ,
+  \underbrace{\prod_{\delta\in\Delta}
+  \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta/2}
+  \unityPower{\sum_{\delta\in\Delta} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
+  }_{\texttt{leadingCoefficient}}
+  ,
+  \underbrace{\prod_{\delta\in\Delta}\prod_{n=1}^{\infty}
+    (1-\unityPower{n v_\delta} x^{n u_\delta})^{r_\delta}
+  }_{\texttt{series}}
+  \right)
+\end{gather}
+and thus corresponds to the data from
+\eqref{eq:modular-g_r(gamma*tau)} with
+$x=\unityPower{\frac{\tau}{w_\gamma}}$ where $w_\gamma$ is given by
+\eqref{eq:width}.
+
 
 )endif
 -------------------------------------------------------------------
@@ -1438,22 +1461,21 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
       ++ g_r(\gamma\tau) in terms of x = \exp(2\pi i\tau/w) where
       ++ w=width(m, c).
     symbolicEtaQuotient: % -> SymbolicEtaQuotientGamma
+      ++ symbolicEtaQuotient(x) returns meta-data corresponding to x.
     expansion: % -> LX
-    prefactor: % -> CX
+      ++ expansion(x) returns the series expansion of x without any prefactor.
+    leadingCoefficient: % -> CX
+      ++ leadingCoefficient(x) returns the
     xExponent: % -> Z -- must be divided by 24
   Implementation ==> add
-    Rep ==> Record(fsymetaquo: SymbolicEtaQuotientGamma, fact: CX, ser: LX)
+    Rep ==> Record(fsymetaquo: SymbolicEtaQuotientGamma, lc: CX, ser: LX)
     xx ==> rep x
+    -- We maintain a cache of expansions of powers of the Euler function.
     q: Symbol := "q"::Symbol
     LC ==> SparseUnivariateLaurentSeries(C, q, 0)
     ef: LC := eulerFunction(1)$QFunctions(C, LC)
-    ef1: C := coefficient(ef, 1)
+    ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
     cache: XHashTable(Z, LC) := getCache()$CachedPower(LC, ef)
-
-    expansion(x: %): LX == xx.ser
-    symbolicEtaQuotient(x: %): SymbolicEtaQuotientGamma == xx.fsymetaquo
-    prefactor(x: %): CX == xx.fact
-    xExponent(x: %): Z == xExponent symbolicEtaQuotient x
 
     RecC ==> Record(k: Z, c: C)
     RecX ==> Record(k: Z, c: CX)
@@ -1461,9 +1483,8 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 
     f(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
         xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
-        cc: C := x.c
         cx: CX := xi^xiPower
-        cx := cc * cx
+        cx := x.c * cx
         [u*x.k, cx]
 
     -- In the series s(q) replace q by q^u*xi^v.
@@ -1472,7 +1493,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         stx: Stream RecX := map(f(u, v), stc)$SFCX
         series(stx)$LX
 
-    etaQuotientExpansion(e: SymbolicEtaQuotientGamma): Record(fact: CX, ser: LX) ==
+    etaQuotient(e: SymbolicEtaQuotientGamma): % ==
         m: P := level e
         divs: LP := divisors e
         s: LX := 1
@@ -1493,27 +1514,116 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         q := mx*unityPower(e)
         n: N := qcoerce(positiveRemainder(numer q, mx))@N
         pf := xi^n*pf
-        [pf, s]
+        per [e, pf, s]
 
-    etaQuotient(e: SymbolicEtaQuotientGamma): % ==
-        r := etaQuotientExpansion e
-        per [e, r.fact, r.ser] -- e contains xExponent(e)/24!!!
+    symbolicEtaQuotient(x: %): SymbolicEtaQuotientGamma == xx.fsymetaquo
+    leadingCoefficient(x: %): CX == xx.lc
+    expansion(x: %): LX == xx.ser
 
+    coerce(x: %): OutputForm == rep(x)::OutputForm
     ((x: %) = (y: %)): Boolean == symbolicEtaQuotient x = symbolicEtaQuotient y
     ((x: %) * (y: %)): % ==
         -- The following multiplication does the compatibility check.
-        symetaquo := symbolicEtaQuotient x * symbolicEtaQuotient y
-        c: CX := prefactor x * prefactor y
+        e := symbolicEtaQuotient x * symbolicEtaQuotient y
+        c: CX := leadingCoefficient x * leadingCoefficient y
         s: LX := expansion x * expansion y
-        per [symetaquo, c, s]
+        per [e, c, s]
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ModularEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+If $N\in\setN$, $r\in R(N)$, and \code{e = etaQuotient(N, r)}, then
+$e$ represents the information given in
+\eqref{eq:modular-g_r(gamma*tau)}
+for each cusp $\frac{a}{c}$ of $\Gamma_0(N)$.
+
+
+)endif
+)abbrev domain METAQ ModularEtaQuotient
+++ ModularEtaQuotient(C, mx, CX, xi, LX) represents the semigroup
+++ of eta-quotients that are modular functions for Gamma_0(N).
+++ In fact, this domain is meant to do computation for a specific N,
+++ but is actually implementing the union over all N.
+++ Only modular functions of the same level can be multiplied.
+ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
+  C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
+  mx: P -- mx-th root of unity needed.
+  CX: Algebra C
+  xi: CX --primitive mx-th root of unity.
+  LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
+  LC ==> SparseUnivariateLaurentSeries(C, q, 0)
+  SEQG ==> SymbolicEtaQuotientGamma
+  Exports ==> SemiGroup with
+    --assert(one? xi^mx)
+    etaQuotient: (P, LZ) -> %
+      ++ etaQuotient(m, r) represents the expansion of
+      ++ g_r(\tau) in terms of x = \exp(2\pi i\tau/w) where
+      ++ w=width(m, c) at all cusps of Gamma0(m).
+    level: % -> P
+      ++ level(x) gives the m such that x corresponds to a modular
+      ++ function for Gamma_0(m).
+    symbolicEtaQuotients: % -> XHashTable(Q, SEQG)
+      ++ symbolicEtaQuotients(x) returns the meta data corresponding to x.
+    expansions: % -> XHashTable(Q, LX)
+      ++ expansions(x) returns the Laurent series expansions of $g_r(tau)$
+      ++ at all cusps of Gamma_0(N).
+  Implementation ==> add
+    Rep ==> Record(flevel: P, meta: XHashTable(Q, SEQG), ser: XHashTable(Q, LX))
+    xx ==> rep x
+
+    etaQuotient(m: P, r: LZ): % ==
+        -- check whether the exponent vectors (rdelta) lead to a
+        -- modular function, i.e., rStarConditions must be fulfilled.
+        not zero? rStarConditions(m, r)$QAuxMEQ =>
+            error "etaQuotient: not a modular function"
+        hmeta: XHashTable(Q, SEQG) := empty()
+        hser: XHashTable(Q, LX) := empty()
+        divs: LP := [qcoerce(d)@P for d in
+                       divisors(m)$IntegerNumberTheoryFunctions]
+        cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ
+            se: SEQG := etaQuotient(m, divs, r, gamma)
+            e: EtaQuotientGamma(C, mx, CX, xi, LX) := etaQuotient se
+            s: LX := expansion e
+            lc: CX := leadingCoefficient e
+            ord: Z := (xExponent(e) exquo 24)::Z -- order of series
+            hmeta.cusp := se
+            hser.cusp := monomial(lc, ord)$LX * s
+        per [m, hmeta, hser]
+
+    level(x: %): P == xx.flevel
+    symbolicEtaQuotients(x: %): XHashTable(Q, SEQG) == xx.meta
+    expansions(x: %): XHashTable(Q, LX) == xx.ser
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
+    ((x: %) = (y: %)): Boolean ==
+        -- it is enough if we compare the level and the rdeltas
+        m: P := level x
+        m ~= level y => false
+        -- note that 1/m is always a cusp of Gamma_0(m), but we choose any
+        ex: XHashTable(Q, SEQG) := symbolicEtaQuotients x
+        ey: XHashTable(Q, SEQG) := symbolicEtaQuotients y
+        cusp: Q := first keys ex
+        exponents(ex.cusp) = exponents(ey.cusp)
 
-
-
-
-
-
+    ((x: %) * (y: %)): % ==
+        m: P := level x
+        m ~= level y =>
+            error "ModularEtaQuotient: cannot multiply elements with different level"
+        ex: XHashTable(Q, SEQG) := symbolicEtaQuotients x
+        ey: XHashTable(Q, SEQG) := symbolicEtaQuotients y
+        sx: XHashTable(Q, LX) := expansions x
+        sy: XHashTable(Q, LX) := expansions y
+        hmeta: XHashTable(Q, SEQG) := empty()
+        hser: XHashTable(Q, LX) := empty()
+        cusps: LQ := keys ex
+        for cusp in cusps repeat
+            hmeta.cusp := ex.cusp * ey.cusp
+            hser.cusp := sx.cusp * sy.cusp
+        per [m, hmeta, hser]
+    coerce(x: %): OutputForm == rep(x)::OutputForm
 
 
 )endif
