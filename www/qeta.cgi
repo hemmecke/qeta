@@ -27,6 +27,13 @@ if (!defined($QUERY_ARRAY{"rvectors"})) {
     delete($QUERY_ARRAY{"rvectors"});
 }
 
+if (!defined($QUERY_ARRAY{"gamma"})) {
+    $gamma = "";
+} else {
+    $gamma = $QUERY_ARRAY{"gamma"};
+    delete($QUERY_ARRAY{"gamma"});
+}
+
 if (!defined($QUERY_ARRAY{"streamcalculate"})) {
     $streamcalculate = "4";
 } else {
@@ -52,19 +59,32 @@ print <<EOF;
     <h1>Eta Quotient Expansions</h1>
 
     <p>
+    Here one can compute the expansion of
+    g_r(δ(γτ)) = Product_{δ|N} η(δτ)^(r_δ) for given exponent vectors
+    r = (r(δ_1), ..., r(δ_n)) where n is the number of positive
+    divisors of N.
+    </p>
+    <p>
     <form action="/people/hemmecke/qeta/qeta.cgi" method="get">
     <input type="submit" value="Compute" />
     <dl>
-    <dt>Level: </dt>
+    <dt><strong>Level:</strong></dt>
     <dd><input name="level" value="$level" size=3 /></dd>
 
-    <dt>Exponent vectors (leave empty to get a monoid basis).
-    </ br>
-    Resulting eta quotient must be a modular function for Gamma_0(level).</dt>
+    <dt><strong>List of m exponent vectors</strong> in the form
+    [[r11,r12,...,r1n],...,[rm1,...,rmn]] with n being the number of
+    divisors of level
+    (leave empty to get a monoid basis corresponding to all
+    eta-quotients that are modular functions).
+    <br />
     <dd><input name="rvectors" value="$rvectors" size=40 /></dd>
-    </dl>
 
-    <dt>Show k coefficients (default k=4):</dt>
+    <dt><strong>Transformation matrix γ</strong> from SL_2(Z) in the form
+    [[a, b], [c,d]] (leave empty to expand at every cusp of
+    Gamma_0(level)).
+    <dd><input name="gamma" value="$gamma" size=40 /></dd>
+
+    <dt><strong>Show k coefficients</strong> (default k=4):</dt>
     <dd><input name="streamcalculate" value="$streamcalculate" size=3 /></dd>
     </dl>
     </form>
@@ -76,8 +96,8 @@ EOF
 
 if ($rvectors eq '') {$rvectors = "eqmevx(m)";}
 $rvectors =~ s/ *//g; # remove spaces from rvectors
-$cmd="/bin/bash /home/www/people/hemmecke/qeta/qeta.sh";
-$args="--level='\"$level\"' --calc='\"$streamcalculate\"' --rvectors='\"$rvectors\"'";
+$cmd="/bin/bash /home/www/people/hemmecke/qeta/qeta/qeta.sh";
+$args="--level='\"$level\"' --calc='\"$streamcalculate\"' --rvectors='\"$rvectors\"' --gamma='\"$gamma\"'";
 
 #print "CMD=[$cmd]\n";
 #print "ARGS={$args}\n";
