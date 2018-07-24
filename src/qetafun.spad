@@ -313,7 +313,7 @@ furthermore,
 \label{eq:naive-matrix-split}
 \end{align}
 Note that for any integer $s$ whe have:
-\begin{align}
+\begin{align*}
 \begin{pmatrix}a\delta&b\delta\\c&d\end{pmatrix}
 &=\begin{pmatrix}a_\delta&b_\delta\\c_\delta&d_\delta\end{pmatrix}
   \begin{pmatrix}1& s\\0&1\end{pmatrix}
@@ -329,9 +329,18 @@ Note that for any integer $s$ whe have:
   \end{pmatrix}
   \begin{pmatrix}h_\delta&\delta b d_\delta-d b_\delta-s \delta / h_\delta\\
                  0      &\delta / h_\delta\end{pmatrix}.
-\end{align}
+\end{align*}
 Therefore, we can choose $b_\delta$ and $d_\delta$ in such a way that
 $0 \le \delta b d_\delta-d b_\delta < \delta/h_\delta$.
+
+If $c=0$, then $a=d=1$, $h_\delta=\delta$. We can choose $d_\delta=1$
+and $b_\delta= \delta b  d_\delta$ and get
+\begin{align}
+\begin{pmatrix}\delta&b\delta\\0&1\end{pmatrix}
+&=\begin{pmatrix}1&b \delta\\0&1\end{pmatrix}
+  \begin{pmatrix}\delta&0\\
+                 0      &1\end{pmatrix}.
+\end{align}
 
 If we set
 \begin{gather}
@@ -430,8 +439,9 @@ $\xi := \unityPower{\frac{c}{24N}}$.
 Since we are only interested in expansions at the cusps, we can assume
 $0<c\in\Delta$.
 
-In the following let $\delta \in \Delta$.
-Because of \eqref{eq:tau_delta}, we have
+In the following let $\delta \in \Delta$. Because of
+$x=q^{1/w_\gamma}$, \eqref{eq:tau_delta} and \eqref{eq:width}, we
+have
 \begin{align}
   q_\delta = \unityPower{\tau_\delta}
   &= x^{u_\delta} \, \unityPower{v_\delta}
@@ -444,16 +454,28 @@ for
   v_\delta := \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}.
   \label{eq:uv_delta}
 \end{gather}
+In particular, if $c=0$, then $a=d=1$, $w_\gamma=1$,
+$h_\delta=\delta$, $u_\delta=\delta$, $v_\delta=0$.
+
 %
 Note that $\unityPower{\frac{v_\delta}{24}} = \xi^k$ for
 $k = (\delta b d_\delta - d b_\delta) \frac{N}{\lcm(\delta,c)}\in \setZ$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Lemma}
-  $u_\delta \in \setZ$.
+  If $\gamma =
+\bigl(
+\begin{smallmatrix}
+  a & b\\
+  c & d
+\end{smallmatrix}
+\bigr) \in SL_2(\setZ)$, $N > 0$, $\delta \in \Delta$, then
+$u_\delta \in \setZ$.
 \end{Lemma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{proof}
+If $c=0$, then $u_\delta=\delta\in\setZ$. Without loss of generality,
+we can assume $c>0$.
 If $p$ is a prime that divides $N$, \ie, $N=N'p^\alpha$ for some
 $\alpha>0$, and $\delta = \delta' p^m$, $c=c' p^k$ with
 $\gcd(p,N')=\gcd(p,\delta')=\gcd(p,c')=1$, then
@@ -1195,7 +1217,7 @@ SymbolicEtaDeltaGamma: SetCategory with
     vdelta: % -> Q            -- b2/d2
     unityPower: % -> Q        -- (kappa_delta + vdelta)/24
  == add
-    Rec ==> Record(red: MZ, triang: MZ)
+    Rec ==> Record(red: SL2Z, triang: MZ)
     Rep ==> Record(
               flevel: P,    -- level \Gamma_0(lev)
               fdelta: P,    -- the divisor used at creation
@@ -1220,8 +1242,8 @@ SymbolicEtaDeltaGamma: SetCategory with
         gamma1: SL2Z := rec.red
         gamma2: MZ := rec.triang
         b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
-        udelta: P := qcoerce(aLigozat(m, c, delta)$QAuxMEQ)@P
         a2: Z := gamma2(1, 1); wgamma: Z := width(m, c)
+        udelta: P := qcoerce(((wgamma*gcd(c,delta)^2) exquo delta)::Z)@P
         --assert(udelta = ((a2*wgamma exquo d2) :: Z))
         if not (udelta = ((a2*wgamma) exquo d2) :: Z) then
             error "udelta does not match"
