@@ -115,9 +115,10 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 MZ ==> Matrix Z -- will be a square matrix
+SL2Z ==> MZ -- represents SL_2(Z)
 Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
-Rec ==> Record(red: MZ, triang: MZ)
+Rec ==> Record(red: SL2Z, triang: MZ)
 Pol ==> SparseUnivariatePolynomial Z
 
 )if LiterateDoc
@@ -183,12 +184,20 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ cusps(m) returns all the cusps for Gamma_0(m) sorted first by
       ++ denominator and then (among the cusps with the same denominatore)
       ++ by the numerator of the cusp.
-    splitMatrix: (MZ, Z) -> Rec
+    splitMatrix: (SL2Z, Z) -> Rec
       ++ splitMatrix(mat, delta) returns a record rec that contains
+      ++ two matrices rec.red=m1 (in SL_2(Z) and rec.triang=m2 such
+      ++ that mat=m1*m2 according to \cide[Lemma~4.8]{Radu:PhD:2010},
+      ++ but in a variation as described in qetafun.spad, i.e., such
+      ++ that 0<=m2(1,2)<delta/g where g = gcd(mat(1,1), mat(2,1)).
+      ++ Input condition: determinant(mat)>0.
+    splitMatrix: (Z, Z, Z, Z) -> Rec
+      ++ splitMatrix(a, b, c, d) returns a record rec that contains
       ++ two matrices rec.red=m1 and rec.triang=m2 such that mat=m1*m2
       ++ according to \cide[Lemma~4.8]{Radu:PhD:2010}, but in a variation
-      ++ as described in qetafun.spad, i.e., such that 0<=m2(1,2)<delta/g
-      ++ where g = gcd(mat(1,1), mat(2,1)).
+      ++ as described in qetafun.spad, i.e., such that 0<=m2(1,2)<det(mat)/g
+      ++ where g = gcd(a, c) and mat=[[a,b],[c,d]].
+      ++ Input condition: a*d-b*c>0.
     cuspToMatrix: (P, Q) -> MZ
       ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]] such
       ++ that splitMatrix(gamma, m) returns two matrices [m1, m2] with
@@ -303,12 +312,10 @@ QAuxiliaryModularEtaQuotientPackage: with
     width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
 
     splitMatrix(mat: MZ, delta: Z): Rec ==
-        LZ ==> List Z
-        LLZ ==> List LZ
-        a: Z := mat(1,1) * delta
-        b: Z := mat(1,2) * delta
-        c: Z := mat(2,1)
-        d: Z := mat(2,2)
+        splitMatrix(mat(1,1) * delta, mat(1,2) * delta, mat(2,1), mat(2,2))
+
+    splitMatrix(a: Z, b: Z, c: Z, d: Z): Rec ==
+        LLZ ==> List List Z
         exgcd: EXGCD := extendedEuclidean(a, c)
         g: Z := exgcd.generator
         d0: Z :=  exgcd.coef1 -- initial value for d1
@@ -316,7 +323,7 @@ QAuxiliaryModularEtaQuotientPackage: with
         a1: Z := (a exquo g) :: Z
         c1: Z := (c exquo g) :: Z
         a2: Z := g
-        d2: Z := (delta exquo g)::Z
+        d2: Z := a1*d-b*c1
         -- Now try to find s such that 0 <= b*d1 - d*b1 - s*d2 < d2.
         b2init: Z := b*d0 - d*b0
         b2: Z := positiveRemainder(b2init, d2)
