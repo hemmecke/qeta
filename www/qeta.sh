@@ -98,15 +98,14 @@ if (expansionAtAllCusps?) then (_
   gammas: List SL2Z := [matrix $gamma]_
 );
 
-minroots := unityroots(m, eqmevx m, gammas)
+rs := $rvectors;
+minroots := unityroots(m, rs, gammas)
 mx: P := lcm [lcm l for l in minroots]
 pz: PZ := cyclotomic(mx)\$CyclotomicPolynomialPackage;
 pq: PQ := map(n+->monomial(1\$Q,1\$N)\$PQ, c+->c::Q::PQ, pz)\$PL;
 xsym: Symbol := "x"::Symbol;
 xi := generator()\$CX;
 divs: List P := [qcoerce(d)@P for d in divisors m];
-rs := $rvectors;
-
 tPrint("OUTPUT STARTS HERE")
 vPrint("level", level)
 vPrint("divisors", divs)
