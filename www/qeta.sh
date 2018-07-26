@@ -106,7 +106,14 @@ pq: PQ := map(n+->monomial(1\$Q,1\$N)\$PQ, c+->c::Q::PQ, pz)\$PL;
 xsym: Symbol := "x"::Symbol;
 xi := generator()\$CX;
 divs: List P := [qcoerce(d)@P for d in divisors m];
+
+
 tPrint("OUTPUT STARTS HERE")
+if not one?(det:=determinant first gammas) then (_
+   vPrint("gamma", first gammas);_
+   vPrint("Error: Determinant of gamma is not 1. det(gamma)", det);_
+   systemCommand("quit"))
+
 vPrint("level", level)
 vPrint("divisors", divs)
 vPrint("exponent vectors (list of r-vectors) rs", rs)
