@@ -1484,6 +1484,9 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
       ++ etaQuotient(s) represents the expansion of
       ++ g_r(\gamma\tau) in terms of x = \exp(2\pi i\tau/w) where
       ++ w=width(m, c).
+    eulerFunctionPower: (P, N, Z) -> LX
+      ++ etaPower(u, v, p) computes eulerFunction(1)^p and replaces
+      ++ q=monomial(1,1)$LC by monomial(xi^v, u)$LX
     symbolicEtaQuotient: % -> SymbolicEtaQuotientGamma
       ++ symbolicEtaQuotient(x) returns meta-data corresponding to x.
     expansion: % -> LX
@@ -1492,19 +1495,26 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
       ++ leadingCoefficient(x) returns the
   Implementation ==> add
     Rep ==> Record(fsymetaquo: SymbolicEtaQuotientGamma, lc: CX, ser: LX)
+    -- The true series expansion of e is given by c * x^p * s where
+    -- c = leadingCoefficient e
+    -- x = \exp(2\pi i\tau/w) where w=width(m, c)
+    -- p = xExponent symbolicEtaQuotient e
+    -- s = expansion e
     xx ==> rep x
     -- We maintain a cache of expansions of powers of the Euler function.
     q: Symbol := "q"::Symbol
     LC ==> SparseUnivariateLaurentSeries(C, q, 0)
     ef: LC := eulerFunction(1)$QFunctions(C, LC)
     ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
+    -- We intend to also store negative powers of the eulerFunction.
     cache: XHashTable(Z, LC) := getCache()$CachedPower(LC, ef)
 
     RecC ==> Record(k: Z, c: C)
     RecX ==> Record(k: Z, c: CX)
     SFCX ==> StreamFunctions2(RecC, RecX)
 
-    f(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
+    substituteVariable(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
+        -- replace variable q by xi^v * x^u
         xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
         cx: CX := xi^xiPower
         cx := x.c * cx
@@ -1513,31 +1523,39 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     -- In the series s(q) replace q by q^u*xi^v.
     substitute(s: LC, u: P, v: N): LX ==
         stc: Stream RecC := terms s
-        stx: Stream RecX := map(f(u, v), stc)$SFCX
+        stx: Stream RecX := map(substituteVariable(u, v), stc)$SFCX
         series(stx)$LX
+
+    eulerFunctionPower(u: P, v: N, rd: Z): LX ==
+        if key?(rd, cache) then
+            es := cache.rd
+        else
+            pow: P := qcoerce(abs rd)@P
+            es := power(pow)$CachedPower(LC, ef)
+            if rd < 0 then
+                es := recip(es)::LC
+                cache.rd := es -- cache for negative exponents
+        substitute(es, u, v)
+
+    squareRoot(fq: Q): CX ==
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
+        ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
     etaQuotient(e: SymbolicEtaQuotientGamma): % ==
         m: P := level e
         divs: LP := divisors e
         s: LX := 1
         for delta in divs for rd in exponents e | not zero? rd repeat
-            pow: P := qcoerce(abs rd)@P
-            es := power(pow)$CachedPower(LC, ef)
-            if rd < 0 then es := recip(es)::LC
             edelta: SymbolicEtaDeltaGamma := eta(e, delta)
             u: P := udelta(edelta)
             v: N := qcoerce(numer(mx * vdelta(edelta)))@N
-            s := s * substitute(es, u, v)
-        fq: Q := rationalPrefactor e
-        import from QAuxiliaryModularEtaQuotientPackage
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)
-        q: Q := rr.rat
-        p: P := rr.rootOf
-        pf: CX := (q::C::CX) * squareRoot(p)$GaussRoot(CX, xi, mx)
-        q := mx*unityPower(e)
+            s := s * eulerFunctionPower(u, v, rd)
+        q: Q := mx * unityPower e
+        if not one? denom q then
+            error "EtaQuotientGamma: denominator does not vanish"
         n: N := qcoerce(positiveRemainder(numer q, mx))@N
-        pf := xi^n*pf
-        per [e, pf, s]
+        cx: CX := xi^n * squareRoot rationalPrefactor e -- leading coefficient
+        per [e, cx, s]
 
     symbolicEtaQuotient(x: %): SymbolicEtaQuotientGamma == xx.fsymetaquo
     leadingCoefficient(x: %): CX == xx.lc
