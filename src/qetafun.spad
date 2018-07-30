@@ -29,6 +29,10 @@ xdbgPrint(x,y) ==> rhx:="42"
 % Euler totient function
 \newcommand{\eulerphi}{\varphi}
 
+% Abbreviation for \sum_{\divides{\delta}{#1}}\delta {#2}_\delta
+\newcommand{\sumdelta}[2][M]{\hat{#2}}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,6 +269,90 @@ $\tau'\in\setH$ and
 \label{eq:eta-W-transformation}
 \end{gather}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}\label{thm:c*tau+d}
+  Let $\gamma := \left(
+    \begin{smallmatrix}a&b\\c&d\end{smallmatrix} \right)\in
+  SL_2(\setZ)$, $\delta>0$, $m>0$, $z\ge0$, and
+  \begin{gather*}
+    W=
+    \begin{pmatrix}
+      \delta & z\\
+      0      & m
+    \end{pmatrix}
+    \gamma
+    = \begin{pmatrix}
+        \delta a + c z & \delta b + d z\\
+        c m & d m
+      \end{pmatrix}
+    \in GL_2^+(\setZ).
+  \end{gather*}
+  Then $\det(W)=\det(H)=\delta m$.
+  %
+  If
+  $h:=\gcd(\delta a + c z, cm)$,
+  $a':=\frac{\delta a + c z}{h}$,
+  $c':=\frac{c m}{h}$, and
+  $b'$ and $d'$ are such that $a'd'-b'c'=1$ and
+  $0 \le (\delta b + d z) d' - d m b' < cm/h$, \ie,
+  \begin{gather*}
+    W':=\begin{pmatrix}
+      (\delta a + c z) / h & b'\\
+      c m / h                    & d'
+    \end{pmatrix},
+    \qquad
+    W''
+    :=
+    \begin{pmatrix}
+      h & (\delta b + d z) d' - d m b'\\
+      0 & \delta m / h
+    \end{pmatrix}.
+  \end{gather*}
+  according to the splitting above.
+
+  Then with $\tau':=W''\tau$ we have
+  $c'\tau'+d' = \frac{h}{\delta} (c\tau + d)$.
+\end{Lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{proof}
+
+\begin{align*}
+  c'\tau'+d'
+  &=
+  c'
+    \left(
+    \frac{h}{\delta m}(h\tau + (\delta b + d z) d' - d m b')
+    \right) + d'\\
+  &=
+    \frac{c m}{h}
+    \left(
+    \frac{h}{\delta m}(h\tau + (\delta b + d z) d' - d m b')
+    \right) + d'\\
+  &=
+    \frac{1}{\delta}
+    \left(
+    h c \tau + b c \delta d' + c d d' z - c d m b'
+    \right) + d'\\
+  &=
+    \frac{1}{\delta}
+    \left(
+    h c \tau + (a d - 1) \delta d' + c d d' z - c d m b'
+    + \delta d'
+    \right)\\
+  &=
+    \frac{1}{\delta}
+    \left(
+    h c \tau + a d \delta d' + c d d' z - c d m b'
+    \right)\\
+  &=
+    \frac{1}{\delta}
+    \left(
+    h c \tau + h d (a' d' - c' b')
+    \right)\\
+  &=
+    \frac{h}{\delta} (c\tau + d)
+\end{align*}
+\end{proof}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $\eta_\delta$ under $SL_2(\setZ)$}
@@ -363,31 +451,9 @@ then
 \end{gather*}
 
 
-Furthermore,
+From Lemma~\ref{thm:c*tau+d} we get
 \begin{align*}
   c_\delta\tau_\delta+d_\delta
-  &=
-  c_\delta
-    \left(
-    \frac{h_\delta\tau+\delta b d_\delta-d b_\delta}{\delta/h_\delta}
-    \right) + d_\delta\\
-  &=
-  \frac{c_\delta h_\delta}{\delta}
-    (
-    h_\delta\tau + b \delta d_\delta-d b_\delta
-    ) + d_\delta\\
-  &=
-  \frac{1}{\delta}
-    (c h_\delta\tau + c b \delta d_\delta - c d b_\delta + \delta d_\delta)\\
-  &=
-  \frac{1}{\delta}
-    (c h_\delta\tau + (ad-1) \delta d_\delta - c d b_\delta + \delta d_\delta)\\
-  &=
-  \frac{1}{\delta}
-    (c h_\delta\tau + ad \delta d_\delta - c d b_\delta)\\
-  &=
-  \frac{1}{\delta}
-    (c h_\delta\tau + d h_\delta (a_\delta d_\delta - c_\delta b_\delta)\\
   &=
   \frac{h_\delta}{\delta}(c \tau + d).
 \end{align*}
@@ -749,7 +815,8 @@ $\frac{a}{c}$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Transformation of $h_{r,m,t}$ under $\Gamma_0(N)$}
+\section{The function $h_{r,m,t}$ and its transformations under
+  $SL_2(\setZ)$ and $\Gamma_0(N)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a positive integer $m$ and $t\in\Set{0,\ldots,m-1}$, a positive
@@ -761,9 +828,13 @@ integer $M$, and $r \in R(M)$ such that
   =
   \prod_{\divides{\delta}{M}}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
   =
-  \unityPower{-\frac{\tau}{24} \sum_{\delta|M}\delta r_\delta} g_r(\tau)
+  \unityPower{-\frac{\tau \, \sumdelta{r}}{24}} g_r(\tau)
 \end{gather*}
-is the generating function for the sequence $(a(n))_{n\in\setN}$.
+is the generating function for the sequence $(a(n))_{n\in\setN}$
+where we have abbreviated
+\begin{gather}
+  \sumdelta{r} := \sum_{\delta|M}\delta r_\delta.
+\end{gather}
 
 Let $U_m$ be an operation on functions $\setH\to\setC$ so that
 \begin{gather*}
@@ -790,7 +861,7 @@ Let $f_t(\tau):=\unityPower{-t\tau}f(\tau)$, then
   &=
   \frac{1}{m}
   \sum_{k=0}^\infty
-  a(k)
+  a(k)\,
   \unityPower{\frac{(k-t)\tau}{m}}
   \sum_{\lambda=0}^{m-1}
   \unityPower{\frac{(k-t)\lambda}{m}}
@@ -798,7 +869,7 @@ Let $f_t(\tau):=\unityPower{-t\tau}f(\tau)$, then
   &=
     \sum_{n=0}^\infty
     \sum_{l=0}^{m-1}
-  a(mn+l)
+  a(mn+l)\,
   \unityPower{\frac{(mn+l-t)\tau}{m}}
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}\unityPower{\frac{(mn+l-t)\lambda}{m}}\\
@@ -812,44 +883,40 @@ equal to $m$ for $l=t$ and vanishes in all other cases.
 
 We can also evaluate $(U_mf_t)(\tau)$ in another way.
 
-Let us abbreviate
-\begin{gather}
-  \sigma := \sum_{\delta|M}\delta r_\delta.
-\end{gather}
-
 \begin{align*}
   (U_mf_t)(\tau)
   &=
   \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)\\
   &=
   \frac{1}{m} \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sigma}
+  \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sumdelta{r}}
   g_r\left(\frac{\tau+\lambda}{m}\right)\\
   &=
   \frac{1}{m}
-  \unityPower{-\frac{\tau}{24m} (24t+\sigma)}
+  \unityPower{-\frac{\tau (24t+\sumdelta{r})}{24m}}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m} (24t+\sigma)}
+  \unityPower{-\frac{\lambda (24t+\sumdelta{r})}{24m}}
   \prod_{\divides{\delta}{M}}
     \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}\\
 \end{align*}
 
-Let us consider the transformation of the function
+In the following we consider the function
 
 \begin{align}
   h_{r,m,t}(\tau)
-  &:=
+  &:= \unityPower{\frac{\tau (24t+\sumdelta{r})}{24m} } (U_mf_t)(\tau)=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m} (24t+\sigma)}
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
   \prod_{\divides{\delta}{M}}
   \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}
   \label{eq:def-h-r-m-t}
 \end{align}
+and its transformations under $SL_2(\setZ)$ and $\Gamma_0(N)$.
 
 In order to algorithmically find a Ramanujan-Kolberg relation for
-$\sum_{n=0}^\infty a(m n + t)$ we restrict the choice of $N$ in such a
-way, that
+$\sum_{n=0}^\infty a(m n + t)$ we restrict the choice of
+$N\in\setN\setminus\Set{0}$ in such a way, that
 \begin{gather}
   \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
   \label{eq:p|m=>p|N}\\
@@ -863,9 +930,9 @@ For the above conditions see (13) and (14) in
 Section~4.2 in \cite{Radu:PhD:2010}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Transformation of $\eta_{\delta,m,\lambda}$ under $\Gamma_0(N)$}
+\subsection{Transformation of $\eta_{\delta,m,\lambda}$ under
+  $SL_2(\setZ)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 Let $m$ and $N$ be a positive integers,
 $\lambda \in \Set{0,\ldots,m-1}$, and $\divides{\delta}{M}$.
@@ -876,10 +943,12 @@ We define
 \left(
   \begin{pmatrix}\delta& \delta \lambda\\0&m\end{pmatrix} \tau
 \right).
+\label{eq:eta_delta-m-lambda}
 \end{gather}
 
-Let $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\Gamma_0(N)$.
+Let
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$.
 %
 Then
 \begin{align}
@@ -900,57 +969,49 @@ where
     \delta (a + c \lambda) & \delta (b + d \lambda)\\
     c m                   & d m
   \end{pmatrix}.
+  \label{eq:W_delta-m-lambda}
 \end{align}
 
-Let's apply the splitting of $W=W'W''$ into a matrix
+Let us apply the splitting of $W=W'W''$ into a matrix
 $W'\in SL_2(\setZ)$ and an upper triangular matrix $W''$ as in the
-Section~\ref{sec:eta-transformation} and compare with the proof of
-Lemma~2.2 of \cite{Radu:AlgorithmicApproachRamanujanCongruences:2009}.
+Section~\ref{sec:eta-transformation}.
 
 We get
 %
 $\det(W) = \delta m$, because $\det(\gamma)=1$.
-
+%
 Furthermore,
-$h = \gcd(\delta(a + c \lambda), \delta \frac{cm}{\delta})=\delta$,
+$h = \gcd(\delta(a + c \lambda), cm)$,
 %
-$a' = a + c \lambda$, and
+$a' = \frac{a + c \lambda}{h}$, and
 %
-$c' = \frac{cm}{\delta}$.
+$c' = \frac{cm}{h}$.
 %
-From \eqref{eq:delta|M=>delta|mN} and $\divides{N}{c}$ follows
-$\divides{\delta}{mc}$ and $c'\in \setZ$.
 
-Note that $\gcd(a,c)=1$. Thus $\gcd(a + c \lambda, c)=1$ and because of
-$\divides{N}{c}$,
-% ($\gamma \in \Gamma_0(N)$)
-it follows $\gcd(a + c \lambda, N)=1$.
-%
-Then \eqref{eq:p|m=>p|N} implies $\gcd(a + c \lambda, m)=1$.
-%
-Therefore $\gcd(a + c \lambda, cm)=1$ and we can find $b^*$ and $d'$ such
-that $(a + c \lambda) d' - b^* cm =1$. It also holds $\gcd(a', c')=1$ and we
-can choose $b'=\delta b^*$ such that $\det(W')=1$ for
-\begin{gather*}
+We find $b'$ and $d'$ according to
+Section~\ref{sec:eta-transformation} such that
+$a' d' - b' c' =1$, \ie, $\det(W')=1$ for
+\begin{gather}
   W'= \begin{pmatrix}a'&b'\\c'&d'\end{pmatrix}
-  = \begin{pmatrix}a+c \lambda& \delta b^*\\cm/\delta&d'\end{pmatrix}.
-\end{gather*}
+  = \begin{pmatrix}
+      \delta(a+c \lambda)/h & b'\\
+      cm/h                  & d'
+    \end{pmatrix}.
+  \label{eq:W'_delta-m-lambda}
+\end{gather}
 
 For the matrix $W''$ we obtain
 \begin{gather}
   W''
   =
   \begin{pmatrix}
-    \delta & \delta ((b + d \lambda) d' - d m b^*)\\
-    0      & m
+    h & \delta ((b + d \lambda) d')\\
+    0      & \delta m / h
   \end{pmatrix}
-  =
-  \begin{pmatrix}
-    \delta & \delta \lambda_\gamma\\
-    0      & m
-  \end{pmatrix}.
+  \label{eq:W''_delta-m-lambda}
 \end{gather}
-where $\lambda_\gamma := (b + d \lambda) d' - d m b^*$.
+where $b'$ and $d'$ have been chosen in such a way that
+$0\le  \delta (b + d \lambda) d' < \delta m / h$.
 
 Note that
 \begin{align*}
@@ -1026,7 +1087,7 @@ and thus
   &= (c\tau+d)^{1/2} \upsilon_{\gamma,\delta,m,\lambda} \, \eta_{\delta,m,\lambda_\gamma}(\tau)
 \end{align*}
 where $\upsilon_{\gamma,\delta,m,\lambda} := \upsilon(W')$ and
-$\lambda_\gamma:= d d' \lambda + b d' - d m b^*$.
+$\lambda_\gamma = d d' \lambda + b d' - d m b^*$, see \eqref{eq:lambda_gamma}.
 
 Note that $d$ and $d'$ are invertible modulo $m$, \ie, given
 $\lambda_\gamma$, we can find $\lambda$ such that
@@ -1039,25 +1100,31 @@ follows invertibility of $d$ modulo $m$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Transformation of $h_{r,m,t}$ under $\Gamma_0(N)$}
+\subsection{Transformation of $h_{r,m,t}$ under
+  $\Gamma_0(N) \subset SL_2(\setZ)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{Hemmecke}
+  Cannot use this section for expansion, since it only describes
+  formulas for $\Gamma_0(N)$.
+\end{Hemmecke}
+
 From the previous section, we can easily find a formula for the
-transformation of $h_{r,m,t}$ under $\Gamma_0(N)$.
+transformation of $h_{r,m,t}$ under $SL_2(\setZ)$.
 
 \begin{align*}
   h_{r,m,t}(\gamma\tau)
   &:=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sum_{\delta|M}\delta r_\delta\Bigr)}
+  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
   \prod_{\divides{\delta}{M}}
     \eta_{\delta,m,\lambda}(\gamma\tau)^{r_\delta}
   \\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sum_{\delta|M}\delta r_\delta\Bigr)}
+  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
     (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
     \prod_{\divides{\delta}{M}}
     \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}\\
@@ -1066,7 +1133,7 @@ transformation of $h_{r,m,t}$ under $\Gamma_0(N)$.
   \cdot
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m} (24t+\sigma)}
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
     \prod_{\divides{\delta}{M}}
     \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}\\
   &=
@@ -1074,13 +1141,13 @@ transformation of $h_{r,m,t}$ under $\Gamma_0(N)$.
   \cdot
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m} (24t+\sigma)}
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
     \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
     \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}
 \end{align*}
 
 Let us compare this with \eqref{eq:def-h-r-m-t} where we have replaced
-$t$ by $t'$ with $t' = t x + \frac{x-1}{24}\sigma+km$ for some
+$t$ by $t'$ with $t' = t x + \frac{x-1}{24}s+km$ for some
 $x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
 \begin{align}
   h_{r,m,t'}(\tau)
@@ -1088,29 +1155,29 @@ $x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m}
-    \Bigl(24\bigl(t x + \frac{x-1}{24}\sigma+km\bigr)+\sigma\Bigr)}
+    \Bigl(24\bigl(t x + \frac{x-1}{24}s+km\bigr)+\sumdelta{r}\Bigr)}
   \prod_{\divides{\delta}{M}}
   \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m} (24 t + \sigma) x}
+  \unityPower{-\frac{\lambda}{24m} (24 t + \sumdelta{r}) x}
   \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sigma) x}
+  \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
   \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}.
 \end{align}
 
 If we can find some $x\in\setZ$ and $\kappa(r,t)\in\setC$ such that
 for every $0\le \lambda<m$
 \begin{gather}
-  \unityPower{-\frac{\lambda}{24m} (24t+\sigma)}
+  \unityPower{-\frac{\lambda}{24m} (24t + \sumdelta{r})}
     \prod_{\divides{\delta}{M}}
     \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
   = \kappa(r, t) \cdot
-    \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sigma) x}
+    \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
 \end{gather}
 
 According to
@@ -1120,24 +1187,378 @@ we choose $x=a^2$ and
 \begin{gather*}
   \kappa(r,t)
   =
-  \beta(\gamma,0) \, \unityPower{\frac{24t+\sigma}{24m} ab(1-m^2)}
+  \beta(\gamma,0) \, \unityPower{\frac{24t+\sumdelta{r}}{24m} ab(1-m^2)}
 \end{gather*}
 
 \begin{align*}
   \kappa(r, t)
   &=
-    \unityPower{\frac{24 t + \sigma}{24m} (\lambda - \lambda_\gamma x)}
+    \unityPower{\frac{24 t + \sumdelta{r}}{24m} (\lambda - \lambda_\gamma x)}
     \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
   &=
-    \unityPower{\frac{24 t + \sigma}{24m}
+    \unityPower{\frac{24 t + \sumdelta{r}}{24m}
       (\lambda - ((b + d \lambda) d' - d m b^*) x)}
     \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
   &=
-    \unityPower{\frac{24 t + \sigma}{24m}
+    \unityPower{\frac{24 t + \sumdelta{r}}{24m}
       (\lambda(1 - dd'x) - (b d' - d m b^*) x}
     \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
 \end{align*}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Expansion of $\eta_{\delta,m,\lambda}(\tau)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+If we set
+\begin{gather}
+  \tau_{\delta,m,\lambda}
+  :=
+    \begin{pmatrix}
+      \delta & \delta \lambda\\
+      0      & m
+    \end{pmatrix}
+    \tau
+  = \frac{\delta \tau + \delta \lambda}{m},
+  \label{eq:tau_delta_m_lambda}
+\end{gather}
+then we can write
+\begin{align*}
+  \eta_{\delta,m,\lambda}(\tau)
+  &= \eta(\tau_{\delta,m,\lambda})
+  = \unityPower{\frac{\delta}{24 m} \tau + \frac{\delta
+    \lambda}{24m}}
+    \prod_{n=1}^\infty(1-q_{m,\lambda}^{\delta n})
+  = \xi_m^{\delta \lambda} q_{m,\lambda}^{\delta/24}
+    \prod_{n=1}^\infty(1-q_{m,\lambda}^{\delta n})
+\end{align*}
+where $q_{m,\lambda}=\xi_m^{\lambda} x_m$,
+$x_m = \unityPower{\frac{\tau}{m}}$,
+$\xi_m= \unityPower{\frac{1}{24m}}$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Expansion of $h_{r,m,t}(\gamma \tau)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For $h_{r,m,t}(\gamma \tau)$ we then have
+\begin{align*}
+  h_{r,m,t}(\gamma\tau)
+  &=
+  (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
+  \cdot
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+    \xi_m^{-\lambda(24t+\sumdelta{r})}
+    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
+    \prod_{\divides{\delta}{M}} \left(\xi_m^{\delta \lambda_\gamma}
+    q_{m,\lambda_\gamma}^{\delta/24}
+    \prod_{n=1}^\infty(1-q_{m,\lambda_\gamma}^{\delta n})\right)^{r_\delta}\\
+  &=
+  (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
+  \cdot
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+    \xi_m^{-\lambda(24t+\sumdelta{r})}
+    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
+    \cdot
+    \xi_m^{\lambda_\gamma \sumdelta{r}}
+    q_{m,\lambda_\gamma}^{\sumdelta{r}/24}
+    \prod_{\divides{\delta}{M}} \left(
+    \prod_{n=1}^\infty(1-q_{m,\lambda_\gamma}^{\delta n})\right)^{r_\delta}
+\end{align*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Find ``modular'' cofactor for $h_{r,m,t}(\tau)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+According to \cite[Thm.~45]{Radu:RamanujanKolberg:2015}
+
+
+\subsection{Transformation of $\eta_{\delta,m,\lambda}$ under
+  $\Gamma_0(N)\subset SL_2(\setZ)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $m$ and $N$ be a positive integers,
+$\lambda \in \Set{0,\ldots,m-1}$, and $\divides{\delta}{M}$.
+%
+We define
+\begin{gather}
+\eta_{\delta,m,\lambda}(\tau) := \eta
+\left(
+  \begin{pmatrix}\delta& \delta \lambda\\0&m\end{pmatrix} \tau
+\right).
+\end{gather}
+
+Let $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\Gamma_0(N)$.
+%
+Then
+\begin{align}
+  \eta_{\delta,m,\lambda}(\gamma \tau)
+  &:= \eta
+\left(
+  \begin{pmatrix}\delta& \delta \lambda\\0&m\end{pmatrix}
+  \gamma
+  \tau
+\right)
+=
+\eta(W \tau)
+\end{align}
+where
+\begin{align}
+  W &:=
+  \begin{pmatrix}
+    \delta (a + c \lambda) & \delta (b + d \lambda)\\
+    c m                   & d m
+  \end{pmatrix}.
+  \label{eq:W_delta-m-lambda}
+\end{align}
+
+Let's apply the splitting of $W=W'W''$ into a matrix
+$W'\in SL_2(\setZ)$ and an upper triangular matrix $W''$ as in the
+Section~\ref{sec:eta-transformation} and compare with the proof of
+Lemma~2.2 of \cite{Radu:AlgorithmicApproachRamanujanCongruences:2009}.
+
+We get
+%
+$\det(W) = \delta m$, because $\det(\gamma)=1$.
+
+Furthermore,
+$h = \gcd(\delta(a + c \lambda), \delta \frac{cm}{\delta})=\delta$,
+%
+$a' = a + c \lambda$, and
+%
+$c' = \frac{cm}{\delta}$.
+%
+From \eqref{eq:delta|M=>delta|mN} and $\divides{N}{c}$ (because
+$\gamma \in \Gamma_0(N)$) follows $\divides{\delta}{mc}$ and
+$c'\in \setZ$.
+
+Note that $\gcd(a,c)=1$. Thus $\gcd(a + c \lambda, c)=1$ and because of
+$\divides{N}{c}$,
+% ($\gamma \in \Gamma_0(N)$)
+it follows $\gcd(a + c \lambda, N)=1$.
+%
+Then \eqref{eq:p|m=>p|N} implies $\gcd(a + c \lambda, m)=1$.
+%
+Therefore $\gcd(a + c \lambda, cm)=1$ and we can find $b^*$ and $d'$ such
+that $(a + c \lambda) d' - b^* cm =1$. It also holds $\gcd(a', c')=1$ and we
+can choose $b'=\delta b^*$ such that $\det(W')=1$ for
+\begin{gather}
+  W'= \begin{pmatrix}a'&b'\\c'&d'\end{pmatrix}
+  = \begin{pmatrix}a+c \lambda& \delta b^*\\cm/\delta&d'\end{pmatrix}.
+  \label{eq:W'_delta-m-lambda}
+\end{gather}
+
+For the matrix $W''$ we obtain
+\begin{gather}
+  W''
+  =
+  \begin{pmatrix}
+    \delta & \delta ((b + d \lambda) d' - d m b^*)\\
+    0      & m
+  \end{pmatrix}
+  =
+  \begin{pmatrix}
+    \delta & \delta \lambda_\gamma\\
+    0      & m
+  \end{pmatrix}.
+  \label{eq:W''_delta-m-lambda}
+\end{gather}
+where
+\begin{gather}
+  \lambda_\gamma := (b + d \lambda) d' - d m b^*.
+  \label{eq:lambda_gamma}
+\end{gather}
+
+Note that
+\begin{align*}
+  W = W'\cdot W''
+  &=
+    \begin{pmatrix}a'& b'\\c'&d'\end{pmatrix}
+    \cdot
+    \begin{pmatrix}1& \delta s\\0&1\end{pmatrix}
+    \begin{pmatrix}1&-\delta s\\0&1\end{pmatrix}
+    \begin{pmatrix}\delta&0\\0&1\end{pmatrix}
+    \begin{pmatrix}1&\lambda_\gamma\\0&m\end{pmatrix}\\
+  &=
+    \begin{pmatrix}a'& b' + a'\delta s\\c'&d' + c' \delta s\end{pmatrix}
+    \cdot
+    \begin{pmatrix}\delta&0\\0&1\end{pmatrix}
+    \begin{pmatrix}1&-s\\0&1\end{pmatrix}
+    \begin{pmatrix}1&\lambda_\gamma\\0&m\end{pmatrix}\\
+  &=
+    \begin{pmatrix}a'& \delta(b^* + (a+c \lambda)s)\\c'&d' + c m s\end{pmatrix}
+    \cdot
+    \begin{pmatrix}\delta&0\\0&1\end{pmatrix}
+    \begin{pmatrix}1&\lambda_\gamma-sm\\0&m\end{pmatrix}
+\end{align*}
+
+
+Clearly, we can choose $s\in\setZ$ such that
+$0 \le \lambda_\gamma - sm < m$.
+%
+In the following, we assume that already in the first place we have
+chosen $b^*$ and $d'$ in such a way that $0\le \lambda_\gamma < m$. In
+other words, we assume functions $(\gamma,\delta,m,\lambda)\mapsto W'$
+and $(\gamma,m,\lambda)\mapsto \lambda_\gamma$.
+
+Note that $\lambda_\gamma$ does depend on $\gamma$, $\lambda$, and
+$m$, but it does not depend on $\delta$.
+
+With $\tau':=W''\tau$ we have
+\begin{align*}
+  c'\tau'+d'
+  &=
+  c'
+    \left(
+    \frac{\delta\tau+\delta(b + d \lambda) d' - d m b'}{m}
+    \right) + d'\\
+  &=
+    \frac{cm}{\delta}
+    \left(
+    \frac{\delta\tau+\delta(b + d \lambda) d'}{m}
+    \right)  - d b' c' + d'\\
+  &=
+    c\tau + c(b + d \lambda) d' - d (a' d' -1) + d'\\
+  &=
+    c\tau + d + c(b + d \lambda) d' - d a' d' + d'\\
+  &=
+    c\tau + d + [c(b + d \lambda) - d (a + c \lambda) + 1]d'\\
+  &=
+    c\tau + d
+\end{align*}
+and thus
+\begin{align*}
+  \eta_{\delta,m,\lambda}(\gamma \tau)
+  &= \eta(W \tau) = \eta(W'W''\tau) = \eta(W'\tau')\\
+  &= (c'\tau'+d')^{1/2} \,\upsilon_{\gamma,\delta,m,\lambda} \,\eta(\tau')\\
+  &= (c\tau+d)^{1/2} \,\upsilon_{\gamma,\delta,m,\lambda} \, \eta(W''\tau)\\
+  &= (c\tau+d)^{1/2} \,\upsilon_{\gamma,\delta,m,\lambda} \, \eta
+    \left(
+    \begin{pmatrix}
+      \delta & \delta \lambda_\gamma\\
+      0      & m
+    \end{pmatrix}
+    \tau
+    \right)\\
+  &= (c\tau+d)^{1/2} \upsilon_{\gamma,\delta,m,\lambda} \, \eta_{\delta,m,\lambda_\gamma}(\tau)
+\end{align*}
+where $\upsilon_{\gamma,\delta,m,\lambda} := \upsilon(W')$ and
+$\lambda_\gamma = d d' \lambda + b d' - d m b^*$, see \eqref{eq:lambda_gamma}.
+
+Note that $d$ and $d'$ are invertible modulo $m$, \ie, given
+$\lambda_\gamma$, we can find $\lambda$ such that
+$\lambda\in\Set{0,\ldots,m-1}$ and
+$\lambda_\gamma= d d' \lambda +  b d' - d m b^*$ holds.
+%
+We have $\gcd(d',m)=1$ by choice of $d'$. Because $\det(\gamma)=1$ and
+$\divides{N}{c}$, it follows $\gcd(N, d)=1$. From \eqref{eq:p|m=>p|N}
+follows invertibility of $d$ modulo $m$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $h_{r,m,t}$ under
+  $\Gamma_0(N) \subset SL_2(\setZ)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{Hemmecke}
+  Cannot use this section for expansion, since it only describes
+  formulas for $\Gamma_0(N)$.
+\end{Hemmecke}
+
+From the previous section, we can easily find a formula for the
+transformation of $h_{r,m,t}$ under $SL_2(\setZ)$.
+
+\begin{align*}
+  h_{r,m,t}(\gamma\tau)
+  &:=
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
+  \prod_{\divides{\delta}{M}}
+    \eta_{\delta,m,\lambda}(\gamma\tau)^{r_\delta}
+  \\
+  &=
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
+    (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
+    \prod_{\divides{\delta}{M}}
+    \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}\\
+  &=
+  (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
+  \cdot
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
+    \prod_{\divides{\delta}{M}}
+    \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}\\
+  &=
+  (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
+  \cdot
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
+    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
+    \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}
+\end{align*}
+
+Let us compare this with \eqref{eq:def-h-r-m-t} where we have replaced
+$t$ by $t'$ with $t' = t x + \frac{x-1}{24}s+km$ for some
+$x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
+\begin{align}
+  h_{r,m,t'}(\tau)
+  &=
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda}{24m}
+    \Bigl(24\bigl(t x + \frac{x-1}{24}s+km\bigr)+s\Bigr)}
+  \prod_{\divides{\delta}{M}}
+  \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
+  &=
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda}{24m} (24 t + \sumdelta{r}) x}
+  \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
+  &=
+  \frac{1}{m}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
+  \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}.
+\end{align}
+
+If we can find some $x\in\setZ$ and $\kappa(r,t)\in\setC$ such that
+for every $0\le \lambda<m$
+\begin{gather}
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
+    \prod_{\divides{\delta}{M}}
+    \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
+  = \kappa(r, t) \cdot
+    \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
+\end{gather}
+
+According to
+\cite[Thm.~2.14]{Radu:AlgorithmicApproachRamanujanCongruences:2009},
+we choose $x=a^2$ and
+
+\begin{gather*}
+  \kappa(r,t)
+  =
+  \beta(\gamma,0) \, \unityPower{\frac{24t+\sumdelta{r}}{24m} ab(1-m^2)}
+\end{gather*}
+
+\begin{align*}
+  \kappa(r, t)
+  &=
+    \unityPower{\frac{24 t + \sumdelta{r}}{24m} (\lambda - \lambda_\gamma x)}
+    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+  &=
+    \unityPower{\frac{24 t + \sumdelta{r}}{24m}
+      (\lambda - ((b + d \lambda) d' - d m b^*) x)}
+    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+  &=
+    \unityPower{\frac{24 t + \sumdelta{r}}{24m}
+      (\lambda(1 - dd'x) - (b d' - d m b^*) x}
+    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+\end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
