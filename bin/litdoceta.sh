@@ -69,6 +69,7 @@ export TEXINPUTS=$P/:$LITDOC/:$TEXINPUTS
 export BIBINPUTS=$P/:$BIBINPUTS
 pdflatex $N.tex
 bibtex $N.aux
+makeindex $N.idx
 echo `pwd`/$N.pdf
 if ! (ps aux | grep -v grep | grep "okular $N.pdf"); then
     echo start okular
