@@ -32,6 +32,11 @@ xdbgPrint(x,y) ==> rhx:="42"
 % Abbreviation for \sum_{\divides{\delta}{#1}}\delta {#2}_\delta
 \newcommand{\sumdelta}[2][M]{\hat{#2}}
 
+\usepackage{makeidx}
+\makeindex
+
+\newcommand{\defineNotation}[2][$$]{%
+  \ensuremath{#2}\index{#1@\ensuremath{#2}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -57,7 +62,7 @@ functions for $\Gamma_0(N)$ at all cusps into $q$-series.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{gather}
-  GL_2^+(\setZ)
+  \defineNotation[GL2+Z]{GL_2^+(\setZ)}
   :=
   \SetDef{  \begin{pmatrix}
     a & b\\
@@ -66,13 +71,14 @@ functions for $\Gamma_0(N)$ at all cusps into $q$-series.
 \end{gather}
 
 \begin{gather}
-  SL_2(\setZ) := \SetDef{\gamma\in GL_2^+(\setZ)}{\det(\gamma)=1}
+  \defineNotation[SL2Z]{SL_2(\setZ)} := \SetDef{\gamma\in
+    GL_2^+(\setZ)}{\det(\gamma)=1}
 \end{gather}
 
 Let $N$ be a positive natural number and define a $\Gamma_0(N)$ as a
 subgroup of the special linear group $SL_2(\setZ)$ as follows.
 \begin{gather*}
-\Gamma_0(N) := \SetDef{  \begin{pmatrix}
+\defineNotation[Gamma0N]{\Gamma_0(N)} := \SetDef{  \begin{pmatrix}
     a & b\\
     c & d
   \end{pmatrix} \in SL_2(\setZ)}{\divides{N}{c}}
@@ -80,49 +86,54 @@ subgroup of the special linear group $SL_2(\setZ)$ as follows.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\label{def:epsilon}
-  Let $\unityPowerSymbol: \setC \to \setC$ be defined by
+  Let $\defineNotation[epsilon]{\unityPowerSymbol}: \setC \to \setC$
+  be defined by
   \begin{gather*}
     \unityPower{x} := \exp(2\pi i x).
   \end{gather*}
 \end{Definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Let $\setH=\SetDef{c\in \setC}{\Im(c)>0}$ denote the upper complex
-half-plane.
+Let $\defineNotation[H]{\setH}=\SetDef{c\in \setC}{\Im(c)>0}$ denote
+the upper complex half-plane.
 
 Let
 \begin{gather}\label{eq:eta-expansion}
-  \eta: \setH \to \setC, \quad
+  \defineNotation[eta]{\eta}: \setH \to \setC, \quad
   \tau \mapsto \unityPower{\frac{\tau}{24}}
   \prod_{n=1}^{\infty}(1-q^n)
 \end{gather}
-with $q = \unityPower{\tau}$
+with $\defineNotation[q]{q} = \unityPower{\tau}$
 denote the Dedekind eta function.
 
-In the following $N$ denotes a positive integer and
-$1=\delta_1<\delta_2\dots<\delta_n=N$ the positive divisors of $N$.
-Let $\Delta:=\Set{\delta_1,\ldots,\delta_n}$. For convenience, we
-allow to index $n$-dimensional vectors by the divisors of $N$,
-instead of the usual index set $\Set{1,\ldots,n}$.
+In the following $\defineNotation[N]{N}$ denotes a positive integer
+and $1=\delta_1<\delta_2\dots<\delta_{\defineNotation[n]{n}}=N$ the
+positive divisors of $N$. Let
+$\defineNotation[Delta]{\Delta}:=\Set{\delta_1,\ldots,\delta_n}$. For
+convenience, we allow to index $n$-dimensional vectors by the divisors
+of $N$, instead of the usual index set $\Set{1,\ldots,n}$.
 %
 For $\delta\in\Delta$ we consider the functions
 \begin{gather*}
- \eta_\delta: \setH \to \setC,\quad \tau \mapsto  \eta(\delta\tau)
+  \defineNotation[eta-delta]{\eta_\delta}: \setH \to \setC,\quad \tau
+  \mapsto \eta(\delta\tau)
 \end{gather*}
 None of these functions is identically zero.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-We define $R(N)$ to be the set of integer tuples
-$r = (r_{\delta_1}, \ldots,
+We define $\defineNotation[RN]{R(N)}$ to be the set of integer tuples
+$\defineNotation[r]{r}r = (r_{\delta_1}, \ldots,
 r_{\delta_n})\in \setZ^n$.
 %
 For $r\in R(N)$ let
 \begin{align}
-  g_r(\tau) &:= \prod_{\delta\in\Delta} \eta(\delta\tau)^{r_\delta}.
-  \label{eq:etaquotient}
+  \defineNotation[g-r-tau]{g_r(\tau)}
+  &:=
+  \prod_{\delta\in\Delta} \eta(\delta\tau)^{r_\delta}.
+  \label{eq:g_r(tau)}
 \end{align}
 
-By $R^*(N)$ we denote the subset of all tuples
+By $\defineNotation[R*N]{R^*(N)}$ we denote the subset of all tuples
 $r=(r_\delta)_{\delta\in\Delta}$ of $R(N)$ that fulfil the following
 conditions.
 \begin{align}
@@ -141,7 +152,8 @@ Note that $R^*(N)$ is an additive monoid. It even is an additive group.
 According to
 \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
 there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
-$\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
+$\Gamma_0(N)$ that correspond to a divisor $c$ of $N$ where
+$\defineNotation[phi]{\eulerphi}$ denotes the Euler totient function.
 
 In the following we always deal with quotients of $\eta$-functions of
 level $N$ that are modular functions for $\Gamma_0(N)$.
@@ -158,7 +170,9 @@ $q$-expansion at all cusps ($q=e^{2\pi i \tau})$.
 Let's look at the transformation of the $\eta$-function (see
 \cite[Lemma~2.27]{Radu:PhD:2010}).
 
-Let $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+Let
+$\defineNotation[gamma]{\gamma} =
+\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 SL_2(\setZ)$, then
 \begin{gather}
 \eta(\gamma\tau) =
@@ -166,7 +180,9 @@ SL_2(\setZ)$, then
 (c\tau+d)^{1/2}\,\upsilon(\gamma)\,\eta(\tau)
 \label{eq:eta-transformation}
 \end{gather}
-where $\upsilon(\gamma) := \upsilon_\eta(a,b,c,d)$ as defined as in
+where
+$\defineNotation[upsilon-gamma]{\upsilon(\gamma)} :=
+\upsilon_\eta(a,b,c,d)$ as defined as in
 \cite[Lemma~2.27]{Radu:PhD:2010}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -372,21 +388,24 @@ Let $\delta \in \setN\setminus\Set{0}$.
 Let
 %
 \begin{gather}
-  h_\delta:=\gcd(\delta a,c), \label{eq:h_delta}
+  \defineNotation[h-delta]{h_\delta}
+  :=
+  \gcd(\delta a,c), \label{eq:h_delta}
 \end{gather}
 %
-$a_\delta:=\frac{\delta a}{h_\delta}$,
+$\defineNotation[a-delta]{a_\delta}:=\frac{\delta a}{h_\delta}$,
 %
-$c_\delta:=\frac{c}{h_\delta}$,
+$\defineNotation[c-delta]{c_\delta}:=\frac{c}{h_\delta}$,
 %
-and $b_\delta$ and $d_\delta$ are chosen in such a way that
+and $\defineNotation[b=delta]{b_\delta}$ and
+$\defineNotation[d-delta]{d_\delta}$ are chosen in such a way that
 $a_\delta d_\delta - b_\delta c_\delta = 1$.
 %
 Because of $\gcd(a_\delta, c_\delta)=1$, such $b_\delta$ and $d_\delta$
 can be found.
 %
 Therefore
-  $\gamma_\delta := \left(
+  $\defineNotation[gamma-delta]{\gamma_\delta} := \left(
   \begin{smallmatrix}a_\delta&b_\delta\\c_\delta&d_\delta\end{smallmatrix}
 \right)\in SL_2(\setZ)$.
 
@@ -431,9 +450,14 @@ and $b_\delta= \delta b  d_\delta$ and get
 
 If we set
 \begin{gather}
-  \tau_\delta:=\begin{pmatrix}h_\delta&\delta b d_\delta-d b_\delta\\0&\delta
-    / h_\delta\end{pmatrix} \tau
-  = \frac{h_\delta\tau+\delta b d_\delta-d b_\delta}{\delta/h_\delta},
+  \defineNotation[tau-delta]{\tau_\delta}
+  :=
+  \begin{pmatrix}
+    h_\delta & \delta b d_\delta-d b_\delta\\
+    0       & \delta / h_\delta
+  \end{pmatrix} \tau
+  =
+  \frac{h_\delta\tau+\delta b d_\delta-d b_\delta}{\delta/h_\delta},
   \label{eq:tau_delta}
 \end{gather}
 then
@@ -467,9 +491,10 @@ Thus, we have
 \eta(\tau_\delta).
 \label{eq:eta_delta(gamma*tau)}
 \end{gather}
-where $\kappa_\delta \in \Set{0,\ldots,23}$ is defined by
-$\unityPower{\frac{\kappa_\delta}{24}}
-:= \upsilon(\gamma_\delta)$.
+where
+$\defineNotation[kappa-delta]{\kappa_\delta} \in \Set{0,\ldots,23}$ is
+defined by
+$\unityPower{\frac{\kappa_\delta}{24}} := \upsilon(\gamma_\delta)$.
 
 
 
@@ -482,7 +507,7 @@ For the following definition see \cite[Lemma~2.37]{Radu:PhD:2010} and
   $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)
   \in SL_2(\setZ)$ and $N$ be a positive integer. Then
   \begin{gather}
-    w_\gamma = \frac{N}{\gcd(c^2, N)}
+    \defineNotation[w-gamma]{w_\gamma} = \frac{N}{\gcd(c^2, N)}
     \label{eq:width}
   \end{gather}
   is called the \emph{width of $\gamma$ with respect to $\Gamma_0(N)$}.
@@ -497,9 +522,9 @@ $\gamma =
   c & d
 \end{smallmatrix}
 \bigr) \in SL_2(\setZ)$ we want to expand $\eta(\tau_\delta)$ in
-$x:=q^{1/w_\gamma}=\unityPower{\frac{\tau}{w_\gamma}}$ with
-coefficients from $\setQ(\xi)$ where
-$\xi := \unityPower{\frac{c}{24N}}$.
+$\defineNotation[x]{x}:=q^{1/w_\gamma}=\unityPower{\frac{\tau}{w_\gamma}}$
+with coefficients from $\setQ(\xi)$ where
+$\defineNotation[xi]{\xi} := \unityPower{\frac{c}{24N}}$.
 
 Since we are only interested in expansions at the cusps, we can assume
 $0<c\in\Delta$.
@@ -508,15 +533,17 @@ In the following let $\delta \in \Delta$. Because of
 $x=q^{1/w_\gamma}$, \eqref{eq:tau_delta} and \eqref{eq:width}, we
 have
 \begin{align}
-  q_\delta = \unityPower{\tau_\delta}
+  \defineNotation[q-delta]{q_\delta} = \unityPower{\tau_\delta}
   &= x^{u_\delta} \, \unityPower{v_\delta}
 \label{eq:q_delta}
 \end{align}
 for
 \begin{gather}
-  u_\delta := \frac{w_\gamma h_\delta^2}{\delta},
+  \defineNotation[u-delta]{u_\delta} :=
+  \frac{w_\gamma h_\delta^2}{\delta},
   \qquad
-  v_\delta := \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}.
+  \defineNotation[v-delta]{v_\delta} :=
+  \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}.
   \label{eq:uv_delta}
 \end{gather}
 In particular, if $c=0$, then $a=d=1$, $w_\gamma=1$,
@@ -603,18 +630,18 @@ Then \eqref{eq:eta_delta(gamma*tau)} turns into
 \begin{Definition}
   For any $c, \delta \in\Delta$, $r\in R(N)$ let us define
   \begin{align}
-    a_N(c, \delta) &:= \frac{N}{\gcd(N, c^2)}
-                       \frac{\gcd(c,\delta)^2}{\delta},\notag\\
-    \ord_c^N(r) &:= \frac{1}{24}\sum_{\delta\in\Delta} a_N(c, \delta) \, r_\delta,
+    \defineNotation[a-N]{a_N}(c, \delta)
+    &:= \frac{N}{\gcd(N, c^2)} \frac{\gcd(c,\delta)^2}{\delta},
+      \notag\\
+    \defineNotation[ord-c-N]{\ord_c^N}(r)
+    &:= \frac{1}{24}\sum_{\delta\in\Delta} a_N(c, \delta) \, r_\delta.
     \label{eq:order-r}
-    \intertext{and}
-    g_r(\tau) &:= \prod_{\delta\in\Delta} \eta(\delta\tau)^{r_\delta}.
-    \label{eq:g_r(tau)}
   \end{align}
 \end{Definition}
 
-With $\ord_\gamma^N$ as defined in \cite{Radu:RamanujanKolberg:2015},
-Theorem~23 of \cite{Radu:RamanujanKolberg:2015} turns into
+With $\defineNotation[ord-gamma-N]{\ord_\gamma^N}$ as defined in
+\cite{Radu:RamanujanKolberg:2015}, Theorem~23 of
+\cite{Radu:RamanujanKolberg:2015} turns into
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Theorem}\label{thm:order}
   Let $\gamma =
@@ -816,11 +843,25 @@ $\frac{a}{c}$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The function $g_{r,m,t}$ and its transformations under
-  $SL_2(\setZ)$ and $\Gamma_0(N)$}
+  $SL_2(\setZ)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given a positive integer $m$ and $t\in\Set{0,\ldots,m-1}$, a positive
-integer $M$, and $r \in R(M)$ such that
+In the following let
+$\defineNotation[m]{m}, \defineNotation[M]{M}, N \in \setN \setminus
+\Set{0}$ subject to the following conditions
+\begin{gather}
+  \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
+  \label{eq:p|m=>p|N}\\
+  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
+    $\divides{\delta}{mN}$.}
+  \label{eq:delta|M=>delta|mN}
+\end{gather}
+
+For the above conditions see (13) and (14) in
+\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
+Section~4.2 in \cite{Radu:PhD:2010}.
+
+Furthermore, let $t\in\Set{0,\ldots,m-1}$ $r \in R(M)$ such that
 \begin{gather*}
   f(\tau)
   =
@@ -833,10 +874,11 @@ integer $M$, and $r \in R(M)$ such that
 is the generating function for the sequence $(a(n))_{n\in\setN}$
 where we have abbreviated
 \begin{gather}
-  \sumdelta{r} := \sum_{\delta|M}\delta r_\delta.
+  \defineNotation[r^{}]{\sumdelta{r}} := \sum_{\delta|M}\delta r_\delta.
 \end{gather}
 
-Let $U_m$ be an operation on functions $\setH\to\setC$ so that
+Let $\defineNotation[U-m]{U_m}$ be an operation on functions
+$\setH\to\setC$ so that
 \begin{gather*}
   (U_m\phi)(\tau) := \frac{1}{m}\sum_{\lambda=0}^{m-1}
   \phi\left(\frac{\tau+\lambda}{m}\right).
@@ -876,13 +918,16 @@ Let $f_t(\tau):=\unityPower{-t\tau}f(\tau)$, then
   &=
     \sum_{n=0}^\infty a(mn+t) q^n
 \end{align*}
+is the generating function for the series
+$(a(mn+t))_{n\in\setN}$.
+
 
 Note that
 $\sum_{\lambda=0}^{m-1}\unityPower{\frac{(mn+l-t)\lambda}{m}}$ is
 equal to $m$ for $l=t$ and vanishes in all other cases.
 
 We can also evaluate $(U_mf_t)(\tau)$ in another way.
-
+%
 \begin{align*}
   (U_mf_t)(\tau)
   &=
@@ -897,13 +942,12 @@ We can also evaluate $(U_mf_t)(\tau)$ in another way.
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda (24t+\sumdelta{r})}{24m}}
   \prod_{\divides{\delta}{M}}
-    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}\\
+    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}
 \end{align*}
 
 In the following we consider the function
-
 \begin{align}
-  g_{r,m,t}(\tau)
+  \defineNotation[g-r-m-t]{g_{r,m,t}(\tau)}
   &:= \unityPower{\frac{\tau (24t+\sumdelta{r})}{24m} } (U_mf_t)(\tau)=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
@@ -912,39 +956,33 @@ In the following we consider the function
   \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}
   \label{eq:def-g_r-m-t}
 \end{align}
-and its transformations under $SL_2(\setZ)$ and $\Gamma_0(N)$.
+and its transformations under $SL_2(\setZ)$.
 
 Note that $g_r = g_{r, 1, 0}$.
 
-In order to algorithmically find a Ramanujan-Kolberg relation for
-$\sum_{n=0}^\infty a(m n + t)$ we restrict the choice of
-$N\in\setN\setminus\Set{0}$ in such a way, that
-\begin{gather}
-  \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
-  \label{eq:p|m=>p|N}\\
-  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
-    $\divides{\delta}{mN}$.}
-  \label{eq:delta|M=>delta|mN}
-\end{gather}
-
-For the above conditions see (13) and (14) in
-\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
-Section~4.2 in \cite{Radu:PhD:2010}.
+We aim at the expansion of $g_{r,m,t}(\tau)$ at all cusps of
+$\gamma = \left(
+  \begin{smallmatrix}a&b\\c&d\end{smallmatrix} \right)\in
+SL_2(\setZ)$, $\Gamma_0(N)$ into Puiseux series in $x=q^{1/w_\gamma}$
+or rather into Laurent series in
+$\defineNotation[z]{z} := q^{\frac{1}{24 w_\gamma}}$. Temporarily (for
+the expansion of $\eta_{\delta,m,\lambda}$ we will expand into Laurent
+series in $\defineNotation[z-m]{z_m} := q^{\frac{1}{24 m w_\gamma}}$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $\eta_{\delta,m,\lambda}$ under
   $SL_2(\setZ)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Let $m$ and $N$ be a positive integers,
-$\lambda \in \Set{0,\ldots,m-1}$, and $\divides{\delta}{M}$.
+Let $\defineNotation[lambda]{\lambda} \in \Set{0,\ldots,m-1}$, and
+$\divides{\delta}{M}$.
 %
 We define
 \begin{gather}
-\eta_{\delta,m,\lambda}(\tau) := \eta
-\left(
-  \begin{pmatrix}\delta& \delta \lambda\\0&m\end{pmatrix} \tau
-\right).
+  \defineNotation[eta-m-lambda]{\eta_{\delta,m,\lambda}}(\tau) := \eta
+  \left(
+    \begin{pmatrix}\delta& \delta \lambda\\0&m\end{pmatrix} \tau
+  \right).
 \label{eq:eta_delta-m-lambda}
 \end{gather}
 
@@ -1002,29 +1040,29 @@ $0\le  \delta (b + d \lambda) d' < \delta m / h_{\delta,m,\lambda}$.
 
 Let us define
 \begin{gather}
-  u_{\delta,m,\lambda}
+  \defineNotation[u-delta-m-lambda]{u_{\delta,m,\lambda}}
   :=
-  \frac{N h_{\delta,m,\lambda}^2}{\delta},
+  \frac{w_\gamma h_{\delta,m,\lambda}^2}{\delta},
   \qquad
-  v_{\delta,m,\lambda}
+  \defineNotation[v-delta-m-lambda]{v_{\delta,m,\lambda}}
   :=
   \frac{h_{\delta,m,\lambda}(\delta (b + d \lambda) d' - d m b')}{\delta m}.
 \end{gather}
 
 And further,
 \begin{align*}
-  \tau_{\delta,m,\lambda}
+  \defineNotation[tau-delta-m-lambda]{\tau_{\delta,m,\lambda}}
   &:=
     W''\tau
     = \frac{h_{\delta,m,\lambda}^2 \tau}{\delta m} +
     \frac{h_{\delta,m,\lambda}(\delta (b + d \lambda) d' - d m
     b')}{\delta m}
-    = u_{\delta,m,\lambda} \frac{\tau}{m N} + v_{\delta,m,\lambda}.
+    = u_{\delta,m,\lambda} \frac{\tau}{m w_\gamma} + v_{\delta,m,\lambda}.
 \end{align*}
 Then
-$q_{\delta,m,\lambda} := \unityPower{\tau_{\delta,m,\lambda}} =
-x_m^{u_{\delta,m,\lambda}}\,\unityPower{v_{\delta,m,\lambda}}$ for
-$x_m := \unityPower{\frac{\tau}{m N}}$.
+$\defineNotation[q-delta-m-lambda]{q_{\delta,m,\lambda}} :=
+\unityPower{\tau_{\delta,m,\lambda}} =
+z_m^{24 u_{\delta,m,\lambda}}\,\unityPower{v_{\delta,m,\lambda}}$.
 
 
 Lemma~\ref{thm:c*tau+d} tells us
@@ -1050,11 +1088,12 @@ Therefore,
     \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)
 \end{align*}
 where
-$\kappa_{\gamma,\delta,m,\lambda}\in \Set{0,\ldots,23}$ is defined by
+$\defineNotation[kappa-gamma-delta-m-lambda]{\kappa_{\gamma,\delta,m,\lambda}}
+\in \Set{0,\ldots,23}$ is defined by
 $\unityPower{\frac{\kappa_{\gamma,\delta,m,\lambda}}{24}} = \upsilon(W')$.
 
 We expand $\eta_{\delta,m,\lambda}(\gamma \tau)$ into a Laurent series
-in $x_m^{1/24}$ with coefficients from $\setQ(\xi_m)$ where
+in $z_m$ with coefficients from $\setQ(\xi_m)$ where
 $\xi_m := \unityPower{\frac{1}{24 m N}}$. Note that
 $\unityPower{\frac{v_{\delta,m,\lambda}}{24}}=\xi_m^k$ for
 $k=\frac{N}{\delta} h_{\delta,m,\lambda}(\delta (b + d \lambda) d' - d
@@ -1091,7 +1130,7 @@ We can write
     \unityPower{\sum_{\divides{\delta}{M}}\frac{r_\delta(v_{\delta,m\lambda} + \kappa_{\gamma,\delta,m,\lambda})}{24}}
     \prod_{\divides{\delta}{M}}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{r_\delta/2}
-    x_m^{r_\delta u_{\delta,m,\lambda}/24}
+    z_m^{r_\delta u_{\delta,m,\lambda}}
     \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{r_\delta}
 \end{align*}
 
@@ -2068,5 +2107,6 @@ ModularEtaQuotientExpansions(C, L, m): Exports == Implementation where
 
 )if LiterateDoc
 \bibliography{qeta}
+\printindex
 \end{document}
 )endif
