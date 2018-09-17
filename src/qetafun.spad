@@ -32,6 +32,9 @@ xdbgPrint(x,y) ==> rhx:="42"
 % Abbreviation for \sum_{\divides{\delta}{#1}}\delta {#2}_\delta
 \newcommand{\sumdelta}[2][M]{\hat{#2}}
 
+\newcommand{\divisorsum}[2][\delta]{\sum_{\divides{#1}{#2}}}
+\newcommand{\divisorprod}[2][\delta]{\prod_{\divides{#1}{#2}}}
+
 \usepackage{makeidx}
 \makeindex
 
@@ -121,6 +124,10 @@ For $\delta\in\Delta$ we consider the functions
 None of these functions is identically zero.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+When we write $\divisorsum{N}$ and $\divisorprod{N}$ we mean the sum
+and product over all \emph{positive} divisors of $N$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 We define $\defineNotation[RN]{R(N)}$ to be the set of integer tuples
 $\defineNotation[r]{r}r = (r_{\delta_1}, \ldots,
 r_{\delta_n})\in \setZ^n$.
@@ -129,7 +136,7 @@ For $r\in R(N)$ let
 \begin{align}
   \defineNotation[g-r-tau]{g_r(\tau)}
   &:=
-  \prod_{\delta\in\Delta} \eta(\delta\tau)^{r_\delta}.
+  \divisorprod{N} \eta(\delta\tau)^{r_\delta}.
   \label{eq:g_r(tau)}
 \end{align}
 
@@ -137,10 +144,10 @@ By $\defineNotation[R*N]{R^*(N)}$ we denote the subset of all tuples
 $r=(r_\delta)_{\delta\in\Delta}$ of $R(N)$ that fulfil the following
 conditions.
 \begin{align}
- \sum_{\delta\in\Delta} r_\delta &= 0\label{eq:sum=0}\\
- \sum_{\delta\in\Delta} \delta r_\delta &\equiv 0\pmod{24}\label{eq:sigmainfinity}\\
- \sum_{\delta\in\Delta} (N/\delta)r_\delta &\equiv 0\pmod{24}\label{eq:sigma0}\\
- \sqrt{\prod_{\delta\in\Delta}\delta^{r_\delta}} &\in \setQ\label{eq:productsquare}
+ \divisorsum{N} r_\delta &= 0\label{eq:sum=0}\\
+ \divisorsum{N} \delta r_\delta &\equiv 0\pmod{24}\label{eq:sigmainfinity}\\
+ \divisorsum{N} (N/\delta)r_\delta &\equiv 0\pmod{24}\label{eq:sigma0}\\
+ \sqrt{\divisorprod{N}\delta^{r_\delta}} &\in \setQ\label{eq:productsquare}
 \end{align}
 
 Note that $R^*(N)$ is an additive monoid. It even is an additive group.
@@ -634,7 +641,7 @@ Then \eqref{eq:eta_delta(gamma*tau)} turns into
     &:= \frac{N}{\gcd(N, c^2)} \frac{\gcd(c,\delta)^2}{\delta},
       \notag\\
     \defineNotation[ord-c-N]{\ord_c^N}(r)
-    &:= \frac{1}{24}\sum_{\delta\in\Delta} a_N(c, \delta) \, r_\delta.
+    &:= \frac{1}{24}\divisorsum{N} a_N(c, \delta) \, r_\delta.
     \label{eq:order-r}
   \end{align}
 \end{Definition}
@@ -673,7 +680,7 @@ From \eqref{eq:eta_delta(gamma*tau)-expansion} follows
 \begin{align}
   g_r(\gamma \tau)
   &=
-  \prod_{\delta\in\Delta}
+  \divisorprod{N}
   (c \tau+d)^{r_\delta/2}
   \,
   \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta/2}
@@ -687,14 +694,14 @@ From \eqref{eq:eta_delta(gamma*tau)-expansion} follows
   \\
   %
   &=
-  (c \tau+d)^{\sum_{\delta\in\Delta} \frac{r_\delta}{2}}
+  (c \tau+d)^{\divisorsum{N} \frac{r_\delta}{2}}
   \cdot
-  \prod_{\delta\in\Delta}
+  \divisorprod{N}
   \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta/2}
   \cdot
-  \unityPower{\sum_{\delta\in\Delta} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
+  \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
-  x^{\sum_{\delta\in\Delta} \frac{r_\delta u_\delta}{24}}
+  x^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
   \cdot
     \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}.
   \label{eq:g_r(gamma*tau)}
@@ -706,14 +713,14 @@ Because of \eqref{eq:sum=0}, $u_\delta=a_N(c, \delta)$, and
 \begin{align}
   g_r(\gamma \tau)
   &=
-  \prod_{\delta\in\Delta}
+  \divisorprod{N}
   \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta/2}
   \cdot
-  \unityPower{\sum_{\delta\in\Delta} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
+  \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
   x^{\ord^N_c(r)}
   \cdot
-  \prod_{\delta\in\Delta}
+  \divisorprod{N}
     \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}\notag\\
   \label{eq:modular-g_r(gamma*tau)}
 \end{align}
@@ -867,14 +874,14 @@ Furthermore, let $t\in\Set{0,\ldots,m-1}$ $r \in R(M)$ such that
   =
   \sum_{n=0}^\infty a(n) q^n
   =
-  \prod_{\divides{\delta}{M}}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+  \divisorprod{M}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
   =
   \unityPower{-\frac{\tau \, \sumdelta{r}}{24}} g_r(\tau)
 \end{gather*}
 is the generating function for the sequence $(a(n))_{n\in\setN}$
 where we have abbreviated
 \begin{gather}
-  \defineNotation[r^{}]{\sumdelta{r}} := \sum_{\delta|M}\delta r_\delta.
+  \defineNotation[r^{}]{\sumdelta{r}} := \divisorsum{M} \delta r_\delta.
 \end{gather}
 
 Let $\defineNotation[U-m]{U_m}$ be an operation on functions
@@ -941,7 +948,7 @@ We can also evaluate $(U_mf_t)(\tau)$ in another way.
   \unityPower{-\frac{\tau (24t+\sumdelta{r})}{24m}}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda (24t+\sumdelta{r})}{24m}}
-  \prod_{\divides{\delta}{M}}
+  \divisorprod{M}
     \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}
 \end{align*}
 
@@ -952,7 +959,7 @@ In the following we consider the function
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
-  \prod_{\divides{\delta}{M}}
+  \divisorprod{M}
   \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}
   \label{eq:def-g_r-m-t}
 \end{align}
@@ -1113,7 +1120,7 @@ of $g_{r,m,t}$ under $SL_2(\setZ)$.
     \frac{1}{m}
     \sum_{\lambda=0}^{m-1}
     \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
-    \prod_{\divides{\delta}{M}}
+    \divisorprod{M}
     \eta_{\delta,m,\lambda}(\gamma\tau)^{r_\delta}
 \end{align*}
 
@@ -1123,12 +1130,12 @@ the product into a modular function for $\Gamma_0(N)$.
 
 We can write
 \begin{align*}
-  \frac{m \, g_{r,m,t}(\gamma\tau)}{(c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}}
+  \frac{m \, g_{r,m,t}(\gamma\tau)}{(c\tau+d)^{\divisorsum{M} r_\delta/2}}
   &=
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
-    \unityPower{\sum_{\divides{\delta}{M}}\frac{r_\delta(v_{\delta,m\lambda} + \kappa_{\gamma,\delta,m,\lambda})}{24}}
-    \prod_{\divides{\delta}{M}}
+    \unityPower{\divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda} + \kappa_{\gamma,\delta,m,\lambda})}{24}}
+    \divisorprod{M}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{r_\delta/2}
     z_m^{r_\delta u_{\delta,m,\lambda}}
     \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{r_\delta}
@@ -1138,6 +1145,79 @@ We can write
 \subsection{Find ``modular'' cofactor for $g_{r,m,t}(\tau)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 According to \cite[Thm.~45]{Radu:RamanujanKolberg:2015}
+
+\begin{Definition}\cite[Def.~35]{Radu:RamanujanKolberg:2015}
+  Let $\Delta^*$ be the set of all tuples $(m, M, N, t, r)$ such that
+  $m,M,N\in\setN\setminus\Set{0}$, $t \in \setN$,
+  $r = (r_\delta)_{\divides{\delta}{M}}$, $r_\delta\in\setZ$
+  fulfil conditions \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}
+  and for
+  %
+  $\kappa:=\gcd(1-m^2, 24)$, $\kappa\ge1$ and
+  $w' := \gcd(\kappa(24t + \divisorsum{M} \delta r_\delta),24m)$,
+  $w := \frac{24m}{w'}$ the following conditions hold.
+  \begin{gather}
+  \kappa \frac{m N^2}{M} \divisorsum{M} \frac{M}{\delta}
+    r_\delta \equiv_{24} 0,\\
+  \kappa N \divisorsum{M} r_\delta \equiv_8 0,\\
+  \divides{w}{N},\\
+  \divides{2}{m} \implies (\kappa N \equiv_4 0 \land \divides{8}{N e})
+  \lor
+  (\divides{2}{e} \land \divides{8}{N(u-1)})
+\end{gather}
+where $e, u\in\setZ$ are such that $u$ is odd and
+$\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$.
+\end{Definition}
+
+
+
+
+\begin{Theorem}\cite[Thm.~45]{Radu:RamanujanKolberg:2015}
+  Let $(m, M, N, t, r) \in \Delta^*$, $s\in R(N)$, $\nu$ be an integer
+  such that $\chi_{m,r}(t)=\unityPower{\frac{\nu}{24}}$, and
+    $\mu=\sizeOfSet{P_{m.r}(t)}$ then $F(s,r,m,t)(\tau)$ is a modular
+    function on $\Gamma_0(N)$ iff the following conditions hold:L
+    \begin{gather}
+      \mu w(r) + w(s) = 0,\\
+      \nu + \mu m \sigma_\infty(r) + \sigma_\infty(s) \equiv 0 \bmod 24,\\
+      \mu \frac{m N}{M} \sigma_0(r) + \sigma_0(s) \equiv 0 \bmod 24,\\
+      \left(\divisorprod{M} (m
+        \delta)^{\abs{r_\delta}}\right)^\mu \Pi(s)\text{ is a square}.
+    \end{gather}
+\end{Theorem}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1162,25 +1242,25 @@ $x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m}
     \Bigl(24\bigl(t x + \frac{x-1}{24}s+km\bigr)+\sumdelta{r}\Bigr)}
-  \prod_{\divides{\delta}{M}}
+  \divisorprod{M}
   \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m} (24 t + \sumdelta{r}) x}
-  \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
+  \divisorprod{M} \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
-  \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}.
+  \divisorprod{M} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}.
 \end{align}
 
 If we can find some $x\in\setZ$ and $\kappa(r,t)\in\setC$ such that
 for every $0\le \lambda<m$
 \begin{gather}
   \unityPower{-\frac{\lambda}{24m} (24t + \sumdelta{r})}
-    \prod_{\divides{\delta}{M}}
+    \divisorprod{M}
     \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
   = \kappa(r, t) \cdot
     \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
@@ -1200,15 +1280,15 @@ we choose $x=a^2$ and
   \kappa(r, t)
   &=
     \unityPower{\frac{24 t + \sumdelta{r}}{24m} (\lambda - \lambda_\gamma x)}
-    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+    \divisorprod{M} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
   &=
     \unityPower{\frac{24 t + \sumdelta{r}}{24m}
       (\lambda - ((b + d \lambda) d' - d m b^*) x)}
-    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+    \divisorprod{M} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
   &=
     \unityPower{\frac{24 t + \sumdelta{r}}{24m}
       (\lambda(1 - dd'x) - (b d' - d m b^*) x}
-    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+    \divisorprod{M} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
 \end{align*}
 
 \subsection{Transformation of $\eta_{\delta,m,\lambda}$ under
@@ -1412,32 +1492,32 @@ transformation of $g_{r,m,t}$ under $SL_2(\setZ)$.
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
-  \prod_{\divides{\delta}{M}}
+  \divisorprod{M}
     \eta_{\delta,m,\lambda}(\gamma\tau)^{r_\delta}
   \\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
-    (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
-    \prod_{\divides{\delta}{M}}
+    (c\tau+d)^{\divisorsum{M} r_\delta/2}
+    \divisorprod{M}
     \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}\\
   &=
-  (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
+  (c\tau+d)^{\divisorsum{M} r_\delta/2}
   \cdot
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
-    \prod_{\divides{\delta}{M}}
+    \divisorprod{M}
     \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}\\
   &=
-  (c\tau+d)^{\sum_{\divides{\delta}{M}} r_\delta/2}
+  (c\tau+d)^{\divisorsum{M} r_\delta/2}
   \cdot
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
-    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
-    \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}
+    \divisorprod{M} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
+    \divisorprod{M} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}
 \end{align*}
 
 Let us compare this with \eqref{eq:def-g_r-m-t} where we have replaced
@@ -1450,25 +1530,25 @@ $x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m}
     \Bigl(24\bigl(t x + \frac{x-1}{24}s+km\bigr)+s\Bigr)}
-  \prod_{\divides{\delta}{M}}
+  \divisorprod{M}
   \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda}{24m} (24 t + \sumdelta{r}) x}
-  \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
+  \divisorprod{M} \eta_{\delta,m,\lambda}(\tau)^{r_\delta}\\
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
-  \prod_{\divides{\delta}{M}} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}.
+  \divisorprod{M} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}.
 \end{align}
 
 If we can find some $x\in\setZ$ and $\kappa(r,t)\in\setC$ such that
 for every $0\le \lambda<m$
 \begin{gather}
   \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
-    \prod_{\divides{\delta}{M}}
+    \divisorprod{M}
     \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}
   = \kappa(r, t) \cdot
     \unityPower{-\frac{\lambda_\gamma}{24m} (24 t + \sumdelta{r}) x}
@@ -1488,15 +1568,15 @@ we choose $x=a^2$ and
   \kappa(r, t)
   &=
     \unityPower{\frac{24 t + \sumdelta{r}}{24m} (\lambda - \lambda_\gamma x)}
-    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+    \divisorprod{M} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
   &=
     \unityPower{\frac{24 t + \sumdelta{r}}{24m}
       (\lambda - ((b + d \lambda) d' - d m b^*) x)}
-    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+    \divisorprod{M} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
   &=
     \unityPower{\frac{24 t + \sumdelta{r}}{24m}
       (\lambda(1 - dd'x) - (b d' - d m b^*) x}
-    \prod_{\divides{\delta}{M}} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
+    \divisorprod{M} \upsilon_{\gamma,\delta,m,\lambda}^{r_\delta}\\
 \end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1655,12 +1735,12 @@ represent the tuple
   ,
   \gamma
   ,
-  \prod_{\delta\in\Delta}
+  \divisorprod{N}
   \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}
   ,
-  \sum_{\delta\in\Delta} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}
+  \divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}
   ,
-  \sum_{\delta\in\Delta} r_\delta u_\delta
+  \divisorsum{N} r_\delta u_\delta
   \right)
 \end{gather}
 and thus corresponds to the data from \eqref{eq:g_r(gamma*tau)}.
@@ -1668,10 +1748,10 @@ and thus corresponds to the data from \eqref{eq:g_r(gamma*tau)}.
 If \code{e = etaQuotient(m, divs, r, gamma)}, then we have the
 following correspondence.
 \code{rationalPrefactor(e)} $=
-  \prod_{\delta\in\Delta} \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}$,
+  \divisorprod{N} \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}$,
 \code{unityPower(e)}        $=
-  \sum_{\delta\in\Delta} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}$,
-\code{xExponent(e)}         $= \sum_{\delta\in\Delta} r_\delta u_\delta$.
+  \divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}$,
+\code{xExponent(e)}         $= \divisorsum{N} r_\delta u_\delta$.
 
 )endif
 -------------------------------------------------------------------
@@ -1811,12 +1891,12 @@ SL_2(\setZ)$, and \code{y = etaQuotient(N, divs, r, gamma)} and
   \left(
   \underbrace{y}_{\texttt{symbolicEtaQuotient}}
   ,
-  \underbrace{\prod_{\delta\in\Delta}
+  \underbrace{\divisorprod{N}
   \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta/2}
-  \unityPower{\sum_{\delta\in\Delta} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
+  \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   }_{\texttt{leadingCoefficient}}
   ,
-  \underbrace{\prod_{\delta\in\Delta}\prod_{n=1}^{\infty}
+  \underbrace{\divisorprod{N}\prod_{n=1}^{\infty}
     (1-\unityPower{n v_\delta} x^{n u_\delta})^{r_\delta}
   }_{\texttt{series}}
   \right)
