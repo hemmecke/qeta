@@ -35,6 +35,8 @@ xdbgPrint(x,y) ==> rhx:="42"
 \newcommand{\divisorsum}[2][\delta]{\sum_{\divides{#1}{#2}}}
 \newcommand{\divisorprod}[2][\delta]{\prod_{\divides{#1}{#2}}}
 
+\newcommand{\setS}{\mathbb{S}}
+
 \usepackage{makeidx}
 \makeindex
 
@@ -98,7 +100,7 @@ subgroup of the special linear group $SL_2(\setZ)$ as follows.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Let $\defineNotation[H]{\setH}=\SetDef{c\in \setC}{\Im(c)>0}$ denote
-the upper complex half-plane.
+the complex upper half-plane.
 
 Let
 \begin{gather}\label{eq:eta-expansion}
@@ -129,7 +131,7 @@ and product over all \emph{positive} divisors of $N$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 We define $\defineNotation[RN]{R(N)}$ to be the set of integer tuples
-$\defineNotation[r]{r}r = (r_{\delta_1}, \ldots,
+$\defineNotation[r]{r} = (r_{\delta_1}, \ldots,
 r_{\delta_n})\in \setZ^n$.
 %
 For $r\in R(N)$ let
@@ -150,7 +152,7 @@ conditions.
  \sqrt{\divisorprod{N}\delta^{r_\delta}} &\in \setQ\label{eq:productsquare}
 \end{align}
 
-Note that $R^*(N)$ is an additive monoid. It even is an additive group.
+Note that $R^*(N)$ is an additive monoid.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Overview}
@@ -703,7 +705,7 @@ From \eqref{eq:eta_delta(gamma*tau)-expansion} follows
   \cdot
   x^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
   \cdot
-    \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}.
+    \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}.
   \label{eq:g_r(gamma*tau)}
 \end{align}
 %
@@ -849,17 +851,20 @@ $\frac{a}{c}$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The function $g_{r,m,t}$ and its transformations under
+\section{The function $g_{s,m,t}$ and its transformations under
   $SL_2(\setZ)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In the following let
-$\defineNotation[m]{m}, \defineNotation[M]{M}, N \in \setN \setminus
-\Set{0}$ subject to the following conditions
+$\defineNotation[m]{m},
+\defineNotation[M]{M},
+N \in \setN \setminus \Set{0}$, and
+$s \in R(M)$
+be subject to the following conditions
 \begin{gather}
   \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
   \label{eq:p|m=>p|N}\\
-  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
+  \text{and, if $\divides{\delta}{M}$ and $s_\delta\ne0$, then
     $\divides{\delta}{mN}$.}
   \label{eq:delta|M=>delta|mN}
 \end{gather}
@@ -868,20 +873,25 @@ For the above conditions see (13) and (14) in
 \cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
 Section~4.2 in \cite{Radu:PhD:2010}.
 
-Furthermore, let $t\in\Set{0,\ldots,m-1}$ $r \in R(M)$ such that
+Furthermore, we fix $t\in\Set{0,\ldots,m-1}$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let
 \begin{gather*}
   f(\tau)
   =
   \sum_{n=0}^\infty a(n) q^n
   =
-  \divisorprod{M}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+  \divisorprod{M}\prod_{n=0}^\infty(1-q^{\delta n})^{s_\delta}
   =
-  \unityPower{-\frac{\tau \, \sumdelta{r}}{24}} g_r(\tau)
+  \unityPower{-\frac{\tau \, \sumdelta{s}}{24}} g_s(\tau)
 \end{gather*}
-is the generating function for the sequence $(a(n))_{n\in\setN}$
+be the generating function for the sequence $(a(n))_{n\in\setN}$
 where we have abbreviated
 \begin{gather}
-  \defineNotation[r^{}]{\sumdelta{r}} := \divisorsum{M} \delta r_\delta.
+  \defineNotation[s^{}]{\sumdelta{s}} := \divisorsum{M} \delta s_\delta.
+  \label{eq:sumdelta}
 \end{gather}
 
 Let $\defineNotation[U-m]{U_m}$ be an operation on functions
@@ -941,40 +951,42 @@ We can also evaluate $(U_mf_t)(\tau)$ in another way.
   \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)\\
   &=
   \frac{1}{m} \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sumdelta{r}}
-  g_r\left(\frac{\tau+\lambda}{m}\right)\\
+  \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sumdelta{s}}
+  g_s\left(\frac{\tau+\lambda}{m}\right)\\
   &=
   \frac{1}{m}
-  \unityPower{-\frac{\tau (24t+\sumdelta{r})}{24m}}
+  \unityPower{-\frac{\tau (24t+\sumdelta{s})}{24m}}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda (24t+\sumdelta{r})}{24m}}
+  \unityPower{-\frac{\lambda (24t+\sumdelta{s})}{24m}}
   \divisorprod{M}
-    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}
+    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
 \end{align*}
 
 In the following we consider the function
 \begin{align}
-  \defineNotation[g-r-m-t]{g_{r,m,t}(\tau)}
-  &:= \unityPower{\frac{\tau (24t+\sumdelta{r})}{24m} } (U_mf_t)(\tau)=
+  \defineNotation[g-s-m-t]{g_{s,m,t}(\tau)}
+  &:= \unityPower{\frac{\tau (24t+\sumdelta{s})}{24m} } (U_mf_t)(\tau)
+  =
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{s})}
   \divisorprod{M}
-  \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{r_\delta}
-  \label{eq:def-g_r-m-t}
+  \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
+  \label{eq:def-g_s-m-t}
 \end{align}
 and its transformations under $SL_2(\setZ)$.
 
-Note that $g_r = g_{r, 1, 0}$.
+Note that $g_s = g_{s, 1, 0}$.
 
-We aim at the expansion of $g_{r,m,t}(\tau)$ at all cusps of
+We aim at the expansion of $g_{s,m,t}(\tau)$ at all cusps
 $\gamma = \left(
-  \begin{smallmatrix}a&b\\c&d\end{smallmatrix} \right)\in
-SL_2(\setZ)$, $\Gamma_0(N)$ into Puiseux series in $x=q^{1/w_\gamma}$
-or rather into Laurent series in
+  \begin{smallmatrix}a&b\\c&d\end{smallmatrix} \right)\in SL_2(\setZ)$
+of $\Gamma_0(N)$ into Puiseux series in $x=q^{1/w_\gamma}$ or rather
+into Laurent series in
 $\defineNotation[z]{z} := q^{\frac{1}{24 w_\gamma}}$. Temporarily (for
-the expansion of $\eta_{\delta,m,\lambda}$ we will expand into Laurent
-series in $\defineNotation[z-m]{z_m} := q^{\frac{1}{24 m w_\gamma}}$.
+the expansion of $\eta_{\delta,m,\lambda}$) we will expand into
+Laurent series in
+$\defineNotation[z-m]{z_m} := q^{\frac{1}{24 m w_\gamma}}$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $\eta_{\delta,m,\lambda}$ under
@@ -1105,57 +1117,65 @@ $\xi_m := \unityPower{\frac{1}{24 m N}}$. Note that
 $\unityPower{\frac{v_{\delta,m,\lambda}}{24}}=\xi_m^k$ for
 $k=\frac{N}{\delta} h_{\delta,m,\lambda}(\delta (b + d \lambda) d' - d
 m b') \in \setZ$.
+\begin{Hemmecke}
+  $\xi_m$ is not yet what we want.
+\end{Hemmecke}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Transformation of $g_{r,m,t}$ under $SL_2(\setZ)$}
+\subsection{Transformation of $g_{s,m,t}$ under $SL_2(\setZ)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-From its definition~\eqref{eq:def-g_r-m-t} and the result of the
+From its definition~\eqref{eq:def-g_s-m-t} and the result of the
 previous section, we can easily find a formula for the transformation
-of $g_{r,m,t}$ under $SL_2(\setZ)$.
+of $g_{s,m,t}$ under $SL_2(\setZ)$.
 
 \begin{align*}
-  g_{r,m,t}(\gamma\tau)
+  g_{s,m,t}(\gamma\tau)
   &:=
     \frac{1}{m}
     \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr)}
     \divisorprod{M}
-    \eta_{\delta,m,\lambda}(\gamma\tau)^{r_\delta}
-\end{align*}
-
-Let us neglect the expansion of the $(c \tau + d)$-factor, since we
-eventually will multiply $g_{r,m,t}(\tau)$ by some cofactor to make
-the product into a modular function for $\Gamma_0(N)$.
-
-We can write
-\begin{align*}
-  \frac{m \, g_{r,m,t}(\gamma\tau)}{(c\tau+d)^{\divisorsum{M} r_\delta/2}}
+    \eta_{\delta,m,\lambda}(\gamma\tau)^{s_\delta}\\
   &=
-  \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)}
-    \unityPower{\divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda} + \kappa_{\gamma,\delta,m,\lambda})}{24}}
+    \frac{(c\tau+d)^{\divisorsum{M} \frac{s_\delta}{2}}}{m}
+    \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr)
+    + \divisorsum{M}\frac{s_\delta(v_{\delta,m\lambda} +
+    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\\
+  & \qquad\times
     \divisorprod{M}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{r_\delta/2}
-    z_m^{r_\delta u_{\delta,m,\lambda}}
-    \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{r_\delta}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
+    \cdot
+    z_m^{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}
+    \cdot
+    \divisorprod{M}
+    \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
 \end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Find ``modular'' cofactor for $g_{r,m,t}(\tau)$}
+\subsection{Find ``modular'' cofactor for $g_{s,m,t}(\tau)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-According to \cite[Thm.~45]{Radu:RamanujanKolberg:2015}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\cite[Def.~35]{Radu:RamanujanKolberg:2015}
-  Let $\Delta^*$ be the set of all tuples $(m, M, N, t, r)$ such that
-  $m,M,N\in\setN\setminus\Set{0}$, $t \in \setN$,
-  $r = (r_\delta)_{\divides{\delta}{M}}$, $r_\delta\in\setZ$
+  Let $\Delta^*$ be the set of all tuples $(m, M, N, t, s)$ such that
+  $m, M, N \in \setN\setminus\Set{0}$,
+  %
+  $t \in \Set{0,\ldots,m-1}$,
+  %
+  $s \in R(M)$
+  %
   fulfil conditions \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}
   and for
   %
-  $\kappa:=\gcd(1-m^2, 24)$, $\kappa\ge1$ and
-  $w' := \gcd(\kappa(24t + \divisorsum{M} \delta r_\delta),24m)$,
-  $w := \frac{24m}{w'}$ the following conditions hold.
+  $\kappa:=\gcd(1-m^2, 24)\ge1$,
+  %
+  $w' := \gcd(\kappa(24t + \sumdelta{s}),24m)$,
+  %
+  $w := \frac{24m}{w'}$
+  %
+  the following conditions hold:
   \begin{gather}
   \kappa \frac{m N^2}{M} \divisorsum{M} \frac{M}{\delta}
     r_\delta \equiv_{24} 0,\\
@@ -1169,22 +1189,200 @@ where $e, u\in\setZ$ are such that $u$ is odd and
 $\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$.
 \end{Definition}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}\label{thm:y^2-1}
+  Let $y\in \setZ$ be such that $gcd(y, 6)=1$ then
+  $y^2 \equiv_{24} 1$, \ie, $ \frac{y^2-1}{24} \in \setZ$.
+\end{Lemma}
+\begin{proof}
+  Let $y = 6k + l$ with $l \in \Set{0,\ldots,5}$. Then
+  $\gcd(y, 6)=\gcd(l,6)=1$ only holds for $l=1$ or $l=5$.
+  %
+  Since $36 k^2 + 12 k l + l^2 = 12k(3k+l) + l^2$, and $12k(3k+l)$ is
+  divisible by 24 for $l=1$ or $l=5$, the statement of the Lemma
+  follows from the fact that $1^2\equiv_{24} 5^2 \equiv_{24} 1$.
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\cite[Def.~40]{Radu:RamanujanKolberg:2015}
+  Let $n \in \setN$, $n>1$. For $x \in \setZ$ we denote by
+  $[x]_n\in \setZ_n$ the residue class of $x$ modulo $n$ and define
+  \begin{gather*}
+    \setS_{n} := \SetDef{[y^2]_n}{y \in \setZ \land \gcd(y, n)=1}
+    \subseteq
+    \setZ_n.
+  \end{gather*}
+\end{Definition}
+
+Let $x \in \setZ$ be such that $[x]_{24_m} \in \setS_{24m}$. Then
+there exists $y \in \setZ$ with $\gcd(y, 24m)=1$ and
+$[x]_{24m}=[y^2]_{24m}$, \ie, $x = y^2 + k (24m)$ for some $k\in
+\setZ$. From Lemma~\ref{thm:y^2-1} follows that
+$\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\cite[Def.~41]{Radu:RamanujanKolberg:2015}
+  Let $s \in R(M)$.
+  %
+  The mapping
+  \begin{align*}
+    \bar{\odot}_s &: \setS_{24m} \times \Set{0,\ldots,m-1} \to
+    \Set{0,\ldots,m-1},
+    \qquad
+    ([x]_{24m}, t) \mapsto [x]_{24m}  \mathbin{\bar{\odot}_s} t
+  \end{align*}
+  is uniquely given by
+  \begin{gather}
+    [x]_{24m} \mathbin{\bar{\odot}_s} t
+    :=
+    \left( t x + \frac{x-1}{24} \sumdelta{s} \right) \bmod{m}
+  \end{gather}
+\end{Definition}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}
+  (Definition 42 and Lemma 43 of \cite{Radu:RamanujanKolberg:2015})
+  For $t\in\Set{0,\ldots,m-1}$, $s \in R(M)$ we define
+  %
+  \begin{align}
+    \defineNotation[P-s-m-t]{P_{s,m,t}}
+    &:=
+      \setS_{24m}  \mathbin{\bar{\odot}_s} t
+      =
+      \SetDef{x \mathbin{\bar{\odot}_s} t}{x \in \setS_{24m}},
+    \\
+    %
+    \defineNotation[chi-s-m-t]{\chi_{s,m,t}}
+    &:=
+      \prod_{t' \in P_{s,m,t}}
+        \unityPower{\frac{(1-m^2)(24 t'+ \sumdelta{s})}{24 m}}.
+  \end{align}
+\end{Definition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}
+  \label{thm:stable-P-s-m-t}
+  \label{thm:chi-exponent}
+  \cite[Lemma~43]{Radu:RamanujanKolberg:2015}
+  Let $t\in\Set{0,\ldots,m-1}$, $s \in R(M)$. Then
+  \begin{enumerate}
+  \item for any $x \in \setS_{24m}$ we have
+    $P_{s,m,t}
+    = x \mathbin{\bar{\odot}_s} P_{s,m,t}
+    = \SetDef{x \mathbin{\bar{\odot}_s} t'}{t'\in P_{s,m,t}}$,
+  \item $\chi_{s,m,t}=\unityPower{\frac{\nu}{24}}$ for some
+    $\nu \in \Set{0,\ldots,23}$.
+  \end{enumerate}
+\end{Lemma}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\cite[Def.~44]{Radu:RamanujanKolberg:2015}
+  Given $t\in\Set{0,\ldots,m-1}$, $s \in R(M)$, $r \in R(N)$, we
+  define
+  \begin{gather}
+    F_{r, s, m, t}(\tau) := \divisorprod{N} \eta(\delta
+    \tau)^{r_\delta} \prod_{t' \in P_{s,m,t}} g_{s,m,t'}(\tau)
+  \end{gather}
+\end{Definition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Theorem}\cite[Thm.~45]{Radu:RamanujanKolberg:2015}
-  Let $(m, M, N, t, r) \in \Delta^*$, $s\in R(N)$, $\nu$ be an integer
-  such that $\chi_{m,r}(t)=\unityPower{\frac{\nu}{24}}$, and
-    $\mu=\sizeOfSet{P_{m.r}(t)}$ then $F(s,r,m,t)(\tau)$ is a modular
-    function on $\Gamma_0(N)$ iff the following conditions hold:L
-    \begin{gather}
-      \mu w(r) + w(s) = 0,\\
-      \nu + \mu m \sigma_\infty(r) + \sigma_\infty(s) \equiv 0 \bmod 24,\\
-      \mu \frac{m N}{M} \sigma_0(r) + \sigma_0(s) \equiv 0 \bmod 24,\\
-      \left(\divisorprod{M} (m
-        \delta)^{\abs{r_\delta}}\right)^\mu \Pi(s)\text{ is a square}.
-    \end{gather}
+  \label{thm:RaduConditions}
+  Let $(m, M, N, t, s) \in \Delta^*$, $r\in R(N)$, $\nu$ and $\mu$ be
+  integers such that $\chi_{s,m,t}=\unityPower{\frac{\nu}{24}}$, and
+  $\mu=\sizeOfSet{P_{s,m,t}}$, then $F_{r,s,m,t}(\tau)$ is a modular
+  function on $\Gamma_0(N)$ iff the following conditions hold:
+  \begin{align}
+    \divisorsum{N} r_\delta + \mu \divisorsum{M} s_\delta
+    &=
+      0,
+    \\
+    \divisorsum{M} \delta r_\delta + \mu m \divisorsum{N} \delta s_\delta + \nu
+    &\equiv
+      0 \pmod{24},
+    \\
+    \divisorsum{N} \frac{N}{\delta} r_\delta
+    + \frac{\mu m N}{M} \divisorsum{M} \frac{M}{\delta} s_\delta
+    &\equiv
+      0 \pmod{24},
+    \\
+    \sqrt{
+    \divisorprod{N}\delta^{r_\delta}
+    \divisorprod{M} (m \delta)^{\mu s_\delta}
+    } &\in \setQ
+  \end{align}
 \end{Theorem}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let $m, M, N, t, r, s, \nu, \mu$ fulfil all the conditions of
+Theorem~\ref{thm:RaduConditions}. Then the exponent of the factor
+$c\tau+d$ is zero, \ie, this factor vanishes.
+
+\begin{align*}
+  F_{r,s,m,t}(\gamma\tau)
+  &=
+  (c\tau+d)^{\divisorsum{N} \frac{r_\delta}{2}}
+  \cdot
+  \divisorprod{N}
+  \left(\frac{h_\delta}{\delta}\right)^{\!\frac{r_\delta}{2}}
+  \cdot
+  \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
+  \cdot
+  x^{\divisorsum{M} \frac{r_\delta u_\delta}{24}}
+  \cdot
+    \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
+  &\qquad\times
+    \prod_{t'\in P_{s,m,t}}
+    \frac{(c\tau+d)^{\divisorsum{M} \frac{s_\delta}{2}}}{m}
+    \left[\sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t'+\sumdelta{s}\Bigr)
+    + \divisorsum{M}\frac{s_\delta(v_{\delta,m\lambda} +
+    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\right.\\
+  &\qquad\times
+    \left.
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
+    \cdot
+    z_m^{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}
+    \cdot
+    \divisorprod{M} \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
+    \right]
+  \\
+  &=
+  \divisorprod{N}
+  \left(\frac{h_\delta}{\delta}\right)^{\!\frac{r_\delta}{2}}
+  \cdot
+  \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
+  \cdot
+  x^{\divisorsum{M} \frac{r_\delta u_\delta}{24}}
+    \cdot
+    \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
+  &\qquad\times
+    \frac{1}{m^\mu}
+    \prod_{t'\in P_{s,m,t}}
+    \left[\sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t'+\sumdelta{s}\Bigr)
+    + \divisorsum{M}\frac{s_\delta(v_{\delta,m\lambda} +
+    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\right.\\
+  &\qquad\times
+    \left.
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
+    \cdot
+    z_m^{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}
+    \cdot
+    \divisorprod{M} \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
+    \right]
+\end{align*}
+
+
+
+
+
+
+
+
 
 
 
@@ -1232,11 +1430,42 @@ $\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$.
 \section{Stuff for later}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\cite[Def.~36+41]{Radu:RamanujanKolberg:2015}
+  Let $t\in\Set{0,\ldots,m-1}$, $r \in R(M)$.
+  %
+  We define two mappings
+  \begin{align*}
+    \odot_r &: \Gamma_0(N) \times \Set{0,\ldots,m-1} \to
+    \Set{0,\ldots,m-1},
+    \qquad
+    (\gamma, t) \mapsto \gamma \odot_r t\\
+    %
+    \bar{\odot}_r &: \setS_{24m} \times \Set{0,\ldots,m-1} \to
+    \Set{0,\ldots,m-1},
+    \qquad
+    ([s]_{24m}, t) \mapsto [s]_{24m} \bar{\odot}_r t
+  \end{align*}
+  where for
+  $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)$
+  the images $\gamma \odot_r t$ and $[s]_{24m} \bar{\odot}_r t$ are
+  uniquely defined by the relations
+  \begin{align*}
+    \gamma \odot_r t &\equiv_m t a^2 + \frac{a^2-1}{24} \divisorsum{M}
+    \delta r_\delta\\
+    [s]_{24m} \bar{\odot}_r t &\equiv_m t s + \frac{s-1}{24}
+    \divisorsum{M} \delta r_\delta
+  \end{align*}
+\end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 Let us compare this with \eqref{eq:def-g_r-m-t} where we have replaced
 $t$ by $t'$ with $t' = t x + \frac{x-1}{24}s+km$ for some
 $x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
 \begin{align}
-  g_{r,m,t'}(\tau)
+  g_{s,m,t'}(\tau)
   &=
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}

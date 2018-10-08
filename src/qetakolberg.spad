@@ -66,51 +66,7 @@ $t\in\Set{0,\ldots,m-1}$ as a $\setQ$-linear combination of
 eta-quotients and (maybe) an appropriate power of
 $q^{1/24}=\unityPower{\frac{\tau}{24}}$.
 
-
-
-
-In order to algorithmically find a Ramanujan-Kolberg relation for
-$\sum_{n=0}^\infty a(m n + t)$ we restrict the choice of $N$ in such a
-way, that
-\begin{gather}
-  \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
-  \label{eq:p|m=>p|N}\\
-  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
-    $\divides{\delta}{mN}$.}
-  \label{eq:delta|M=>delta|mN}
-\end{gather}
-
-For the above conditions see (13) and (14) in
-\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
-Section~4.2 in \cite{Radu:PhD:2010} or
-\cite[Def.~34]{Radu:RamanujanKolberg:2015}.
-
-\begin{Definition}\cite[Def.~35]{Radu:RamanujanKolberg:2015}
-  Let $\Delta^*$ be the set of all tuples $(m, M, N, t, r)$ such that
-  $m,M,N\in\setN\setminus\Set{0}$, $t \in \setN$,
-  $r = (r_\delta)_{\divides{\delta}{M}}$, $r_\delta\in\setZ$ and for
-  $\kappa:=\gcd(1-m^2, 24)$, $\kappa\ge1$ and
-  $w' := \gcd(\kappa(24t + \sum_{\divides{\delta}{M}} \delta r_\delta),24m)$,
-  $w := \frac{24m}{w'}$ the following conditions hold.
-  \begin{gather}
-  \text{for every prime $p$: }  \divides{p}{m} \implies \divides{p}{N},
-  \label{eq:p|m=>p|N}\\
-  \divides{\delta}{M} \land r_\delta\ne0 \implies \divides{\delta}{mN}
-  \label{eq:delta|M=>delta|mN}\\
-  \kappa \frac{m N^2}{M} \sum_{\divides{\delta}{M}} \frac{M}{\delta}
-    r_\delta \equiv_{24} 0,\\
-  \kappa N \sum_{\divides{\delta}{M}} r_\delta \equiv_8 0,\\
-  \divides{w}{N},\\
-  \divides{2}{m} \implies (\kappa N \equiv_4 0 \land \divides{8}{N e})
-  \lor
-  (\divides{2}{e} \land \divides{8}{N(u-1)})
-\end{gather}
-where $e, u\in\setZ$ are such that $u$ is odd and
-$\prod_{\divides{\delta}{M}} \delta^{\abs{r_\delta}}=2^e u$.
-\end{Definition}
-
-
-
+For mathematical background see \PathName{qetafun.spad}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -134,73 +90,112 @@ N ==> NonNegativeInteger
 Z ==> Integer
 VZ ==> Vector Z
 MZ ==> Matrix Z
-Rec ==> Record(red: MZ, triang: MZ, tg: Z)
+Rec ==> Record(red: SL2Z, lg: N)
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
+
+-- Note that in the following correspondence between programming variables
+-- and notation in the mathematical description in qetafun.spad.
+-- Variable   <--> mathematical notation
+-- m               m
+-- mm              M
+-- nn              N
+-- sigmaInfty      \sumdelta{r}
+-- kappa(m)        \kappa
 
 )abbrev package QETAKOL QEtaKolberg
 QEtaKolberg: Exports == Implementation where
   Exports ==> with
-    kappa: P -> P
-    chiExponent: (P, Z, List N) -> Z
-      ++ chiExponent(m, sigmaInfinity) computes e such that
-      ++ $\exp(2\pi i e / 24) = \chi_{m,r}(t)$
-      ++ where $\chi_{m,r}(t)$ is defined as in
-      ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015}.
-      ++ We assume $sigmaInfinity = \sum_{\delta|N} \delta r_\delta$.
+    orbitRadu: (Z, P, N) -> List N
     orbit: (Z, P, N) -> List N
-      ++ orbit(sigmaInfinity, m, t) computes the elements of
-      ++ $P_{m,r}(t)$ as defined in
+      ++ orbit(sigmaInfty, m, t) computes the elements of
+      ++ $P_{s,m,t)$ as defined in qetafun.spad,
       ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015} and
       ++ \cite[Lemma 4.35]{Radu:PhD:2010}.
-      ++ We assume $sigmaInfinity = \sum_{\delta|N} \delta r_\delta$.
-    splitMatrix: (MZ, Z, Z, Z) -> Rec
-      ++ splitMatrix(gamma, delta, m, t) returns a record rec that
-      ++ contains two matrices rec.red=m1 and rec.triang=m2 such that
-      ++ for gamma = matrix [[a, b], [c, d]] and
-      ++ W=matrix [[delta(a+ct), delta(b+dt)],[cm, dn]] it holds
+      ++ We assume $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
+    chiExponent: (Z, P, List N) -> Z
+      ++ chiExponent(sigmaInfty, m, orb) computes e such that
+      ++ $\exp(2\pi i e / 24) = \chi_{s,m,t)$.
+      ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta s_\delta$.
+      ++ See Lemma \ref{thm:chi-exponent}.
+      ++ Furthermore, we assume that orb = orbit(sigmaInfty, m, t).
+
+)if TODO
+--    splitMatrix: (MZ, Z, Z, N) -> Rec
+      ++ splitMatrix(gamma, delta, m, lambda) returns a record rec that
+      ++ contains two matrices rec.red=m1 and rec.triang=m2 and a value lg
+      ++ such that for gamma = matrix [[a, b], [c, d]] and
+      ++ W=matrix [[delta(a+ct), delta(b+dt)],[cm, dm]] it holds
       ++ W=m1*m2 according to \cite[Lemma~4.8]{Radu:PhD:2010}, but
       ++ in a variation as described in qetafun.spad, i.e., such that
-      ++ 0<=m2(1,2)<deltam where g = gcd(mat(1,1), mat(2,1)).
+      ++ m1 is given by eq:W'_delta-m-lambda, m2 by eq:W''_delta-m-lambda
+      ++ and lg by eq:lambda_gamma.
+      ++ Furthermore, 0<=lg<m and m2(1,2)=delta*lg
+    lambdaGamma: (P, SL2Z, N) -> N
+      ++ lambdaGamma(m, gamma, lambda) returns the transformed lambda
+      ++ according to gamma. See eq:lambda_gamma in qetafun.spad.
     etaCoFactor: (P, P, P, N, List Z) -> Record(particular : Union(VZ, "failed"), basis : List VZ) -- List Z
       ++ etaCoFactor(m, mm, nn, t, r) returns a list s such that
-      ++ #s=#divisors(nn) such that s fulfills (34)-(37) of Theorem 45
-      ++ of \cite{Radu:RamanujanKolberg:2015}.
-  Implementation ==> add
-    chiExponent(m: P, sigmaInfty: Z, orb: List N): Z ==
-        s: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
-        positiveRemainder((((1-m^2)*s) exquo m)::Z, 24)
+      ++ #s=#divisors(nn) such that (m, mm, nn, t, r, s) fulfills
+      ++ (34)-(37) of Theorem 45 of \cite{Radu:RamanujanKolberg:2015}.
+    sigmaInfinity: (N, List Z) -> Z
+      ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
+      ++ it is assumed that the entries of r correspond to the divisors
+      ++ of mm.
+      ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
+    sigmaZero: (N, List Z) -> Z
+      ++ sigmaZero(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
+      ++ it is assumed that the entries of r correspond to the divisors
+      ++ of mm.
+)endif
 
-    kappa(m: P): P == -- gcd(1-m^2, 24) -- m = level
+  Implementation ==> add
+
+    -- auxiliary (local) functions
+
+    -- kappa: P -> P
+    --   ++ kappa(m) computes gcd(1-m^2,24).
+    kappa(m: P): P == -- gcd(1-m^2, 24)
         ++ \cite[Def.~35]{Radu:RamanujanKolberg:2015}
         (even? m => 1; 8) * (zero? positiveRemainder(m, 3) => 1; 3)
 
-    circleBar(a2: Z, sigmaInfty: Z, m: P, t: N): N ==
+    odotBar(a2: Z, sigmaInfty: Z, m: P, t: N): N ==
         --assert(one? positiveRemainder(a2, 24))
         -- \cite[Def.~41]{Radu:RamanujanKolberg:2015}
         z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
         qcoerce(z)@N
 
-    -- The following function computes P_{m,r}(t).
-    orbit(sigmaInfty: Z, m: P, t: N): List N ==
-        k: P := kappa m
-        g := gcd(k*(24*t + sigmaInfty), 24*m)
-        w: Z := qcoerce((24*m exquo g)::Z)@P
+    orbitRadu(sigmaInfty: Z, m: P, t: N): List N ==
+        g := gcd(kappa(m)*(24*t + sigmaInfty), 24*m)
+        dbgPrint("g", g)
+        w: P := qcoerce((24*m exquo g)::Z)@P
+        dbgPrint("w", w)
         sw: List Z := empty()
         for a in 0..w-1 | one? gcd(a, w) repeat
             a2 := positiveRemainder(a^2, w)
+            dbgPrint("a", a)
+            dbgPrint("a2", a2)
             if not member?(a2, sw) then sw := cons(a2, sw)
+        dbgPrint("sw", sw)
         s: List Z := empty()
-        --assert(one? gcd(w, 24)) -- proof
+        -- There exists k \in \setN such that a^2+k*w = 1 mod 24
         --choose a representative (mod w) that is divisible by 24
         for a2 in sw repeat
             u: Z := a2
-            while not one? positiveRemainder(u, 24) repeat u := u + w
+            dbgPrint("u00000", u)
+            while not one? positiveRemainder(u, 24) repeat
+                u := u + w
+                dbgPrint("u", u)
             s := cons(u, s)
-        sort [circleBar(a2, sigmaInfty, m, t) for a2 in s]
+        sort [odotBar(a2, sigmaInfty, m, t) for a2 in s]
 
-    splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==
-        LZ ==> List Z
-        LLZ ==> List LZ
+    chiExponent(sigmaInfty: Z, m: P, orb: List N): Z ==
+        x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
+        positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
+
+
+)if TODO
+     splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==
+        LLZ ==> List List Z
         --assert(delta>0)
         --assert(m>0)
         --assert(one? determinat(gamma))
@@ -236,6 +231,9 @@ QEtaKolberg: Exports == Implementation where
         m1: MZ := matrix([[a1, b1], [c1, d1]]$LLZ)
         m2: MZ := matrix([[delta, delta * tgamma], [0, m]]$LLZ)
         [m1, m2, tgamma]$Rec
+
+    lambdaGamma(m: P, gamma: SL2Z, lambda: N): N == 1
+
 
     primePower(d: P, p: P): N ==
         import from Factored Z
@@ -290,6 +288,30 @@ QEtaKolberg: Exports == Implementation where
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
         diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+
+)endif
+
+    -- exported functions
+
+    -- The following function computes P_{m,r,t} with the optimization
+    -- given by Radu in \cite[Lemma 4.35]{Radu:PhD:2010}, i.e., we do not
+    -- need to check all entries of \setS_{24m}, but only those that are
+    -- not equivalent mod w.
+    orbit(sigmaInfty: Z, m: P, t: N): List N ==
+        m24: Z := 24*m
+        g := gcd(kappa(m)*(24*t + sigmaInfty), m24)
+        w: P := qcoerce((m24 exquo g)::Z)@P
+        result: List N := empty()
+        for a in 0..w-1 | one? gcd(a, w) repeat
+            y := a
+            while y < m24 and not one? gcd(y, m24) repeat y := y + w
+            -- Not the following "if y < m24 then" condition is unnecessary.
+            -- Note that gcd(a + k*w, m24)=gcd(a+k*w,g*w)=1 for
+            -- k chosen to be the product of all prime divisors of g
+            -- that do not divide i and do not divide w.
+            e := odotBar(positiveRemainder(y^2, m24), sigmaInfty, m, t)
+            if not member?(e, result) then result := cons(e, result)
+        result
 
 
 )if LiterateDoc
