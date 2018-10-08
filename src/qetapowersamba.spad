@@ -65,10 +65,10 @@ xdbgPrint(x,y) ==> rhx:="42"
 \newcommand{\RelProperDivisibilityN}{\sqsubset}
 \newcommand{\dividesProperlyN}[2]{#1\RelProperDivisibilityN{#2}}
 
-\newcommand{\RelDivisibility}[1]{\trianglelefteq_{#1}}
-\newcommand{\divides}[3][]{#2\RelDivisibility{#1}#3}
-\newcommand{\RelProperDivisibility}[1]{\vartriangleleft_{#1}}
-\newcommand{\dividesProperly}[3][]{#2\RelProperDivisibility{#1}#3}
+\newcommand{\RelDivisibilityMod}[1]{\trianglelefteq_{#1}}
+\newcommand{\dividesMod}[3][]{#2\RelDivisibilityMod{#1}#3}
+\newcommand{\RelProperDivisibilityMod}[1]{\vartriangleleft_{#1}}
+\newcommand{\dividesModProperly}[3][]{#2\RelProperDivisibilityMod{#1}#3}
 
 %\usepackage{rhxterm} % define \useterm and \defineterm
 \def\defineterm{\emph}
@@ -153,14 +153,14 @@ $\initial(0)=0$, $\lc(0)=0$, $\deg(0)=-\infty$.
   $a\in\setZ$ such that $n=n'+ad$.
 %
   Let $u, b\in R^*$. We say that $u$ is \defineterm{reducible by $b$
-    modulo $d$} (denoted by $\divides[d]{b}{u}$) if and only if
+    modulo $d$} (denoted by $\dividesMod[d]{b}{u}$) if and only if
   \begin{gather*}
     \degreeSize(b) \sqsubseteq \degreeSize(u) \land \deg u \equiv_d
     \deg b.
   \end{gather*}
 \end{Definition}
 
-In general, from $\divides[d]{b}{u}$ and $\divides[d]{u}{b}$ follows
+In general, from $\dividesMod[d]{b}{u}$ and $\dividesMod[d]{u}{b}$ follows
 only $\degreeSize(b) = \degreeSize(u)$, but neither $b=u$ nor
 $\initial(b) = \initial(u)$.
 
@@ -180,9 +180,9 @@ $\initial(b) = \initial(u)$.
 
 \begin{Remark}\label{remark:oneStepReduce}
   Clearly, if $\canBeReducedTo{t, b}{u}{u'}$, then
-  $\divides[d]{b}{u}$.
+  $\dividesMod[d]{b}{u}$.
   %
-  Conversely, let us assume $\divides[d]{b}{u}$ where $d=\deg t>0$.
+  Conversely, let us assume $\dividesMod[d]{b}{u}$ where $d=\deg t>0$.
   Then $a=\frac{\deg u - \deg b}{d}\in\setN$ and
   $\euclideanSize(\lc(b)) \le \euclideanSize(\lc(u))$.
   %
@@ -211,7 +211,7 @@ $\initial(b) = \initial(u)$.
 \begin{Definition}
   For $d\in \setN\setminus\Set{0}$, a set $B\subseteq R^*$ is called
   \defineterm{interreduced modulo $d$}, if for any $b, b' \in B$,
-  $b\ne b'$ neither $\divides[d]{b}{b'}$ nor $\divides[d]{b'}{b}$
+  $b\ne b'$ neither $\dividesMod[d]{b}{b'}$ nor $\dividesMod[d]{b'}{b}$
   holds.
 \end{Definition}
 
@@ -219,11 +219,11 @@ $\initial(b) = \initial(u)$.
   Suppose that the set $B\subseteq R^*$ is \useterm{interreduced
     modulo $d$}. If $C$ is a field, then $\euclideanSize(c)=1$ for any
   $c\in C\setminus\Set{0}$. It follows that for any $u\in R^*$ there
-  is at most one $b\in B$ such that $\divides[d]{b}{u}$.
+  is at most one $b\in B$ such that $\dividesMod[d]{b}{u}$.
 
   In general, however, for $u\in R^*$ it is still possible that there
-  exist $b, b' \in B$, with $b\ne b'$, $\divides[d]{b}{u}$, and
-  $\divides[d]{b'}{u}$. For example, consider $C=\setZ$,
+  exist $b, b' \in B$, with $b\ne b'$, $\dividesMod[d]{b}{u}$, and
+  $\dividesMod[d]{b'}{u}$. For example, consider $C=\setZ$,
   $\euclideanSize(z)=\abs{z}$. If $b, b' \in B$, $b \ne b'$ with
   $\deg b = d + \deg b'$,
   $\euclideanSize(\lc b) < \euclideanSize(\lc b')$, and $u\in R^*$ is
@@ -241,10 +241,10 @@ maximal degree in $x$.
 \begin{Definition}
   Let $t, u \in R^*$, $d=\deg t>0$, $B \subset R^*$ be
   \useterm{interreduced modulo $d$}, and let there exist $b \in B$
-  with $\divides[d]{b}{u}$. We denote by
+  with $\dividesMod[d]{b}{u}$. We denote by
   \defineNotation[select]{\applySelect{u}{t}{B}} the element $b \in B$
   such that
-  $\deg b = \max \SetDef{\deg b'}{b'\in B\land \divides[d]{b'}{u}}$.
+  $\deg b = \max \SetDef{\deg b'}{b'\in B\land \dividesMod[d]{b'}{u}}$.
 
   We say that the relation $\reducesTo{t,B}{u}{u'}$ holds if and only
   if $\canBeReducedTo{t,b}{u}{u'}$ and $u'= u-ct^ab$ for
@@ -256,14 +256,14 @@ maximal degree in $x$.
   %
   By \defineNotation[reduce]{\applyReduce{u}{t}{B}}, we denote the
   $u'\in R$ such that $\reducesTo[*]{t, B}{u}{u'}$ and there does
-  not exist $b\in B$ with $\divides[d]{b}{u'}$.
+  not exist $b\in B$ with $\dividesMod[d]{b}{u'}$.
   %
   If $u' = \applyReduce{u}{t}{B}$, we say $u$ \defineterm{reduces
     modulo $t$ and $B$} to $u'$.
 \end{Definition}
 
 \begin{Remark}
-  Under the assumption that $B$ is finite, $\divides[d]{b}{u}$ is
+  Under the assumption that $B$ is finite, $\dividesMod[d]{b}{u}$ is
   decidable algorithmically and the function $\oneStepReduce$ from
   Remark~\ref{remark:oneStepReduce} is computable, also
   $\FunSelect{t}{B}$ and $\FunReduce{t}{B}$ are computable.
