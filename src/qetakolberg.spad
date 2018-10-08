@@ -118,6 +118,10 @@ QEtaKolberg: Exports == Implementation where
       ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta s_\delta$.
       ++ See Lemma \ref{thm:chi-exponent}.
       ++ Furthermore, we assume that orb = orbit(sigmaInfty, m, t).
+    etaCoFactor: (P, P, P, N, List Z) -> Record(particular : Union(VZ, "failed"), basis : List VZ) -- List Z
+      ++ etaCoFactor(m, mm, nn, t, s) returns a list r such that
+      ++ #r=#divisors(nn) and (m, mm, nn, t, r, s) the conditions in
+      ++ Theorem~\ref{thm:RaduConditions}.
 
 )if TODO
 --    splitMatrix: (MZ, Z, Z, N) -> Rec
@@ -133,10 +137,6 @@ QEtaKolberg: Exports == Implementation where
     lambdaGamma: (P, SL2Z, N) -> N
       ++ lambdaGamma(m, gamma, lambda) returns the transformed lambda
       ++ according to gamma. See eq:lambda_gamma in qetafun.spad.
-    etaCoFactor: (P, P, P, N, List Z) -> Record(particular : Union(VZ, "failed"), basis : List VZ) -- List Z
-      ++ etaCoFactor(m, mm, nn, t, r) returns a list s such that
-      ++ #s=#divisors(nn) such that (m, mm, nn, t, r, s) fulfills
-      ++ (34)-(37) of Theorem 45 of \cite{Radu:RamanujanKolberg:2015}.
     sigmaInfinity: (N, List Z) -> Z
       ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
@@ -192,6 +192,72 @@ QEtaKolberg: Exports == Implementation where
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
         positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
 
+    -- primePower(d, p) returns e such that gcd(d/p^e, p)=1.
+    primePower(d: P, p: P): N ==
+        e: N := 0;
+        x: Z := d
+        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
+        return e
+
+    etaCoFactor(m: P, mm: P, nn: P, t: N, s: List Z): _
+      Record(particular : Union(VZ, "failed"), basis : List VZ) ==
+        -- Setup matrix. Then solve inhomogeneous system.
+        QEQMEVS ==> QEtaQuotientMonoidExponentVectorsStar
+        mat: MZ := rStarConditionMatrix(nn)$QEQMEVS
+        nr: N := nrows mat
+        divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
+        d: VZ := vector divs
+        dbgPrint("d", d)
+        n: N := # divs
+        dbgPrint("n", n)
+        w: Z := 0
+        sigmaInfty: Z := 0
+        sigma0: Z := 0
+        for j in 1..n for sdelta in s repeat
+            w := w + sdelta
+            sigmaInfty := sigmaInfty + d.j * sdelta
+            sigma0 := sigma0 + d(n+1-j) * sdelta
+        -- Compute P_{m,r}(t).
+        orb: List N := orbit(sigmaInfty, m, t)
+        dbgPrint("orb", orb)
+        orbitSize: Z := # orb
+        nu: Z := chiExponent(sigmaInfty, m, orb)
+        dbgPrint("nu", nu)
+
+        v: Vector Z := new(nr, 0)
+        v.1 := - orbitSize * w                   -- \ref{eq:Radu-sum=0}
+        dbgPrint("v1", v.1)
+        v.2 := - nu - orbitSize * m * sigmaInfty -- \ref{eq:Radu-sigmainfinity}
+        dbgPrint("v2", v.2)
+        x: Z := orbitSize * m * nn * sigma0
+        v.3 := - ((x exquo mm)::Z)               -- \ref{eq:Radu-sigma0}
+        dbgPrint("v3", v.3)
+        fl: List Record(factor: Z, exponent: N) := factors factor nn
+        -- Determine the cofactor according to (37) of
+        -- \cite{Radu:RamanujanKolberg:2015} for each prime separately.
+        -- Or see \ref{eq:Radu-productsquare} in qetafun.spad.
+        if even? orbitSize then
+            for i in 1..#fl for fe in fl repeat qsetelt!(v, i+3, 0)
+        else
+            for i in 1..#fl for fe in fl repeat
+                dbgPrint("i", i)
+                p: P := qcoerce(fe.factor)@P -- extract prime factor
+                dbgPrint("p", p)
+                em: N := primePower(m, p)
+                -- for all divisors of mm > 1
+                e: Z := if odd? first s then em else 0 -- case: delta=1
+                for j in 2..n for sdelta in rest s | odd? sdelta repeat
+                    -- Mod 2 only odd sdelta is relevant.
+                    e := em + primePower(qcoerce(d.j)@P, p)
+                dbgPrint("i+3", i+3)
+                dbgPrint("e", e)
+                qsetelt!(v, i+3, e)
+                dbgPrint("v", v)
+        -- Now we have a matrix mat and a right-hand side v and need to
+        -- solve mat*x=v for x.
+        dbgPrint("v", v)
+        dbgPrint("mat", mat)
+        diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
 )if TODO
      splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==
@@ -235,59 +301,7 @@ QEtaKolberg: Exports == Implementation where
     lambdaGamma(m: P, gamma: SL2Z, lambda: N): N == 1
 
 
-    primePower(d: P, p: P): N ==
-        import from Factored Z
-        fl: List Record(factor: Z, exponent: N) := factors factor d
-        for fe in fl repeat
-            if fe.factor = p then return fe.exponent
-        return 0
 
-    etaCoFactor(m: P, mm: P, nn: P, t: N, r: List Z): Record(particular : Union(VZ, "failed"), basis : List VZ) ==
-        -- etaCoFactor(m, mm, nn, t, r) this computes the
-        -- $s_\delta$ with $\delta|N$ from Theorem 45
-        -- of \cite{Radu:RamanujanKolberg:2015}
-        -- where we here use mm=M, nn=N.
-        -- Setup matrix. Then solve inhomogeneous system.
-        QEQMEVS ==> QEtaQuotientMonoidExponentVectorsStar
-        mat: MZ := rStarConditionMatrix(nn)$QEQMEVS
-        nc: N := ncols mat
-        divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
-        d: VZ := vector divs
-        n: N := # divs
-        w: Z := 0
-        sigmaInfty: Z := 0
-        sigma0: Z := 0
-        for j in 1..n for rdelta in r repeat
-            w := w + rdelta
-            sigmaInfty := sigmaInfty + d.j * rdelta
-            sigma0 := sigma0 + d(n+1-j) * rdelta
-        -- Compute P_{m,r}(t).
-        orb: List N := orbit(sigmaInfty, m, t)
-        orbitSize: Z := # orb
-        nu: Z := chiExponent(m, sigmaInfty, orb)
-
-        v: Vector Z := new(nc, 0)
-        v.1 := - orbitSize * w
-        v.2 := - (nu + orbitSize * m * sigmaInfty)
-        v.3 := sigma0
-        fl: List Record(factor: Z, exponent: N) := factors factor nn
-        -- Determine the cofactor according to (37) of
-        -- \cite{Radu:RamanujanKolberg:2015} for each prime separately.
-        if even? orbitSize then
-            for i in 1..#fl for fe in fl repeat qsetelt!(v, n+i+2, 0)
-        else
-            for i in 1..#fl for fe in fl repeat
-                p: P := qcoerce(fe.factor)@P
-                em: N := primePower(m, p)
-                -- for all divisors of mm > 1
-                e: Z := if odd? first r then em else 0 -- case: delta=1
-                for j in 2..n for rdelta in rest r | odd? rdelta repeat
-                    -- Mod 2 only odd rdelta is relevant.
-                    e := em + primePower(qcoerce(d.j)@P, p)
-                qsetelt!(v, n+i+2, e)
-        -- Now we have a matrix mat and a right-hand side v and need to
-        -- solve mat*x=v for x.
-        diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
 )endif
 
