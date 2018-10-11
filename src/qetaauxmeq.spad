@@ -184,12 +184,13 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ cusps(m) returns all the cusps for Gamma_0(m) sorted first by
       ++ denominator and then (among the cusps with the same denominatore)
       ++ by the numerator of the cusp.
+    splitMatrix: (SL2Z, Z, P, N) -> Rec
+      ++ splitMatrix(mat, delta, m, lambda) computes
+      ++ splitMatrix(a, b, c, d) where the arguments are the matrix
+      ++ entries of matrix [[delta, delta*lambda], [0, m]]*mat.
+      ++ Input condition: determinant(mat)>0.
     splitMatrix: (SL2Z, Z) -> Rec
-      ++ splitMatrix(mat, delta) returns a record rec that contains
-      ++ two matrices rec.red=m1 (in SL_2(Z) and rec.triang=m2 such
-      ++ that mat=m1*m2 according to \cide[Lemma~4.8]{Radu:PhD:2010},
-      ++ but in a variation as described in qetafun.spad, i.e., such
-      ++ that 0<=m2(1,2)<delta/g where g = gcd(mat(1,1), mat(2,1)).
+      ++ splitMatrix(mat, delta) computes splitMatrix(mat, delta, 1, 0).
       ++ Input condition: determinant(mat)>0.
     splitMatrix: (Z, Z, Z, Z) -> Rec
       ++ splitMatrix(a, b, c, d) returns a record rec that contains
@@ -311,9 +312,24 @@ QAuxiliaryModularEtaQuotientPackage: with
 
     width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
 
-    splitMatrix(mat: MZ, delta: Z): Rec ==
-        splitMatrix(mat(1,1) * delta, mat(1,2) * delta, mat(2,1), mat(2,2))
+    -- Split matrix as in Lemma~\ref{thm:matrix-splitting} with
+    -- z = delta*lambda.
+    splitMatrix(mat: SL2Z, delta: Z, m: P, lambda: N): Rec ==
+        z: Z := delta*lambda
+        w11: Z := delta*mat(1,1) + mat(2,1)*z
+        w12: Z := delta*mat(1,2) + mat(2,2)*z
+        w21: Z := mat(2,1)*m
+        w22: Z := mat(2,1)*m
+        splitMatrix(w11, w12, w21, w22)
 
+    -- Split matrix as in Lemma~\ref{thm:matrix-splitting} with
+    -- z = 0 and m = 1.
+    splitMatrix(mat: SL2Z, delta: Z): Rec ==
+        splitMatrix(mat(1,1) * delta, mat(1,2) * delta, mat(2,1), mat(2,2))
+        -- Same as splitMatrix(mat, delta, 1, 0).
+
+    -- Split matrix according to Section~\ref{sec:eta-transformation} in
+    -- qetafun.spad.
     splitMatrix(a: Z, b: Z, c: Z, d: Z): Rec ==
         LLZ ==> List List Z
         exgcd: EXGCD := extendedEuclidean(a, c)
