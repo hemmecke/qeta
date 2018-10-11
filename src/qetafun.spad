@@ -196,6 +196,7 @@ $\defineNotation[upsilon-gamma]{\upsilon(\gamma)} :=
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Lemma}
+\label{thm:matix-splitting}
 Let $\gamma',\gamma''\in SL_2(\setZ)$.
 %
 Then $\upsilon(\gamma'\gamma'')^2 = \upsilon(\gamma')^2 \upsilon(\gamma'')^2$.
@@ -962,17 +963,23 @@ We can also evaluate $(U_mf_t)(\tau)$ in another way.
     \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
 \end{align*}
 
+As abbreviation, we define the function
+\begin{align}
+  \defineNotation[g-s-m-t-lambda]{g_{s,m,t,\lambda}(\tau)}
+  &:=
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{s})}
+  \divisorprod{M}
+  \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
+  \label{eq:g_s-m-t-lambda(tau)}
+\end{align}
+
 In the following we consider the function
 \begin{align}
   \defineNotation[g-s-m-t]{g_{s,m,t}(\tau)}
   &:= \unityPower{\frac{\tau (24t+\sumdelta{s})}{24m} } (U_mf_t)(\tau)
   =
-  \frac{1}{m}
-  \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{s})}
-  \divisorprod{M}
-  \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
-  \label{eq:def-g_s-m-t}
+  \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\tau)
+  \label{eq:g_s-m-t(tau)}
 \end{align}
 and its transformations under $SL_2(\setZ)$.
 
@@ -998,8 +1005,8 @@ $\divides{\delta}{M}$.
 %
 We define
 \begin{gather}
-  \defineNotation[eta-m-lambda]{\eta_{\delta,m,\lambda}}(\tau) := \eta
-  \left(
+  \defineNotation[eta-delta-m-lambda]{\eta_{\delta,m,\lambda}}(\tau)
+  := \eta \left(
     \begin{pmatrix}\delta& \delta \lambda\\0&m\end{pmatrix} \tau
   \right).
 \label{eq:eta_delta-m-lambda}
@@ -1059,6 +1066,10 @@ $0\le  \delta (b + d \lambda) d' < \delta m / h_{\delta,m,\lambda}$.
 
 Let us define
 \begin{gather}
+  \defineNotation[e-delta-m-lambda]{e_{\delta,m,\lambda}}
+  :=
+  \frac{h_{\delta,m,\lambda}^2}{\delta m},
+  \qquad
   \defineNotation[u-delta-m-lambda]{u_{\delta,m,\lambda}}
   :=
   \frac{w_\gamma h_{\delta,m,\lambda}^2}{\delta},
@@ -1075,7 +1086,8 @@ And further,
     W''\tau
     = \frac{h_{\delta,m,\lambda}^2 \tau}{\delta m} +
     \frac{h_{\delta,m,\lambda}(\delta (b + d \lambda) d' - d m
-    b')}{\delta m}
+    b')}{\delta m}\\
+    &= e_{\delta,m,\lambda} \tau + v_{\delta,m,\lambda}.
     = u_{\delta,m,\lambda} \frac{\tau}{m w_\gamma} + v_{\delta,m,\lambda}.
 \end{align*}
 Then
@@ -1088,24 +1100,31 @@ Lemma~\ref{thm:c*tau+d} tells us
 $c'\tau_{\delta,m,\lambda}+d' = \frac{h_{\delta,m,\lambda}}{\delta} (c \tau + d)$.
 %
 Therefore,
-\begin{align*}
+\begin{align}
   \eta_{\delta,m,\lambda}(\gamma \tau)
   &= \eta(W \tau)
     = (c'\tau'+d')^{1/2} \, \upsilon(W')
-    \,\eta(\tau_{\delta,m,\lambda})\\
+    \,\eta(\tau_{\delta,m,\lambda})\notag\\
   &=
     (c\tau+d)^{1/2}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
     \unityPower{\frac{\kappa_{\gamma,\delta,m,\lambda}}{24}} \,
     q_{\delta,m,\lambda}^{1/24}
-    \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)\\
+    \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)\notag\\
   &=
     (c\tau+d)^{1/2}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
     \unityPower{\frac{ v_{\delta,m\lambda} + \kappa_{\gamma,\delta,m,\lambda}}{24}}
-    x_m^{u_{\delta,m,\lambda}/24}
+    z_m^{u_{\delta,m,\lambda}/24}
+    \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)\notag\\
+  &=
+    (c\tau+d)^{1/2}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
+    \unityPower{\frac{ v_{\delta,m\lambda} + \kappa_{\gamma,\delta,m,\lambda}}{24}}
+    q^{e_{\delta,m,\lambda}/24}
     \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)
-\end{align*}
+    \label{eq:eta_delta-m-lambda(gamma*tau)}
+\end{align}
 where
 $\defineNotation[kappa-gamma-delta-m-lambda]{\kappa_{\gamma,\delta,m,\lambda}}
 \in \Set{0,\ldots,23}$ is defined by
@@ -1122,21 +1141,49 @@ m b') \in \setZ$.
 \end{Hemmecke}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $g_{s,m,t,\lambda}$ under $SL_2(\setZ)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+From its definition~\eqref{eq:g_s-m-t-lambda(tau)} and
+\eqref{eq:eta_delta-m-lambda(gamma*tau)}, we can easily find a formula
+for the transformation of $g_{s,m,t,\lambda}$ under $SL_2(\setZ)$.
+
+\begin{align}
+  g_{s,m,t,\lambda}(\gamma\tau)
+  &=
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr)}
+    \divisorprod{M}
+    \eta_{\delta,m,\lambda}(\gamma\tau)^{s_\delta}\notag\\
+  \begin{split}
+  &=
+    (c\tau+d)^{\divisorsum{M} \frac{s_\delta}{2}}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr)
+    + \divisorsum{M}\frac{s_\delta(v_{\delta,m,\lambda} +
+    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\\
+  & \qquad\times
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
+    \cdot
+    \unityPower{\frac{\divisorsum{M} s_\delta e_{\delta,m,\lambda}}{24} \tau}
+    \cdot
+    \divisorprod{M}
+    \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
+  \end{split}
+  \label{eq:g_s-m-t-lambda(gamma*tau)}
+\end{align}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $g_{s,m,t}$ under $SL_2(\setZ)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-From its definition~\eqref{eq:def-g_s-m-t} and the result of the
-previous section, we can easily find a formula for the transformation
-of $g_{s,m,t}$ under $SL_2(\setZ)$.
+From its definition~\eqref{eq:g_s-m-t(tau)}
+and \ref{eq:g_s-m-t-lambda(gamma*tau)}, we can easily find a formula
+for the transformation of $g_{s,m,t}$ under $SL_2(\setZ)$.
 
-\begin{align*}
+\begin{align}
   g_{s,m,t}(\gamma\tau)
-  &:=
-    \frac{1}{m}
-    \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr)}
-    \divisorprod{M}
-    \eta_{\delta,m,\lambda}(\gamma\tau)^{s_\delta}\\
+  &:=\frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\gamma\tau)\notag\\
+  \begin{split}
   &=
     \frac{(c\tau+d)^{\divisorsum{M} \frac{s_\delta}{2}}}{m}
     \sum_{\lambda=0}^{m-1}
@@ -1147,11 +1194,13 @@ of $g_{s,m,t}$ under $SL_2(\setZ)$.
     \divisorprod{M}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
     \cdot
-    z_m^{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}
+    \unityPower{\frac{\divisorsum{M} s_\delta e_{\delta,m,\lambda}}{24}\tau}
     \cdot
     \divisorprod{M}
     \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
-\end{align*}
+  \end{split}
+  \label{eq:g_s-m-t(gamma*tau)}
+\end{align}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Find ``modular'' cofactor for $g_{s,m,t}(\tau)$}
@@ -1166,7 +1215,7 @@ of $g_{s,m,t}$ under $SL_2(\setZ)$.
   %
   $s \in R(M)$
   %
-  fulfil conditions \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}
+  fulfil conditions \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delt|mN}
   and for
   %
   $\kappa:=\gcd(1-m^2, 24)\ge1$,
@@ -1178,8 +1227,8 @@ of $g_{s,m,t}$ under $SL_2(\setZ)$.
   the following conditions hold:
   \begin{gather}
   \kappa \frac{m N^2}{M} \divisorsum{M} \frac{M}{\delta}
-    r_\delta \equiv_{24} 0,\\
-  \kappa N \divisorsum{M} r_\delta \equiv_8 0,\\
+    s_\delta \equiv_{24} 0,\\
+  \kappa N \divisorsum{M} s_\delta \equiv_8 0,\\
   \divides{w}{N},\\
   \divides{2}{m} \implies (\kappa N \equiv_4 0 \land \divides{8}{N e})
   \lor
@@ -1329,7 +1378,7 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
   \cdot
   \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
-  x^{\divisorsum{M} \frac{r_\delta u_\delta}{24}}
+  x^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
   \cdot
     \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
   &\qquad\times
@@ -1344,7 +1393,7 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
     \divisorprod{M}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
     \cdot
-    z_m^{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}
+    \unityPower{\frac{\divisorsum{M} s_\delta e_{\delta,m,\lambda}}{24}\tau}
     \cdot
     \divisorprod{M} \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
     \right]
@@ -1355,7 +1404,7 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
   \cdot
   \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
-  x^{\divisorsum{M} \frac{r_\delta u_\delta}{24}}
+  x^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
     \cdot
     \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
   &\qquad\times
@@ -1370,7 +1419,7 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
     \divisorprod{M}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
     \cdot
-    z_m^{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}
+    \unityPower{\frac{\divisorsum{M} s_\delta e_{\delta,m,\lambda}}{24}\tau}
     \cdot
     \divisorprod{M} \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
     \right]
@@ -1385,8 +1434,12 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
 
 
 
-
-
+For all $\lambda \in\Set{0,\ldots,m-1}$:
+\begin{gather*}
+  \mu \cdot \frac{\divisorsum{M} s_\delta e_{\delta,m,\lambda}}{24}\\
+  \divisorsum{N} \frac{r_\delta u_\delta}{w_\gamma}
+  + \mu \cdot \frac{\divisorsum{M} s_\delta h_{\delta,m,\lambda}^2}{24 \delta m}\\
+\end{gather*}
 
 
 
@@ -1461,7 +1514,7 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
 
 
 
-Let us compare this with \eqref{eq:def-g_r-m-t} where we have replaced
+Let us compare this with \eqref{eq:def-g_s-m-t(tau)} where we have replaced
 $t$ by $t'$ with $t' = t x + \frac{x-1}{24}s+km$ for some
 $x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
 \begin{align}
@@ -1749,7 +1802,7 @@ transformation of $g_{r,m,t}$ under $SL_2(\setZ)$.
     \divisorprod{M} \eta_{\delta,m,\lambda_\gamma}(\tau)^{r_\delta}
 \end{align*}
 
-Let us compare this with \eqref{eq:def-g_r-m-t} where we have replaced
+Let us compare this with \eqref{eq:g_s-m-t(tau)} where we have replaced
 $t$ by $t'$ with $t' = t x + \frac{x-1}{24}s+km$ for some
 $x\in\setN$ and $k\in\setZ$ such that $0\le t' < m$.
 \begin{align}
@@ -2413,6 +2466,162 @@ ModularEtaQuotientExpansions(C, L, m): Exports == Implementation where
     qetaGrades(x: %): LZ ==
         zero? x => [0 for k in 1..ncusps]
         [qetaGrade(x, qcoerce(k)@P) for k in 1..ncusps]
+
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{SymbolicEtaDeltaSequenceLambdaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $\divides{\delta}{M}$,
+$\lambda \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, elements from the domain
+\code{SymbolicEtaDeltaSequenceLambdaGamma} represent the tuple
+\begin{gather}
+  \left(
+  M,
+  \delta,
+  m,
+  \lambda,
+  \gamma,
+  \frac{h_{\delta,m,\lambda}}{\delta}
+  ,
+  e_{\delta,m,\lambda},
+  v_{\delta,m,\lambda},
+  \kappa_{\delta,m,\lambda},
+  \frac{v_{\delta,m,\lambda} + \kappa_{\delta,m,\lambda}}{24}
+  \right)
+\end{gather}
+and thus corresponds to the data from \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+
+If \code{e = eta(mm, delta, m, lambda, gamma)}, then we
+have the following correspondence:
+%
+\code{rationalPrefactor(e)} $= \frac{h_{\delta,m,\lambda}}{\delta}$,
+\code{edelta(e)}            $= e_{\delta,m,\lambda}$,
+\code{udelta(e)}            $= u_{\delta,m,\lambda}$,
+\code{vdelta(e)}            $= v_{\delta,m,\lambda}$,
+\code{upsilonExponent(e)}   $= \kappa_{\delta,m,\lambda}$,
+\code{unityPower(e)}        $= \frac{v_{\delta,m,\lambda}+\kappa_{\delta,m,\lambda}}{24}$.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain SYEDSLG SymbolicEtaDeltaSequenceLambdaGamma
+++ SymbolicEtaDeltaSequenceLambdaGamma is a generalization of
+++ SymbolicEtaDeltaGamma. It holds data to compute an eta
+++ expansion of \eta_{delta.m,\lambda}(\gamma\tau).
+++ See \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+SymbolicEtaDeltaSequenceLambdaGamma:
+  SetCategory with
+    eta: (P, P, P, N, SL2Z) -> %
+      ++ eta(mm, delta, m, lambda, gamma) represents the
+      ++ expansion of \eta_{\delta,m,\lambda}(\gamma\tau) in terms of
+      ++ q = \exp(2\pi i\tau).
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+      -- Returns mm.
+    delta: % -> P
+      ++ delta(x) returns the corresponding delta.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    lambda: % -> N
+      ++ lambda(x) returns lambda.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+
+    rationalPrefactor: % -> Q
+      ++ rationalPrefactor(x) returns the square of the second product
+      ++ in eq:g_r(gamma*tau)
+
+    upsilonExponent: % -> Z24
+      ++ kappa_delta
+    edelta: % -> Q
+      ++ edelta
+    vdelta: % -> Q
+      ++ vdelta
+    unityPower: % -> Q        -- (kappa_delta + vdelta)/24
+
+ == add
+    Rec ==> Record(red: SL2Z, triang: MZ)
+    Rep ==> Record(
+              flevel: P,
+              fdelta: P,
+              fmultiplier: P,
+              flambda: N,
+              fgamma: SL2Z, -- gamma
+              frat: Q,      -- square of rational prefactor
+              fkappa: Z24,  -- upsilonExponent(a1,b2,c1,d1)
+              fedelta: Q,   -- edelta = hdelta^2/(delta*m)
+                            -- \eqref{eq:uv_delta-m-lambda}}
+              fvdelta: Q,   -- b2/d2, reduced form of roots of unity
+                            -- 0<=b2<d2, 0<d2
+              funityPower: Q-- (kappa + vdelta)/24
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    eta(mm: P, delta: P, m: P, lambda: N, gamma: SL2Z): % ==
+        --assert(gamma(2, 1)>0)
+        rec: Rec := splitMatrix(gamma, delta, m, lambda)$QAuxMEQ
+        gamma1: SL2Z := rec.red
+        gamma2: MZ := rec.triang
+        b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
+        a2: Z := gamma2(1, 1); -- hdelta
+        rat: Q := a2/delta
+        edelta: Q := a2/d2 -- = hdelta^2/delta/m
+        vdelta: Q := b2/d2
+        kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
+        r: Q := (vdelta + (convert(kappa)@Z)::Q) / (24::Q)
+          -- eq:eta_delta-m-lambda(gamma*tau)-expansion)
+        num: Z := numer r; den: Z := denom r -- denom(r)-th root of unity
+        r := positiveRemainder(num, den)/den
+        per [mm, delta, m, lambda, gamma, rat, kappa, edelta, vdelta, r]
+
+    level(x: %): P == xx.flevel
+    delta(x: %): P == xx.fdelta
+    multiplier(x: %): P == xx.fmultiplier
+    lambda(x: %): N == xx.flambda
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    upsilonExponent(x: %): Z24 == xx.fkappa
+    edelta(x: %): Q == xx.fedelta
+    vdelta(x: %): Q == xx.fvdelta
+    unityPower(x: %): Q == xx.funityPower
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.frat)
+        h := hashUpdate!(h, xx.fkappa)
+        h := hashUpdate!(h, xx.fedelta)
+        h := hashUpdate!(h, xx.fvdelta)
+        h := hashUpdate!(h, xx.funityPower)
+    ((x: %) = (y: %)): Boolean ==
+        level x ~= level y => false
+        delta x ~= delta y => false
+        multiplier x ~= multiplier y => false
+        lambda x ~= lambda y => false
+        gamma x = gamma y
+
 
 )if LiterateDoc
 \bibliography{qeta}
