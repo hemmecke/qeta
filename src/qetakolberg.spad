@@ -164,6 +164,35 @@ QEtaKolberg: Exports == Implementation where
         z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
         qcoerce(z)@N
 
+    -- primePower(d, p) returns e such that gcd(d/p^e, p)=1.
+    primePower(d: P, p: P): N ==
+        e: N := 0;
+        x: Z := d
+        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
+        return e
+
+    -- exported functions
+
+    -- The following function computes P_{m,r,t} with the optimization
+    -- given by Radu in \cite[Lemma 4.35]{Radu:PhD:2010}, i.e., we do not
+    -- need to check all entries of \setS_{24m}, but only those that are
+    -- not equivalent mod w.
+    orbit(sigmaInfty: Z, m: P, t: N): List N ==
+        m24: Z := 24*m
+        g := gcd(kappa(m)*(24*t + sigmaInfty), m24)
+        w: P := qcoerce((m24 exquo g)::Z)@P
+        result: List N := empty()
+        for a in 0..w-1 | one? gcd(a, w) repeat
+            y := a
+            while y < m24 and not one? gcd(y, m24) repeat y := y + w
+            -- Not the following "if y < m24 then" condition is unnecessary.
+            -- Note that gcd(a + k*w, m24)=gcd(a+k*w,g*w)=1 for
+            -- k chosen to be the product of all prime divisors of g
+            -- that do not divide i and do not divide w.
+            e := odotBar(positiveRemainder(y^2, m24), sigmaInfty, m, t)
+            if not member?(e, result) then result := cons(e, result)
+        result
+
     orbitRadu(sigmaInfty: Z, m: P, t: N): List N ==
         g := gcd(kappa(m)*(24*t + sigmaInfty), 24*m)
         dbgPrint("g", g)
@@ -192,13 +221,6 @@ QEtaKolberg: Exports == Implementation where
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
         positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
 
-    -- primePower(d, p) returns e such that gcd(d/p^e, p)=1.
-    primePower(d: P, p: P): N ==
-        e: N := 0;
-        x: Z := d
-        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
-        return e
-
     etaCoFactor(m: P, mm: P, nn: P, t: N, s: List Z): _
       Record(particular : Union(VZ, "failed"), basis : List VZ) ==
         -- Setup matrix. Then solve inhomogeneous system.
@@ -207,9 +229,7 @@ QEtaKolberg: Exports == Implementation where
         nr: N := nrows mat
         divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
         d: VZ := vector divs
-        dbgPrint("d", d)
         n: N := # divs
-        dbgPrint("n", n)
         w: Z := 0
         sigmaInfty: Z := 0
         sigma0: Z := 0
@@ -219,19 +239,13 @@ QEtaKolberg: Exports == Implementation where
             sigma0 := sigma0 + d(n+1-j) * sdelta
         -- Compute P_{m,r}(t).
         orb: List N := orbit(sigmaInfty, m, t)
-        dbgPrint("orb", orb)
         orbitSize: Z := # orb
         nu: Z := chiExponent(sigmaInfty, m, orb)
-        dbgPrint("nu", nu)
-
         v: Vector Z := new(nr, 0)
         v.1 := - orbitSize * w                   -- \ref{eq:Radu-sum=0}
-        dbgPrint("v1", v.1)
         v.2 := - nu - orbitSize * m * sigmaInfty -- \ref{eq:Radu-sigmainfinity}
-        dbgPrint("v2", v.2)
         x: Z := orbitSize * m * nn * sigma0
         v.3 := - ((x exquo mm)::Z)               -- \ref{eq:Radu-sigma0}
-        dbgPrint("v3", v.3)
         fl: List Record(factor: Z, exponent: N) := factors factor nn
         -- Determine the cofactor according to (37) of
         -- \cite{Radu:RamanujanKolberg:2015} for each prime separately.
@@ -240,23 +254,16 @@ QEtaKolberg: Exports == Implementation where
             for i in 1..#fl for fe in fl repeat qsetelt!(v, i+3, 0)
         else
             for i in 1..#fl for fe in fl repeat
-                dbgPrint("i", i)
                 p: P := qcoerce(fe.factor)@P -- extract prime factor
-                dbgPrint("p", p)
                 em: N := primePower(m, p)
                 -- for all divisors of mm > 1
                 e: Z := if odd? first s then em else 0 -- case: delta=1
                 for j in 2..n for sdelta in rest s | odd? sdelta repeat
                     -- Mod 2 only odd sdelta is relevant.
                     e := em + primePower(qcoerce(d.j)@P, p)
-                dbgPrint("i+3", i+3)
-                dbgPrint("e", e)
                 qsetelt!(v, i+3, e)
-                dbgPrint("v", v)
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
-        dbgPrint("v", v)
-        dbgPrint("mat", mat)
         diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
 )if TODO
@@ -299,34 +306,7 @@ QEtaKolberg: Exports == Implementation where
         [m1, m2, tgamma]$Rec
 
     lambdaGamma(m: P, gamma: SL2Z, lambda: N): N == 1
-
-
-
-
 )endif
-
-    -- exported functions
-
-    -- The following function computes P_{m,r,t} with the optimization
-    -- given by Radu in \cite[Lemma 4.35]{Radu:PhD:2010}, i.e., we do not
-    -- need to check all entries of \setS_{24m}, but only those that are
-    -- not equivalent mod w.
-    orbit(sigmaInfty: Z, m: P, t: N): List N ==
-        m24: Z := 24*m
-        g := gcd(kappa(m)*(24*t + sigmaInfty), m24)
-        w: P := qcoerce((m24 exquo g)::Z)@P
-        result: List N := empty()
-        for a in 0..w-1 | one? gcd(a, w) repeat
-            y := a
-            while y < m24 and not one? gcd(y, m24) repeat y := y + w
-            -- Not the following "if y < m24 then" condition is unnecessary.
-            -- Note that gcd(a + k*w, m24)=gcd(a+k*w,g*w)=1 for
-            -- k chosen to be the product of all prime divisors of g
-            -- that do not divide i and do not divide w.
-            e := odotBar(positiveRemainder(y^2, m24), sigmaInfty, m, t)
-            if not member?(e, result) then result := cons(e, result)
-        result
-
 
 )if LiterateDoc
 \bibliography{qeta}
