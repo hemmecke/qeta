@@ -1,6 +1,6 @@
 -------------------------------------------------------------------
 ---
---- FriCAS QEtaa
+--- FriCAS QEta
 --- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
@@ -296,6 +296,8 @@ $\tau'\in\setH$ and
 \end{gather}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begingroup
+\newcommand{\h}{h}
 \begin{Lemma}\label{thm:c*tau+d}
   Let $\gamma := \left(
     \begin{smallmatrix}a&b\\c&d\end{smallmatrix} \right)\in
@@ -316,69 +318,69 @@ $\tau'\in\setH$ and
   Then $\det(W)=\delta m$.
   %
   If
-  $h_{\delta,m,z}:=\gcd(\delta a + c z, cm)$,
-  $a':=\frac{\delta a + c z}{h_{\delta,m,z}}$,
-  $c':=\frac{c m}{h_{\delta,m,z}}$, and
+  $\h:=\gcd(\delta a + c z, cm)$,
+  $a':=\frac{\delta a + c z}{\h}$,
+  $c':=\frac{c m}{\h}$, and
   $b'$ and $d'$ are such that $a'd'-b'c'=1$ and
-  $0 \le (\delta b + d z) d' - d m b' < cm/h_{\delta,m,z}$, \ie,
+  $0 \le (\delta b + d z) d' - d m b' < cm / \h$, \ie,
   \begin{gather*}
     W':=\begin{pmatrix}
-      (\delta a + c z) / h_{\delta,m,z} & b'\\
-      c m / h_{\delta,m,z}              & d'
+      (\delta a + c z) / \h & b'\\
+      c m / \h              & d'
     \end{pmatrix},
     \qquad
     W''
     :=
     \begin{pmatrix}
-      h_{\delta,m,z} & (\delta b + d z) d' - d m b'\\
-      0       & \delta m / h_{\delta,m,z}
+      \h & (\delta b + d z) d' - d m b'\\
+      0  & \delta m / \h
     \end{pmatrix}.
   \end{gather*}
   according to the splitting above,
   %
   then with $\tau':=W''\tau$ we have
-  $c'\tau'+d' = \frac{h_{\delta,m,z}}{\delta} (c\tau + d)$.
+  $c'\tau'+d' = \frac{\h}{\delta} (c\tau + d)$.
 \end{Lemma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{proof}
-
 \begin{align*}
   c'\tau'+d'
   &=
   c'
     \left(
-    \frac{h_{\delta,m,z}}{\delta m}(h\tau + (\delta b + d z) d' - d m b')
+    \frac{\h}{\delta m}(h\tau + (\delta b + d z) d' - d m b')
     \right) + d'\\
   &=
-    \frac{c m}{h_{\delta,m,z}}
+    \frac{c m}{\h}
     \left(
-    \frac{h_{\delta,m,z}}{\delta m}(h_{\delta,m,z} \tau + (\delta b + d z) d' - d m b')
-    \right) + d'\\
-  &=
-    \frac{1}{\delta}
-    \left(
-    h_{\delta,m,z} c \tau + b c \delta d' + c d d' z - c d m b'
+    \frac{\h}{\delta m}(\h \tau + (\delta b + d z) d' - d m b')
     \right) + d'\\
   &=
     \frac{1}{\delta}
     \left(
-    h_{\delta,m,z} c \tau + (a d - 1) \delta d' + c d d' z - c d m b'
+    \h c \tau + b c \delta d' + c d d' z - c d m b'
+    \right) + d'\\
+  &=
+    \frac{1}{\delta}
+    \left(
+    \h c \tau + (a d - 1) \delta d' + c d d' z - c d m b'
     + \delta d'
     \right)\\
   &=
     \frac{1}{\delta}
     \left(
-    h_{\delta,m,z} c \tau + a d \delta d' + c d d' z - c d m b'
+    \h c \tau + a d \delta d' + c d d' z - c d m b'
     \right)\\
   &=
     \frac{1}{\delta}
     \left(
-    h_{\delta,m,z} c \tau + h_{\delta,m,z} d (a' d' - c' b')
+    \h c \tau + \h d (a' d' - c' b')
     \right)\\
   &=
-    \frac{h_{\delta,m,z}}{\delta} (c\tau + d)
+    \frac{\h}{\delta} (c\tau + d)
 \end{align*}
 \end{proof}
+\endgroup
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $\eta_\delta$ under $SL_2(\setZ)$}
@@ -1038,9 +1040,8 @@ where
   \label{eq:W_delta-m-lambda}
 \end{align}
 
-With $z = \delta \lambda$ and
-$h_{\delta,m,\lambda} = \gcd(\delta (a + c \lambda), cm)$, the splitting
-of $W = W' W''$ is given in Lemma~\ref{thm:c*tau+d}, \ie,
+Setting $z = \delta \lambda$ in Lemma~\ref{thm:c*tau+d}, we get the
+splitting of $W = W' W''$ as
 %
 \begin{gather}
   W' =
@@ -1063,6 +1064,11 @@ of $W = W' W''$ is given in Lemma~\ref{thm:c*tau+d}, \ie,
 \end{gather}
 where $b'$ and $d'$ have been chosen in such a way that
 $0\le  \delta (b + d \lambda) d' < \delta m / h_{\delta,m,\lambda}$.
+and
+\begin{gather}
+  \defineNotation[h-delta-m-lambda]{h_{\delta,m,\lambda}} :=
+  \gcd(\delta (a + c \lambda), cm).
+\end{gather}
 
 Let us define
 \begin{gather}
@@ -2267,9 +2273,9 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         divs: LP := divisors e
         s: LX := 1
         for delta in divs for rd in exponents e | not zero? rd repeat
-            edelta: SymbolicEtaDeltaGamma := eta(e, delta)
+            etadelta: SymbolicEtaDeltaGamma := eta(e, delta)
             u: P := udelta(edelta)
-            v: N := qcoerce(numer(mx * vdelta(edelta)))@N
+            v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
             s := s * eulerFunctionPower(u, v, rd)
         q: Q := mx * unityPower e
         if not one? denom q then
@@ -2660,13 +2666,13 @@ $= -\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr) +
   \divisorsum{M} \frac{s_\delta(v_{\delta,m,\lambda} +
   \kappa_{\delta,m,\lambda})}{24}$,
 %
-\code{qExponent(e)} $= \divisorsum{M} s_\delta u_{\delta,m,\lambda}$.
+\code{qExponent(e)} $= \divisorsum{M} s_\delta e_{\delta,m,\lambda}$.
 
 )endif
 -------------------------------------------------------------------
 )abbrev domain SYMBESLG SymbolicEtaSequenceLambdaGamma
 ++ SymbolicEtaSequenceLambdaGamma is a generalization of
-++ SymbolicEtaQuotientGamma. It holds data to compute an eta
+++ SymbolicEtaSequenceLambdaGamma. It holds data to compute an eta
 ++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau).
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
 SymbolicEtaSequenceLambdaGamma:
