@@ -1915,7 +1915,7 @@ correspondence.
 \code{unityPower(e)}        $= \frac{v_\delta+\kappa_\delta}{24}$.
 )endif
 
-)abbrev domain SYMBEDG SymbolicEtaDeltaGamma
+)abbrev domain YEDG SymbolicEtaDeltaGamma
 ++ SymbolicEtaDeltaGamma collects data for the expansion of
 ++ eta_delta(\gamma \tau).
 SymbolicEtaDeltaGamma: SetCategory with
@@ -2034,7 +2034,7 @@ following correspondence.
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain SYMBETAQ SymbolicEtaQuotientGamma
+)abbrev domain YEQG SymbolicEtaQuotientGamma
 ++ SymbolicEtaQuotientGamma holds data to compute an eta quotient expansion
 ++ of g_r(\gamma\tau).
 SymbolicEtaQuotientGamma: SemiGroup with
@@ -2312,7 +2312,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
   LC ==> SparseUnivariateLaurentSeries(C, q, 0)
-  SEQG ==> SymbolicEtaQuotientGamma
+  YEQG ==> SymbolicEtaQuotientGamma
   Exports ==> SemiGroup with
     --assert(one? xi^mx)
     etaQuotient: (P, LZ) -> %
@@ -2322,13 +2322,13 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
     level: % -> P
       ++ level(x) gives the m such that x corresponds to a modular
       ++ function for Gamma_0(m).
-    symbolicEtaQuotients: % -> XHashTable(Q, SEQG)
+    symbolicEtaQuotients: % -> XHashTable(Q, YEQG)
       ++ symbolicEtaQuotients(x) returns the meta data corresponding to x.
     expansions: % -> XHashTable(Q, LX)
       ++ expansions(x) returns the Laurent series expansions of $g_r(tau)$
       ++ at all cusps of Gamma_0(N).
   Implementation ==> add
-    Rep ==> Record(flevel: P, meta: XHashTable(Q, SEQG), ser: XHashTable(Q, LX))
+    Rep ==> Record(flevel: P, meta: XHashTable(Q, YEQG), ser: XHashTable(Q, LX))
     xx ==> rep x
 
     etaQuotient(m: P, r: LZ): % ==
@@ -2336,14 +2336,14 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         -- modular function, i.e., rStarConditions must be fulfilled.
         not zero? rStarConditions(m, r)$QAuxMEQ =>
             error "etaQuotient: not a modular function"
-        hmeta: XHashTable(Q, SEQG) := empty()
+        hmeta: XHashTable(Q, YEQG) := empty()
         hser: XHashTable(Q, LX) := empty()
         divs: LP := [qcoerce(d)@P for d in
                        divisors(m)$IntegerNumberTheoryFunctions]
         cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ
-            se: SEQG := etaQuotient(m, divs, r, gamma)
+            se: YEQG := etaQuotient(m, divs, r, gamma)
             e: EtaQuotientGamma(C, mx, CX, xi, LX) := etaQuotient se
             s: LX := expansion e
             lc: CX := leadingCoefficient e
@@ -2353,7 +2353,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         per [m, hmeta, hser]
 
     level(x: %): P == xx.flevel
-    symbolicEtaQuotients(x: %): XHashTable(Q, SEQG) == xx.meta
+    symbolicEtaQuotients(x: %): XHashTable(Q, YEQG) == xx.meta
     expansions(x: %): XHashTable(Q, LX) == xx.ser
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
@@ -2362,8 +2362,8 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         m: P := level x
         m ~= level y => false
         -- note that 1/m is always a cusp of Gamma_0(m), but we choose any
-        ex: XHashTable(Q, SEQG) := symbolicEtaQuotients x
-        ey: XHashTable(Q, SEQG) := symbolicEtaQuotients y
+        ex: XHashTable(Q, YEQG) := symbolicEtaQuotients x
+        ey: XHashTable(Q, YEQG) := symbolicEtaQuotients y
         cusp: Q := first keys ex
         exponents(ex.cusp) = exponents(ey.cusp)
 
@@ -2371,11 +2371,11 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         m: P := level x
         m ~= level y =>
             error "ModularEtaQuotient: cannot multiply elements with different level"
-        ex: XHashTable(Q, SEQG) := symbolicEtaQuotients x
-        ey: XHashTable(Q, SEQG) := symbolicEtaQuotients y
+        ex: XHashTable(Q, YEQG) := symbolicEtaQuotients x
+        ey: XHashTable(Q, YEQG) := symbolicEtaQuotients y
         sx: XHashTable(Q, LX) := expansions x
         sy: XHashTable(Q, LX) := expansions y
-        hmeta: XHashTable(Q, SEQG) := empty()
+        hmeta: XHashTable(Q, YEQG) := empty()
         hser: XHashTable(Q, LX) := empty()
         cusps: LQ := keys ex
         for cusp in cusps repeat
@@ -2483,13 +2483,13 @@ ModularEtaQuotientExpansions(C, L, m): Exports == Implementation where
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{SymbolicEtaDeltaSequenceLambdaGamma}
+\subsection{SymbolicSiftedEtaDeltaLambdaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $\divides{\delta}{M}$,
 $\lambda \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 SL_2(\setZ)$, elements from the domain
-\code{SymbolicEtaDeltaSequenceLambdaGamma} represent the tuple
+\code{SymbolicSiftedEtaDeltaLambdaGamma} represent the tuple
 \begin{gather}
   \left(
   M,
@@ -2518,13 +2518,12 @@ have the following correspondence:
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain SYEDSLG SymbolicEtaDeltaSequenceLambdaGamma
-++ SymbolicEtaDeltaSequenceLambdaGamma is a generalization of
+)abbrev domain YSEDLG SymbolicSiftedEtaDeltaLambdaGamma
+++ SymbolicSiftedEtaDeltaLambdaGamma is a generalization of
 ++ SymbolicEtaDeltaGamma. It holds data to compute an eta
 ++ expansion of \eta_{delta.m,\lambda}(\gamma\tau).
 ++ See \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
-SymbolicEtaDeltaSequenceLambdaGamma:
-  SetCategory with
+SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
     eta: (P, P, P, N, SL2Z) -> %
       ++ eta(mm, delta, m, lambda, gamma) represents the
       ++ expansion of \eta_{\delta,m,\lambda}(\gamma\tau) in terms of
@@ -2541,7 +2540,7 @@ SymbolicEtaDeltaSequenceLambdaGamma:
       ++ lambda(x) returns lambda.
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
-      -- Returns gamma as given in etaSequence(...,gamma).
+      -- Returns gamma as given in eta(...,gamma).
 
     rationalPrefactor: % -> Q
       ++ rationalPrefactor(x) returns the square of the second product
@@ -2620,12 +2619,12 @@ SymbolicEtaDeltaSequenceLambdaGamma:
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{SymbolicEtaSequenceLambdaGamma}
+\subsection{SymbolicSiftedEtaQuotientLambdaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $s \in R(M)$, $t,\lambda \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 SL_2(\setZ)$, elements from the domain
-\code{SymbolicEtaSequenceLambdaGamma} represent the tuple
+\code{SymbolicSiftedEtaLambdaGamma} represent the tuple
 \begin{gather}
   \left(
   M,
@@ -2646,7 +2645,7 @@ SL_2(\setZ)$, elements from the domain
 and thus corresponds to the data from \eqref{eq:g_s-m-t-lambda(gamma*tau)},
 \ie,  it computes the building blocks for $g_{s,m,t,\lambda}(\gamma\tau)$.
 
-If \code{e = etaSequence(mm, divs, s, m, t, lambda, gamma)}, then we
+If \code{e = etaQuotient(mm, divs, s, m, t, lambda, gamma)}, then we
 have the following correspondence:
 %
 \code{rationalPrefactor(e)}
@@ -2661,13 +2660,12 @@ $= -\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr) +
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain SYMBESLG SymbolicEtaSequenceLambdaGamma
-++ SymbolicEtaSequenceLambdaGamma is a generalization of
+)abbrev domain YSEQLG SymbolicSiftedEtaQuotientLambdaGamma
+++ SymbolicSiftedEtaQuotientLambdaGamma is a generalization of
 ++ SymbolicEtaQuotientGamma. It holds data to compute an eta
 ++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau).
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
-SymbolicEtaSequenceLambdaGamma:
-  SetCategory with
+SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     etaQuotient: (P, LP, LZ, P, N, N, SL2Z) -> %
       ++ etaQuotient(mm, divs, s, m, t, lambda, gamma) represents the
       ++ expansion of g_{s,m,t,\lambda}(\gamma\tau) in terms of
@@ -2715,11 +2713,11 @@ SymbolicEtaSequenceLambdaGamma:
       ++ corresponding to e=etaQuotient(mm, divs, s, m, t, lambda, gamma)
       ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[z]] where w
       ++ is a n-th root of unity and z a fractional q power.
-    eta: (%, P) -> SymbolicEtaDeltaSequenceLambdaGamma
+    eta: (%, P) -> SymbolicSiftedEtaDeltaLambdaGamma
       ++ eta(x, delta) returns the data corresponding to the respective
       ++ delta.
  == add
-    HT ==> XHashTable(P, SymbolicEtaDeltaSequenceLambdaGamma)
+    HT ==> XHashTable(P, SymbolicSiftedEtaDeltaLambdaGamma)
       -- mapping delta to \eta_{\delta,m,\lambda}
     Rep ==> Record(
               flevel: P,     -- level \Gamma_0(lev)
@@ -2772,13 +2770,13 @@ SymbolicEtaSequenceLambdaGamma:
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         for delta in divs repeat
-            SyEDSLG ==> SymbolicEtaDeltaSequenceLambdaGamma
-            eta.delta := eta(m, delta, m, lambda, gamma)$SyEDSLG --$
+            YSEDLG ==> SymbolicSiftedEtaDeltaLambdaGamma
+            eta.delta := eta(m, delta, m, lambda, gamma)$YSEDLG --$
         etaquot(mm, divs, s, m, t, lambda, gamma, eta)
 
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
-    eta(x: %, delta: P): SymbolicEtaDeltaSequenceLambdaGamma == xx.feta.delta
+    eta(x: %, delta: P): SymbolicSiftedEtaDeltaLambdaGamma == xx.feta.delta
     exponents(x: %): LZ == xx.fexponents
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
@@ -2812,15 +2810,15 @@ SymbolicEtaSequenceLambdaGamma:
 )if LiterateDoc
 % $
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{EtaSequenceLambdaGamma}
+\subsection{SiftedEtaQuotientLambdaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $s \in R(M)$, $t,\lambda \in
 \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-SL_2(\setZ)$, elements from the domain \code{EtaSequenceLambdaGamma}
+SL_2(\setZ)$, elements from the domain \code{SiftedEtaQuotientLambdaGamma}
 represents the series expansion of
 $g_{s,m,t,\lambda}(\gamma\tau)$, \ie, an element from
-\code{SymbolicEtaSequenceLambdaGamma} in terms of $q^{1/(24 m w)}$ where
+\code{SymbolicSiftedEtaQuotientLambdaGamma} in terms of $q^{1/(24 m w)}$ where
 $w$ must be a multiple of the the $\lcm$ the denominator of
 \begin{gather*}
   p := \frac{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}{24}
@@ -2843,7 +2841,7 @@ $s_\delta\ne0$, \ie, it represents the tuple
   \right)
 \end{gather}
 where $y$ is the corrresponding element of
-\code{SymbolicEtaSequenceLambdaGamma} and, thus, the series from
+\code{SymbolicSiftedEtaQuotientLambdaGamma} and, thus, the series from
 \eqref{eq:g_s-m-t-lambda(gamma*tau)} without the
 $(c\tau+d)$-part.
 
@@ -2851,20 +2849,20 @@ $(c\tau+d)$-part.
 
 
 -------------------------------------------------------------------
-)abbrev domain ETASLG EtaSequenceLambdaGamma
-++ EtaSequenceLambdaGamma is a generalization of
-++ SymbolicEtaSequenceLambdaGamma. It holds data to compute an eta
+)abbrev domain SEQLG SiftedEtaQuotientLambdaGamma
+++ SiftedEtaQuotientLambdaGamma is a generalization of
+++ SymbolicSiftedEtaQuotientLambdaGamma. It holds data to compute an eta
 ++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau).
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
-EtaSequenceLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
+SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
   Exports ==> SetCategory with
-    etaSifted: (SymbolicEtaSequenceLambdaGamma, P) -> %
-      ++ etaSifted(e, w) represents the
+    etaQuotient: (SymbolicSiftedEtaQuotientLambdaGamma, P) -> %
+      ++ etaQuotient(e, w) represents the
       ++ q-expansion of g_{s,m,t,\lambda}(\gamma\tau) at \tau=i\infity.
     rationalPowerDenominator: % -> P
       ++ rationalPowerDenominator(x) returns d such that x is a Laurent series
@@ -2913,28 +2911,29 @@ EtaSequenceLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
         ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
-    etaSifted(e: SymbolicEtaSequenceLambdaGamma, w: P): % == -- w=width
+    etaQuotient(e: SymbolicSiftedEtaQuotientLambdaGamma, w: P): % ==
+        -- w=width
         mm: P := level e
         divs: LP := divisors e
         m: P := multiplier e
         d: P := 24*m*w
         s: LX := 1
         for delta in divs for sd in exponents e | not zero? sd repeat
-            etadelta: SymbolicEtaDeltaSequenceLambdaGamma := eta(e, delta)
+            etadelta: SymbolicSiftedEtaDeltaLambdaGamma := eta(e, delta)
             u: Q := d * udelta etadelta
             not one? denom u =>
-                error "EtaSequenceLambdaGamma: denominator does not vanish"
+                error "SiftedEtaQuotientLambdaGamma: denominator does not vanish"
             v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
             ep: LC := eulerFunctionPower sd
             s := s * substitute(ep, qcoerce(numer u)@P, v)
         q: Q := mx * unityPower e
         if not one? denom q then
-            error "EtaSequenceLambdaGamma: denominator for xi does not vanish"
+            error "SiftedEtaQuotientLambdaGamma: denominator for xi does not vanish"
         n: N := qcoerce(positiveRemainder(numer q, mx))@N
         cx: CX := xi^n * squareRoot rationalPrefactor e -- leading coefficient
         p: Q := d/24 * qExponent e -- the "/24" is missing from qPower(e)
         if not one? denom p then
-            error "EtaSequenceLambdaGamma: denominator for q does not vanish"
+            error "SiftedEtaQuotientLambdaGamma: denominator for q does not vanish"
         per [d, monomial(cx, numer p)$LX * s] --$
 
     rationalPowerDenominator(x: %): P == xx.den
@@ -2946,11 +2945,11 @@ EtaSequenceLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
 )if LiterateDoc
 % $
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{EtaSequenceGamma}
+\subsection{SiftedEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $s \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-SL_2(\setZ)$, elements from the domain \code{EtaSequenceGamma}
+SL_2(\setZ)$, elements from the domain \code{SiftedEtaQuotientGamma}
 represents the series expansion of
 \begin{gather*}
   g_{s,m,t}(\gamma\tau)
@@ -2962,12 +2961,12 @@ without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
 
 
 -------------------------------------------------------------------
-)abbrev domain ETASG EtaSequenceGamma
-++ EtaSequenceGamma represents the sum (over all lambda) of elements
-++ from EtaSequenceLambdaGamma. It holds the series
+)abbrev domain SEQG SiftedEtaQuotientGamma
+++ SiftedEtaQuotientGamma represents the sum (over all lambda) of elements
+++ from SiftedEtaQuotientLambdaGamma. It holds the series
 ++ expansion of g_{s,m,t}(\gamma\tau).
 ++ See \eqref{eq:g_s-m-t(gamma*tau)}.}
-EtaSequenceGamma(C, mx, CX, xi, LX): Exports == Implementation where
+SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
@@ -2986,16 +2985,16 @@ EtaSequenceGamma(C, mx, CX, xi, LX): Exports == Implementation where
     Rep ==> Record(den: P, ser: LX)
     RecX ==> Record(k: Z, c: CX)
     xx ==> rep x
-    SESLG ==> SymbolicEtaSequenceLambdaGamma
-    ESLG ==> EtaSequenceLambdaGamma(C, mx, CX, xi, LX)
+    YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
+    SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
     divideBy(m: Z): RecX -> RecX == (x: RecX): RecX +->
         [(x.k exquo m)::Z, (1/m)$Q::C::CX * x.c]$RecX
     etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z, w: P): % ==
         l: LX := 0
         m1: P := qcoerce(m::Z - 1)@P
         for lambda in 0..m1 repeat
-            seq: SESLG := etaQuotient(mm, divs, s, m, t, lambda, gamma)
-            l := l + expansion etaSifted(seq, w)$ESLG
+            seq: YSEQLG := etaQuotient(mm, divs, s, m, t, lambda, gamma)
+            l := l + expansion etaQuotient(seq, w)$SEQLG
         -- After summation only the coefficients with exponents divisible
         -- by m should be non-zero. We make a sanity check.
         for i in 1..m1 repeat
