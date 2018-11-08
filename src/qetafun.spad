@@ -551,7 +551,7 @@ have
 \end{align}
 for
 \begin{gather}
-  \defineNotation[u-delta]{e_\delta} :=
+  \defineNotation[e-delta]{e_\delta} :=
   \frac{w_\gamma h_\delta^2}{\delta},
   \qquad
   \defineNotation[v-delta]{v_\delta} :=
@@ -1072,13 +1072,9 @@ and
 
 Let us define
 \begin{gather}
-  \defineNotation[e-delta-m-lambda]{u_{\delta,m,\lambda}}
+  \defineNotation[u-delta-m-lambda]{u_{\delta,m,\lambda}}
   :=
   \frac{h_{\delta,m,\lambda}^2}{\delta m},
-  \qquad
-  \defineNotation[u-delta-m-lambda]{e_{\delta,m,\lambda}}
-  :=
-  \frac{w_\gamma h_{\delta,m,\lambda}^2}{\delta},
   \qquad
   \defineNotation[v-delta-m-lambda]{v_{\delta,m,\lambda}}
   :=
@@ -1094,12 +1090,11 @@ And further,
     \frac{h_{\delta,m,\lambda}(\delta (b + d \lambda) d' - d m
     b')}{\delta m}\\
     &= u_{\delta,m,\lambda} \tau + v_{\delta,m,\lambda}.
-    = e_{\delta,m,\lambda} \frac{\tau}{m w_\gamma} + v_{\delta,m,\lambda}.
 \end{align*}
 Then
 $\defineNotation[q-delta-m-lambda]{q_{\delta,m,\lambda}} :=
 \unityPower{\tau_{\delta,m,\lambda}} =
-z_m^{24 e_{\delta,m,\lambda}}\,\unityPower{v_{\delta,m,\lambda}}$.
+q^{u_{\delta,m,\lambda}}\,\unityPower{v_{\delta,m,\lambda}}$.
 
 
 Lemma~\ref{thm:c*tau+d} tells us
@@ -1116,12 +1111,6 @@ Therefore,
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
     \unityPower{\frac{\kappa_{\gamma,\delta,m,\lambda}}{24}} \,
     q_{\delta,m,\lambda}^{1/24}
-    \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)\notag\\
-  &=
-    (c\tau+d)^{1/2}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
-    \unityPower{\frac{ v_{\delta,m\lambda} + \kappa_{\gamma,\delta,m,\lambda}}{24}}
-    z_m^{e_{\delta,m,\lambda}/24}
     \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)\notag\\
   &=
     (c\tau+d)^{1/2}
@@ -1384,7 +1373,7 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
   \cdot
   \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
-  x^{\divisorsum{N} \frac{r_\delta e_\delta}{24}}
+  q^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
   \cdot
     \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
   &\qquad\times
@@ -1410,7 +1399,7 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
   \cdot
   \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
-  x^{\divisorsum{N} \frac{r_\delta e_\delta}{24}}
+  q^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
     \cdot
     \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
   &\qquad\times
@@ -1899,10 +1888,12 @@ OF ==> OutputForm
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
 )if LiterateDoc
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SymbolicEtaDeltaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $N\in\setN$, $\divides{\delta}{N}$,
+For $N\in\setN$,
+$\divides{\delta}{N}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 SL_2(\setZ)$, elements from the domain \code{SymbolicEtaDelta}
 represent the tuple
@@ -2127,7 +2118,7 @@ SymbolicEtaQuotientGamma: SemiGroup with
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         for delta in divs repeat
-            eta.delta := eta(m, delta, gamma)$SymbolicEtaDeltaGamma
+            eta.delta := eta(m, delta, gamma)$SymbolicEtaDeltaGamma --$
         etaquot(m, divs, r, gamma, eta)
 
     level(x: %): P == xx.flevel
@@ -2265,7 +2256,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         substitute(es, u, v)
 
     squareRoot(fq: Q): CX ==
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ --$
         ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
     etaQuotient(e: SymbolicEtaQuotientGamma): % ==
@@ -2274,7 +2265,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         s: LX := 1
         for delta in divs for rd in exponents e | not zero? rd repeat
             etadelta: SymbolicEtaDeltaGamma := eta(e, delta)
-            u: P := edelta(udelta)
+            u: P := edelta(etadelta)
             v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
             s := s * eulerFunctionPower(u, v, rd)
         q: Q := mx * unityPower e
@@ -2521,7 +2512,6 @@ have the following correspondence:
 %
 \code{rationalPrefactor(e)} $= \frac{h_{\delta,m,\lambda}}{\delta}$,
 \code{udelta(e)}            $= u_{\delta,m,\lambda}$,
-\code{edelta(e)}            $= e_{\delta,m,\lambda}$,
 \code{vdelta(e)}            $= v_{\delta,m,\lambda}$,
 \code{upsilonExponent(e)}   $= \kappa_{\delta,m,\lambda}$,
 \code{unityPower(e)}        $= \frac{v_{\delta,m,\lambda}+\kappa_{\delta,m,\lambda}}{24}$.
@@ -2653,7 +2643,8 @@ SL_2(\setZ)$, elements from the domain
   \divisorsum{M} s_\delta u_{\delta,m,\lambda}
   \right)
 \end{gather}
-and thus corresponds to the data from \eqref{eq:g_s-m-t-lambda(gamma*tau)}.
+and thus corresponds to the data from \eqref{eq:g_s-m-t-lambda(gamma*tau)},
+\ie,  it computes the building blocks for $g_{s,m,t,\lambda}(\gamma\tau)$.
 
 If \code{e = etaSequence(mm, divs, s, m, t, lambda, gamma)}, then we
 have the following correspondence:
@@ -2672,7 +2663,7 @@ $= -\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr) +
 -------------------------------------------------------------------
 )abbrev domain SYMBESLG SymbolicEtaSequenceLambdaGamma
 ++ SymbolicEtaSequenceLambdaGamma is a generalization of
-++ SymbolicEtaSequenceLambdaGamma. It holds data to compute an eta
+++ SymbolicEtaQuotientGamma. It holds data to compute an eta
 ++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau).
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
 SymbolicEtaSequenceLambdaGamma:
@@ -2697,7 +2688,7 @@ SymbolicEtaSequenceLambdaGamma:
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
       ++ Returns m.
-    offset: % -> P
+    offset: % -> N
       ++ offset(x) returns the subsequence offset.
       ++ Returns t.
     lambda: % -> P
@@ -2782,13 +2773,15 @@ SymbolicEtaSequenceLambdaGamma:
         if gamma(2,1) < 0 then gamma := -gamma
         for delta in divs repeat
             SyEDSLG ==> SymbolicEtaDeltaSequenceLambdaGamma
-            eta.delta := eta(m, delta, m, lambda, gamma)$SyEDSLG
+            eta.delta := eta(m, delta, m, lambda, gamma)$SyEDSLG --$
         etaquot(mm, divs, s, m, t, lambda, gamma, eta)
 
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
     eta(x: %, delta: P): SymbolicEtaDeltaSequenceLambdaGamma == xx.feta.delta
     exponents(x: %): LZ == xx.fexponents
+    multiplier(x: %): P == xx.fmultiplier
+    offset(x: %): N == xx.foffset
     gamma(x: %): SL2Z == xx.fgamma
     rationalPrefactor(x: %): Q == xx.frat
     unityPower(x: %): Q == xx.funityPower
@@ -2815,6 +2808,206 @@ SymbolicEtaSequenceLambdaGamma:
         xx.foffset ~= yy.foffset => false
         xx.flambda ~= yy.flambda => false
         xx.fgamma = yy.fgamma
+
+)if LiterateDoc
+% $
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{EtaSequenceLambdaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $s \in R(M)$, $t,\lambda \in
+\Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, elements from the domain \code{EtaSequenceLambdaGamma}
+represents the series expansion of
+$g_{s,m,t,\lambda}(\gamma\tau)$, \ie, an element from
+\code{SymbolicEtaSequenceLambdaGamma} in terms of $q^{1/(24 m w)}$ where
+$w$ must be a multiple of the the $\lcm$ the denominator of
+\begin{gather*}
+  p := \frac{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}{24}
+\end{gather*}
+and of all denominators of $u_{\delta,m,\lambda}$ over all
+$\divides{\delta}{M}$ with
+$s_\delta\ne0$, \ie, it represents the tuple
+\begin{gather}
+  \left(
+  y
+  ,
+  \underbrace{\divisorprod{M}
+  \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!s_\delta/2}
+  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr) +
+  \divisorsum{M} \frac{s_\delta(v_{\delta,m,\lambda} + \kappa_{\delta,m,\lambda})}{24}}
+  }_{\texttt{leadingCoefficient}}
+  \cdot
+  q^p \divisorprod{M}\prod_{n=1}^{\infty}
+    (1-\unityPower{n v_\delta} q^{n u_\delta})^{s_\delta}
+  \right)
+\end{gather}
+where $y$ is the corrresponding element of
+\code{SymbolicEtaSequenceLambdaGamma} and, thus, the series from
+\eqref{eq:g_s-m-t-lambda(gamma*tau)} without the
+$(c\tau+d)$-part.
+
+)endif
+
+
+-------------------------------------------------------------------
+)abbrev domain ETASLG EtaSequenceLambdaGamma
+++ EtaSequenceLambdaGamma is a generalization of
+++ SymbolicEtaSequenceLambdaGamma. It holds data to compute an eta
+++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau).
+++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
+EtaSequenceLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
+  C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
+  mx: P -- mx-th root of unity needed.
+  CX: Algebra C
+  xi: CX --primitive mx-th root of unity.
+  LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
+  Exports ==> SetCategory with
+    etaSifted: (SymbolicEtaSequenceLambdaGamma, P) -> %
+      ++ etaSifted(e, w) represents the
+      ++ q-expansion of g_{s,m,t,\lambda}(\gamma\tau) at \tau=i\infity.
+    rationalPowerDenominator: % -> P
+      ++ rationalPowerDenominator(x) returns d such that x is a Laurent series
+      ++ in q^d.
+    expansion: % -> LX
+      ++ expansion(x) returns the Laurent series representation of x
+      ++ without the prefactor corresponding to (c\tau+d) in z=q^(1/d)
+      ++ where d=rationalPowerDenominator(x).
+  Implementation ==> add
+    Rep ==> Record(den: P, ser: LX)
+    xx ==> rep x
+     -- We maintain a cache of expansions of powers of the Euler function.
+    q: Symbol := "q"::Symbol
+    LC ==> SparseUnivariateLaurentSeries(C, q, 0)
+    ef: LC := eulerFunction(1)$QFunctions(C, LC)
+    ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
+    -- We intend to also store negative powers of the eulerFunction.
+    cache: XHashTable(Z, LC) := getCache()$CachedPower(LC, ef)
+
+    RecC ==> Record(k: Z, c: C)
+    RecX ==> Record(k: Z, c: CX)
+    SFCX ==> StreamFunctions2(RecC, RecX)
+
+    eulerFunctionPower(p: Z): LC ==
+        key?(p, cache) => cache.p
+        zero? p => 1
+        pow: P := qcoerce(abs p)@P
+        es := power(pow)$CachedPower(LC, ef) --$
+        p > 0 => es
+        cache.p := recip(es)::LC -- cache for negative exponents and return
+
+    substituteVariable(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
+        -- replace variable q by xi^v * x^u
+        xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
+        cx: CX := xi^xiPower
+        cx := x.c * cx
+        [u*x.k, cx]
+
+    -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
+    substitute(s: LC, u: P, v: N): LX ==
+        stc: Stream RecC := terms s
+        stx: Stream RecX := map(substituteVariable(u, v), stc)$SFCX
+        series(stx)$LX
+
+    squareRoot(fq: Q): CX ==
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
+        ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
+
+    etaSifted(e: SymbolicEtaSequenceLambdaGamma, w: P): % == -- w=width
+        mm: P := level e
+        divs: LP := divisors e
+        m: P := multiplier e
+        d: P := 24*m*w
+        s: LX := 1
+        for delta in divs for sd in exponents e | not zero? sd repeat
+            etadelta: SymbolicEtaDeltaSequenceLambdaGamma := eta(e, delta)
+            u: Q := d * udelta etadelta
+            not one? denom u =>
+                error "EtaSequenceLambdaGamma: denominator does not vanish"
+            v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
+            ep: LC := eulerFunctionPower sd
+            s := s * substitute(ep, qcoerce(numer u)@P, v)
+        q: Q := mx * unityPower e
+        if not one? denom q then
+            error "EtaSequenceLambdaGamma: denominator for xi does not vanish"
+        n: N := qcoerce(positiveRemainder(numer q, mx))@N
+        cx: CX := xi^n * squareRoot rationalPrefactor e -- leading coefficient
+        p: Q := d/24 * qExponent e -- the "/24" is missing from qPower(e)
+        if not one? denom p then
+            error "EtaSequenceLambdaGamma: denominator for q does not vanish"
+        per [d, monomial(cx, numer p)$LX * s] --$
+
+    rationalPowerDenominator(x: %): P == xx.den
+    expansion(x: %): LX == xx.ser
+
+    coerce(x: %): OutputForm == xx::OutputForm
+    ((x: %) = (y: %)): Boolean == rep x = rep y
+
+)if LiterateDoc
+% $
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{EtaSequenceGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $s \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, elements from the domain \code{EtaSequenceGamma}
+represents the series expansion of
+\begin{gather*}
+  g_{s,m,t}(\gamma\tau)
+  =\frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\gamma\tau)
+\end{gather*}
+without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
+
+)endif
+
+
+-------------------------------------------------------------------
+)abbrev domain ETASG EtaSequenceGamma
+++ EtaSequenceGamma represents the sum (over all lambda) of elements
+++ from EtaSequenceLambdaGamma. It holds the series
+++ expansion of g_{s,m,t}(\gamma\tau).
+++ See \eqref{eq:g_s-m-t(gamma*tau)}.}
+EtaSequenceGamma(C, mx, CX, xi, LX): Exports == Implementation where
+  C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
+  mx: P -- mx-th root of unity needed.
+  CX: Algebra C
+  xi: CX --primitive mx-th root of unity.
+  LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
+  Exports ==>  with
+    etaQuotient: (P, LP, LZ, P, N, SL2Z, P) -> %
+      ++ etaQuotient(mm, divs, s, m, t, gamma, w) represents the
+      ++ z-expansion of g_{s,m,t}(\gamma\tau) at
+      ++ \tau=i\infity where z = q^(1/24w).
+    rationalPowerDenominator: % -> P
+    expansion: % -> LX
+      ++ expansion(x) returns the Puiseux series expansion of x
+      ++ without the prefactor corresponding to (c\tau+d)
+  Implementation ==> add
+    Rep ==> Record(den: P, ser: LX)
+    RecX ==> Record(k: Z, c: CX)
+    xx ==> rep x
+    SESLG ==> SymbolicEtaSequenceLambdaGamma
+    ESLG ==> EtaSequenceLambdaGamma(C, mx, CX, xi, LX)
+    divideBy(m: Z): RecX -> RecX == (x: RecX): RecX +->
+        [(x.k exquo m)::Z, (1/m)$Q::C::CX * x.c]$RecX
+    etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z, w: P): % ==
+        l: LX := 0
+        m1: P := qcoerce(m::Z - 1)@P
+        for lambda in 0..m1 repeat
+            seq: SESLG := etaQuotient(mm, divs, s, m, t, lambda, gamma)
+            l := l + expansion etaSifted(seq, w)$ESLG
+        -- After summation only the coefficients with exponents divisible
+        -- by m should be non-zero. We make a sanity check.
+        for i in 1..m1 repeat
+            if not zero? coefficient(l, i) then error "m-lambda sum"
+        per [24 * w, series(map(divideBy m, terms l))$LX]
+
+    rationalPowerDenominator(x: %): P == xx.den
+    expansion(x: %): LX == xx.ser
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    ((x: %) = (y: %)): Boolean == rep x = rep y
+
 
 )if LiterateDoc
 \bibliography{qeta}
