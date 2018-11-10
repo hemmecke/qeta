@@ -2922,12 +2922,15 @@ SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
             etadelta: SymbolicSiftedEtaDeltaLambdaGamma := eta(e, delta)
             u: Q := d * udelta etadelta
             not one? denom u =>
+                dbgPrint("delta, d", [delta, d]$List(P))
+                dbgPrint("udelta", [udelta etadelta, u]$List(Q))
                 error "SiftedEtaQuotientLambdaGamma: denominator does not vanish"
             v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
             ep: LC := eulerFunctionPower sd
             s := s * substitute(ep, qcoerce(numer u)@P, v)
         q: Q := mx * unityPower e
         if not one? denom q then
+            dbgPrint("mx * unityPower e", q)
             error "SiftedEtaQuotientLambdaGamma: denominator for xi does not vanish"
         n: N := qcoerce(positiveRemainder(numer q, mx))@N
         cx: CX := xi^n * squareRoot rationalPrefactor e -- leading coefficient
@@ -2937,7 +2940,9 @@ SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
         per [d, monomial(cx, numer p)$LX * s] --$
 
     rationalPowerDenominator(x: %): P == xx.den
-    expansion(x: %): LX == xx.ser
+    expansion(x: %): LX ==
+        dbgPrint("expansion lambda", x)
+        xx.ser
 
     coerce(x: %): OutputForm == xx::OutputForm
     ((x: %) = (y: %)): Boolean == rep x = rep y
@@ -2972,11 +2977,17 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
-  Exports ==>  with
+  Exports ==> CoercibleTo OutputForm with
     etaQuotient: (P, LP, LZ, P, N, SL2Z, P) -> %
       ++ etaQuotient(mm, divs, s, m, t, gamma, w) represents the
       ++ z-expansion of g_{s,m,t}(\gamma\tau) at
       ++ \tau=i\infity where z = q^(1/24w).
+    etaQuotientOrbitProduct: (P, LP, LZ, P, N, SL2Z, P) -> %
+      ++ etaQuotientOrbitProduct(mm, divs, s, m, t, gamma, w)
+      ++ returns the product over all
+      ++ etaQuotient(mm, divs, s, m, t', gamma, w) for t' in
+      ++ orbit(sigmaInfty, m, t) where
+      ++ $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
     rationalPowerDenominator: % -> P
     expansion: % -> LX
       ++ expansion(x) returns the Puiseux series expansion of x
@@ -2987,8 +2998,18 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     xx ==> rep x
     YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
     SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
+
+    rationalPowerDenominator(x: %): P == xx.den
+    expansion(x: %): LX == xx.ser
+
+    coerce(x: %): OutputForm == xx::OutputForm
+    ((x: %) = (y: %)): Boolean == rep x = rep y
+
+    -- auxiliary function dividedBy
     divideBy(m: Z): RecX -> RecX == (x: RecX): RecX +->
         [(x.k exquo m)::Z, (1/m)$Q::C::CX * x.c]$RecX
+
+    -- exported function etaQuotient
     etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z, w: P): % ==
         l: LX := 0
         m1: P := qcoerce(m::Z - 1)@P
@@ -2998,14 +3019,22 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         -- After summation only the coefficients with exponents divisible
         -- by m should be non-zero. We make a sanity check.
         for i in 1..m1 repeat
-            if not zero? coefficient(l, i) then error "m-lambda sum"
+            if not zero? coefficient(l, i) then
+                dbgPrint("expansion", l)
+                error "m-lambda sum"
         per [24 * w, series(map(divideBy m, terms l))$LX]
 
-    rationalPowerDenominator(x: %): P == xx.den
-    expansion(x: %): LX == xx.ser
+    etaQuotientOrbitProduct(mm: P, divs: LP, s: LZ,
+                            m: P, t: N, gamma: SL2Z, w: P): % ==
+        shat: Z := 0 -- sigmaInfty
+        for delta in divs for sdelta in s repeat
+            shat := shat + delta * sdelta
+        l: LX := 1
+        for tt in orbit(shat, m, t)$QEtaKolberg repeat
+            l := l * expansion etaQuotient(mm, divs, s, m, tt, gamma, w)
+        per [24 * w, l]
 
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-    ((x: %) = (y: %)): Boolean == rep x = rep y
+
 
 
 )if LiterateDoc
