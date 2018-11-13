@@ -1887,7 +1887,10 @@ LSL2Z ==> List SL2Z
 OF ==> OutputForm
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
-)if LiterateDoc
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+
+)if LiterateDocu
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SymbolicEtaDeltaGamma}
@@ -1944,9 +1947,8 @@ SymbolicEtaDeltaGamma: SetCategory with
               frat: Q,      -- h_delta/delta
               fkappa: Z24,  -- upsilonExponent(a1,b2,c1,d1)
               fedelta: P,   -- edelta = width*hdelta^2/delta \eqref{eq:q_delta}}
-              fvdelta: Q,   -- b2/d2, reduced form of roots of unity
+              fvdelta: Q    -- b2/d2, reduced form of roots of unity
                             -- 0<=b2<d2, 0<d2
-              funityPower: Q-- (kappa_delta + vdelta)/24
              )
     import from Rep
     xx ==> rep x
@@ -1968,11 +1970,7 @@ SymbolicEtaDeltaGamma: SetCategory with
             error "edelta does not match"
         vdelta: Q := b2/d2
         kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
-        r: Q := (vdelta + (convert(kappa)@Z)::Q) / (24::Q)
-          -- eq:eta_delta(gamma*tau)-expansion)
-        num: Z := numer r; den: Z := denom r -- denom(r)-th root of unity
-        r := positiveRemainder(num, den)/den
-        per [m, delta, gamma, rat, kappa, edelta, vdelta, r]
+        per [m, delta, gamma, rat, kappa, edelta, vdelta]
 
     level(x: %): P == xx.flevel
     delta(x: %): P == xx.fdelta
@@ -1981,7 +1979,6 @@ SymbolicEtaDeltaGamma: SetCategory with
     upsilonExponent(x: %): Z24 == xx.fkappa
     edelta(x: %): P == xx.fedelta
     vdelta(x: %): Q == xx.fvdelta
-    unityPower(x: %): Q == xx.funityPower
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
         h := hashUpdate!(h, xx.flevel)
@@ -1989,7 +1986,6 @@ SymbolicEtaDeltaGamma: SetCategory with
         h := hashUpdate!(h, xx.fkappa)
         h := hashUpdate!(h, xx.fedelta)
         h := hashUpdate!(h, xx.fvdelta)
-        h := hashUpdate!(h, xx.funityPower)
     ((x: %) = (y: %)): Boolean ==
         level x ~= level y => false
         delta x ~= delta y => false
@@ -2097,11 +2093,18 @@ SymbolicEtaQuotientGamma: SemiGroup with
         rat: Q := 1
         upower: Q := 0
         xexponent: Z := 0
-        for delta in divs for rdelta in r repeat
+        for delta in divs for rdelta in r | not zero? rdelta repeat
             e := eta(delta)
             rat := rat * rationalPrefactor(e)^rdelta
-            upower := upower + rdelta * unityPower(e)
             xexponent := xexponent + rdelta * edelta(e)
+
+            kappa: Q := (convert(upsilonExponent e)@Z)::Q
+            upower := upower + rdelta * (vdelta e + kappa)
+
+        -- Now make the numerator small.
+        den: Z := 24 * denom upower -- den-th root of unity
+        upower := positiveRemainder(numer upower, den) / den
+
         -- minimal root of unity needed for the expansion is determined from
         -- expressing the squareroot of the rational prefactor in roots of unity
         -- and from the unityPower.
@@ -2338,8 +2341,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
             error "etaQuotient: not a modular function"
         hmeta: XHashTable(Q, YEQG) := empty()
         hser: XHashTable(Q, LX) := empty()
-        divs: LP := [qcoerce(d)@P for d in
-                       divisors(m)$IntegerNumberTheoryFunctions]
+        divs: LP := DIVISORS m
         cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ
@@ -2414,7 +2416,7 @@ ModularEtaQuotientExpansions(C, L, m): Exports == Implementation where
       ++ series(x, n) returns the series corresponding to the n-th index.
       ++ Indices can run from 1 to maxIndex().
   Implementation ==> add
-    divs: LP := [qcoerce(d)@P for d in divisors(m)$IntegerNumberTheoryFunctions]
+    divs: LP := DIVISORS m
     ndivs: N := # divs
     cusps: LQ := cuspsOfGamma0(m)$QAuxiliaryModularEtaQuotientPackage
     ncusps: P := qcoerce(#cusps)@P
@@ -2501,8 +2503,7 @@ SL_2(\setZ)$, elements from the domain
   ,
   u_{\delta,m,\lambda},
   v_{\delta,m,\lambda},
-  \kappa_{\delta,m,\lambda},
-  \frac{v_{\delta,m,\lambda} + \kappa_{\delta,m,\lambda}}{24}
+  \kappa_{\delta,m,\lambda}
   \right)
 \end{gather}
 and thus corresponds to the data from \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
@@ -2513,8 +2514,7 @@ have the following correspondence:
 \code{rationalPrefactor(e)} $= \frac{h_{\delta,m,\lambda}}{\delta}$,
 \code{udelta(e)}            $= u_{\delta,m,\lambda}$,
 \code{vdelta(e)}            $= v_{\delta,m,\lambda}$,
-\code{upsilonExponent(e)}   $= \kappa_{\delta,m,\lambda}$,
-\code{unityPower(e)}        $= \frac{v_{\delta,m,\lambda}+\kappa_{\delta,m,\lambda}}{24}$.
+\code{upsilonExponent(e)}   $= \kappa_{\delta,m,\lambda}$.
 
 )endif
 -------------------------------------------------------------------
@@ -2552,7 +2552,7 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
       ++ udelta
     vdelta: % -> Q
       ++ vdelta
-    unityPower: % -> Q        -- (kappa_delta + vdelta)/24
+    unityPower: % -> Q        -- (kappa_delta + vdelta)
 
  == add
     Rec ==> Record(red: SL2Z, triang: MZ)
@@ -2566,9 +2566,8 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
               fkappa: Z24,  -- upsilonExponent(a1,b2,c1,d1)
               fudelta: Q,   -- udelta = hdelta^2/(delta*m)
                             -- \eqref{eq:uv_delta-m-lambda}}
-              fvdelta: Q,   -- b2/d2, reduced form of roots of unity
+              fvdelta: Q    -- b2/d2, reduced form of roots of unity
                             -- 0<=b2<d2, 0<d2
-              funityPower: Q-- (kappa + vdelta)/24
             )
     import from Rep
     xx ==> rep x
@@ -2585,11 +2584,7 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
         udelta: Q := a2/d2 -- = hdelta^2/delta/m
         vdelta: Q := b2/d2
         kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
-        r: Q := (vdelta + (convert(kappa)@Z)::Q) / (24::Q)
-          -- eq:eta_delta-m-lambda(gamma*tau)-expansion)
-        num: Z := numer r; den: Z := denom r -- denom(r)-th root of unity
-        r := positiveRemainder(num, den)/den
-        per [mm, delta, m, lambda, gamma, rat, kappa, udelta, vdelta, r]
+        per [mm, delta, m, lambda, gamma, rat, kappa, udelta, vdelta]
 
     level(x: %): P == xx.flevel
     delta(x: %): P == xx.fdelta
@@ -2600,7 +2595,6 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
     upsilonExponent(x: %): Z24 == xx.fkappa
     udelta(x: %): Q == xx.fudelta
     vdelta(x: %): Q == xx.fvdelta
-    unityPower(x: %): Q == xx.funityPower
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
         h := hashUpdate!(h, xx.flevel)
@@ -2608,7 +2602,6 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
         h := hashUpdate!(h, xx.fkappa)
         h := hashUpdate!(h, xx.fudelta)
         h := hashUpdate!(h, xx.fvdelta)
-        h := hashUpdate!(h, xx.funityPower)
     ((x: %) = (y: %)): Boolean ==
         level x ~= level y => false
         delta x ~= delta y => false
@@ -2689,7 +2682,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     offset: % -> N
       ++ offset(x) returns the subsequence offset.
       ++ Returns t.
-    lambda: % -> P
+    lambda: % -> N
       ++ lambda(x) returns lambda
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
@@ -2746,13 +2739,20 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
         upower: Q := 0
         qexponent: Q := 0
         sigmaInfty: Z := 0
-        for delta in divs for sdelta in s repeat
+        for delta in divs for sdelta in s | not zero? sdelta repeat
             e := eta(delta)
             rat := rat * rationalPrefactor(e)^sdelta
-            upower := upower + sdelta * unityPower(e)
             qexponent := qexponent + sdelta * udelta(e)
+
+            kappa: Q := (convert(upsilonExponent e)@Z)::Q
+            upower := upower + sdelta * (vdelta e + kappa)
             sigmaInfty := sigmaInfty + delta * sdelta
+
         upower := upower - lambda/m * (24*t + sigmaInfty)
+        -- Now make the numerator small.
+        den: Z := 24 * denom upower -- den-th root of unity
+        upower := positiveRemainder(numer upower, den) / den
+
         -- minimal root of unity needed for the expansion is determined from
         -- expressing the squareroot of the rational prefactor in roots of unity
         -- and from the unityPower.
@@ -2780,6 +2780,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     exponents(x: %): LZ == xx.fexponents
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
+    lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
     rationalPrefactor(x: %): Q == xx.frat
     unityPower(x: %): Q == xx.funityPower
@@ -2940,9 +2941,7 @@ SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
         per [d, monomial(cx, numer p)$LX * s] --$
 
     rationalPowerDenominator(x: %): P == xx.den
-    expansion(x: %): LX ==
-        dbgPrint("expansion lambda", x)
-        xx.ser
+    expansion(x: %): LX == xx.ser
 
     coerce(x: %): OutputForm == xx::OutputForm
     ((x: %) = (y: %)): Boolean == rep x = rep y
@@ -2988,6 +2987,8 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
       ++ etaQuotient(mm, divs, s, m, t', gamma, w) for t' in
       ++ orbit(sigmaInfty, m, t) where
       ++ $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
+    coEtaQuotient: (P, LP, LZ, SL2Z, P) -> %
+    modularEtaQuotient: (P, LZ, P, LZ, P, N, SL2Z, P) -> %
     rationalPowerDenominator: % -> P
     expansion: % -> LX
       ++ expansion(x) returns the Puiseux series expansion of x
@@ -3007,6 +3008,8 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 
     -- auxiliary function dividedBy
     divideBy(m: Z): RecX -> RecX == (x: RecX): RecX +->
+        [(x.k exquo m)::Z, x.c]$RecX
+    divideBy2(m: Z): RecX -> RecX == (x: RecX): RecX +->
         [(x.k exquo m)::Z, (1/m)$Q::C::CX * x.c]$RecX
 
     -- exported function etaQuotient
@@ -3022,7 +3025,7 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
             if not zero? coefficient(l, i) then
                 dbgPrint("expansion", l)
                 error "m-lambda sum"
-        per [24 * w, series(map(divideBy m, terms l))$LX]
+        per [24 * w, series(map(divideBy2 m, terms l))$LX]
 
     etaQuotientOrbitProduct(mm: P, divs: LP, s: LZ,
                             m: P, t: N, gamma: SL2Z, w: P): % ==
@@ -3034,8 +3037,18 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
             l := l * expansion etaQuotient(mm, divs, s, m, tt, gamma, w)
         per [24 * w, l]
 
+    coEtaQuotient(nn: P, divs: LP, r: LZ, gamma: SL2Z, w: P): % ==
+        -- r must match thm:RaduConditions
+        etaQuotient(nn, divs, r, 1, 0, gamma, w)
 
-
+    modularEtaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N,
+                       gamma: SL2Z, w: P): % ==
+        nndivs: LP := DIVISORS nn
+        mmdivs: LP := DIVISORS mm
+        eq1: % := etaQuotientOrbitProduct(mm, mmdivs, s, m, t, gamma, w)
+        eq2: % := coEtaQuotient(nn, nndivs, r, gamma, w)
+        l: LX := expansion eq1 * expansion eq2
+        per [w, series(map(divideBy 24, terms l))$LX]
 
 )if LiterateDoc
 \bibliography{qeta}
