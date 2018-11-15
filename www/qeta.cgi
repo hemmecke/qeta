@@ -2,7 +2,7 @@
 #
 # Perl script to call FriCAS with QEta stuff
 #
-# Ralf Hemmecke <ralf@hemmecke.de>
+# Ralf Hemmecke <ralf@hemmecke.org>
 #
 
 # Needed to get the parameters to the CGI script.

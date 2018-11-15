@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Create qeta.input via
-# ./qeta.sh --level=4 --calc=4 --rvectors="[[-8, 0, 8], [8, 0, -8], [8, -24, 16], [-8, 24, -16]]" --gamma="[[1,3],[1,2]]" --teecmd=qeta.input
+# ./qeta.sh --level=4 --calc=4 --rvectors="[[-8, 0, 8], [8, 0, -8], [8, -24, 16], [-8, 24, -16]]" --gamma="[[1,2],[1,3]]" --teecmd=qeta.input
 
 # Note that the qeta.cgi script should never call THIS shell script with
 # the parameter --teecmd.
@@ -43,7 +43,7 @@ done
 #echo "stream calculate = $calc"
 #echo "rvectors = $rvectors"
 
-cat <<EOF  | $teecmd | timeout 60s /zvol/fricas/x86_64/bin/fricas -nosman | sed '1,/OUTPUT STARTS HERE/d; /Type:/d; s/([0-9]*) -> //g; /   ([0-9]*)$/d'
+cat <<EOF  | $teecmd | timeout 60s fricas -nosman | sed '1,/OUTPUT STARTS HERE/d; /Type:/d; s/([0-9]*) -> //g; /   ([0-9]*)$/d'
 )cd $tmp
 )r qetalibs
 )r etamacros
@@ -70,8 +70,11 @@ EQG ==> EtaQuotientGamma(Q, mx, CX, xi, LX);
 MEQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
 MEQX ==> ModularEtaQuotientExpansions(CX, LX, level);
 
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+
 unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
-  divs: List P := [qcoerce(delta)@P for delta in divisors m];_
+  divs: List P := DIVISORS m;_
   l: List List P := empty(); _
   for r in rs repeat (_
       lp: List P := empty();_
@@ -98,15 +101,21 @@ if (expansionAtAllCusps?) then (_
   gammas: List SL2Z := [matrix $gamma]_
 );
 
+
 rs := $rvectors;
+if not one?(det:=determinant first gammas) then (_
+   tPrint("OUTPUT STARTS HERE");_
+   vPrint("gamma", first gammas);_
+   vPrint("Error: Determinant of gamma is not 1. det(gamma)", det);_
+   systemCommand("quit"))
+
 minroots := unityroots(m, rs, gammas)
 mx: P := lcm [lcm l for l in minroots]
 pz: PZ := cyclotomic(mx)\$CyclotomicPolynomialPackage;
 pq: PQ := map(n+->monomial(1\$Q,1\$N)\$PQ, c+->c::Q::PQ, pz)\$PL;
 xsym: Symbol := "x"::Symbol;
 xi := generator()\$CX;
-divs: List P := [qcoerce(d)@P for d in divisors m];
-
+divs: List P := DIVISORS m;
 
 tPrint("OUTPUT STARTS HERE")
 if not one?(det:=determinant first gammas) then (_
