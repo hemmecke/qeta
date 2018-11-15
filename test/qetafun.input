@@ -1,0 +1,71 @@
+-- This is a testfile for src/qetafun.spad.
+-- It is also connected to \cite{Hemmecke:DancingSambaRamanujan:2018}
+-- formula (7).
+-- To (7) corresponds an expression in eta functions. Here we compute
+-- the expansion thereof not only at the cusp infinity (which is given by (7)),
+-- but also at the other cusps of \Gamma_0(22).
+-- The computation of such an expansion is given by F_{r,s,m,t} as given in
+-- src/qetafun.spad.
+
+)cd /home/hemmecke/g/qeta/tmp
+)r qetalibs
+)r etamacros
+
+B ==> Boolean
+S ==> Symbol;
+MZ ==> Matrix Z -- consider only 2x2 matricies
+SL2Z ==> MZ -- matrices with determinant = 1
+
+EZ ==> Expression Z;
+expr x ==> x :: S :: EZ;
+
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+
+C ==> Q
+
+PZ ==> SparseUnivariatePolynomial Z;
+PQ ==> SparseUnivariatePolynomial Q;
+PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, Z, PZ, PQ);
+CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
+LX ==> UnivariateLaurentSeries(CX, xsym, 0);
+MZ ==> Matrix Z -- consider only 2x2 matricies
+SL2Z ==> MZ -- matrices with determinant = 1
+QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
+YEDG ==> SymbolicEtaDeltaGamma;
+YEQG ==> SymbolicEtaQuotientGamma;
+ETAQG ==> EtaQuotientGamma(C, mx, CX, xi, LX);
+METAQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
+METAQX ==> ModularEtaQuotientExpansions(CX, LX, level);
+-------------------------------------------------------------------
+YSEDLG ==> SymbolicSiftedEtaDeltaLambdaGamma
+YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
+SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
+SEQG ==> SiftedEtaQuotientGamma(C, mx, CX, xi, LX)
+-------------------------------------------------------------------
+
+xsym: Symbol := "x"::Symbol;
+
+-- p(11n+6)
+nn: P := 22; r: List Z := [10, 2, 11, -22]
+mm: P := 11; s: List Z := [-1, 0]
+mmdivs: List P := DIVISORS mm
+m: P := 11; t: N := 6;
+cusps := cuspsOfGamma0 nn
+gammas := [cuspToMatrix(nn,x)$QAuxMEQ for x in cusps]
+widths := [width(nn, gamma(2,1)) for gamma in gammas]
+
+yel := [[etaQuotient(m, mmdivs, s, m, t, lambda::N, gamma)$YSEQLG for lambda in 0..m-1] for gamma in gammas];
+mx: P := lcm [lcm [minRootOfUnity y for y in ye] for ye in yel]
+pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage;
+pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL;
+xi := generator()$CX
+
+-- el := etaQuotient(m, divs, s, m, t, gamma, mm)$SEQG
+shat: Z := 0 -- sigmaInfty
+for delta in mmdivs for sdelta in s repeat shat := shat + delta * sdelta
+
+orb: List N := orbit(shat, m, t)
+[[gamma(1,1)/gamma(2,1), _
+  modularEtaQuotient(nn, r, mm, s, m, t, gamma, width(nn, gamma(2,1)))$SEQG] _
+    for gamma in gammas]
