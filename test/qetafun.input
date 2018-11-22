@@ -43,6 +43,8 @@ YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
 SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
 SEQG ==> SiftedEtaQuotientGamma(C, mx, CX, xi, LX)
 -------------------------------------------------------------------
+WIDTH(nn, c) == qcoerce(width(nn, c))@P
+
 
 xsym: Symbol := "x"::Symbol;
 
@@ -51,21 +53,38 @@ nn: P := 22; r: List Z := [10, 2, 11, -22]
 mm: P := 11; s: List Z := [-1, 0]
 mmdivs: List P := DIVISORS mm
 m: P := 11; t: N := 6;
+
+
 cusps := cuspsOfGamma0 nn
 gammas := [cuspToMatrix(nn,x)$QAuxMEQ for x in cusps]
-widths := [width(nn, gamma(2,1)) for gamma in gammas]
+--assert(cusps = [gamma(1,1)/gamma(2,1) for gamma in gammas])
 
-yel := [[etaQuotient(m, mmdivs, s, m, t, lambda::N, gamma)$YSEQLG for lambda in 0..m-1] for gamma in gammas];
+widths := [width(nn, gamma(2,1)) for gamma in gammas] -- not used below
+
+-- Determine the what biggest root of unity we need for the coefficient domain.
+yel := [[etaQuotient(m, mmdivs, s, m, t, lambda::N, gamma)$YSEQLG _
+         for lambda in 0..m-1] for gamma in gammas];
 mx: P := lcm [lcm [minRootOfUnity y for y in ye] for ye in yel]
+
+-- Create the actual coefficient domain (working for each cusp).
 pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage;
 pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL;
 xi := generator()$CX
 
--- el := etaQuotient(m, divs, s, m, t, gamma, mm)$SEQG
+-- Compute sigmaInfinity = \hat{s} for the incoming eta-quotient that
+-- represents the series that we want to express in other eta quotients.
 shat: Z := 0 -- sigmaInfty
 for delta in mmdivs for sdelta in s repeat shat := shat + delta * sdelta
 
+-- What's the orbit for (m,t)-sifted sequences given by the s-eta-quotient.
 orb: List N := orbit(shat, m, t)
+
+-- Compute the expansion of the (m,t)-sifted s-eta-quotient that has been
+-- multiplied by an r-eta-quotient that makes the product into a modular
+-- function for Gamma0(nn).
 [[gamma(1,1)/gamma(2,1), _
-  modularEtaQuotient(nn, r, mm, s, m, t, gamma, width(nn, gamma(2,1)))$SEQG] _
+  modularEtaQuotient(nn, r, mm, s, m, t, gamma, WIDTH(nn, gamma(2,1)))$SEQG] _
     for gamma in gammas]
+
+--TODO: Find a "better" r-vector that makes
+-- sum(g for cusp in cusps | (g := qetaGrade(F,cusp))>0) is minimal.
