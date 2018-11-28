@@ -35,9 +35,10 @@ QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
 YEDG ==> SymbolicEtaDeltaGamma;
 YEQG ==> SymbolicEtaQuotientGamma;
 ETAQG ==> EtaQuotientGamma(C, mx, CX, xi, LX);
-METAQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
-METAQX ==> ModularEtaQuotientExpansions(CX, LX, level);
+MEQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
+MEQX ==> ModularEtaQuotientExpansions(CX, LX, nn);
 -------------------------------------------------------------------
+MSEQC ==> ModularSiftedEtaQuotientCondition
 YSEDLG ==> SymbolicSiftedEtaDeltaLambdaGamma
 YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
 SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
@@ -50,16 +51,18 @@ xsym: Symbol := "x"::Symbol;
 
 -- p(11n+6)
 nn: P := 22; r: List Z := [10, 2, 11, -22]
+--nn: P := 22; r: List Z := [-10,10,-9,10]
 mm: P := 11; s: List Z := [-1, 0]
 mmdivs: List P := DIVISORS mm
 m: P := 11; t: N := 6;
 
+if not modularInputConditions(nn,mm,s,m,t)$MSEQC then error "mod input cond"
 
 cusps := cuspsOfGamma0 nn
-gammas := [cuspToMatrix(nn,x)$QAuxMEQ for x in cusps]
+gammas := [cuspToMatrix(nn, cusp)$QAuxMEQ for cusp in cusps]
 --assert(cusps = [gamma(1,1)/gamma(2,1) for gamma in gammas])
 
-widths := [width(nn, gamma(2,1)) for gamma in gammas] -- not used below
+widths := [WIDTH(nn, gamma(2,1)) for gamma in gammas] -- not used below
 
 -- Determine the what biggest root of unity we need for the coefficient domain.
 yel := [[etaQuotient(m, mmdivs, s, m, t, lambda::N, gamma)$YSEQLG _
@@ -86,5 +89,53 @@ orb: List N := orbit(shat, m, t)
   modularEtaQuotient(nn, r, mm, s, m, t, gamma, WIDTH(nn, gamma(2,1)))$SEQG] _
     for gamma in gammas]
 
+-- Turn the separate expansions at the cusps into a vector (MEQX).
+--TODO: Look for a better CX. During the computation we might get
+-- mx as a multiple of m whereas we actually only need a mx/m-th root of unity.
+eqx: XHashTable(Q, LX) := table()
+for cusp in cusps repeat (_
+  w: P := WIDTH(nn, denom cusp);_
+  gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
+  seqg: SEQG := modularEtaQuotient(nn, r, mm, s, m, t, gamma, w)$SEQG;_
+  eqx.cusp := expansion seqg);
+meqx: MEQX := eqx :: MEQX
+
 --TODO: Find a "better" r-vector that makes
 -- sum(g for cusp in cusps | (g := qetaGrade(F,cusp))>0) is minimal.
+)fin
+
+-- v = p + x1*v1 + x2*v2 + x3*v3
+
+res := etaCoFactor(m, mm, nn, t, s)
+res.particular + 10 * res.basis.1 - 5* (res.basis.2 -res.basis.3)
+
+pp := (res.particular).(1..4)
+vv := pp - vector r
+mat := transpose matrix [x(1..4) for x in res.basis]
+VZ ==> Vector Z
+
+diophantineSystem(mat, vv)$SmithNormalForm(Z, VZ, VZ, MZ)
+
+------------
+
+nndivs := DIVISORS nn
+gamma := gammas.2
+w := width(nn, gamma(2,1))
+eq1 := etaQuotientOrbitProduct(mm, mmdivs, s, m, t, gamma, w)$SEQG
+eq2 := coEtaQuotient(nn, nndivs, r, gamma, w)$SEQG
+expansion eq1 * expansion eq2
+
+-- Consider the order of the the cofactor (without the (c\tau+d) factor)
+-- at each cusp in terms of q^(1/w) where w=width(nn,gamma(2,1)).
+yeq := [etaQuotient(nn, nndivs, r, gamma)$YEQG for gamma in gammas]
+vr := vector r
+yeq1 := [xExponent(y)$YEQG for y in yeq]
+
+-------------------------------------------------------------------
+
+yeqlg := [[(etaQuotient(mm, mmdivs, s, m, t, lambda, gamma)$YSEQLG) for lambda in 0..10] for gamma in gammas]
+yeqlg1 := [[width(nn, (gamma$YSEQLG)(y)(2,1)) * qExponent(y)$YSEQLG for y in yeql] for yeql in yeqlg]
+
+
+mats := [matrix [[1, lambda],[0,m]] * gamma for lambda in 0..10]
+smats := [splitMatrix(mat, 1) for mat in mats]
