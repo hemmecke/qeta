@@ -903,15 +903,22 @@ $\setH\to\setC$ so that
   (U_m\phi)(\tau) := \frac{1}{m}\sum_{\lambda=0}^{m-1}
   \phi\left(\frac{\tau+\lambda}{m}\right).
 \end{gather*}
-Let $f_t(\tau):=\unityPower{-t\tau}f(\tau)$, then
+Let
+\begin{gather*}
+  f_t(\tau)
+  :=\unityPower{-t\tau}f(\tau)
+  = \unityPower{-\frac{\tau (24 t + \sumdelta{s})}{24}} g_s(\tau),
+\end{gather*}
+then
 \begin{align*}
   (U_mf_t)(\tau)
   &=
-  \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)\\
+  \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)
+  \\
   &=
   \frac{1}{m} \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{t\tau+t\lambda}{m}}
-  \sum_{k=0}^\infty a(k) \unityPower{\frac{k\tau+n\lambda}{m}}
+  \sum_{k=0}^\infty a(k) \unityPower{\frac{k\tau+k\lambda}{m}}
   \\
   &=
   \frac{1}{m}
@@ -953,9 +960,14 @@ We can also evaluate $(U_mf_t)(\tau)$ in another way.
   &=
   \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)\\
   &=
-  \frac{1}{m} \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sumdelta{s}}
-  g_s\left(\frac{\tau+\lambda}{m}\right)\\
+    \frac{1}{m} \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{(\tau+\lambda) (24 t + \sumdelta{s})}{24 m}}
+    g_s\left(\frac{\tau+\lambda}{m}\right)
+  \\
+% &=
+% \frac{1}{m} \sum_{\lambda=0}^{m-1}
+% \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sumdelta{s}}
+% g_s\left(\frac{\tau+\lambda}{m}\right)\\
   &=
   \frac{1}{m}
   \unityPower{-\frac{\tau (24t+\sumdelta{s})}{24m}}
@@ -1306,6 +1318,16 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Lemma}
+  \label{thm:orbit-sum}
+  \cite[Lemma~43]{Radu:RamanujanKolberg:2015}
+  \begin{gather}
+      \sum_{t' \in P_{s,m,t}} (24 t'+ \sumdelta{s}) \equiv_m 0.
+    \label{eq:orbit-sum}
+  \end{gather}
+\end{Lemma}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}
   \label{thm:stable-P-s-m-t}
   \label{thm:chi-exponent}
   \cite[Lemma~43]{Radu:RamanujanKolberg:2015}
@@ -1428,13 +1450,67 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
 
 
 
+\begin{align*}
+  f(\tau)
+  &=
+  \sum_{n=0}^\infty a(n) q^n
+  =
+    \unityPower{-\frac{\tau \, \sumdelta{s}}{24}} g_s(\tau)
+  \\
+%
+  f_t(\tau)
+  &:=
+    \unityPower{-t\tau}f(\tau)
+    =
+    \unityPower{-\frac{\tau (24t+\sumdelta{s})}{24}} g_s(\tau)
+  \\
+%
+  (U_mf_t)(\tau)
+  &=
+    \sum_{n=0}^\infty a(mn+t) q^n
+  \\
+  &=
+  \frac{1}{m}
+  \unityPower{-\frac{\tau (24t+\sumdelta{s})}{24m}}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda (24t+\sumdelta{s})}{24m}}
+  \divisorprod{M}
+    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
+  \\
+  g_{s,m,t,\lambda}(\tau)
+  &=
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{s})}
+    \divisorprod{M}
+    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
+  \\
+%
+  g_{s,m,t}(\tau)
+  &=
+    \unityPower{\frac{\tau (24t+\sumdelta{s})}{24m} } (U_mf_t)(\tau)
+    =
+    \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\tau)
+  \\
+%
+  F_{r, s, m, t}(\tau)
+  &:=
+    \divisorprod{N} \eta(\delta \tau)^{r_\delta}
+    \prod_{t' \in P_{s,m,t}} \frac{1}{m}
+    \left(
+    \sum_{\lambda=0}^{m-1} g_{s,m,t',\lambda}(\tau)
+    \right)
+  \\
+  &:=
+    \divisorprod{N} \eta(\delta \tau)^{r_\delta}
+    \frac{1}{m^\mu}
+    \prod_{t' \in P_{s,m,t}}
+    \left(
+    \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m} (24t'+\sumdelta{s})}
+    \divisorprod{M} \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
+    \right)
+  \\
+\end{align*}
 
-For all $\lambda \in\Set{0,\ldots,m-1}$:
-\begin{gather*}
-  \mu \cdot \frac{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}{24}\\
-  \divisorsum{N} \frac{r_\delta e_\delta}{w_\gamma}
-  + \mu \cdot \frac{\divisorsum{M} s_\delta h_{\delta,m,\lambda}^2}{24 \delta m}\\
-\end{gather*}
 
 
 
