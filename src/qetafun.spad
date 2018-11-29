@@ -3171,6 +3171,7 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     xx ==> rep x
     YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
     SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
+    QFT ==> QFunctionTools(CX, LX)
 
     rationalPowerDenominator(x: %): P == xx.den
     expansion(x: %): LX == xx.ser
@@ -3178,11 +3179,7 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     coerce(x: %): OutputForm == xx::OutputForm
     ((x: %) = (y: %)): Boolean == rep x = rep y
 
-    -- auxiliary function dividedBy
-    divideBy(m: Z): RecX -> RecX == (x: RecX): RecX +->
-        [(x.k exquo m)::Z, x.c]$RecX
-    divideBy2(m: Z): RecX -> RecX == (x: RecX): RecX +->
-        [(x.k exquo m)::Z, (1/m)$Q::C::CX * x.c]$RecX
+    divideBy(m: Z): CX -> CX == (c: CX): CX +-> (1/m)$Q::C::CX * c
 
     -- exported function etaQuotient
     etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z, w: P): % ==
@@ -3191,13 +3188,17 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         for lambda in 0..m1 repeat
             seq: YSEQLG := etaQuotient(mm, divs, s, m, t, lambda, gamma)
             l := l + expansion etaQuotient(seq, w)$SEQLG
+        -- A transformation of an eta-quotient is a non-zero function.
+        -- Thus, it is safe to ask for the order of the series expansion.
+        ord: Z := order l
         -- After summation only the coefficients with exponents divisible
         -- by m should be non-zero. We make a sanity check.
         for i in 1..m1 repeat
-            if not zero? coefficient(l, i) then
+            if not zero? coefficient(l, ord+i) then
                 dbgPrint("expansion", l)
                 error "m-lambda sum"
-        per [24 * w, series(map(divideBy2 m, terms l))$LX]
+        ord := (ord exquo m) :: Z -- order of resulting series
+        per [24 * w, chooseAndMap(divideBy m, (n: Z): Z +-> m*n, l, ord)$QFT]
 
     etaQuotientOrbitProduct(mm: P, divs: LP, s: LZ,
                             m: P, t: N, gamma: SL2Z, w: P): % ==
@@ -3219,7 +3220,10 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         eq1: % := etaQuotientOrbitProduct(mm, mmdivs, s, m, t, gamma, w)
         eq2: % := coEtaQuotient(nn, nndivs, r, gamma, w)
         l: LX := expansion eq1 * expansion eq2
-        per [w, series(map(divideBy 24, terms l))$LX]
+        --assert(not zero? l)
+        ord: Z := (order(l) exquo 24) :: Z -- It's a modular function.
+        per [w, choose((n: Z): Z +-> 24*n, l, ord)$QFT]
+
 
 )if LiterateDoc
 \bibliography{qeta}
