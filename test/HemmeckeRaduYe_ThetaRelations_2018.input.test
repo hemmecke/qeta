@@ -1,4 +1,8 @@
-)clear completely
+--test:ThetaRelations
+-- This test refers to the computation done in
+-- an article of Hemmecke, Radu, and Ye:
+-- "The Generators of all Polynomial Relations among Jacobi Theta Functions"
+-- https://www3.risc.jku.at/publications/download/risc_5719/thetarelations.pdf
 N ==> NonNegativeInteger; Q ==> Fraction Integer
 D ==> HomogeneousDistributedMultivariatePolynomial([t2,t4], Q)
 F ==> Fraction D; R ==> UnivariatePolynomial('t3, F)
@@ -19,8 +23,17 @@ B := groebner(concat(U, [h1, h2]))
 G := [x for x in B | zero? reduce(_+, degree(x, vars(1..4)))]
 G := [(t2::K)^2*x for x in G]  -- make it denominator-free
 
+g1: P := t2^2 * T1^2 + t4^2 * T3^2 - t3^2 * T4^2
+g2: P := t2^2 * T2^2 - t3^2 * T3^2 + t4^2 * T4^2
+
+assertTrue(member?(g1, G))
+assertTrue(member?(g2, G))
+
 p: P := t3^2*T1^2 + t4^2*T2^2 - t2^2*T4^2
-normalForm(p, G)
+assertTrue(zero? normalForm(p, G))
 
 z := reduce(p, G)$ExtendedPolynomialReduction(K, E, P)
-z.mult * p ,  (z.poly + z.repr.1 * G.1 + z.repr.2 * G.2)
+assertTrue(zero?(z.poly))
+
+assertEquals(z.mult * p,  (z.poly + z.repr.1 * G.1 + z.repr.2 * G.2))
+--endtest
