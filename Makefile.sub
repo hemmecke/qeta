@@ -99,8 +99,8 @@ FRICAS=FRICAS_INITFILE='' fricas -nosman
 	echo ")compile $<" >> etacompile.input
 	grep '^)abbrev' $< \
         | sed -e 's/^.abbrev[ ]*domain[ \t]*[A-Z0-9]*[ \t]*/    --D /' \
-              -e 's/^.abbrev[ ]*category[ \t]*[A-Z0-9]*[ \t]*/    --C /' \
-              -e 's/^.abbrev[ ]*package[ \t]*[A-Z0-9]*[ \t]*/    --P /' \
+              -e 's/^.abbrev[ ]*category[ \t]*[A-Z0-9]*[ \t]*/  --C /' \
+              -e 's/^.abbrev[ ]*package[ \t]*[A-Z0-9]*[ \t]*/   --P /' \
 	>> etacompile.input
 	echo >> etacompile.input
 	echo "-- )compile $<" >> qetalibs.input
@@ -128,14 +128,13 @@ qetasomos.compile: qetadom.compile qetatool.compile
 qetakolberg.compile: qetaqmev.compile
 qetafun.compile: qetadom.compile qetaauxmeq.compile qetasqrt.compile qetapowersamba.compile
 
-compile-spad:
-	-rm etacompile.input ${patsubst %,%.compile, ${SPADFILES}}
+compile-spad: ${patsubst %,%.spad, ${SPADFILES}}
+	-rm qetalibs.input etacompile.input
+	-rm ${patsubst %,%.compile, ${SPADFILES}}
 	${MAKE} ${patsubst %,%.compile, ${SPADFILES}}
 	echo ')read etacompile.input' | ${FRICAS} | tee $@
 
-# Compilation of needed packages
-qetalibs.input etacompile.input: ${patsubst %, %.compile, ${SPADFILES}}
-
+###################################################################
 define COMPUTE_OUT_GENERIC
 	$(MKDIR_P) $$TARGET_DIR/log \
 	&& N=$* \

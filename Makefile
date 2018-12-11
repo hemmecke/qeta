@@ -45,26 +45,26 @@ PREREQS=${patsubst %,tmp/%,Makefile ${PREREQS_INPUT} ${PREREQS_SAGE} ${PREREQS_S
 
 prerequisites: ${PREREQS}
 
-allall compile-spad eqmev eqig elig er checksomos runfricassomos \
+allall recompile-spad compile-spad eqmev eqig elig er checksomos runfricassomos \
 seg slg ceg clg clean distclean:
 	${MAKE} prerequisites
 	cd tmp && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@
 
 tmp/Makefile: Makefile.sub
 	${MKDIR_P} tmp
-	cp $< $@
+	cp -a $< $@
 tmp/qeta.tex tmp/qeta.bib tmp/qeta.sty: tmp/qeta.%: qeta.%
 	${MKDIR_P} tmp
-	cp $< $@
+	cp -a $< $@
 ${patsubst %,tmp/%,${PREREQS_INPUT}}: tmp/%: input/%
 	${MKDIR_P} tmp
-	cp $< $@
+	cp -a $< $@
 ${patsubst %,tmp/%,${PREREQS_SAGE}}: tmp/%: sagemath/%
 	${MKDIR_P} tmp
-	cp $< $@
+	cp -a $< $@
 ${patsubst %,tmp/%,${PREREQS_SPAD}}: tmp/%: src/%
 	${MKDIR_P} tmp
-	cp $< $@
+	cp -a $< $@
 
 ###################################################################
 # documentation
