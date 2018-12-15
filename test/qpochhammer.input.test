@@ -1,0 +1,79 @@
+--setup
+R ==> UnivariatePolynomial('a, Z)
+K ==> Fraction R
+L ==> UnivariateLaurentSeries(K,'q, 0)
+k: K := monomial(1,1)$R :: K
+z: L := monomial(1,1)$L
+QP ==> qPochhammer$QFunctions(K, L)
+QPn(a, n) ==> inv QP(a, -n, 1, n)
+-- We truncate at a sufficiently big index.
+aeq(order, k, r, s, n, x) ==> assertEquals(_
+    rationalFunction(QP(k,r, s, n), order),_
+    rationalFunction(x, order))
+--endsetup
+
+--test:q-2
+n: N := 2
+qp: L := QPn(a, n) -- logically Pochhammer symbol (a, q)_{-n}
+cl: List K := [coefficient(qp, i) for i in 0..12]
+z: L := monomial(1, 1)$L
+l: L := inv((1-k/z)*(1-k/z^2))
+cr: List K := [coefficient(l, i) for i in 0..12]
+assertEquals(cl, cr)
+cr: List K := [0, 0, 0, 1/k^2, 1/k^3, _
+  1/k^3 + 1/k^4, _
+  1/k^4 + 1/k^5, _
+  1/k^4 + 1/k^5 + 1/k^6, _
+  1/k^5 + 1/k^6 + 1/k^7, _
+  1/k^5 + 1/k^6 + 1/k^7 + 1/k^8, _
+  1/k^6 + 1/k^7 + 1/k^8 + 1/k^9, _
+  1/k^6 + 1/k^7 + 1/k^8 + 1/k^9 + 1/k^10, _
+  1/k^7 + 1/k^8 + 1/k^9 + 1/k^10 + 1/k^11]
+assertEquals(cl, cr)
+--endtest
+
+--test:q-3
+n: N := 3
+qp: L := QPn(a, n) -- logically Pochhammer symbol (a, q)_{-n}
+cl: List K := [coefficient(qp, i) for i in 0..12]
+z: L := monomial(1, 1)$L
+l: L := inv((1-k/z)*(1-k/z^2)*(1-k/z^3))
+cr: List K := [coefficient(l, i) for i in 0..12]
+assertEquals(cl, cr)
+cr: List K := [0, 0, 0, 0, 0, 0, _
+  -1/k^3, _
+  -1/k^4, _
+  -(k+1)/k^5, _
+  -(k^2+k+1)/k^6, _
+  -(2*k^2+k+1)/k^7, _
+  -(k^3+2*k^2+k+1)/k^8, _
+  -(k^4+2*k^3+2*k^2+k+1)/k^9]
+assertEquals(cl, cr)
+--endtest
+
+--test:aq
+-- infinite qPochhammer
+qp: L := QP(a, 0, 1)
+cl: List K := [coefficient(qp, i) for i in 0..12]
+cr: List K := [1-k, _
+  -k*(1-k), _
+  -k*(1-k), _
+  -k*(1-k)^2, _
+  -k*(1-k)^2, _
+  -k + 3*k^2 - 2*k^3, _
+  -k + 3*k^2 - 3*k^3 + k^4, _
+  -k + 4*k^2 - 4*k^3 + k^4, _
+  -k + 4*k^2 - 5*k^3 + 2*k^4, _
+  -k + 5*k^2 - 7*k^3 + 3*k^4, _
+  -k + 5*k^2 - 8*k^3 + 5*k^4 - k^5, _
+  -k + 6*k^2 - 10*k^3 + 6*k^4 - k^5, _
+  -k + 6*k^2 - 12*k^3 + 9*k^4 - 2*k^5]
+assertEquals(cl, cr)
+--endtest
+
+--test:qq
+qp: L := QP(1, 1, 1)
+cl: List K := [coefficient(qp, i) for i in 0..12]
+cr: List K := [1, -1, -1,  0, 0, 1, 0, 1, 0, 0, 0, 0, -1]
+assertEquals(cl, cr)
+--endtest

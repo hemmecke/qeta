@@ -1,0 +1,137 @@
+--setup
+R ==> UnivariatePolynomial('a, Z)
+K ==> Fraction R
+L ==> UnivariateLaurentSeries(K,'q, 0)
+k: K := monomial(1,1)$R :: K
+QP ==> qPochhammer$QFunctions(K, L)
+
+-- We truncate at a sufficiently big index.
+-- qp computes
+--   prod(1-c*q^r*(q^s)^i, i=0..n-1)    if n>=0
+--   1/prod(1-c*q^r*(q^(-s)^i, i=1..-n) if n<0
+-- That's the naive definition of the q-Pochhammer symbol for the finite
+-- case as defined, for example, here:
+-- http://mathworld.wolfram.com/q-PochhammerSymbol.html
+qp(c: K, r: Z, s: Z, n: Z): L == (_
+    l: L := 1$L;_
+    a: K := -c;_
+    zero? n => l;_
+    n > 0 => (_
+        for i in 0..n-1 repeat l := l * (1 + monomial(a, r+s*i));_
+        return l_
+    );_
+    for i in 1..(-n) repeat l := l * (1 + monomial(a, r-s*i));
+    return inv l);
+
+O ==> OutputForm
+SKIP(r,s,n) ==> print(["====skip":: O, 1::O, [r, s ,n]::O]::O);_
+
+-- Here we check whether the naive multiplication method to compute
+-- (c*q^r, q^s)_n agrees with the one computed via qPochhammer$QFunctions(K, L).
+aeqn(c, r, s, n) ==> (_
+    print(["========":: O, c::O, [r, s ,n]::O]::O);_
+    ll: L := QP(c, r, s, n); print(["comp"::O, ll::O]::O);_
+    lr: L := qp(c, r, s, n); print(["expt"::O, lr::O]::O);_
+    assertEquals(_
+        rationalFunction(ll, 15),_
+        rationalFunction(lr, 15)));
+
+-- Here we check the case n=infinity. We do this by computing the product
+-- for n=20 and then check only the terms up to degree 14.
+aeq(c, r, s) ==> (_
+    print(["::::::::":: O, c::O, [r, s]::O]::O);_
+    ll: L := QP(c, r, s);     print(["comp"::O, ll::O]::O);_
+    lr: L := qp(c, r, s, 20); print(["expt"::O, lr::O]::O);_
+    assertEquals(_
+        rationalFunction(ll, 14),_
+        rationalFunction(lr, 14)));
+
+-- Check finite case for a="the indeterminate of the coefficient ring".
+-- Check finite case for a=1, but note that this can be a problem
+-- for certain r and s if n<0.
+checknc(r, s, n) ==> (_
+    aeqn(k, r, s, n);_
+    n < 0 => (_
+        rr: Z := r+s*n;_
+        zero? rr => SKIP(r, s, n);_
+        zero? s => aeqn(1, r, s, n);_
+        j: Z := (-rr) quo s;_
+        zero?(rr+s*j) and j>=0 and j+n < 0 => SKIP(r, s, n);_
+        aeqn(1, r, s, n));_
+    aeqn(1, r, s, n));
+
+-- Check finite cases for different n.
+checkn(r, s) ==> for n in 0..3 repeat checknc(r, s, n)
+
+-- Check infinite case and all combinations of finite cases for the
+-- first few n.
+check(r, s) ==> (           checkn( r,  s);_
+    if s > 0 then           checkn( r, -s);_
+    if r > 0 then           checkn(-r,  s);_
+    if r > 0 and s > 0 then checkn(-r, -s);_
+    if s > 0 then (aeq(k, r, s); aeq(1, r, s)))
+--endsetup
+
+--test:q00
+check(0, 0)
+--endtest
+
+--test:q01
+check(0, 1)
+--endtest
+
+--test:q02
+check(0, 2)
+--endtest
+
+--test:q03
+check(0, 3)
+--endtest
+
+--test:q10
+check(1, 0)
+--endtest
+
+--test:q11
+check(1, 1)
+--endtest
+
+--test:q12
+check(1, 2)
+--endtest
+
+--test:q13
+check(1, 3)
+--endtest
+
+--test:q20
+check(2, 0)
+--endtest
+
+--test:q21
+check(2, 1)
+--endtest
+
+--test:q22
+check(2, 2)
+--endtest
+
+--test:q23
+check(2, 3)
+--endtest
+
+--test:q30
+check(3, 0)
+--endtest
+
+--test:q31
+check(3, 1)
+--endtest
+
+--test:q32
+check(3, 2)
+--endtest
+
+--test:q33
+check(3, 3)
+--endtest
