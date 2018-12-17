@@ -92,6 +92,10 @@ VZ ==> Vector Z
 MZ ==> Matrix Z
 Rec ==> Record(red: SL2Z, lg: N)
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
+LP ==> List P
+LZ ==> List Z
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetafun.spad.
@@ -105,6 +109,16 @@ EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 )abbrev package QETAKOL QEtaKolberg
 QEtaKolberg: Exports == Implementation where
   Exports ==> with
+    modularInputConditions?: (P, P, LZ, P, N) -> Boolean
+      ++ modularInputConditions(nn, mm, s, m, t) returns true iff all
+      ++ the conditions for the parameters are fulfilled.
+      ++ This checks whether (nn, mm, s, m, t) is in \Delta^* as
+      ++ defined in Definition~\ref{def:modular-input-conditions}.
+    modularConditions?: (P, P, LZ, LZ, P, N) -> Boolean
+      ++ modularConditions(nn, mm, r, s, m, t) returns true iff all
+      ++ the conditions of Theorem~\ref{thm:RaduConditions} are
+      ++ fulfilled.
+      ++ Compare with rStarConditions from QAuxiliaryModularEtaQuotientPackage.
     orbitRadu: (Z, P, N) -> List N
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
@@ -149,6 +163,8 @@ QEtaKolberg: Exports == Implementation where
 )endif
 
   Implementation ==> add
+    fUnion ==> Union("nil", "sqfr", "irred", "prime")
+    FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
 
     -- auxiliary (local) functions
 
@@ -170,6 +186,32 @@ QEtaKolberg: Exports == Implementation where
         x: Z := d
         while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
         return e
+
+    -- Return true iff \eqref{eq:Radu-productsquare} holds.
+    checkSquare?(nn: P, mm: P, r: LZ, s: LZ, m: P, orbitSize: Z): Boolean ==
+        nndivs: LP := DIVISORS nn
+        mmdivs: LP := DIVISORS mm
+        fl: FL := factorList factor nn
+        -- By \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}, it is
+        -- enough to consider all prime divisors of N.
+        for fe in fl repeat -- do for all primes dividing nn
+            p: P := qcoerce(fe.factor)@P -- extract prime factor
+            -- Determine whether an even power of p divides
+            -- \prod_{\delta|N}\delta^rdelta.
+            e1: Z := 0
+            for delta in rest nndivs for rdelta in rest r|odd? rdelta repeat
+                e1 := e1 + primePower(delta, p)
+            e2: Z := 0
+            if odd? orbitSize then
+                -- check 2nd prod in eq:Radu-productsquare
+                em: N := primePower(m, p)
+                -- for all divisors of mm > 1
+                if odd? first s then e2 := em -- case: delta=1
+                for d in rest mmdivs for sdelta in rest s | odd? sdelta repeat
+                    -- mod 2, only odd sdelta is relevant.
+                    e2 := e2 + em + primePower(d, p)
+            if odd?(e1 + e2) then return false
+        return true
 
     -- exported functions
 
@@ -246,7 +288,7 @@ QEtaKolberg: Exports == Implementation where
         v.2 := - nu - orbitSize * m * sigmaInfty -- \ref{eq:Radu-sigmainfinity}
         x: Z := orbitSize * m * nn * sigma0
         v.3 := - ((x exquo mm)::Z)               -- \ref{eq:Radu-sigma0}
-        fl: List Record(factor: Z, exponent: N) := factors factor nn
+        fl: FL := factorList factor nn
         -- Determine the cofactor according to (37) of
         -- \cite{Radu:RamanujanKolberg:2015} for each prime separately.
         -- Or see \ref{eq:Radu-productsquare} in qetafun.spad.
@@ -260,11 +302,159 @@ QEtaKolberg: Exports == Implementation where
                 e: Z := if odd? first s then em else 0 -- case: delta=1
                 for j in 2..n for sdelta in rest s | odd? sdelta repeat
                     -- Mod 2 only odd sdelta is relevant.
-                    e := em + primePower(qcoerce(d.j)@P, p)
-                qsetelt!(v, i+3, e)
+                    e := e + em + primePower(qcoerce(d.j)@P, p)
+                qsetelt!(v, i+3, positiveRemainder(e, 2))
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
         diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+
+    modularInputConditions?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
+        import from FL
+        DIVISIBLEBY?(k, z) ==> zero? positiveRemainder(z, k)
+
+        t<0 or t>=m => false
+
+        --\eqref{eq:p|m=>p|N}
+        fm: Factored Z := factor m
+        mfl: FL := factorList fm
+        nnprimes := [f.factor for f in factorList factor nn]
+        for f in mfl repeat
+            not member?(f.factor, nnprimes) =>
+                dbgPrint("eq:p|m=>p|N mfl", mfl)
+                dbgPrint("eq:p|m=>p|N nnprimes", nnprimes)
+                return false
+
+        --\eqref{eq:delta|M=>delta|mN}
+        mmdivs: LP := DIVISORS mm
+        #mmdivs ~= #s =>
+            dbgPrint("size of s: mmdivs", mmdivs)
+            dbgPrint("size of s: s", s)
+            false
+
+        divs: LP := DIVISORS(m*nn)
+        for delta in mmdivs for sdelta in s | not zero? sdelta repeat
+            not member?(delta, divs) =>
+                dbgPrint("eq:delta|M=>delta|mN", mmdivs)
+                dbgPrint("eq:delta|M=>delta|mN", divs)
+                return false
+
+        --\eqref{eq:sv24}
+        sv: Z := 0
+        for mmdelta in reverse mmdivs for sdelta in s | not zero? sdelta repeat
+            sv := mmdelta * sdelta
+
+        kappam: Z := kappa m -- gcd(m*m - 1, 24)
+        x: Z := kappam*m*nn*nn*sv
+        not DIVISIBLEBY?(24, (x exquo mm) :: Z) =>
+            dbgPrint("eq:sv24 s", s)
+            dbgPrint("eq:sv24 mmdivs", mmdivs)
+            dbgPrint("eq:sv24 sv", sv)
+            dbgPrint("eq:sv24 kappa", kappam)
+            dbgPrint("eq:sv24 x", x exquo mm)
+            return false
+
+        --\eqref{eq:sum-s}
+        ssum: Z := 0
+        for sdelta in s repeat ssum := ssum + sdelta
+        not zero? positiveRemainder(kappam*nn*ssum, 8) =>
+            dbgPrint("eq:sum-s ssum", ssum)
+            dbgPrint("eq:sum-s kappa", kappam)
+            dbgPrint("eq:sum-s nn", nn)
+            return false
+
+        --\eqref{eq:w|N}
+        shat: Z := 0 -- sigmaInfty
+        for delta in divs for sdelta in s repeat shat := shat + delta * sdelta
+        w: Z := ((24*m) exquo gcd(kappam*(24*t + shat), 24*m)) :: Z
+        not zero? positiveRemainder(nn, w) =>
+            dbgPrint("eq:w|N nn", nn)
+            dbgPrint("eq:w|N w", w)
+            dbgPrint("eq:w|N shat", shat)
+            return false
+
+        --\eqref{eq:even-m}
+        odd? m => true
+        u: Z := 1
+        for delta in mmdivs for sdelta in s | not zero? sdelta repeat
+            adelta: P := qcoerce(abs(sdelta))@P
+            u := u * delta^adelta
+        e: Z := 0
+        while even? u repeat
+            e := e + 1
+            u := shift(u, -1)
+
+        b1: Boolean := DIVISIBLEBY?(4, kappam*nn) and DIVISIBLEBY?(8, nn*e)
+        b2: Boolean := even? e and DIVISIBLEBY?(8, nn*(u-1))
+        if not (b1 or b2) then
+            dbgPrint("eq:even-m m", m)
+            dbgPrint("eq:even-m kappa", kappam)
+            dbgPrint("eq:even-m nn", nn)
+            dbgPrint("eq:even-m e", e)
+            dbgPrint("eq:even-m e", u)
+        return (b1 or b2)
+
+    modularConditions?(nn: P, mm: P, r: LZ, s: LZ, m: P, t: N): Boolean ==
+        not modularInputConditions?(nn, mm, s, m, t) => false
+
+        nndivs: LP := DIVISORS nn
+        #nndivs ~= #r =>
+            dbgPrint("size of r: nndivs", nndivs)
+            dbgPrint("size of r: r", r)
+            false
+
+        mmdivs: LP := DIVISORS mm
+        shat: Z := 0 -- sigmaInfty
+        for delta in mmdivs for sdelta in s repeat shat := shat + delta * sdelta
+        orb: List N := orbit(shat, m, t)
+        orbitSize: Z := # orb
+
+        --\eqref{eq:Radu-sum=0}
+        not zero?(reduce(_+, r, 0) + orbitSize * reduce(_+, s, 0)) =>
+            dbgPrint("eq:Radu-sum=0 r", r)
+            dbgPrint("eq:Radu-sum=0 s", s)
+            dbgPrint("eq:Radu-sum=0 orbitSize", orbitSize)
+            false
+
+        --\eqref{eq:Radu-sigmainfinity}
+        rhat: Z := 0
+        for delta in nndivs for rdelta in r repeat rhat := rhat + delta * rdelta
+        nu: Z := chiExponent(shat, m, orb)
+        z: Z := rhat + orbitSize * m * shat + nu
+        not zero? positiveRemainder(z, 24) =>
+            dbgPrint("eq:Radu-sigmainfinity nndivs", nndivs)
+            dbgPrint("eq:Radu-sigmainfinity r", r)
+            dbgPrint("eq:Radu-sigmainfinity mmdivs", mmdivs)
+            dbgPrint("eq:Radu-sigmainfinity s", s)
+            dbgPrint("eq:Radu-sigmainfinity orbitSize", orbitSize)
+            dbgPrint("eq:Radu-sigmainfinity nu", nu)
+            false
+
+        --\eqref{eq:Radu-sigma0}
+        rv: Z := 0
+        for delta in reverse nndivs for rdelta in r repeat
+            rv := rv + delta * rdelta
+        sv: Z := 0
+        for delta in reverse mmdivs for sdelta in s repeat
+            sv := sv + delta * sdelta
+        f: Z := ((m * nn) exquo mm)::Z -- modularInputConditions \implies f \in Z
+        not zero? positiveRemainder(rv + orbitSize * f * sv, 24) =>
+            dbgPrint("eq:Radu-sigma0 nndivs", nndivs)
+            dbgPrint("eq:Radu-sigma0 r", r)
+            dbgPrint("eq:Radu-sigma0 mmdivs", mmdivs)
+            dbgPrint("eq:Radu-sigma0 s", s)
+            dbgPrint("eq:Radu-sigma0 orbitSize", orbitSize)
+            false
+
+        --\eqref{eq:Radu-productsquare}
+        not checkSquare?(nn, mm, r, s, m, orbitSize) =>
+            dbgPrint("eq:Radu-productsquare nn", nn)
+            dbgPrint("eq:Radu-productsquare mm", mm)
+            dbgPrint("eq:Radu-productsquare r", r)
+            dbgPrint("eq:Radu-productsquare s", s)
+            dbgPrint("eq:Radu-productsquare orbitSize", orbitSize)
+            false
+
+        true
 
 )if TODO
      splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==

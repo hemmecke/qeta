@@ -1215,8 +1215,9 @@ for the transformation of $g_{s,m,t}$ under $SL_2(\setZ)$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\cite[Def.~35]{Radu:RamanujanKolberg:2015}
-  Let $\Delta^*$ be the set of all tuples $(m, M, N, t, s)$ such that
-  $m, M, N \in \setN\setminus\Set{0}$,
+  \label{def:modular-input-condition}
+  Let $\Delta^*$ be the set of all tuples $(N, M, s, m, t)$ such that
+  $N, M, m \in \setN\setminus\Set{0}$,
   %
   $t \in \Set{0,\ldots,m-1}$,
   %
@@ -1355,8 +1356,10 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Theorem}\cite[Thm.~45]{Radu:RamanujanKolberg:2015}
   \label{thm:RaduConditions}
-  Let $(m, M, N, t, s) \in \Delta^*$, $r\in R(N)$, $\nu$ and $\mu$ be
-  integers such that $\chi_{s,m,t}=\unityPower{\frac{\nu}{24}}$, and
+  Let $(N, M, s, m, t) \in \Delta^*$ according to
+  Definition~\ref{def:modular-input-condition}, $r\in R(N)$, $\nu$ and
+  $\mu$ be integers such that
+  $\chi_{s,m,t}=\unityPower{\frac{\nu}{24}}$, and
   $\mu=\sizeOfSet{P_{s,m,t}}$, then $F_{r,s,m,t}(\tau)$ is a modular
   function on $\Gamma_0(N)$ iff the following conditions hold:
   \begin{align}
@@ -1381,7 +1384,7 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
 \end{Theorem}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Let $m, M, N, t, r, s, \nu, \mu$ fulfil all the conditions of
+Let $N, M, r, s, m, t, \nu, \mu$ fulfil all the conditions of
 Theorem~\ref{thm:RaduConditions}. Then the exponent of the factor
 $c\tau+d$ is zero, \ie, this factor vanishes.
 
@@ -1966,7 +1969,7 @@ QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
-)if LiterateDocu
+)if LiterateDoc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SymbolicEtaDeltaGamma}
@@ -2552,109 +2555,6 @@ ModularEtaQuotientExpansions(C, L, m): Exports == Implementation where
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{ModularSiftedEtaQuotientCondition}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Check conditions of Definition~35 of \cite{Radu:RamanujanKolberg:2015}.
-
-)endif
-
-)abbrev package MSEQC ModularSiftedEtaQuotientCondition
-ModularSiftedEtaQuotientCondition: with
-    modularInputConditions: (P, P, LZ, P, N) -> Boolean
-      ++ modularInputConditions(nn, mm, s, m, t) returns true if all
-      ++ the conditions for the parameters are fulfilled.
-      ++ This is important for the computation of the "modular" cofactor.
-  == add
-    fUnion ==> Union("nil", "sqfr", "irred", "prime")
-    FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
-
-    modularInputConditions(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
-        import from FL
-        DIVISIBLEBY?(k, z) ==> zero? positiveRemainder(z, k)
-
-        --\eqref{eq:p|m=>p|N}
-        fm: Factored Z := factor m
-        mfl: FL := factorList fm
-        nnprimes := [f.factor for f in factorList factor nn]
-        for f in mfl repeat
-            not member?(f.factor, nnprimes) =>
-                dbgPrint("eq:p|m=>p|N mfl", mfl)
-                dbgPrint("eq:p|m=>p|N nnprimes", nnprimes)
-                return false
-
-        --\eqref{eq:delta|M=>delta|mN}
-        mmdivs: LP := DIVISORS mm
-        divs: LP := DIVISORS(m*nn)
-        for delta in mmdivs for sdelta in s | not zero? sdelta repeat
-            not member?(delta, divs) =>
-                dbgPrint("eq:delta|M=>delta|mN", mmdivs)
-                dbgPrint("eq:delta|M=>delta|mN", divs)
-                return false
-
-        --\eqref{eq:sv24}
-        sv: Z := 0
-        for mmdelta in reverse mmdivs for sdelta in s | not zero? sdelta repeat
-            sv := mmdelta * sdelta
-
-        kappa: Z := gcd(m*m - 1, 24)
-        x: Z := kappa*m*nn*nn*sv
-        not DIVISIBLEBY?(24, (x exquo mm) :: Z) =>
-            dbgPrint("eq:sv24 s", s)
-            dbgPrint("eq:sv24 mmdivs", mmdivs)
-            dbgPrint("eq:sv24 sv", sv)
-            dbgPrint("eq:sv24 kappa", kappa)
-            dbgPrint("eq:sv24 x", x exquo mm)
-            return false
-
-        --\eqref{eq:sum-s}
-        ssum: Z := 0
-        for sdelta in s repeat ssum := ssum + sdelta
-        not zero? positiveRemainder(kappa*nn*ssum, 8) =>
-            dbgPrint("eq:sum-s ssum", ssum)
-            dbgPrint("eq:sum-s kappa", kappa)
-            dbgPrint("eq:sum-s nn", nn)
-            return false
-
-        --\eqref{eq:w|N}\\
-        shat: Z := 0 -- sigmaInfty
-        for delta in divs for sdelta in s repeat shat := shat + delta * sdelta
-        w: Z := ((24*m) exquo gcd(kappa*(24*t + shat), 24*m)) :: Z
-        not zero? positiveRemainder(nn, w) =>
-            dbgPrint("eq:w|N nn", nn)
-            dbgPrint("eq:w|N w", w)
-            dbgPrint("eq:w|N shat", shat)
-            return false
-
-        --\eqref{eq:even-m}
-        odd? m => true
-        u: Z := 1
-        for delta in mmdivs for sdelta in s | not zero? sdelta repeat
-            adelta: P := qcoerce(abs(sdelta))@P
-            u := u * delta^adelta
-        e: Z := 0
-        while even? u repeat
-            e := e + 1
-            u := shift(u, -1)
-
-        b1: Boolean := DIVISIBLEBY?(4, kappa*nn) and DIVISIBLEBY?(8, nn*e)
-        b2: Boolean := even? e and DIVISIBLEBY?(8, nn*(u-1))
-        if not (b1 or b2) then
-            dbgPrint("eq:even-m m", m)
-            dbgPrint("eq:even-m kappa", kappa)
-            dbgPrint("eq:even-m nn", nn)
-            dbgPrint("eq:even-m e", e)
-            dbgPrint("eq:even-m e", u)
-        return (b1 or b2)
-
-
-
-
-
-
-)if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SymbolicSiftedEtaDeltaLambdaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3150,8 +3050,8 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   Exports ==> CoercibleTo OutputForm with
     etaQuotient: (P, LP, LZ, P, N, SL2Z, P) -> %
       ++ etaQuotient(mm, divs, s, m, t, gamma, w) represents the
-      ++ z-expansion of g_{s,m,t}(\gamma\tau) at
-      ++ \tau=i\infity where z = q^(1/24w).
+      ++ z-expansion of g_{s,m,t}(\gamma\tau) at \tau=i\infity
+      ++ where z = q^(1/(24*w)).
     etaQuotientOrbitProduct: (P, LP, LZ, P, N, SL2Z, P) -> %
       ++ etaQuotientOrbitProduct(mm, divs, s, m, t, gamma, w)
       ++ returns the product over all
@@ -3159,7 +3059,12 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
       ++ orbit(sigmaInfty, m, t) where
       ++ $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
     coEtaQuotient: (P, LP, LZ, SL2Z, P) -> %
-      ++ compute the expansion of the "modular" cofactor.
+      ++ TODO: This function should not be exported.
+      ++ coEtaQuotient(nn, divs, r, gamma, w) computes
+      ++ etaQuotient(nn, divs, r, 1, 0, gamma, w) where divs=divisors(nn)
+      ++ and r must match thm:RaduConditions.
+      ++ It compute the expansion of the "modular" cofactor needed in
+      ++ modularEtaQuotient.
     modularEtaQuotient: (P, LZ, P, LZ, P, N, SL2Z, P) -> %
     rationalPowerDenominator: % -> P
     expansion: % -> LX
@@ -3215,6 +3120,8 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 
     modularEtaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N,
                        gamma: SL2Z, w: P): % ==
+        not modularConditions?(nn, mm, r, s, m, t)$QEtaKolberg =>
+            error "modular conditions are not fulfilled"
         nndivs: LP := DIVISORS nn
         mmdivs: LP := DIVISORS mm
         eq1: % := etaQuotientOrbitProduct(mm, mmdivs, s, m, t, gamma, w)
