@@ -1,0 +1,108 @@
+-- This is like test/qetafun11.input.test, but for m=7,t=5,mm=5,nn=14
+
+--setup
+B ==> Boolean
+S ==> Symbol;
+MZ ==> Matrix Z -- consider only 2x2 matricies
+SL2Z ==> MZ -- matrices with determinant = 1
+
+EZ ==> Expression Z;
+expr x ==> x :: S :: EZ;
+
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+
+C ==> Q
+
+PZ ==> SparseUnivariatePolynomial Z;
+PQ ==> SparseUnivariatePolynomial Q;
+PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, Z, PZ, PQ);
+CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
+LX ==> UnivariateLaurentSeries(CX, xsym, 0);
+QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
+YEDG ==> SymbolicEtaDeltaGamma;
+YEQG ==> SymbolicEtaQuotientGamma;
+ETAQG ==> EtaQuotientGamma(C, mx, CX, xi, LX);
+METAQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
+METAQX ==> ModularEtaQuotientExpansions(CX, LX, nn);
+-------------------------------------------------------------------
+QETAKOL ==> QEtaKolberg
+YSEDLG ==> SymbolicSiftedEtaDeltaLambdaGamma
+YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
+SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
+SEQG ==> SiftedEtaQuotientGamma(C, mx, CX, xi, LX)
+-------------------------------------------------------------------
+WIDTH(nn, c) == qcoerce(width(nn, c))@P
+xsym: Symbol := "x"::Symbol;
+--endsetup
+
+--test:Ramanujan
+nn: P := 14; r: List Z := [8,0,-7,0]
+mm: P := 7; s: List Z := [-1, 0]
+mmdivs: List P := DIVISORS mm
+m: P := 7; t: N := 5;
+
+--TODO:
+-- c := etaCoFactor(m, mm, nn, t, s)$QEtaKolberg
+-- vector r - (c.particular - 20*c.basis.3)(1..4) -- [0,0,1,0]
+-- vector r = (c.particular + 2*c.basis.2 - 22*c.basis.3)(1..4) -- [8,0,-7,0]
+
+assertTrue(modularInputConditions?(nn,mm,s,m,t)$QETAKOL)
+
+cusps := cuspsOfGamma0 nn
+gammas := [cuspToMatrix(nn, cusp)$QAuxMEQ for cusp in cusps]
+assertEquals([gamma(1,1)/gamma(2,1) for gamma in gammas], cusps)
+
+widths := [WIDTH(nn, gamma(2,1)) for gamma in gammas]
+assertEquals(widths, reverse DIVISORS nn)
+
+-- Determine the what biggest root of unity we need for the coefficient domain.
+yel := [[etaQuotient(m, mmdivs, s, m, t, lambda::N, gamma)$YSEQLG _
+         for lambda in 0..m-1] for gamma in gammas];
+mx: P := lcm [lcm [minRootOfUnity y for y in ye] for ye in yel]
+assertEquals(mx, 168)
+
+-- Create the actual coefficient domain (working for each cusp).
+pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage;
+pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL;
+xi := generator()$CX
+
+-- Compute sigmaInfinity = \hat{s} for the incoming eta-quotient that
+-- represents the series that we want to express in other eta quotients.
+shat: Z := 0 -- sigmaInfty
+for delta in mmdivs for sdelta in s repeat shat := shat + delta * sdelta
+assertEquals(shat, -1)
+
+-- What's the orbit for (m,t)-sifted sequences given by the s-eta-quotient.
+orb: List N := orbit(shat, m, t)
+assertEquals(orb, [5])
+
+-- Compute the expansion of the (m,t)-sifted s-eta-quotient that has been
+-- multiplied by an r-eta-quotient that makes the product into a modular
+-- function for Gamma0(nn).
+--[[gamma(1,1)/gamma(2,1), _
+--  modularEtaQuotient(nn, r, mm, s, m, t, gamma, WIDTH(nn, gamma(2,1)))$SEQG] _
+--    for gamma in gammas]
+
+-- Turn the separate expansions at the cusps into a vector (METAQX).
+--TODO: Look for a better CX. During the computation we might get
+-- mx as a multiple of m whereas we actually only need a mx/m-th root of unity.
+eqx: XHashTable(Q, LX) := table()
+for cusp in cusps repeat (_
+  w: P := WIDTH(nn, denom cusp);_
+  gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
+  seqg: SEQG := modularEtaQuotient(nn, r, mm, s, m, t, gamma, w)$SEQG;_
+  eqx.cusp := expansion seqg);
+meqx: METAQX := eqx :: METAQX
+
+eqx: XHashTable(Q, LX) := table()
+for cusp in cusps repeat (_
+  w: P := WIDTH(nn, denom cusp);_
+  gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
+  seqg: SEQG := modularEtaQuotient(nn,[0,0,0,0],mm,[4,-4],1,0,gamma,w)$SEQG;_
+  eqx.cusp := expansion seqg);
+meqxr: METAQX := eqx :: METAQX
+seven: METAQX := 7*1$METAQX
+rhs: METAQX := (-7)*(meqxr+seven)
+assertTrue zero?(meqx + rhs)
+--endtest
