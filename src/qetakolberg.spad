@@ -94,6 +94,8 @@ Rec ==> Record(red: SL2Z, lg: N)
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 LP ==> List P
 LZ ==> List Z
+QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
+
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
@@ -180,13 +182,6 @@ QEtaKolberg: Exports == Implementation where
         z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
         qcoerce(z)@N
 
-    -- primePower(d, p) returns e such that gcd(d/p^e, p)=1.
-    primePower(d: P, p: P): N ==
-        e: N := 0;
-        x: Z := d
-        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
-        return e
-
     -- Return true iff \eqref{eq:Radu-productsquare} holds.
     checkSquare?(nn: P, mm: P, r: LZ, s: LZ, m: P, orbitSize: Z): Boolean ==
         nndivs: LP := DIVISORS nn
@@ -200,7 +195,7 @@ QEtaKolberg: Exports == Implementation where
             -- \prod_{\delta|N}\delta^rdelta.
             e1: Z := 0
             for delta in rest nndivs for rdelta in rest r|odd? rdelta repeat
-                e1 := e1 + primePower(delta, p)
+                e1 := e1 + primePower(delta, p)$QAuxMEQ
             e2: Z := 0
             if odd? orbitSize then
                 -- check 2nd prod in eq:Radu-productsquare
@@ -297,12 +292,12 @@ QEtaKolberg: Exports == Implementation where
         else
             for i in 1..#fl for fe in fl repeat
                 p: P := qcoerce(fe.factor)@P -- extract prime factor
-                em: N := primePower(m, p)
+                em: N := primePower(m, p)$QAuxMEQ
                 -- for all divisors of mm > 1
                 e: Z := if odd? first s then em else 0 -- case: delta=1
                 for j in 2..n for sdelta in rest s | odd? sdelta repeat
                     -- Mod 2 only odd sdelta is relevant.
-                    e := e + em + primePower(qcoerce(d.j)@P, p)
+                    e := e + em + primePower(qcoerce(d.j)@P, p)$QAuxMEQ
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.

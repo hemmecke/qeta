@@ -57,9 +57,22 @@ modular functions for $\Gamma_0(N)$ and $K^\infty(N)$ the set of
 modular functions have a (multiple) pole, if any, at infinity only.
 Furthermore, let $E(N)$ be the set of $\eta$-quotients that are
 modular functions, and let $E^\infty(N) := E(N)\cap K^\infty(N)$.
+%
+Note that $E^\infty(N)=\SetDef{g_r}{r\in R^\infty(N)}$ where
+$R^\infty(N)$ and $g_r$ are defined in
+\cite{Hemmecke+Radu:EtaRelations:2018}.
 
-This file contains code to compute a (finite) monoid basis for
-$E^\infty(N)$ in two variants.
+This file contains code to compute a $\setN$-module basis for
+$R^\infty(N)$ in two variants, one naive way done in pure FriCAS and
+another version using an external program
+\textsf{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}}.
+
+Furthermore, we compute a $\setN$-module basis for $R^*(N)$.
+%
+Note that $E(N)=\SetDef{g_r}{r\in R^*(N)}$.
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -101,7 +114,7 @@ VQ ==> Vector Q
 
 From the proof of Lemma~25 of the article
 \cite{Radu:RamanujanKolberg:2015} we can extract a simple algorithm to
-compute a basis for the monoid $E^\infty(N)$.
+compute a $\setN$-module basis for $R^\infty(N)$.
 
 As in \cite{Radu:RamanujanKolberg:2015}, we first determine $\kappa_1,
 \ldots, \kappa_n$ where $n+1$ is the number of divisors of $N$. We are
@@ -114,7 +127,7 @@ keep ``irreducible'' elements.
 
 The domain \texttt{NModuleBasis(n)} is only an auxiliary domain
 that represents the generators of a submodule of $\setN^n$.
-
+%
 The use of \texttt{VZ} instead of \texttt{Vector(N)} has only be done
 for convenience. Negative vector entries are not allowed.
 )endif
@@ -133,7 +146,12 @@ NModuleBasis(n: N): with
       ++ union of v with all elements from x that are not an N-multiple of v.
       ++ assert(v.i>0 for i in 1..n)
     reducible?: (VZ, %) -> Boolean
+      ++ reducible?(v, x) returns true if the vector v is N-linear
+      ++ combination of elements in x where N is the ring of natural
+      ++ numbers.
     reduce: (VZ, %) -> VZ
+      ++ reduce(v, x) returns a vector z such that reducible?(z,x) is
+      ++ false and v-z is a N-linear combination of elements from x.
     sup: % -> VZ
       ++ sup(x) returns a minimal (w.r.t reducibility) element that
       ++ is reducible by every element of x.
@@ -182,15 +200,16 @@ NModuleBasis(n: N): with
 
 
 )abbrev package QETAQMEV QEtaQuotientMonoidExponentVectors
-++ QEtaQuotientMonoidExponentVectors helps to do computations with eta functions
-++ and quotients of eta functions expressed in terms of the q-series.
+++ QEtaQuotientMonoidExponentVectors helps to do computations with eta
+++ functions and quotients of eta functions expressed in terms of the
+++ q-series.
 QEtaQuotientMonoidExponentVectors: with
     etaQuotientMonoidExponentVectors: P -> List List Z
       ++ etaQuotientMonoidExponentVectors(m) returns Z-vectors $r$ (of
       ++ dimension n+1, where #(divisors m)=n+1) that correspond to
       ++ the formula (16) from \cit{Radu:RamanujanKolberg:2015}, i.e.
       ++ (together with the zero vector) they describe the monoid
-      ++ E^\infty(m).
+      ++ E^\infty(m) and the N-module R^\infty(N), respectively.
   == add
     -- domain constant vdivs for "determineKappas"
     vdivs24: VZ := vector(divisors(24)$IntegerNumberTheoryFunctions)
@@ -202,6 +221,12 @@ QEtaQuotientMonoidExponentVectors: with
     -- relation that w(r)=0.
     -- Furthermore, if an r with non-integer entries is given, it
     -- automatically means that the conditions are not fulfilled.
+    -- This implementation is a specialized form of
+    -- rStarConditions $ QAuxiliaryModularEtaQuotientPackage.
+    -- We keep it as it was programmed first and is probably faster
+    -- for the purpose it is used for. Furthermore, since
+    -- etaQuotientMonoidExponentVectors $ QEtaQuotientMonoidExponentVectors4ti2
+    -- is much more efficient. There is no reason to refactor.
     rConditions?(n: N, vdivs: VZ, rtilde: VQ): Boolean ==
         --assert(divs1=delete!(divisors(m)$IntegerNumberTheoryFunctions, 1)
         --assert(n+1 = #divs)
@@ -418,13 +443,6 @@ QEtaQuotientMonoidExponentVectors4ti2: with
         den: Z := dj * gcd(diprime, di)
         (num exquo den)::Z -- can prove that this cannot fail
 
-    primePower(d: P, p: P): N ==
-        import from Factored Z
-        fl: List Record(factor: Z, exponent: N) := factors factor d
-        for fe in fl repeat
-            if fe.factor = p then return fe.exponent
-        return 0
-
     monoidGenerators(m: P, n: N, d: VZ): List VZ ==
         fl: List Record(factor: Z, exponent: N) := factors factor m
         cols: P := qcoerce(n + 2 + #fl)@P
@@ -445,7 +463,9 @@ QEtaQuotientMonoidExponentVectors4ti2: with
             k := n+2+i
             p: P := qcoerce(fe.factor)@P
             for j in 2..n repeat -- for all divisors > 1
-                qsetelt!(mat, k, j, primePower(qcoerce(d.j)@P, p))
+                dj: P := qcoerce(d.j)@P
+                e: N := primePower(dj, p)$QAuxiliaryModularEtaQuotientPackage
+                qsetelt!(mat, k, j, e)
             qsetelt!(mat, k, k, 2) -- additional variable for (mod 2)
         r1: N := random(10^20); -- the seems to be always the same
         r2: N := random(10^20); -- temporary filename

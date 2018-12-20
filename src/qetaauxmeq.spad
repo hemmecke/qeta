@@ -212,6 +212,10 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ exists an element y such that y^2=p.
       ++ p must be a radical integer, i.e., should not contain the
       ++ square of a prime.
+    primePower: (P, P) -> N
+      ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
+      ++ highest power e such that p^e is a factor of d.
+
 -------------------------------------------------------------------
 -- Temporarily exported
 -------------------------------------------------------------------
@@ -466,6 +470,13 @@ $a\in X_c$.
         x = 2 => 8
         positiveRemainder(x, 4)=1 => x
         4*x
+
+    primePower(d: P, p: P): N ==
+        e: N := 0;
+        x: Z := d
+        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
+        return e
+
 
 )if LiterateDoc
 \bibliography{qeta}
