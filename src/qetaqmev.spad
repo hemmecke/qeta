@@ -109,6 +109,43 @@ VQ ==> Vector Q
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Collection of auxiliary functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package QMEVAUX QEtaQuotientMonoidExponentVectorsAux
+++ QEtaQuotientMonoidExponentVectorsAux provides a number of
+++ auxiliary functions for the use in the variants to compute
+++ etaQuotientMonoidExponentVectors.
+QEtaQuotientMonoidExponentVectorsAux: with
+    ascend:  (List Z, List Z) -> Boolean
+      ++ ascend implements a (somewhat arbitrary) sorting criterium.
+      ++ ascend(x, y) returns true if the sum of the absolute values
+      ++ of the entries of x is smaller than for y or if these values
+      ++ agree and the sum of the negative entries of x is greater
+      ++ (i.e. smallerin absolute value) then the respective sum for
+      ++ y. We break ties by the revlex order.
+  == add
+    ascend(x: List Z, y: List Z): Boolean ==
+        --assert(#x=#y)
+        tx: Z := reduce(_+, [abs e for e in x])
+        ty: Z := reduce(_+, [abs e for e in y])
+        tx < ty => true
+        tx > ty => false
+        tx: Z := reduce(_+, [e for e in x | e < 0])
+        ty: Z := reduce(_+, [e for e in y | e < 0])
+        tx > ty => true -- note that 0 < - tx < - ty
+        tx < ty => false
+        -- break ties by revlex order over Z^n where n=#x=#y.
+        for ex in reverse x for ey in reverse y repeat
+            if ex < ey then return false
+            if ex > ey then return true
+        false -- x=y
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{First version as given by Radu}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -211,6 +248,8 @@ QEtaQuotientMonoidExponentVectors: with
       ++ (together with the zero vector) they describe the monoid
       ++ E^\infty(m) and the N-module R^\infty(N), respectively.
   == add
+    QMEVAUX ==> QEtaQuotientMonoidExponentVectorsAux
+
     -- domain constant vdivs for "determineKappas"
     vdivs24: VZ := vector(divisors(24)$IntegerNumberTheoryFunctions)
 
@@ -375,25 +414,6 @@ QEtaQuotientMonoidExponentVectors: with
         qsetelt!(r, 1, r0)
         r
 
-    -- x < y if the total degree of the absolute value of the entries
-    -- is smaller or if the absolute value of the sum of the negative
-    -- entries is smaller. We break ties by the revlex order.
-    ascend(x: List Z, y: List Z): Boolean ==
-        --assert(#x=#y)
-        tx: Z := reduce(_+, [abs e for e in x])
-        ty: Z := reduce(_+, [abs e for e in y])
-        tx < ty => true
-        tx > ty => false
-        tx: Z := reduce(_+, [e for e in x | e < 0])
-        ty: Z := reduce(_+, [e for e in y | e < 0])
-        tx > ty => true -- note that 0 < - tx < - ty
-        tx < ty => false
-        -- break ties by revlex order over Z^n where n=#x=#y.
-        for ex in reverse x for ey in reverse y repeat
-            if ex < ey then return false
-            if ex > ey then return true
-        false -- x=y
-
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
@@ -407,7 +427,7 @@ QEtaQuotientMonoidExponentVectors: with
         vkappas: VZ := determineKappas(n, vdivs, ainv)
         monoidgens: List VZ := monoidGenerators(n, vdivs, ainv, vkappas)
         eqgens: List VZ := [rvec(n, v, ainv) for v in monoidgens]
-        sort(ascend, [entries x for x in eqgens])
+        sort(ascend $ QMEVAUX, [entries x for x in eqgens])
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -433,15 +453,8 @@ QEtaQuotientMonoidExponentVectors4ti2: with
       ++ (together with the zero vector) they describe the monoid
       ++ E^\infty(m).
   == add
-    -- Compute B_N and A^\infty_N as in
-    -- \cite{Hemmecke+Radu:EtaRelations:2018}.
-    -- a(m, di, dj) here corresponds to a_m(di, dj) in
-    -- \cite[Notation 3.2.6]{Ligozat:CourbesModulaires:1975}.
-    a(m: Z, di: Z, dj: Z): Z == -- di==c, dj==delta
-        diprime: Z := (m exquo di)::Z
-        num: Z := diprime * (gcd(di, dj)^2)
-        den: Z := dj * gcd(diprime, di)
-        (num exquo den)::Z -- can prove that this cannot fail
+    a ==> aLigozat $ QAuxiliaryModularEtaQuotientPackage
+    QMEVAUX ==> QEtaQuotientMonoidExponentVectorsAux
 
     monoidGenerators(m: P, n: N, d: VZ): List VZ ==
         fl: List Record(factor: Z, exponent: N) := factors factor m
@@ -519,32 +532,13 @@ QEtaQuotientMonoidExponentVectors4ti2: with
         close! f
         return result
 
-    -- x < y if the total degree of the absolute value of the entries
-    -- is smaller or if the absolute value of the sum of the negative
-    -- entries is smaller. We break ties by the revlex order.
-    ascend(x: List Z, y: List Z): Boolean ==
-        --assert(#x=#y)
-        tx: Z := reduce(_+, [abs e for e in x])
-        ty: Z := reduce(_+, [abs e for e in y])
-        tx < ty => true
-        tx > ty => false
-        tx: Z := reduce(_+, [e for e in x | e < 0])
-        ty: Z := reduce(_+, [e for e in y | e < 0])
-        tx > ty => true -- note that 0 < - tx < - ty
-        tx < ty => false
-        -- break ties by revlex order over Z^n where n=#x=#y.
-        for ex in reverse x for ey in reverse y repeat
-            if ex < ey then return false
-            if ex > ey then return true
-        false -- x=y
-
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions --$
         n: N := # divs
         vdivs: VZ := vector divs
         monoidgens: List VZ := monoidGenerators(m, n, vdivs)
-        sort(ascend, [entries x for x in monoidgens])
+        sort(ascend $ QMEVAUX, [entries x for x in monoidgens])
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -576,6 +570,8 @@ QEtaQuotientMonoidExponentVectorsStar: with
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}).
     rStarConditionMatrix: P -> MZ
   == add
+    QMEVAUX ==> QEtaQuotientMonoidExponentVectorsAux
+
     -- Compute B_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
     primePower(d: P, p: P): N ==
         import from Factored Z
@@ -612,25 +608,6 @@ QEtaQuotientMonoidExponentVectorsStar: with
         vPrint("mat", mat)
         return mat
 
-    -- x < y if the total degree of the absolute value of the entries
-    -- is smaller or if the absolute value of the sum of the negative
-    -- entries is smaller. We break ties by the revlex order.
-    ascend(x: List Z, y: List Z): Boolean ==
-        --assert(#x=#y)
-        tx: Z := reduce(_+, [abs e for e in x])
-        ty: Z := reduce(_+, [abs e for e in y])
-        tx < ty => true
-        tx > ty => false
-        tx: Z := reduce(_+, [e for e in x | e < 0])
-        ty: Z := reduce(_+, [e for e in y | e < 0])
-        tx > ty => true -- note that 0 < - tx < - ty
-        tx < ty => false
-        -- break ties by revlex order over Z^n where n=#x=#y.
-        for ex in reverse x for ey in reverse y repeat
-            if ex < ey then return false
-            if ex > ey then return true
-        false -- x=y
-
     integerNullSpace(mat: MZ): List VZ ==
         import from SmithNormalForm(Z, VZ, VZ, MZ)
         SmithForm ==> Record(Smith: MZ, leftEqMat: MZ, rightEqMat: MZ)
@@ -646,7 +623,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
         lat: MZ := LLL(mat)$LLLReduction
         ll: List List Z := listOfLists lat
         ll2: List List Z := [[-x for x in l] for l in ll]
-        sort(ascend, concat(ll, ll2))
+        sort(ascend $ QMEVAUX, concat(ll, ll2))
 
     etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
@@ -667,7 +644,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
         vPrint("lat", lat)
         ll: List List Z := listOfLists lat
         ll2: List List Z := [[-x for x in l] for l in ll]
-        sort(ascend, concat(ll, ll2))
+        sort(ascend $ QMEVAUX, concat(ll, ll2))
 
 )if LiterateDoc
 \bibliography{qeta}
