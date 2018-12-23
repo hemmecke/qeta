@@ -162,6 +162,25 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         ++ and
         ++ \[\prod_{k=0}^{n-1} (1-c\cdot q^s \cdot (q^r)^k),\] otherwise,
         ++ where q=monomial(1,1)$L.
+    eisensteinE2: () -> L
+        ++ eisensteinE2() returns the normalized Eisenstein series
+        ++ E2 = 1 - 24 \sum_{n=1}^\infty \sigma_1(n) q^{2n}$ where
+        ++ $\sigma_1(n)$ is the sum of the divisors of $n$.
+    eisensteinE4: () -> L
+        ++ eisensteinE4() returns the normalized Eisenstein series
+        ++ E4 = 1 + 240 \sum_{n=1}^\infty \sigma_3(n) q^{2n}$ where
+        ++ $\sigma_3(n)$ is the sum of third powers of the divisors
+        ++ of $n$.
+    eisensteinE6: () -> L
+        ++ eisensteinE4() returns the normalized Eisenstein series
+        ++ E6 = 1 - 504 \sum_{n=1}^\infty \sigma_5(n) q^{2n}$ where
+        ++ $\sigma_3(n)$ is the sum of fifth powers of the divisors
+        ++ of $n$.
+    kleinJInvariant: () -> L
+        ++ kleinJInvariant() returns Klein's j-invariant as a Laurent
+        ++ series in q=2i\pi. It is given by 1728*E4^3/(E4^3-E6^2)
+        ++ where E4 and E6 are the respective normalized Eisenstein
+        ++ series.
 
   I ==> add
     qPochhammer(): L == qPochhammer(1, 1, 1)
@@ -319,6 +338,25 @@ summand for the previous index $k$.
         r: R := if even? n then 1 else -1
         cons([s*m, r], cons([s*(2*n+1+m), -r], eulerStream2(s, n+1, m+3*n+2, z)))
     eulerFunction2(s: P): L == series eulerStream2(s, 0, 0, empty()$S)
+
+    -- first an auxiliary function
+    eisensteinStream(c: R, k: N, n: P): Stream R == delay
+        s: Z := sumOfKthPowerDivisors(n, k)$IntegerNumberTheoryFunctions
+        cons(s*c, eisensteinStream(c, k, n+1))
+
+    eisensteinE2(): L ==
+        laurent(0, cons(1, eisensteinStream(coerce(-24)$R, 1 , 1)))
+    eisensteinE4(): L ==
+        laurent(0, cons(1, eisensteinStream(240::R, 3, 1)))
+    eisensteinE6(): L ==
+        laurent(0, cons(1, eisensteinStream(coerce(-504)$R, 5, 1)))
+
+    kleinJInvariant(): L ==
+        ef: L := eulerFunction 1
+        ef2: L := ef * ef
+        ef4: L := ef2 * ef2
+        ps8: L := recip(ef4 * ef4)::L
+        monomial(1, -1) * (eisensteinE4()*ps8)^3
 
 )if LiterateDoc
 \bibliography{qeta}
