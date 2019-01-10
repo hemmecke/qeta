@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################
+PROJECT=qeta
 # Compute the eta relations and generate also intermediate data.
 #
 # Note that generated files that don't count as "results" will be put
@@ -29,56 +30,55 @@ MKDIR_P=mkdir -p
 # We assume that make is executed from the directory where THIS Makefile
 # is located.
 ROOT:=${shell pwd}
-BIN=${ROOT}/bin
+TMP=tmp
+LITDOC=${ROOT}/bin/litdoc.sh
+TPROJECT=${TMP}/${PROJECT}
 
 ###################################################################
 # toplevel targets
-all: er
+all: compile-spad
 SPADFILES=qfunct cachedpow qetasqrt qetaqmev qetadom qetatool qetasamba \
   qetaradu qetaicat qetaih qeta3hdp qetair qetais qetasomos \
   qetaauxmeq qetapowersamba qetakolberg qetafun
-
+PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
 PREREQS_SAGE=etagb.sage
-PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
-PREREQS=${patsubst %,tmp/%,Makefile ${PREREQS_INPUT} ${PREREQS_SAGE} ${PREREQS_SPAD}}
+PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQS_SAGE}}
 
 prerequisites: ${PREREQS}
 
-allall recompile-spad compile-spad eqmev eqig elig er checksomos \
-    runfricassomos seg slg ceg clg clean distclean:
+recompile-spad compile-spad  clean distclean \
+    compute-all eqmev eqig elig er checksomos runfricassomos seg slg ceg clg:
 	${MAKE} prerequisites
-	cd tmp && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@
+	cd ${TMP} && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@
 
-tmp/Makefile: Makefile.sub
-	${MKDIR_P} tmp
+${TMP}/Makefile: Makefile.sub
+	${MKDIR_P} ${TMP}
 	cp -a $< $@
-tmp/qeta.tex tmp/qeta.bib tmp/qeta.sty: tmp/qeta.%: qeta.%
-	${MKDIR_P} tmp
+${patsubst %,${TPROJECT}.%, tex bib sty}: ${TPROJECT}.%: ${PROJECT}.%
+	${MKDIR_P} ${TMP}
 	cp -a $< $@
-${patsubst %,tmp/%,${PREREQS_INPUT}}: tmp/%: input/%
-	${MKDIR_P} tmp
+${patsubst %,${TMP}/%,${PREREQS_INPUT}}: ${TMP}/%: input/%
+	${MKDIR_P} ${TMP}
 	cp -a $< $@
-${patsubst %,tmp/%,${PREREQS_SAGE}}: tmp/%: sagemath/%
-	${MKDIR_P} tmp
+${patsubst %,${TMP}/%,${PREREQS_SPAD}}: ${TMP}/%: src/%
+	${MKDIR_P} ${TMP}
 	cp -a $< $@
-${patsubst %,tmp/%,${PREREQS_SPAD}}: tmp/%: src/%
-	${MKDIR_P} tmp
+${patsubst %,${TMP}/%,${PREREQS_SAGE}}: ${TMP}/%: sagemath/%
+	${MKDIR_P} ${TMP}
 	cp -a $< $@
 
 ###################################################################
 # documentation
 # Compile all .spad files to .pdf and join them together.
-TMP=${ROOT}/tmp
 pdfall: pdf
-	cd tmp && pdftk qeta.pdf ${patsubst %,%.pdf, ${SPADFILES}} output qetaall.pdf
-pdf: ${patsubst %,tmp/qeta.%, tex bib sty} ${patsubst %,tmp/%.pdf,${SPADFILES}}
-	cd tmp && pdflatex qeta.tex && bibtex qeta.aux
+	cd ${TMP} && pdftk ${patsubst %,%.pdf, ${SPADFILES}} output project.pdf
+pdf: ${patsubst %,${TPROJECT}.%, tex bib sty} \
+     ${patsubst %,${TMP}/%.pdf,${SPADFILES}}
+	cd ${TMP} && pdflatex ${PROJECT}.tex && bibtex ${PROJECT}.aux
 ${patsubst %,tmp/%.pdf,${SPADFILES}}: tmp/%.pdf: src/%.spad
-	EXECUTE=: ${BIN}/litdoceta.sh $<
-	if grep 'LaTeX Warning: There were undefined references' tmp/$*.log; then \
-	    EXECUTE=: ${BIN}/litdoceta.sh $<; \
-	fi
-	if grep 'LaTeX Warning: .*Rerun' tmp/$*.log; then \
-	    EXECUTE=: ${BIN}/litdoceta.sh $<; \
-	fi
+	EXECUTE=: ${LITDOC} $<
+	if grep 'LaTeX Warning: There were undefined references' ${TMP}/$*.log;\
+	    then EXECUTE=: ${LITDOC} $<; fi
+	if grep 'LaTeX Warning: .*Rerun' ${TMP}/$*.log; \
+	    then EXECUTE=: ${LITDOC} $<; fi

@@ -29,7 +29,69 @@ MKDIR_P=mkdir -p
 # We assume that make is executed from the directory where THIS Makefile
 # is located.
 BIN=${ROOT}/bin
+
+all: compile-spad
+
+# Note that a modified version of FriCAS is needed that does not
+# require variables in the GroebnerPackage.
+# https://github.com/hemmecke/fricas/commits/poly
+FRICAS=FRICAS_INITFILE='' fricas -nosman
+
+###################################################################
+# The following stuff is only relevant inside tmp/
+%.compile: %.spad
+	echo ")compile $<" >> projectcompile.input
+	grep '^)abbrev' $< \
+        | sed -e 's/^.abbrev[ ]*domain[ \t]*[A-Z0-9]*[ \t]*/    --D /' \
+              -e 's/^.abbrev[ ]*category[ \t]*[A-Z0-9]*[ \t]*/    --C /' \
+              -e 's/^.abbrev[ ]*package[ \t]*[A-Z0-9]*[ \t]*/    --P /' \
+	>> projectcompile.input
+	echo >> projectcompile.input
+	echo "-- )compile $<" >> projectlibs.input
+	grep '^)abbrev' $< \
+	| awk '{print};/category/ {print $$1, $$2, $$3"-", $$4}' \
+	| sed -e 's/^.abbrev[ ]*domain[ \t]*/)lib /' \
+	      -e 's/^.abbrev[ ]*category[ \t]*/)lib /' \
+	      -e 's/^.abbrev[ ]*package[ \t]*/)lib /' \
+	      -e 's/[ \t][ \t]*[^ \t]*$$//' \
+	>> projectlibs.input
+	echo >> projectlibs.input
+	touch $@
+
+qetadom.compile: qfunct.compile
+qetaqmev.compile: qetaauxmeq.compile
+qetatool.compile: qfunct.compile
+qetasamba.compile: qetadom.compile
+qetaradu.compile: qetadom.compile qetatool.compile
+qetaicat.compile: qetatool.compile qetaqmev.compile
+qetair.compile: qeta3hdp.compile qetaicat.compile qetaradu.compile
+qetais.compile: qeta3hdp.compile qetaicat.compile qetasamba.compile
+qetaih.compile: qetaicat.compile qetasamba.compile
+qetarel.compile: qetaqrelr.compile qetaqrels.compile qetaqrelh.compile
+qetasomos.compile: qetadom.compile qetatool.compile
+qetakolberg.compile: qetaqmev.compile
+qetafun.compile: qetadom.compile qetaauxmeq.compile qetasqrt.compile \
+  qetakolberg.compile qetapowersamba.compile
+
+compile-spad: ${patsubst %,%.spad, ${SPADFILES}}
+	-rm projectlibs.input projectcompile.input
+	-rm ${patsubst %,%.compile, ${SPADFILES}}
+	${MAKE} ${patsubst %,%.compile, ${SPADFILES}}
+	echo ')read projectcompile.input' | ${FRICAS} | tee $@
+
+###################################################################
 DIR=${ROOT}/etafiles
+DS=${DIR}/Somos
+clean:
+	rm -f *.compile projectcompile.input projectlibs.input compile-spad
+	rm -f ${DS}/etarelationlevels.txt somoslevels.txt
+
+distclean:
+	rm -f $(ALLTMP)
+	rm -f $(ALLOUT)
+	rm -f $(ALLINPUT)
+
+###################################################################
 VARIANT=Hemmecke
 SOMOS=${ROOT}/somos
 DV=${DIR}/${VARIANT}
@@ -81,59 +143,12 @@ EROUT=  $(patsubst %, ${DV}/${ER}%.out,  ${LEVELS_ER})
 ALLINPUT= ${EQMEVINPUT} ${EQIGINPUT} ${ELIGINPUT} ${ERINPUT}
 ALLOUT=   ${EQMEVOUT}   ${EQIGOUT}   ${ELIGOUT}   ${EROUT}
 ALLTMP=${patsubst %.out,%.tmp,${ALLOUT}}
-all: er
-allall: ${ALLINPUT}
+
+compute-all: ${ALLINPUT}
 eqmev: ${EQMEVINPUT}
 eqig: ${EQIGINPUT}
 elig: ${ELIGINPUT}
 er: ${ERINPUT}
-
-# Note that a modified version of FriCAS is needed that does not
-# require variables in the GroebnerPackage.
-# https://github.com/hemmecke/fricas/commits/poly
-FRICAS=FRICAS_INITFILE='' fricas -nosman
-
-###################################################################
-# The following stuff is only relevant inside tmp/
-%.compile: %.spad
-	echo ")compile $<" >> etacompile.input
-	grep '^)abbrev' $< \
-        | sed -e 's/^.abbrev[ ]*domain[ \t]*[A-Z0-9]*[ \t]*/    --D /' \
-              -e 's/^.abbrev[ ]*category[ \t]*[A-Z0-9]*[ \t]*/  --C /' \
-              -e 's/^.abbrev[ ]*package[ \t]*[A-Z0-9]*[ \t]*/   --P /' \
-	>> etacompile.input
-	echo >> etacompile.input
-	echo "-- )compile $<" >> qetalibs.input
-	grep '^)abbrev' $< \
-	| awk '{print};/category/ {print $$1, $$2, $$3"-", $$4}' \
-	| sed -e 's/^.abbrev[ ]*domain[ \t]*/)lib /' \
-	      -e 's/^.abbrev[ ]*category[ \t]*/)lib /' \
-	      -e 's/^.abbrev[ ]*package[ \t]*/)lib /' \
-	      -e 's/[ \t][ \t]*[^ \t]*$$//' \
-	>> qetalibs.input
-	echo >> qetalibs.input
-	touch $@
-
-qetadom.compile: qfunct.compile
-qetaqmev.compile: qetaauxmeq.compile
-qetatool.compile: qfunct.compile
-qetasamba.compile: qetadom.compile
-qetaradu.compile: qetadom.compile qetatool.compile
-qetaicat.compile: qetatool.compile qetaqmev.compile
-qetair.compile: qeta3hdp.compile qetaicat.compile qetaradu.compile
-qetais.compile: qeta3hdp.compile qetaicat.compile qetasamba.compile
-qetaih.compile: qetaicat.compile qetasamba.compile
-qetarel.compile: qetaqrelr.compile qetaqrels.compile qetaqrelh.compile
-qetasomos.compile: qetadom.compile qetatool.compile
-qetakolberg.compile: qetaqmev.compile
-qetafun.compile: qetadom.compile qetaauxmeq.compile qetasqrt.compile \
-  qetakolberg.compile qetapowersamba.compile
-
-compile-spad: ${patsubst %,%.spad, ${SPADFILES}}
-	-rm qetalibs.input etacompile.input
-	-rm ${patsubst %,%.compile, ${SPADFILES}}
-	${MAKE} ${patsubst %,%.compile, ${SPADFILES}}
-	echo ')read etacompile.input' | ${FRICAS} | tee $@
 
 ###################################################################
 define COMPUTE_OUT_GENERIC
@@ -161,17 +176,6 @@ ${DV}/${ELIG}%.out: ${DV}/${EQIG}%.input
 	${COMPUTE_OUT}
 ${DV}/${ER}%.out: ${DV}/${ELIG}%.input ${DV}/${EQMEV}%.input
 	${COMPUTE_OUT}
-
-###################################################################
-DS=${DIR}/Somos
-clean:
-	rm -f *.compile etacompile.input qetalibs.input compile-spad
-	rm -f ${DS}/etarelationlevels.txt somoslevels.txt
-
-distclean:
-	rm -f $(ALLTMP)
-	rm -f $(ALLOUT)
-	rm -f $(ALLINPUT)
 
 ###################################################################
 # express relations of Somos http://eta.math.georgetown.edu/etal/
