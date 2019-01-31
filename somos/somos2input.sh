@@ -1,6 +1,6 @@
 #!/bin/bash
 # Translate the .gp files from Somos
-# http://eta.math.georgetown.edu/etaL/index.html
+# http://eta.math.georgetown.edu/etal/index.html
 # into something that FriCAS can read.
 
 # We basically have to turn /* ... */ comments into FriCAS comments by

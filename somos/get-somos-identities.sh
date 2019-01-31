@@ -4,15 +4,20 @@
 # Somos-level*.gp from the Website of Somos.
 # From the .gp files, we then compute somos*.input files
 
-curl http://eta.math.georgetown.edu/etal/index.html > index.html
-IDS=$(grep '">level' index.html | sed 's/.*level//;s/<.*//')
+somosurl="http://eta.math.georgetown.edu"
+#somosurl="https://web.archive.org/web/20180903181137/http://eta.math.georgetown.edu"
+
+HERE=`pwd`
+
+curl $somosurl/etal/index.html > data/index.html
+IDS=$(grep '">level' data/index.html | sed 's/.*level//;s/<.*//')
 
 for n in $IDS; do
     echo $n;
-    wget -c http://eta.math.georgetown.edu/etal/L$n.txt
+    (cd data; wget -c $somosurl/etal/L$n.txt)
 done;
 
-curl http://eta.math.georgetown.edu/etal/eta07.gp > Somos-eta07.gp
+curl $somosurl/eta07.gp > data/Somos-eta07.gp
 
 # First we create a file somos.input, that contains the relations from Somos
 # but in a format that can be read by FriCAS.
@@ -20,15 +25,15 @@ curl http://eta.math.georgetown.edu/etal/eta07.gp > Somos-eta07.gp
 # fricas (1) -> h: XHashTable(Symbol, Polynomial(Integer)) := table();
 # fricas (2) -> )read somos.input
 
-awk '/^[qtx][0-9]*_/ {sub(/^/, "h("); sub(/ *= *\+/, ") := "); print; next} {print "--" $0}' Somos-eta07.gp > somos.input
+awk '/^[qtx][0-9]*_/ {sub(/^/, "h("); sub(/ *= *\+/, ") := "); print; next} {print "--" $0}' data/Somos-eta07.gp > data/somos.input
 
 # We also generate smaller files that can be read separately. One file per level.
-LEVELS=$(grep '^h(' somos.input | sed 's/h([qtx]//;s/_.*//' | sort -n -u)
+LEVELS=$(grep '^h(' data/somos.input | sed 's/h([qtx]//;s/_.*//' | sort -n -u)
 for l in $LEVELS; do
     echo === Level = $l ===
-    F=somos$l.input
+    F=data/somos$l.input
     echo 'h: XHashTable(Symbol, Polynomial(Integer)) := table();' > $F
-    grep "^h(.${l}_" somos.input >> $F
+    grep "^h(.${l}_" data/somos.input >> $F
     echo "h$l: XHashTable(Symbol, Polynomial(Integer)) := h;" >> $F
 done
 
@@ -38,11 +43,12 @@ done
 # the relations to the file somos.input so that somos.input will contain all
 # known relations from Somos.
 LEVELS="121 169 289 361"
-for l in $LEVELS; do
-    echo "=== Somos Level = $l ==="
-    curl http://eta.math.georgetown.edu/etaL/level$l.gp > Somos-level$l.gp
-    ./somos2input.sh Somos-level$l.gp > Somos-level$l.input
-    echo 'h: XHashTable(Symbol, Polynomial(Integer)) := table();' > somos$l.input
+for l in $LEVELS; do (
+    cd data;
+    echo "=== Somos Level = $l ===";
+    curl $somosurl/etaL/level$l.gp > Somos-level$l.gp;
+    $HERE/somos2input.sh Somos-level$l.gp > Somos-level$l.input;
+    echo 'h: XHashTable(Symbol, Polynomial(Integer)) := table();' > somos$l.input;
     cat <<EOF | fricas -nosman | sed ':a;N;$!ba;s/_\n//g' | grep -- '-> -- h' | sed 's/^.*-> -- //' | tee -a somos$l.input >> somos.input
 )set output algebra off
 )set output linear on
@@ -78,4 +84,4 @@ txt: OF := hconcat [s::Symbol::OF, z::OF, ";"::Symbol::OF];
 display(txt::LinearOutputFormat, 77)
 EOF
     echo "h$l: XHashTable(Symbol, Polynomial(Integer)) := h;" >> somos$l.input
-done
+) done
