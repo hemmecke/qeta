@@ -23,7 +23,7 @@ function fricas_program {
     LEVEL=$1
     FILE=$2
     cat <<EOF
-)r qetalibs
+)r projectlibs
 )r etamacros
 
 S ==> Symbol
