@@ -29,6 +29,7 @@ MKDIR_P=mkdir -p
 # We assume that make is executed from the directory where THIS Makefile
 # is located.
 BIN=${ROOT}/bin
+INPUT=${ROOT}/input
 
 all: compile-spad
 
@@ -84,7 +85,7 @@ DIR=${ROOT}/etafiles
 DS=${DIR}/Somos
 clean:
 	rm -f *.compile projectcompile.input projectlibs.input compile-spad
-	rm -f ${DS}/etarelationlevels.txt somoslevels.txt
+	rm -f etarelationlevels.txt somoslevels.txt
 
 distclean:
 	rm -f $(ALLTMP)
@@ -93,7 +94,7 @@ distclean:
 
 ###################################################################
 VARIANT=Hemmecke
-SOMOS=${ROOT}/somos
+SOMOS=${ROOT}/somos/data
 DV=${DIR}/${VARIANT}
 
 LEVELS= 4 6 8 9 10 12 14 15 16 18 20 21 22 24 25 26 27 28 30 \
@@ -186,31 +187,66 @@ CHECKSOMOS_INPUT=$(patsubst %, ${DS}/checksomos%.input, ${CHECKSOMOS_LEVELS})
 FRICASSOMOS_INPUT=$(patsubst %, ${DS}/fricassomos%.input, ${CHECKSOMOS_LEVELS})
 RUNFRICASSOMOS_OUT=$(patsubst %, ${DS}/runfricassomos%.out, ${CHECKSOMOS_LEVELS})
 
-somoslevels.txt: ${ROOT}/somos/somos.input
-	grep '^h(' $< \
-	| sed 's/h([qtx]//;s/_.*//' \
+# Determine which levels are given through the collection of Somos.
+somos-all.input: ${SOMOS}/somos-all.gp
+	awk '/^[qtx][0-9]*_/ {sub(/^/,"h("); sub(/ *= *\+/, ") := "); print; next} {print "--" $$0}' $< > $@
+
+# Some levels are given in another format.
+SOMOS_SQUARED_PRIMES=121 169 289 361
+# We assume that CHECKSOMOS_LEVELS is already set when calling the Makefile.
+SOMOS_ALL=${filter-out ${SOMOS_SQUARED_PRIMES}, ${CHECKSOMOS_LEVELS}}
+# This file lists all levels provided by Somos.
+somoslevels.txt: somos-all.input
+	( for n in ${SOMOS_SQUARED_PRIMES}; do echo $$n; done; \
+          grep '^h(' $< | sed 's/h([qtx]//;s/_.*//') \
 	| sort -n -u \
 	| tr '\n' ' ' \
 	> $@
 
-${DS}/etarelationlevels.txt: somoslevels.txt
-	${MKDIR_P} ${@D}
+# This file lists a subset of numbers from somoslevels.txt, namely those n,
+# for whicht there is a corresponding file ${DV}/etaRelations$n.input.
+etarelationlevels.txt: somoslevels.txt
 	for l in $$(cat $<); do \
 	    if test -r ${DV}/etaRelations$$l.input; then printf "$$l "; fi; \
 	done \
 	> $@
 
-checksomos: ${DS}/etarelationlevels.txt
-	CHECKSOMOS_LEVELS=$$(cat ${DS}/etarelationlevels.txt); \
+###################################################################
+# Create all somos$n.input files.
+SOMOS_SP_LEVELS=${patsubst %, somos%.input, ${SOMOS_SQUARED_PRIMES}}
+SOMOS_ALL_LEVELS=${patsubst %, somos%.input, ${SOMOS_ALL}}
+${SOMOS_SP_LEVELS}: somos%.input: ${SOMOS}/somos-level%.gp
+	echo "=== $@ ===";
+	echo 'h: XHashTable(Symbol, Polynomial(Integer)) := table();' > $@
+	(${BIN}/somossquaredprime2input.pl $<; \
+	 cat ${INPUT}/somossquaredprime.input) \
+	| fricas -nosman \
+	| sed ':a;N;$$!ba;s/_\n//g' \
+	| grep -- '-> -- h' \
+	| sed 's/^.*-> -- //' \
+	>> $@
+
+${SOMOS_ALL_LEVELS}: somos%.input: somos-all.input
+	echo === $@ ===
+	echo 'h: XHashTable(Symbol, Polynomial(Integer)) := table();' > $@
+	grep "^h(.$*_" $< >> $@
+	echo "h$*: XHashTable(Symbol, Polynomial(Integer)) := h;" >> $@
+
+###################################################################
+# Check whether all of the relations found by Somos, really reduce to 0
+# modulo our Gröbner basis of eta relations.
+checksomos: etarelationlevels.txt
+	CHECKSOMOS_LEVELS=$$(cat $<); \
 	echo "==:: $$CHECKSOMOS_LEVELS"; \
 	${MAKE} CHECKSOMOS_LEVELS="$$CHECKSOMOS_LEVELS" checksomos_input
 
 checksomos_input: ${FRICASSOMOS_INPUT}
 
-${CHECKSOMOS_OUT}: ${DS}/checksomos%.out: compile-spad ${DS}/etarelationlevels.txt
-	${BIN}/checksomos.sh $* DIR=${DIR} VARIANT=${VARIANT} SOMOS="${SOMOS}" > $@
+${CHECKSOMOS_OUT}: ${DS}/checksomos%.out: compile-spad somos%.input
+	${MKDIR_P} ${@D}
+	${BIN}/checksomos.sh $* DIR=${DIR} VARIANT=${VARIANT} SOMOS="." > $@
 
-${CHECKSOMOS_INPUT}: ${DS}/checksomos%.input: ${DS}/checksomos%.out compile-spad ${DS}/etarelationlevels.txt
+${CHECKSOMOS_INPUT}: ${DS}/checksomos%.input: ${DS}/checksomos%.out
 	cat $< \
 	| awk -e '/-- eta relations --/ {p=1}' \
 	    -e 'p==0 {next}' \
@@ -229,8 +265,10 @@ ${FRICASSOMOS_INPUT}: ${DS}/fricassomos%.input: ${DS}/checksomos%.input
 	    -e 'END {sub(/;$$/,"];",l);print l}' \
 	  $< > $@
 
-runfricassomos: ${DS}/etarelationlevels.txt
-	CHECKSOMOS_LEVELS=$$(cat ${DS}/etarelationlevels.txt); \
+###################################################################
+# Check whether the relations in fricassomos$n.input really evaluate to 0.
+runfricassomos: etarelationlevels.txt
+	CHECKSOMOS_LEVELS=$$(cat $<); \
 	echo "==:: $$CHECKSOMOS_LEVELS"; \
 	${MAKE} CHECKSOMOS_LEVELS="$$CHECKSOMOS_LEVELS" runfricassomos_out
 
@@ -245,7 +283,7 @@ ${RUNFRICASSOMOS_OUT}: ${DS}/runfricassomos%.out: ${DS}/fricassomos%.input
 
 
 ###################################################################
-# compute Groebner basis i Q[E] of eta relations from Somos
+# compute Groebner basis in Q[E] of eta relations from Somos
 # http://eta.math.georgetown.edu/etal/
 # Then reduce the true etaRelations GB with this "Somos relations ideal"
 # in order to find elements that Somos does not have.

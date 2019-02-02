@@ -47,7 +47,7 @@ PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQ
 
 prerequisites: ${PREREQS}
 
-recompile-spad compile-spad  clean distclean \
+recompile-spad compile-spad clean distclean \
     compute-all eqmev eqig elig er checksomos runfricassomos seg slg ceg clg:
 	${MAKE} prerequisites
 	cd ${TMP} && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@

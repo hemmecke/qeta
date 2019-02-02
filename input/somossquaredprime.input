@@ -1,0 +1,41 @@
+-- http://eta.math.georgetown.edu/etal/index.html
+
+-- Append this to the .input file from Somos that came from the output of
+-- somosscquaredprime.pl and run it through FriCAS in order to obtain
+-- the corresponding somos121.input
+
+-- Usage:
+-- (somossquaredprime2input.pl somos-level121.gp; \
+--  cat somossquaredprime.input) | fricas -nosman
+
+)set output algebra off
+)set output linear on
+)set message type off
+N ==> NonNegativeInteger
+Z ==> Integer
+LSym ==> List Symbol
+Pol ==> Polynomial Z
+OF ==> OutputForm
+level := p*p
+divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+usyms: LSym := [concat("u", convert(i)@String)::Symbol for i in divs]
+syms: LSym := cons("q"::Symbol, usyms)
+z: Pol := 0
+for x in idpp repeat (_
+    co: Z := first x; _
+    le: List Record(k: Symbol, c: N) := _
+        [[s, qcoerce(n)@N] for s in syms for n in rest x]; _
+    ex: IndexedExponents(Symbol) := [le]; _
+    z := z + monomial(co, ex));
+tdeg := totalDegree(z, usyms);
+rdivs: List Z := cons(-24, divs);
+RSZ ==> Record(key:Symbol,entry:Z);
+X ==> XHashTable(Symbol,Z);
+lkv: List(RSZ) := [[v,r]@RSZ for v in syms for r in rdivs];
+h: X := table(lkv);
+v:=[listOfTerms degree(m) for m in monomials z];
+w := removeDuplicates [reduce(_+,[h(kv.k)*(kv.c) for kv in x],0) for x in v];
+rk: Z := first w;
+s: String := concat(["-- h(x", string(level), "__", string(tdeg), "__", string(rk), ") := "]);
+txt: OF := hconcat [s::Symbol::OF, z::OF, ";"::Symbol::OF];
+display(txt::LinearOutputFormat, 77)
