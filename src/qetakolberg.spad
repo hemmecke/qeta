@@ -134,11 +134,13 @@ QEtaKolberg: Exports == Implementation where
       ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta s_\delta$.
       ++ See Lemma \ref{thm:chi-exponent}.
       ++ Furthermore, we assume that orb = orbit(sigmaInfty, m, t).
-    etaCoFactor: (P, P, P, N, List Z) -> Record(particular : Union(VZ, "failed"), basis : List VZ) -- List Z
-      ++ etaCoFactor(m, mm, nn, t, s) returns a list r such that
-      ++ #r=#divisors(nn) and (m, mm, nn, t, r, s) the conditions in
-      ++ Theorem~\ref{thm:RaduConditions}.
-
+    etaCoFactorSpace: (P, P, List Z, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ) -- List Z
+      ++ etaCoFactorSpace(nn, mm, s, m, t) returns a vector v and the
+      ++ basis of a space such that #v=#divisors(nn) and
+      ++ modularConditions?(nn, mm, members r, s, m, t) is true for any
+      ++ r = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
+      ++ and any sufficiently long list z of integers.
+      ++ The function fails, if there is no such solution.
 )if TODO
 --    splitMatrix: (MZ, Z, Z, N) -> Rec
       ++ splitMatrix(gamma, delta, m, lambda) returns a record rec that
@@ -222,10 +224,11 @@ QEtaKolberg: Exports == Implementation where
         for a in 0..w-1 | one? gcd(a, w) repeat
             y := a
             while y < m24 and not one? gcd(y, m24) repeat y := y + w
-            -- Not the following "if y < m24 then" condition is unnecessary.
-            -- Note that gcd(a + k*w, m24)=gcd(a+k*w,g*w)=1 for
-            -- k chosen to be the product of all prime divisors of g
-            -- that do not divide i and do not divide w.
+            -- Note that m24=g*w and gcd(a + k*w, m24) =
+            -- gcd(a+k*w,g*w) = 1 for k chosen to be the product of
+            -- all prime divisors of g that do not divide a and do not
+            -- divide w. In other words, the above while loop also
+            -- terminates without the "y < m24" condition.
             e := odotBar(positiveRemainder(y^2, m24), sigmaInfty, m, t)
             if not member?(e, result) then result := cons(e, result)
         result
@@ -258,8 +261,8 @@ QEtaKolberg: Exports == Implementation where
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
         positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
 
-    etaCoFactor(m: P, mm: P, nn: P, t: N, s: List Z): _
-      Record(particular : Union(VZ, "failed"), basis : List VZ) ==
+    etaCoFactorSpace(nn: P, mm: P, s: List Z, m: P, t: N): _
+      Record(particular: Union(VZ, "failed"), basis: List VZ) ==
         -- Setup matrix. Then solve inhomogeneous system.
         QEQMEVS ==> QEtaQuotientMonoidExponentVectorsStar
         mat: MZ := rStarConditionMatrix(nn)$QEQMEVS
