@@ -609,10 +609,9 @@ QEtaQuotientMonoidExponentVectorsStar: with
         return mat
 
     integerNullSpace(mat: MZ): List VZ ==
-        import from SmithNormalForm(Z, VZ, VZ, MZ)
-        SmithForm ==> Record(Smith: MZ, leftEqMat: MZ, rightEqMat: MZ)
-        s: SmithForm := completeSmith mat
-        [v*transpose(s.rightEqMat) for v in nullSpace(s.Smith)]
+        v: VZ := new(nrows mat, 0)
+        sol := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+        sol.basis
 
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
