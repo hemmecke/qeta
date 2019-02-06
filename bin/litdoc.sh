@@ -3,9 +3,9 @@
 function usage {
     cat <<EOF
 Usage:
-  bin/liddoceta.sh foo
-  bin/liddoceta.sh foo.spad
-  bin/liddoceta.sh src/foo.spad
+  bin/liddoc.sh foo
+  bin/liddoc.sh foo.spad
+  bin/liddoc.sh src/foo.spad
 
 extracts the LaTeX document inside )if LiterateDoc ... )endif
 of the file src/foo.spad and compiles it with pdflatex and bibtex
@@ -32,7 +32,7 @@ function maybe_download {
     L="https://raw.githubusercontent.com/hemmecke/fricas/master-hemmecke/src/doc/"
     F="/home/hemmecke/g/fricas/src/doc"
     if test ! -r $LITDOC/$1; then
-        mkdir $LITDOC
+        mkdir -p $LITDOC
         if test -r $F/$1; then
             cp $F/$1 $LITDOC/$1
         else
@@ -65,11 +65,14 @@ fi
 
 cd $TMP
 awk -f $LITDOC/literatedoc.awk $P/src/$N.spad > $N.tex
-export TEXINPUTS=$P/:$LITDOC/:$TEXINPUTS
+export TEXINPUTS=.:$P/:$LITDOC/:$TEXINPUTS
 export BIBINPUTS=$P/:$BIBINPUTS
 pdflatex $N.tex
 bibtex $N.aux
 makeindex $N.idx
+echo "++++++++++++++++++++ LaTeX Warnings ++++++++++++++++++++"
+grep -i warning $N.log | sort -u
+echo "++++++++++++++++++++ LaTeX Warnings ++++++++++++++++++++"
 echo `pwd`/$N.pdf
 if ! (ps aux | grep -v grep | grep "okular $N.pdf"); then
     echo start okular
