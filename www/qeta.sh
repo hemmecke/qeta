@@ -65,10 +65,10 @@ MZ ==> Matrix Z -- consider only 2x2 matricies
 SL2Z ==> MZ -- matrices with determinant = 1
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
 SEDG ==> SymbolicEtaDeltaGamma;
-SEQG ==> SymbolicEtaQuotientGamma;
+YEQG ==> SymbolicEtaQuotientGamma;
 EQG ==> EtaQuotientGamma(Q, mx, CX, xi, LX);
-MEQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
-MEQX ==> ModularEtaQuotientExpansions(CX, LX, level);
+METAQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
+METAQX ==> ModularEtaQuotientExpansions(CX, LX, level);
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
@@ -79,7 +79,7 @@ unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
   for r in rs repeat (_
       lp: List P := empty();_
       for g in gammas repeat (_
-          e: SEQG := etaQuotient(m, divs, r, g);_
+          e: YEQG := etaQuotient(m, divs, r, g);_
           lp := cons(minRootOfUnity e, lp) _
       );_
       l := cons(lp, l) _
@@ -92,9 +92,9 @@ expansionAtAllCusps? := empty? "$gamma";
 gammas: List SL2Z := empty();
 -- Expand at all cusps if no gamma was given.
 if (expansionAtAllCusps?) then (_
-  cusps: List Q := cuspsOfGamma0(m)\$QAuxMEQ;_
+  cusps: List Q := cuspsOfGamma0(m)\$QAuxMETAQ;_
   for cusp in cusps repeat (_
-    g: SL2Z := cuspToMatrix(m, cusp)\$QAuxMEQ;_
+    g: SL2Z := cuspToMatrix(m, cusp)\$QAuxMETAQ;_
     gammas := cons(g, gammas));_
   gammas := reverse! gammas_
 ) else (_
@@ -136,7 +136,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   vPrint("Non-modular quotients", lerr);_
   if expansionAtAllCusps? then vPrint("Expansion at cusps", cusps);_
   vPrint("Expansion at gammas", gammas);_
-  llse := [[etaQuotient(m, divs, rr, g)\$SEQG for g in gammas] _
+  llse := [[etaQuotient(m, divs, rr, g)\$YEQG for g in gammas] _
            for rr in rs];_
   tPrint("Interpret resulting record as follows:");_
   tPrint("g_r(trf*tau) = lc * x^xpower * ser");_
@@ -151,8 +151,8 @@ if not empty? lerr or not expansionAtAllCusps? then (_
 ) else (_
   vPrint("Expansion at cusps", cusps);_
   vPrint("Expansion at CUSPS", [cuspToMatrix(m, cusp)\$QAuxMEQ for cusp in cuspsOfGamma0 m]);_
-  le := [etaQuotient(m, r)\$MEQ for r in rs];_
-  ees := [expansions(e)::MEQX for e in le];_
+  le := [etaQuotient(m, r)\$METAQ for r in rs];_
+  ees := [expansions(e)::METAQX for e in le];_
   [[rr, ex] for rr in rs for ex in ees])
 
 EOF
