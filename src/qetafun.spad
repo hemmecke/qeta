@@ -1980,7 +1980,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{ModularEtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-If $N\in\setN$, $r\in R(N)$, and \code{e = etaQuotient(N, r)}, then
+If $N\in\setN$, $r\in R^*(N)$, and \code{e = etaQuotient(N, r)}, then
 $e$ represents the information given in
 \eqref{eq:modular-g_r(gamma*tau)}
 for each cusp $\frac{a}{c}$ of $\Gamma_0(N)$.
@@ -2213,7 +2213,7 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
 For $m, M\in\setN$, $s \in R(M)$, $t,\lambda \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 SL_2(\setZ)$, elements from the domain
-\code{SymbolicSiftedEtaLambdaGamma} represent the tuple
+\code{SymbolicSiftedEtaQuotientLambdaGamma} represent the tuple
 \begin{gather}
   \left(
   M,
@@ -2222,6 +2222,7 @@ SL_2(\setZ)$, elements from the domain
   t,
   \lambda,
   \gamma,
+  y,
   \divisorprod{M}
   \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!s_\delta}
   ,
@@ -2231,11 +2232,18 @@ SL_2(\setZ)$, elements from the domain
   \divisorsum{M} s_\delta u_{\delta,m,\lambda}
   \right)
 \end{gather}
-and thus corresponds to the data from \eqref{eq:g_s-m-t-lambda(gamma*tau)},
-\ie,  it computes the building blocks for $g_{s,m,t,\lambda}(\gamma\tau)$.
+and thus corresponds to the data from
+\eqref{eq:g_s-m-t-lambda(gamma*tau)}, \ie, it computes the building
+blocks for $g_{s,m,t,\lambda}(\gamma\tau)$.
+
+The special entry $y=(y_\delta)_{\divides{\delta}{M}}$ is a container
+of the \code{SymbolicSiftedEtaDeltaLambdaGamma} values for each
+divisor $\delta$ of $M$.
 
 If \code{e = etaQuotient(mm, divs, s, m, t, lambda, gamma)}, then we
 have the following correspondence:
+%
+\code{e.delta} $= y_\delta$,
 %
 \code{rationalPrefactor(e)}
 $= \divisorprod{N} \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}$,
@@ -2302,8 +2310,8 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
       ++ corresponding to e=etaQuotient(mm, divs, s, m, t, lambda, gamma)
       ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[z]] where w
       ++ is a n-th root of unity and z a fractional q power.
-    eta: (%, P) -> SymbolicSiftedEtaDeltaLambdaGamma
-      ++ eta(x, delta) returns the data corresponding to the respective
+    elt: (%, P) -> SymbolicSiftedEtaDeltaLambdaGamma
+      ++ x.delta returns the data corresponding to the respective
       ++ delta.
  == add
     HT ==> XHashTable(P, SymbolicSiftedEtaDeltaLambdaGamma)
@@ -2372,7 +2380,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
 
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
-    eta(x: %, delta: P): SymbolicSiftedEtaDeltaLambdaGamma == xx.feta.delta
+    elt(x: %, delta: P): SymbolicSiftedEtaDeltaLambdaGamma == xx.feta.delta
     exponents(x: %): LZ == xx.fexponents
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
@@ -2516,7 +2524,7 @@ SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
         d: P := 24*m*w
         s: LX := 1
         for delta in divs for sd in exponents e | not zero? sd repeat
-            etadelta: SymbolicSiftedEtaDeltaLambdaGamma := eta(e, delta)
+            etadelta: SymbolicSiftedEtaDeltaLambdaGamma := e.delta
             u: Q := d * udelta etadelta
             not one? denom u =>
                 dbgPrint("delta, d", [delta, d]$List(P))
