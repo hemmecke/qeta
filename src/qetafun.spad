@@ -2428,11 +2428,10 @@ for each cusp $\frac{a}{c}$ of $\Gamma_0(N)$.
 
 )endif
 )abbrev domain METAQ ModularEtaQuotient
-++ ModularEtaQuotient(C, mx, CX, xi, LX) represents the semigroup
+++ ModularEtaQuotient(C, mx, CX, xi, LX) represents the set
 ++ of eta-quotients that are modular functions for Gamma_0(N).
 ++ In fact, this domain is meant to do computation for a specific N,
 ++ but is actually implementing the union over all N.
-++ Only modular functions of the same level can be multiplied.
 ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
@@ -2440,9 +2439,13 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
   LC ==> SparseUnivariateLaurentSeries(C, q, 0)
-  YEQG ==> SymbolicEtaQuotientGamma
+  YEQ ==> SymbolicEtaQuotient
   Exports ==> SetCategory with
     --assert(one? xi^mx)
+    etaQuotient: YEQ -> %
+      ++ etaQuotient(y) represents the expansion of
+      ++ g_r(\tau) in terms of x = \exp(2\pi i\tau/w) where
+      ++ w=width(m, c) at all cusps of Gamma0(level y).
     etaQuotient: (P, LZ) -> %
       ++ etaQuotient(m, r) represents the expansion of
       ++ g_r(\tau) in terms of x = \exp(2\pi i\tau/w) where
@@ -2450,51 +2453,40 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
     level: % -> P
       ++ level(x) gives the m such that x corresponds to a modular
       ++ function for Gamma_0(m).
-    symbolicEtaQuotients: % -> XHashTable(Q, YEQG)
-      ++ symbolicEtaQuotients(x) returns the meta data corresponding to x.
+    symbolicEtaQuotient: % -> YEQ
+      ++ symbolicEtaQuotient(x) returns the meta data corresponding to x.
+      ++ If x=etaQuotient(y) then symbolicEtaQuotient(x)=y.
     expansions: % -> XHashTable(Q, LX)
       ++ expansions(x) returns the Laurent series expansions of $g_r(tau)$
       ++ at all cusps of Gamma_0(N).
   Implementation ==> add
-    Rep ==> Record(flevel: P, meta: XHashTable(Q, YEQG), ser: XHashTable(Q, LX))
+    Rep ==> Record(meta: YEQ, ser: XHashTable(Q, LX))
     xx ==> rep x
 
-    etaQuotient(m: P, r: LZ): % ==
+    etaQuotient(y: YEQ): % ==
+        m: P := level y
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function, i.e., rStarConditions must be fulfilled.
-        not zero? rStarConditions(m, r)$QAuxMEQ =>
+        not zero? rStarConditions(m, exponents y)$QAuxMEQ =>
             error "etaQuotient: not a modular function"
-        hmeta: XHashTable(Q, YEQG) := empty()
         hser: XHashTable(Q, LX) := empty()
-        divs: LP := DIVISORS m
-        cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
-        for cusp in cusps repeat
-            gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ
-            se: YEQG := etaQuotient(m, divs, r, gamma)
-            e: EtaQuotientGamma(C, mx, CX, xi, LX) := etaQuotient se
+        for cusp in cusps y repeat
+            ye: SymbolicEtaQuotientGamma := y.cusp
+            e: EtaQuotientGamma(C, mx, CX, xi, LX) := etaQuotient ye
             s: LX := expansion e
             lc: CX := leadingCoefficient e
-            ord: Z := (xExponent(se) exquo 24)::Z -- order of series
-            hmeta.cusp := se
+            ord: Z := (xExponent(ye) exquo 24)::Z -- order of series
             hser.cusp := monomial(lc, ord)$LX * s
-        per [m, hmeta, hser]
-
-    level(x: %): P == xx.flevel
-    symbolicEtaQuotients(x: %): XHashTable(Q, YEQG) == xx.meta
+        per [y, hser]
+    etaQuotient(m: P, r: LZ): % == etaQuotient(etaQuotient(m, r)$YEQ)
+    level(x: %): P == level(xx.meta)
+    symbolicEtaQuotients(x: %): YEQ == xx.meta
     expansions(x: %): XHashTable(Q, LX) == xx.ser
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     ((x: %) = (y: %)): Boolean ==
-        -- it is enough if we compare the level and the rdeltas
-        m: P := level x
-        m ~= level y => false
-        -- note that 1/m is always a cusp of Gamma_0(m), but we choose any
-        ex: XHashTable(Q, YEQG) := symbolicEtaQuotients x
-        ey: XHashTable(Q, YEQG) := symbolicEtaQuotients y
-        cusp: Q := first keys ex
-        exponents(ex.cusp) = exponents(ey.cusp)
-
-    coerce(x: %): OutputForm == rep(x)::OutputForm
+        -- it is enough if we compare the symbolic data
+        symbolicEtaQuotient x = symbolicEtaQuotient y
 
 
 )if LiterateDoc
