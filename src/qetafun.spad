@@ -1738,7 +1738,7 @@ following correspondence.
 )abbrev domain YEQG SymbolicEtaQuotientGamma
 ++ SymbolicEtaQuotientGamma holds data to compute an eta quotient expansion
 ++ of g_r(\gamma\tau).
-SymbolicEtaQuotientGamma: SemiGroup with
+SymbolicEtaQuotientGamma: SetCategory with
     etaQuotient: (P, LP, LZ, SL2Z) -> %
       ++ etaQuotient(m, divs, r, gamma) represents the expansion of
       ++ g_r(\gamma\tau) in terms of
@@ -1772,7 +1772,7 @@ SymbolicEtaQuotientGamma: SemiGroup with
       ++ the expansion of the function g_r(\gamma\tau) corresponding to
       ++ e=etaQuotient(m, divs, r, gamma) (neglecting the (c\tau+d)^* factor
       ++ lives in Q[w][[x]] where w is a n-th root of unity.
-    eta: (%, P) -> SymbolicEtaDeltaGamma
+    elt: (%, P) -> SymbolicEtaDeltaGamma
       ++ eta(x, delta) returns the data corresponding to the respective
       ++ delta.
  == add
@@ -1853,17 +1853,6 @@ SymbolicEtaQuotientGamma: SemiGroup with
         xx.fdivs ~= yy.fdivs => false
         xx.fexponents ~= yy.fexponents => false
         xx.fgamma = yy.fgamma
-
-    ((x: %) * (y: %)): % ==
-        (xm: P := level x) ~= level y =>
-            error "SymbolicEtaQuotientGamma: different levels"
-        (divs: LP := divisors x) ~= divisors y =>
-            error "SymbolicEtaQuotientGamma: different divisors"
-        (g: SL2Z := gamma x) ~= gamma y =>
-            error "SymbolicEtaQuotientGamma: different gammas"
-        sumr: LZ := [rx+ry for rx in exponents x for ry in exponents y]
-        etaquot(xm, divs, sumr, g, xx.feta)
-
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2341,7 +2330,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
-  Exports ==> SemiGroup with
+  Exports ==> SetCategory with
     --assert(one? xi^mx)
     etaQuotient: SymbolicEtaQuotientGamma -> %
       ++ etaQuotient(s) represents the expansion of
@@ -2409,7 +2398,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         divs: LP := divisors e
         s: LX := 1
         for delta in divs for rd in exponents e | not zero? rd repeat
-            etadelta: SymbolicEtaDeltaGamma := eta(e, delta)
+            etadelta: SymbolicEtaDeltaGamma := e.delta
             u: P := edelta(etadelta)
             v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
             s := s * eulerFunctionPower(u, v, rd)
@@ -2426,12 +2415,6 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     ((x: %) = (y: %)): Boolean == symbolicEtaQuotient x = symbolicEtaQuotient y
-    ((x: %) * (y: %)): % ==
-        -- The following multiplication does the compatibility check.
-        e := symbolicEtaQuotient x * symbolicEtaQuotient y
-        c: CX := leadingCoefficient x * leadingCoefficient y
-        s: LX := expansion x * expansion y
-        per [e, c, s]
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2458,7 +2441,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
   LC ==> SparseUnivariateLaurentSeries(C, q, 0)
   YEQG ==> SymbolicEtaQuotientGamma
-  Exports ==> SemiGroup with
+  Exports ==> SetCategory with
     --assert(one? xi^mx)
     etaQuotient: (P, LZ) -> %
       ++ etaQuotient(m, r) represents the expansion of
@@ -2511,21 +2494,6 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         cusp: Q := first keys ex
         exponents(ex.cusp) = exponents(ey.cusp)
 
-    ((x: %) * (y: %)): % ==
-        m: P := level x
-        m ~= level y =>
-            error "ModularEtaQuotient: cannot multiply elements with different level"
-        ex: XHashTable(Q, YEQG) := symbolicEtaQuotients x
-        ey: XHashTable(Q, YEQG) := symbolicEtaQuotients y
-        sx: XHashTable(Q, LX) := expansions x
-        sy: XHashTable(Q, LX) := expansions y
-        hmeta: XHashTable(Q, YEQG) := empty()
-        hser: XHashTable(Q, LX) := empty()
-        cusps: LQ := keys ex
-        for cusp in cusps repeat
-            hmeta.cusp := ex.cusp * ey.cusp
-            hser.cusp := sx.cusp * sy.cusp
-        per [m, hmeta, hser]
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
 
