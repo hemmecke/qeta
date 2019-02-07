@@ -1974,7 +1974,9 @@ SL_2(\setZ)$, elements from the domain
   \kappa_{\delta,m,\lambda}
   \right)
 \end{gather}
-and thus corresponds to the data from \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+and thus corresponds to the data from
+\eqref{eq:eta_delta-m-lambda(gamma*tau)}, \ie, it computes the
+building blocks for $\eta_{\delta,m,\lambda}(\gamma\tau)$.
 
 If \code{e = eta(mm, delta, m, lambda, gamma)}, then we
 have the following correspondence:
@@ -2284,7 +2286,108 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
         xx.flambda ~= yy.flambda => false
         xx.fgamma = yy.fgamma
 
+
 )if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{SymbolicSiftedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $s \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, elements from the domain
+\code{SymbolicSiftedEtaQuotientGamma} represent the collection
+\code{SymbolicSiftedEtaQuotientLambdaGamma} for each $\lambda \in
+\Set{0,\ldots,m-1}$ and thus corresponds to the data from
+\eqref{eq:g_s-m-t(gamma*tau)}, \ie, it computes the building
+blocks for $g_{s,m,t}(\gamma\tau)$.
+
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YSEQG SymbolicSiftedEtaQuotientGamma
+++ SymbolicSiftedEtaQuotientGamma is a generalization of
+++ SymbolicEtaQuotientGamma. It holds data to compute an eta
+++ quotient expansion of g_{s,m,t}(\gamma\tau)
+++ See \eqref{eq:g_s-m-t(gamma*tau)}.}
+SymbolicSiftedEtaQuotientGamma: SetCategory with
+    etaQuotient: (P, LP, LZ, P, N, SL2Z) -> %
+      ++ etaQuotient(mm, divs, s, m, t, gamma) represents the
+      ++ expansion of g_{s,m,t}(\gamma\tau).
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+      -- Returns mm.
+    exponents: % -> LZ
+      ++ exponents(x) returns the list of exponents corresponding to all
+      ++ divisors.
+      -- Returns s.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    offset: % -> N
+      ++ offset(x) returns the subsequence offset.
+      ++ Returns t.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+    minRootOfUnity: % -> P
+      ++ minRootOfUnity(x) returns
+      ++ lcm [minRootOfUnity(x.lambda) for lambda in 0..m-1].
+    elt: (%, N) -> SymbolicSiftedEtaQuotientLambdaGamma
+      ++ x.lambda returns the data corresponding to the respective
+      ++ lambda.
+ == add
+    A ==> IndexedOneDimensionalArray(SymbolicSiftedEtaQuotientLambdaGamma, 0)
+    Rep ==> Record(
+              feta: A,    -- mapping lambda to \eta_{\delta,m,lambda}
+              fminroot: P -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+
+    etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z): % ==
+        e: SymbolicSiftedEtaQuotientLambdaGamma :=
+            etaQuotient(mm, divs, s, m, t, 0, gamma)
+        minroot: P := minRootOfUnity e
+        eta: A := new(m, e) -- fill with dummy values
+        for lambda in 1..m-1 repeat -- can start with 1.
+            e := etaQuotient(mm, divs, s, m, t, lambda, gamma)
+            minroot := qcoerce(lcm(minroot, minRootOfUnity e))@P
+            eta.lambda := e
+        per [eta, minroot]
+
+    elt(x: %, lambda: N): SymbolicSiftedEtaQuotientLambdaGamma ==
+        rep(x).feta.lambda
+    level(x: %): P == level(x.0)
+    divisors(x: %): LP == divisors(x.0)
+    exponents(x: %): LZ == exponents(x.0)
+    multiplier(x: %): P == multiplier(x.0)
+    offset(x: %): N == offset(x.0)
+    gamma(x: %): SL2Z == gamma(x.0)
+    minRootOfUnity(x: %): P == rep(x).fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, x.0)
+    ((x: %) = (y: %)): Boolean == x.0 = y.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Domains involving Laurent series}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
