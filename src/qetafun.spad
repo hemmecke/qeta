@@ -1867,6 +1867,96 @@ SymbolicEtaQuotientGamma: SemiGroup with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{SymbolicEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $N\in\setN$, $r\in R(N)$,
+elements from the domain \code{SymbolicEtaQuotient}
+is a container of data from  \code{SymbolicEtaQuotientGamma} for each
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, corresponding to a cusp of $\Gamma_0(N)$.
+
+If \code{e = etaQuotient(m, r)}, then
+for each cusp in
+\code{cuspsOfGamma0(nn)$QAuxiliaryModularEtaQuotientPackage}
+%$
+we have \code{e.cusp} is the corresponding data from
+\code{SymbolicEtaQuotientGamma}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YEQ SymbolicEtaQuotient
+++ SymbolicEtaQuotient holds data to compute an eta quotient expansions
+++ of g_r(\tau) at all cusps of $N$.
+SymbolicEtaQuotient: SetCategory with
+    etaQuotient: (P, LZ) -> %
+      ++ etaQuotient(m, r) represents the expansion of
+      ++ g_r(\tau) at all cusps a/c of Gamma0(m)
+      ++ in terms of x = \exp(2\pi i\tau/w) where w=width(m, c) and
+      ++ gamma=cupsToMatrix(m, a/c).
+    level: % -> P
+      ++ If x=etaQuotient(m, r) then level(x) returns the level of
+      ++ the eta quotient, i.e., level(x)=m.
+    exponents: % -> LZ
+      ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
+      ++ exponents, i.e., level(x)=r.
+    cusps: % -> List Q
+      ++ If x=etaQuotient(m, r), then
+      ++ cusps(x)=cuspsOfGamma0(m)$QAuxiliaryModularEtaQuotientPackage.
+    minRootOfUnity: % -> P
+      ++ If x=etaQuotient(m, r), then minRootOfUnity(x) returns the
+      ++ smallest positive integer n such that the expansion of the
+      ++ function g_r(\tau) at any cusp of Gamma_0(m)
+      ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[x]] where w
+      ++ is a n-th root of unity.
+    elt: (%, Q) -> SymbolicEtaQuotientGamma
+      ++ x.cusp returns the data corresponding to the respective
+      ++ cusp.
+ == add
+    HT ==> XHashTable(Q, SymbolicEtaQuotientGamma)
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fexponents: LZ,-- the r vector
+              fcusps: LQ,
+              feta: HT,      -- mapping delta to \eta_\delta
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+    lcmP(a, b) ==> qcoerce(lcm(a::Integer, b::Integer))@P
+
+    etaQuotient(m: P, r: LZ): % ==
+        divs: LP := DIVISORS m
+        cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
+        h: HT := empty()
+        minroot: P := 1
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ
+            e: SymbolicEtaQuotientGamma := etaQuotient(m, divs, r, gamma)
+            h.cusp := e
+            minroot := qcoerce(lcm(minroot, minRootOfUnity e))@P
+        per [m, r, cusps, h, minroot]
+
+    level(x: %): P == xx.flevel
+    exponents(x: %): LZ == xx.fexponents
+    cusps(x: %): LQ == xx.fcusps
+    elt(x: %, cusp: Q): SymbolicEtaQuotientGamma == xx.feta.cusp
+    minRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents = yy.fexponents
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
