@@ -1596,6 +1596,7 @@ QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+lcmP(a, b) ==> qcoerce(lcm(a::Integer, b::Integer))@P
 
 )if LiterateDoc
 %$
@@ -1813,7 +1814,6 @@ SymbolicEtaQuotientGamma: SetCategory with
     import from Rep
     xx ==> rep x
     yy ==> rep y
-    lcmP(a, b) ==> qcoerce(lcm(a::Integer, b::Integer))@P
 
     -- divs must be ALL divisors of m sorted ascendingly
     etaquot(m: P, divs: LP, r: LZ, gamma: SL2Z, eta: HT): % ==
@@ -1934,7 +1934,6 @@ SymbolicEtaQuotient: SetCategory with
     import from Rep
     xx ==> rep x
     yy ==> rep y
-    lcmP(a, b) ==> qcoerce(lcm(a::Integer, b::Integer))@P
 
     etaQuotient(m: P, r: LZ): % ==
         divs: LP := DIVISORS m
@@ -1945,7 +1944,7 @@ SymbolicEtaQuotient: SetCategory with
             gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ
             e: SymbolicEtaQuotientGamma := etaQuotient(m, divs, r, gamma)
             h.cusp := e
-            minroot := qcoerce(lcm(minroot, minRootOfUnity e))@P
+            minroot := lcmP(minroot, minRootOfUnity e)
         per [m, r, cusps, h, minroot]
 
     level(x: %): P == xx.flevel
@@ -2230,7 +2229,6 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     import from Rep
     xx ==> rep x
     yy ==> rep y
-    lcmP(a, b) ==> qcoerce(lcm(a::Integer, b::Integer))@P
 
     -- divs must be ALL divisors of m sorted ascendingly
     etaquot(mm: P, divs: LP, s: LZ,
@@ -2371,7 +2369,7 @@ SymbolicSiftedEtaQuotientGamma: SetCategory with
         eta: A := new(m, e) -- fill with dummy values
         for lambda in 1..m-1 repeat -- can start with 1.
             e := etaQuotient(mm, divs, s, m, t, lambda, gamma)
-            minroot := qcoerce(lcm(minroot, minRootOfUnity e))@P
+            minroot := lcmP(minroot, minRootOfUnity e)
             eta.lambda := e
         per [eta, minroot]
 
@@ -2464,7 +2462,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
         minroot: P := 1
         for tt in orb repeat
             e: YSEQG := etaQuotient(mm, divs, s, m, tt, gamma)
-            minroot := qcoerce(lcm(minroot, minRootOfUnity e))@P
+            minroot := lcmP(minroot, minRootOfUnity e)
             h.tt := e
         per [mm, divs, s, m, t, gamma, h, minroot]
 
@@ -2503,13 +2501,16 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{SymbolicModularSiftedEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $m, M\in\setN$, $s \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
+
+For $m, M, N\in\setN$, $r \in R(N)$, $s \in R(M)$, $t \in
+\Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 SL_2(\setZ)$, elements from the domain
-\code{SymbolicModularSiftedEtaQuotientGamma} multiplies an
-$\eta$-quotient cofactor to
-\code{SymbolicSiftedEtaQuotientOrbitProductGamma} in order
-to make the product a modular function.
+\code{SymbolicModularSiftedEtaQuotientGamma} represent the product of
+an
+$\eta$-quotient cofactor to an element of
+\code{SymbolicSiftedEtaQuotientOrbitProductGamma} in order to make the
+product a modular function.
 
 It corresponds to the data from \eqref{eq:F_r-s-m-t(gamma*tau)}, \ie, it
 computes the building blocks for $F_{r, s, m, t}(\gamma\tau)$.
@@ -2551,7 +2552,7 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
         seqopg: YSEQOPG := etaQuotient(mm, mmdivs, s, m, t, gamma)
         minR1: P := minRootOfUnity coetaqg
         minR2: P := minRootOfUnity seqopg
-        per [coetaqg, seqopg, qcoerce(lcm(minR1, minR2))@P]
+        per [coetaqg, seqopg, lcmP(minR1, minR2)]
 
     cofactor(x: %): YEQG == xx.fcoetaqg
     orbitProduct(x: %): YSEQOPG == xx.fseqopg
