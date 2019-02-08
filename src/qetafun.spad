@@ -2390,6 +2390,115 @@ SymbolicSiftedEtaQuotientGamma: SetCategory with
     ((x: %) = (y: %)): Boolean == x.0 = y.0
 
 
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{SymbolicSiftedEtaQuotientOrbitProductGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $s \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, elements from the domain
+\code{SymbolicSiftedEtaQuotientOrbitProductGamma} represent the
+collection \code{SymbolicSiftedEtaQuotientGamma}
+for each
+$t' \in \modularOrbit{s, m, t}$ and thus corresponds to the data from
+\eqref{eq:P_s-m-t(gamma*tau)}, \ie, it computes the building blocks
+for $P_{s,m,t}(\gamma\tau)$.
+
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YSEQOPG SymbolicSiftedEtaQuotientOrbitProductGamma
+++ SymbolicSiftedEtaQuotientOrbitProductGamma
+++ holds data to compute an eta quotient
+++ expansions of P_{s, m, t}(\gamma\tau).
+++ See \eqref{eq:P_s-m-t(gamma*tau)}.}
+SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
+    etaQuotient: (P, LP, LZ, P, N, SL2Z) -> %
+      ++ etaQuotient(mm, s, m, t, gamma) represents the expansion
+      ++ of P_{s, m, t}(\gamma\tau).
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+      -- Returns mm.
+    exponents: % -> LZ
+      ++ exponents(x) returns the list of exponents corresponding to all
+      ++ divisors.
+      -- Returns s.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    offset: % -> N
+      ++ offset(x) returns the subsequence offset.
+      ++ Returns t.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+    minRootOfUnity: % -> P
+      ++ minRootOfUnity(x) returns
+      ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
+    elt: (%, N) -> SymbolicSiftedEtaQuotientGamma
+      ++ x.u returns the data corresponding to the respective
+      ++ orbit element u.
+ == add
+    YSEQG ==> SymbolicSiftedEtaQuotientGamma
+    HT ==> XHashTable(N, YSEQG)
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fdivs: LP,     -- all divisors of level that are given at creation
+              fexponents: LZ,-- the s vector
+              fmultiplier: P,-- the multiplier m
+              foffset: N,    -- the offset t \in 0..(m-1)
+              fgamma: SL2Z,  -- gamma
+              fdata: HT,
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z): % ==
+        shat: Z := 0 -- sigmaInfty
+        for delta in divs for sdelta in s repeat shat := shat + delta * sdelta
+        orb: List N := orbit(shat, m, t)$QEtaKolberg
+        h: HT := empty()
+        minroot: P := 1
+        for tt in orb repeat
+            e: YSEQG := etaQuotient(mm, divs, s, m, tt, gamma)
+            minroot := qcoerce(lcm(minroot, minRootOfUnity e))@P
+            h.tt := e
+        per [mm, divs, s, m, t, gamma, h, minroot]
+
+    elt(x: %, tt: N): YSEQG == rep(x).fdata.tt
+    level(x: %): P == xx.flevel
+    divisors(x: %): LP == xx.fdivs
+    exponents(x: %): LZ == xx.fexponents
+    multiplier(x: %): P == xx.fmultiplier
+    offset(x: %): N == xx.foffset
+    gamma(x: %): SL2Z == xx.fgamma
+    minRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fdivs)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fmultiplier)
+        h := hashUpdate!(h, xx.foffset)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fdivs ~= yy.fdivs => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fmultiplier ~= yy.fmultiplier => false
+        xx.foffset ~= yy.foffset => false
+        xx.fgamma = yy.fgamma
+
+
+
+
+
 
 
 
