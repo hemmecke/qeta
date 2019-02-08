@@ -36,6 +36,7 @@ xdbgPrint(x,y) ==> rhx:="42"
 \newcommand{\divisorprod}[2][\delta]{\prod_{\divides{#1}{#2}}}
 
 \newcommand{\setS}{\mathbb{S}}
+\newcommand{\modularOrbit}[1]{\mathcal{O}_{#1}}
 
 \usepackage{makeidx}
 \makeindex
@@ -1303,7 +1304,7 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
   For $t\in\Set{0,\ldots,m-1}$, $s \in R(M)$ we define
   %
   \begin{align}
-    \defineNotation[P-s-m-t]{P_{s,m,t}}
+    \defineNotation[O-s-m-t]{\modularOrbit{s,m,t}}
     &:=
       \setS_{24m}  \mathbin{\bar{\odot}_s} t
       =
@@ -1312,7 +1313,7 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
     %
     \defineNotation[chi-s-m-t]{\chi_{s,m,t}}
     &:=
-      \prod_{t' \in P_{s,m,t}}
+      \prod_{t' \in \modularOrbit{s,m,t}}
         \unityPower{\frac{(1-m^2)(24 t'+ \sumdelta{s})}{24 m}}.
   \end{align}
 \end{Definition}
@@ -1322,22 +1323,22 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
   \label{thm:orbit-sum}
   \cite[Lemma~43]{Radu:RamanujanKolberg:2015}
   \begin{gather}
-      \sum_{t' \in P_{s,m,t}} (24 t'+ \sumdelta{s}) \equiv_m 0.
+      \sum_{t' \in \modularOrbit{s,m,t}} (24 t'+ \sumdelta{s}) \equiv_m 0.
     \label{eq:orbit-sum}
   \end{gather}
 \end{Lemma}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Lemma}
-  \label{thm:stable-P-s-m-t}
+  \label{thm:stable-O-s-m-t}
   \label{thm:chi-exponent}
   \cite[Lemma~43]{Radu:RamanujanKolberg:2015}
   Let $t\in\Set{0,\ldots,m-1}$, $s \in R(M)$. Then
   \begin{enumerate}
   \item for any $x \in \setS_{24m}$ we have
-    $P_{s,m,t}
-    = x \mathbin{\bar{\odot}_s} P_{s,m,t}
-    = \SetDef{x \mathbin{\bar{\odot}_s} t'}{t'\in P_{s,m,t}}$,
+    $\modularOrbit{s,m,t}
+    = x \mathbin{\bar{\odot}_s} \modularOrbit{s,m,t}
+    = \SetDef{x \mathbin{\bar{\odot}_s} t'}{t'\in \modularOrbit{s,m,t}}$,
   \item $\chi_{s,m,t}=\unityPower{\frac{\nu}{24}}$ for some
     $\nu \in \Set{0,\ldots,23}$.
   \end{enumerate}
@@ -1347,11 +1348,44 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
 \begin{Definition}\cite[Def.~44]{Radu:RamanujanKolberg:2015}
   Given $t\in\Set{0,\ldots,m-1}$, $s \in R(M)$, $r \in R(N)$, we
   define
-  \begin{gather}
-    F_{r, s, m, t}(\tau) := \divisorprod{N} \eta(\delta
-    \tau)^{r_\delta} \prod_{t' \in P_{s,m,t}} g_{s,m,t'}(\tau)
-  \end{gather}
+  \begin{align}
+    P_{s, m, t}(\tau)
+    &:= \prod_{t' \in \modularOrbit{s,m,t}} g_{s,m,t'}(\tau)\\
+    %
+    F_{r, s, m, t}(\tau)
+    &:= \divisorprod{N} \eta(\delta\tau)^{r_\delta} \cdot P_{s, m, t}(\tau)
+  \end{align}
 \end{Definition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $P_{s,m,t}$ under $SL_2(\setZ)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{align}
+  P_{s,m,t}(\gamma\tau)
+  &=
+    \left(\frac{(c\tau+d)^{\divisorsum{M} \frac{s_\delta}{2}}}{m}\right)^\mu
+    \prod_{t'\in \modularOrbit{s,m,t}}
+    \left[\sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t'+\sumdelta{s}\Bigr)
+    + \divisorsum{M}\frac{s_\delta(v_{\delta,m\lambda} +
+    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\right.\notag\\
+  &\qquad\times
+    \left.
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
+    \cdot
+    \unityPower{\frac{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}{24}\tau}
+    \cdot
+    \divisorprod{M} \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
+    \right]
+    \label{eq:P_s-m-t(gamma*tau)}
+\end{align}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $F_{r,s,m,t}$ under $SL_2(\setZ)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Theorem}\cite[Thm.~45]{Radu:RamanujanKolberg:2015}
@@ -1360,7 +1394,7 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
   Definition~\ref{def:modular-input-condition}, $r\in R(N)$, $\nu$ and
   $\mu$ be integers such that
   $\chi_{s,m,t}=\unityPower{\frac{\nu}{24}}$, and
-  $\mu=\sizeOfSet{P_{s,m,t}}$, then $F_{r,s,m,t}(\tau)$ is a modular
+  $\mu=\sizeOfSet{\modularOrbit{s,m,t}}$, then $F_{r,s,m,t}(\tau)$ is a modular
   function on $\Gamma_0(N)$ iff the following conditions hold:
   \begin{align}
     \divisorsum{N} r_\delta + \mu \divisorsum{M} s_\delta
@@ -1388,8 +1422,12 @@ Let $N, M, r, s, m, t, \nu, \mu$ fulfil all the conditions of
 Theorem~\ref{thm:RaduConditions}. Then the exponent of the factor
 $c\tau+d$ is zero, \ie, this factor vanishes.
 
-\begin{align*}
-  F_{r,s,m,t}(\gamma\tau)
+\begin{align}
+  F_{r, s, m, t}(\gamma\tau)
+  &:= \divisorprod{N} \eta(\delta\gamma\tau)^{r_\delta}
+    \cdot
+    P_{s, m, t}(\gamma\tau)
+  \notag\\
   &=
   (c\tau+d)^{\divisorsum{N} \frac{r_\delta}{2}}
   \cdot
@@ -1400,24 +1438,10 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
   \cdot
   q^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
   \cdot
-    \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
+    \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\notag\\
   &\qquad\times
-    \prod_{t'\in P_{s,m,t}}
-    \frac{(c\tau+d)^{\divisorsum{M} \frac{s_\delta}{2}}}{m}
-    \left[\sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t'+\sumdelta{s}\Bigr)
-    + \divisorsum{M}\frac{s_\delta(v_{\delta,m\lambda} +
-    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\right.\\
-  &\qquad\times
-    \left.
-    \divisorprod{M}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{s_\delta}{2}}
-    \cdot
-    \unityPower{\frac{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}{24}\tau}
-    \cdot
-    \divisorprod{M} \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
-    \right]
-  \\
+    P_{s, m, t}(\gamma\tau)
+  \notag\\
   &=
   \divisorprod{N}
   \left(\frac{h_\delta}{\delta}\right)^{\!\frac{r_\delta}{2}}
@@ -1426,14 +1450,14 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
   \cdot
   q^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
     \cdot
-    \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\\
+    \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta} \times\notag\\
   &\qquad\times
     \frac{1}{m^\mu}
-    \prod_{t'\in P_{s,m,t}}
+    \prod_{t'\in \modularOrbit{s,m,t}}
     \left[\sum_{\lambda=0}^{m-1}
     \unityPower{-\frac{\lambda}{24m}\Bigl(24t'+\sumdelta{s}\Bigr)
     + \divisorsum{M}\frac{s_\delta(v_{\delta,m\lambda} +
-    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\right.\\
+    \kappa_{\gamma,\delta,m,\lambda})}{24}} \times\right.\notag\\
   &\qquad\times
     \left.
     \divisorprod{M}
@@ -1443,7 +1467,8 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
     \cdot
     \divisorprod{M} \prod_{n=1}^\infty (1-q_{\delta,m,\lambda}^n)^{s_\delta}
     \right]
-\end{align*}
+    \label{eq:F_r-s-m-t(gamma*tau)}
+\end{align}
 
 
 
@@ -1451,6 +1476,9 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The formulas in short and their relations to the implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \begin{align*}
@@ -1494,24 +1522,18 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
     \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\tau)
   \\
 %
+  P_{s, m, t}(\tau)
+  &:=
+    \frac{1}{m^\mu}
+    \prod_{t' \in \modularOrbit{s,m,t}}
+    \left(
+    \sum_{\lambda=0}^{m-1} g_{s,m,t'}(\tau)
+    \right)
+  \\
+%
   F_{r, s, m, t}(\tau)
   &:=
-    \divisorprod{N} \eta(\delta \tau)^{r_\delta}
-    \prod_{t' \in P_{s,m,t}} \frac{1}{m}
-    \left(
-    \sum_{\lambda=0}^{m-1} g_{s,m,t',\lambda}(\tau)
-    \right)
-  \\
-  &:=
-    \divisorprod{N} \eta(\delta \tau)^{r_\delta}
-    \frac{1}{m^\mu}
-    \prod_{t' \in P_{s,m,t}}
-    \left(
-    \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m} (24t'+\sumdelta{s})}
-    \divisorprod{M} \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
-    \right)
-  \\
+    \divisorprod{N} \eta(\delta \tau)^{r_\delta} \cdot P_{s, m, t}(\tau)
 \end{align*}
 
 
