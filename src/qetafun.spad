@@ -2498,6 +2498,73 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
 
 
 
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{SymbolicModularSiftedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $s \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, elements from the domain
+\code{SymbolicModularSiftedEtaQuotientGamma} multiplies an
+$\eta$-quotient cofactor to
+\code{SymbolicSiftedEtaQuotientOrbitProductGamma} in order
+to make the product a modular function.
+
+It corresponds to the data from \eqref{eq:F_r-s-m-t(gamma*tau)}, \ie, it
+computes the building blocks for $F_{r, s, m, t}(\gamma\tau)$.
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YMSEQG SymbolicModularSiftedEtaQuotientGamma
+++ SymbolicModularSiftedEtaQuotientGamma
+++ holds data to compute an eta quotient
+++ expansions of F_{r, s, m, t}(\gamma\tau).
+++ See \eqref{eq:F_r-s-m-t(gamma*tau)}.
+SymbolicModularSiftedEtaQuotientGamma: SetCategory with
+    etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
+      ++ etaQuotient(nn, r, mm, s, m, t, gamma) represents the expansion
+      ++ of F_{r,s, m, t}(\gamma\tau).
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+    minRootOfUnity: % -> P
+      ++ minRootOfUnity(x) returns
+      ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
+ == add
+    YSEQOPG ==> SymbolicSiftedEtaQuotientOrbitProductGamma
+    YEQG ==> SymbolicEtaQuotientGamma
+    Rep ==> Record(
+              fcoetaqg: YEQG,
+              fseqopg: YSEQOPG,
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N, gamma: SL2Z): % ==
+        nndivs: LP := DIVISORS nn
+        mmdivs: LP := DIVISORS mm
+        coetaqg: YEQG := etaQuotient(nn, nndivs, r, gamma)
+        seqopg: YSEQOPG := etaQuotient(mm, mmdivs, s, m, t, gamma)
+        minR1: P := minRootOfUnity coetaqg
+        minR2: P := minRootOfUnity seqopg
+        per [coetaqg, seqopg, qcoerce(lcm(minR1, minR2))@P]
+
+    cofactor(x: %): YEQG == xx.fcoetaqg
+    orbitProduct(x: %): YSEQOPG == xx.fseqopg
+    minRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.fcoetaqg)
+        h := hashUpdate!(h, xx.fseqopg)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        (xx.fcoetaqg = yy.fcoetaqg) and (xx.fseqopg = yy.fseqopg)
 
 
 
