@@ -2473,6 +2473,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
     gamma(x: %): SL2Z == xx.fgamma
+    orbit(x: %): List N == xx.forbit
     minRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
@@ -2568,6 +2569,75 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
         (xx.fcoetaqg = yy.fcoetaqg) and (xx.fseqopg = yy.fseqopg)
 
 
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{SymbolicModularSiftedEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For $m, M, N\in\setN$, $r \in R(N)$, $s \in R(M)$, $t \in
+\Set{0,\ldots,m-1}$,
+elements from the domain
+\code{SymbolicModularSiftedEtaQuotient} represent the collection
+of element from
+\code{SymbolicSiftedEtaQuotienGamma} for all $\gamma \in SL_2(\setZ)$
+corresponding to a cusp of $\Gamma_0(N)$.
+
+It corresponds to the data from \eqref{eq:F_r-s-m-t(gamma*tau)}, \ie,
+it computes the building blocks for $F_{r, s, m, t}(\gamma\tau)$.
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YMSEQ SymbolicModularSiftedEtaQuotient
+++ SymbolicModularSiftedEtaQuotient
+++ holds data to compute an eta quotient
+++ expansions of F_{r, s, m, t}(\gamma\tau) at all cusps of $Gamma_0(N)$.
+++ See \eqref{eq:F_r-s-m-t(gamma*tau)}.
+SymbolicModularSiftedEtaQuotient: SetCategory with
+    etaQuotient: (P, LZ, P, LZ, P, N) -> %
+      ++ etaQuotient(nn, r, mm, s, m, t) represents the expansion
+      ++ of F_{r,s, m, t}(\gamma\tau).
+    cusps: % -> List Q
+      ++ cusps(x)=cuspsOfGamma0(level x)$QAuxiliaryModularEtaQuotientPackage.
+    elt: (%, Q) -> SymbolicModularSiftedEtaQuotientGamma
+      ++ x.cusp returns the data corresponding to the respective
+      ++ cusp.
+    minRootOfUnity: % -> P
+      ++ minRootOfUnity(x) returns
+      ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
+ == add
+    YMSEQG ==> SymbolicModularSiftedEtaQuotientGamma
+    HT ==> XHashTable(Q, YMSEQG)
+    Rep ==> Record(
+              flevel: P,  -- corresponds to Gamma_0(N)
+              fcusps: LQ, -- cusps of Gamma_0(N)
+              fmseq: HT,  -- mapping gamma to YMSEQG
+              fminroot: P -- minimal root of unity needed for the coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): % ==
+        h: HT := empty()
+        minroot: P := 1
+        cusps: LQ := cuspsOfGamma0(nn)$QAuxMEQ
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ
+            e: YMSEQG := etaQuotient(nn, r, mm, s, m, t, gamma)
+            h.cusp := e
+            minroot := lcmP(minroot, minRootOfUnity e)
+        per [nn, cusps, h, minroot]
+
+    level(x: %): P == xx.flevel
+    elt(x: %, cusp: Q): YMSEQG == xx.fmseq.cusp
+    minRootOfUnity(x: %): P == xx.fminroot
+    cusps(x: %): LQ == xx.fcusps
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fmseq)
+    ((x: %) = (y: %)): Boolean == xx.fmseq = yy.fmseq
 
 
 
