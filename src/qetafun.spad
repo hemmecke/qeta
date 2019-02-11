@@ -2668,7 +2668,7 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Domains involving Laurent series}
+\subsection{Domains involving Puiseux series}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The following domains compute actual series from the data provided by
@@ -2875,82 +2875,72 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
 )if LiterateDoc
 % $
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{SiftedEtaQuotientLambdaGamma}
+\subsubsection{SiftedEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $m, M\in\setN$, $s \in R(M)$, $t,\lambda \in
-\Set{0,\ldots,m-1}$,
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-SL_2(\setZ)$, elements from the domain \code{SiftedEtaQuotientLambdaGamma}
-represents the series expansion of
-$g_{s,m,t,\lambda}(\gamma\tau)$, \ie, an element from
-\code{SymbolicSiftedEtaQuotientLambdaGamma} in terms of $q^{1/(24 m w)}$ where
-$w$ must be a multiple of the the $\lcm$ the denominator of
-\begin{gather*}
-  p := \frac{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}{24}
-\end{gather*}
-and of all denominators of $u_{\delta,m,\lambda}$ over all
-$\divides{\delta}{M}$ with
-$s_\delta\ne0$, \ie, it represents the tuple
-\begin{gather}
-  \left(
-  y
-  ,
-  \underbrace{\divisorprod{M}
-  \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!s_\delta/2}
-  \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr) +
-  \divisorsum{M} \frac{s_\delta(v_{\delta,m,\lambda} + \kappa_{\delta,m,\lambda})}{24}}
-  }_{\texttt{leadingCoefficient}}
-  \cdot
-  q^p \divisorprod{M}\prod_{n=1}^{\infty}
-    (1-\unityPower{n v_\delta} q^{n u_\delta})^{s_\delta}
-  \right)
-\end{gather}
-where $y$ is the corrresponding element of
-\code{SymbolicSiftedEtaQuotientLambdaGamma} and, thus, the series from
-\eqref{eq:g_s-m-t-lambda(gamma*tau)} without the
-$(c\tau+d)$-part.
-
+The domain \code{SiftedEtaQuotientGamma} represents the Puiseux series
+expansion of various eta quotients.
 )endif
 
-
 -------------------------------------------------------------------
-)abbrev domain SEQLG SiftedEtaQuotientLambdaGamma
-++ SiftedEtaQuotientLambdaGamma is a generalization of
+)abbrev domain SEQLG SiftedEtaQuotientGamma
+++ EtaQuotientLambdaGamma is a generalization of
 ++ SymbolicSiftedEtaQuotientLambdaGamma. It holds data to compute an eta
 ++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau).
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
-SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
+SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
-  Exports ==> SetCategory with
-    etaQuotient: (SymbolicSiftedEtaQuotientLambdaGamma, P) -> %
-      ++ etaQuotient(e, w) represents the
+  YMSEQG ==> SymbolicModularSiftedEtaQuotientGamma
+  YSEQOPG ==> SymbolicSiftedEtaQuotientOrbitProductGamma
+  YSEQG ==> SymbolicSiftedEtaQuotientGamma
+  YEQG ==> SymbolicEtaQuotientGamma
+  Exports ==> CoercibleTo OutputForm with
+    puiseux: (SymbolicEtaQuotientGamma, P) -> %
+      ++ puiseux(y, w) represents the q-expansion of
+      ++ g_{s}(\gamma\tau) at \tau=i\infity.
+    puiseux: (SymbolicSiftedEtaQuotientLambdaGamma, P) -> %
+      ++ puiseux(y, w) represents the
       ++ q-expansion of g_{s,m,t,\lambda}(\gamma\tau) at \tau=i\infity.
+    puiseux: (SymbolicSiftedEtaQuotientGamma, P) -> %
+      ++ puiseux(y, w) represents the q-expansion of
+      ++ g_{s,m,t}(\gamma\tau) at \tau=i\infity.
+    puiseux: (SymbolicSiftedEtaQuotientOrbitProductGamma, P) -> %
+      ++ puiseux(y, w) represents the q-expansion of
+      ++ $\prod_{t'\in\modularOrbit{s,m,t}} g_{s,m,t}(\gamma\tau)$
+      ++ at \tau=i\infity.
+    puiseux: (SymbolicModularSiftedEtaQuotientGamma, P) -> %
+      ++ puiseux(y, w) represents the q-expansion of
+      ++ $F_{r,s,m,t}(\gamma\tau)$ at \tau=i\infity.
+
     rationalPowerDenominator: % -> P
       ++ rationalPowerDenominator(x) returns d such that x is a Laurent series
       ++ in q^d.
     expansion: % -> LX
-      ++ expansion(x) returns the Laurent series representation of x
+      ++ expansion(x) returns the Puiseux series representation of x
       ++ without the prefactor corresponding to (c\tau+d) in z=q^(1/d)
       ++ where d=rationalPowerDenominator(x).
   Implementation ==> add
     Rep ==> Record(den: P, ser: LX)
     xx ==> rep x
      -- We maintain a cache of expansions of powers of the Euler function.
+
+    RecC ==> Record(k: Z, c: C)
+    RecX ==> Record(k: Z, c: CX)
+    SFCX ==> StreamFunctions2(RecC, RecX)
+    QFT ==> QFunctionTools(CX, LX)
+
+-------------------------------------------------------------------
+-- Cache powers of powers of the expansions of the Euler function.
+-------------------------------------------------------------------
     q: Symbol := "q"::Symbol
     LC ==> SparseUnivariateLaurentSeries(C, q, 0)
     ef: LC := eulerFunction(1)$QFunctions(C, LC)
     ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
     -- We intend to also store negative powers of the eulerFunction.
     cache: XHashTable(Z, LC) := getCache()$CachedPower(LC, ef)
-
-    RecC ==> Record(k: Z, c: C)
-    RecX ==> Record(k: Z, c: CX)
-    SFCX ==> StreamFunctions2(RecC, RecX)
-
     eulerFunctionPower(p: Z): LC ==
         key?(p, cache) => cache.p
         zero? p => 1
@@ -2959,6 +2949,9 @@ SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
         p > 0 => es
         cache.p := recip(es)::LC -- cache for negative exponents and return
 
+-------------------------------------------------------------------
+-- Auxiliary functions
+-------------------------------------------------------------------
     substituteVariable(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
         -- replace variable q by xi^v * x^u
         xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
@@ -2972,48 +2965,68 @@ SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX): Exports == Implementation where
         stx: Stream RecX := map(substituteVariable(u, v), stc)$SFCX
         series(stx)$LX
 
+    -- We assume that CX has been chosen in such a way that the square
+    -- root of the argument of squareRoot can be expressed in it.
     squareRoot(fq: Q): CX ==
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
         ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
-    etaQuotient(e: SymbolicSiftedEtaQuotientLambdaGamma, w: P): % ==
+    divideBy(m: Z): CX -> CX == (c: CX): CX +-> (1/m)$Q::C::CX * c
+
+-------------------------------------------------------------------
+-- exported functions
+-------------------------------------------------------------------
+    rationalPowerDenominator(x: %): P == xx.den
+    expansion(x: %): LX == xx.ser
+    coerce(x: %): OutputForm == xx::OutputForm
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $s \in R(M)$, $t,\lambda \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$, the following function represents the Puiseux expansion
+of $g_{s,m,t,\lambda}(\gamma\tau)$, \ie, in terms of $q^{1/(24 m w)}$
+where $w$ must be a multiple of the the $\lcm$ the denominator of
+\begin{gather*}
+  p := \frac{\divisorsum{M} s_\delta u_{\delta,m,\lambda}}{24}
+\end{gather*}
+and of all denominators of $u_{\delta,m,\lambda}$ over all
+$\divides{\delta}{M}$ with $s_\delta\ne0$, \ie, the series from
+\eqref{eq:g_s-m-t-lambda(gamma*tau)} without the $(c\tau+d)$-part.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+    puiseux(y: SymbolicSiftedEtaQuotientLambdaGamma, w: P): % ==
         -- w=width
-        mm: P := level e
-        divs: LP := divisors e
-        m: P := multiplier e
+        mm: P := level y
+        divs: LP := divisors y
+        m: P := multiplier y
         d: P := 24*m*w
         s: LX := 1
-        for delta in divs for sd in exponents e | not zero? sd repeat
-            etadelta: SymbolicSiftedEtaDeltaLambdaGamma := e.delta
+        for delta in divs for sd in exponents y | not zero? sd repeat
+            etadelta: SymbolicSiftedEtaDeltaLambdaGamma := y.delta
             u: Q := d * udelta etadelta
             not one? denom u =>
                 dbgPrint("delta, d", [delta, d]$List(P))
                 dbgPrint("udelta", [udelta etadelta, u]$List(Q))
-                error "SiftedEtaQuotientLambdaGamma: denominator does not vanish"
+                error "SiftedEtaQuotientGamma: denominator does not vanish"
             v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
             ep: LC := eulerFunctionPower sd
             s := s * substitute(ep, qcoerce(numer u)@P, v)
-        q: Q := mx * unityPower e
-        if not one? denom q then
-            dbgPrint("mx * unityPower e", q)
-            error "SiftedEtaQuotientLambdaGamma: denominator for xi does not vanish"
+        q: Q := mx * unityPower y
+        not one? denom q =>
+            dbgPrint("mx * unityPower y", q)
+            error "SiftedEtaQuotientGamma: denominator for xi does not vanish"
         n: N := qcoerce(positiveRemainder(numer q, mx))@N
-        cx: CX := xi^n * squareRoot rationalPrefactor e -- leading coefficient
-        p: Q := d/24 * qExponent e -- the "/24" is missing from qPower(e)
-        if not one? denom p then
-            error "SiftedEtaQuotientLambdaGamma: denominator for q does not vanish"
+        cx: CX := xi^n * squareRoot rationalPrefactor y -- leading coefficient
+        p: Q := d/24 * qExponent y -- the "/24" is missing from qPower(y)
+        not one? denom p =>
+            error "SiftedEtaQuotientGamma: denominator for q does not vanish"
         per [d, monomial(cx, numer p)$LX * s]
-
-    rationalPowerDenominator(x: %): P == xx.den
-    expansion(x: %): LX == xx.ser
-
-    coerce(x: %): OutputForm == xx::OutputForm
-    ((x: %) = (y: %)): Boolean == rep x = rep y
 
 )if LiterateDoc
 %$
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{SiftedEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $s \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
@@ -3024,68 +3037,14 @@ represents the series expansion of
   =\frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\gamma\tau)
 \end{gather*}
 without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-
--------------------------------------------------------------------
-)abbrev domain SEQG SiftedEtaQuotientGamma
-++ SiftedEtaQuotientGamma represents the sum (over all lambda) of elements
-++ from SiftedEtaQuotientLambdaGamma. It holds the series
-++ expansion of g_{s,m,t}(\gamma\tau).
-++ See \eqref{eq:g_s-m-t(gamma*tau)}.}
-SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
-  C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
-  mx: P -- mx-th root of unity needed.
-  CX: Algebra C
-  xi: CX --primitive mx-th root of unity.
-  LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
-  Exports ==> CoercibleTo OutputForm with
-    etaQuotient: (P, LP, LZ, P, N, SL2Z, P) -> %
-      ++ etaQuotient(mm, divs, s, m, t, gamma, w) represents the
-      ++ z-expansion of g_{s,m,t}(\gamma\tau) at \tau=i\infity
-      ++ where z = q^(1/(24*w)).
-    etaQuotientOrbitProduct: (P, LP, LZ, P, N, SL2Z, P) -> %
-      ++ etaQuotientOrbitProduct(mm, divs, s, m, t, gamma, w)
-      ++ returns the product over all
-      ++ etaQuotient(mm, divs, s, m, t', gamma, w) for t' in
-      ++ orbit(sigmaInfty, m, t) where
-      ++ $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
-    coEtaQuotient: (P, LP, LZ, SL2Z, P) -> %
-      ++ TODO: This function should not be exported.
-      ++ coEtaQuotient(nn, divs, r, gamma, w) computes
-      ++ etaQuotient(nn, divs, r, 1, 0, gamma, w) where divs=divisors(nn)
-      ++ and r must match thm:RaduConditions.
-      ++ It compute the expansion of the "modular" cofactor needed in
-      ++ modularEtaQuotient.
-    modularEtaQuotient: (P, LZ, P, LZ, P, N, SL2Z, P) -> %
-    rationalPowerDenominator: % -> P
-    expansion: % -> LX
-      ++ expansion(x) returns the Puiseux series expansion of x
-      ++ without the prefactor corresponding to (c\tau+d)
-  Implementation ==> add
-    Rep ==> Record(den: P, ser: LX)
-    RecX ==> Record(k: Z, c: CX)
-    xx ==> rep x
-    YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
-    SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
-    QFT ==> QFunctionTools(CX, LX)
-
-    rationalPowerDenominator(x: %): P == xx.den
-    expansion(x: %): LX == xx.ser
-
-    coerce(x: %): OutputForm == xx::OutputForm
-    ((x: %) = (y: %)): Boolean == rep x = rep y
-
-    divideBy(m: Z): CX -> CX == (c: CX): CX +-> (1/m)$Q::C::CX * c
-
-    -- exported function etaQuotient
-    etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z, w: P): % ==
+    puiseux(y: SymbolicSiftedEtaQuotientGamma, w: P): % ==
+        m: P := multiplier y
         l: LX := 0
         m1: P := qcoerce(m::Z - 1)@P
-        for lambda in 0..m1 repeat
-            seq: YSEQLG := etaQuotient(mm, divs, s, m, t, lambda, gamma)
-            l := l + expansion etaQuotient(seq, w)$SEQLG
+        for lambda in 0..m1 repeat l := l + expansion puiseux(y.lambda, w)
         -- A transformation of an eta-quotient is a non-zero function.
         -- Thus, it is safe to ask for the order of the series expansion.
         ord: Z := order l
@@ -3094,32 +3053,32 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         for i in 1..m1 repeat
             if not zero? coefficient(l, ord+i) then
                 dbgPrint("expansion", l)
-                error "m-lambda sum"
+                error "SiftedEtaQuotientGamma: m-lambda sum"
         ord := (ord exquo m) :: Z -- order of resulting series
         per [24 * w, chooseAndMap(divideBy m, (n: Z): Z +-> m*n, l, ord)$QFT]
 
-    etaQuotientOrbitProduct(mm: P, divs: LP, s: LZ,
-                            m: P, t: N, gamma: SL2Z, w: P): % ==
-        shat: Z := 0 -- sigmaInfty
-        for delta in divs for sdelta in s repeat shat := shat + delta * sdelta
-        l: LX := 1
-        for tt in orbit(shat, m, t)$QEtaKolberg repeat
-            l := l * expansion etaQuotient(mm, divs, s, m, tt, gamma, w)
-        per [24 * w, l]
+    puiseux(y: SymbolicSiftedEtaQuotientOrbitProductGamma, w: P): % ==
+        orb := orbit y
+        t: N := first orb;
+        orb := rest orb
+        px: % := puiseux(y.t, w)
+        d: P := rationalPowerDenominator px
+        l: LX := expansion px
+        for tt in orb repeat l := l * expansion puiseux(y.tt, w)
+        per [d, l]
 
-    coEtaQuotient(nn: P, divs: LP, r: LZ, gamma: SL2Z, w: P): % ==
-        -- r must match thm:RaduConditions
-        etaQuotient(nn, divs, r, 1, 0, gamma, w)
-
-    modularEtaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N,
-                       gamma: SL2Z, w: P): % ==
-        not modularConditions?(nn, mm, r, s, m, t)$QEtaKolberg =>
-            error "modular conditions are not fulfilled"
-        nndivs: LP := DIVISORS nn
-        mmdivs: LP := DIVISORS mm
-        eq1: % := etaQuotientOrbitProduct(mm, mmdivs, s, m, t, gamma, w)
-        eq2: % := coEtaQuotient(nn, nndivs, r, gamma, w)
-        l: LX := expansion eq1 * expansion eq2
+    puiseux(y: SymbolicModularSiftedEtaQuotientGamma, w: P): % ==
+        yc: SymbolicSiftedEtaQuotientGamma := cofactor y
+        yo: SymbolicSiftedEtaQuotientOrbitProductGamma := orbitProduct y
+        pc: % := puiseux(yc, w)
+        po: % := puiseux(yo, w)
+        d: P := rationalPowerDenominator pc
+        -- Sanity check.
+        d ~= 24 * w =>
+            error "SiftedEtaQuotientGamma: Puiseux expansion in wrong variable"
+        rationalPowerDenominator pc ~= rationalPowerDenominator po =>
+            error "SiftedEtaQuotientGamma: expansion in different variables"
+        l: LX := expansion pc * expansion po
         --assert(not zero? l)
         ord: Z := (order(l) exquo 24) :: Z -- It's a modular function.
         per [w, choose((n: Z): Z +-> 24*n, l, ord)$QFT]
