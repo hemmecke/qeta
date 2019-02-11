@@ -545,22 +545,26 @@ $0<c\in\Delta$.
 In the following let $\delta \in \Delta$. Because of
 $x=q^{1/w_\gamma}$, \eqref{eq:tau_delta} and \eqref{eq:width}, we
 have
-\begin{align}
+\begin{gather}
   \defineNotation[q-delta]{q_\delta} = \unityPower{\tau_\delta}
-  &= x^{e_\delta} \, \unityPower{v_\delta}
+  = q^{u_\delta} \, \unityPower{v_\delta}
+  = x^{e_\delta} \, \unityPower{v_\delta}
 \label{eq:q_delta}
-\end{align}
+\end{gather}
 for
 \begin{gather}
+  \defineNotation[u-delta]{u_\delta} :=
+  \frac{h_\delta^2}{\delta},
+  \qquad
   \defineNotation[e-delta]{e_\delta} :=
-  \frac{w_\gamma h_\delta^2}{\delta},
+  w_\gamma u_\delta,
   \qquad
   \defineNotation[v-delta]{v_\delta} :=
   \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}.
   \label{eq:uv_delta}
 \end{gather}
 In particular, if $c=0$, then $a=d=1$, $w_\gamma=1$,
-$h_\delta=\delta$, $e_\delta=\delta$, $v_\delta=0$.
+$h_\delta=\delta$, $u_\delta=e_\delta=\delta$, $v_\delta=0$.
 
 %
 Note that $\unityPower{\frac{v_\delta}{24}} = \xi^k$ for
@@ -693,7 +697,7 @@ From \eqref{eq:eta_delta(gamma*tau)-expansion} follows
   \,
   \unityPower{\frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
-  x^{r_\delta e_\delta/24}
+  q^{r_\delta u_\delta/24}
   \cdot
     \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}
   \notag
@@ -707,15 +711,15 @@ From \eqref{eq:eta_delta(gamma*tau)-expansion} follows
   \cdot
   \unityPower{\divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}}
   \cdot
-  x^{\divisorsum{N} \frac{r_\delta e_\delta}{24}}
+  q^{\divisorsum{N} \frac{r_\delta u_\delta}{24}}
   \cdot
     \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}.
   \label{eq:g_r(gamma*tau)}
 \end{align}
 %
 If $r\in R^*(N)$, then $g_r$ is a modular function on $\Gamma_0(N)$.
-Because of \eqref{eq:sum=0}, $e_\delta=a_N(c, \delta)$, and
-\eqref{eq:order-r}, we can write
+Because of \eqref{eq:sum=0}, $q^{u_\delta}=x^{e_\delta}$,
+$e_\delta=a_N(c, \delta)$, and \eqref{eq:order-r}, we can write
 \begin{align}
   g_r(\gamma \tau)
   &=
@@ -1663,7 +1667,8 @@ SymbolicEtaDeltaGamma: SetCategory with
       ++ gamma(x) returns the gamma as given at creation time of x.
     rationalPrefactor: % -> Q -- (h_delta/delta)
     upsilonExponent: % -> Z24 -- kappa_delta
-    edelta: % -> P            -- width*gcd(delta,c)^2/delta
+    edelta: % -> P            -- width*udelta
+    udelta: % -> Q            -- gcd(delta,c)^2/delta
     vdelta: % -> Q            -- b2/d2
     unityPower: % -> Q        -- (kappa_delta + vdelta)/24
  == add
@@ -1675,6 +1680,7 @@ SymbolicEtaDeltaGamma: SetCategory with
               frat: Q,      -- h_delta/delta
               fkappa: Z24,  -- upsilonExponent(a1,b2,c1,d1)
               fedelta: P,   -- edelta = width*hdelta^2/delta \eqref{eq:q_delta}}
+              fudelta: Q,   -- edelta = hdelta^2/delta \eqref{eq:q_delta}}
               fvdelta: Q    -- b2/d2, reduced form of roots of unity
                             -- 0<=b2<d2, 0<d2
              )
@@ -1692,13 +1698,16 @@ SymbolicEtaDeltaGamma: SetCategory with
         gamma2: MZ := rec.triang
         b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
         a2: Z := gamma2(1, 1); wgamma: Z := width(m, c)
-        edelta: P := qcoerce(((wgamma*gcd(c,delta)^2) exquo delta)::Z)@P
+        udelta: Q := gcd(c,delta)^2 / delta
+        edelta: P := qcoerce(numer(wgamma*udelta))@P
+        if not one?(denom(wgamma*udelta)) then
+            error "edelta is not integer"
         --assert(edelta = ((a2*wgamma exquo d2) :: Z))
-        if not (edelta = ((a2*wgamma) exquo d2) :: Z) then
+        if udelta ~= a2/d2 then
             error "edelta does not match"
         vdelta: Q := b2/d2
         kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
-        per [m, delta, gamma, rat, kappa, edelta, vdelta]
+        per [m, delta, gamma, rat, kappa, edelta, udelta, vdelta]
 
     level(x: %): P == xx.flevel
     delta(x: %): P == xx.fdelta
@@ -1706,13 +1715,14 @@ SymbolicEtaDeltaGamma: SetCategory with
     rationalPrefactor(x: %): Q == xx.frat
     upsilonExponent(x: %): Z24 == xx.fkappa
     edelta(x: %): P == xx.fedelta
+    udelta(x: %): Q == xx.fudelta
     vdelta(x: %): Q == xx.fvdelta
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
         h := hashUpdate!(h, xx.flevel)
         h := hashUpdate!(h, xx.frat)
         h := hashUpdate!(h, xx.fkappa)
-        h := hashUpdate!(h, xx.fedelta)
+        h := hashUpdate!(h, xx.fudelta)
         h := hashUpdate!(h, xx.fvdelta)
     ((x: %) = (y: %)): Boolean ==
         level x ~= level y => false
@@ -1790,6 +1800,11 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ while neglecting the (c\tau+d) factor.
       ++ It corresponds to 24 times the exponent of the fourth product
       ++ of eq:g_r(gamma*tau).
+    qExponent: % -> Q
+      ++ qExponent(e) returns the 24 times the order of the expansion
+      ++ of e in q = \exp(2\pi i\tau) while neglecting the (c\tau+d)
+      ++ factor. It corresponds to 24 times the exponent of the fourth
+      ++ product of eq:g_r(gamma*tau).
     minRootOfUnity: % -> P
       ++ minRootOfUnity(e) returns the smallest positive integer n such that
       ++ the expansion of the function g_r(\gamma\tau) corresponding to
@@ -1809,6 +1824,7 @@ SymbolicEtaQuotientGamma: SetCategory with
               frat: Q,       -- square of rational prefactor
               funityPower: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
               fxExponent: Z, -- \sum_delta rdelta*edelta
+              fqExponent: Q, -- \sum_delta rdelta*udelta
               fminroot: P    -- minimal root of unity needed for coefficients
             )
     import from Rep
@@ -1820,10 +1836,12 @@ SymbolicEtaQuotientGamma: SetCategory with
         rat: Q := 1
         upower: Q := 0
         xexponent: Z := 0
+        qexponent: Q := 0
         for delta in divs for rdelta in r | not zero? rdelta repeat
             e := eta(delta)
             rat := rat * rationalPrefactor(e)^rdelta
             xexponent := xexponent + rdelta * edelta(e)
+            qexponent := qexponent + rdelta * udelta(e)
 
             kappa: Q := (convert(upsilonExponent e)@Z)::Q
             upower := upower + rdelta * (vdelta e + kappa)
@@ -1841,7 +1859,7 @@ SymbolicEtaQuotientGamma: SetCategory with
         p: P := rr.rootOf
         minroot: P := lcmP(denom upower, minSquareRootOfUnity(p)$QAuxMEQ)
         minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
-        per [m, divs, r, gamma, eta, rat, upower, xexponent, minroot]
+        per [m, divs, r, gamma, eta, rat, upower, xexponent, qexponent, minroot]
 
     etaQuotient(m: P, divs: LP, r: LZ, gamma: SL2Z): % ==
         eta: HT := empty()
@@ -1859,6 +1877,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     rationalPrefactor(x: %): Q == xx.frat
     unityPower(x: %): Q == xx.funityPower
     xExponent(x: %): Z == xx.fxExponent
+    qExponent(x: %): Q == xx.fqExponent
     minRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
