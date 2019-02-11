@@ -2335,6 +2335,7 @@ SymbolicSiftedEtaQuotientGamma: SetCategory with
     level: % -> P
       ++ level(x) returns the level of the eta quotient.
       -- Returns mm.
+    divisors: % -> LP
     exponents: % -> LZ
       ++ exponents(x) returns the list of exponents corresponding to all
       ++ divisors.
@@ -2431,6 +2432,10 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
       -- Returns gamma as given in etaSequence(...,gamma).
+    orbit: % -> List N
+      ++ orbit(x) returns $\modularOrbit{s, m, t}$ where
+      ++ s=exponents(x), m=multiplier(x), t=offset(x).
+      ++ See definition of orbit in qetakolberg.spad
     minRootOfUnity: % -> P
       ++ minRootOfUnity(x) returns
       ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
@@ -2447,6 +2452,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
               fmultiplier: P,-- the multiplier m
               foffset: N,    -- the offset t \in 0..(m-1)
               fgamma: SL2Z,  -- gamma
+              forbit: List N,-- \modularOrbit(s, m, t}
               fdata: HT,
               fminroot: P    -- minimal root of unity needed for coefficients
             )
@@ -2464,7 +2470,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
             e: YSEQG := etaQuotient(mm, divs, s, m, tt, gamma)
             minroot := lcmP(minroot, minRootOfUnity e)
             h.tt := e
-        per [mm, divs, s, m, t, gamma, h, minroot]
+        per [mm, divs, s, m, t, gamma, orb, h, minroot]
 
     elt(x: %, tt: N): YSEQG == rep(x).fdata.tt
     level(x: %): P == xx.flevel
@@ -2528,6 +2534,8 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
     etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
       ++ etaQuotient(nn, r, mm, s, m, t, gamma) represents the expansion
       ++ of F_{r,s, m, t}(\gamma\tau).
+    cofactor: % -> SymbolicSiftedEtaQuotientGamma
+    orbitProduct: % -> SymbolicSiftedEtaQuotientOrbitProductGamma
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
       -- Returns gamma as given in etaSequence(...,gamma).
@@ -2535,11 +2543,9 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
       ++ minRootOfUnity(x) returns
       ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
  == add
-    YSEQOPG ==> SymbolicSiftedEtaQuotientOrbitProductGamma
-    YEQG ==> SymbolicEtaQuotientGamma
     Rep ==> Record(
-              fcoetaqg: YEQG,
-              fseqopg: YSEQOPG,
+              fcoetaqg: SymbolicSiftedEtaQuotientGamma,
+              fseqopg: SymbolicSiftedEtaQuotientOrbitProductGamma,
               fminroot: P    -- minimal root of unity needed for coefficients
             )
     import from Rep
@@ -2547,16 +2553,20 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
     yy ==> rep y
 
     etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N, gamma: SL2Z): % ==
+        not modularConditions?(nn, mm, r, s, m, t)$QEtaKolberg =>
+            error "modular conditions are not fulfilled"
         nndivs: LP := DIVISORS nn
         mmdivs: LP := DIVISORS mm
-        coetaqg: YEQG := etaQuotient(nn, nndivs, r, gamma)
-        seqopg: YSEQOPG := etaQuotient(mm, mmdivs, s, m, t, gamma)
+        coetaqg: SymbolicSiftedEtaQuotientGamma :=
+            etaQuotient(nn, nndivs, r, 1, 0, gamma)
+        seqopg: SymbolicSiftedEtaQuotientOrbitProductGamma :=
+            etaQuotient(mm, mmdivs, s, m, t, gamma)
         minR1: P := minRootOfUnity coetaqg
         minR2: P := minRootOfUnity seqopg
         per [coetaqg, seqopg, lcmP(minR1, minR2)]
 
-    cofactor(x: %): YEQG == xx.fcoetaqg
-    orbitProduct(x: %): YSEQOPG == xx.fseqopg
+    cofactor(x: %): SymbolicSiftedEtaQuotientGamma == xx.fcoetaqg
+    orbitProduct(x: %): SymbolicSiftedEtaQuotientOrbitProductGamma == xx.fseqopg
     minRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
