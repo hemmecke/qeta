@@ -63,12 +63,13 @@ CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
 LX ==> UnivariateLaurentSeries(CX, xsym, 0);
 MZ ==> Matrix Z -- consider only 2x2 matricies
 SL2Z ==> MZ -- matrices with determinant = 1
+
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
 SEDG ==> SymbolicEtaDeltaGamma;
 YEQG ==> SymbolicEtaQuotientGamma;
 EQG ==> EtaQuotientGamma(Q, mx, CX, xi, LX);
 METAQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
-METAQX ==> ModularEtaQuotientExpansions(CX, LX, level);
+MODFUNX ==> ModularFunctionExpansions(CX, LX, level);
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
