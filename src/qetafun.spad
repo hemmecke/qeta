@@ -1795,13 +1795,13 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ unityPower(e) returns sum_\delta rdelta*(vdelta+Kappa_delta)/24
       ++ It corresponds to the third product of eq:g_r(gamma*tau).
     xExponent: % -> Z
-      ++ xExponent(e) returns the 24 times the order of the expansion
+      ++ xExponent(e) returns 24 times the order of the expansion
       ++ of e in x = \exp(2\pi i\tau/w) where w is the width of the cusp
       ++ while neglecting the (c\tau+d) factor.
       ++ It corresponds to 24 times the exponent of the fourth product
       ++ of eq:g_r(gamma*tau).
     qExponent: % -> Q
-      ++ qExponent(e) returns the 24 times the order of the expansion
+      ++ qExponent(e) returns 24 times the order of the expansion
       ++ of e in q = \exp(2\pi i\tau) while neglecting the (c\tau+d)
       ++ factor. It corresponds to 24 times the exponent of the fourth
       ++ product of eq:g_r(gamma*tau).
@@ -2088,9 +2088,8 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
         rec: Rec := splitMatrix(gamma, delta, m, lambda)$QAuxMEQ
         gamma1: SL2Z := rec.red
         gamma2: MZ := rec.triang
-        b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
-        a2: Z := gamma2(1, 1); -- hdelta
-        rat: Q := a2/delta
+        a2: Z := gamma2(1, 1); b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
+        rat: Q := a2/delta -- = hdelta/delta
         udelta: Q := a2/d2 -- = hdelta^2/delta/m
         vdelta: Q := b2/d2
         kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
@@ -2214,7 +2213,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
       ++ sum_\delta sdelta*(vdelta+Kappa_delta)/24. It corresponds to
       ++ the second factor of \eqref{eq:g_s-m-t-lambda(gamma*tau)}.
     qExponent: % -> Q
-      ++ qExponent(e) returns the 24 times the order of the expansion
+      ++ qExponent(e) returns 24 times the order of the expansion
       ++ of e in q = \exp(2\pi i\tau)  while neglecting the (c\tau+d) factor.
       ++ It corresponds to 24 times the exponent of the fourth product
       ++ of \eqref{eq:g_s-m-t-lambda(gamma*tau)}.
@@ -2627,6 +2626,9 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
     etaQuotient: (P, LZ, P, LZ, P, N) -> %
       ++ etaQuotient(nn, r, mm, s, m, t) represents the expansion
       ++ of F_{r,s, m, t}(\gamma\tau).
+    level: % -> P
+      ++ level(x) returns nn such that x corresponds to a modular
+      ++ function for Gamma_0(nn).
     cusps: % -> List Q
       ++ cusps(x)=cuspsOfGamma0(level x)$QAuxiliaryModularEtaQuotientPackage.
     elt: (%, Q) -> SymbolicModularSiftedEtaQuotientGamma
@@ -2681,6 +2683,8 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
 
 
 )if LiterateDoc
+%$
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2853,7 +2857,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
       ++ g_r(\tau) in terms of x = \exp(2\pi i\tau/w) where
       ++ w=width(m, c) at all cusps of Gamma0(m).
     level: % -> P
-      ++ level(x) gives the m such that x corresponds to a modular
+      ++ level(x) returns m such that x corresponds to a modular
       ++ function for Gamma_0(m).
     symbolicEtaQuotient: % -> YEQ
       ++ symbolicEtaQuotient(x) returns the meta data corresponding to x.
@@ -2901,10 +2905,11 @@ expansion of various eta quotients.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain SEQLG SiftedEtaQuotientGamma
-++ EtaQuotientLambdaGamma is a generalization of
-++ SymbolicSiftedEtaQuotientLambdaGamma. It holds data to compute an eta
-++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau).
+)abbrev domain SEQG SiftedEtaQuotientGamma
+++ SiftedEtaQuotientGamma is a generalization of
+++ taQuotientGamma. It holds data to compute an eta
+++ quotient expansion of g_{s,m,t,\lambda}(\gamma\tau),
+++ g_{s,m,t}(\gamma\tau), F_{r,s,m,t}(\gamma\tau).
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
 SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
@@ -2912,33 +2917,26 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
-  YMSEQG ==> SymbolicModularSiftedEtaQuotientGamma
-  YSEQOPG ==> SymbolicSiftedEtaQuotientOrbitProductGamma
-  YSEQG ==> SymbolicSiftedEtaQuotientGamma
-  YEQG ==> SymbolicEtaQuotientGamma
   Exports ==> CoercibleTo OutputForm with
-    puiseux: (SymbolicEtaQuotientGamma, P) -> %
-      ++ puiseux(y, w) represents the q-expansion of
-      ++ g_{s}(\gamma\tau) at \tau=i\infity.
     puiseux: (SymbolicSiftedEtaQuotientLambdaGamma, P) -> %
       ++ puiseux(y, w) represents the
       ++ q-expansion of g_{s,m,t,\lambda}(\gamma\tau) at \tau=i\infity.
     puiseux: (SymbolicSiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
-      ++ g_{s,m,t}(\gamma\tau) at \tau=i\infity.
+      ++ $g_{s,m,t}(\gamma\tau)$ at $\tau=i\infity$.
     puiseux: (SymbolicSiftedEtaQuotientOrbitProductGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $\prod_{t'\in\modularOrbit{s,m,t}} g_{s,m,t}(\gamma\tau)$
-      ++ at \tau=i\infity.
+      ++ at $\tau=i\infity$.
     puiseux: (SymbolicModularSiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
-      ++ $F_{r,s,m,t}(\gamma\tau)$ at \tau=i\infity.
+      ++ $F_{r,s,m,t}(\gamma\tau)$ at $\tau=i\infity$.
 
     rationalPowerDenominator: % -> P
       ++ rationalPowerDenominator(x) returns d such that x is a Laurent series
       ++ in q^d.
     expansion: % -> LX
-      ++ expansion(x) returns the Puiseux series representation of x
+      ++ expansion(x) returns the Laurent series representation of x
       ++ without the prefactor corresponding to (c\tau+d) in z=q^(1/d)
       ++ where d=rationalPowerDenominator(x).
   Implementation ==> add
@@ -2999,8 +2997,9 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     expansion(x: %): LX == xx.ser
     coerce(x: %): OutputForm == xx::OutputForm
 
-
 )if LiterateDoc
+%$
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $s \in R(M)$, $t,\lambda \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
@@ -3039,7 +3038,7 @@ $\divides{\delta}{M}$ with $s_\delta\ne0$, \ie, the series from
             error "SiftedEtaQuotientGamma: denominator for xi does not vanish"
         n: N := qcoerce(positiveRemainder(numer q, mx))@N
         cx: CX := xi^n * squareRoot rationalPrefactor y -- leading coefficient
-        p: Q := d/24 * qExponent y -- the "/24" is missing from qPower(y)
+        p: Q := d/24 * qExponent y -- the "/24" is missing from qExponent(y)
         not one? denom p =>
             error "SiftedEtaQuotientGamma: denominator for q does not vanish"
         per [d, monomial(cx, numer p)$LX * s]
