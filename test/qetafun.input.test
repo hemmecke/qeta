@@ -24,113 +24,63 @@ DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
 C ==> Q
 
-PZ ==> SparseUnivariatePolynomial Z;
 PQ ==> SparseUnivariatePolynomial Q;
-PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, Z, PZ, PQ);
+
 CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
 LX ==> UnivariateLaurentSeries(CX, xsym, 0);
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
-YEDG ==> SymbolicEtaDeltaGamma;
-YEQG ==> SymbolicEtaQuotientGamma;
-ETAQG ==> EtaQuotientGamma(C, mx, CX, xi, LX);
-METAQ ==> ModularEtaQuotient(Q, mx, CX, xi, LX);
-METAQX ==> ModularEtaQuotientExpansions(CX, LX, nn);
--------------------------------------------------------------------
-QETAKOL ==> QEtaKolberg
-YSEDLG ==> SymbolicSiftedEtaDeltaLambdaGamma
-YSEQLG ==> SymbolicSiftedEtaQuotientLambdaGamma
-SEQLG ==> SiftedEtaQuotientLambdaGamma(C, mx, CX, xi, LX)
-SEQG ==> SiftedEtaQuotientGamma(C, mx, CX, xi, LX)
+YMSETAQ ==> SymbolicModularSiftedEtaQuotient;
+SETAQG ==> SiftedEtaQuotientGamma(Q, mx, CX, xi, LX);
+MSETAQ ==> ModularSiftedEtaQuotient(Q, mx, CX, xi, LX);
+MODFUNX ==> ModularFunctionExpansions(CX, LX, nn);
 -------------------------------------------------------------------
 WIDTH(nn, c) == qcoerce(width(nn, c))@P
 xsym: Symbol := "x"::Symbol;
 -------------------------------------------------------------------
-check ==>
-    mmdivs: List P := DIVISORS mm;
-
-    assertTrue(modularInputConditions?(nn,mm,s,m,t)$QETAKOL)
-
-    cusps := cuspsOfGamma0 nn
-    gammas := [cuspToMatrix(nn, cusp)$QAuxMEQ for cusp in cusps]
-    assertEquals([gamma(1,1)/gamma(2,1) for gamma in gammas], cusps)
-
-    widths := [WIDTH(nn, gamma(2,1)) for gamma in gammas]
-    assertEquals(widths, reverse DIVISORS nn)
-
-    -- Determine the what biggest root of unity we need for the
-    -- coefficient domain.
-    yel := [[etaQuotient(m, mmdivs, s, m, t, lambda::N, gamma)$YSEQLG _
-             for lambda in 0..m-1] for gamma in gammas];
-    mx: P := lcm [lcm [minRootOfUnity y for y in ye] for ye in yel]
-    assertEquals(mx, minroot)
-
-    -- Create the actual coefficient domain (working for each cusp).
-    pz: PZ := cyclotomic(mx)$CyclotomicPolynomialPackage;
-    pq: PQ := map(n+->monomial(1$Q,1$N)$PQ, c+->c::Q::PQ, pz)$PL;
-    xi := generator()$CX
-
-    -- Compute sigmaInfinity = \hat{s} for the incoming eta-quotient
-    -- that represents the series that we want to express in other eta
-    -- quotients.
-    shat: Z := 0 -- sigmaInfty
-    for delta in mmdivs for sdelta in s repeat shat := shat + delta * sdelta
-    assertEquals(shat, -1)
-
-    -- What's the orbit for (m,t)-sifted sequences given by the
-    -- s-eta-quotient.
-    orb: List N := orbit(shat, m, t)
-    assertEquals(orb, [t])
-
-    -- Compute the expansion of the (m,t)-sifted s-eta-quotient that
-    -- has been multiplied by an r-eta-quotient that makes the product
-    -- into a modular function for Gamma0(nn).
-
-    --[[g(1,1)/g(2,1), _
-    --  modularEtaQuotient(nn, r, mm, s, m, t, g, WIDTH(nn, g(2,1)))$SEQG] _
-    --    for g in gammas]
-
-    -- Turn the separate expansions at the cusps into a vector (METAQX).
-
-    --TODO: Look for a better CX. During the computation we might get
-    -- mx as a multiple of m whereas we actually only need a mx/m-th
-    -- root of unity.
-    eqx: XHashTable(Q, LX) := table()
-    for cusp in cusps repeat (_
-        w: P := WIDTH(nn, denom cusp);_
-        gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
-        seqg: SEQG := modularEtaQuotient(nn, r, mm, s, m, t, gamma, w)$SEQG;_
-        eqx.cusp := expansion seqg);
-    meqx: METAQX := eqx :: METAQX
+lift2Q x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, Q)
+-------------------------------------------------------------------
 --endsetup
 
 -------------------------------------------------------------------
 --test:Ramanujan5
-nn: P := 10; r: List Z := [6,0,-5,0]
+nn: P := 10; r: List Z := [6,0,-5,0];
 mm: P := 5; s: List Z := [-1, 0]
 m: P := 5; t: N := 4;
-minroot: N := 60
-check;
+minroot: P := 60
+yf: YMSEQ := etaQuotient(nn, r, mm, s, m, t)
+mx: P := minRootOfUnity yf
+assertEquals(mx, minroot)
+pq: PQ := lift2Q(cyclotomic(mx)$CyclotomicPolynomialPackage);
+xi := generator()$CX
+f: MSETAQ :=  expandAtAllCusps yf;
+mf: MODFUNX := expansions(f)::MODFUNX
 -- compare result with formula (4) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
 -- Note that meqx comes with the cofactor given by r, so we also must
 -- multiply the right-hand side equals to the constant 5.
-minusfive: METAQX := (-5)*1$METAQX
-assertTrue zero?(meqx+minusfive)
+minusfive: MODFUNX := (-5)*1$MODFUNX
+assertTrue zero?(mf+minusfive)
 --endtest
 
 -------------------------------------------------------------------
 --test:Ramanujan7
-nn: P := 14; r: List Z := [8,0,-7,0]
-mm: P := 7; s: List Z := [-1, 0]
+nn: P := 14; r: List Z := [8,0,-7,0];
+mm: P := 7; s: List Z := [-1, 0];
 m: P := 7; t: N := 5;
-minroot: N := 168
+minroot: P := 168
 
 --TODO:
 -- c := etaCoFactor(m, mm, nn, t, s)$QEtaKolberg
 -- vector r - (c.particular - 20*c.basis.3)(1..4) -- [0,0,1,0]
 -- vector r = (c.particular + 2*c.basis.2 - 22*c.basis.3)(1..4) -- [8,0,-7,0]
 
-check;
+yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
+mx: P := minRootOfUnity yf
+assertEquals(mx, minroot)
+pq: PQ := lift2Q(cyclotomic(mx)$CyclotomicPolynomialPackage);
+xi := generator()$CX
+f: MSETAQ :=  expandAtAllCusps yf;
+mf: MODFUNX := expansions(f)::MODFUNX
 
 -- compare result with formula (5) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
@@ -139,16 +89,27 @@ check;
 -- the (-7)*seven below for the second term on the rhs of (5).
 -- The first term on the rhs of (5) turns into the eta-quotient for mm=7
 -- given by the vector [4, -4].
-eqx: XHashTable(Q, LX) := table()
-for cusp in cusps repeat (_
+
+eqx1: XHashTable(Q, LX) := table()
+eqx2: XHashTable(Q, LX) := table()
+for cusp in cusps yf repeat (_
   w: P := WIDTH(nn, denom cusp);_
   gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
-  seqg: SEQG := modularEtaQuotient(nn,[0,0,0,0],mm,[4,-4],1,0,gamma,w)$SEQG;_
-  eqx.cusp := expansion seqg);
-meqxr: METAQX := eqx :: METAQX
-seven: METAQX := 7*1$METAQX
-rhs: METAQX := (-7)*(meqxr+seven)
-assertTrue zero?(meqx + rhs)
+  y1: YMSETAQG := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0,gamma);_
+  y2: YMSETAQG := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0,gamma);_
+  p1: SETAQG := puiseux(y1, w);_
+  p2: SETAQG := puiseux(y2, w);_
+  eqx1.cusp := expansion p1;_
+  eqx2.cusp := expansion p2_
+  )
+
+m1: MODFUNX := eqx1 :: MODFUNX
+m2: MODFUNX := eqx2 :: MODFUNX
+assertTrue(zero?(m1 + (-1)*m2)) -- check different construction of m1 and m2.
+
+seven: MODFUNX := 7*1$MODFUNX
+rhs: MODFUNX := (-7)*(m1+seven)
+assertTrue(zero?(mf + rhs))
 --endtest
 
 -------------------------------------------------------------------
@@ -158,8 +119,15 @@ nn: P := 22; r: List Z := [10, 2, 11, -22]
 --nn: P := 22; r: List Z := [-10,10,-9,10]
 mm: P := 11; s: List Z := [-1, 0]
 m: P := 11; t: N := 6;
-minroot: N := 264;
-check;
+minroot: P := 264;
+yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
+mx: P := minRootOfUnity yf
+assertEquals(mx, minroot)
+pq: PQ := lift2Q(cyclotomic(mx)$CyclotomicPolynomialPackage);
+xi := generator()$CX
+f: MSETAQ :=  expandAtAllCusps yf;
+mf: MODFUNX := expansions(f)::MODFUNX
+
 
 -- compare result with formula (9) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
@@ -177,28 +145,18 @@ rgens: List List Z := [_
 
 assertEquals(rgens, xetaQuotientMonoidExponentVectors nn)
 
--- etaquotgensZ: List EtaQuotient(CX, LX) := [etaQuotient(nndivs, r) for r in rgens];
+ygens: List YMSETAQ := [etaQuotient(nn,r,mm,[0,0],1,0)$YMSETAQ for r in rgens];
+mgens: List MSETAQ := [expandAtAllCusps(x)$MSETAQ for x in ygens];
+M: List MODFUNX := [expansions(x)::MODFUNX for x in mgens];
+F ==> mf
+X n ==> n * 1$MODFUNX
 
-eqgens: List METAQX := empty()
-for r in rgens repeat (_
-  msx: XHashTable(Q, LX) := table();_
-  for cusp in cusps repeat (_
-    w: P := WIDTH(nn, denom cusp);_
-    gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
-    seqg: SEQG := etaQuotient(nn, nndivs, r, 1, 0, gamma, w)$SEQG;_
-    msx.cusp := expansion seqg);_
-  mmsx: METAQX := msx :: METAQX;_
-  eqgens := cons(msx, eqgens))
-eqgens := reverse! eqgens;
-
-le := [etaQuotient(nn, r)$METAQ for r in rgens];
-ees := [expansions(e)::METAQX for e in le];
-
-M ==> ees
-F ==> meqx
-X n ==> n * 1$METAQX
-
-repr := 11^2*3068*M.7 + 11^2*(3*M.1 + X 4236)*M.6 + 11*(285*M.1+X(11*5972))*M.5 + 11/8*(M.1^2+11*4497*M.1+X(11^2*3156))*M.4 + 11*(1867*M.1+X(11*2476))*M.3 + (- 11/8)*(M.1^3+1011*M.1^2+11*6588*M.1+X(11^2*10880));
+repr := 11^2*3068*M.7_
+      + 11^2*(3*M.1 + X 4236)*M.6_
+      + 11*(285*M.1+X(11*5972))*M.5_
+      + 11/8*(M.1^2+11*4497*M.1+X(11^2*3156))*M.4_
+      + 11*(1867*M.1+X(11*2476))*M.3_
+      + (- 11/8)*(M.1^3+1011*M.1^2+11*6588*M.1+X(11^2*10880));
 
 ZERO := F + (-1)*repr;
 
