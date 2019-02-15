@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018-2019  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -26,12 +26,31 @@ xdbgPrint(x,y) ==> rhx:="42"
 )if LiterateDoc
 \documentclass{article}
 \usepackage{qeta}
+\usepackage{xifthen}
 
-\newcommand{\euclideanSize}{\varphi}
-\newcommand{\degreeSize}{\psi}
 \newcommand{\eps}{\varepsilon}
-\DeclareMathOperator{\lc}{lc} % leading coefficient
-\DeclareMathOperator{\initial}{in} % initial = coefficient * power product
+
+\newcommand{\degree}[2][]{%
+  \ifthenelse{\equal{#1}{}}{\deg(#2)}{\deg_{#1}(#2)}}
+
+\newcommand{\opdegreeSize}{\psi}
+\newcommand{\degreeSize}[1]{\opdegreeSize(#1)}
+
+\newcommand{\opdegreeIndexSize}{\Psi}
+\newcommand{\degreeIndexSize}[1]{\opdegreeIndexSize(#1)}
+
+\newcommand{\opeuclideanSize}{\varphi}
+\newcommand{\euclideanSize}[1]{\opeuclideanSize(#1)}
+
+\DeclareMathOperator{\opidx}{idx}
+\newcommand{\idx}[1]{\opidx(#1)}
+
+\DeclareMathOperator{\oplc}{lc} % leading coefficient
+\newcommand{\lc}[2][]{\ifthenelse{\equal{#1}{}}{\oplc(#2)}{\oplc_{#1}(#2)}}
+
+\DeclareMathOperator{\opinitial}{in} % initial = coefficient * power product
+\newcommand{\initial}[2][]{%
+  \ifthenelse{\equal{#1}{}}{\opinitial(#2)}{\opinitial_{#1}{(#2)}}}
 
 \DeclareMathOperator{\zero}{zero} % zero testing
 \DeclareMathOperator{\true}{true} % zero testing
@@ -116,98 +135,177 @@ $\deg(m) < 0$ ($<$ in each component), then $m=0$.
 Let $\setN$ denote the natural numbers (including 0).
 %
 Let $C$ be a computable Euclidean domain and let
-$\euclideanSize: C\setminus\Set{0} \to \setN\setminus\Set{0}$ be a
+$\opeuclideanSize: C\setminus\Set{0} \to \setN\setminus\Set{0}$ be a
 Euclidean size function (also known as Euclidean degree or simply
-Euclidean function) on $C$.
+Euclidean function) on $C$. By $C^\times$ we denote the set of
+invertible elements of $C$.
 %
-At the moment we assume $M=C[x]^r$. We shall see later, that everything
-also works in a more general context.
-%
+At the moment we assume $R=C[x]$ and $M=R^n$. We shall see later, that
+everything also works in a more general context.
+
+For $f=\sum_{k=0}^r c_k x^k \in R$, we denote by
+$\initial{f}=c_r x^r$, $\lc{f}=c_r$, $\deg(f)=r$ the initial, the
+leading coefficient and the degree of $f$. In particular, we define
+$\initial{0}=0$, $\lc{0}=0$, $\degree{0}=-\infty$.
+
 Let $M^*=M\setminus\Set{0}$.
 %
-For $f=\sum_{k=0}^r c_k x^k \in C[x]$, we denote by
-$\initial(f)=c_r x^r$, $\lc(f)=c_r$, $\deg(f)=r$ the initial, the
-leading coefficient and the degree of $f$. In particular, we define
-$\initial(0)=0$, $\lc(0)=0$, $\deg(0)=-\infty$.
+For $f=(f_1, \ldots f_n) \in M^*$, we denote by
+%
+$\idx(f)$ the maximal $j$ such that $f_j \ne 0$.
+%
+Furthermore, for $i \in \Set{1,\ldots,n}$,
+%
+$\initial[i]{f} = \initial{f_i}$,
+%
+$\lc[i]{f} = \lc{f_i}$,
+%
+$\degree[i]{f} = \degree{f_i}$
+%
+the initial, the leading coefficient and the degree of $f$. In
+particular, we define $\initial[i]{0}=0$, $\lc[i]{0}=0$,
+$\degree[i]{0}=-\infty$.
 
+To ease notation, we also define $\degree{f}=\degree[\idx{f}]{f}$ and
+$\lc{f}=\lc[\idx{f}]{f}$ for $f \in M^*$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}%
-\label{def:Ordering}%
-\label{def:degreeSize}%
-  Let $\RelLessThanLex$ and $\RelDivisibilityN$ be two relation on
-  $\setN^2$ defined by
+  \label{def:Ordering}%
+  \label{def:degreeSize}%
+  \label{def:degreeIndexSize}%
+  Let ${\RelLessThanLex}\subset\setN^3$ and
+  ${\RelDivisibilityN}\subset\setN^2$ be two relation defined by
   \begin{align*}
-  \ltLex{(n_1,n_2)}{(n_1',n_2')} &\iff n_1 < n_1' \lor (n_1 = n_1' \land n_2< n_2')\\
-  \dividesN{(n_1,n_2)}{(n_1',n_2')} &\iff n_1\le n_1' \land n_2\le n_2',
+    \ltLex{(n_1,n_2,n_3)}{(n_1',n_2', n_3')}
+    &\iff
+      n_1 < n_1' \lor (n_1 = n_1' \land n_2< n_2') \lor
+      (n_1 = n_1' \land n_2= n_2'  \land n_3< n_3')
+    \\
+    \dividesN{(n_1,n_2)}{(n_1',n_2')} &\iff n_1\le n_1' \land n_2\le n_2',
   \end{align*}
-  for $n_1, n_2, n_1', n_2' \in \setN$.
+  for $n_1, n_2, n_3, n_1', n_2', n_3' \in \setN$.
 %
   We denote by $\RelLessEqualLex$ the reflexive closure of
   $\RelLessThanLex$.
-%
-  Let $\degreeSize: R^* \to \setN^2$ be defined by
-  $\degreeSize(f)=(\deg(f), \euclideanSize(\lc f))$.
-%
+
+  For $f \in R^*= R\setminus\Set{0}$, let
+  %
+  $\opdegreeSize: R^* \to \setN^2$
+  %
+  be defined by
+  %
+  $\degreeSize{f}=(\degree{f}, \euclideanSize{\lc{f}})$.
+
+  For $f\in M^*$, let $\opdegreeIndexSize: M^* \to \setN^3$ be defined
+  by
+  $\degreeIndexSize{f} = (\degree{f}, \idx{f}, \euclideanSize{\lc{f}})$.
+
   Let $d\in\setN\setminus\Set{0}$, $n, n' \in \setZ$. By
   $n \equiv_d n'$ we denote that $n$ and $n'$ are
   \defineterm{congruent modulo $d$}, \ie, that there exists
   $a\in\setZ$ such that $n=n'+ad$.
-%
-  Let $u, b\in R^*$. We say that $u$ is \defineterm{reducible by $b$
-    modulo $d$} (denoted by $\dividesMod[d]{b}{u}$) if and only if
-  \begin{gather*}
-    \degreeSize(b) \sqsubseteq \degreeSize(u) \land \deg u \equiv_d
-    \deg b.
-  \end{gather*}
 \end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-In general, from $\dividesMod[d]{b}{u}$ and $\dividesMod[d]{u}{b}$ follows
-only $\degreeSize(b) = \degreeSize(u)$, but neither $b=u$ nor
-$\initial(b) = \initial(u)$.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}%
+  \label{def:reducibility}%
+  Let $u, b \in M^*$. We say that $u$ is
+  %
+  \defineterm{reducible by $b$ modulo $d$} (denoted by
+  $\dividesMod[d]{b}{u}$) if and only if
+  \begin{gather*}
+    u_i \ne 0
+    \land
+    \degreeSize{b_i} \sqsubseteq \degreeSize{u_i}
+    \land
+    \deg(b_i) \equiv_d \deg(u_i)
+  \end{gather*}
+  for $i = \idx{b}$.
+\end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Note that from $\dividesMod[d]{b}{u}$ follows
+$\degree{b}\le\degree{u}$, but not necessarily $\idx{b}=\idx{u}$.
+
+In general, from $\dividesMod[d]{b}{u}$ and $\dividesMod[d]{u}{b}$
+follows only $i:=\idx{b}=\idx{u}$, and
+$\degreeSize{b_i} = \degreeSize{u_i}$, but neither $b=u$ nor
+$\initial{b} = \initial{u}$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\label{def:ReductionRelation}
-  For $u, t, b\in R^*$, $u'\in R$, the relation
+  For $u, t, b\in M^*$, $u'\in M$, the relation
   $\canBeReducedTo{t, b}{u}{u'}$ holds (in words: $u$
   \defineterm{reduces in one step modulo $t$ and $b$} to $u'$) if and
-  only if there exist $c\in C$ and $a\in\setN$ such that
+  only if there exists $i\in\Set{1,\ldots,n}$ such that
+  $i=\idx{t}=\idx{b}$,
+  %
+  $\dividesMod[d]{b}{u}$ for $d=\deg(t_i)$,
+  %
+  and there exist $c\in C$ and $a\in\setN$ such that
   $u = c t^a b + u'$ and either $u'=0$ or
-  $\ltLex{\degreeSize(u')}{\degreeSize(u)}$.
+  $\ltLex{\degreeIndexSize{u'}}{\degreeIndexSize{u}}$.
 
-  If $B=\Set{b_1, \ldots, b_r}\subset R^*$, then
-  $\canBeReducedTo{t, B}{u}{u'}$ holds (in words: $u$ \defineterm{can
-    be reduced in one step modulo $t$ and $B$} to $u'$) if and only if
-  there exists $b \in B$ such that $\canBeReducedTo{t, b}{u}{u'}$.
+  If $B=\Set{b_1, \ldots, b_r}\subset M^*$ and
+  $T=\Set{t_1, \ldots, t_s}\subset M^*$, with $\degree{t_i}>0$ for all
+  $i=1,\ldots,s$, then $\canBeReducedTo{T, B}{u}{u'}$ holds (in words:
+  $u$ \defineterm{can be reduced in one step modulo $T$ and $B$} to
+  $u'$) if and only if there exists $b \in B$ and $t \in T$ such that
+  $\canBeReducedTo{t, b}{u}{u'}$.
 \end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{Remark}\label{remark:oneStepReduce}
   Clearly, if $\canBeReducedTo{t, b}{u}{u'}$, then
-  $\dividesMod[d]{b}{u}$.
+  $\dividesMod[d]{b}{u}$ for $d=\degree{t}$ by definition.
+
+  Conversely, let $u, t, b \in M^*$ with $i:=\idx{b}=\idx{t}$,
+  $d=\degree{t_i}>0$, $\lc{t_i}=1$ and assume $\dividesMod[d]{b}{u}$.
   %
-  Conversely, let us assume $\dividesMod[d]{b}{u}$ where $d=\deg t>0$.
-  Then $a=\frac{\deg u - \deg b}{d}\in\setN$ and
-  $\euclideanSize(\lc(b)) \le \euclideanSize(\lc(u))$.
+  Then $a=\frac{\degree{u_i} - \degree{b_i}}{d}\in\setN$ and
+  $\euclideanSize{\lc{b_i}} \le \euclideanSize{\lc{u_i}}$.
   %
   Furthermore, since $C$ is a Euclidean domain, there exists $c\in C$
-  such that $\lc(u) = c \lc(b) + r$ with either $r=0$ or
-  $\euclideanSize(r) < \euclideanSize(\lc(b))$.
+  such that $\lc{u_i} = c \lc{b_i} + r$ with either $r=0$ or
+  $\euclideanSize{r} < \euclideanSize{\lc{b_i}}$.
   %
   Thus, if the operations in $C$ are computable, we can compute
-  $(a,c)\in \setN\times C$ and $u'=u - ct^ab$ such that either $u'=0$
-  or $u'\ne0$ and $lc(u')=r$, \ie,
-  $\ltLex{\degreeSize(u')}{\degreeSize(u)}$, in other words, we can
-  compute $u'$ with $\canBeReducedTo{t, b}{u}{u'}$.
+  $(a,c)\in \setN\times C$ and $u'=u - ct^ab$ such that either
+  $u'_i=0$ (and, thus, $\idx{u'} < \idx{u}$) or
+  $\degree{u'_i}<\degree{u_i}$ or
+  $\euclideanSize{\lc{u_i'}}<\euclideanSize{u_i}$
+  %
+  \ie, $\ltLex{\degreeIndexSize{u'}}{\degreeIndexSize{u}}$, in other
+  words, we can compute $u'$ with $\canBeReducedTo{t, b}{u}{u'}$.
 
   In general, Euclidean division does not necessarily yield unique $c$
-  and $r$ with the above properties. Consider, for example, the
-  Gaussian integers $C=\setZ[i]$ with $\euclideanSize(a+bi)=a^2+b^2$.
+  and $r$ with the above properties. Consider, for example, the case
+  Gaussian integers $C=\setZ[i]$ with $\euclideanSize{a+bi}=a^2+b^2$.
   Then $3 = (1-i)\cdot(1+i) + 1 = (2-i)\cdot(1+i)-i$ are two different
   Euclidean division steps of $3$ by $1+i$.
 
   In order to make the reduction functional, we assume a computable
-  function $\oneStepReduce$ such that
-  $\ltLex{\degreeSize(u-ct^ab)}{\degreeSize(u)}$ for
-  $(a, c) = \applyOneStepReduce{u}{t}{b}$ if $u-ct^ab\ne0$.
+  function $\oneStepReduce: M^3\to \setN \times C$ such that if
+  $u, t, b \in M^*$,
+  %
+  $i=\idx{b}=\idx{t}$,
+  %
+  $d=\degree{t_i}>0$,
+  %
+  $\lc{t_i}=1$,
+  %
+  $\dividesMod[d]{b}{u}$,
+  %
+  $(a, c) = \applyOneStepReduce{u}{t}{b}$, and
+  %
+  $u'=u-ct^ab\ne0$, then
+  %
+  $\ltLex{\degreeIndexSize{u'}}{\degreeIndexSize{u}}$
 \end{Remark}
 
+\begin{Hemmecke}
 \begin{Definition}
   For $d\in \setN\setminus\Set{0}$, a set $B\subseteq R^*$ is called
   \defineterm{interreduced modulo $d$}, if for any $b, b' \in B$,
@@ -217,18 +315,18 @@ $\initial(b) = \initial(u)$.
 
 \begin{Remark}\label{remark:abmiguity}
   Suppose that the set $B\subseteq R^*$ is \useterm{interreduced
-    modulo $d$}. If $C$ is a field, then $\euclideanSize(c)=1$ for any
+    modulo $d$}. If $C$ is a field, then $\euclideanSize{c}=1$ for any
   $c\in C\setminus\Set{0}$. It follows that for any $u\in R^*$ there
   is at most one $b\in B$ such that $\dividesMod[d]{b}{u}$.
 
   In general, however, for $u\in R^*$ it is still possible that there
   exist $b, b' \in B$, with $b\ne b'$, $\dividesMod[d]{b}{u}$, and
   $\dividesMod[d]{b'}{u}$. For example, consider $C=\setZ$,
-  $\euclideanSize(z)=\abs{z}$. If $b, b' \in B$, $b \ne b'$ with
+  $\euclideanSize{z}=\abs{z}$. If $b, b' \in B$, $b \ne b'$ with
   $\deg b = d + \deg b'$,
-  $\euclideanSize(\lc b) < \euclideanSize(\lc b')$, and $u\in R^*$ is
+  $\euclideanSize{\lc b} < \euclideanSize{\lc b'}$, and $u\in R^*$ is
   such that $\deg u = \deg b$ and
-  $\euclideanSize(\lc u) = \euclideanSize(\lc b')$. To be more
+  $\euclideanSize{\lc{u}} = \euclideanSize{\lc{b'}}$. To be more
   concrete, consider $t=x^2$, \ie, $d=2$ and $u=3x^5$, $b=3x^3$,
   $b'=2x^5$. Then $u=tb+0=b'+x^5$.
 \end{Remark}
@@ -277,12 +375,13 @@ maximal degree in $x$.
     u = u' + \sum_{b\in B} p_b(t) b\label{eq:repr-u}
   \end{gather}
   and
-  $\degreeSize(u) = \max_{\RelLessThanLex} (\Set{\degreeSize(u')} \cup
-  \SetDef{\degreeSize(p_b(t)b)}{b\in B, p_b\ne0})$.
+  $\degreeSize{u} = \max_{\RelLessThanLex} (\Set{\degreeSize{u'}} \cup
+  \SetDef{\degreeSize{p_b(t)b}}{b\in B, p_b\ne0})$.
   In particular, we want to emphasize that there is no summand $s$ on
   the right-hand side of~\eqref{eq:repr-u} with
-  $\ltLex{\degreeSize(u)}{\degreeSize(s)}$.
+  $\ltLex{\degreeSize{u}}{\degreeSize{s}}$.
 \end{Remark}
+\end{Hemmecke}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -392,6 +491,7 @@ XEtaComputationCategory(C: EuclideanDomain, F: XEtaAlgebra C): Category ==
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Restricted reduction}
 
+\begin{Hemmecke}
 According to \cite{Hemmecke:DancingSambaRamanujan:2018}, we use a
 restricted reduction for the algorithm \algoSamba.
 
@@ -399,6 +499,7 @@ An element $x$ is not reducible by $b$ not only when its grade is
 bigger than that of $b$, but also with the grades are equal and the
 (Euclidean) size of the leading coefficient of $x$ is smaller than
 that of $b$.
+\end{Hemmecke}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
