@@ -316,13 +316,14 @@ Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
   Impl ==> ULS add
     Rep ==> ULS
     Rec ==> Record(expon: Z, ps: UTS) -- hack!!!
+    uts x ==> (x pretend Rec).ps
     coerce(v : Variable(var)): % == monomial(1, 1)
     coerce(s: ULS): % == per s
     coerce(x: %): ULS == rep x
     zero?(x: %): Boolean ==
         d: Z := degree x -- (x pretend Rec).expon
         d > 0 => true
-        not zero? coefficient(rep x, d) => false
+        not zero? coefficient(uts x, 0) => false -- get out early
         -- remove zeroes until order becomes positive
         rec: Rec := (removeZeroes(1-d, x)) pretend Rec
         xrec := x pretend Rec
