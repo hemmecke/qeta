@@ -50,7 +50,7 @@ xdbgPrint(x,y) ==> rhx:="42"
 
 \DeclareMathOperator{\opinitial}{in} % initial = coefficient * power product
 \newcommand{\initial}[2][]{%
-  \ifthenelse{\equal{#1}{}}{\opinitial(#2)}{\opinitial_{#1}{(#2)}}}
+  \ifthenelse{\equal{#1}{}}{\opinitial(#2)}{\opinitial_{#1}(#2)}}
 
 \DeclareMathOperator{\zero}{zero} % zero testing
 \DeclareMathOperator{\true}{true} % zero testing
@@ -89,11 +89,14 @@ xdbgPrint(x,y) ==> rhx:="42"
 \newcommand{\RelProperDivisibilityMod}[1]{\vartriangleleft_{#1}}
 \newcommand{\dividesModProperly}[3][]{#2\RelProperDivisibilityMod{#1}#3}
 
+\usepackage{makeidx}
+\makeindex
+
 %\usepackage{rhxterm} % define \useterm and \defineterm
-\def\defineterm{\emph}
+\def\defineterm#1{\textcolor{red}{\emph{#1}}}
 \def\useterm{}
 \newcommand{\defineNotation}[2][$$]{%
-  \ensuremath{#2}\index{#1@\ensuremath{#2}}}
+  \ensuremath{\textcolor{red}{#2}}\index{#1@\ensuremath{#2}}}
 
 \newtheorem{Remark}[Theorem]{Remark}
 
@@ -132,35 +135,39 @@ $\deg(m) < 0$ ($<$ in each component), then $m=0$.
 \label{sec:Definitions}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Let $\setN$ denote the natural numbers (including 0).
+Let $\defineNotation[N]{\setN}$ denote the natural numbers (including
+0).
 %
-Let $C$ be a computable Euclidean domain and let
-$\opeuclideanSize: C\setminus\Set{0} \to \setN\setminus\Set{0}$ be a
-Euclidean size function (also known as Euclidean degree or simply
-Euclidean function) on $C$. By $C^\times$ we denote the set of
-invertible elements of $C$.
+Let $\defineNotation{C}$ be a computable Euclidean domain and let
+$\defineNotation[phi]{\opeuclideanSize}: C\setminus\Set{0} \to
+\setN\setminus\Set{0}$ be a Euclidean size function (also known as
+Euclidean degree or simply Euclidean function) on $C$. By
+$\defineNotation{C^\times}$ we denote the set of invertible elements
+of $C$.
 %
 At the moment we assume $R=C[x]$ and $M=R^n$. We shall see later, that
 everything also works in a more general context.
 
 For $f=\sum_{k=0}^r c_k x^k \in R$, we denote by
-$\initial{f}=c_r x^r$, $\lc{f}=c_r$, $\deg(f)=r$ the initial, the
-leading coefficient and the degree of $f$. In particular, we define
+$\defineNotation[initial]{\initial{f}}=c_r x^r$,
+$\defineNotation[lc]{\lc{f}}=c_r$,
+$\defineNotation[deg]{\degree{f}}=r$ the initial, the leading
+coefficient and the degree of $f$. In particular, we define
 $\initial{0}=0$, $\lc{0}=0$, $\degree{0}=-\infty$.
 
-Let $M^*=M\setminus\Set{0}$.
+Let $\defineNotation[Mstar]{M^*}=M\setminus\Set{0}$.
 %
 For $f=(f_1, \ldots f_n) \in M^*$, we denote by
 %
-$\idx(f)$ the maximal $j$ such that $f_j \ne 0$.
+$\defineNotation[idx]{\idx{f}}$ the maximal $j$ such that $f_j \ne 0$.
 %
 Furthermore, for $i \in \Set{1,\ldots,n}$,
 %
-$\initial[i]{f} = \initial{f_i}$,
+$\defineNotation[initiali]{\initial[i]{f}} = \initial{f_i}$,
 %
-$\lc[i]{f} = \lc{f_i}$,
+$\defineNotation[lci]{\lc[i]{f}} = \lc{f_i}$,
 %
-$\degree[i]{f} = \degree{f_i}$
+$\defineNotation[degreei]{\degree[i]{f}} = \degree{f_i}$
 %
 the initial, the leading coefficient and the degree of $f$. In
 particular, we define $\initial[i]{0}=0$, $\lc[i]{0}=0$,
@@ -174,8 +181,9 @@ $\lc{f}=\lc[\idx{f}]{f}$ for $f \in M^*$.
   \label{def:Ordering}%
   \label{def:degreeSize}%
   \label{def:degreeIndexSize}%
-  Let ${\RelLessThanLex}\subset\setN^3$ and
-  ${\RelDivisibilityN}\subset\setN^2$ be two relation defined by
+  Let $\defineNotation[<lex]{\RelLessThanLex}\subset\setN^3$ and
+  $\defineNotation[<divisibility]{\RelDivisibilityN}\subset\setN^2$ be
+  two relation defined by
   \begin{align*}
     \ltLex{(n_1,n_2,n_3)}{(n_1',n_2', n_3')}
     &\iff
@@ -186,25 +194,27 @@ $\lc{f}=\lc[\idx{f}]{f}$ for $f \in M^*$.
   \end{align*}
   for $n_1, n_2, n_3, n_1', n_2', n_3' \in \setN$.
 %
-  We denote by $\RelLessEqualLex$ the reflexive closure of
-  $\RelLessThanLex$.
+  We denote by $\defineNotation[<=lex]{\RelLessEqualLex}$ the
+  reflexive closure of $\RelLessThanLex$.
 
   For $f \in R^*= R\setminus\Set{0}$, let
   %
-  $\opdegreeSize: R^* \to \setN^2$
+  $\defineNotation[psi]{\opdegreeSize}: R^* \to \setN^2$
   %
   be defined by
   %
   $\degreeSize{f}=(\degree{f}, \euclideanSize{\lc{f}})$.
 
-  For $f\in M^*$, let $\opdegreeIndexSize: M^* \to \setN^3$ be defined
-  by
-  $\degreeIndexSize{f} = (\degree{f}, \idx{f}, \euclideanSize{\lc{f}})$.
+  For $f\in M^*$, let
+  $\defineNotation[Psi]{\opdegreeIndexSize}: M^* \to \setN^3$ be
+  defined by
+  $\degreeIndexSize{f} = (\degree{f}, \idx{f},
+  \euclideanSize{\lc{f}})$.
 
   Let $d\in\setN\setminus\Set{0}$, $n, n' \in \setZ$. By
-  $n \equiv_d n'$ we denote that $n$ and $n'$ are
-  \defineterm{congruent modulo $d$}, \ie, that there exists
-  $a\in\setZ$ such that $n=n'+ad$.
+  $n \mathrel{\defineNotation[=d]{\equiv_d}} n'$ we denote that $n$
+  and $n'$ are \defineterm{congruent modulo $d$}, \ie, that there
+  exists $a\in\setZ$ such that $n=n'+ad$.
 \end{Definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -214,7 +224,7 @@ $\lc{f}=\lc[\idx{f}]{f}$ for $f \in M^*$.
   Let $u, b \in M^*$. We say that $u$ is
   %
   \defineterm{reducible by $b$ modulo $d$} (denoted by
-  $\dividesMod[d]{b}{u}$) if and only if
+  $\defineNotation[<divides]{\dividesMod[d]{b}{u}}$) if and only if
   \begin{gather*}
     u_i \ne 0
     \land
@@ -237,9 +247,9 @@ $\initial{b} = \initial{u}$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\label{def:ReductionRelation}
   For $u, t, b\in M^*$, $u'\in M$, the relation
-  $\canBeReducedTo{t, b}{u}{u'}$ holds (in words: $u$
-  \defineterm{reduces in one step modulo $t$ and $b$} to $u'$) if and
-  only if there exists $i\in\Set{1,\ldots,n}$ such that
+  $\defineNotation[->tbu]{\canBeReducedTo{t, b}{u}{u'}}$ holds (in
+  words: $u$ \defineterm{reduces in one step modulo $t$ and $b$} to
+  $u'$) if and only if there exists $i\in\Set{1,\ldots,n}$ such that
   $i=\idx{t}=\idx{b}$,
   %
   $\dividesMod[d]{b}{u}$ for $d=\deg(t_i)$,
@@ -250,7 +260,7 @@ $\initial{b} = \initial{u}$.
 
   If $B=\Set{b_1, \ldots, b_r}\subset M^*$ and
   $T=\Set{t_1, \ldots, t_s}\subset M^*$, with $\degree{t_i}>0$ for all
-  $i=1,\ldots,s$, then $\canBeReducedTo{T, B}{u}{u'}$ holds (in words:
+  $i=1,\ldots,s$, then $\defineNotation[->TBu]{\canBeReducedTo{T, B}{u}{u'}}$ holds (in words:
   $u$ \defineterm{can be reduced in one step modulo $T$ and $B$} to
   $u'$) if and only if there exists $b \in B$ and $t \in T$ such that
   $\canBeReducedTo{t, b}{u}{u'}$.
@@ -272,8 +282,8 @@ $\initial{b} = \initial{u}$.
   $\euclideanSize{r} < \euclideanSize{\lc{b_i}}$.
   %
   Thus, if the operations in $C$ are computable, we can compute
-  $(a,c)\in \setN\times C$ and $u'=u - ct^ab$ such that either
-  $u'_i=0$ (and, thus, $\idx{u'} < \idx{u}$) or
+  $(a,c)\in \setN\times C$ and $u'=u - ct^ab$ such that either $u'=0$
+  or $u'_i=0$ (and, thus, $\idx{u'} < \idx{u}$) or
   $\degree{u'_i}<\degree{u_i}$ or
   $\euclideanSize{\lc{u_i'}}<\euclideanSize{u_i}$
   %
@@ -287,8 +297,9 @@ $\initial{b} = \initial{u}$.
   Euclidean division steps of $3$ by $1+i$.
 
   In order to make the reduction functional, we assume a computable
-  function $\oneStepReduce: M^3\to \setN \times C$ such that if
-  $u, t, b \in M^*$,
+  function
+  $\defineNotation[red]{\oneStepReduce}: M^3\to \setN \times C$ such
+  that if $u, t, b \in M^*$,
   %
   $i=\idx{b}=\idx{t}$,
   %
@@ -302,7 +313,7 @@ $\initial{b} = \initial{u}$.
   %
   $u'=u-ct^ab\ne0$, then
   %
-  $\ltLex{\degreeIndexSize{u'}}{\degreeIndexSize{u}}$
+  $\ltLex{\degreeIndexSize{u'}}{\degreeIndexSize{u}}$.
 \end{Remark}
 
 \begin{Hemmecke}
@@ -894,5 +905,6 @@ XEtaComputation(C, n, F): Exports
 
 )if LiterateDoc
 \bibliography{qeta}
+\printindex
 \end{document}
 )endif
