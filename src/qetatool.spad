@@ -87,6 +87,9 @@ QAuxiliaryTools(): with
         ++ clearDenominator(p) multiplies the polynomial p over rational numbers
         ++ with the least common multiple of all its coefficients and
         ++ returns the result as a polynomial over the integers.
+    numberOfGaps: (P, List P) -> P
+        ++ numberOfGaps(n, l) computes
+        ++ reduce(+, [floor(x/n) for x in l]).
   == add
     indexedSymbols(s: String, n: N): List Symbol ==
         [concat(s, convert(i)@String)::Symbol for i in 1..n]
@@ -98,6 +101,8 @@ QAuxiliaryTools(): with
         mon(x) ==> monomial(numer(c*leadingCoefficient x), degree x)$Polynomial(Z)
         lm: List Polynomial Z := [mon(x) for x in monomials p]
         reduce(_+, lm)
+    numberOfGaps(n: P, list: List P): P ==
+        qcoerce(reduce(_+, [floor(x /$Q n) for x in list]$List(Z)))@P
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
