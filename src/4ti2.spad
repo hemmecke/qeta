@@ -1,0 +1,105 @@
+-------------------------------------------------------------------
+---
+--- FriCAS 4ti2
+--- Copyright (C) 2019  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)abbrev package X4TI2 X4ti2
+
+S ==> String
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+MZ ==> Matrix Z
+VZ ==> Vector Z
+RELS ==> VZ -- only entries from {-1, 0, 1} are allowed with meaning {<=,=,>=}
+LVZ ==> List VZ
+ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
+
+++ X4ti2 provides an interface to the program zsolve from the
+++ 4ti2 software package (http://4ti2.de, https://4ti2.github.io/).
+X4ti2: with
+    zsolve:  (MZ, RELS, VZ) -> ZRESULT
+      ++ If A is a (m,n)-matrix,
+      ++ r an m-dimensional vector with entries from {-1, 0, 1},
+      ++ b an m-dimensional vector, then
+      ++ zsolve(A, r, b, fn) returns 3 lists I, H, F such that for any
+      ++ vector i in inhom and any N-linear combination h of vectors
+      ++ from hom H and any Z-linear combination f of vectors from F,
+      ++ the vector x=i+h+f solves the given system Ax r b where here
+      ++ the vector r has to be interpreted rowwise, such that -1
+      ++ means <=, 0 means =, and 1 means >=.
+
+      ++ The function creates some random files to transmit data to
+      ++ and from 4ti2. These files will be written to the current
+      ++ directory and start with the prefix "4ti2-" followed by a
+      ++ random number. They will be removed after the computation.
+  == add
+    rep x ==> (x@%) pretend Rep
+    per x ==> (x@Rep) pretend %
+
+    zsolvepath: Reference S := ref "/usr/bin/4ti2-zsolve"
+    zsolveoptions: Reference S := ref "-q"
+
+    writeMatrix(fn: FileName, mat: MZ): Void ==
+        -- create .mat
+        tf: TextFile := open(fn, "output")$TextFile
+        rows := nrows mat
+        cols := ncols mat -- must be > 0
+        writeLine!(tf, concat [string rows, " ", string cols])
+        for i in 1..rows repeat
+            s: String := string qelt(mat, i, 1)
+            for j in 2..cols repeat
+                s := concat(concat(s, " "), string qelt(mat, i, j))
+            writeLine!(tf, s)
+        close! tf
+        void()
+
+    readFile(fn: FileName): List VZ ==
+        not exists? fn => empty()
+        f: File Z := open(fn, "input")
+        rows: N := (read! f)::N
+        cols: P := (read! f)::P
+        result: List(VZ) := empty()$List(VZ)
+        for i in 1..rows repeat
+            v: VZ := new(cols, 0)
+            for j in 1..cols repeat v.j := read! f
+            result := cons(v, result)
+        close! f
+        return result
+
+    localzsolve(mat: MZ, rels: RELS, b: VZ, dir: S, basename: S): ZRESULT ==
+        import from FileName
+        writeMatrix(filename(dir, basename, "mat"), mat)
+        writeMatrix(filename(dir, basename, "rhs"), transpose(b)$MZ)
+        writeMatrix(filename(dir, basename, "rel"), transpose(rels)$MZ)
+        cmd: S := concat ["system ",
+            deref zsolvepath, " ", deref zsolveoptions, " ", basename]
+        systemCommand(cmd)$MoreSystemCommands
+        I: LVZ := readFile filename(dir, basename, "zinhom")
+        H: LVZ := readFile filename(dir, basename, "zhom")
+        F: LVZ := readFile filename(dir, basename, "zfree")
+        fn: S := concat(filename(dir, basename, "") :: S, ".*")
+        systemCommand(concat("system /bin/rm ", fn))$MoreSystemCommands
+        [I, H, F]
+
+    zsolve(mat: MZ, rels: RELS, b: VZ): ZRESULT ==
+        h: HashState := new()
+        r: Z := value hashUpdate!(hashUpdate!(hashUpdate!(h, mat), rels), b)
+        dir: S := ""
+        basename: String := concat("4ti2-", string r)
+        localzsolve(mat, rels, b, dir, basename)

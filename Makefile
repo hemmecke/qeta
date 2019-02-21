@@ -37,8 +37,9 @@ TPROJECT=${TMP}/${PROJECT}
 ###################################################################
 # toplevel targets
 all: compile-spad
-SPADFILES=qfunct cachedpow qetasqrt qetaqmev qetadom qetatool qetasamba \
-  qetaradu qetaicat qetaih qeta3hdp qetair qetais qetasomos \
+SPADFILES=4ti2 qfunct cachedpow qetasqrt qetaqmev qetadom qetatool \
+  qetasamba qetaradu \
+  qetaicat qetaih qeta3hdp qetair qetais qetasomos \
   qetaauxmeq qetapowersamba qetakolberg qetafun
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
