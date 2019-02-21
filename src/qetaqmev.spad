@@ -480,57 +480,16 @@ QEtaQuotientMonoidExponentVectors4ti2: with
                 e: N := primePower(dj, p)$QAuxiliaryModularEtaQuotientPackage
                 qsetelt!(mat, k, j, e)
             qsetelt!(mat, k, k, 2) -- additional variable for (mod 2)
-        r1: N := random(10^20); -- the seems to be always the same
-        r2: N := random(10^20); -- temporary filename
-        baseName: String := concat ["4ti2-", string m, "-", string r2]
 
-        -- create .mat
-        fn: FileName := filename("", baseName, "mat")
-        tf: TextFile := open(fn, "output")$TextFile
-        writeLine!(tf, concat [string rows, " ", string cols])
-        for i in 1..rows repeat
-            s: String := string qelt(mat, i, 1)
-            for j in 2..cols repeat
-                s := concat(concat(s, " "), string qelt(mat, i, j))
-            writeLine!(tf, s)
-        close! tf
-
-        -- create .rhs
-        fn := filename("", baseName, "rhs")
-        tf := open(fn, "output")$TextFile
-        writeLine!(tf, concat("1 ", string rows))
-        s := string 0
-        for i in 2..rows repeat s := concat(s, " 0")
-        writeLine!(tf, s)
-        close! tf
-
-        -- create .rel
-        fn := filename("", baseName, "rel")
-        tf := open(fn, "output")$TextFile
-        writeLine!(tf, concat("1 ", string rows))
-        s := ">"
-        for i in 2..n-1 repeat s := concat(s, " >")
-        for i in n..rows repeat s:= concat(s, " =")
-        writeLine!(tf, s)
-        close! tf
-
-        command: String := concat("system /usr/bin/4ti2-zsolve ", baseName)
-        systemCommand(command)$MoreSystemCommands
-
-        -- read back the .zhom file
-        -- the zinhom file should only contain zeroes.
-        fn := filename("", baseName, "zhom")
-        f: File Z := open(fn, "input")
-        rows := (read! f)::P
-        cols := (read! f)::P
+        b: VZ := new(rows, 0)
+        rels: VZ := new(rows, 0) -- all equations
+        -- However the first n entries are inequations A x >= b.
+        for i in 1..n-1 repeat rels.i := 1
+        res := zsolve(mat, rels, b)$X4ti2
+        -- We only need the zhom part, since the zinhom part should
+        -- contain only zeros..
         result: List(VZ) := empty()$List(VZ)
-        for i in 1..rows repeat
-            v: VZ := new(n, 0)
-            for j in 1..n repeat v.j := read! f
-            for j in n+1..cols repeat read! f -- ignore those values
-            result := cons(v, result)
-        close! f
-        return result
+        [row(1..n) for row in res.zhom]
 
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
