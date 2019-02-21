@@ -1595,6 +1595,7 @@ LP ==> List P
 LZ ==> List Z
 LQ ==> List Q
 LSL2Z ==> List SL2Z
+VZ ==> Vector Z
 OF ==> OutputForm
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
@@ -2913,6 +2914,7 @@ expansion of various eta quotients.
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
 SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
+  -- We need Algebra(Q) for multiplication with (1/m)
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
@@ -3161,6 +3163,88 @@ ModularSiftedEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         metadata x = metadata y
 
 )if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{QEtaOptimalCoFactor}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Compute a vector that must be multiplied to the (sifted) eta quotient
+in order to make it a modular function having a pole only at infinity
+or to make the (positive) orders at all cusps (\code{qetaGrades})
+small in total sum.
+
+)endif
+
+)abbrev package QOPTCFAC QEtaOptimalCoFactor
+QEtaOptimalCoFactor: Exports == Implementation where
+  Exports ==> with
+    etaCoFactorInfinity: (P, P, LZ, P, N) -> LZ
+      ++ etaCoFactorInfinity(nn, mm, s, m, t) returns a vector r such that
+      ++ modularConditions?(nn, mm, members r, s, m, t)$QEtaKolberg and
+      ++ etaQuotient(nn, r, mm, s, m,t)$SymbolicModularSiftedEtaQuotient
+      ++ corresponds to a modular function with poles only at infinity and
+      ++ with smallest pole order.
+
+  Implementation ==> add
+    LVZ ==> List VZ
+    ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
+    ECFS ==>  Record(particular: Union(VZ, "failed"), basis: List VZ)
+    C ==> Q
+    lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
+    SUPC ==> SparseUnivariatePolynomial C
+    CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
+    LX ==> UnivariateLaurentSeries(CX, xsym, 0)
+    YMSETAQ ==> SymbolicModularSiftedEtaQuotient
+    MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi, LX)
+    a ==> aLigozat $ QAuxiliaryModularEtaQuotientPackage
+
+    -- order of eta^r at cusp a/c.
+    grade(nn: P, divs: LP, c: Z, r: LZ): Z ==
+        l: LZ := [rdelta * a(nn, c, delta) for delta in divs for rdelta in r]
+        -(reduce(_+, l, 0) exquo 24)::Z
+
+    -- orders at cusps of Gamma0(nn) different from infinity
+    grades(nn: P, divs: LP, cusps: LQ, r: LZ): LZ ==
+        [grade(nn, divs, denom cusp, r) for cusp in cusps]
+
+    etaCoFactorInfinity(nn: P, mm: P, s: LZ, m: P, t: N): LZ ==
+        ecfs: ECFS := etaCoFactorSpace(nn, mm, s, m, t)$QEtaKolberg
+        nndivs: LP := DIVISORS nn
+        n: N := #nndivs
+        -- excclude infinity cusp
+        cusps: LQ := [cusp for cusp in cuspsOfGamma0(nn)$QAuxMEQ | cusp~=1/nn]
+        rinitial: VZ := ((ecfs.particular)::VZ)(1..n)
+
+        -- Compute the poleorders/grades for the particular solution rinitial.
+        y: YMSETAQ := etaQuotient(nn, members rinitial, mm, s, m, t);
+        mx: P := minRootOfUnity y
+        supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
+        xi := generator()$CX;
+        xsym: Symbol := "x"::Symbol;
+        e: XHashTable(Q, LX) := expansions expandAtAllCusps(y)$MSETAQ
+        -- vector of orders without order at infinity
+        rhs: LZ := [-order(e.cusp) for cusp in cusps]
+
+        -- For the vectors in the basis, we don't need to compute the
+        -- series explicitly, since these vectors correspond to
+        -- modular eta quotients and thus we can use the matrix of
+        -- Ligozat to compute the order vectors.
+        b: LVZ := [x(1..n) for x in ecfs.basis]
+        bas: List LZ := [grades(nn, nndivs, cusps, members r) for r in b]
+        mat: MZ := transpose matrix bas
+        rels: VZ := vector [1 for x in 1..#cusps]
+        zresult: ZRESULT := zsolve(mat, rels, vector rhs)$X4ti2
+        adjustment := members first zresult.zinhom
+        members(rinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
+
+)if LiterateDoc
+%$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
