@@ -374,12 +374,46 @@ QEtaExtendedAlgebra(_
     ((x: %) + (y: %)): % == embed(first x + first y, second x + second y)
     ((x: %) - (y: %)): % == embed(first x - first y, second x - second y)
     ((x: %) * (y: %)): % == embed(first x * first y, second x * second y)
+
     ((c: C) * (x: %)): % == embed(c * first x, c * second x)
     ((x: %) ^ (n: N)): % == embed(first(x)^n, second(x)^n)
     qetaGrade(x: %): Z == qetaGrade first x
     qetaCoefficient(x: %, n: Z): C == qetaCoefficient(first x, n)
     qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient first x
 
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{A domain whose elements cache their $n$-th power}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+)abbrev domain QEALGCP QEtaAlgebraCachedPower
+++ The domain QEtaAlgebraCachedPower(C, A) behaves like the given
+++ QEtaAlgebra A, but to each of its elements x a power x^n is never
+++ computed twice, but rather stored and then accessed from the cache.
+QEtaAlgebraCachedPower(C, A): Exports == Implementation where
+  C: GcdDomain
+  A: QEtaAlgebra C
+  Exports ==> Join(QEtaAlgebra C, CoercibleFrom A, CoercibleTo A)
+  Implementation ==> CachedPower A add
+    Rep ==> CachedPower A
+    import from Rep
+    toA x ==> rep(x) :: A
+    embed a ==> per(a::Rep)
+    coerce(x: %): OutputForm == toA(x) :: OutputForm
+    0: % == embed(0$A)
+    1: % == embed(1$A)
+    zero?(x: %): Boolean == zero? toA x
+    _-(x: %): % == embed(- toA x)
+    ((x: %) + (y: %)): % == embed(toA x + toA y)
+    ((x: %) - (y: %)): % == embed(toA x - toA y)
+    ((x: %) * (y: %)): % == embed(toA x * toA y)
+    ((c: C) * (x: %)): % == embed(c * toA x)
+    ((x: %) ^ (n: N)): % == embed(power!(rep x, n))
+    qetaGrade(x: %): Z == qetaGrade toA x
+    qetaCoefficient(x: %, n: Z): C == qetaCoefficient(toA x, n)
+    qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient toA x
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
