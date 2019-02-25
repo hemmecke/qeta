@@ -332,7 +332,11 @@ summand for the previous index $k$.
     eulerFunction(s: P): L ==
         series cons([0, 1], eulerStream(s, 2*s, 0, empty()$S))
 
-    partitionSeries(s: P): L == recip(eulerFunction s)::L
+    partitionStream(s: P, n: Z, z: S): S == delay
+        p: Z := partition(n)$IntegerCombinatoricFunctions(Z)
+        cons([n*s, p::R], partitionStream(s, n+1, z))
+    partitionSeries(s: P): L ==
+        series cons([0, 1], partitionStream(s, 1, empty$S))
 
     eulerStream2(s: P, n: Z, m: Z, z: S): S == delay
         r: R := if even? n then 1 else -1
@@ -357,6 +361,7 @@ summand for the previous index $k$.
         ef4: L := ef2 * ef2
         ps8: L := recip(ef4 * ef4)::L
         monomial(1, -1) * (eisensteinE4()*ps8)^3
+
 
 )if LiterateDoc
 \bibliography{qeta}
