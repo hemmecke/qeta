@@ -3157,7 +3157,7 @@ ModularSiftedEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{QEtaOptimalCoFactor}
+\subsection{QEtaModularFunctionTools}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Compute a vector that must be multiplied to the (sifted) eta quotient
 in order to make it a modular function having a pole only at infinity
@@ -3166,9 +3166,16 @@ small in total sum.
 
 )endif
 
-)abbrev package QOPTCFAC QEtaOptimalCoFactor
-QEtaOptimalCoFactor: Exports == Implementation where
+)abbrev package QOPTCFAC QEtaModularFunctionTools
+QEtaModularFunctionTools: Exports == Implementation where
   Exports ==> with
+    qetaGrades: SymbolicModularSiftedEtaQuotient -> XHashTable(Q, Z)
+      ++ qetaGrades(y) returns the qetaGrades of the modular
+      ++ function corresponding to y.
+    qetaGrades: (P, LZ, P, LZ, P, N) -> XHashTable(Q, Z)
+      ++ qetaGrades(nn, r, mm, s, m, t) returns
+      ++ qetaGrades(y) where
+      ++ y=etaQuotient(nn, r, mm, s, m, t)$SymbolicModularSiftedEtaQuotient.
     etaCoFactorInfinity: (P, P, LZ, P, N) -> LZ
       ++ etaCoFactorInfinity(nn, mm, s, m, t) returns a vector r such that
       ++ modularConditions?(nn, mm, members r, s, m, t)$QEtaKolberg and
@@ -3198,6 +3205,20 @@ QEtaOptimalCoFactor: Exports == Implementation where
     grades(nn: P, divs: LP, cusps: LQ, r: LZ): LZ ==
         [grade(nn, divs, denom cusp, r) for cusp in cusps]
 
+    qetaGrades(y: YMSETAQ): XHashTable(Q, Z) ==
+        mx: P := minRootOfUnity y
+        supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
+        xi := generator()$CX;
+        xsym: Symbol := "x"::Symbol;
+        e: XHashTable(Q, LX) := expansions expandAtAllCusps(y)$MSETAQ
+        ht: XHashTable(Q, Z) := empty()
+        for cusp in keys e repeat ht.cusp := -order(e.cusp)
+        ht
+
+    qetaGrades(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): XHashTable(Q, Z) ==
+        y: YMSETAQ := etaQuotient(nn, r, mm, s, m, t);
+        qetaGrades y
+
     etaCoFactorInfinity(nn: P, mm: P, s: LZ, m: P, t: N): LZ ==
         ecfs: ECFS := etaCoFactorSpace(nn, mm, s, m, t)$QEtaKolberg
         nndivs: LP := DIVISORS nn
@@ -3219,14 +3240,9 @@ QEtaOptimalCoFactor: Exports == Implementation where
         if not zero? z then rinitial := z*row(tmat, i)*mat
 
         -- Compute the poleorders/grades for the particular solution rinitial.
-        y: YMSETAQ := etaQuotient(nn, members rinitial, mm, s, m, t);
-        mx: P := minRootOfUnity y
-        supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
-        xi := generator()$CX;
-        xsym: Symbol := "x"::Symbol;
-        e: XHashTable(Q, LX) := expansions expandAtAllCusps(y)$MSETAQ
-        -- vector of orders without order at infinity
-        rhs: LZ := [-order(e.cusp) for cusp in cusps]
+        g: XHashTable(Q, Z) := qetaGrades(nn, members rinitial, mm, s, m, t);
+        -- Exclude order at cusp at infinity.
+        rhs: LZ := [g.cusp for cusp in cusps]
 
         -- For the vectors in the basis, we don't need to compute the
         -- series explicitly, since these vectors correspond to
