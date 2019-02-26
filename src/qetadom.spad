@@ -260,7 +260,7 @@ Laurent polynomials).
 ++ respective domains will be created on the fly, we list here only
 ++ the functions that are actually used in QEtaPackage.
 QEtaAlgebra(C: CommutativeRing): Category ==
-  Join(SemiGroup, MagmaWithUnit, CoercibleTo OutputForm) with
+  Join(Monoid, AbelianGroup) with
     0: %
       ++ 0 is the neutral element with respect to +.
     1: %
@@ -356,7 +356,7 @@ QEtaExtendedAlgebra(_
     C: GcdDomain,_
     A: QEtaAlgebra C,_
     B: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)_
-  ): Join(QEtaAlgebra(C), Monoid, AbelianGroup) with
+  ): QEtaAlgebra C with
     embed: (A, B) -> %
     first: % -> A
     second: % -> B
@@ -394,8 +394,10 @@ QEtaExtendedAlgebra(_
 ++ computed twice, but rather stored and then accessed from the cache.
 QEtaAlgebraCachedPower(C, A): Exports == Implementation where
   C: GcdDomain
-  A: QEtaAlgebra C
-  Exports ==> Join(QEtaAlgebra C, CoercibleFrom A, CoercibleTo A)
+  A: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)
+  Exports ==> Join(Monoid, AbelianGroup, CoercibleFrom A, CoercibleTo A) with
+    _*: (C, %) -> %
+    if A has QEtaAlgebra C then QEtaAlgebra C
   Implementation ==> CachedPower A add
     Rep ==> CachedPower A
     import from Rep
@@ -411,9 +413,10 @@ QEtaAlgebraCachedPower(C, A): Exports == Implementation where
     ((x: %) * (y: %)): % == embed(toA x * toA y)
     ((c: C) * (x: %)): % == embed(c * toA x)
     ((x: %) ^ (n: N)): % == embed(power!(rep x, n))
-    qetaGrade(x: %): Z == qetaGrade toA x
-    qetaCoefficient(x: %, n: Z): C == qetaCoefficient(toA x, n)
-    qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient toA x
+    if A has QEtaAlgebra C then
+        qetaGrade(x: %): Z == qetaGrade toA x
+        qetaCoefficient(x: %, n: Z): C == qetaCoefficient(toA x, n)
+        qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient toA x
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
