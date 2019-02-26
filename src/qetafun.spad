@@ -3205,6 +3205,18 @@ QEtaOptimalCoFactor: Exports == Implementation where
         -- excclude infinity cusp
         cusps: LQ := [cusp for cusp in cuspsOfGamma0(nn)$QAuxMEQ | cusp~=1/nn]
         rinitial: VZ := ((ecfs.particular)::VZ)(1..n)
+        b: LVZ := [x(1..n) for x in ecfs.basis]
+        -- The rinitial vector might have very big numbers in it. We
+        -- make them smaller by applying LLL to the system.
+        mat: MZ := matrix cons(members rinitial, [members v for v in b])
+        el: Record(lll: MZ, trf: MZ) := extendedLLL(mat)$LLLReduction
+        -- Now look for 1 or -1 in the first entry of the transformation
+        -- matrix.
+        tmat: MZ := el.trf
+        z: Z := 0
+        i: N := 1
+        while i <= nrows(tmat) and not one? abs(z := tmat(i, 1)) repeat i := i+1
+        if not zero? z then rinitial := z*row(tmat, i)*mat
 
         -- Compute the poleorders/grades for the particular solution rinitial.
         y: YMSETAQ := etaQuotient(nn, members rinitial, mm, s, m, t);
@@ -3220,7 +3232,6 @@ QEtaOptimalCoFactor: Exports == Implementation where
         -- series explicitly, since these vectors correspond to
         -- modular eta quotients and thus we can use the matrix of
         -- Ligozat to compute the order vectors.
-        b: LVZ := [x(1..n) for x in ecfs.basis]
         bas: List LZ := [grades(nn, nndivs, cusps, members r) for r in b]
         mat: MZ := transpose matrix bas
         rels: VZ := vector [1 for x in 1..#cusps]
