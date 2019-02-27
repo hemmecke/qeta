@@ -2765,6 +2765,9 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     ef: LC := eulerFunction(1)$QFunctions(C, LC)
     ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
     efc: CachedPower LC := ef :: CachedPower(LC)
+    ps: LC := partitionSeries(1)$QFunctions(C, LC)
+    ps1: C := coefficient(ef, 1) -- avoid null pointer by expansion
+    psc: CachedPower LC := ps :: CachedPower(LC)
 
     RecC ==> Record(k: Z, c: C)
     RecX ==> Record(k: Z, c: CX)
@@ -2784,6 +2787,8 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         series(stx)$LX
 
     eulerFunctionPower(u: P, v: N, rd: Z): LX ==
+        zero? rd => 1$LX
+        rd < 0 => substitute(power!(psc, -rd)$CachedPower(LC), u, v)
         substitute(power!(efc, rd)$CachedPower(LC), u, v)
 
     squareRoot(fq: Q): CX ==
@@ -2950,6 +2955,9 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     ef: LC := eulerFunction(1)$QFunctions(C, LC)
     ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
     efc: CachedPower LC := ef :: CachedPower(LC)
+    ps: LC := partitionSeries(1)$QFunctions(C, LC)
+    ps1: C := coefficient(ps, 1) -- avoid null pointer by expansion
+    psc: CachedPower LC := ps :: CachedPower(LC)
 
 -------------------------------------------------------------------
 -- Auxiliary functions
@@ -2968,7 +2976,9 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         series(stx)$LX
 
     eulerFunctionPower(u: P, v: N, rd: Z): LX ==
-        substitute(power!(efc, rd), u, v)
+        zero? rd => 1$LX
+        rd < 0 => substitute(power!(psc, -rd)$CachedPower(LC), u, v)
+        substitute(power!(efc, rd)$CachedPower(LC), u, v)
 
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.
