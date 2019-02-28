@@ -121,6 +121,9 @@ EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 Rec ==> Record(red: SL2Z, triang: MZ)
 Pol ==> SparseUnivariatePolynomial Z
 
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Auxiliary package to check modularity of $\eta$ quotients}
@@ -139,6 +142,7 @@ width of a cusp \cite[Lemma~2.37]{Radu:PhD:2010} and
 
 )endif
 
+-- Maybe this should become a domain CongruenceSubgroupGamma0(m).
 )abbrev package QAUXMEQ QAuxiliaryModularEtaQuotientPackage
 ++ QAuxiliaryModularEtaQuotientPackage helps to do computations with
 ++ eta quotients that are modular functions.
@@ -170,6 +174,11 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ and some a. The width is independent of a and given by
       ++ m/gcd(c^2,m).
       ++ \cite[Lemma~2.37]{Radu:PhD:2010}
+    numberOfGaps: (P, List P) -> P
+        ++ numberOfGaps(n, l) computes
+        ++ reduce(+, [floor(x/n) for x in l]).
+    indexOfGamma0: P -> P
+        ++ indexOfGamma0(n) computes the index of Gamma_0(n) in SL2Z.
     cusps2OfGamma0: P -> List Q
       ++ According to
       ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
@@ -314,6 +323,9 @@ QAuxiliaryModularEtaQuotientPackage: with
 
     width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
 
+    numberOfGaps(n: P, list: List P): P ==
+        qcoerce(reduce(_+, [floor(x /$Q n) for x in list]$List(Z)))@P
+
     -- Split matrix as in Lemma~\ref{thm:matrix-splitting} with
     -- z = delta*lambda.
     splitMatrix(mat: SL2Z, delta: Z, m: P, lambda: N): Rec ==
@@ -367,6 +379,12 @@ QAuxiliaryModularEtaQuotientPackage: with
         -- s: Z := ((t*u - dprime) exquo c) :: Z
         b := ((a*d -1) exquo c) :: Z -- instead of s we use that det=1
         matrix [[a, b], [c, d]]
+
+    indexOfGamma0(m: P): P ==
+        r: Q := 1
+        for f in factorList factor m repeat
+            r := r * (1 + 1/(f.factor))
+        qcoerce(numer(m*r))@P
 
 )if LiterateDoc
 
