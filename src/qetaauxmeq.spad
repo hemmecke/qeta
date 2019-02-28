@@ -193,6 +193,8 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ cusps(m) returns all the cusps for Gamma_0(m) sorted first by
       ++ denominator and then (among the cusps with the same denominatore)
       ++ by the numerator of the cusp.
+    numberOfCuspsOfGamma0: P -> P
+      ++ numberOfCuspsOfGamma0(m) returns the number of cusps of level m.
     splitMatrix: (SL2Z, Z, P, N) -> Rec
       ++ splitMatrix(mat, delta, m, lambda) computes
       ++ splitMatrix(a, b, c, d) where the arguments are the matrix
@@ -440,6 +442,13 @@ $a\in X_c$.
 --                m: MZ := matrix [[a, b], [c, d]]
                 result := cons(a/c, result)
         sort!(smallerCusp, result)
+
+    numberOfCuspsOfGamma0(level: P): P ==
+        --assert(one/ first DIVISORS level)
+        n: Z := 1  -- eulerPhi(gcd(1, level))
+        for c in rest DIVISORS level repeat
+            n := n + eulerPhi(gcd(c, (level exquo c)::Z))
+        qcoerce(n)@P
 
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
     FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
