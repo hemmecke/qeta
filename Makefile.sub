@@ -1,7 +1,7 @@
 ###################################################################
 #
 # Eta relations
-# Copyright 2015-2018,  Ralf Hemmecke <ralf@hemmecke.org>
+# Copyright 2015-2019,  Ralf Hemmecke <ralf@hemmecke.org>
 #
 ###################################################################
 # This program is free software: you can redistribute it and/or modify
@@ -360,3 +360,40 @@ ${ALLINPUT}: %.input: %.out
 	     -e '    $$P=1; print;}' \
 	     -e '}' \
 	$< | grep -v '^-- ' > $@
+
+###################################################################
+# api documentation
+# Create a HTML site (locally) for the API similar to fricas.github.io/api.
+# The path to the source .spad files.
+SPADSOURCEURL=file:///home/hemmecke/g/qeta/src
+API_SPAD=$(HOME)/g/fricas-bisect/fricas-rhx/src/doc/api.spad
+abbrev.list:
+#--rhx: TODO: Does not work for in-source-build!!!
+	(${ROOT}/src; \
+	grep -nH '^)ab[a-z]* [a-z]*  *[A-Z0-9]* *[^ ]*' *.spad \
+	| sed -e 's/\.spad:/ /' -e 's/:)abbrev//') > $@
+
+sphinx/source/history.rst:
+	$(MKDIR_P) sphinx/source
+	echo "Commit History" > $@
+	echo "==============" >>$@
+	echo                  >>$@
+	echo ".. code::"      >>$@
+	echo                  >>$@
+	(cd ${ROOT}; git log --decorate master^^^..HEAD | sed 's/^/    /') >> $@
+
+sphinx/stamp: abbrev.list sphinx/source/history.rst
+	$(MKDIR_P) sphinx/source
+	((echo ')compile "$(API_SPAD)"'; \
+	  echo ')read projectlibs'; \
+	  echo ")cd sphinx/source"; \
+	  echo 'documentAll("../../abbrev.list")') \
+	  | FRICAS_INITFILE='' fricas -nosman) > $@
+
+mysphinx: sphinx/stamp
+	. ${VIRTUALENV}/sphinx/bin/activate && cd sphinx && make html
+
+api: compile-spad
+	-rm -rf sphinx
+	cp -r ${ROOT}/sphinx .
+	${MAKE} mysphinx
