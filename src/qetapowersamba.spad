@@ -517,10 +517,20 @@ XEtaAlgebraBasisContainer(C, F): Exports == Implementation where
     basisElements: % -> V
       ++ basisElements(x) returns the basis elements that are stored
       ++ in the structure x.
+    component: (F, IDX) -> Z -- auxiliary function
+      ++ Let k = qetaIndex(u), g := grade(u,k), and  I = sort(keys idx).
+      ++ component(u, idx) returns c where
+      ++ c is -k if empty?(I).
+      ++ c is the idx(max(J)) if
+      ++ J = [i for i in I | grade(u, k) = grade(u, idx.i)] is nonempty.
+      ++ If J is empty, then c = -k otherwise.
+
   Implementation ==> add
     Rep ==> Record(idx: IDX, mul: MUL, be: V)
     xx ==> rep x
     import from Rep
+
+    n: P := maxIndex()$F
 
     coerce(x: %): OutputForm == xx::OutputForm
 
@@ -533,6 +543,16 @@ XEtaAlgebraBasisContainer(C, F): Exports == Implementation where
     indexPermutation(x: %): IDX == xx.idx
     multipliers(x: %): MUL == xx.mul
     basisElements(x: %): V == xx.be
+
+    component(u: F, ix: IDX): Z ==
+        k: P := qetaIndex u
+        empty? ix => -k -- no multiplier available
+        g: Z := qetaGrade(u, k)
+        for ii in n .. 1 by -1 | key?(i := qcoerce(ii)@P, ix) repeat
+            c := ix.i
+            qetaGrade(u, c) = g => return c::Z
+        return -k
+
 
 
 )if LiterateDoc
@@ -569,6 +589,7 @@ XEtaComputationCategory(C: EuclideanDomain, F: XEtaAlgebra C): Category ==
     postProcess!: % -> %
       ++ postProcess!(x) postprocesses the result. It might interreduce
       ++ the basis or do other kinds of cleanup.
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Restricted reduction}
@@ -605,6 +626,8 @@ XEtaReduction(C, F): Exports == Implementation where
       ++ "u reduces modulo ab to v".
     greaterGrade?: P -> (F, F) -> Boolean
       ++ greaterGrade?(k)(x, y) returns qetaGrade(x, k)>qetaGrade(y,k).
+
+    reducer: (F, H, Z, P) -> Union(F, "failed")
   Implementation ==> add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
@@ -640,7 +663,8 @@ XEtaReduction(C, F): Exports == Implementation where
     -- ensured by the requirement that "basis" is appropriately sorted by
     -- greaterGrade?.
     reducer(u: F, basis: H, grdt: Z, k: P): Union(F, "failed") ==
-        zero? u => "failed"
+        -- It is enough to reduce each component to grade > 0.
+        grade(u, k, -1) < 0 => "failed"
         i: Z := positiveRemainder(grade(u, k), grdt)
         -- if zero? i there is no corresponding element in basis, but
         -- we can use the element 1, i.e. we reduce u by a power of t.
@@ -653,15 +677,30 @@ XEtaReduction(C, F): Exports == Implementation where
             if topReducible?(u, b, k) then return b::Union(F, "failed")
         "failed"
 
-    reduceComponent(u: F, t: F, basis: H, k: P): F ==
-        --assert(grade(t, k)=grade(t))
-        --assert(grade(t, k)>0)
-        --assert(one? leadingCoefficient(t, k)) -- invertible would be enough
-        --assert grade(b, k)=grade b for all b in basis
-        --assert grade(b, k)>0 for all b in basis
-        --assert(not zero? positiveRemainder(grade(b), grade t) for all b in basis)
-        grdt: Z := grade(t, k)
-        while not ((r := reducer(u, basis, grdt, k)) case "failed") repeat
+    reduce(u: F, ab: AB): F ==
+        -- Reduce component qetaIndex u!!! as long as u is nonzero and
+        -- a reducer does exist. If there does not exist a reducer, then
+        -- don't try to reduce in another component.
+        idx: IDX := indexPermutation ab
+        mul: MUL := multipliers ab
+        be: V := basisElements ab
+        while not zero? u repeat
+            kz := component(u, idx)
+            kz <= 0 => return u -- no top-reduction possible
+            k: P := qcoerce(kz)@P
+            -- u := reduceComponents(u, mul.k, be.k, k)
+            t: F := mul.k
+            grdt: Z := grade(t, k)
+            basis: H := be.k
+            --assert(grade(t, k)=grade(t)) -- i.e. qetaIndex(t)=k
+            --assert(grade(t, k)>0) -- that is by construction of mul
+            --assert(one? leadingCoefficient(t, k)) -- invertible is enough
+            --assert(grade(b, k)=grade b for all b in basis)
+            ---- by construction of be.k
+            --assert grade(b, k)>0 for all b in basis -- by construction of be
+            --assert(not zero? positiveRemainder(grade(b), grade t) _
+            --       for all b in basis) -- by construction of be
+            (r := reducer(u, basis, grdt, k)) case "failed" => return u
             grdu: Z := grade(u, k)
             v: F := r :: F
             j: Z := ((grdu - grade(v, k)) exquo grdt) :: Z
@@ -669,20 +708,12 @@ XEtaReduction(C, F): Exports == Implementation where
             -- cc: Record(quotient: C, remainder: C)
             cc := divide(leadingCoefficient(u, k), leadingCoefficient(v, k))
             u := u - (cc.quotient)*v
-            uca := unitNormal leadingCoefficient(u, k)
-            u := (uca.associate)*u
-        uca := unitNormal leadingCoefficient(u, k)
-        u := (uca.associate)*u
+--TODO: Cannot simplify coefficient, since contrary to Finite0Series,
+-- leadingCoefficient(u, k) does not give 0, but currently runs forever.
+--TODO: zero? u => return u
+--TODO: uca := unitNormal leadingCoefficient(u, k)
+--TODO: u := (uca.associate)*u
         return u
-
-    reduce(u: F, ab: AB): F ==
-        idx: IDX := indexPermutation ab
-        mul: MUL := multipliers ab
-        be: V := basisElements ab
-        for i in maxIndex()$F .. 1 by -1 repeat
-            k := idx(qcoerce(i)@P)
-            if key?(k, mul) then u := reduceComponent(u, mul.k, be.k, k)
-        u
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -720,7 +751,7 @@ XEtaAlgebraBasis(C, F, Y): Exports == Implementation where
         y: Y := initialize m
         while criticalElements? y repeat y := oneStepComputation! y
         return postProcess! y
-    algebraBasis(m: List F): AB ==>
+    algebraBasis(m: List F): AB ==
         y: Y := algebraBasisComputation m
         algebraBasis y
 
@@ -735,11 +766,11 @@ XEtaAlgebraBasis(C, F, Y): Exports == Implementation where
 XEtaComputation(C, F): Exports == Implementation where
   C: EuclideanDomain
   F: XEtaAlgebra C
+  FF ==> Record(f1: F, f2: F)
+  Products ==> XHashTable(Z, List FF)
+  AB ==> XEtaAlgebraBasisContainer(C, F)
   Exports ==> XEtaComputationCategory(C, F)
   Implementation ==> add
-    FF ==> Record(f1: F, f2: F)
-    Products ==> XHashTable(Z, List FF)
-    AB ==> XEtaAlgebraBasisContainer(C, F)
     Rep ==> Record(ab: AB, ce: List F, havepairs?: Boolean, pairs: Products)
     -- bel contains the L part of elements of be.
     grade ==> qetaGrade$F
@@ -756,6 +787,99 @@ XEtaComputation(C, F): Exports == Implementation where
     multipliers(x: %): MUL == multipliers(xx.ab)
     basisElements(x: %): V == basisElements(xx.ab)
 
+    criticalElements?(x: %): Boolean ==
+        not empty?(xx.ce) => true
+        xx.havepairs? => not empty?(xx.pairs)
+        -- make sure that there are basis elements.
+        not empty? multipliers x
+--        be: V := basisElements x
+--        for k in 1..n repeat if not empty?(be.k) then return true
+--        false -- there are no basis elements from which pairs can be computed
+
+    -- Compute the maximal grade of f1*f2.
+    maxProductGrade(f1: F, f2: F): Z ==
+        --assert(not zero? f1)
+        --assert(not zero? f2)
+        gmax: Z := -1 -- dummy, because there is at least one >= 0.
+        for kn in 1..n repeat
+            k: P := qcoerce(kn)@P
+            g: Z := grade(f1, k) + grade(f2, k)
+            if g > gmax then gmax := g
+        gmax
+
+    addPair!(products: Products, f1: F, f2: F): Products ==
+        gmax := maxProductGrade(f1, f2)
+        products.gmax := cons([f1, f2], elt(products, gmax, empty()))
+        products
+
+    addMultiplierPairs!(x: %): Void ==
+        -- Add all products of multipliers except squares.
+        products: Products := xx.pairs
+        mul: MUL := multipliers x
+        mults: List F := entries mul
+        --TODO: Since element from the multipliers can have the same
+        -- grade in different components, we also must check products
+        -- of multipliers.
+        t: F := first mults
+        while not empty?(mults := rest mults) repeat
+            for b in mults repeat addPair!(products, t, b)
+            t := first mults
+
+    -- Add pairs for a new basis element u that has just been
+    -- added to the basis and has not made any other basis element
+    -- become reducible by u.
+    addBasisElementPairs!(u: F, basis: List F, x: %): Void ==
+        products: Products := xx.pairs
+        -- Add a pair (u, v) where v runs over all multipliers...
+        for t in entries multipliers x repeat addPair!(products, u, t)
+        -- and basis elements (including u itself)
+        for b in basis repeat addPair!(products, u, b)
+
+    basisElementList(x: %): List F ==
+        be: V := basisElements x
+        basis: List F := empty()
+        for i in 1..n repeat
+            for lb in entries be.i repeat
+                for b in lb repeat basis := cons(b, basis)
+        basis
+
+    addNewBasisElementPairs!(u: F, x: %): Void ==
+        addBasisElementPairs!(u, basisElementList x, x)
+
+    addComponentGapPairs!(products: Products, t: F, basis: H, k: P): Products ==
+        d: Z := grade(t, k)
+        for bs in entries(basis) repeat -- bs: List F
+            -- bs = all basis elements of same grade g (mod d)
+            -- bs is non-empty and sorted by greaterGrade?
+            b := first bs
+            bas := rest bs
+            g: Z := grade(b, k)
+            while not empty? bas repeat
+                b := first bas
+                e: Z := grade(b, k)
+                j: Z := ((g - e) exquo d) :: Z
+                tj: F := t^(qcoerce(j)@N)
+                --assert(grade(tj*b, k)=g)
+                --It might happen that qetaIndex(tj*b)~=k!!!
+                addPair!(products, tj, b)
+                bas := rest bas
+                g := e
+        products
+
+    addGapPairs!(x: %): Void ==
+        products: Products := xx.pairs
+        mul: MUL := multipliers x
+        be: V := basisElements x
+        --TODO: check comment!
+        -- Additionally, we have to add products of the form t^j*b
+        -- where qetaGrade(b,k)+j*d=qetaGrade(b',k) and b, b' in x.be
+        -- b different from b' and j>0 is minimal with that property.
+        -- That corresponds to the set S (line 13) in the algorithm samba
+        -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
+        -- We do this for each component separately.
+        for kn in 1..n | key?(k := qcoerce(kn)@P, mul) repeat
+            addComponentGapPairs!(products, mul.k, be.k, k)
+
     updateNonMultiplier!(u: F, x: %, k: P): Void ==
         -- Now we look at every potentially reducible element in
         -- the basis and move such element to the critical element list.
@@ -769,7 +893,6 @@ XEtaComputation(C, F): Exports == Implementation where
         -- from the basis into the critical elements.
         i: Z := positiveRemainder(grdu, grdt)
         -- i is not zero, because otherwise u would be reducible by t.
-        xdbgPrint("UPD i", i)
         basis: H := basisElements(x).k
         potentiallyReducible: List F := elt(basis, i, empty())
         red: List F := empty()
@@ -783,107 +906,44 @@ XEtaComputation(C, F): Exports == Implementation where
                 irr := cons(b, irr)
         basis.i := sort(greaterGrade? k, cons(u, irr))
         red := concat(red, xx.ce)
-        xx.ce := sort(greaterGrade? k, red)
-        xx.havepairs? := false
+        -- We don't need to redo reduction of pairs if no basis element
+        -- has been removed.
+        if empty? red then
+            addNewBasisElementPairs!(u, x)
+        else
+            xx.ce := sort(greaterGrade? k, red)
+            xx.havepairs? := false
 
     -- Destructively updates multipliers, basis, and critical elements
     update!(u: F, x: %): Void() ==
-        xdbgPrint("UPD u", u)
         --assert(not zero? u)
         --u is not top reducible by x
         --assert(every?(x+->x, concat [_
         --      [not topReducible?(u, b, k) for all b in xx.be.k] _
         --    for all k in keys(xx.mul)]))
-        k: P := qetaIndex u
-        xdbgPrint("UPD k", k)
-        mul: MUL := multipliers x
-        key?(k, mul) => updateNonMultiplier!(u, x, k)
-        mul.k := u -- we've found a new multiplier
-        -- There must still be an unassigned index.
         idx: IDX := indexPermutation x
+        kz := component(u, idx) --assert(not zero? kz)
+        kz > 0 => updateNonMultiplier!(u, x, qcoerce(kz)@P)
+        k: P := qcoerce(-kz)@P
+        -- There must still be an unassigned index.
         -- maybe we should reduce all the other multipliers by u.
         i: P := n
         while key?(i, idx) repeat i := qcoerce(i - 1)@P
         idx.i := k
-
-    maxGrade(x: F): Z == qetaGrade(x, qetaIndex x)
-    smallerMaxGrade(f1: F, f2: F): Boolean ==
-        -- there is optimization potential wrt use of unity roots
-        m1 := maxGrade f1
-        m2 := maxGrade f2
-        m1 < m2 or (m1 = m2 and qetaIndex f1 < qetaIndex f2)
-
-    initialize(m: List F): % ==
-        x: % := per [empty(), empty(), false, empty()]
-        -- sort by the maximal (positive) grade
-        for mi in sort(smallerMaxGrade, m) repeat
-            u: F := reduce(mi, xx.ab)
-            if not zero? u then update!(u, x)
-        return x
-
-    criticalElements?(x: %): Boolean ==
-        not empty?(xx.ce) => true
-        xx.havepairs? => not empty?(xx.pairs)
-        -- make sure that there are basis elements.
-        be: V := basisElements x
-        for k in 1..n repeat if not empty?(be.k) then return true
-        false -- there are no basis elements from which pairs can be computed
-
-    -- Compute the maximal grade of f1*f2.
-    maxProductGrade(f1: F, f2: F): Z ==
-        --assert(not zero? f1)
-        --assert(not zero? f2)
-        gmax: Z := -1 -- dummy, because there is at least one >= 0.
-        for kn in 1..n repeat
-            k: P := qcoerce(kn)@P
-            g: Z := grade(f1, k) + grade(f2, k)
-            if g > gmax then gmax := g
-        gmax
+        mul: MUL := multipliers x
+        mul.k := u -- we've found a new multiplier
+        -- if a new multiplier has been added, then remove the pairs
+        xx.havepairs? := false
 
     computePairs!(x: %): Void ==
-        be: V := basisElements x
-        basis: List F := concat concat [entries(be.i) for i in 1..n]
+        addMultiplierPairs! x
+        basis: List F := basisElementList x
         --assert(not empty? basis) -- so there is at least one product
-        products: Products := table()
-        while not empty? basis repeat
-            b: F := first basis
-            for e in basis repeat
-                gmax: Z := maxProductGrade(b, e)
-                products.gmax := cons([b, e], elt(products, gmax, empty()))
+        while not empty? basis repeat -- do not add a pair twice
+            addBasisElementPairs!(first basis, basis, x)
             basis := rest basis
-
-        --TODO: check comment!
-        -- Additionally, we have to add products of the form t^j*b
-        -- where qetaGrade(b,k)+j*d=qetaGrade(b',k) and b, b' in x.be
-        -- b different from b' and j>0 is minimal with that property.
-        -- That corresponds to the set S (line 13) in the algorithm samba
-        -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
-        -- We do this for each component separately.
-        mul: MUL := multipliers x
-        for kn in 1..n | key?(k := qcoerce(kn)@P, mul) repeat
-            t: F := mul.k
-            d: Z := grade(t, k)
-            for bs in entries(be.k) repeat
-                -- bs = all basis elements of same grade g (mod d)
-                -- bs is non-empty and sorted by greaterGrade?
-                b := first bs
-                bas := rest bs
-                g: Z := grade(b, k)
-                while not empty? bas repeat
-                    b := first bas
-                    e: Z := grade(b, k)
-                    j: Z := ((g - e) exquo d) :: Z
-                    tj: F := t^(qcoerce(j)@N)
-                    --assert(grade(tj*b, k)=g)
-                    --It might happen that qetaIndex(tj*b)~=k!!!
-                    gmax: Z := maxProductGrade(tj, b)
-                    products.gmax := cons([tj, b], elt(products, gmax, empty()))
-                    bas := rest bas
-                    g := e
-
-        xx.pairs := products
+        addGapPairs! x
         xx.havepairs? := true
-        xdbgPrint("pairs ret", x)
 
     -- We first reduce in L and only when there is a non-zero result
     -- we redo the computation in F.
@@ -903,17 +963,26 @@ XEtaComputation(C, F): Exports == Implementation where
         p: Products := xx.pairs
         --assert(not empty? indices p)
         g: Z := reduce(min, indices p)$List(Z) -- minimal grade
-        xdbgPrint("one g", g)
         r: FF := first(p.g) -- the element of this grade
-        xdbgPrint("one r", r)
         l: List FF := rest(p.g) -- remove u
-        xdbgPrint("one l", l)
         if empty? l then remove!(g, p) else p.g := l
-        xdbgPrint("one p", p)
         u := reduce(r.f1 * r.f2, xx.ab)
-        xdbgPrint("one ug", qetaGrades u)
         if not zero? u then update!(u, x)
-        xdbgPrint("one return", srep x)
+        return x
+
+    maxGrade(x: F): Z == qetaGrade(x, qetaIndex x)
+    smallerMaxGrade(f1: F, f2: F): Boolean ==
+        -- there is optimization potential wrt use of unity roots
+        m1 := maxGrade f1
+        m2 := maxGrade f2
+        m1 < m2 or (m1 = m2 and qetaIndex f1 < qetaIndex f2)
+
+    initialize(m: List F): % ==
+        x: % := per [empty(), empty(), false, empty()]
+        -- sort by the maximal (positive) grade
+        for mi in sort(smallerMaxGrade, m) repeat
+            u: F := reduce(mi, xx.ab)
+            if not zero? u then update!(u, x)
         return x
 
     postProcess!(x: %): % == x
@@ -921,7 +990,6 @@ XEtaComputation(C, F): Exports == Implementation where
         -- remove this elemenr from the basis and reduce it with respect
         -- to the remaining basis.
         -- Note that no top-reduction should occur
-
 
 )if LiterateDoc
 \bibliography{qeta}
