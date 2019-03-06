@@ -81,7 +81,10 @@ Z ==> Integer
 ++ Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-QEtaComputationCategory(C: EuclideanDomain, F: QEtaAlgebra C): Category == with
+QEtaComputationCategory(C, F): Category == Exports where
+  C: EuclideanDomain
+  F: QEtaGradedAlgebra C
+  Exports ==> CoercibleTo OutputForm with
 --    update!: (F, Z, %) -> Void
 --      ++ update!(u, grdt, x) adds u to the basis and updates the critical
 --      ++ elements. The argument grdt is considered to be the grade of a
@@ -101,6 +104,9 @@ QEtaComputationCategory(C: EuclideanDomain, F: QEtaAlgebra C): Category == with
       ++ critical elements. Then it reduces it and updates the basis and
       ++ the critical elements if the reduction did not end with 0.
       ++ It should hold criticalElements?(x), otherwise the result is undefined.
+    postProcess!: % -> %
+      ++ postProcess!(x) postprocesses the result. It might interreduce
+      ++ the basis or do other kinds of cleanup.
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -125,7 +131,7 @@ that of $b$.
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
 QEtaReduction(C, F): Exports == Implementation where
   C: EuclideanDomain
-  F: QEtaAlgebra C
+  F: QEtaGradedAlgebra C
   H ==> XHashTable(Z, List F)
   Exports ==> with
     topReducible?: (F, F) -> Boolean
@@ -250,7 +256,7 @@ that of $b$.
 ++ certain pojection function.
 QEtaConstantReduction(C, F): Exports == Implementation where
   C: EuclideanDomain
-  F: QEtaAlgebra C
+  F: QEtaGradedAlgebra C
   H ==> XHashTable(Z, List F)
   Exports ==> with
     topReducible?: (F, F) -> Boolean
@@ -322,7 +328,7 @@ of \algoSamba{}.
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
 QEtaAlgebraBasis(C, F, Y): Exports == Implementation where
   C: EuclideanDomain
-  F: QEtaAlgebra C
+  F: QEtaGradedAlgebra C
   Y: QEtaComputationCategory(C, F)
   Exports ==> with
     algebraBasis: (F, List F) -> List F
@@ -364,7 +370,7 @@ from the basis.
 ++ is no longer in the basis.
 ++TODO: This implementation does not exactly follow the above article, since
 ++      line 13 (computation of the set S) is missing.
-QEtaComputation1(C: EuclideanDomain, F: QEtaAlgebra C): _
+QEtaComputation1(C: EuclideanDomain, F: QEtaGradedAlgebra C): _
   QEtaComputationCategory(C, F) == add
     H ==> XHashTable(Z, List F)
     Rep ==> Record(be: H, ce: H)
@@ -414,15 +420,6 @@ QEtaComputation1(C: EuclideanDomain, F: QEtaAlgebra C): _
                 criticalElements.grdv := cons(v, l)
         return void()
 
-    initialize(t: F, m: List F): % ==
-        --assert(qetaGrade t > 0)
-        x: % := per [table(), table()]
-        grdt: Z := qetaGrade t
-        for mi in m repeat
-            u := reduce(mi, t, xx.be)
-            if not zero? u then update!(u, grdt, x)
-        return x
-
     criticalElements?(x: %): Boolean == not empty?(xx.ce)
 
     -- extract the minimal element from h and remove it
@@ -441,6 +438,21 @@ QEtaComputation1(C: EuclideanDomain, F: QEtaAlgebra C): _
         u := reduce(u, t, xx.be)
         if not zero? u then update!(u, grdt, x)
         return x
+
+    initialize(t: F, m: List F): % ==
+        --assert(qetaGrade t > 0)
+        x: % := per [table(), table()]
+        grdt: Z := qetaGrade t
+        for mi in m repeat
+            u := reduce(mi, t, xx.be)
+            if not zero? u then update!(u, grdt, x)
+        return x
+
+    postProcess!(x: %): % == x
+        -- Here we go through the list of all basis elements temporarily
+        -- remove this elemenr from the basis and reduce it with respect
+        -- to the remaining basis.
+        -- Note that no top-reduction should occur
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -468,7 +480,7 @@ critical elements that will not be discarded after each extension.
 ++ to consider.
 QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
   C: EuclideanDomain
-  F: QEtaAlgebra C
+  F: QEtaGradedAlgebra C
   Implementation ==> add
     H ==> XHashTable(Z, List F)
     FF ==> Record(f1: F, f2: F)
@@ -621,8 +633,8 @@ Otherwise the steps in the computation are similar to QEtaComputation2.
 QEtaExtendedComputation(C, L, F): QEtaComputationCategory(C, F)
  == Implementation where
   C: EuclideanDomain
-  L: QEtaAlgebra C
-  F: QEtaAlgebra C with (first: % -> L)
+  L: QEtaGradedAlgebra C
+  F: QEtaGradedAlgebra C with (first: % -> L)
   Implementation ==> add
     H ==> XHashTable(Z, List F)
     HL ==> XHashTable(Z, List L)

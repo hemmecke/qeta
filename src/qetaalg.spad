@@ -1,0 +1,279 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2019  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Computing with Dedekind Eta Functions as $q$-series}
+\author{Ralf Hemmecke}
+\date{10-Dec-2015}
+\maketitle
+\begin{abstract}
+
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+LSym ==> List Symbol
+OF ==> OutputForm
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The category algebras for our context}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Maybe we can choose \code{Algebra} later, because that is what we
+want. We have chosen to implement a new category to keep the number of
+signatures small.
+
+)endif
+
+)abbrev category QETAALG QEtaAlgebra
+++ QEtaAlgebra(C) lists the minimal signatures for running algebra functions in
+++ the QEtaPackage.
+++ Mathematically seen is it a C-algebra.
+QEtaAlgebra(C: CommutativeRing): Category ==
+  Join(Monoid, AbelianGroup) with
+    0: %
+      ++ 0 is the neutral element with respect to +.
+    1: %
+      ++ 1 is the neutral element with respect to *.
+    zero?: % -> Boolean
+      ++ zero?(x) returns true if x is the neutral element with respect to +.
+    _-: % -> %
+      ++ Negation.
+    _+: (%, %) -> %
+      ++ Commutative addition.
+    _-: (%, %) -> %
+      ++ Inverse operation to addition.
+    _*: (%, %) -> %
+      ++ Commutative multiplication
+    _*: (C, %) -> %
+      ++ Multiplication by a coefficient.
+    _^: (%, N) -> %
+      ++ Exponentiation (repeated multiplication)
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The category of $\setZ$-graded algebras}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This category represents $\setZ$-graded $C$-algebras that have a
+concept of leading coefficient. Among such algebras are $C((t))$
+(univariate Laurent series) and $C$-subalgebras of $C((t))$, \ie,
+$C[t]$ (univariate polynomial algebras) and $C[t,t^{-1}]$ (univariate
+Laurent polynomials).
+
+
+)endif
+)abbrev category QEGALG QEtaGradedAlgebra
+++ QEtaGradedAlgebra(C) lists the minimal signatures for running the
+++ functions in the QEtaPackage. Mathematically seen is it a C-algebra
+++ that is Z-graded. Simplest example is a univariate polynomial ring
+++ over C, but since it is expected that respective domains will be
+++ created on the fly, we list here only the functions that are
+++ actually used in QEtaPackage.
+QEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
+    qetaGrade: % -> Z
+      ++ qetaGrade(x) returns the grade of an element.
+      ++ The qetaGrade of 0 is undefined.
+      ++ Any element x with qetaGrade(x)<0 will be considered to be zero.
+    qetaCoefficient: (%, Z) -> C
+      ++ qetaCoefficient(x, n) returns the coefficient corresponding
+      ++ to grade n.
+    qetaLeadingCoefficient: % -> C
+      ++ qetaLeadingCoefficient(x) returns qetaCoefficient(x, grade x).
+      ++ The qetaLeadingCoefficient of 0 is undefined.
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Common category for elements in the the
+  \algoPowerSamba{} algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+)abbrev category XETAALG XEtaGradedAlgebra
+++ A domain implementing XEtaGradedAlgebra(C) is supposed to work like the
+++ direct product of n=maxIndex() copies of a QEtaAlgebra.
+XEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
+    maxIndex: () -> P
+      ++ maxIndex() returns the number of components of this domain.
+    qetaIndex: % -> P
+      ++ qetaIndex(x) for nonzero x returns k such that
+      ++ qetaGrade(x, k) = max [qetaGrade(x, j) for j in 1..maxIndex()]
+      ++ and k is minimal with this property.
+      ++ qetaIndex(0) is undefined.
+    qetaGrade: (%, P) -> Z
+      ++ qetaGrade(x, k) returns the grade with the first nonzero entry
+      ++ in the k-th component. If the grade is not bounded from below
+      ++ this function might run into an infinite loop.
+      ++ qetaGrade(0, k) is undefined.
+    qetaGrade: (%, P, Z) -> Z
+      ++ qetaGrade(x, k, mn) returns the maximum of qetaGrade(x, k) and
+      ++ mn.
+    qetaLeadingCoefficient: (%, P) -> C
+      ++ qetaLeadingCoefficient(x, k) returns the coefficient
+      ++ in the k-th component corresponding to qetaGrade(x).
+      ++ The qetaLeadingCoefficient of 0 is undefined.
+    qetaGrades: % -> List Z
+      ++ qetaGrades(x) returns [qetaGrade(x, k) for k in 1..maxIndex())]
+      ++ for nonzero x and [0 for k in 1..maxIndex()] for x=0.
+    if C has Field then
+        _/: (%, %) -> %
+          ++ Division. It's dangerous, because sums of eta quotients
+          ++ might have zeros so that inverses of such function
+          ++ usually have poles not only at the cusps of Gamma_0(m).
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{A domain for recording algebra operation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev domain QETAEALG QEtaExtendedAlgebra
+++ The domain QEtaExtendedAlgebra(C, A, B) behaves like the given
+++ QEtaAlgebra A, but every algebra operation is executed on the
+++ (hidden) B part as well and can later be extracted.
+QEtaExtendedAlgebra(_
+    C: GcdDomain,_
+    A: QEtaAlgebra C,_
+    B: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)_
+  ): QEtaAlgebra C with
+    embed: (A, B) -> %
+    first: % -> A
+    second: % -> B
+    if A has QEtaGradedAlgebra C then QEtaGradedAlgebra C
+    if A has XEtaGradedAlgebra C then XEtaGradedAlgebra C
+    if A has Field and B has Field then
+        _/: (%, %) -> %
+          ++ Division. It's dangerous, because sums of eta quotients
+          ++ might have zeros so that inverses of such function
+          ++ usually have poles not only at the cusps of Gamma_0(m).
+ == add
+    Rep ==> Record(aa: A, bb: B)
+    -- local functions
+    embed(a: A, b: B): % == per [a, b]
+    first(x: %): A == rep(x).aa
+    second(x: %): B == rep(x).bb
+    coerce(x: %): OutputForm == ([first(x)::OF, second(x)::OF]$List(OF))::OF
+    0: % == embed(0$A, 0$B)
+    1: % == embed(1$A, 1$B)
+    zero?(x: %): Boolean == zero? first x
+    _-(x: %): % == embed(- first x, second x)
+    ((x: %) + (y: %)): % == embed(first x + first y, second x + second y)
+    ((x: %) - (y: %)): % == embed(first x - first y, second x - second y)
+    ((x: %) * (y: %)): % == embed(first x * first y, second x * second y)
+
+    ((c: C) * (x: %)): % == embed(c * first x, c * second x)
+    ((x: %) ^ (n: N)): % == embed(first(x)^n, second(x)^n)
+    if A has QEtaGradedAlgebra C then
+        qetaGrade(x: %): Z == qetaGrade first x
+        qetaCoefficient(x: %, n: Z): C == qetaCoefficient(first x, n)
+        qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient first x
+    if A has XEtaGradedAlgebra C then
+        maxIndex(): P == maxIndex()$A
+        qetaIndex(x: %): P == qetaIndex first x
+        qetaGrade(x: %, k: P): Z == qetaGrade(first x, k)
+        qetaGrade(x: %, k: P, n: Z): Z == qetaGrade(first x, k, n)
+        qetaLeadingCoefficient(x: %, k: P): C ==
+            qetaLeadingCoefficient(first x, k)
+        qetaGrades(x: %): List Z == qetaGrades first x
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{A domain whose elements cache their $n$-th power}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+)abbrev domain QEALGCP QEtaAlgebraCachedPower
+++ The domain QEtaAlgebraCachedPower(C, A) behaves like the given
+++ QEtaAlgebra A, but to each of its elements x a power x^n is never
+++ computed twice, but rather stored and then accessed from the cache.
+QEtaAlgebraCachedPower(C, A): Exports == Implementation where
+  C: GcdDomain
+  A: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)
+  Exports ==> Join(Monoid, AbelianGroup, CoercibleFrom A, CoercibleTo A) with
+    _*: (C, %) -> %
+    if A has QEtaGradedAlgebra C then QEtaGradedAlgebra C
+    if A has XEtaGradedAlgebra C then XEtaGradedAlgebra C
+  Implementation ==> CachedPower A add
+    Rep ==> CachedPower A
+    import from Rep
+    toA x ==> rep(x) :: A
+    embed a ==> per(a::Rep)
+    coerce(x: %): OutputForm == toA(x) :: OutputForm
+    0: % == embed(0$A)
+    1: % == embed(1$A)
+    zero?(x: %): Boolean == zero? toA x
+    _-(x: %): % == embed(- toA x)
+    ((x: %) + (y: %)): % == embed(toA x + toA y)
+    ((x: %) - (y: %)): % == embed(toA x - toA y)
+    ((x: %) * (y: %)): % == embed(toA x * toA y)
+    ((c: C) * (x: %)): % == embed(c * toA x)
+    ((x: %) ^ (n: N)): % == embed(power!(rep x, n))
+    if A has QEtaGradedAlgebra C then
+        qetaGrade(x: %): Z == qetaGrade toA x
+        qetaCoefficient(x: %, n: Z): C == qetaCoefficient(toA x, n)
+        qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient toA x
+    if A has XEtaGradedAlgebra C then
+        maxIndex(): P == maxIndex()$A
+        qetaIndex(x: %): P == qetaIndex toA x
+        qetaGrade(x: %, k: P): Z == qetaGrade(toA x, k)
+        qetaGrade(x: %, k: P, n: Z): Z == qetaGrade(toA x, k, n)
+        qetaLeadingCoefficient(x: %, k: P): C ==
+            qetaLeadingCoefficient(toA x, k)
+        qetaGrades(x: %): List Z == qetaGrades toA x
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

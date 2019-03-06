@@ -37,7 +37,7 @@ We implement functionality to compute with Dedekind $\eta$-functions.
 The code below deals with a expansions of $\eta$-quotients at infinity
 in terms of $q$-series. These $\eta$-quotients generate an algebra over
 some ring $C$, the category of all such algebras is implemented via
-\code{QEtaAlgebra(C)}. A domain intended to record algebraic
+\code{QEtaGradedAlgebra(C)}. A domain intended to record algebraic
 operations is given by \code{QEtaExtendedAlgebra}.
 
 Modular function that are $\eta$-quotients and have a pole (if any)
@@ -46,7 +46,7 @@ have the property that they are zero if their order is positive. This
 domain is implemented via \code{Finite0Series}. In other words, in
 contrast to \spadtype{UnivariateLaurentSeries}, it can be checked in
 finite time whether an element of \code{Finite0Series} is zero or not.
-\code{Finite0Series(C, q, 0)} form a \code{QEtaAlgebra(C)}.
+\code{Finite0Series(C, q, 0)} form a \code{QEtaGradedAlgebra(C)}.
 
   An auxiliary domain \code{Monomials} is introduced that adds
   variable names so that a an element of a \code{DirectProduct} can be
@@ -240,57 +240,6 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         return r
 
 )if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The category of $\setZ$-graded algebras}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-This category represents $\setZ$-graded $C$-algebras that have a
-concept of leading coefficient. Among such algebras are $C((t))$
-(univariate Laurent series) and $C$-subalgebras of $C((t))$, \ie,
-$C[t]$ (univariate polynomial algebras) and $C[t,t^{-1}]$ (univariate
-Laurent polynomials).
-
-
-)endif
-)abbrev category QETAALG QEtaAlgebra
-++ QEtaAlgebra(C) lists the minimal signatures for running the functions in
-++ the QEtaPackage.
-++ Mathematically seen is it a C-algebra that is Z-graded. Simplest example
-++ is a univariate polynomial ring over C, but since it is expected that
-++ respective domains will be created on the fly, we list here only
-++ the functions that are actually used in QEtaPackage.
-QEtaAlgebra(C: CommutativeRing): Category ==
-  Join(Monoid, AbelianGroup) with
-    0: %
-      ++ 0 is the neutral element with respect to +.
-    1: %
-      ++ 1 is the neutral element with respect to *.
-    zero?: % -> Boolean
-      ++ zero?(x) returns true if x is the neutral element with respect to +.
-    _-: % -> %
-      ++ Negation.
-    _+: (%, %) -> %
-      ++ Commutative addition.
-    _-: (%, %) -> %
-      ++ Inverse operation to addition.
-    _*: (%, %) -> %
-      ++ Commutative multiplication
-    _*: (C, %) -> %
-      ++ Multiplication by a coefficient.
-    _^: (%, N) -> %
-      ++ Exponentiation (repeated multiplication)
-    qetaGrade: % -> Z
-      ++ qetaGrade(x) returns the grade of an element.
-      ++ The qetaGrade of 0 is undefined.
-      ++ Any element x with qetaGrade(x)<0 will be considered to be zero.
-    qetaCoefficient: (%, Z) -> C
-      ++ qetaCoefficient(x, n) returns the coefficient corresponding
-      ++ to grade n.
-    qetaLeadingCoefficient: % -> C
-      ++ qetaLeadingCoefficient(x) returns qetaCoefficient(x, grade x).
-      ++ The qetaLeadingCoefficient of 0 is undefined.
-
-)if LiterateDoc
 In \cite{Radu:RamanujanKolberg:2015}, the computations are done in
 a subclass of Laurent series, namely those that are identically zero
 if their order is greater than zero.
@@ -310,7 +259,7 @@ Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
   UTS ==> UnivariateTaylorSeries(C, var, cen)
   ULS ==> UnivariateLaurentSeries(C, var, cen)
   Exports ==> Join(UnivariateLaurentSeriesConstructorCategory(C, UTS),
-                   QEtaAlgebra C) with
+                   QEtaGradedAlgebra C) with
     coerce: Variable(var) -> %
       ++ \spad{coerce(var)} converts the series variable \spad{var} into a
       ++ Laurent series.
@@ -340,83 +289,6 @@ Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
     qetaLeadingCoefficient(x: %): C ==
         zero? x => 0 -- destructively set x
         leadingCoefficient x
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{A domain for recording algebra operation}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-)endif
-
-)abbrev domain QETAEALG QEtaExtendedAlgebra
-++ The domain QEtaExtendedAlgebra(C, A, B) behaves like the given
-++ QEtaAlgebra A, but every algebra operation is executed on the
-++ (hidden) B part as well and can later be extracted.
-QEtaExtendedAlgebra(_
-    C: GcdDomain,_
-    A: QEtaAlgebra C,_
-    B: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)_
-  ): QEtaAlgebra C with
-    embed: (A, B) -> %
-    first: % -> A
-    second: % -> B
- == add
-    Rep ==> Record(aa: A, bb: B)
-    -- local functions
-    embed(a: A, b: B): % == per [a, b]
-    first(x: %): A == rep(x).aa
-    second(x: %): B == rep(x).bb
-    coerce(x: %): OutputForm == ([first(x)::OF, second(x)::OF]$List(OF))::OF
-    0: % == embed(0$A, 0$B)
-    1: % == embed(1$A, 1$B)
-    zero?(x: %): Boolean == zero? first x
-    _-(x: %): % == embed(- first x, second x)
-    ((x: %) + (y: %)): % == embed(first x + first y, second x + second y)
-    ((x: %) - (y: %)): % == embed(first x - first y, second x - second y)
-    ((x: %) * (y: %)): % == embed(first x * first y, second x * second y)
-
-    ((c: C) * (x: %)): % == embed(c * first x, c * second x)
-    ((x: %) ^ (n: N)): % == embed(first(x)^n, second(x)^n)
-    qetaGrade(x: %): Z == qetaGrade first x
-    qetaCoefficient(x: %, n: Z): C == qetaCoefficient(first x, n)
-    qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient first x
-
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{A domain whose elements cache their $n$-th power}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-)endif
-)abbrev domain QEALGCP QEtaAlgebraCachedPower
-++ The domain QEtaAlgebraCachedPower(C, A) behaves like the given
-++ QEtaAlgebra A, but to each of its elements x a power x^n is never
-++ computed twice, but rather stored and then accessed from the cache.
-QEtaAlgebraCachedPower(C, A): Exports == Implementation where
-  C: GcdDomain
-  A: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)
-  Exports ==> Join(Monoid, AbelianGroup, CoercibleFrom A, CoercibleTo A) with
-    _*: (C, %) -> %
-    if A has QEtaAlgebra C then QEtaAlgebra C
-  Implementation ==> CachedPower A add
-    Rep ==> CachedPower A
-    import from Rep
-    toA x ==> rep(x) :: A
-    embed a ==> per(a::Rep)
-    coerce(x: %): OutputForm == toA(x) :: OutputForm
-    0: % == embed(0$A)
-    1: % == embed(1$A)
-    zero?(x: %): Boolean == zero? toA x
-    _-(x: %): % == embed(- toA x)
-    ((x: %) + (y: %)): % == embed(toA x + toA y)
-    ((x: %) - (y: %)): % == embed(toA x - toA y)
-    ((x: %) * (y: %)): % == embed(toA x * toA y)
-    ((c: C) * (x: %)): % == embed(c * toA x)
-    ((x: %) ^ (n: N)): % == embed(power!(rep x, n))
-    if A has QEtaAlgebra C then
-        qetaGrade(x: %): Z == qetaGrade toA x
-        qetaCoefficient(x: %, n: Z): C == qetaCoefficient(toA x, n)
-        qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient toA x
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -466,7 +338,7 @@ QEtaUnivariatePolynomial(C: CommutativeRing, var: Symbol): Join(_
   UnivariatePolynomialCategory(C) with (_
     coerce : Variable(var) -> %;_
     fmecg : (%, NonNegativeInteger, C, %) -> %),_
-  QEtaAlgebra C)
+  QEtaGradedAlgebra C)
  == UnivariatePolynomial(var, C) add
     qetaGrade(x: %): Z == degree(rep x)::Z
     qetaCoefficient(x: %, n: Z): C ==
@@ -481,10 +353,7 @@ QEtaUnivariatePolynomial(C: CommutativeRing, var: Symbol): Join(_
 ++ qetaCoefficient, or qetaLeadingCoefficient from this domain.
 QEtaPolynomial(C: CommutativeRing): Join(_
   PolynomialCategory(C, IndexedExponents Symbol, Symbol), QEtaAlgebra C)
- == Polynomial C add
-    qetaGrade(x: %): Z == error "QEtaPolynomial: not implemented"
-    qetaCoefficient(x: %, n: Z): C == error "QEtaPolynomial: not implemented"
-    qetaLeadingCoefficient(x: %): C == error "QEtaPolynomial: not implemented"
+ == Polynomial C
 \end{verbcode}
 
 \bibliography{qeta}

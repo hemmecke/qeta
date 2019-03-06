@@ -428,62 +428,6 @@ V ==> Vector H -- mapping k -> H
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Common category for elements in the the
-  \algoPowerSamba{} algorithm}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-)endif
-)abbrev category XETAALG XEtaAlgebra
-++ A domain implementing XEtaAlgebra(C) is supposed to work like the
-++ direct product of n=maxIndex() copies of a QEtaAlgebra.
-XEtaAlgebra(C: CommutativeRing): Category == CoercibleTo OutputForm with
-    0: %
-      ++ 0 is the neutral element with respect to +.
-    1: %
-      ++ 1 is the neutral element with respect to *.
-    zero?: % -> Boolean
-      ++ zero?(x) returns true if x is the neutral element with respect to +.
-    _-: % -> %
-      ++ Negation.
-    _+: (%, %) -> %
-      ++ Commutative addition.
-    _-: (%, %) -> %
-      ++ Inverse operation to addition.
-    _*: (%, %) -> %
-      ++ Commutative multiplication
-    _*: (C, %) -> %
-      ++ Multiplication by a coefficient.
-    _^: (%, N) -> %
-      ++ Exponentiation (repeated multiplication)
-    maxIndex: () -> P
-      ++ maxIndex() returns the number of components of this domain.
-    qetaIndex: % -> P
-      ++ qetaIndex(x) for nonzero x returns k such that
-      ++ qetaGrade(x, k) = max [qetaGrade(x, j) for j in 1..maxIndex()]
-      ++ and k is minimal with this property.
-      ++ qetaIndex(0) is undefined.
-    qetaGrade: (%, P) -> Z
-      ++ qetaGrade(x, k) returns the grade with the first nonzero entry
-      ++ in the k-th component. If the grade is not bounded from below
-      ++ this function might run into an infinite loop.
-      ++ qetaGrade(0, k) is undefined.
-    qetaGrade: (%, P, Z) -> Z
-      ++ qetaGrade(x, k, mn) returns the maximum of qetaGrade(x, k) and
-      ++ mn.
-    qetaLeadingCoefficient: (%, P) -> C
-      ++ qetaLeadingCoefficient(x, k) returns the coefficient
-      ++ in the k-th component corresponding to qetaGrade(x).
-      ++ The qetaLeadingCoefficient of 0 is undefined.
-    qetaGrades: % -> List Z
-      ++ qetaGrades(x) returns [qetaGrade(x, k) for k in 1..maxIndex())]
-      ++ for nonzero x and [0 for k in 1..maxIndex()] for x=0.
-    if C has Field then
-        _/: (%, %) -> %
-          ++ Division. It's dangerous, because sums of eta quotients
-          ++ might have zeros so that inverses of such function
-          ++ usually have poles not only at the cusps of Gamma_0(m).
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Data structure for \algoPowerSamba}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -498,7 +442,7 @@ XEtaAlgebra(C: CommutativeRing): Category == CoercibleTo OutputForm with
 ++ as smaller than component idx.j.
 XEtaAlgebraBasisContainer(C, F): Exports == Implementation where
   C: EuclideanDomain
-  F: XEtaAlgebra C
+  F: XEtaGradedAlgebra C
   Exports ==> CoercibleTo OutputForm with
     empty: () -> %
     indexPermutation: % -> IDX
@@ -565,7 +509,7 @@ Since we don't know in advance
 )endif
 
 )abbrev category XETACAT XEtaComputationCategory
-XEtaComputationCategory(C: EuclideanDomain, F: XEtaAlgebra C): Category ==
+XEtaComputationCategory(C: EuclideanDomain, F: XEtaGradedAlgebra C): Category ==
   CoercibleTo OutputForm with
 --    update!: (F, Z, %) -> Void
 --      ++ update!(u, grdt, x) adds u to the basis and updates the critical
@@ -611,7 +555,7 @@ that of $b$.
 )abbrev package XETARED XEtaReduction
 XEtaReduction(C, F): Exports == Implementation where
   C: EuclideanDomain
-  F: XEtaAlgebra C
+  F: XEtaGradedAlgebra C
   AB ==> XEtaAlgebraBasisContainer(C, F)
   Exports ==> with
     topReducible?: (F, F, P) -> Boolean
@@ -727,7 +671,7 @@ of \algoSamba{}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 )abbrev package XETAABAS XEtaAlgebraBasis
-++ QEtaAlgebraBasis implements the algorithm Samba from an article of
+++ XEtaAlgebraBasis implements the algorithm Samba from an article of
 ++ Ralf Hemmecke:
 ++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
 ++ Symbolic Computation).
@@ -735,7 +679,7 @@ of \algoSamba{}.
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
 XEtaAlgebraBasis(C, F, Y): Exports == Implementation where
   C: EuclideanDomain
-  F: XEtaAlgebra C
+  F: XEtaGradedAlgebra C
   Y: XEtaComputationCategory(C, F)
   AB ==> XEtaAlgebraBasisContainer(C, F)
   Exports ==> with
@@ -765,7 +709,7 @@ XEtaAlgebraBasis(C, F, Y): Exports == Implementation where
 )abbrev domain XETAC XEtaComputation
 XEtaComputation(C, F): Exports == Implementation where
   C: EuclideanDomain
-  F: XEtaAlgebra C
+  F: XEtaGradedAlgebra C
   FF ==> Record(f1: F, f2: F)
   Products ==> XHashTable(Z, List FF)
   AB ==> XEtaAlgebraBasisContainer(C, F)
