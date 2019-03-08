@@ -11,36 +11,7 @@
 -- documentation in src/qetafun.spad).
 
 --setup
-B ==> Boolean
-S ==> Symbol;
-MZ ==> Matrix Z -- consider only 2x2 matricies
-SL2Z ==> MZ -- matrices with determinant =
-
-INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
-
 C ==> Q
-
-PQ ==> SparseUnivariatePolynomial Q;
-
-CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
-LX ==> UnivariateLaurentSeries(CX, xsym, 0);
-QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
-YMSETAQ ==> SymbolicModularSiftedEtaQuotient;
-SETAQG ==> SiftedEtaQuotientGamma(Q, mx, CX, xi, LX);
-MSETAQ ==> ModularSiftedEtaQuotient(Q, mx, CX, xi, LX);
-MODFUNX ==> ModularFunctionExpansions(CX, LX, nn);
--------------------------------------------------------------------
-WIDTH(nn, c) == qcoerce(width(nn, c))@P
-xsym: Symbol := "x"::Symbol;
--------------------------------------------------------------------
-lift2Q x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, Q)
--------------------------------------------------------------------
-sigmaInfinity(divs: List P, s: List Z): Z == (_
-  shat: Z := 0;_
-  for delta in divs for sdelta in s repeat shat := shat + delta * sdelta;_
-  shat)
--------------------------------------------------------------------
 --endsetup
 
 -------------------------------------------------------------------
@@ -60,10 +31,8 @@ assertEquals(r, [6,0,-5,0])
 
 minroot: P := 60
 yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
-mx: P := minimalRootOfUnity yf
-assertEquals(mx, minroot)
-pq: PQ := lift2Q(cyclotomic(mx)$CyclotomicPolynomialPackage);
-xi := generator()$CX
+xiord: P := minimalRootOfUnity yf
+assertEquals(xiord, minroot)
 f: MSETAQ :=  expandAtAllCusps yf;
 mf: MODFUNX := expansions(f)::MODFUNX
 -- compare result with formula (4) from
@@ -97,10 +66,8 @@ minroot: P := 168
 -- vector r = (c.particular + 2*c.basis.2 - 22*c.basis.3)(1..4) -- [8,0,-7,0]
 
 yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
-mx: P := minimalRootOfUnity yf
-assertEquals(mx, minroot)
-pq: PQ := lift2Q(cyclotomic(mx)$CyclotomicPolynomialPackage);
-xi := generator()$CX
+xiord: P := minimalRootOfUnity yf
+assertEquals(xiord, minroot)
 
 modfunx x ==> expansions(expandAtAllCusps(x)$MSETAQ)::MODFUNX
 mf: MODFUNX := modfunx yf;
@@ -163,10 +130,8 @@ assertEquals(r, [10, 2, 11, -22])
 
 minroot: P := 264;
 yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
-mx: P := minimalRootOfUnity yf
-assertEquals(mx, minroot)
-pq: PQ := lift2Q(cyclotomic(mx)$CyclotomicPolynomialPackage);
-xi := generator()$CX
+xiord: P := minimalRootOfUnity yf
+assertEquals(xiord, minroot)
 f: MSETAQ :=  expandAtAllCusps yf;
 mf: MODFUNX := expansions(f)::MODFUNX
 

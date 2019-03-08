@@ -1,56 +1,95 @@
+-------------------------------------------------------------------
+-- General macros for the compuation with eta quotions in the QEta package
+-------------------------------------------------------------------
+
 OF==>OutputForm
 dbgPrint(x,y) ==> display(([x::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 77)
 vPrint(x,y)==>display(hconcat([x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF))::LinearOutputFormat,77)
 
+-------------------------------------------------------------------
+N ==> NonNegativeInteger
+P ==> PositiveInteger
 Z ==> Integer
 Q ==> Fraction Z
-C ==> Z
-
-PolZ ==> Polynomial Z
-PolQ ==> Polynomial Q
-Pol  ==> Polynomial C
-
-LPolZ ==> List PolZ
-LPolQ ==> List PolQ
-LPol  ==> List Pol
+MZ ==> Matrix Z -- consider only 2x2 matricies
+SL2Z ==> MZ -- matrices with determinant = 1
 
 LSym ==> List Symbol
 
-LZ ==> Finite0Series(Z, 'q, 0) -- M^{\infty}(N)
-LQ ==> Finite0Series(Q, 'q, 0) -- M^{\infty}(N)
-L  ==> Finite0Series(C, 'q, 0) -- M^{\infty}(N)
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
-ETAZ ==> EtaQuotient(Z, LZ)
-ETAQ ==> EtaQuotient(Q, LQ)
-ETA  ==> EtaQuotient(C, L)
-
-QEQMEV ==> QEtaQuotientMonoidExponentVectors
-
-QEIZ ==> QEtaIdeal(Z, LZ)
-QEIQ ==> QEtaIdeal(Q, LQ)
-QEI  ==> QEtaIdeal(C, L)
-QEtaIdeal ==> QEtaIdealHemmecke
-
-QEARZ ==> QEtaAuxiliaryRelations(Z)
-QEARQ ==> QEtaAuxiliaryRelations(Q)
-QEAR  ==> QEtaAuxiliaryRelations(C)
-
-N ==> NonNegativeInteger
-E ==> Monomials(dim, D, syms)
+-------------------------------------------------------------------
+-- related to Gröbner basis computation
+-- The domain D (DirectProduct) has to be set to specify the term order.
+-- The list of variables have to be given through `syms`.
+Pol  ==> Polynomial C
+LPol  ==> List Pol
+QEG(E) ==> QEtaGroebner(C, E)
+E ==> Monomials(dim, D, syms) -- show DirectProduct as monomials.
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
-P ==> PositiveInteger
 
-QEG(X) ==> QEtaGroebner(C, X)
+QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
+WIDTH(nn, c) == qcoerce(width(nn, c)$QAuxMEQ)@P
+
+-------------------------------------------------------------------
+-- function names with implicit package calling
+QEQMEV ==> QEtaQuotientMonoidExponentVectors
+QEI  ==> QEtaIdeal(C, F1)
+QEtaIdeal ==> QEtaIdealHemmecke -- default variant
 
 xetaQuotientMonoidExponentVectors ==> etaQuotientMonoidExponentVectors $ QEQMEV
 xetaQuotientIdealGenerators ==> etaQuotientIdealGenerators $ QEI
 xetaLaurentIdealGenerators ==> etaLaurentIdealGenerators $ QEI
 xetaRelations ==> etaRelations $ QEI
 
-eqmev ==> xetaQuotientMonoidExponentVectors
-eqg ==> xetaQuotientIdealGenerators
-elg ==> xetaLaurentIdealGenerators
-er ==> xetaRelations
+-- The type of laurent series that we use for expansion.
+-- Should be possible to replace this with SparseUnivariateLaurentSeries.
+-- However, our series are dense anyway.
 
+-------------------------------------------------------------------
+-- related to computation with eta quotients having poles only at infinity
+L  ==> UnivariateLaurentSeries(C , 'q, 0);
+ETA  ==> EtaQuotient(C, L)
 toeta ==> toEta $ ETA
+F1 ==> Finite0Series(C, 'q, 0) -- actual computation domain
+CF1 ==> QEtaAlgebraCachedPower(C, F1) -- computation domain in cached version
+CPol ==> QEtaAlgebraCachedPower(C, Pol) -- computation pols in cached version
+X1 ==> QEtaExtendedAlgebra(C, CF1, CPol)
+toX1(a, b) ==> embed(a, b::CPol)$Xn
+QABP1 ==> QEtaAlgebraBasisPackage(C, X1, QEtaExtendedComputation(C, CF1, X1))
+
+-------------------------------------------------------------------
+-- related to computation with eta quotients having poles at any cusp
+-- Must set:
+-- xiord: order of the root of unity
+xisym: Symbol := "ξ"::Symbol;
+UPC ==> UnivariatePolynomial(xisym, C);
+SUPZ2SUPC x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
+SUP2UP x ==> unmakeSUP(SUPZ2SUPC x)$UPC
+MINROOTPOL ==> SUP2UP(cyclotomic(xiord)$CyclotomicPolynomialPackage);
+CX ==> SimpleAlgebraicExtension(C, UPC, MINROOTPOL);
+xi ==> generator()$CX;
+
+LX ==> UnivariateLaurentSeries(CX, 'q, 0); -- CX is C with roots of unity
+YMSETAQ ==> SymbolicModularSiftedEtaQuotient;
+SETAQG ==> SiftedEtaQuotientGamma(C, xiord, CX, xi, LX);
+MSETAQ ==> ModularSiftedEtaQuotient(C, xiord, CX, xi, LX);
+MODFUNX ==> ModularFunctionExpansions(CX, LX, nn);
+Fn ==> MODFUNX
+CFn ==> QEtaAlgebraCachedPower(CX, Fn) -- computation domain in cached version
+PolCX ==> Polynomial CX
+CPolCX ==> QEtaAlgebraCachedPower(CX, PolCX) -- computation with cached pols
+Xn ==> QEtaExtendedAlgebra(CX, CFn, CPolCX);
+toXn(a, b) ==> embed(a, b::CPolCX)$Xn
+QABPn ==> XEtaAlgebraBasisPackage(CX, Xn, XEtaComputation(CX, Xn))
+
+-------------------------------------------------------------------
+-- Auxiliary functions
+-------------------------------------------------------------------
+sigmaInfinity(divs: List P, s: List Z): Z == (_
+  shat: Z := 0;_
+  for delta in divs for sdelta in s repeat shat := shat + delta * sdelta;_
+  shat)
+-------------------------------------------------------------------

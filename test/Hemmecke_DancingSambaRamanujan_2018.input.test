@@ -59,9 +59,8 @@
 
 --setup
 C ==> IntegerLocalizedAtPrime 11
-X ==> QEtaExtendedAlgebra(C, L, Pol);
+X ==> QEtaExtendedAlgebra(C, F1, Pol);
 xembed(a,b)==>embed(a,b)
-et ==> eta$ETAZ -- et(n) encodes \eta(n \tau) as a powerseries in q=2i\pi\tau.
 -- The following function simply maps the integer coefficients of the
 -- series into the localized coefficient domain or into the rational
 -- number domain Q.
@@ -78,6 +77,10 @@ smaller11(x:Pol,y:Pol):Boolean == _
 smallerT(x:Pol,y:Pol):Boolean == degree(x, 'T) < degree(y, 'T)
 
 level := 22;
+
+ETAZ ==> EtaQuotient(Z, LZ)
+PolZ ==> Polynomial Z; LZ ==> Finite0Series(Z, 'q, 0);
+PolQ ==> Polynomial Q; LQ ==> Finite0Series(Q, 'q, 0);
 --endsetup
 
 --test:Hemmecke
@@ -108,7 +111,7 @@ rfeqgensZ: List Fraction PolZ := [_
   (9*q^8+8*q^7-10*q^6-4*q^5-5*q^4+8*q^3+2*q^2-4*q+1)/q^9];
 assertEquals([rationalFunction(x, 0) for x in eqgensZ], rfeqgensZ)
 
-eqgens: List L := [zcmap x for x in eqgensZ];
+eqgens: List F1 := [zcmap x for x in eqgensZ];
 assertEquals([qetaGrade x for x in eqgens], [5, 5, 6, 5, 7, 8, 9])
 
 msyms := indexedSymbols("M", #eqgens)
@@ -120,7 +123,7 @@ xeqgens: List X := [xembed(x, s) for x in eqgens for s in msyms];
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_7]$.
 tex: X := xeqgens.1
-abex := algebraBasis(tex, xeqgens)$QAB(C, L, X)
+abex := algebraBasis(tex, xeqgens)$QAB(C, F1, X)
 abexExpected: LPol := [1/128*M7-5/128*M6+21/128*M5_
   +(-1/1024*M1+11*213/1024)*M4-85/128*M3+1/1024*M1^2+505/1024*M1,_
   1/8*M4-1/8*M1, M3, M5, M6]
@@ -203,8 +206,8 @@ rxqExpected: Pol := _
 assertEquals(rxq, rxqExpected)
 
 -- Let's plug in the original $\eta$-quotients into `rxq`.
-ez := eval(rxq, c+->c::L, cons('F,msyms), cons(first fex,eqgens))_
-      $ PolynomialEvaluation(C, L)
+ez := eval(rxq, c+->c::F1, cons('F,msyms), cons(first fex,eqgens))_
+      $ PolynomialEvaluation(C, F1)
 assertTrue(zero? ez)
 --endtest
 
@@ -287,10 +290,10 @@ assertTrue(modularConditions?(22,11,[10,2,11,-22],[-1,0],11,6))
 -- series into the localized coefficient domain and eventually creates
 -- an object that attaches the indeterminate $J$ to the series.
 --
-i: L := kleinJInvariant()$QFunctions(C, L);
+i: F1 := kleinJInvariant()$QFunctions(C, F1);
 j: X := xembed(i, J); first j, second j
 
-ip: L := multiplyExponents(i, 11);
+ip: F1 := multiplyExponents(i, 11);
 jp: X := xembed(ip, Jp); first jp, second jp
 
 -- ### The series $t$
@@ -300,7 +303,7 @@ jp: X := xembed(ip, Jp); first jp, second jp
 -- = \exp(2\pi i \tau)$.
 --
 tz: LZ := retract(etaQuotient([1,11],[12,-12])$ETAZ);
-tt: L := zcmap tz;
+tt: F1 := zcmap tz;
 t: X := xembed(tt, T); first t, second t
 
 -- ## Construct elements suitable for the algebraBasis algorithm
@@ -339,7 +342,7 @@ mgens := [m1,m2,m3]
 -- original generators.
 
 --approx. 75 seconds
-ab: List X := algebraBasis(t, mgens)$QAB(C, L, X);
+ab: List X := algebraBasis(t, mgens)$QAB(C, F1, X);
 
 assertEquals(#ab, 12)
 
@@ -549,8 +552,8 @@ assertEquals(degs, degsExpected)
 
 -- approx. 45 seconds
 fjjpt: List Symbol := [F, J, Jp, T];
-z := eval(r, c+->c::L, fjjpt, [first f, first j, first jp, first t])_
-     $ PolynomialEvaluation(C, L)
+z := eval(r, c+->c::F1, fjjpt, [first f, first j, first jp, first t])_
+     $ PolynomialEvaluation(C, F1)
 assertTrue(zero? z)
 
 -- Let's check whether the relation interpreted with rational
@@ -704,7 +707,7 @@ fz: LZ := q*eulerFunction(11)$QFunctions(Z, LZ)*r11;
 tz: LZ := retract(etaQuotient([1,11],[12,-12])$ETAZ);
 fep: X := xembed(zcmap(tz*fz), Y)
 t: X := xembed(zcmap tz, T);
-abp := algebraBasis(t, [fep])$QAB(C, L, X);
+abp := algebraBasis(t, [fep])$QAB(C, F1, X);
 assertEquals(#abp, 4)
 pols := [second x for x in abp]
 polsExpected: LPol := [Y, Y^2, Y^3, Y^4]
