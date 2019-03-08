@@ -1806,8 +1806,8 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ of e in q = \exp(2\pi i\tau) while neglecting the (c\tau+d)
       ++ factor. It corresponds to 24 times the exponent of the fourth
       ++ product of eq:g_r(gamma*tau).
-    minRootOfUnity: % -> P
-      ++ minRootOfUnity(e) returns the smallest positive integer n such that
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(e) returns the smallest positive integer n such that
       ++ the expansion of the function g_r(\gamma\tau) corresponding to
       ++ e=etaQuotient(m, divs, r, gamma) (neglecting the (c\tau+d)^* factor
       ++ lives in Q[w][[x]] where w is a n-th root of unity.
@@ -1879,7 +1879,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     unityPower(x: %): Q == xx.funityPower
     xExponent(x: %): Z == xx.fxExponent
     qExponent(x: %): Q == xx.fqExponent
-    minRootOfUnity(x: %): P == xx.fminroot
+    minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
@@ -1933,8 +1933,8 @@ SymbolicEtaQuotient: SetCategory with
     cusps: % -> List Q
       ++ If x=etaQuotient(m, r), then
       ++ cusps(x)=cuspsOfGamma0(m)$QAuxiliaryModularEtaQuotientPackage.
-    minRootOfUnity: % -> P
-      ++ If x=etaQuotient(m, r), then minRootOfUnity(x) returns the
+    minimalRootOfUnity: % -> P
+      ++ If x=etaQuotient(m, r), then minimalRootOfUnity(x) returns the
       ++ smallest positive integer n such that the expansion of the
       ++ function g_r(\tau) at any cusp of Gamma_0(m)
       ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[x]] where w
@@ -1964,14 +1964,14 @@ SymbolicEtaQuotient: SetCategory with
             gamma: SL2Z := cuspToMatrix(m, cusp)$QAuxMEQ
             e: SymbolicEtaQuotientGamma := etaQuotient(m, divs, r, gamma)
             h.cusp := e
-            minroot := lcmP(minroot, minRootOfUnity e)
+            minroot := lcmP(minroot, minimalRootOfUnity e)
         per [m, r, cusps, h, minroot]
 
     level(x: %): P == xx.flevel
     exponents(x: %): LZ == xx.fexponents
     cusps(x: %): LQ == xx.fcusps
     elt(x: %, cusp: Q): SymbolicEtaQuotientGamma == xx.feta.cusp
-    minRootOfUnity(x: %): P == xx.fminroot
+    minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
@@ -2218,12 +2218,13 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
       ++ of e in q = \exp(2\pi i\tau)  while neglecting the (c\tau+d) factor.
       ++ It corresponds to 24 times the exponent of the fourth product
       ++ of \eqref{eq:g_s-m-t-lambda(gamma*tau)}.
-    minRootOfUnity: % -> P
-      ++ minRootOfUnity(e) returns the smallest positive integer n such that
-      ++ the expansion of the function g_{s,m,t,\lambda}(\gamma\tau)
-      ++ corresponding to e=etaQuotient(mm, divs, s, m, t, lambda, gamma)
-      ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[z]] where w
-      ++ is a n-th root of unity and z a fractional q power.
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(e) returns the smallest positive integer n
+      ++ such that the expansion of the function
+      ++ g_{s,m,t,\lambda}(\gamma\tau) corresponding to
+      ++ e=etaQuotient(mm, divs, s, m, t, lambda, gamma) (neglecting
+      ++ the (c\tau+d)^* factor lives in Q[w][[z]] where w is a n-th
+      ++ root of unity and z a fractional q power.
     elt: (%, P) -> SymbolicSiftedEtaDeltaLambdaGamma
       ++ x.delta returns the data corresponding to the respective
       ++ delta.
@@ -2302,7 +2303,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     rationalPrefactor(x: %): Q == xx.frat
     unityPower(x: %): Q == xx.funityPower
     qExponent(x: %): Q == xx.fqExponent
-    minRootOfUnity(x: %): P == xx.fminroot
+    minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
@@ -2368,9 +2369,9 @@ SymbolicSiftedEtaQuotientGamma: SetCategory with
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
       -- Returns gamma as given in etaSequence(...,gamma).
-    minRootOfUnity: % -> P
-      ++ minRootOfUnity(x) returns
-      ++ lcm [minRootOfUnity(x.lambda) for lambda in 0..m-1].
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.lambda) for lambda in 0..m-1].
     elt: (%, N) -> SymbolicSiftedEtaQuotientLambdaGamma
       ++ x.lambda returns the data corresponding to the respective
       ++ lambda.
@@ -2385,11 +2386,11 @@ SymbolicSiftedEtaQuotientGamma: SetCategory with
     etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z): % ==
         e: SymbolicSiftedEtaQuotientLambdaGamma :=
             etaQuotient(mm, divs, s, m, t, 0, gamma)
-        minroot: P := minRootOfUnity e
+        minroot: P := minimalRootOfUnity e
         eta: A := new(m, e) -- fill with dummy values
         for lambda in 1..m-1 repeat -- can start with 1.
             e := etaQuotient(mm, divs, s, m, t, lambda, gamma)
-            minroot := lcmP(minroot, minRootOfUnity e)
+            minroot := lcmP(minroot, minimalRootOfUnity e)
             eta.lambda := e
         per [eta, minroot]
 
@@ -2401,7 +2402,7 @@ SymbolicSiftedEtaQuotientGamma: SetCategory with
     multiplier(x: %): P == multiplier(x.0)
     offset(x: %): N == offset(x.0)
     gamma(x: %): SL2Z == gamma(x.0)
-    minRootOfUnity(x: %): P == rep(x).fminroot
+    minimalRootOfUnity(x: %): P == rep(x).fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, x.0)
@@ -2455,9 +2456,9 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
       ++ orbit(x) returns $\modularOrbit{s, m, t}$ where
       ++ s=exponents(x), m=multiplier(x), t=offset(x).
       ++ See definition of orbit in qetakolberg.spad
-    minRootOfUnity: % -> P
-      ++ minRootOfUnity(x) returns
-      ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(shat,m,t)].
     elt: (%, N) -> SymbolicSiftedEtaQuotientGamma
       ++ x.u returns the data corresponding to the respective
       ++ orbit element u.
@@ -2487,7 +2488,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
         minroot: P := 1
         for tt in orb repeat
             e: YSETAQG := etaQuotient(mm, divs, s, m, tt, gamma)
-            minroot := lcmP(minroot, minRootOfUnity e)
+            minroot := lcmP(minroot, minimalRootOfUnity e)
             h.tt := e
         per [mm, divs, s, m, t, gamma, orb, h, minroot]
 
@@ -2499,7 +2500,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
     offset(x: %): N == xx.foffset
     gamma(x: %): SL2Z == xx.fgamma
     orbit(x: %): List N == xx.forbit
-    minRootOfUnity(x: %): P == xx.fminroot
+    minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
@@ -2558,9 +2559,9 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
       -- Returns gamma as given in etaSequence(...,gamma).
-    minRootOfUnity: % -> P
-      ++ minRootOfUnity(x) returns
-      ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(shat,m,t)].
  == add
     Rep ==> Record(
               fcoetaqg: SymbolicSiftedEtaQuotientGamma,
@@ -2580,13 +2581,13 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
             etaQuotient(nn, nndivs, r, 1, 0, gamma)
         seqopg: SymbolicSiftedEtaQuotientOrbitProductGamma :=
             etaQuotient(mm, mmdivs, s, m, t, gamma)
-        minR1: P := minRootOfUnity coetaqg
-        minR2: P := minRootOfUnity seqopg
+        minR1: P := minimalRootOfUnity coetaqg
+        minR2: P := minimalRootOfUnity seqopg
         per [coetaqg, seqopg, lcmP(minR1, minR2)]
 
     cofactor(x: %): SymbolicSiftedEtaQuotientGamma == xx.fcoetaqg
     orbitProduct(x: %): SymbolicSiftedEtaQuotientOrbitProductGamma == xx.fseqopg
-    minRootOfUnity(x: %): P == xx.fminroot
+    minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
@@ -2635,9 +2636,9 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
     elt: (%, Q) -> SymbolicModularSiftedEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
-    minRootOfUnity: % -> P
-      ++ minRootOfUnity(x) returns
-      ++ lcm [minRootOfUnity(x.u) for u in orbit(shat,m,t)].
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(shat,m,t)].
  == add
     YMSETAQG ==> SymbolicModularSiftedEtaQuotientGamma
     HT ==> XHashTable(Q, YMSETAQG)
@@ -2659,12 +2660,12 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
             gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ
             e: YMSETAQG := etaQuotient(nn, r, mm, s, m, t, gamma)
             h.cusp := e
-            minroot := lcmP(minroot, minRootOfUnity e)
+            minroot := lcmP(minroot, minimalRootOfUnity e)
         per [nn, cusps, h, minroot]
 
     level(x: %): P == xx.flevel
     elt(x: %, cusp: Q): YMSETAQG == xx.fmseq.cusp
-    minRootOfUnity(x: %): P == xx.fminroot
+    minimalRootOfUnity(x: %): P == xx.fminroot
     cusps(x: %): LQ == xx.fcusps
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
@@ -3216,7 +3217,7 @@ QEtaModularFunctionTools: Exports == Implementation where
         [grade(nn, divs, denom cusp, r) for cusp in cusps]
 
     qetaGrades(y: YMSETAQ): XHashTable(Q, Z) ==
-        mx: P := minRootOfUnity y
+        mx: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
