@@ -81,18 +81,6 @@ N ==> NonNegativeInteger
 Z ==> Integer
 LSym ==> List Symbol
 
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Variant Hemmecke}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Most things are generically implemented as a default package in the
-category \code{QEtaIdealCategory}.
-
-The function \code{relationsIdealGenerators} computes $J^{(M)}$ as
-described in \cite[Chapter~7]{Hemmecke+Radu:EtaRelations:2018}.
-)endif
-
 )abbrev package QETAIH QEtaIdealHemmecke
 QEtaIdealHemmecke(C, L): Exports == Implementation where
   C: EuclideanDomain
@@ -169,6 +157,108 @@ QEtaIdealHemmecke(C, L): Exports == Implementation where
         -- There is no need to compute a Groebner basis.
         -- mrels: LPol := groebner(dim, msyms, mpgens)
         mrels: LPol := [x for x in mpgens|not zero? x]
+        vPrint("mrels", mrels)
+        vPrint("lenmrels", #mrels)
+        vPrint("totaldegmrels", [totalDegree x for x in mrels])
+        return mrels
+
+)if LiterateDoc
+% $
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Variant HemmeckeCached}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Most things are generically implemented as a default package in the
+category \code{QEtaIdealCategory}.
+
+The function \code{relationsIdealGenerators} computes $J^{(M)}$ as
+described in \cite[Chapter~7]{Hemmecke+Radu:EtaRelations:2018}.
+
+Everything is as in variant Hemmecke, except that here we wrap the
+domains with \code{QEtaAlgebaCachedPower}.
+
+)endif
+
+)abbrev package QETAIHC QEtaIdealHemmeckeCached
+QEtaIdealHemmeckeCached(C, L): Exports == Implementation where
+  C: EuclideanDomain
+  L: Join(UnivariateLaurentSeriesCategory C, QEtaGradedAlgebra C)
+  Pol ==> Polynomial C
+  LPol ==> List Pol
+  Exports ==> QEtaIdealCategory(C, L)
+  Implementation ==> add
+    relationsIdealGenerators(mgens: List L): LPol ==
+        CL ==> QEtaAlgebraCachedPower(C, L)
+        CPol ==> QEtaAlgebraCachedPower(C, Pol)
+        X ==> QEtaExtendedAlgebra(C, CL, CPol);
+        QEAB ==> QEtaAlgebraBasisPackage(C, X, QEtaExtendedComputation(C,CL,X))
+        xreduce(x,t,bas) ==> reduce(x, t, bas)$QEtaReduction(C, X)
+        xembed(a, b) ==> embed(x::CL, m::Pol::CPol)$X
+        import from Pol
+        import from CPol
+
+        msyms: LSym := indexedSymbols("M", #mgens)$QAuxiliaryTools
+        xmgens: List X := [xembed(x, m) for x in mgens for m in msyms]
+        xt: X := first xmgens
+        xzgens: List X := algebraBasis(xt, rest xmgens)$QEAB
+        -- Now we have the algebra basis together with how it relates to the
+        -- originally given elements.
+        vPrint("xzgens", xzgens)
+        -- Each of the original given elements must be representable in
+        -- the algebra basis.
+        xmpols: List X := [xreduce(xx, xt, xzgens) for xx in xmgens]
+        -- So this reduction should result in 0 in the first component
+        -- and a relation among the initially given elements.
+        vPrint("xmpols", xmpols)
+        -- Safety check
+        for x in xmpols | not zero? x repeat
+            error "polynomialRelations: non-zero-reduction"
+
+        -- Also the products of the elements in the algebra basis
+        -- should be representable by a Q[t]-linear relation of the elements
+        -- in the algebra basis where t = first(xt).
+        -- We do the whole computation with the relations part attached and
+        -- thus obtain another set of relations among the intitial
+        -- elements.
+        xpgens: List X := empty() -- generators of the product relations
+        l: List X := xzgens -- don't modify xzgens
+        while not empty? l repeat
+            zi: X := first l
+            for zj in l repeat
+                p: X := xreduce(zi*zj, xt, xzgens)
+                --safety check
+                --assert(zero?(first p))
+                not zero? p =>
+                    error "polynomialRelations: non-zero-product-reduction"
+                xpgens := cons(p, xpgens)
+            l := rest l
+
+        vPrint("xpgens", xpgens)
+
+        mpols: LPol := [second(xx)::Pol for xx in xmpols]
+        pgens: LPol := [second(xx)::Pol for xx in xpgens]
+
+        mpgens: LPol := concat(mpols, pgens)
+        -- Now we already have all the relations.
+        -- To make them look nicer, we can compute a degrevlex
+        -- Groebner basis. since we are actually not interested in a
+        -- Groebner basis, but rather in a set of generators of the
+        -- respective ideal, it is enough to return these generators.
+
+        vPrint("mpgens", mpgens)
+
+        -- We build in a safety check, ie., plug in the respective series
+        -- and check whether the result is zero.
+        fc(c: C): L == c::L
+        PE ==> PolynomialEvaluation(C, L)
+        vPrint("mysyms", msyms)
+        evalmpgens: List L := [eval(x, fc, msyms, mgens)$PE for x in mpgens]
+        vPrint("evalmpgens", evalmpgens)
+        vPrint("zerompgens", [zero? x for x in evalmpgens])
+        dim: P := qcoerce(#mgens)@P
+        -- There is no need to compute a Groebner basis.
+        -- mrels: LPol := groebner(dim, msyms, mpgens)
+        mrels: LPol := [x for x in mpgens | not zero? x]
         vPrint("mrels", mrels)
         vPrint("lenmrels", #mrels)
         vPrint("totaldegmrels", [totalDegree x for x in mrels])

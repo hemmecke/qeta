@@ -29,6 +29,7 @@ function QuotientMonoidExponentVectors {
 )read etacompute.input
 )set message type off
 )set message time on
+QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
 result := xetaQuotientMonoidExponentVectors $1;
 )set message time off
 vPrint("etaQuotientMonoidExponentVectors$1", result)
@@ -50,6 +51,7 @@ function QuotientIdealGenerators {
     DEP=etaQuotientMonoidExponentVectors$1
     cat <<EOF
 )read etacompute.input
+C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT
 $DEP: List(List Z) := [];
 )read $2/$3/$DEP.input
@@ -81,6 +83,7 @@ function LaurentIdealGenerators {
     DEPQIG=etaQuotientIdealGenerators$1
     cat <<EOF
 )read etacompute.input
+C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT
 $DEPQMEV: List(List Z) := [];
 )read $2/$3/$DEPQMEV.input
@@ -117,6 +120,7 @@ function Relations {
     DEP=etaLaurentIdealGenerators$1
     cat <<EOF
 )read etacompute.input
+C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT
 $DEP: LPol := [];
 )read $2/$3/$DEP.input
