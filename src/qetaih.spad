@@ -91,7 +91,9 @@ QEtaIdealHemmecke(C, L): Exports == Implementation where
   Implementation ==> add
     relationsIdealGenerators(mgens: List L): LPol ==
         X ==> QEtaExtendedAlgebra(C, L, Pol);
-        QEAB ==> QEtaAlgebraBasisPackage(C, X, QEtaExtendedComputation(C, L, X))
+        QXRED(C, L, X) ==> QEtaExtendedReduction(C, L, X)
+        QXCOMP(C, L, X) ==> QEtaComputation(C, X, QXRED(C, L, X))
+        QEAB ==> QEtaAlgebraBasisPackage(C, X, QXCOMP(C, L, X))
         xreduce(x,t,bas) ==> reduce(x, t, bas)$QEtaReduction(C, X)
         import from Pol
 
@@ -191,7 +193,9 @@ QEtaIdealHemmeckeCached(C, L): Exports == Implementation where
         CL ==> QEtaAlgebraCachedPower(C, L)
         CPol ==> QEtaAlgebraCachedPower(C, Pol)
         X ==> QEtaExtendedAlgebra(C, CL, CPol);
-        QEAB ==> QEtaAlgebraBasisPackage(C, X, QEtaExtendedComputation(C,CL,X))
+        QXRED(C, CL, X) ==> QEtaExtendedReduction(C, CL, X)
+        QXCOMP(C, CL, X) ==> QEtaComputation(C, X, QXRED(C, CL, X))
+        QEAB ==> QEtaAlgebraBasisPackage(C, X, QXCOMP(C, CL, X))
         xreduce(x,t,bas) ==> reduce(x, t, bas)$QEtaReduction(C, X)
         xembed(a, b) ==> embed(x::CL, m::Pol::CPol)$X
         import from Pol

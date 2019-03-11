@@ -70,7 +70,9 @@ zcmap(x) ==> abmap(Z, C, x)
 cqmap(x) ==> abmap(C, Q, x)
 zqmap(x) ==> abmap(Z, Q, x)
 
-QAB(C, L, X) ==> QEtaAlgebraBasisPackage(C, X, QEtaExtendedComputation(C, L, X))
+QXRED(C, L, X) ==> QEtaExtendedReduction(C, L, X)
+QXCOMP(C, L, X) ==> QEtaComputation(C, X, QXRED(C, L, X))
+QAB(C, L, X) ==> QEtaAlgebraBasisPackage(C, X, QXCOMP(C, L, X))
 
 smaller11(x:Pol,y:Pol):Boolean == _
   exponent leadingCoefficient x < exponent leadingCoefficient y
@@ -180,7 +182,7 @@ fex: X := xembed(zcmap fe, F)
 -- can be expressed as $F=11p(M_1,\ldots, M_7)$ where $p$ is a
 -- polynomial having coefficient denominators not divisible by 11.
 
-rex := reduce(fex, tex, abex)
+rex := reduce(fex, tex, abex)$QEtaReduction(C, X)
 assertTrue(zero? rex)
 
 mrex := _
@@ -426,16 +428,16 @@ assertEquals(qreds, qredsExpected)
 -- coefficients are non-rational, but rather lie in
 -- $\mathbb{Z}_{(11)}$.
 
-assertFalse(zero? reduce(t^3*f, t, ab))
+assertFalse(zero? reduce(t^3*f, t, ab)$$QEtaReduction(C, X))
 
 assertEquals(_
-  [zero? reduce(t^v * f, t, ab) for v in 1..10],_
+  [zero? reduce(t^v * f, t, ab)$QEtaReduction(C, X) for v in 1..10],_
   [false, false, false, false, false, false, true, true, true, true])
 
 -- Since all involved series in the algebra basis `ab` have their
 -- representation in terms of $J$, $Jp$, and $T$ attached, we have
 -- found a relation in $F$, $J$, $Jp$, and $T$.
-result := reduce(t^7 * f, t, ab);
+result := reduce(t^7 * f, t, ab)$QEtaReduction(C, X);
 assertTrue(zero? result)
 res := second result;
 assertEquals(variables res, [T, Jp, J, F])
@@ -604,7 +606,7 @@ qreds := [zero? reduce(tq^v * fq, tq, abq)$QEtaReduction(Q, XQ) for v in 1..7]
 qredsExpected := [false, false, true, true, true, true, true]
 assertEquals(qreds, qredsExpected)
 
-resultq := reduce(tq^3*fq, tq, abq)
+resultq := reduce(tq^3*fq, tq, abq)$QEtaReduction(Q, XQ)
 assertTrue(zero? resultq)
 
 resq := second resultq;
@@ -672,7 +674,7 @@ fez: XZ := xembed(fe, F)
 
 -- Interestingly, we have to multiply by 4, because otherwise the
 -- reduction would not return 0.
-rez := reduce(4*fez, tez, abez)
+rez := reduce(4*fez, tez, abez)$QEtaReduction(Z, XZ)
 assertTrue(zero? rez)
 
 rz := second rez;
@@ -713,7 +715,7 @@ pols := [second x for x in abp]
 polsExpected: LPol := [Y, Y^2, Y^3, Y^4]
 assertEquals(pols, polsExpected)
 
-rep := reduce((fep)^5, t, abp)
+rep := reduce((fep)^5, t, abp)$QEtaReduction(C, X)
 assertTrue(zero? rep)
 
 
