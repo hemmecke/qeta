@@ -350,8 +350,8 @@ Basis elements that become reducible are put into a separate list of
 critical elements that will not be discarded after each extension.
 )endif
 
-)abbrev domain QETAC2 QEtaComputation2
-++ QEtaComputation2 implements a variant of the algorithm Samba
+)abbrev domain QETAC QEtaComputation
+++ QEtaComputation implements a variant of the algorithm Samba
 ++ from an article of Ralf Hemmecke:
 ++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
 ++ Symbolic Computation).
@@ -360,11 +360,14 @@ critical elements that will not be discarded after each extension.
 ++ In this variant, the critical elements are the basis elements that
 ++ became reducible and products of basis elements. Products are kept as
 ++ pairs and will only be evaluated when the critical element is considered.
-++ The pairs are only computed when there are no reducible basis elements left
-++ to consider.
-QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
+
+++ The pairs are only computed (and considered as critical elements)
+++ when there are no reducible basis elements left to consider.
+QEtaComputation(C, F, R): Exports == Implementation where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
+  R: QEtaReductionCategory(C, F)
+  Exports ==> QEtaComputationCategory(C, F)
   Implementation ==> add
     H ==> XHashTable(Z, List F)
     FF ==> Record(f1: F, f2: F)
@@ -373,7 +376,6 @@ QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
     xx ==> rep x
-    import from QEtaReduction(C, F)
     import from Rep
 
     basisElements(x: %): List F == concat entries xx.be
@@ -397,14 +399,14 @@ QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
         irr: List F := empty()
 
         for b in potentiallyReducible repeat
-            if topReducible?(b, u) then
+            if topReducible?(b, u)$R then
                 -- add b to criticalElements
                 red := cons(b, red)
             else
                 irr := cons(b, irr)
-        basis.i := sort(greaterGrade?, cons(u, irr))
+        basis.i := sort(greaterGrade?$R, cons(u, irr))
         red := concat(red, xx.cbe)
-        xx.cbe := sort(greaterGrade?, red)
+        xx.cbe := sort(greaterGrade?$R, red)
         xx.havepairs? := false
         return void()
 
@@ -413,7 +415,7 @@ QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
         x: % := per [table(), empty(), false, empty()]
         grdt: Z := qetaGrade t
         for mi in m repeat
-            u := reduce(mi, t, xx.be)
+            u := reduce(mi, t, xx.be)$R
             if not zero? u then update!(u, grdt, x)
         return x
 
@@ -462,7 +464,7 @@ QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
         not empty?(xx.cbe) =>
             u: F := first(xx.cbe)
             xx.cbe := rest(xx.cbe)
-            if not zero?(u := reduce(u, t, xx.be)) then update!(u, grdt, x)
+            if not zero?(u := reduce(u, t, xx.be)$R) then update!(u, grdt, x)
             return x
         if not xx.havepairs? then --assert(not empty?(xx.be))
             computePairs!(t, x)
@@ -472,7 +474,7 @@ QEtaComputation2(C, F): QEtaComputationCategory(C, F) == Implementation where
         r: FF := first(p.g) -- the element of this grade
         l: List FF := rest(p.g) -- remove u
         if empty? l then remove!(g, p) else p.g := l
-        if not zero?(u := reduce(r.f1 * r.f2, t, xx.be)) then
+        if not zero?(u := reduce(r.f1 * r.f2, t, xx.be)$R) then
             update!(u, grdt, x)
         return x
 
@@ -493,7 +495,7 @@ not want to collect zero relations, we first try to reduce an element
 without the attached relations part and redo the computation including
 the attached relations part only if the result is non-zero.
 
-Otherwise the steps in the computation are similar to QEtaComputation2.
+Otherwise the steps in the computation are similar to QEtaComputation.
 )endif
 
 )abbrev domain QETACX QEtaExtendedComputation
