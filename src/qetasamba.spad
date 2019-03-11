@@ -110,7 +110,7 @@ QEtaComputationCategory(C, F): Category == Exports where
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Restricted reduction}
+\subsection{Category of restricted reduction packages}
 
 According to \cite{Hemmecke:DancingSambaRamanujan:2018}, we use a
 restricted reduction for the algorithm \algoSamba.
@@ -123,13 +123,12 @@ that of $b$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-)abbrev package QETARED QEtaReduction
-++ QEtaReduction implements the restricted reduction as described in
-++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
-++ Symbolic Computation).
-++ doi:10.1016/j.jsc.2017.02.001
+)abbrev category QREDCAT QEtaReductionCategory
+++ QEtaReductionCategory implements the restricted reduction as
+++ described in "Dancing Samba with Ramanujan Partition Congruences"
+++ (Journal of Symbolic Computation). doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-QEtaReduction(C, F): Exports == Implementation where
+QEtaReductionCategory(C, F): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
   H ==> XHashTable(Z, List F)
@@ -139,6 +138,16 @@ QEtaReduction(C, F): Exports == Implementation where
       ++ for v = u - f*b and lc = leadingCoefficient:
       ++ (grade u > grade v or
       ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
+    reducer: (F, H, Z) -> Union(F, "failed")
+      ++ reducer(u, basis, grdt) returns an element b from the basis
+      ++ or b=1 such that grade u - grade b is divisible by grdt or
+      ++ return "failed" if no such b exists.
+      ++ This functions corresponds to the function
+      ++ "select_{t,basis}(u)" as in Definition 2.6 of
+      ++ \cite{Hemmecke:DancingSambaRamanujan:2018}. That reducer
+      ++ yields the element with biggest possible grade is ensured by
+      ++ the requirement that "basis" is appropriately sorted by
+      ++ greaterGrade?.
     reduce: (F, F, List F) -> F
       ++ reduce(u, t, basis) returns an element v such that v is not reducible
       ++ modulo t and basis and "u reduces modulo t and basis to v".
@@ -153,7 +162,7 @@ QEtaReduction(C, F): Exports == Implementation where
       ++ basis has a qetaGrade that is divisible by the qetaGrade of t.
     greaterGrade?: (F, F) -> Boolean
       ++ greaterGrade?(x, y) returns qetaGrade(x)>qetaGrade(y).
-  Implementation ==> add
+   add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
     greaterGrade?(x: F, y: F): Boolean == grade x > grade y
@@ -167,14 +176,35 @@ QEtaReduction(C, F): Exports == Implementation where
         lcb: C := leadingCoefficient b
         euclideanSize lcu >= euclideanSize lcb
 
-    -- Return an element b from the basis or b=1 such that
-    -- grade u - grade b is divisible by grdt or return "failed" if no such
-    -- b exists.
-    -- This functions corresponds to the function "select_{t,basis}(u)" as
-    -- in Definition 2.6 of \cite{Hemmecke:DancingSambaRamanujan:2018}.
-    -- That reducer yields the element with biggest possible grade is
-    -- ensured by the requirement that "basis" is appropriately sorted by
-    -- greaterGrade?.
+    reduce(u: F, t: F, bas: List F): F ==
+        grdu: Z := grade u
+        grdt: Z := grade t
+        basis: H := table()
+        for b in bas repeat -- fill the table
+            i: Z := positiveRemainder(grade b, grdt) -- This is not zero!
+            l: List F := elt(basis, i, empty())
+            basis.i := sort(greaterGrade?, cons(b, l))
+        reduce(u, t, basis)
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Restricted reduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package QETARED QEtaReduction
+++ QEtaReduction implements the restricted reduction as described in
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
+  C: EuclideanDomain
+  F: QEtaGradedAlgebra C
+  H ==> XHashTable(Z, List F)
+  Impl ==> add
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
     reducer(u: F, basis: H, grdt: Z): Union(F, "failed") ==
         zero? u => "failed"
         i: Z := positiveRemainder(grade u, grdt)
@@ -189,23 +219,18 @@ QEtaReduction(C, F): Exports == Implementation where
             if topReducible?(u, b) then return b::Union(F, "failed")
         "failed"
 
-    -- reduce(u, t, basis) returns an element v such that
-    -- a*u = v + ft(t) + sum_b fb(t)*b where b runs over all elements
-    -- of basis, fi(t) is a polynomial in C[t], and a is a unit in C.
-    -- We assume that leadingCoefficient(t)=1.
-    -- Furthermore, we assume that the elements of basis are lists that
-    -- are sorted by greaterGrade?.
     reduce(u: F, t: F, basis: H): F ==
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
-        --assert(not zero? positiveRemainder(grade(b), grade t) for all b in basis)
+        --assert(not zero? positiveRemainder(grade(b), grade t)
+        --       for all b in basis)
         grdt: Z := grade t
         while not ((r := reducer(u, basis, grdt)) case "failed") repeat
             grdu: Z := grade u
             v: F := r :: F
             j: Z := ((grdu - grade v) exquo grdt) :: Z
-            v: F := v*t^(qcoerce(j)@N)
+            v := v*t^(qcoerce(j)@N)
             -- cc: Record(quotient: C, remainder: C)
             cc := divide(leadingCoefficient u, leadingCoefficient v)
             u := u - (cc.quotient)*v
@@ -215,17 +240,67 @@ QEtaReduction(C, F): Exports == Implementation where
         u := (uca.associate)*u
         return u
 
-    reduce(u: F, t: F, bas: List F): F ==
-        grdu: Z := grade u
-        grdt: Z := grade t
-        basis: H := table()
-        for b in bas repeat -- fill the table
-            i: Z := positiveRemainder(grade b, grdt) -- This is not zero!
-            l: List F := elt(basis, i, empty())
-            basis.i := sort(greaterGrade?, cons(b, l))
-        reduce(u, t, basis)
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Restricted reduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
 
+)abbrev package QETAXRED QEtaExtendedReduction
+++ QEtaExtendedReduction implements the restricted reduction as
+++ described in "Dancing Samba with Ramanujan Partition Congruences"
+++ (Journal of Symbolic Computation). doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ It differs from QEtaReduction in that the reduction is first
+++ performed on an element of L and only if non-zero repeated also on
+++ the extended part.
+QEtaExtendedReduction(C, L, F): QEtaReductionCategory(C, F) == Impl where
+  C: EuclideanDomain
+  L: QEtaGradedAlgebra C
+  F: QEtaGradedAlgebra C with (first: % -> L)
+  H ==> XHashTable(Z, List F)
+  Impl ==> add
+    topRed?(u, v) ==> topReducible?(u, v)$QEtaReduction(C, L)
+    grade ==> qetaGrade
+    leadingCoefficient ==> qetaLeadingCoefficient
+    reducerL(u: L, basis: H, grdt: Z): Union(F, "failed") ==
+        zero? u => "failed"
+        i: Z := positiveRemainder(qetaGrade u, grdt)
+        -- if zero? i there is no corresponding element in basis, but
+        -- we can use the element 1, i.e. we reduce u by a power of t.
+        zero? i => return (1$F)::Union(F, "failed")
+        candidates: List F := elt(basis, i, empty())
+            -- candidates contains all basis elements b with
+            -- positiveRemainder(grade b, grdt) = i in the same order
+            -- as given in basis.
+        for b in candidates repeat
+            if topRed?(u, first b) then return b::Union(F, "failed")
+        "failed"
 
+    -- First reduce in the first component and only if the result
+    -- is nonzero, then redo the computation also with the attached
+    -- part.
+    reduce(u: F, t: F, basis: H): F ==
+        --assert(grade(t)>0)
+        --assert(one? leadingCoefficient t)
+        --assert grade(b)>0 for all b in basis
+        --assert(not zero? positiveRemainder(grade(b), grade t)
+        --       for all b in basis)
+        ul: L := first u
+        tl: L := first t
+        grdt: Z := qetaGrade tl
+        while not ((r := reducerL(ul, basis, grdt)) case "failed") repeat
+            grdu: Z := qetaGrade ul
+            vl: L := first(r :: F)
+            j: Z := ((grdu - qetaGrade vl) exquo grdt) :: Z
+            vl := vl*tl^(qcoerce(j)@N)
+            -- cc: Record(quotient: C, remainder: C)
+            cc := divide(leadingCoefficient ul, leadingCoefficient vl)
+            ul := ul - (cc.quotient)*vl
+            uca := unitNormal leadingCoefficient ul
+            ul := (uca.associate)*ul
+        zero? ul => return 0$F
+        return reduce(u, t, basis)$QEtaReduction(C, F)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
