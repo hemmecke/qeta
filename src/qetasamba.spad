@@ -55,6 +55,10 @@ These two technical macros are necessary to distinguish between Rep
 and \%.
 )endif
 
+OF==>OutputForm
+display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
+
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
@@ -221,6 +225,7 @@ QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
         "failed"
 
     reduce(u: F, t: F, basis: H): F ==
+        vPrint("red u", qetaGrade u)
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
@@ -239,6 +244,7 @@ QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
             u := (uca.associate)*u
         uca := unitNormal leadingCoefficient u
         u := (uca.associate)*u
+        if zero? u then vPrint("red", 0)
         return u
 
 )if LiterateDoc
@@ -358,6 +364,7 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
             if grdb < v.k then v.k := grdb
         numOfGaps: Z := 0
         for j in 1..grdt-1 repeat numOfGaps := numOfGaps + floor(v.j /$Q grdt)
+        vPrint("numOfGaps", numOfGaps)
         numOfGaps <= g => false
         criticalElements? y
 
@@ -420,7 +427,7 @@ QEtaComputation(C, F, R): Exports == Implementation where
         --assert(not zero?(positiveRemainder(grade u, grdt)
         --assert(not topReducible?(u, b) for all b in basis)
         grdu: Z := grade u
-
+        vPrint("update grdu", grdu)
         -- update basis
         -- Since u is not top-reducible by any basis element, we can add
         -- u to the basis. We move elements that become top-reducible by u
