@@ -161,8 +161,7 @@ QEtaReductionCategory(C, F): Category == Exports where
       ++ the requirement that "basis" is appropriately sorted by
       ++ greaterGrade?.
     noTraceAtEnter: (F, F, H) -> Void
-    noTraceInLoop: F -> Void
-    noTraceAtReturn: F -> Void
+    noTrace: F -> Void
 
     tracedReduce: ((F, F, H) -> Void, F -> Void, F -> Void) -> ((F, F, H) -> F)
       ++ tracedReduce(traceEnter, traceLoop, traceReturn)(u, t, h) behaves
@@ -213,12 +212,10 @@ QEtaReductionCategory(C, F): Category == Exports where
     -- For tracing the computation, other functions (that print
     -- something) could be used.
     noTraceAtEnter(u: F, t: F, basis: H): Void == void()
-    noTraceInLoop(u: F): Void == void()
-    noTraceAtReturn(u: F): Void == void()
+    noTrace(u: F): Void == void()
 
     reduce(u: F, t: F, basis: H): F ==
-        tracedReduce(noTraceAtEnter, noTraceInLoop, noTraceAtReturn)_
-                    (u, t, basis)
+        tracedReduce(noTraceAtEnter, noTrace, noTrace)(u, t, basis)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
