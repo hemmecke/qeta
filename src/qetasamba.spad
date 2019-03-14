@@ -153,6 +153,18 @@ QEtaReductionCategory(C, F): Category == Exports where
       ++ yields the element with biggest possible grade is ensured by
       ++ the requirement that "basis" is appropriately sorted by
       ++ greaterGrade?.
+    noTraceAtEnter: (F, F, H) -> Void
+    noTraceInLoop: F -> Void
+    noTraceAtReturn: F -> Void
+
+    reduce: (F, F, H, (F, F, H) -> Void, F -> Void, F -> Void) -> F
+      ++ reduce(u, t, h, traceEnter, traceLoop, traceReturn) behaves
+      ++ identical to reduce(u, t, h) except that at enter and exit
+      ++ time the functions traceEnter(u, t, basis) and traceExit(w)
+      ++ are called where w is the value that will be returned. Inside
+      ++ the internal while look the function traceLoop(v) is called
+      ++ with v being the intermediately reduced u.
+      ++ These hooks are provided to print a trace of the reduction.
     reduce: (F, F, List F) -> F
       ++ reduce(u, t, basis) returns an element v such that v is not reducible
       ++ modulo t and basis and "u reduces modulo t and basis to v".
@@ -191,6 +203,15 @@ QEtaReductionCategory(C, F): Category == Exports where
             basis.i := sort(greaterGrade?, cons(b, l))
         reduce(u, t, basis)
 
+    -- For tracing the computation, other functions (that print
+    -- something) could be used.
+    noTraceAtEnter(u: F, t: F, basis: H): Void == void()
+    noTraceInLoop(u: F): Void == void()
+    noTraceAtReturn(u: F): Void == void()
+
+    reduce(u: F, t: F, basis: H): F ==
+        reduce(u, t, basis, noTraceAtEnter, noTraceInLoop, noTraceAtReturn)
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Restricted reduction}
@@ -224,19 +245,22 @@ QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
             if topReducible?(u, b) then return b::Union(F, "failed")
         "failed"
 
-    reduce(u: F, t: F, basis: H): F ==
+    reduce(u: F, t: F, basis: H,_
+           traceEnter: (F, F, H) -> Void,_
+           traceLoop: F -> Void,_
+           traceReturn: F -> Void): F ==
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
         --assert(not zero? positiveRemainder(grade(b), grade t)
         --       for all b in basis)
+        traceEnter(u, t, basis)
         grdt: Z := grade t
-        vPrint("red u", cons(grade u, [# elt(basis, i, empty()$List(F)) for i in 1..grdt-1]$List(Z))::OF)
         while not ((r := reducer(u, basis, grdt)) case "failed") repeat
+            traceLoop u
             grdu: Z := grade u
             v: F := r :: F
             j: Z := ((grdu - grade v) exquo grdt) :: Z
-            vPrint("red j", [j, grdu, grade v]$List(Z))
             v := v*t^(qcoerce(j)@N)
             -- cc: Record(quotient: C, remainder: C)
             cc := divide(leadingCoefficient u, leadingCoefficient v)
@@ -245,7 +269,7 @@ QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
             u := (uca.associate)*u
         uca := unitNormal leadingCoefficient u
         u := (uca.associate)*u
-        if zero? u then vPrint("red", 0)
+        traceReturn u
         return u
 
 )if LiterateDoc
@@ -374,8 +398,10 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
         --assert(not empty? m)
         --assert(qetaGrade t > 0)
         grdt: Z := qetaGrade t
-        tooBig := grdt*g+1 -- make initial entries too big
-        v: Vector Z := new(qcoerce(grdt-1)@N, tooBig)
+        l: List Z := [qetaGrade x for x in m]
+        tooBig := 1 + g + reduce(_+, l, 0)
+        -- make initial entries too big
+        v: Vector Z := new(qcoerce(grdt-1)@N, grdt * tooBig)
         y: Y := initialize(t, m)
         while continue?(grdt, g, v, y) repeat y := oneStepComputation! y
         return sort(smallerGrade?, basisElements y)
@@ -485,7 +511,6 @@ QEtaComputation(C, F, R): Exports == Implementation where
         --assert(grdt > 0)
         --assert(not zero?(positiveRemainder(grade u, grdt)
         --assert(not topReducible?(u, b) for all b in basis)
-        vPrint("update grdu", u)
         -- update basis
         -- Since u is not top-reducible by any basis element, we can add
         -- u to the basis. We move elements that become top-reducible by u
@@ -561,7 +586,6 @@ QEtaComputation(C, F, R): Exports == Implementation where
         -- products with smallest degree prefer cbe if equal degree.
         p: Products := xx.pairs
         f: F := selectNext! x
-        vPrint("select", f)
         if not zero?(u := reduce(f, xx.mul, xx.be)$R) then update!(u, x)
         return x
 
