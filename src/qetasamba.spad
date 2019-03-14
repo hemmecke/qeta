@@ -90,6 +90,7 @@ Q ==> Fraction Z
 QEtaComputationCategory(C, F): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
+  H ==> XHashTable(Z, List F)
   Exports ==> CoercibleTo OutputForm with
 --    update!: (F, %) -> Void
 --      ++ update!(u, x) adds u to the basis and updates the critical
@@ -109,6 +110,12 @@ QEtaComputationCategory(C, F): Category == Exports where
       ++ critical elements. Then it reduces it and updates the basis and
       ++ the critical elements if the reduction did not end with 0.
       ++ It should hold criticalElements?(x), otherwise the result is undefined.
+    oneTracedStep!: (% -> Void, (F, F, H) -> Void, F -> Void, F -> Void) _
+                    -> (% -> %)
+      ++ oneTracedStep!(x, trace, traceEnter, traceLoop, traceReturn)
+      ++ behaves like oneStepComputation!(x) except that
+      ++ trace(x) is called at the beginning of the function and
+      ++
     postProcess!: % -> %
       ++ postProcess!(x) postprocesses the result. It might interreduce
       ++ the basis or do other kinds of cleanup.
@@ -157,8 +164,8 @@ QEtaReductionCategory(C, F): Category == Exports where
     noTraceInLoop: F -> Void
     noTraceAtReturn: F -> Void
 
-    reduce: (F, F, H, (F, F, H) -> Void, F -> Void, F -> Void) -> F
-      ++ reduce(u, t, h, traceEnter, traceLoop, traceReturn) behaves
+    tracedReduce: ((F, F, H) -> Void, F -> Void, F -> Void) -> ((F, F, H) -> F)
+      ++ tracedReduce(traceEnter, traceLoop, traceReturn)(u, t, h) behaves
       ++ identical to reduce(u, t, h) except that at enter and exit
       ++ time the functions traceEnter(u, t, basis) and traceExit(w)
       ++ are called where w is the value that will be returned. Inside
@@ -210,7 +217,8 @@ QEtaReductionCategory(C, F): Category == Exports where
     noTraceAtReturn(u: F): Void == void()
 
     reduce(u: F, t: F, basis: H): F ==
-        reduce(u, t, basis, noTraceAtEnter, noTraceInLoop, noTraceAtReturn)
+        tracedReduce(noTraceAtEnter, noTraceInLoop, noTraceAtReturn)_
+                    (u, t, basis)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -245,10 +253,10 @@ QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
             if topReducible?(u, b) then return b::Union(F, "failed")
         "failed"
 
-    reduce(u: F, t: F, basis: H,_
-           traceEnter: (F, F, H) -> Void,_
+    traceReduce(traceEnter: (F, F, H) -> Void,_
            traceLoop: F -> Void,_
-           traceReturn: F -> Void): F ==
+           traceReturn: F -> Void): (F, F, H) -> F ==
+      (u: F, t: F, basis: H): F +->
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
@@ -373,6 +381,12 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
       ++ k = positiveRemainder(qetaGrade b, qetaGrade t).
       ++ If (in case C is not a field) there are several b with that
       ++ property, then the one with smallest qetaGrade is counted.
+    algebraBasis: (F, List F, Z, Y -> Y) -> List F
+      ++ algebraBasis(t, m, g, oneStep!) repeats oneStep! as long as
+      ++ there are critical elements in the internal "computation"
+      ++ data structure. It returns earlier if the number of gaps in
+      ++ the basis is equal to g.
+
   Implementation ==> add
     import from QEtaReduction(C, F)
     smallerGrade?(x: F, y: F): Boolean == qetaGrade x < qetaGrade y
@@ -394,7 +408,7 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
         numOfGaps <= g => false
         criticalElements? y
 
-    algebraBasis(t: F, m: List F, g: Z): List F ==
+    algebraBasis(t: F, m: List F, g: Z, oneStep!: Y -> Y): List F ==
         --assert(not empty? m)
         --assert(qetaGrade t > 0)
         grdt: Z := qetaGrade t
@@ -403,8 +417,11 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
         -- make initial entries too big
         v: Vector Z := new(qcoerce(grdt-1)@N, grdt * tooBig)
         y: Y := initialize(t, m)
-        while continue?(grdt, g, v, y) repeat y := oneStepComputation! y
+        while continue?(grdt, g, v, y) repeat y := oneStep! y
         return sort(smallerGrade?, basisElements y)
+
+    algebraBasis(t: F, m: List F, g: Z): List F ==
+        algebraBasis(t, m, g, oneStepComputation!)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -584,10 +601,25 @@ QEtaComputation(C, F, R): Exports == Implementation where
         --assert(criticalElements? x)
         -- Selection process: Take the first element from cbe or
         -- products with smallest degree prefer cbe if equal degree.
-        p: Products := xx.pairs
         f: F := selectNext! x
         if not zero?(u := reduce(f, xx.mul, xx.be)$R) then update!(u, x)
         return x
+
+    oneTracedStep!(trace: % -> Void, _
+                   traceEnter: (F, F, H) -> Void,_
+                   traceLoop: F -> Void,_
+                   traceReturn: F -> Void): (% -> %) ==
+      (x: %): % +->
+        --assert(criticalElements? x)
+        -- Selection process: Take the first element from cbe or
+        -- products with smallest degree prefer cbe if equal degree.
+        trace x
+        f: F := selectNext! x
+        red := tracedReduce(traceEnter, traceLoop, traceReturn)$R
+        u := red(f, xx.mul, xx.be)
+        if not zero? u then update!(u, x)
+        return x
+
 
 )if LiterateDoc
 \bibliography{qeta}
