@@ -74,11 +74,91 @@ Q ==> Fraction Z
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data structure for \algoSamba}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev domain QABCC QEtaAlgebraBasisContainerCategory
+++ QEtaAlgebraBasisContainerCategory(C, F) is a category for a data
+++ structure that can be used for reduction modulo an algebra basis
+++ (samba basis).
+QEtaAlgebraBasisContainerCategory(C, F): Category == Exports where
+  C: EuclideanDomain
+  F: QEtaGradedAlgebra C
+  Exports ==> CoercibleTo OutputForm with
+    multiplier: % -> F
+      ++ multiplier(x) returns multiplier element.
+    basisElements: (%, Z) -> List F
+      ++ basisElements(x, d) returns the basis elements of grade d.
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data structure for \algoSamba}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev domain QETAABC QEtaAlgebraBasisContainer
+++ QEtaAlgebraBasisContainer(C, F) is a domain holding the special
+++ structure of a algebra basis with elements that can be used during
+++ a reduction.
+QEtaAlgebraBasisContainer(C, F): Exports == Implementation where
+  C: EuclideanDomain
+  F: QEtaGradedAlgebra C
+  H ==> XHashTable(Z, List F)
+  Exports ==> QEtaAlgebraBasisContainerCategory(C, F) with
+    initialize: F -> %
+      ++ initialize(t) creates an empty basis that contains only
+      ++ the multiplier t.
+    basisElements: % -> H
+      ++ basisElements(x) returns the basis elements of all grades.
+  Implementation ==> add
+    Rep ==> Record(mul: F, be: H)
+    xx ==> rep x
+    import from Rep
+    coerce(x: %): OutputForm == xx::OutputForm
+    initialize(t: F): % == per [t, empty()]
+    multiplier(x: %): F == xx.mul
+    basisElements(x: %): H == xx.be
+    basisElements(x: %, d: Z): List F == elt(xx.be, d, empty()$List(F))
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data structure for \algoSamba}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev domain QETAXABC QEtaExtendedAlgebraBasisContainer
+++ QEtaAlgebraBasisContainer(C, F) is a domain holding the special
+++ structure of a algebra basis with elements that can be used during
+++ a reduction.
+QEtaExtendedAlgebraBasisContainer(C, L, F, AB): Exports == Implementation where
+  C: EuclideanDomain
+  L: QEtaGradedAlgebra C
+  F: QEtaGradedAlgebra C with (first: % -> L)
+  AB: QEtaAlgebraBasisContainerCategory(C, F)
+  Exports ==> QEtaAlgebraBasisContainerCategory(C, L) with
+    coerce: AB -> %
+      ++ basisElements(x) returns the basis elements of all grades.
+  Implementation ==> add
+    Rep ==> AB
+    xx ==> rep x
+    coerce(x: %): OutputForm == xx::OutputForm
+    coerce(ab: AB): % == per ab
+    multiplier(x: %): L == first multiplier xx
+    basisElements(x: %, d: Z): List L == [first f for f in basisElements(xx, d)]
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Common category for the \algoSamba{} algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-)abbrev category QETACAT QEtaComputationCategory
+)abbrev category QETACC QEtaComputationCategory
 ++ QEtaComputationCategory provides the functions necessary for the
 ++ internal functioning of basis elements and critical elements.
 ++ This category is an abstraction of the functionality to implement
@@ -87,10 +167,10 @@ Q ==> Fraction Z
 ++ Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-QEtaComputationCategory(C, F): Category == Exports where
+QEtaComputationCategory(C, F, AB): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  H ==> XHashTable(Z, List F)
+  AB: QEtaAlgebraBasisContainerCategory(C, F)
   Exports ==> CoercibleTo OutputForm with
 --    update!: (F, %) -> Void
 --      ++ update!(u, x) adds u to the basis and updates the critical
@@ -101,21 +181,22 @@ QEtaComputationCategory(C, F): Category == Exports where
     criticalElements?: % -> Boolean
       ++ criticalElements?(x) returns true if x represents a structure that
       ++ still contains critical elements.
-    basisElements: % -> List F
-      ++ basisElements(x) returns the basis elements that are stored
-      ++ in the structure x.
+    algebraBasis: % -> AB
+      ++ algebraBasis(x) returns the structure from x that holds the
+      ++ algebra basis.
     oneStepComputation!: % -> %
       ++ oneStepComputation!(x) computes one step of the computation.
       ++ It extracts a critical element and removes it from the list of
       ++ critical elements. Then it reduces it and updates the basis and
       ++ the critical elements if the reduction did not end with 0.
       ++ It should hold criticalElements?(x), otherwise the result is undefined.
-    oneTracedStep!: (% -> Void, (F, F, H) -> Void, F -> Void, F -> Void) _
+    oneTracedStep!: (% -> Void, (F, AB) -> Void, F -> Void, F -> Void) _
                     -> (% -> %)
       ++ oneTracedStep!(x, trace, traceEnter, traceLoop, traceReturn)
       ++ behaves like oneStepComputation!(x) except that
       ++ trace(x) is called at the beginning of the function and
-      ++
+      ++ tracedReduce(traceEnter, traceLoop, traceReturn) is used
+      ++ instead of the ordinary reduce function.
     postProcess!: % -> %
       ++ postProcess!(x) postprocesses the result. It might interreduce
       ++ the basis or do other kinds of cleanup.
@@ -140,9 +221,10 @@ that of $b$.
 ++ described in "Dancing Samba with Ramanujan Partition Congruences"
 ++ (Journal of Symbolic Computation). doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-QEtaReductionCategory(C, F): Category == Exports where
+QEtaReductionCategory(C, F, AB): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
+  AB: QEtaAlgebraBasisContainerCategory(C, F)
   H ==> XHashTable(Z, List F)
   Exports ==> with
     topReducible?: (F, F) -> Boolean
@@ -150,7 +232,7 @@ QEtaReductionCategory(C, F): Category == Exports where
       ++ for v = u - f*b and lc = leadingCoefficient:
       ++ (grade u > grade v or
       ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
-    reducer: (F, H, Z) -> Union(F, "failed")
+    reducer: (F, AB) -> Union(F, "failed")
       ++ reducer(u, basis, grdt) returns an element b from the basis
       ++ or b=1 such that grade u - grade b is divisible by grdt or
       ++ return "failed" if no such b exists.
@@ -160,26 +242,21 @@ QEtaReductionCategory(C, F): Category == Exports where
       ++ yields the element with biggest possible grade is ensured by
       ++ the requirement that "basis" is appropriately sorted by
       ++ greaterGrade?.
-    noTraceAtEnter: (F, F, H) -> Void
+    noTraceAtEnter: (F, AB) -> Void
     noTrace: F -> Void
-
-    tracedReduce: ((F, F, H) -> Void, F -> Void, F -> Void) -> ((F, F, H) -> F)
-      ++ tracedReduce(traceEnter, traceLoop, traceReturn)(u, t, h) behaves
-      ++ identical to reduce(u, t, h) except that at enter and exit
-      ++ time the functions traceEnter(u, t, basis) and traceExit(w)
+    tracedReduce: ((F, AB) -> Void, F -> Void, F -> Void) -> ((F, AB) -> F)
+      ++ tracedReduce(traceEnter, traceLoop, traceReturn)(u, ab) behaves
+      ++ identical to reduce(u, ab) except that at enter and exit
+      ++ time the functions traceEnter(u, ab) and traceExit(w)
       ++ are called where w is the value that will be returned. Inside
       ++ the internal while look the function traceLoop(v) is called
       ++ with v being the intermediately reduced u.
       ++ These hooks are provided to print a trace of the reduction.
-    reduce: (F, F, List F) -> F
-      ++ reduce(u, t, basis) returns an element v such that v is not reducible
-      ++ modulo t and basis and "u reduces modulo t and basis to v".
-      ++ We assume that qetaLeadingCoefficient(t)=1 and no element of the
-      ++ basis has a qetaGrade that is divisible by the qetaGrade of t.
-    reduce: (F, F, H) -> F
-      ++ reduce(u, t, h) returns an element v such that v is not reducible
-      ++ modulo t and basis and "u reduces modulo t and basis to v" where
-      ++ basis is given by the lists of h. These element lists of h are
+    reduce: (F, AB) -> F
+      ++ reduce(u, ab) returns an element v such that v is not reducible
+      ++ modulo ab and "u reduces modulo t and basis to v" where
+      ++ basis is given by the lists of basisElements(ab, d) for all grades.
+      ++ These element lists of h are
       ++ assumed to be sorted by greaterGrade?.
       ++ We assume that qetaLeadingCoefficient(t)=1 and no element of the
       ++ basis has a qetaGrade that is divisible by the qetaGrade of t.
@@ -199,23 +276,13 @@ QEtaReductionCategory(C, F): Category == Exports where
         lcb: C := leadingCoefficient b
         euclideanSize lcu >= euclideanSize lcb
 
-    reduce(u: F, t: F, bas: List F): F ==
-        grdu: Z := grade u
-        grdt: Z := grade t
-        basis: H := table()
-        for b in bas repeat -- fill the table
-            i: Z := positiveRemainder(grade b, grdt) -- This is not zero!
-            l: List F := elt(basis, i, empty())
-            basis.i := sort(greaterGrade?, cons(b, l))
-        reduce(u, t, basis)
-
     -- For tracing the computation, other functions (that print
     -- something) could be used.
-    noTraceAtEnter(u: F, t: F, basis: H): Void == void()
+    noTraceAtEnter(u: F, ab: AB): Void == void()
     noTrace(u: F): Void == void()
 
-    reduce(u: F, t: F, basis: H): F ==
-        tracedReduce(noTraceAtEnter, noTrace, noTrace)(u, t, basis)
+    reduce(u: F, ab: AB): F ==
+        tracedReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -229,20 +296,21 @@ QEtaReductionCategory(C, F): Category == Exports where
 ++ Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
+QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  H ==> XHashTable(Z, List F)
+  AB: QEtaAlgebraBasisContainerCategory(C, F)
   Impl ==> add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
-    reducer(u: F, basis: H, grdt: Z): Union(F, "failed") ==
+    reducer(u: F, ab: AB): Union(F, "failed") ==
         zero? u => "failed"
+        grdt: Z := grade multiplier ab
         i: Z := positiveRemainder(grade u, grdt)
         -- if zero? i there is no corresponding element in basis, but
         -- we can use the element 1, i.e. we reduce u by a power of t.
         zero? i => return (1$F)::Union(F, "failed")
-        candidates: List F := elt(basis, i, empty())
+        candidates: List F := basisElements(ab, i)
             -- candidates contains all basis elements b with
             -- positiveRemainder(grade b, grdt) = i in the same order
             -- as given in basis.
@@ -250,18 +318,19 @@ QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
             if topReducible?(u, b) then return b::Union(F, "failed")
         "failed"
 
-    tracedReduce(traceEnter: (F, F, H) -> Void,_
+    tracedReduce(traceEnter: (F, AB) -> Void,_
                  traceLoop: F -> Void,_
-                 traceReturn: F -> Void): (F, F, H) -> F ==
-      (u: F, t: F, basis: H): F +->
+                 traceReturn: F -> Void): (F, AB) -> F ==
+      (u: F, ab: AB): F +->
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
         --assert(not zero? positiveRemainder(grade(b), grade t)
         --       for all b in basis)
-        traceEnter(u, t, basis)
+        traceEnter(u, ab)
+        t: F := multiplier ab
         grdt: Z := grade t
-        while not ((r := reducer(u, basis, grdt)) case "failed") repeat
+        while not ((r := reducer(u, ab)) case "failed") repeat
             traceLoop u
             grdu: Z := grade u
             v: F := r :: F
@@ -291,53 +360,29 @@ QEtaReduction(C, F): QEtaReductionCategory(C, F) == Impl where
 ++ It differs from QEtaReduction in that the reduction is first
 ++ performed on an element of L and only if non-zero repeated also on
 ++ the extended part.
-QEtaExtendedReduction(C, L, F): QEtaReductionCategory(C, F) == Impl where
+QEtaExtendedReduction(C, L, F, AB): Exports == Implementation where
   C: EuclideanDomain
   L: QEtaGradedAlgebra C
   F: QEtaGradedAlgebra C with (first: % -> L)
-  H ==> XHashTable(Z, List F)
-  Impl ==> add
-    topRed?(u, v) ==> topReducible?(u, v)$QEtaReduction(C, L)
-    grade ==> qetaGrade
-    leadingCoefficient ==> qetaLeadingCoefficient
-    reducerL(u: L, basis: H, grdt: Z): Union(F, "failed") ==
-        zero? u => "failed"
-        i: Z := positiveRemainder(qetaGrade u, grdt)
-        -- if zero? i there is no corresponding element in basis, but
-        -- we can use the element 1, i.e. we reduce u by a power of t.
-        zero? i => return (1$F)::Union(F, "failed")
-        candidates: List F := elt(basis, i, empty())
-            -- candidates contains all basis elements b with
-            -- positiveRemainder(grade b, grdt) = i in the same order
-            -- as given in basis.
-        for b in candidates repeat
-            if topRed?(u, first b) then return b::Union(F, "failed")
-        "failed"
-
-    -- First reduce in the first component and only if the result
-    -- is nonzero, then redo the computation also with the attached
-    -- part.
-    reduce(u: F, t: F, basis: H): F ==
+  AB: QEtaAlgebraBasisContainerCategory(C, F)
+  XAB ==> QEtaExtendedAlgebraBasisContainer(C, L, F, AB)
+  Exports ==> QEtaReductionCategory(C, F, AB)
+  Implementation ==> add
+    tracedReduce(traceEnter: (F, AB) -> Void,_
+                 traceLoop: F -> Void,_
+                 traceReturn: F -> Void): (F, AB) -> F ==
+      (u: F, ab: AB): F +->
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
         --assert(not zero? positiveRemainder(grade(b), grade t)
         --       for all b in basis)
-        ul: L := first u
-        tl: L := first t
-        grdt: Z := qetaGrade tl
-        while not ((r := reducerL(ul, basis, grdt)) case "failed") repeat
-            grdu: Z := qetaGrade ul
-            vl: L := first(r :: F)
-            j: Z := ((grdu - qetaGrade vl) exquo grdt) :: Z
-            vl := vl*tl^(qcoerce(j)@N)
-            -- cc: Record(quotient: C, remainder: C)
-            cc := divide(leadingCoefficient ul, leadingCoefficient vl)
-            ul := ul - (cc.quotient)*vl
-            uca := unitNormal leadingCoefficient ul
-            ul := (uca.associate)*ul
-        zero? ul => return 0$F
-        return reduce(u, t, basis)$QEtaReduction(C, F)
+        ul: L := reduce(first u, ab :: XAB)$QEtaReduction(C, L, XAB)
+        zero? ul =>
+            traceReturn(0$F)
+            return 0$F
+        tReduce ==> tracedReduce $ QEtaReduction(C, F, AB)
+        return tReduce(traceEnter, traceLoop, traceReturn)(u, ab)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -357,16 +402,19 @@ of \algoSamba{}.
 ++ Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
+QEtaAlgebraBasisPackage(C, F, AB, Y): Exports == Implementation where
+  H ==> XHashTable(Z, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  Y: QEtaComputationCategory(C, F)
+  AB: QEtaAlgebraBasisContainerCategory(C, F) with
+      basisElements: % -> H
+  Y: QEtaComputationCategory(C, F, AB)
   Exports ==> with
-    algebraBasis: (F, List F) -> List F
+    algebraBasis: (F, List F) -> AB
       ++ algebraBasis(t, m) returns a list z such that
       ++ C[t, m] and the C[t]-module generated by 1 and z are equal as sets.
       ++ Assume that qetaGrade(t)>0.
-    algebraBasis: (F, List F, Z) -> List F
+    algebraBasis: (F, List F, Z) -> AB
       ++ algebraBasis(t, m, g) returns a list z such that
       ++ C[t, m] and the C[t]-module generated by 1 and z are equal as sets.
       ++ Assume that qetaGrade(t)>0.
@@ -378,25 +426,26 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
       ++ k = positiveRemainder(qetaGrade b, qetaGrade t).
       ++ If (in case C is not a field) there are several b with that
       ++ property, then the one with smallest qetaGrade is counted.
-    algebraBasis: (F, List F, Z, Y -> Y) -> List F
+    algebraBasis: (F, List F, Z, Y -> Y) -> AB
       ++ algebraBasis(t, m, g, oneStep!) repeats oneStep! as long as
       ++ there are critical elements in the internal "computation"
       ++ data structure. It returns earlier if the number of gaps in
       ++ the basis is equal to g.
 
   Implementation ==> add
-    import from QEtaReduction(C, F)
     smallerGrade?(x: F, y: F): Boolean == qetaGrade x < qetaGrade y
-    algebraBasis(t: F, m: List F): List F ==
+    algebraBasis(t: F, m: List F): AB ==
         --assert(not empty? m)
         --assert(qetaGrade t > 0)
         y: Y := initialize(t, m)
         while criticalElements? y repeat y := oneStepComputation! y
-        return sort(smallerGrade?, basisElements y)
+        return algebraBasis y
 
     continue?(grdt: Z, g: Z, v: Vector Z, y: Y): Boolean ==
-        for b in basisElements y repeat
-            grdb := qetaGrade b
+        ab: AB := algebraBasis y
+        basis: H := basisElements ab
+        for bas in entries basis repeat
+            grdb := qetaGrade last bas
             k: Z := positiveRemainder(grdb, grdt)
             if grdb < v.k then v.k := grdb
         numOfGaps: Z := 0
@@ -405,7 +454,7 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
         numOfGaps <= g => false
         criticalElements? y
 
-    algebraBasis(t: F, m: List F, g: Z, oneStep!: Y -> Y): List F ==
+    algebraBasis(t: F, m: List F, g: Z, oneStep!: Y -> Y): AB ==
         --assert(not empty? m)
         --assert(qetaGrade t > 0)
         grdt: Z := qetaGrade t
@@ -415,9 +464,9 @@ QEtaAlgebraBasisPackage(C, F, Y): Exports == Implementation where
         v: Vector Z := new(qcoerce(grdt-1)@N, grdt * tooBig)
         y: Y := initialize(t, m)
         while continue?(grdt, g, v, y) repeat y := oneStep! y
-        return sort(smallerGrade?, basisElements y)
+        return algebraBasis y
 
-    algebraBasis(t: F, m: List F, g: Z): List F ==
+    algebraBasis(t: F, m: List F, g: Z): AB ==
         algebraBasis(t, m, g, oneStepComputation!)
 
 )if LiterateDoc
@@ -445,16 +494,20 @@ critical elements that will not be discarded after each extension.
 
 ++ The pairs are only computed (and considered as critical elements)
 ++ when there are no reducible basis elements left to consider.
-QEtaComputation(C, F, R): Exports == Implementation where
+QEtaComputation(C, F, AB, R): Exports == Implementation where
+  H ==> XHashTable(Z, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  R: QEtaReductionCategory(C, F)
-  Exports ==> Join(QEtaComputationCategory(C, F), CoercibleTo OutputForm)
+  AB: QEtaAlgebraBasisContainerCategory(C, F) with
+      initialize: F -> %
+      basisElements: % -> H
+
+  R: QEtaReductionCategory(C, F, AB)
+  Exports ==> Join(QEtaComputationCategory(C, F, AB), CoercibleTo OutputForm)
   Implementation ==> add
-    H ==> XHashTable(Z, List F)
     FF ==> Record(f1: F, f2: F)
     Products ==> XHashTable(Z, List FF)
-    Rep ==> Record(mul: F, be: H, cbe: List F, pairs: Products)
+    Rep ==> Record(ab: AB, cbe: List F, pairs: Products)
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
     xx ==> rep x
@@ -462,7 +515,7 @@ QEtaComputation(C, F, R): Exports == Implementation where
     coerce(x: %): OF == xx::OF
     smallerGrade?(x: F, y: F): Boolean == grade x < grade y
 
-    basisElements(x: %): List F == concat entries xx.be
+    basisElements(x: %): List F == concat entries basisElements xx.ab
 
     addPair!(f1: F, f2: F, products: Products): Products ==
         g := grade f1 + grade f2
@@ -489,14 +542,14 @@ QEtaComputation(C, F, R): Exports == Implementation where
         products
 
     addGapPairs!(x: %): Void ==
-        t: F := xx.mul
+        t: F := multiplier xx.ab
         products: Products := xx.pairs
         -- Additionally, we have to add products of the form t^j*b
         -- where qetaGrade(b)+j*d=qetaGrade(b') and b, b' in x.be
         -- b different from b' and j>0 is minimal with that property.
         -- That corresponds to the set S (line 13) in the algorithm samba
         -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
-        for bs in entries(xx.be) repeat
+        for bs in entries basisElements xx.ab repeat
             -- bs = all basis elements of same grade g (mod d)
             -- bs is non-empty and sorted by greaterGrade?
             b1 := first bs
@@ -518,7 +571,7 @@ QEtaComputation(C, F, R): Exports == Implementation where
 
     -- Destructively updates basis and critical elements
     update!(u: F, x: %): Void() ==
-        t: F := xx.mul
+        t: F := multiplier xx.ab
         grdt: Z := grade t
         grdu: Z := grade u
         --assert(grade u > 0)
@@ -530,8 +583,8 @@ QEtaComputation(C, F, R): Exports == Implementation where
         -- u to the basis. We move elements that become top-reducible by u
         -- from the basis into the critical elements.
         i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
-        basis: H := xx.be
-        bas: List F := elt(basis, i, empty())
+        basis: H := basisElements(xx.ab)
+        bas: List F := basisElements(xx.ab, i)
         red: List F := empty()
         irr: List F := empty()
 
@@ -569,7 +622,7 @@ QEtaComputation(C, F, R): Exports == Implementation where
 
     initialize(t: F, m: List F): % ==
         --assert(qetaGrade t > 0)
-        per [t, table(), sort(smallerGrade?, m), empty()]
+        per [initialize(t)$AB, sort(smallerGrade?, m), empty()]
 
     criticalElements?(x: %): Boolean ==
         not empty?(xx.cbe) or not empty?(xx.pairs)
@@ -599,11 +652,11 @@ QEtaComputation(C, F, R): Exports == Implementation where
         -- Selection process: Take the first element from cbe or
         -- products with smallest degree prefer cbe if equal degree.
         f: F := selectNext! x
-        if not zero?(u := reduce(f, xx.mul, xx.be)$R) then update!(u, x)
+        if not zero?(u := reduce(f, xx.ab)$R) then update!(u, x)
         return x
 
     oneTracedStep!(trace: % -> Void, _
-                   traceEnter: (F, F, H) -> Void,_
+                   traceEnter: (F, AB) -> Void,_
                    traceLoop: F -> Void,_
                    traceReturn: F -> Void): (% -> %) ==
       (x: %): % +->
@@ -612,8 +665,8 @@ QEtaComputation(C, F, R): Exports == Implementation where
         -- products with smallest degree prefer cbe if equal degree.
         trace x
         f: F := selectNext! x
-        red := tracedReduce(traceEnter, traceLoop, traceReturn)$R
-        u := red(f, xx.mul, xx.be)
+        tReduce ==> tracedReduce $ R
+        u := tReduce(traceEnter, traceLoop, traceReturn)(f, xx.ab)
         if not zero? u then update!(u, x)
         return x
 

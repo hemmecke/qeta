@@ -120,25 +120,34 @@ QEtaIdealSamba(C, L): Exports == Implementation where
     --    ++ algebra basis expressed in terms of the indeterminates T and
     --    ++ Zj.
     polynomialRelationsGenerators(mgens: List L): Record(gens: LPol, zlen: N) ==
-        RED ==> QEtaReduction(C, L)
-        QEAB ==> QEtaAlgebraBasisPackage(C, L, QEtaComputation(C, L, RED))
-        xreduce(x,t,bas) ==> reduce(x, t, bas)$QEtaReduction(C, X)
+        LAB ==> QEtaAlgebraBasisContainer(C, L)
+        LRED ==> QEtaReduction(C, L, LAB)
+        LY ==> QEtaComputation(C, L, LAB, LRED)
+        LQABP ==> QEtaAlgebraBasisPackage(C, L, LAB, LY)
         t: L := first mgens -- Note that one?(qetaLeadingcoefficient(t)).
-        zgens: List L := algebraBasis(t, rest mgens)$QEAB
-        -- zgens are the generators of the $\mathbb{Q}[t]$-module
-        vPrint("zgens", zgens)
+        lab: LAB := algebraBasis(t, rest mgens)$LQABP
+        zgens: List L := concat entries basisElements lab
+
+        -- lab are the generators of the $\mathbb{Q}[t]$-module
+        vPrint("zgens", lab)
         -- Safety check
-        for x in mgens | not zero? reduce(x, t, zgens)$QEtaReduction(C, L) repeat
+        for x in mgens | not zero? reduce(x, lab)$LRED repeat
             error "polynomialRelations: non-zero-reduction"
 
         -- Express the generators of $E^\infty(m)$ in the module
         -- $\langle 1, zgens \rangle_{Q[t]}$.
         -- This correspond to formula (62) in
         -- \cite{Radu:RamanujanKolberg:2015}.
+        X ==> QEtaExtendedAlgebra(C, L, Pol);
+        AB ==> QEtaAlgebraBasisContainer(C, X)
+        RED ==> QEtaReduction(C, X, AB)
+        Y ==> QEtaComputation(C, X, AB, RED)
+        QABP ==> QEtaAlgebraBasisPackage(C, X, AB, Y)
+        xreduce(x, ab) ==> reduce(x, ab)$RED
+
         import from QAuxiliaryTools
         import from Pol
         msyms: LSym := indexedSymbols("M", #mgens)
-        X ==> QEtaExtendedAlgebra(C, L, Pol);
         zsyms: LSym := indexedSymbols("Z", #zgens)
         tsym: Symbol := "T"::Symbol
         syms: LSym := concat(zsyms, cons(tsym, msyms))
@@ -148,7 +157,8 @@ QEtaIdealSamba(C, L): Exports == Implementation where
         xzgens: List X := [embed(x, m::Pol) for x in zgens for m in zsyms]
         vPrint("xzgens", xzgens)
         xt: X := embed(t, "T"::Symbol::Pol)
-        xmpols: List X := [xreduce(xx, xt, xzgens) for xx in xmgens]
+        ab: AB := algebraBasis(xt, xzgens)$QABP
+        xmpols: List X := [xreduce(xx, ab) for xx in xmgens]
         vPrint("xmpols", xmpols)
 
         xpgens: List X := empty() -- generators of the product relations
@@ -156,7 +166,7 @@ QEtaIdealSamba(C, L): Exports == Implementation where
         while not empty? l repeat
             zi: X := first l
             for zj in l repeat
-                p: X := xreduce(zi*zj, xt, xzgens)
+                p: X := xreduce(zi*zj, ab)
                 vPrint("product", p)
                 xpgens := cons(p, xpgens)
             l := rest l
