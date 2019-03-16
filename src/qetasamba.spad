@@ -79,11 +79,11 @@ Q ==> Fraction Z
 
 )endif
 
-)abbrev domain QABCC QEtaAlgebraBasisContainerCategory
-++ QEtaAlgebraBasisContainerCategory(C, F) is a category for a data
+)abbrev domain QABC QEtaAlgebraBasisCategory
+++ QEtaAlgebraBasisCategory(C, F) is a category for a data
 ++ structure that can be used for reduction modulo an algebra basis
 ++ (samba basis).
-QEtaAlgebraBasisContainerCategory(C, F): Category == Exports where
+QEtaAlgebraBasisCategory(C, F): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
   Exports ==> CoercibleTo OutputForm with
@@ -99,15 +99,15 @@ QEtaAlgebraBasisContainerCategory(C, F): Category == Exports where
 
 )endif
 
-)abbrev domain QETAABC QEtaAlgebraBasisContainer
-++ QEtaAlgebraBasisContainer(C, F) is a domain holding the special
+)abbrev domain QETAAB QEtaAlgebraBasis
+++ QEtaAlgebraBasis(C, F) is a domain holding the special
 ++ structure of a algebra basis with elements that can be used during
 ++ a reduction.
-QEtaAlgebraBasisContainer(C, F): Exports == Implementation where
+QEtaAlgebraBasis(C, F): Exports == Implementation where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
   H ==> XHashTable(Z, List F)
-  Exports ==> QEtaAlgebraBasisContainerCategory(C, F) with
+  Exports ==> QEtaAlgebraBasisCategory(C, F) with
     initialize: F -> %
       ++ initialize(t) creates an empty basis that contains only
       ++ the multiplier t.
@@ -131,16 +131,16 @@ QEtaAlgebraBasisContainer(C, F): Exports == Implementation where
 
 )endif
 
-)abbrev domain QETAXABC QEtaExtendedAlgebraBasisContainer
-++ QEtaAlgebraBasisContainer(C, F) is a domain holding the special
+)abbrev domain QETAXAB QEtaExtendedAlgebraBasis
+++ QEtaAlgebraBasis(C, F) is a domain holding the special
 ++ structure of a algebra basis with elements that can be used during
 ++ a reduction.
-QEtaExtendedAlgebraBasisContainer(C, L, F, AB): Exports == Implementation where
+QEtaExtendedAlgebraBasis(C, L, F, AB): Exports == Implementation where
   C: EuclideanDomain
   L: QEtaGradedAlgebra C
   F: QEtaGradedAlgebra C with (first: % -> L)
-  AB: QEtaAlgebraBasisContainerCategory(C, F)
-  Exports ==> QEtaAlgebraBasisContainerCategory(C, L) with
+  AB: QEtaAlgebraBasisCategory(C, F)
+  Exports ==> QEtaAlgebraBasisCategory(C, L) with
     coerce: AB -> %
       ++ basisElements(x) returns the basis elements of all grades.
   Implementation ==> add
@@ -170,7 +170,7 @@ QEtaExtendedAlgebraBasisContainer(C, L, F, AB): Exports == Implementation where
 QEtaComputationCategory(C, F, AB): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  AB: QEtaAlgebraBasisContainerCategory(C, F)
+  AB: QEtaAlgebraBasisCategory(C, F)
   Exports ==> CoercibleTo OutputForm with
 --    update!: (F, %) -> Void
 --      ++ update!(u, x) adds u to the basis and updates the critical
@@ -224,7 +224,7 @@ that of $b$.
 QEtaReductionCategory(C, F, AB): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  AB: QEtaAlgebraBasisContainerCategory(C, F)
+  AB: QEtaAlgebraBasisCategory(C, F)
   H ==> XHashTable(Z, List F)
   Exports ==> with
     topReducible?: (F, F) -> Boolean
@@ -299,7 +299,7 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
 QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  AB: QEtaAlgebraBasisContainerCategory(C, F)
+  AB: QEtaAlgebraBasisCategory(C, F)
   Impl ==> add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
@@ -364,8 +364,8 @@ QEtaExtendedReduction(C, L, F, AB): Exports == Implementation where
   C: EuclideanDomain
   L: QEtaGradedAlgebra C
   F: QEtaGradedAlgebra C with (first: % -> L)
-  AB: QEtaAlgebraBasisContainerCategory(C, F)
-  XAB ==> QEtaExtendedAlgebraBasisContainer(C, L, F, AB)
+  AB: QEtaAlgebraBasisCategory(C, F)
+  XAB ==> QEtaExtendedAlgebraBasis(C, L, F, AB)
   Exports ==> QEtaReductionCategory(C, F, AB)
   Implementation ==> add
     tracedReduce(traceEnter: (F, AB) -> Void,_
@@ -406,7 +406,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
   H ==> XHashTable(Z, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  AB: QEtaAlgebraBasisContainerCategory(C, F) with
+  AB: QEtaAlgebraBasisCategory(C, F) with
       basisElements: % -> H
   Y: QEtaComputationCategory(C, F, AB)
   Exports ==> with
@@ -498,10 +498,9 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
   H ==> XHashTable(Z, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  AB: QEtaAlgebraBasisContainerCategory(C, F) with
+  AB: QEtaAlgebraBasisCategory(C, F) with
       initialize: F -> %
       basisElements: % -> H
-
   R: QEtaReductionCategory(C, F, AB)
   Exports ==> Join(QEtaComputationCategory(C, F, AB), CoercibleTo OutputForm)
   Implementation ==> add

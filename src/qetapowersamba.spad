@@ -433,14 +433,14 @@ V ==> Vector H -- mapping k -> H
 
 )endif
 
-)abbrev domain XETAABC XEtaAlgebraBasisContainer
-++ XEtaAlgebraBasisContainer(C, F) is a domain holding the special
+)abbrev domain XETAABC XEtaAlgebraBasis
+++ XEtaAlgebraBasis(C, F) is a domain holding the special
 ++ structure of a algebra basis with elements that can be used during
 ++ a reduction in arbitrary positive power (the multipliers), the
 ++ linear basis elements and an order on the component given by an
 ++ index permutation idx if i<j then component idx.i should be counted
 ++ as smaller than component idx.j.
-XEtaAlgebraBasisContainer(C, F): Exports == Implementation where
+XEtaAlgebraBasis(C, F): Exports == Implementation where
   C: EuclideanDomain
   F: XEtaGradedAlgebra C
   Exports ==> CoercibleTo OutputForm with
@@ -520,7 +520,7 @@ XEtaComputationCategory(C: EuclideanDomain, F: XEtaGradedAlgebra C): Category ==
     criticalElements?: % -> Boolean
       ++ criticalElements?(x) returns true if x represents a structure that
       ++ still contains critical elements.
-    algebraBasis: % -> XEtaAlgebraBasisContainer(C, F)
+    algebraBasis: % -> XEtaAlgebraBasis(C, F)
       ++ algebraBasis(x) extracts the currently computed basis from
       ++ the data structure.
     oneStepComputation!: % -> %
@@ -556,7 +556,7 @@ that of $b$.
 XEtaReduction(C, F): Exports == Implementation where
   C: EuclideanDomain
   F: XEtaGradedAlgebra C
-  AB ==> XEtaAlgebraBasisContainer(C, F)
+  AB ==> XEtaAlgebraBasis(C, F)
   Exports ==> with
     topReducible?: (F, F, P) -> Boolean
       ++ topReducible?(u, b, k) returns true iff there exists f in F
@@ -681,7 +681,7 @@ XEtaSambaPackage(C, F, Y): Exports == Implementation where
   C: EuclideanDomain
   F: XEtaGradedAlgebra C
   Y: XEtaComputationCategory(C, F)
-  AB ==> XEtaAlgebraBasisContainer(C, F)
+  AB ==> XEtaAlgebraBasis(C, F)
   Exports ==> with
     sambaComputation: List F -> Y
     samba: List F -> AB
@@ -712,7 +712,7 @@ XEtaComputation(C, F): Exports == Implementation where
   F: XEtaGradedAlgebra C
   FF ==> Record(f1: F, f2: F)
   Products ==> XHashTable(Z, List FF)
-  AB ==> XEtaAlgebraBasisContainer(C, F)
+  AB ==> XEtaAlgebraBasis(C, F)
   Exports ==> XEtaComputationCategory(C, F)
   Implementation ==> add
     Rep ==> Record(ab: AB, ce: List F, havepairs?: Boolean, pairs: Products)
