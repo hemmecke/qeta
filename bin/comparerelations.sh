@@ -56,7 +56,7 @@ dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
 V ==> Vector R
 X ==> Record(poly: R, repr: V, mult: C)
-toR ==> coerce\$PC
+toR ==> coerce\$PolynomialConversion(C, E, syms)
 OF==>OutputForm
 display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
 vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))

@@ -20,67 +20,72 @@ INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
 -------------------------------------------------------------------
+-- The following macros are parametrized by the coefficient domain C.
+-------------------------------------------------------------------
 -- related to Gröbner basis computation
 -- The domain D (DirectProduct) has to be set to specify the term order.
 -- The list of variables have to be given through `syms`.
-Pol  ==> Polynomial C
-LPol  ==> List Pol
-QEG(E) ==> QEtaGroebner(C, E)
-E ==> Monomials(dim, D, syms) -- show DirectProduct as monomials.
-R ==> PolynomialRing(C, E)
-PC ==> PolynomialConversion(C, E, syms)
+Pol C  ==> Polynomial C
+LPol C  ==> List Pol C
 
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
 WIDTH(nn, c) == qcoerce(width(nn, c)$QAuxMEQ)@P
 
 -------------------------------------------------------------------
--- function names with implicit package calling
-QEQMEV ==> QEtaQuotientMonoidExponentVectors
-QEI  ==> QEtaIdeal(C, F1)
-QEtaIdeal ==> QEtaIdealHemmecke -- default variant
-
-xetaQuotientMonoidExponentVectors ==> etaQuotientMonoidExponentVectors $ QEQMEV
-xetaQuotientIdealGenerators ==> etaQuotientIdealGenerators $ QEI
-xetaLaurentIdealGenerators ==> etaLaurentIdealGenerators $ QEI
-xetaRelations ==> etaRelations $ QEI
-
 -- The type of laurent series that we use for expansion.
 -- Should be possible to replace this with SparseUnivariateLaurentSeries.
 -- However, our series are dense anyway.
-
 -------------------------------------------------------------------
 -- related to computation with eta quotients having poles only at infinity
-L  ==> UnivariateLaurentSeries(C , 'q, 0);
-F1 ==> Finite0Series(C, 'q, 0) -- actual computation domain
-ETA  ==> EtaQuotient(C, F1)
-toeta ==> toEta $ ETA
-CF1 ==> QEtaAlgebraCachedPower(C, F1) -- computation domain in cached version
-CPol ==> QEtaAlgebraCachedPower(C, Pol) -- computation pols in cached version
-X1 ==> QEtaExtendedAlgebra(C, CF1, CPol)
-toX1(a, b) ==> embed(a, b::CPol)$X1
+LS C  ==> UnivariateLaurentSeries(C , 'q, 0);
+F1 C ==> Finite0Series(C, 'q, 0) -- actual computation domain
+ETA C  ==> EtaQuotient(C, F1 C)
+toeta ==> toEta $ ETA(C)
+CF1 C ==> QEtaAlgebraCachedPower(C, F1 C) -- computation domain (cached)
+CPol C ==> QEtaAlgebraCachedPower(C, Pol C) -- computation pols in (cached)
+X1 C ==> QEtaExtendedAlgebra(C, CF1 C, CPol C)
+toX1(C, a, b) ==> embed(a::CF1(C), b::CPol(C))$X1(C)
 
-QRED(C, F1) ==> QEtaReduction(C, F1)
-QCOMP(C, F1) ==> QEtaComputation(C, F1, QRED(C, F1))
-QABP1(C, F1) ==> QEtaAlgebraBasisPackage(C, F1, QCOMP(C, F1))
+-- We always use CachedPower versions
+QAB1 C ==> QEtaAlgebraBasis(C, CF1 C)
+QRED C ==> QEtaReduction(C, CF1 C, QAB1 C)
+QCOMP C ==> QEtaComputation(C, CF1 C, QAB1 C, QRED C)
+QSAMBA1 C ==> QEtaSambaPackage(C, CF1 C, QAB1 C, QCOMP C)
 
-QXRED(C, CF1, X1) ==> QEtaExtendedReduction(C, CF1, X1)
-QXCOMP(C, CF1, X1) ==> QEtaComputation(C, X1, QXRED(C, CF1, X1))
-QXABP1(C, CF1, X1) ==> QEtaAlgebraBasisPackage(C, X1, QXCOMP(C, CF1, X1))
+-- Now samba in extended form, i.e., with attached part (all cahed powers)
+QXAB1 C ==> QEtaAlgebraBasis(C, X1 C)
+QXRED C ==> QEtaReduction(C, X1 C, QXAB1 C)
+QXCOMP C ==> QEtaComputation(C, X1 C, QXAB1 C, QXRED C)
+QXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMP C)
 
+-- The following macros yield samba with a zero-reduction test
+-- before the reduction with attached part is repeated.
+QFXRED C ==> QEtaExtendedReduction(C, CF1 C, X1 C, QXAB1 C)
+QFXCOMP C ==> QEtaComputation(C, X1 C, QXAB1 C, QFXRED C)
+QFXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QFXCOMP C)
 -------------------------------------------------------------------
 -- related to computation with eta quotients having poles at any cusp
 -- Must set:
 -- xiord: order of the root of unity
 xisym: Symbol := "ξ"::Symbol;
-UPC ==> UnivariatePolynomial(xisym, C);
-SUPZ2SUPC x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
-SUP2UP x ==> unmakeSUP(SUPZ2SUPC x)$UPC
-MINROOTPOL ==> SUP2UP(cyclotomic(xiord)$CyclotomicPolynomialPackage);
-CX ==> SimpleAlgebraicExtension(C, UPC, MINROOTPOL);
-xi ==> generator()$CX;
+UPxi C ==> UnivariatePolynomial(xisym, C);
+SUPZ2SUP(C, x) ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
+SUP2UP(C, x) ==> unmakeSUP(SUPZ2SUP(C, x))$UPxi(C)
 
-LX ==> UnivariateLaurentSeries(CX, 'q, 0); -- CX is C with roots of unity
+-- minimal polynomial for n-th root of unity
+MINROOTPOL(C, n) ==> SUP2UP(C, cyclotomic(n)$CyclotomicPolynomialPackage);
+-- If xiord = 1 or 2 then set xi==>1 or xi==>-1 respectively and,
+-- furthermore, CX ==> C.
+-- Extension of C with n-th root of unity
+UnityRootExtension(C, n) ==> _
+    SimpleAlgebraicExtension(C, UPxi C, MINROOTPOL(C, n));
+
+-------------------------------------------------------------------
+-- TODO: The following macros must be made more parametrized.
+-- Problem is that we need C, xiord, and xi.
+LX ==> LS CX
 YMSETAQ ==> SymbolicModularSiftedEtaQuotient;
+ETAQG ==> EtaQuotientGamma(C, xiord, CX, xi, LX);
 SETAQG ==> SiftedEtaQuotientGamma(C, xiord, CX, xi, LX);
 MSETAQ ==> ModularSiftedEtaQuotient(C, xiord, CX, xi, LX);
 MODFUNX ==> ModularFunctionExpansions(CX, LX, nn);
@@ -90,7 +95,7 @@ PolCX ==> Polynomial CX
 CPolCX ==> QEtaAlgebraCachedPower(CX, PolCX) -- computation with cached pols
 Xn ==> QEtaExtendedAlgebra(CX, CFn, CPolCX);
 toXn(a, b) ==> embed(a, b::CPolCX)$Xn
-QABPn(CX, Xn) ==> XEtaAlgebraBasisPackage(CX, Xn, XEtaComputation(CX, Xn))
+QABPn ==> XEtaAlgebraBasisPackage(CX, Xn, XEtaComputation(CX, Xn))
 
 -------------------------------------------------------------------
 -- Auxiliary functions
@@ -99,4 +104,6 @@ sigmaInfinity(divs: List P, s: List Z): Z == (_
   shat: Z := 0;_
   for delta in divs for sdelta in s repeat shat := shat + delta * sdelta;_
   shat)
+-------------------------------------------------------------------
+smallerGrade?(x, y) == qetaGrade x < qetaGrade y
 -------------------------------------------------------------------

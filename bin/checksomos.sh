@@ -42,13 +42,15 @@ function fricas_program {
     LEVEL=$1
     cat <<EOF
 )read etacompute
+C ==> Integer
+PolC ==> Pol C
 level := $LEVEL
 )read $SOMOS/somos$LEVEL.input
 )read $DIR/$VARIANT/etaRelations$LEVEL.input
 g := etaRelations$LEVEL;
 maxdeg: N := totalDegree first g
 vPrint("maxdeg", maxdeg);
-f: XHashTable(Symbol, Pol) := table();
+f: XHashTable(Symbol, PolC) := table();
 hkeys: LSym := keys h;
 xkey(k: Symbol, maxdeg: N): String == (_
     b: Z := 10000;_
@@ -77,21 +79,24 @@ divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
 syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
+E ==> Monomials(dim, D, syms)
+R ==> PolynomialRing(C, E)
+PC ==> PolynomialConversion(C, E, syms)
 xnf ==> extendedNormalForm\$QEtaGroebner(C, E);
 gsyms: LSym := indexedSymbols("g", #g)\$QAuxiliaryTools
 toR ==> coerce\$PC
 OF==>OutputForm
 display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
 vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
-printPol(k: Symbol, lsyms: LSym, ldim: N, p: Pol): Void == (_
+printPol(k: Symbol, lsyms: LSym, ldim: N, p: PolC): Void == (_
     DX := DirectProduct(ldim, N); _
     EX := Monomials(ldim, DX, lsyms); _
     RX := PolynomialRing(R, EX); _
     r: RX := 0; _
-    z: Pol := p; _
+    z: PolC := p; _
     for s in lsyms for i in 1..ldim repeat ( _
-        c: Pol := coefficient(p, s, 1); _
-        z: Pol := z - c*s; _
+        c: PolC := coefficient(p, s, 1); _
+        z: PolC := z - c*s; _
         cr: R := toR c; _
         dx: DX := unitVector(i)\$DX; _
         ex: EX := directProduct(dx::Vector(N)); _
@@ -107,7 +112,7 @@ for k in fkeys repeat vPrint(k, toR(f.k));
 
 print("-- Relation relations --"::Symbol::OF)
 for k in fkeys repeat (_
-    p: Pol := xnf(f.k, g, syms, k, "g"); _
+    p: PolC := xnf(f.k, g, syms, k, "g"); _
     lsyms: LSym := cons(k, gsyms); _
     ldim: N := #lsyms; _
     printPol(k, lsyms, ldim, p))

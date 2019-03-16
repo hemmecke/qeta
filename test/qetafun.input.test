@@ -12,6 +12,7 @@
 
 --setup
 C ==> Q
+LX ==> LS CX
 --endsetup
 
 -------------------------------------------------------------------
@@ -30,9 +31,11 @@ r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
 assertEquals(r, [6,0,-5,0])
 
 minroot: P := 60
-yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
+yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t);
 xiord: P := minimalRootOfUnity yf
 assertEquals(xiord, minroot)
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
 f: MSETAQ :=  expandAtAllCusps yf;
 mf: MODFUNX := expansions(f)::MODFUNX
 -- compare result with formula (4) from
@@ -65,9 +68,11 @@ minroot: P := 168
 -- vector r - (c.particular - 20*c.basis.3)(1..4) -- [0,0,1,0]
 -- vector r = (c.particular + 2*c.basis.2 - 22*c.basis.3)(1..4) -- [8,0,-7,0]
 
-yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
+yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t);
 xiord: P := minimalRootOfUnity yf
 assertEquals(xiord, minroot)
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
 
 modfunx x ==> expansions(expandAtAllCusps(x)$MSETAQ)::MODFUNX
 mf: MODFUNX := modfunx yf;
@@ -92,6 +97,10 @@ assertTrue(zero?(mf - rhs))
 -- Check that the sifted computation equals modular computation as prefactor.
 nn: P := 14;
 mm: P := 7;
+xiord := 168
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+
 eqx1: XHashTable(Q, LX) := table()
 eqx2: XHashTable(Q, LX) := table()
 cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
@@ -108,7 +117,7 @@ for cusp in cusps repeat (_
 
 m1: MODFUNX := eqx1 :: MODFUNX
 m2: MODFUNX := eqx2 :: MODFUNX
-assertTrue(zero?(m1 + (-1)*m2)) -- check different construction of m1 and m2.
+assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 --endtest
 
 -------------------------------------------------------------------
@@ -132,6 +141,8 @@ minroot: P := 264;
 yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
 xiord: P := minimalRootOfUnity yf
 assertEquals(xiord, minroot)
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
 f: MSETAQ :=  expandAtAllCusps yf;
 mf: MODFUNX := expansions(f)::MODFUNX
 
@@ -150,7 +161,7 @@ rgens: List List Z := [_
   [2,  2, 10, -14],_
   [4,  0, 12, -16]]
 
-assertEquals(rgens, xetaQuotientMonoidExponentVectors nn)
+assertEquals(rgens, etaQuotientMonoidExponentVectors nn)
 
 ygens: List YMSETAQ := [etaQuotient(nn,r,mm,[0,0],1,0)$YMSETAQ for r in rgens];
 mgens: List MSETAQ := [expandAtAllCusps(x)$MSETAQ for x in ygens];
@@ -165,7 +176,7 @@ repr := 11^2*3068*M.7_
       + 11*(1867*M.1+X(11*2476))*M.3_
       + (- 11/8)*(M.1^3+1011*M.1^2+11*6588*M.1+X(11^2*10880));
 
-ZERO := F + (-1)*repr;
+ZERO := F - repr;
 
 assertTrue zero? ZERO
 --endtest
