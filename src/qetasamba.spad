@@ -89,8 +89,8 @@ QEtaAlgebraBasisCategory(C, F): Category == Exports where
   Exports ==> CoercibleTo OutputForm with
     multiplier: % -> F
       ++ multiplier(x) returns multiplier element.
-    basisElements: (%, Z) -> List F
-      ++ basisElements(x, d) returns the basis elements of grade d.
+    basis: (%, Z) -> List F
+      ++ basis(x, d) returns the basis elements of grade d.
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,6 +111,9 @@ QEtaAlgebraBasis(C, F): Exports == Implementation where
     initialize: F -> %
       ++ initialize(t) creates an empty basis that contains only
       ++ the multiplier t.
+    basis: % -> List F
+      ++ basis(x) returns all basis elements. It is equal to
+      ++ concat(entries basisElements x).
     basisElements: % -> H
       ++ basisElements(x) returns the basis elements of all grades.
   Implementation ==> add
@@ -121,7 +124,8 @@ QEtaAlgebraBasis(C, F): Exports == Implementation where
     initialize(t: F): % == per [t, empty()]
     multiplier(x: %): F == xx.mul
     basisElements(x: %): H == xx.be
-    basisElements(x: %, d: Z): List F == elt(xx.be, d, empty()$List(F))
+    basis(x: %): List F == concat entries xx.be
+    basis(x: %, d: Z): List F == elt(xx.be, d, empty()$List(F))
 
 
 )if LiterateDoc
@@ -149,7 +153,7 @@ QEtaExtendedAlgebraBasis(C, L, F, AB): Exports == Implementation where
     coerce(x: %): OutputForm == xx::OutputForm
     coerce(ab: AB): % == per ab
     multiplier(x: %): L == first multiplier xx
-    basisElements(x: %, d: Z): List L == [first f for f in basisElements(xx, d)]
+    basis(x: %, d: Z): List L == [first f for f in basis(xx, d)]
 
 
 )if LiterateDoc
@@ -255,7 +259,7 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
     reduce: (F, AB) -> F
       ++ reduce(u, ab) returns an element v such that v is not reducible
       ++ modulo ab and "u reduces modulo t and basis to v" where
-      ++ basis is given by the lists of basisElements(ab, d) for all grades.
+      ++ basis is given by the lists of basis(ab, d) for all grades.
       ++ These element lists of h are
       ++ assumed to be sorted by greaterGrade?.
       ++ We assume that qetaLeadingCoefficient(t)=1 and no element of the
@@ -310,7 +314,7 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
         -- if zero? i there is no corresponding element in basis, but
         -- we can use the element 1, i.e. we reduce u by a power of t.
         zero? i => return (1$F)::Union(F, "failed")
-        candidates: List F := basisElements(ab, i)
+        candidates: List F := basis(ab, i)
             -- candidates contains all basis elements b with
             -- positiveRemainder(grade b, grdt) = i in the same order
             -- as given in basis.
@@ -515,7 +519,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
     smallerGrade?(x: F, y: F): Boolean == grade x < grade y
 
     algebraBasis(x: %): AB == xx.ab
-    basisElements(x: %): List F == concat entries basisElements xx.ab
+    basisList(x: %): List F == concat entries basisElements xx.ab
 
     addPair!(f1: F, f2: F, products: Products): Products ==
         g := grade f1 + grade f2
@@ -531,7 +535,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         for b in basis repeat addPair!(u, b, products)
 
     addNewBasisElementPairs!(u: F, x: %): Void ==
-        addBasisElementPairs!(u, basisElements x, x)
+        addBasisElementPairs!(u, basisList x, x)
 
     addGapPair!(t: F, b1: F, b2: F, products: Products): Products ==
         g := grade b2
@@ -562,11 +566,11 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
 
     computePairs!(x: %): Void ==
         --assert(not empty?(xx.be)) -- so there is at least one product
-        basis: List F := basisElements x
+        bas: List F := basisList x
         products: Products := table()
-        while not empty? basis repeat
-            addBasisElementPairs!(first basis, basis, x)
-            basis := rest basis
+        while not empty? bas repeat
+            addBasisElementPairs!(first bas, bas, x)
+            bas := rest bas
         addGapPairs! x
 
     -- Destructively updates basis and critical elements
@@ -584,7 +588,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         -- from the basis into the critical elements.
         i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
         basis: H := basisElements(xx.ab)
-        bas: List F := basisElements(xx.ab, i)
+        bas: List F := basis(xx.ab, i)
         red: List F := empty()
         irr: List F := empty()
 
