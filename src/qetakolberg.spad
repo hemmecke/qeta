@@ -116,10 +116,16 @@ QEtaKolberg: Exports == Implementation where
       ++ the conditions for the parameters are fulfilled.
       ++ This checks whether (nn, mm, s, m, t) is in \Delta^* as
       ++ defined in Definition~\ref{def:modular-input-conditions}.
-    modularConditions?: (P, P, LZ, LZ, P, N) -> Boolean
-      ++ modularConditions?(nn, mm, r, s, m, t) returns true iff all
+    modularConditions?: (P, LZ, P, LZ, P, N) -> Boolean
+      ++ modularConditions?(nn, r, mm, s, m, t) returns true iff all
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
       ++ fulfilled.
+      ++ Compare with rStarConditions from QAuxiliaryModularEtaQuotientPackage.
+    modularConditions?: (P, LZ) -> Boolean
+      ++ modularConditions?(nn, r) returns true iff
+      ++ the eta quotient corresponding to r is a modular function for
+      ++ Gamma_0(nn).
+      ++ It is equivalent to modularConditions?(nn, r, 1, [0], 1, 0).
       ++ Compare with rStarConditions from QAuxiliaryModularEtaQuotientPackage.
     orbitRadu: (Z, P, N) -> List N
     orbit: (Z, P, N) -> List N
@@ -137,7 +143,7 @@ QEtaKolberg: Exports == Implementation where
     etaCoFactorSpace: (P, P, List Z, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ) -- List Z
       ++ etaCoFactorSpace(nn, mm, s, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
-      ++ modularConditions?(nn, mm, members r, s, m, t) is true for any
+      ++ modularConditions?(nn, members r, mm, s, m, t) is true for any
       ++ r = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
@@ -391,7 +397,7 @@ QEtaKolberg: Exports == Implementation where
             dbgPrint("eq:even-m e", u)
         return (b1 or b2)
 
-    modularConditions?(nn: P, mm: P, r: LZ, s: LZ, m: P, t: N): Boolean ==
+    modularConditions?(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): Boolean ==
         not modularInputConditions?(nn, mm, s, m, t) => false
 
         nndivs: LP := DIVISORS nn
@@ -453,6 +459,9 @@ QEtaKolberg: Exports == Implementation where
             false
 
         true
+
+    modularConditions?(nn: P, r: LZ): Boolean ==
+        modularConditions?(nn, r, 1, [0], 1, 0)
 
 )if TODO
      splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==

@@ -147,7 +147,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
             width(level, g(2, 1)),_
             leadingCoefficient(e := etaQuotient(se)\$EQG),_
             xExponent(se)/24,_
-            expansion e]\$Rec_
+            eulerExpansion e]\$Rec_
            for se in lse] for lse in llse]_
 ) else (_
   vPrint("Expansion at cusps", cusps);_

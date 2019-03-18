@@ -1814,6 +1814,10 @@ SymbolicEtaQuotientGamma: SetCategory with
     elt: (%, P) -> SymbolicEtaDeltaGamma
       ++ elt(x, delta) returns the data corresponding to the respective
       ++ delta.
+    modular?: % -> Boolean
+      ++ modular?() returns true if the eta quotient is a modular function
+      ++ for Gamma0(level x), i.e, it returns
+      ++ modularConditions?(level x, exponents x)$QEtaKolberg.
  == add
     HT ==> XHashTable(P, SymbolicEtaDeltaGamma) -- mapping delta to \eta_\delta
     Rep ==> Record(
@@ -1880,6 +1884,8 @@ SymbolicEtaQuotientGamma: SetCategory with
     xExponent(x: %): Z == xx.fxExponent
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
+    modular?(x: %): Boolean ==
+        modularConditions?(level x, exponents x)$QEtaKolberg
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
@@ -2573,7 +2579,7 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
     yy ==> rep y
 
     etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N, gamma: SL2Z): % ==
-        not modularConditions?(nn, mm, r, s, m, t)$QEtaKolberg =>
+        not modularConditions?(nn, r, mm, s, m, t)$QEtaKolberg =>
             error "modular conditions are not fulfilled"
         nndivs: LP := DIVISORS nn
         mmdivs: LP := DIVISORS mm
@@ -2731,6 +2737,8 @@ $x=\unityPower{\frac{\tau}{w_\gamma}}$ where $w_\gamma$ is given by
 )abbrev domain ETAQG EtaQuotientGamma
 ++ EtaQuotientGamma(C, mx, CX, xi, LX) represents the semigroup
 ++ of eta-quotient expansions at gamma.
+++ The eta quotient need not be a modular function, but the (c*tau+d)
+++ factor is always ignored.
 EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
@@ -2748,17 +2756,34 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
       ++ q=monomial(1,1)$LC by monomial(xi^v, u)$LX
     symbolicEtaQuotient: % -> SymbolicEtaQuotientGamma
       ++ symbolicEtaQuotient(x) returns meta-data corresponding to x.
+    eulerExpansion: % -> LX
+      ++ eulerExpansion(e) returns the series expansion of e without
+      ++ any prefactor.
+      ++ The true series expansion (in terms of fractional x powers of e
+      ++ is given by lc * x^p * s where
+      ++ lc = leadingCoefficient e,
+      ++ x = \exp(2\pi i\tau/w) where w=width(m, c),
+      ++ c = gamma(symbolicEtaQuotient e)(2,1),
+      ++ p = (xExponent symbolicEtaQuotient e) / 24
+      ++ s = eulerExpansion e.
     expansion: % -> LX
-      ++ expansion(x) returns the series expansion of x without any prefactor.
+      ++ expansion(e) should only be called if modular?(e) holds,
+      ++ otherwise it might return an error.
+      ++ expansion(e) returns the series expansion of e in terms of
+      ++ x = \exp(2\pi i\tau/w) where w=width(m, c),
+      ++ c = gamma(symbolicEtaQuotient e)(2,1).
     leadingCoefficient: % -> CX
       ++ leadingCoefficient(x) returns the
+    modular?: % -> Boolean
+      ++ modular?(x) returns true if the eta quotient is a modular function
+      ++ for Gamma0(nn) where nn=level(symbolicEtaQuotient x).
   Implementation ==> add
     Rep ==> Record(fsymetaquo: SymbolicEtaQuotientGamma, lc: CX, ser: LX)
     -- The true series expansion of e is given by c * x^p * s where
     -- c = leadingCoefficient e
     -- x = \exp(2\pi i\tau/w) where w=width(m, c)
-    -- p = xExponent symbolicEtaQuotient e
-    -- s = expansion e
+    -- p = (xExponent symbolicEtaQuotient e) / 24
+    -- s = eulerExpansion e
     xx ==> rep x
     -- We maintain a cache of expansions of powers of the Euler function.
     q: Symbol := "q"::Symbol
@@ -2814,7 +2839,14 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 
     symbolicEtaQuotient(x: %): SymbolicEtaQuotientGamma == xx.fsymetaquo
     leadingCoefficient(x: %): CX == xx.lc
-    expansion(x: %): LX == xx.ser
+    eulerExpansion(x: %): LX == xx.ser
+    expansion(x: %): LX ==
+        lc: CX := leadingCoefficient x
+        y: SymbolicEtaQuotientGamma := symbolicEtaQuotient x
+        ord: Z := (xExponent(y) exquo 24)::Z -- order of series
+        monomial(lc, ord)$LX * eulerExpansion x
+
+    modular?(x: %): Boolean == modular? symbolicEtaQuotient x
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     ((x: %) = (y: %)): Boolean == symbolicEtaQuotient x = symbolicEtaQuotient y
@@ -2877,10 +2909,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         for cusp in cusps y repeat
             ye: SymbolicEtaQuotientGamma := y.cusp
             e: EtaQuotientGamma(C, mx, CX, xi, LX) := etaQuotient ye
-            s: LX := expansion e
-            lc: CX := leadingCoefficient e
-            ord: Z := (xExponent(ye) exquo 24)::Z -- order of series
-            hser.cusp := monomial(lc, ord)$LX * s
+            hser.cusp := expansion e
         per [y, hser]
     etaQuotient(m: P, r: LZ): % == etaQuotient(etaQuotient(m, r)$YETAQ)
     level(x: %): P == level(xx.meta)
@@ -3189,7 +3218,7 @@ QEtaModularFunctionTools: Exports == Implementation where
       ++ y=etaQuotient(nn, r, mm, s, m, t)$SymbolicModularSiftedEtaQuotient.
     etaCoFactorInfinity: (P, P, LZ, P, N) -> LZ
       ++ etaCoFactorInfinity(nn, mm, s, m, t) returns a vector r such that
-      ++ modularConditions?(nn, mm, members r, s, m, t)$QEtaKolberg and
+      ++ modularConditions?(nn, members r, mm, s, m, t)$QEtaKolberg and
       ++ etaQuotient(nn, r, mm, s, m,t)$SymbolicModularSiftedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity and
       ++ with smallest pole order.
