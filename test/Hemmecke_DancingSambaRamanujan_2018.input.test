@@ -1,5 +1,18 @@
+-- Via jupytext this file can be shown as a jupyter notebook.
+-- For that one would have to move or link it to a file with
+-- extension ".input".
+
+)clear complete
+assertEquals(x,y)==>(x=y)@Boolean
+assertTrue x ==> x
+
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+
 -- # Problem formulation
---
+
 -- Let $p(n)$ denote the number of partitions of the natural number $n$. Show that for every natural number $k$ the expression $p(11k+6)$ is divisible by 11.
 --
 -- The solution is described in the article (http://www.sciencedirect.com/science/article/pii/S0747717117300147):
@@ -41,7 +54,7 @@
 -- The article is also available as <a
 -- href="http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf">RISC
 -- report 16-06</a>.
---
+
 -- ## Explanation of the session
 --
 -- Let X be an algebra that can be used in with the algorithm `samba`,
@@ -57,13 +70,20 @@
 -- localized at 11, i.e. rational numbers that have no denominator
 -- divisible by 11.
 
+-- +
+-------------------------------------------------------------------
 --setup
+-------------------------------------------------------------------
+-- -
+
 C ==> IntegerLocalizedAtPrime 11
 L ==> F1 C
 X ==> X1 C
+
 -- The following function simply maps the integer coefficients of the
 -- series into the localized coefficient domain or into the rational
 -- number domain Q.
+
 abmap(A, B, x) ==> _
   map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
 zcmap(x) ==> abmap(Z, C, x)
@@ -81,15 +101,27 @@ smaller11(x: PolC, y: PolC):Boolean == _
   exponent leadingCoefficient x < exponent leadingCoefficient y
 smallerT(x: PolC, y: PolC):Boolean == degree(x, 'T) < degree(y, 'T)
 
---endsetup
 
---test:Hemmecke
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
 -- # Relations in terms of the $M_i$'s
+
+-- +
+-------------------------------------------------------------------
+--test:Hemmecke
+-------------------------------------------------------------------
+-- -
+
 
 -- The generators of the $\eta$-quotients of level 22 are given by
 -- these exponents for the $\eta$ functions (with arguments being the
 -- divisors of 22). The variable `rgens` corresponds to the generators
 -- of $R^\infty(22)$.
+
 rgens := etaQuotientMonoidExponentVectors level;
 rgensExpected: List List Z := [_
     [7, -3, 3, -7], [-4, 8, 4, -8], [-2, 6, 6, -10], [-1, 1, 11, -11], _
@@ -122,8 +154,10 @@ xeqgens: List X := [toX1(C, x, s) for x in eqgens for s in msyms];
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_7]$.
+
 tex: X := xeqgens.1
 abex := samba(tex, xeqgens)$QXSAMBA1(C)
+
 -- Due to another critical element selection strategy, the resulting
 -- polynomial is a bit different.
 
@@ -136,7 +170,7 @@ assertEquals([second(x)::PolC for x in bas], abexExpected)
 assertEquals(# bas, 5)
 
 -- ## Relation for divisibility of $p(11k+6)$ by 11
---
+
 -- Let's first define $F$ as on top of page 30 of
 -- \cite{Radu:RamanujanKolberg:2015}, i.e.
 -- $$
@@ -151,6 +185,7 @@ assertEquals(# bas, 5)
 ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
 
 -- Then we select the sub-series given by the (11n+6)-th term.
+
 r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
 r11Expected: Fraction PolZ := _
   1188908248*q^10+342325709*q^9+92669720*q^8+23338469*q^7+5392783*q^6_
@@ -190,6 +225,7 @@ assertTrue(zero? rex)
 -- Due to a different reduction strategy in a newer implementation of
 -- Samba, we don't get exactly the same result as in
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}.
+
 mrex := [(inv(unitPart leadingCoefficient x)::C)*x _
          for x in monomials(second(rex)::PolC)]
 mrexExpectedArticle: LPol C := _
@@ -201,6 +237,7 @@ mrexExpected: LPol C := _
 assertEquals(sort(smaller11, mrex), mrexExpected)
 
 -- Let's normalize the leading coefficient of $F$ to 1.
+
 rexq := (second rex)::PolC;
 cfxq := coefficient(rexq, 'F, 1)
 lcfxq := leadingCoefficient cfxq
@@ -223,6 +260,8 @@ rxqExpected: PolC := _
 assertEquals(rxq, rxqExpected)
 
 -- Let's plug in the original $\eta$-quotients into `rxq`.
+
+
 sers: List L := cons(first fex,eqgens)
 ezArticle := eval(rxqExpectedArticle, c+->c::L, cons('F,msyms), sers)_
       $ PolynomialEvaluation(C, L)
@@ -230,15 +269,23 @@ assertTrue(zero? ezArticle)
 ez := eval(rxq, c+->c::L, cons('F,msyms), sers)_
       $ PolynomialEvaluation(C, L)
 assertTrue(zero? ez)
+
+
+-- +
+-------------------------------------------------------------------
 --endtest
+-------------------------------------------------------------------
+-- -
 
 
--------------------------------------------------------------------
--------------------------------------------------------------------
+-- # Checking modularity
+
+-- +
 -------------------------------------------------------------------
 --test:modularity
--- # Checking modularity
---
+-------------------------------------------------------------------
+-- -
+
 -- We are looking for an expression of
 -- $S=\sum_{k=0}^{\infty}p(11k+6)q^k$ in terms of Dedekind
 -- $\eta$-functions.
@@ -254,14 +301,21 @@ assertTrue(zero? ez)
 -- to $F$ from above indeed leads to a modular function.
 
 assertTrue(modularConditions?(22,[10,2,11,-22],11,[-1,0],11,6))
+
+-- +
+-------------------------------------------------------------------
 --endtest
+-------------------------------------------------------------------
+-- -
 
--------------------------------------------------------------------
--------------------------------------------------------------------
--------------------------------------------------------------------
-
---test:Klein
 -- # Express in Klein's J-invariant
+
+-- +
+-----------------------------------------------------------------
+--test:Klein
+-----------------------------------------------------------------
+-- -
+
 -- Let
 -- $$
 -- U(v):=t^v q \prod_{n=1}^{\infty}(1-q^{11n})\sum_{k=0}^{\infty}p(11k+6)q^k.
@@ -310,7 +364,7 @@ assertTrue(modularConditions?(22,[10,2,11,-22],11,[-1,0],11,6))
 -- The following function simply maps the integer coefficients of the
 -- series into the localized coefficient domain and eventually creates
 -- an object that attaches the indeterminate $J$ to the series.
---
+
 i: L := kleinJInvariant()$QFunctions(C, L);
 j: X := toX1(C, i, J); first j, second j
 
@@ -318,16 +372,17 @@ ip: L := multiplyExponents(i, 11);
 jp: X := embed(ip, Jp); first jp, second jp
 
 -- ### The series $t$
---
+
 -- The value $t$ is given by $$t =
 -- \left(\frac{\eta(\tau)}{\eta(11\tau)}\right)^{12}$$ in terms of $q
 -- = \exp(2\pi i \tau)$.
---
+
 tz: LZ := retract(etaQuotient([1,11],[12,-12])$ETAZ);
 tt: L := zcmap tz;
 t: X := toX1(C, tt, T); first t, second t
 
 -- ## Construct elements suitable for the algebraBasis algorithm
+
 m1: X := t;
 
 -- We need some auxiliary values $m_2$ and $m_3$.
@@ -343,18 +398,32 @@ m3: X := jp*t;
 -- finish.
 
 m := jp; mp := j;
-while (d := qetaGrade(m)$X) > 0 repeat (c := qetaLeadingCoefficient(m)$X; e:N := d::N; m := m-c*j^e; mp:=mp-c*jp^e)
-mp
+while (d := qetaGrade(m)$X) > 0 repeat (_
+    c := qetaLeadingCoefficient(m)$X;_
+    e:N := d::N;_
+    m := m-c*j^e;_
+    mp := mp-c*jp^e)
+
+-- mp
 --
---     [-q^(-121)+O(q^(-110)), -Jp^11+11*744*Jp^10+11*(-2570796)*Jp^9+11*4880620256*_
---     Jp^8+11*(-5550817150590)*Jp^7+11^2*351821430873072*Jp^6+11^2*(-_
---     147929969197380488)*Jp^5+11^2*35519316022933293120*Jp^4+11^2*(-_
---     4373015221856525734395)*Jp^3+11^2*224874476512864841450600*Jp^2+11^2*(-_
---     3096214928567780111700972)*Jp+J]
+--     [-q^(-121)+O(q^(-110)),_
+--     -Jp^11_
+--     +11*744*Jp^10_
+--     +11(-2570796)*Jp^9_
+--     +11*4880620256*Jp^8_
+--     +11*(-5550817150590)*Jp^7_
+--     +11^2*351821430873072*Jp^6_
+--     +11^2*(-147929969197380488)*Jp^5_
+--     +11^2*35519316022933293120*Jp^4_
+--     +11^2*(-4373015221856525734395)*Jp^3_
+--     +11^2*224874476512864841450600*Jp^2_
+--     +11^2*(-3096214928567780111700972)*Jp_
+--     +J]
+
 mgens := [m1,m2,m3]
 
 -- ### The algebra basis computation
---
+
 -- Then we compute the algebra basis for the elements $t=m_1$, $m_2$,
 -- and $m_3$.
 --
@@ -403,7 +472,8 @@ assertEquals(pows, powsExpected)
 
 -- The (absolute value of the) order and the power of 11 in the
 -- leading coefficient of the elements in the algebra basis.
-gl := [[qetaGrade i, unitCanonical qetaLeadingCoefficient i] for i in ab]
+
+gl := [[qetaGrade i, unitCanonical qetaLeadingCoefficient i] for i in basis ab]
 glExpected: List List C := [[7, 11^18], [8, 11^8], [9, 11^4], [11, 11^3],_
   [12, 11^3], [13, 11^3], [14, 1], [16, 1], [17, 11^2], [18, 11],_
   [11*2, 1], [23, 1]]
@@ -415,15 +485,18 @@ assertEquals(gl, glExpected)
 -- $$
 --
 -- Let's do this step by step. We take the partition series.
+
 ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
 
 -- We also take the sub-series given by the (11n+6)-th term of ps as
 -- defined earlier. The coefficients of the series `r11` we want to
 -- check for divisibility by 11.
+
 r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
 
--- Putting all together (except the factor $t^v$) gives the following
--- expression.
+-- Putting all together (except the factor $t^v$) gives the following expression.
+
+
 q: LZ := 'q :: LZ
 fz: LZ := q*eulerFunction(11)$QFunctions(Z, LZ)*r11;
 f: X := embed(zcmap fz, F)
@@ -436,7 +509,8 @@ f: X := embed(zcmap fz, F)
 -- Although for the coefficient domain $\mathbb{Q}$ we find $v=3$,
 -- with the coefficients being in $C=\mathbb{Z}_{(11)}$, the reduction
 -- to zero only starts to work with $v=7$.
-qab := [cqmap first x for x in ab];
+
+qab := [cqmap first x for x in basis ab];
 qt := cqmap first t
 qreds := [zero? reduce(cqmap(first(t^v * f)), qt, qab)$QEtaReduction(Q, LQ)_
           for v in 1..7]
@@ -456,6 +530,7 @@ assertEquals(_
 -- Since all involved series in the algebra basis `ab` have their
 -- representation in terms of $J$, $Jp$, and $T$ attached, we have
 -- found a relation in $F$, $J$, $Jp$, and $T$.
+
 result := reduce(t^7 * f, t, ab)$QEtaReduction(C, X);
 assertTrue(zero? result)
 res := second result;
@@ -464,6 +539,7 @@ assertEquals(variables res, [T, Jp, J, F])
 -- The leading coefficient is a rational number whose numerator and
 -- denominator are not divisible by 11, i.e., the `exponent` (of 11)
 -- of the coefficient is zero.
+
 cf := coefficient(res, 'F, 1);
 lcf := leadingCoefficient cf
 assertTrue(zero? exponent lcf)
@@ -471,9 +547,11 @@ assertTrue(zero? exponent lcf)
 -- Let's normalize the coefficient in front of the variable $F$ such
 -- that it becomes 1, i.e., we multiply by the inverse of the
 -- coefficient.
+
 r := (inv(unitPart lcf)::C)*res;
 
 -- Let us investigate the coefficients of all monomials of $r$.
+
 mr := [(inv(unitPart leadingCoefficient x)::C)*x for x in monomials r];
 sort(smaller11, mr)
 sort(smallerT, mr)
@@ -487,6 +565,7 @@ sort(smallerT, mr)
 -- where $h$ is a polynomial in $\mathbb{Z}_{(11)}[t,j,j_p]$.
 
 -- Let us create output that can directly pasted into a journal paper.
+
 tups := [(d:=degree(x, [T,J,Jp]); [d.1-2,d.2,d.3]) for x in rest sort(smaller11, mr)];
 assertEquals(#tups, 161)
 
@@ -550,6 +629,7 @@ assertEquals(sort tups, tupsExpected)
 
 -- Size of numerator and denominators of the coefficients of the
 -- linear combination of the powerproducts.
+
 sz(x) ==> floor((log(abs(numer(x::Q)::Float))/log(10.0))::Float)::Z
 sizes := remove(0, sort [sz x for x in coefficients r])
 assertEquals(min sizes, 2324)
@@ -586,13 +666,18 @@ rq := r::Polynomial(Fraction Integer);
 zq := eval(rq, c+->c::LQ, fjjpt, [cqmap first f, cqmap i, cqmap ip, zqmap tz])_
       $ PolynomialEvaluation(Q, LQ)
 assertTrue(zero? zq)
+
+-- +
+-------------------------------------------------------------------
 --endtest
-
--------------------------------------------------------------------
--------------------------------------------------------------------
 -------------------------------------------------------------------
 
+-- +
+-------------------------------------------------------------------
 --test:Klein_rational
+-------------------------------------------------------------------
+-- -
+
 -- # The same algorithm can be used over the rational numbers $\mathbb{Q}$
 
 -- However, that computation leads to only 5 elements in the algebra
@@ -664,17 +749,24 @@ monomsExpected: List PolC := [_
   11^6*J*Jp*T^4, 11^7*Jp*T^4, 11^7*J*T^4, 11^7*T^4, 11*Jp^2*T^3,_
   11*Jp*T^3, F*T^3, 11*T^3, Jp^2*T^2, Jp*T^2, T^2]
 assertEquals(monoms, monomsExpected)
+
+-- +
+-------------------------------------------------------------------
 --endtest
+-------------------------------------------------------------------
+-- -
 
--------------------------------------------------------------------
--------------------------------------------------------------------
--------------------------------------------------------------------
-
---test:integer
 -- # The relation in $M_i$'s with integer coefficients
---
+
+-- +
+-----------------------------------------------------------------
+--test:integer
+-----------------------------------------------------------------
+-- -
+
 -- Here $\mathbb{Z}$ is considered as a Euclidean domain wrt the
 -- absolute value as the Euclidean size function.
+
 LZ ==> F1 Z
 XZ ==> X1 Z
 divs := divisors(level)$IntegerNumberTheoryFunctions;
@@ -695,8 +787,8 @@ r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
 fe := pfZ * r11
 fez: XZ := toX1(Z, fe, F)
 
--- Interestingly, we have to multiply by 4, because otherwise the
--- reduction would not return 0.
+-- Interestingly, we have to multiply by 4, because otherwise the reduction would not return 0.
+
 rez := reduce(4*fez, abez)$QXRED(Z)
 assertTrue(zero? rez)
 
@@ -717,14 +809,20 @@ assertEquals(divisibility11, 0)
 ez := eval(rz, c+->c::LZ, cons('F,msyms), cons(first fez,eqgensZ))_
       $ PolynomialEvaluation(Z, LZ)
 assertTrue(zero? ez)
+
+-- +
+-------------------------------------------------------------------
 --endtest
+-------------------------------------------------------------------
+-- -
 
--------------------------------------------------------------------
--------------------------------------------------------------------
--------------------------------------------------------------------
-
---test:Paule
 -- # Paule's proof via computation in $C[t,F]$
+
+-- +
+-----------------------------------------------------------------
+--test:Paule
+-----------------------------------------------------------------
+-- -
 
 LZ ==> F1 Z
 X ==> X1 C
@@ -760,4 +858,8 @@ assertEquals(pol, polExpected)
 -- Theory Conference in honor of Krishna Alladi's 60th birthday"
 -- (Gainesville, March 17-21, 2016).
 -- Compare with formula (8) in \cite{Hemmecke::DancingSambaRamanujan:2018}.
+
+-- +
+-------------------------------------------------------------------
 --endtest
+-------------------------------------------------------------------
