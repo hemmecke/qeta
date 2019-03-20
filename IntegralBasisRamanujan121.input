@@ -1,0 +1,436 @@
+-- # Compute integral basis common denominator
+
+-- Compute integral basis for N=121 by adding to the generators of the
+-- eta quotients of level 121 having only poles at infinity the
+-- p(11n+6) generating series and a series coming from the trace of a
+-- modular eta quotient for N=242 of order -15.
+
+)clear completely
+)set output linear on
+)set output algebra off
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+
+)r projectlibs )quiet
+)r etamacros.input )quiet
+C ==> Q;
+CF ==> CF1 C
+X ==> X1 C
+
+)r ../input/tracemacros )quiet
+
+F1Z ==> F1 Z
+abmap(A, B, x) ==> _
+  map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
+zcmap(x) ==> abmap(Z, C, x)
+
+)set mess time on
+)set mess type on
+)set output linear off
+)set output algebra on
+)set stream calculate 2
+
+nn: P := 121; -- level
+nndivs := DIVISORS nn;
+
+-- We want to involve the series corresponding to $p(11n+6)$.
+
+mm: P := 11; s: List Z := [-1, 0]; m: P := 11;
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
+
+-- We do expansion at the cusp $i\infty$ which corresponds to $1/N$ or to `1/nn` in terms of our session variables.
+QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
+eqmev ==> etaQuotientMonoidExponentVectors $ QEQMEV
+rgens := eqmev nn;
+eqgens := [retract(etaQuotient(nndivs, r)$ETA C) for r in rgens]
+
+-- The generators of the $\eta$-quotients of level 121 are given by these exponents for the $\eta$ functions (with arguments being the divisors of 121).
+-- The variable `rgens` corresponds to the generators of $R^\infty(121)$.
+
+msyms := indexedSymbols("M", #eqgens);
+xgens := [toX1(C, x, s) for x in eqgens for s in msyms]
+
+-- We take a minimal (in terms the order in q) element from the generators and make it special.b
+-- Then we compute an algebra basis for $C[M_1,M_2]$.
+
+xt: X := xgens.1
+
+xab := samba(xt, xgens, 0, onet1Step!)$QXSAMBA1(C)
+# basis xab, [qetaGrade x for x in basis xab]
+
+-- Let's set new variables for each series in the basis.
+
+xtt := toX1(C, first xt, T);
+bsyms := indexedSymbols("B", # basis xab);
+xabbasis := [toX1(C, first x, s) for x in basis xab for s in bsyms];
+grades := [qcoerce(qetaGrade x)@P for x in xabbasis]
+nog := numberOfGaps(qetaGrade xt, grades)
+
+-- # Add the $p(11n+6)$ generating series
+
+-- Now we consider an additional series. Here we take the series corresponding to the $p(11n+6)$ problem.
+
+ps: F1Z := partitionSeries(1)$QFunctions(Z, F1Z)
+r11: F1Z := choose((n: Z): Z +-> m*n+t, ps, 0) -- p(11n+6)
+
+expectedGrade := qetaGrades(nn, r, mm, s, m, t).(1/nn)
+eqcf11 := etaQuotient(nndivs, r)$EtaQuotient(Z, F1Z); --cofactor for r11
+qfactor := ((qetaGrade series eqcf11)-expectedGrade)*24 - prefactor eqcf11
+fcf11 := retract(q24(qfactor)$EtaQuotient(Z, F1Z) * eqcf11)
+fzf := r11 * fcf11; -- modular f with integer coefficients
+ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in F1
+xf := toX1(C, ff, F)
+
+xabb := samba(xtt, xabbasis, nog, onet1Step!)$QXSAMBA1(C)
+xr := reduce(xf, xabb)$QXRED(C)
+
+
+-- # Compute denominator polynomial for integral basis
+
+-- We only need the coefficients of the pricipal part of
+-- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$
+-- where $h_i \in \langle 1, b_1, b_2, b_3, b_4 \rangle_{C[t]}$
+-- in order to find a relation among these $q$-series.
+--
+-- Note that $t$ corresponds to our variable `tex` and $b_1,\ldots,b_4$ to our basis `abex`.
+--
+-- Then $t^i f - h_i$ corresponds to `reduce(xtt^i xf, xtt, xabb)`.
+--
+-- Note that the result $r$ contains in its second component its representation in terms of the given $F$, and the $B_i$.
+
+e1:=37; e2:=102
+rs := [reduce(xtt^e1*xf, xabb)$QXRED(C)]
+for i in e1+1..e2 repeat (_
+  print(i);_
+  rs := cons(reduce(xtt*first(rs), xabb)$QXRED(C), rs))
+rs := reverse! rs;
+[qetaGrade x for x in rs]
+
+[coefficient(second(x)::Pol C, F, 1) for x in rs]
+
+-- Extract the 192 coefficients corresponding to the orders $-191, \ldots, 0$ and compute the kernel of the corresponding matrix.
+
+l := [[qetaCoefficient(first x, i) for i in 0..191] for x in rs];
+mat := transpose matrix l;
+ns := nullSpace mat;
+#ns
+
+-- Extract the coefficients from the vector in the nullspace.
+
+cs := members first ns;
+
+-- Check that the resulting vector indeed yields a relation.
+
+lincomp := [c*rr for c in cs for rr in rs];
+lc := reduce(_+, lincomp);
+zero? lc
+
+qetaCoefficient(lc, 0)
+
+-- Indeed, we have just shown a relation for
+-- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$.
+--
+-- In the second component of this "zero" is it's relation in terms of $F, $$M_1$, and $M_2$.
+-- The "denominator polynomial" is given by the coefficient of $F$.
+
+p := (second lc)::Pol C;
+variables p
+[degree(p, x) for x in variables p]
+
+-- # Computation of the corresponding polynomials $p_0,..,p_4$
+
+-- In order to find the respective cofactors to the $c1$ from above, we must do the whole computation with different attached values, namely T, and B1, B2, B3, B4, for the elements in basis `ab`.
+
+c1:=coefficient(p,F,1);
+c0:=coefficient(p,F,0);
+
+variables c0
+vars := reverse! rest variables c0
+c0s := [coefficient(c0, x, 1) for x in vars];
+degree(c1, T), [degree(x, T) for x in c0s]
+
+gcd cons(c1,c0s)
+
+-- Apart from the $t^{37}$ factor, we get other factors.
+
+fl := factorList factor c1;
+
+[x.exponent for x in fl]
+flfactors := [x.factor for x in fl]
+
+-- # Compute a new basis with the $f$ added
+
+cft := first xtt
+cff := first xf
+cfabbasis := [first x for x in xabbasis]
+-- We know already that the number of gaps will be 31.
+cffab := samba(cft, cons(cff, cfabbasis), 31, cfonet1Step!)$QSAMBA1(C);
+grades := [qcoerce(qetaGrade x)@P for x in basis cffab]
+nog := numberOfGaps(qetaGrade xt, grades)
+
+
+
+
+
+
+
+-- # Add another series not covered by cffab)
+--
+-- We temporarily switch to level 242 and take the trace of a series from
+-- there.
+divs242 := DIVISORS 242;
+rgens242 := etaQuotientMonoidExponentVectors(242)$QEtaQuotientMonoidExponentVectors4ti2
+--eqgens := [retract(etaQuotient(divs242, r)$ETA(Z)) for r in rgens]
+
+r242 := first rgens242
+-- This give a series of order -10.
+eqt := (retract etaQuotient(divs242, r242)$ETA(Z))::F1(C)
+
+-- ## The Atkin-Lehner involution W_2^242
+-- The matrix is given by
+-- matrix [[2, -1], [242, -120]]
+-- or
+-- matrix [2, 1], [242, 122]]
+
+-- We can split the matrix into an element of SL2Z and a triangular matrix.
+alw := matrix [[2, -1], [242, -120]]
+sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
+gamma := sm.red
+
+-- The second matrix just corresponds to going from tau to 2*tau, i.e.,
+-- we must transform eqt2 instead of eqt.
+
+-- Use the functions from qetafun.
+-- First check that we are talking about the same function.
+idgamma: SL2Z := matrix [[1,0],[0,1]]
+yeqg: YETAQG := etaQuotient(242, divs242, r242, gamma);
+modular? yeqg
+xiord: P := minimalRootOfUnity yeqg
+-- We expect no roots of unity.
+one? xiord
+CX := C
+xi := 1
+eqg: ETAQG := etaQuotient yeqg;
+modular? eqg
+expansion eqg
+xord := xExponent yeqg
+u2eqg := choose((n: Z): Z +-> 2*n, expansion eqg, opx)::F1(C)
+-- similar computation with other domain
+--yseqg: YSETAQG := etaQuotient(242, divs242, r242, 1, 0, gamma);
+--px := puiseux(yseqg, 1)$SETAQG
+--opx := (order expansion px / 24)::Z
+--choose((n: Z): Z +-> 24*n, expansion px, opx)
+
+-- u2eqg represents U_2(f|W).
+
+-- Now we compute f + 2*U_2(f|W).
+cftraceeqg := (eqt + 2*u2eqg)::CF
+
+-- Now we can add this element to the algebra basis computed earlier
+-- and hope that we end with a algebra basis for all of M^\infinity(121).
+
+cftracefbas := cons(cftraceeqg, basis cffab);
+genus := genusOfGamma0 121
+cfhfab := samba(cft, cftracefbas, genus, cfonet1Step!)$QSAMBA1(C);
+
+
+xtraceeqg: X := toX1(C, eqt + 2*u2eqg, 'U)
+xtracefbas := cons(xtraceeqg, cons(xf, xabbasis))
+xhfab := samba(xtt, xtracefbas, genus, onet1Step!)$QXSAMBA1(C)
+
+
+# basis xhfab
+grades := [qcoerce(qetaGrade x)@P for x in basis xhfab]
+numberOfGaps(qetaGrade xtt, grades)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- END basis for M^\infty(121)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- -----------------------------------------------------------------
+-- # Investigate another $f_2
+-- $ whose generating series corresponds to $c(11n+1)$
+
+-- The first $f$ had used the parameter $s=(-1,0)$.
+
+s
+
+-- Now we use a function corresponding to the vector $s_2 =(-2,0)$.
+-- As can be seen below, that function already lives in the module generated by $F$ and the original generators $M_1$ and $M_2$.
+
+s2 := [-2,0]
+shat2: Z := sigmaInfinity(mmdivs, s2)
+orbs2 := [orb for tt in 0..m-1 | (orb := orbit(shat2,m,tt); one? # orb)]
+t2: N := first first orbs2
+r2: List Z := etaCoFactorInfinity(nn, mm, s2, m, t2)$QEtaModularFunctionTools
+
+ps2: LZ := ps^2
+r112: LZ := choose((n: Z): Z +-> m*n+t2, ps2, 0)
+ecfz2 := etaQuotient(nndivs, r2)$EtaQuotient(Z, LZ)
+
+expectedGrade := qetaGrades(nn, r2, mm, s2, m, t2).(1/nn)
+qfactor2 := ((qetaGrade series ecfz2)-expectedGrade)*24 - prefactor ecfz2
+
+pf2Z := retract(q24(qfactor2)$EtaQuotient(Z, LZ) * ecfz2);
+fe2z := r112 * pf2Z;
+fe2 := zcmap fe2z;
+f2x: X := xembed(fe2, F)
+
+r2x: X := reduce(f2x, tx, abfx);
+zero? r2x
+
+-- -----------------------------------------------------------------
+-- # Yet another try with $f_{11}$ corresponding to $p(121n+116)$
+
+mm: P := 121; s: List Z := [-1, 0, 0]; m: P := 121;
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
+
+
+r121: LZ := choose((n: Z): Z +-> m*n+t, ps, 0)
+ecfz121 := etaQuotient(nndivs, r)$EtaQuotient(Z, LZ)
+
+expectedGrade := qetaGrades(nn, r, mm, s, m, t).(1/nn)
+qfactor121 := ((qetaGrade series ecfz121)-expectedGrade)*24 - prefactor ecfz121
+
+pf121Z := retract(q24(qfactor121)$EtaQuotient(Z, LZ) * ecfz121);
+fe121z := r121 * pf121Z;
+fe121 := zcmap fe121z;
+f121x: X := xembed(fe121, F121)
+
+-- We reduce first by `abx` and only then by `abfx`.
+
+red121 := reduce(first f121x, first tx, [first x for x in abx]);
+red121f := reduce(red121, first tx, [first x for x in abfx]);
+zero? red121f
+
+-- r11x: X := reduce(f11x, tx, abfx);
+-- zero? r11x
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- -----------------------------------------------------------------
+-- # Algebraic Curve setup
+
+h := etaQuotientIdealGenerators(nn, rgens)$QEtaIdeal(C, L0);
+variables h
+#h
+gb := groebner(h);
+
+dis := eval(discriminant(first gb, M2), M1=T);
+
+disfl := factorList factor dis;
+#disfl
+
+[x.exponent for x in disfl]
+[degree(x.factor, T) for x in disfl]
+disflfactors := [x.factor for x in disfl]
+
+(flfactors = [disflfactors.i for i in [1,2,3,4,7,8]])@Boolean
+
+-- Additional factors in the discriminant.
+
+disflfactors.5,disflfactors.6
+
+
+
+
+
+-- -----------------------------------------------------------------
+-- ## Try with built-in AlgebraicFunctionField
+
+U ==> UnivariatePolynomial('M1, Q)
+UU ==> UnivariatePolynomial('M2, Fraction U)
+modulus: UU := gb.1::UU;
+AFF ==> AlgebraicFunctionField(Q, U, UU, modulus)
+
+basis()$AFF
+
+1--genus()$AFF
+
+1--integralBasis()$AFF
+
+-- Maybe our denominator comes from the fact that our basis is not given in terms of
+-- $[1, M_2, M_2^2, M_2^3, M_2^4]$ but in the following representation.
+
+[second x for x in abex]
+
+[reduce((xeqgens.2)^i, tex, [tex]) for i in 1..4]
+
+
+
+reduce((xeqgens.2)^2, tex, [tex])
