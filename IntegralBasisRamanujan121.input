@@ -33,16 +33,8 @@ zcmap(x) ==> abmap(Z, C, x)
 nn: P := 121; -- level
 nndivs := DIVISORS nn;
 
--- We want to involve the series corresponding to $p(11n+6)$.
-
-mm: P := 11; s: List Z := [-1, 0]; m: P := 11;
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
-orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
-t: N := first first orbs
-r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
-
 -- We do expansion at the cusp $i\infty$ which corresponds to $1/N$ or to `1/nn` in terms of our session variables.
+
 QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
 eqmev ==> etaQuotientMonoidExponentVectors $ QEQMEV
 rgens := eqmev nn;
@@ -73,6 +65,13 @@ nog := numberOfGaps(qetaGrade xt, grades)
 -- # Add the $p(11n+6)$ generating series
 
 -- Now we consider an additional series. Here we take the series corresponding to the $p(11n+6)$ problem.
+
+mm: P := 11; s: List Z := [-1, 0]; m: P := 11;
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
 
 ps: F1Z := partitionSeries(1)$QFunctions(Z, F1Z)
 r11: F1Z := choose((n: Z): Z +-> m*n+t, ps, 0) -- p(11n+6)
@@ -179,24 +178,29 @@ nog := numberOfGaps(qetaGrade xt, grades)
 
 
 -- # Add another series not covered by cffab)
---
+
 -- We temporarily switch to level 242 and take the trace of a series from
 -- there.
+
 divs242 := DIVISORS 242;
 rgens242 := etaQuotientMonoidExponentVectors(242)$QEtaQuotientMonoidExponentVectors4ti2
 --eqgens := [retract(etaQuotient(divs242, r)$ETA(Z)) for r in rgens]
 
 r242 := first rgens242
+
 -- This give a series of order -10.
+
 eqt := (retract etaQuotient(divs242, r242)$ETA(Z))::F1(C)
 
 -- ## The Atkin-Lehner involution W_2^242
+
 -- The matrix is given by
--- matrix [[2, -1], [242, -120]]
+-- `matrix [[2, -1], [242, -120]]`
 -- or
--- matrix [2, 1], [242, 122]]
+-- `matrix [2, 1], [242, 122]]`.
 
 -- We can split the matrix into an element of SL2Z and a triangular matrix.
+
 alw := matrix [[2, -1], [242, -120]]
 sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
 gamma := sm.red
@@ -206,6 +210,7 @@ gamma := sm.red
 
 -- Use the functions from qetafun.
 -- First check that we are talking about the same function.
+
 idgamma: SL2Z := matrix [[1,0],[0,1]]
 yeqg: YETAQG := etaQuotient(242, divs242, r242, gamma);
 modular? yeqg
@@ -219,19 +224,25 @@ modular? eqg
 expansion eqg
 xord := xExponent yeqg
 u2eqg := choose((n: Z): Z +-> 2*n, expansion eqg, opx)::F1(C)
+
 -- similar computation with other domain
+
+-- +
 --yseqg: YSETAQG := etaQuotient(242, divs242, r242, 1, 0, gamma);
 --px := puiseux(yseqg, 1)$SETAQG
 --opx := (order expansion px / 24)::Z
 --choose((n: Z): Z +-> 24*n, expansion px, opx)
+-- -
 
--- u2eqg represents U_2(f|W).
+-- u2eqg represents $U_2(f|W)$.
 
--- Now we compute f + 2*U_2(f|W).
+-- Now we compute $f + 2U_2(f|W)$.
+
 cftraceeqg := (eqt + 2*u2eqg)::CF
 
 -- Now we can add this element to the algebra basis computed earlier
--- and hope that we end with a algebra basis for all of M^\infinity(121).
+-- and hope that we end with a algebra basis for all modular functions
+-- of level 121, i.e., $M^\infty(121)$.
 
 cftracefbas := cons(cftraceeqg, basis cffab);
 genus := genusOfGamma0 121
