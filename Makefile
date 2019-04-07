@@ -40,7 +40,7 @@ all: compile-spad
 SPADFILES=4ti2 qfunct cachedpow \
   qetaalg qetasqrt qetaqmev qetadom qetatool \
   qetasamba qetaradu \
-  qetaicat qetaih qeta3hdp qetair qetais qetasomos \
+  qetaicat qetaih qetaihc qeta3hdp qetair qetais qetasomos \
   qetaauxmeq qetapowersamba qetakolberg qetafun
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input

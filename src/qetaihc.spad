@@ -55,6 +55,19 @@ Here we implement the variant that is described in
 \GB{} computation is needed.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Variant HemmeckeCached}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Most things are generically implemented as a default package in the
+category \code{QEtaIdealCategory}.
+
+The function \code{relationsIdealGenerators} computes $J^{(M)}$ as
+described in \cite[Chapter~7]{Hemmecke+Radu:EtaRelations:2018}.
+
+Everything is as in variant Hemmecke, except that here we wrap the
+domains with \code{QEtaAlgebaCachedPower}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let us start with a few common macros.
@@ -81,8 +94,8 @@ N ==> NonNegativeInteger
 Z ==> Integer
 LSym ==> List Symbol
 
-)abbrev package QETAIH QEtaIdealHemmecke
-QEtaIdealHemmecke(C, L): Exports == Implementation where
+)abbrev package QETAIHC QEtaIdealHemmeckeCached
+QEtaIdealHemmeckeCached(C, L): Exports == Implementation where
   C: EuclideanDomain
   L: Join(UnivariateLaurentSeriesCategory C, QEtaGradedAlgebra C)
   Pol ==> Polynomial C
@@ -90,12 +103,15 @@ QEtaIdealHemmecke(C, L): Exports == Implementation where
   Exports ==> QEtaIdealCategory(C, L)
   Implementation ==> add
     relationsIdealGenerators(mgens: List L): LPol ==
-        X ==> QEtaExtendedAlgebra(C, L, Pol);
+        CL ==> QEtaAlgebraCachedPower(C, L)
+        CPol ==> QEtaAlgebraCachedPower(C, Pol)
+        X ==> QEtaExtendedAlgebra(C, CL, CPol);
         AB ==> QEtaAlgebraBasis(C, X)
-        RED ==> QEtaExtendedReduction(C, L, X, AB)
-        xembed(a, b) ==> embed(x, m::Pol)$X
-        lpol l ==> [second x for x in l]
+        RED ==> QEtaExtendedReduction(C, CL, X, AB)
+        xembed(a, b) ==> embed(x::CL, m::Pol::CPol)$X
+        lpol l ==> [second(x)::Pol for x in l]
         import from Pol
+        import from CPol
 
         Y ==> QEtaComputation(C, X, AB, RED)
         QSAMBA ==> QEtaSambaPackage(C, X, AB, Y)
