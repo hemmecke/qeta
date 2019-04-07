@@ -26,10 +26,24 @@ abmap(A, B, x) ==> _
   map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
 zcmap(x) ==> abmap(Z, C, x)
 
+expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
+    w: P := WIDTH(nn, gamma(2,1))
+    y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG
+    xiord: P := minimalRootOfUnity y
+    if xiord > 2 then
+        CX := UnityRootExtension(C, xiord)
+        xi := generator()$CX
+    else 
+        CX := Q
+        xi :=  -(-1)^xiord
+    e := expansion(puiseux(y, w)$SETAQG)::F1(CX)
+    abmap(CX, C, e)
+    --map(retract, e)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+
 )set mess time on
 )set mess type on
-)set output linear on
-)set output algebra off
+)set output linear off
+)set output algebra on
 )set stream calculate 2
 
 nn: P := 121; -- level
@@ -342,6 +356,13 @@ r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
 ps: F1Z := partitionSeries(1)$QFunctions(Z, F1Z)
 r11: F1Z := choose((n: Z): Z +-> m*n+t, ps, 0) -- p(11n+6)
 
+-- Let's compute the expansion of 
+-- $$
+-- F(\tau) = q^{\frac{13}{24}}
+--           \frac{\eta(\tau)^{11} \eta(11\tau)}{\eta(121\tau)^{11}}
+--           \sum_{k=0}^{\infty}p(11k+6)q^k.
+-- $$
+
 expectedGrade := qetaGrades(nn, r, mm, s, m, t).(1/nn)
 eqcf11 := etaQuotient(nndivs, r)$EtaQuotient(Z, F1Z); --cofactor for r11
 qfactor := ((qetaGrade series eqcf11)-expectedGrade)*24 - prefactor eqcf11
@@ -449,9 +470,90 @@ cffab := samba(cft, cons(cff, cfabbasis), 31, cfonet1Step!)$QSAMBA1(C);
 grades := [qcoerce(qetaGrade x)@P for x in basis cffab]
 nog := numberOfGaps(qetaGrade xt, grades)
 
--- # Add f-expansion at 1 instead of $\infty$
+-- # Add F-expansion at 1 instead of $\infty$
+
+QEQMEVS ==> QEtaQuotientMonoidExponentVectorsStar
+eqmevx ==> etaQuotientMonoidExponentVectorsX$QEQMEVS
+eqmev ==> etaQuotientMonoidExponentVectors$QEQMEV
+
+-- With the cofactor eta quotient corresponding to $r=(11,1,-11)$, we get a modular function for the generating function of $p(11n+6)$ that only has a pole at infinity (corresponding to the cusp $\frac{1}{121}$).
+
+nn, r, mm, s, m, t
+
+fGrades := qetaGrades(nn, r, mm, s, m, t);
+[fGrades.cusp for cusp in cuspsOfGamma0(nn)]
+
+-- A basis for the monoid of all modular eta quotients is given by the following exponent vectors, which in turn correspond to expansions with the following grades. (Note that our concept of grade corresponds to the negated order of the series.)
+
+rs1 := eqmevx nn
+rGrades :=[qetaGrades(nn, r1, mm, [0,0], 1, 0) for r1 in rs1];
+[[h.cusp for cusp in cuspsOfGamma0(nn)] for h in rGrades]
+
+-- Thus by multiplying $f$ with 11 times the eta quotient corresponding to $(-1,0,1)$, we get a modular function that only has a pole of order 55 at the cusp 1.
+
+r1 := members(vector r + 11 * vector rs1.1)
+f1Grades := qetaGrades(nn, r1, mm, s, m, t);
+[f1Grades.cusp for cusp in cuspsOfGamma0(nn)]
+
+-- Let's compute the expansion of $F_1(\gamma_1\tau)$ for the modular function
+--
+-- $$
+-- F_1(\tau) = q^{\frac{13}{24}}
+--             \eta(11\tau)^{11}
+--             \sum_{k=0}^{\infty}p(11k+6)q^k
+-- $$
+-- where
+-- $$
+-- \gamma_1 = \begin{pmatrix} 1 & -1 \\ 1 & 0 \end{pmatrix}
+-- $$
+-- corresponds to the cusp at 1.
+
+)if false
+yf1 := etaQuotient(nn, r1, mm, s, m, t)$YMSETAQ;
+xiord: P := minimalRootOfUnity yf1
+CX := UnityRootExtension(C, xiord);
+xi := generator()$CX;
+af: MSETAQ :=  expandAtAllCusps yf1;
+qetaGrades(expansions(af)::MODFUNX)
+xaf := (expansions(af).1)::F1(CX)
+map(retract, xaf)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+)endif
+
+)set stream calc 2
+
+expansionAtCusp(nn, r, mm, s, m, t, cusp) ==
+    expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, cuspToMatrix(nn, cusp)$QAuxMEQ)
 
 
+xf1 := toX1(C, expansionAtCusp(nn, r1, mm, s, m, t, 1), 'F1)
+
+xtt
+
+xf1bas := [xtt, xgens.2, xf1]
+
+xf1ab := samba(xtt, xf1bas, genus, onet1Step!)$QXSAMBA1(C);
+
+# basis xf1ab
+
+[first x for x in basis xf1ab]
+
+grades1 := [qcoerce(qetaGrade x)@P for x in basis xf1ab]
+
+nog := numberOfGaps(qetaGrade xt, grades1)
+
+xff1bas := [xtt, xgens.2, xf1, xf]
+
+xff1ab := samba(xtt, xf1bas, genus, onet1Step!)$QXSAMBA1(C);
+
+gradesff1 := [qcoerce(qetaGrade x)@P for x in basis xff1ab]
+
+nog := numberOfGaps(qetaGrade xt, gradesff1)
+
+-- +
+rs1 := eqmev nn
+
+rs2 := [members(- vector x) for x in rs1]
+-- -
 
 
 
