@@ -174,10 +174,14 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ m/gcd(c^2,m).
       ++ \cite[Lemma~2.37]{Radu:PhD:2010}
     numberOfGaps: (P, List P) -> P
-        ++ numberOfGaps(n, l) computes
-        ++ reduce(+, [floor(x/n) for x in l]).
+      ++ numberOfGaps(n, l) computes
+      ++ reduce(+, [floor(x/n) for x in l]).
+    dedekindPsi:P -> P
+      ++ dedekindPsi(n) computes the value of the Dedekind psi function.
+      ++ https://en.wikipedia.org/wiki/Dedekind_psi_function
     indexOfGamma0: P -> P
         ++ indexOfGamma0(n) computes the index of Gamma_0(n) in SL2Z.
+        ++ indexOfGamma0(n) is equal to dedekindPsi(n).
     cusps2OfGamma0: P -> List Q
       ++ According to
       ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
@@ -389,7 +393,8 @@ QAuxiliaryModularEtaQuotientPackage: with
         matrix [[a, b], [c, d]]
 
 
-    indexOfGamma0(m: P): P ==
+    indexOfGamma0(m: P): P == dedekindPsi(m)
+    dedekindPsi(m: P): P ==
         r: Q := 1
         for f in factorList factor m repeat
             r := r * (1 + 1/(f.factor))
