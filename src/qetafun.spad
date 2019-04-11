@@ -2792,7 +2792,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
     efc: CachedPower LC := ef :: CachedPower(LC)
     ps: LC := partitionSeries(1)$QFunctions(C, LC)
-    ps1: C := coefficient(ef, 1) -- avoid null pointer by expansion
+    ps1: C := coefficient(ps, 1) -- avoid null pointer by expansion
     psc: CachedPower LC := ps :: CachedPower(LC)
 
     RecC ==> Record(k: Z, c: C)
@@ -2806,7 +2806,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         cx := x.c * cx
         [u*x.k, cx]
 
-    -- In the series s(q) replace q by q^u*xi^v.
+    -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
     substitute(s: LC, u: P, v: N): LX ==
         stc: Stream RecC := terms s
         stx: Stream RecX := map(substituteVariable(u, v), stc)$SFCX
@@ -2972,9 +2972,6 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     xx ==> rep x
      -- We maintain a cache of expansions of powers of the Euler function.
 
-    RecC ==> Record(k: Z, c: C)
-    RecX ==> Record(k: Z, c: CX)
-    SFCX ==> StreamFunctions2(RecC, RecX)
     QFT ==> QFunctionTools(CX, LX)
 
 -------------------------------------------------------------------
@@ -2992,6 +2989,10 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 -------------------------------------------------------------------
 -- Auxiliary functions
 -------------------------------------------------------------------
+    RecC ==> Record(k: Z, c: C)
+    RecX ==> Record(k: Z, c: CX)
+    SFCX ==> StreamFunctions2(RecC, RecX)
+
     substituteVariable(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
         -- replace variable q by xi^v * x^u
         xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
