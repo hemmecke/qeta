@@ -2745,6 +2745,8 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
+  RecC ==> Record(k: Z, c: C)
+  RecX ==> Record(k: Z, c: CX)
   Exports ==> SetCategory with
     --assert(one? xi^mx)
     etaQuotient: SymbolicEtaQuotientGamma -> %
@@ -2777,6 +2779,8 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     modular?: % -> Boolean
       ++ modular?(x) returns true if the eta quotient is a modular function
       ++ for Gamma0(nn) where nn=level(symbolicEtaQuotient x).
+    substituteVariable: (P, N) -> RecC -> RecX
+      ++ Is the function [k, c] +-> [u*k, xi^v*c]
   Implementation ==> add
     Rep ==> Record(fsymetaquo: SymbolicEtaQuotientGamma, lc: CX, ser: LX)
     -- The true series expansion of e is given by c * x^p * s where
@@ -2795,10 +2799,6 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     ps1: C := coefficient(ps, 1) -- avoid null pointer by expansion
     psc: CachedPower LC := ps :: CachedPower(LC)
 
-    RecC ==> Record(k: Z, c: C)
-    RecX ==> Record(k: Z, c: CX)
-    SFCX ==> StreamFunctions2(RecC, RecX)
-
     substituteVariable(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
         -- replace variable q by xi^v * x^u
         xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
@@ -2808,9 +2808,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
 
     -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
     substitute(s: LC, u: P, v: N): LX ==
-        stc: Stream RecC := terms s
-        stx: Stream RecX := map(substituteVariable(u, v), stc)$SFCX
-        series(stx)$LX
+        map(substituteVariable(u, v), s)$QFunctionTools2(C, LC, CX, LX)
 
     eulerFunctionPower(u: P, v: N, rd: Z): LX ==
         zero? rd => 1$LX
@@ -2874,7 +2872,6 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
-  LC ==> SparseUnivariateLaurentSeries(C, q, 0)
   YETAQ ==> SymbolicEtaQuotient
   Exports ==> SetCategory with
     --assert(one? xi^mx)
@@ -2972,44 +2969,8 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     xx ==> rep x
      -- We maintain a cache of expansions of powers of the Euler function.
 
+    import from EtaQuotientGamma(C, mx, CX, xi, LX)
     QFT ==> QFunctionTools(CX, LX)
-
--------------------------------------------------------------------
--- Cache powers of powers of the expansions of the Euler function.
--------------------------------------------------------------------
-    q: Symbol := "q"::Symbol
-    LC ==> SparseUnivariateLaurentSeries(C, q, 0)
-    ef: LC := eulerFunction(1)$QFunctions(C, LC)
-    ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
-    efc: CachedPower LC := ef :: CachedPower(LC)
-    ps: LC := partitionSeries(1)$QFunctions(C, LC)
-    ps1: C := coefficient(ps, 1) -- avoid null pointer by expansion
-    psc: CachedPower LC := ps :: CachedPower(LC)
-
--------------------------------------------------------------------
--- Auxiliary functions
--------------------------------------------------------------------
-    RecC ==> Record(k: Z, c: C)
-    RecX ==> Record(k: Z, c: CX)
-    SFCX ==> StreamFunctions2(RecC, RecX)
-
-    substituteVariable(u: P, v: N): RecC -> RecX == (x: RecC): RecX +->
-        -- replace variable q by xi^v * x^u
-        xiPower: N := qcoerce(positiveRemainder(v*x.k, mx))@N
-        cx: CX := xi^xiPower
-        cx := x.c * cx
-        [u*x.k, cx]
-
-    -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
-    substitute(s: LC, u: P, v: N): LX ==
-        stc: Stream RecC := terms s
-        stx: Stream RecX := map(substituteVariable(u, v), stc)$SFCX
-        series(stx)$LX
-
-    eulerFunctionPower(u: P, v: N, rd: Z): LX ==
-        zero? rd => 1$LX
-        rd < 0 => substitute(power!(psc, -rd)$CachedPower(LC), u, v)
-        substitute(power!(efc, rd)$CachedPower(LC), u, v)
 
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.
@@ -3367,7 +3328,7 @@ ModularFunctionExpansions(C, L, m): Exports == Implementation where
     maxIndex(): P == ncusps
     qetaIndex(x: %): P ==
         --assert(not zero? x) -- therefore for one k qetaGrade(x,k)>=0
-        maxGrade := -1 -- dummy value
+        maxGrade: Z := -1 -- dummy value
         idx: N := 0
         for kn in 1 .. ncusps repeat
             k: P := qcoerce(kn)@P

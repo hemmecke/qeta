@@ -131,6 +131,46 @@ QFunctionTools(C: Ring, L: UnivariateLaurentSeriesCategory C): with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Auxiliary package to create a series from another series by replacing the
+variable q by xi^v*x^u.
+)endif
+
+)abbrev package QFUN2 QFunctionTools2
+++ QFunctionTools2 allows to create a series from another series.
+QFunctionTools2(C, L, CX, LX): Exports == Implementation where
+  C: Ring
+  L: UnivariateLaurentSeriesCategory C
+  CX: Ring
+  LX: UnivariateLaurentSeriesCategory CX
+  S ==> Stream C
+  SX ==> Stream CX
+  RecC ==> Record(k: Z, c: C)
+  RecX ==> Record(k: Z, c: CX)
+  Exports ==> with
+    map: (RecC -> RecX, L) -> LX
+      ++ If x = \sum_{n=m}^\infty c(n)*q^n, then map(h, x) returns
+      ++ a series \sum{n=m}^\infty g(c(n), n)*q^{f(n}}
+      ++ where h([k,c]) is assumed to be equal to [f(k), g(c, k)].
+      ++ f is assumed to be strictly increasing.
+    map: ((C, Z) -> CX, Z -> Z, L) -> LX
+      ++ If x = \sum_{n=m}^\infty c(n)*q^n, then map(g, f, x) returns
+      ++ a series \sum{n=m}^\infty g(c(n), n)*q^{f(n}}.
+      ++ f is assumed to be strictly increasing.
+  Implementation ==> add
+    SFCX ==> StreamFunctions2(RecC, RecX)
+
+    map(f: RecC -> RecX, x: L): LX ==
+        stc: Stream RecC := terms x
+        stx: Stream RecX := map(f, stc)$SFCX
+        series(stx)$LX
+
+    gxf(g: (C, Z) -> CX, f: Z -> Z): RecC -> RecX == (x: RecC): RecX +->
+        [f(x.k), g(x.c, x.k)]
+
+    map(g: (C, Z) -> CX, f: Z -> Z, x: L): LX == map(gxf(g, f), x)
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Convert convert power series by mapping coefficients.
 )endif
 
