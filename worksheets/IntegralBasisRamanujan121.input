@@ -33,7 +33,7 @@ expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
     if xiord > 2 then
         CX := UnityRootExtension(C, xiord)
         xi := generator()$CX
-    else 
+    else
         CX := Q
         xi :=  -(-1)^xiord
     e := expansion(puiseux(y, w)$SETAQG)::F1(CX)
@@ -99,7 +99,7 @@ xabb := samba(xtt, xabbasis, nog, onet1Step!)$QXSAMBA1(C)
 --
 -- In our case we have
 -- $$f|\mathrm{tr}_{121}^{242} = f + 2 f|W_2^{242}|U_2$$
--- where 
+-- where
 -- $$
 -- W_2^{242}=
 -- \begin{pmatrix}
@@ -356,7 +356,7 @@ r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
 ps: F1Z := partitionSeries(1)$QFunctions(Z, F1Z)
 r11: F1Z := choose((n: Z): Z +-> m*n+t, ps, 0) -- p(11n+6)
 
--- Let's compute the expansion of 
+-- Let's compute the expansion of
 -- $$
 -- F(\tau) = q^{\frac{13}{24}}
 --           \frac{\eta(\tau)^{11} \eta(11\tau)}{\eta(121\tau)^{11}}
@@ -520,6 +520,9 @@ map(retract, xaf)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
 )endif
 
 )set stream calc 2
+CX := Q
+
+)r ../input/convenience
 
 expansionAtCusp(nn, r, mm, s, m, t, cusp) ==
     expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, cuspToMatrix(nn, cusp)$QAuxMEQ)
@@ -554,10 +557,66 @@ rs1 := eqmev nn
 
 rs2 := [members(- vector x) for x in rs1]
 -- -
+-- # Add Klein's $j$-invariant
+
+
+-- First expand $j(\tau)$ and $j(11\tau)$ at every cusp of $\Gamma_0(121)$.
+
+mm:=11
+
+rgens := etaQuotientMonoidExponentVectors(nn)$QEtaQuotientMonoidExponentVectors4ti2
+ys := [etaQuotient(nn, r, mm, [0, 0], 1, 0) for r in rgens];
+xiord := max [minimalRootOfUnity x for x in ys]
+
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+
+fs := [expandAtAllCusps(x)$MSETAQ for x in ys];
+
+ms := [expansions(x)::MODFUNX for x in fs];
+
+[qetaGrades x for x in ms]
+
+)r ../input/convenience
+
+hj : XHashTable(Q, LX) := table()
+hj1: XHashTable(Q, LX) := table()
+hj2: XHashTable(Q, LX) := table()
+
+for cusp in cuspsOfGamma0(nn) repeat (_
+  w := WIDTH(nn, denom cusp);_
+  gamma := cuspToMatrix(nn, cusp);_
+  hj.cusp  := kleinJ(1,   gamma, w);_
+  hj1.cusp := kleinJ(11,  gamma, w);_
+  hj2.cusp := kleinJ(121, gamma, w))  
+
+mj  := hj  :: MODFUNX; qetaGrades mj
+mj1 := hj1 :: MODFUNX; qetaGrades mj1
+mj2 := hj2 :: MODFUNX; qetaGrades mj2
+
+mmj  := mj*ms.2*ms.1^25;   qetaGrades mmj
+mmj1 := mj1*ms.1^3*ms.2^3; qetaGrades mmj1
+mmj2 := mj2*ms.1*ms.2;     qetaGrades mmj2
+
+toF1C x ==> map(retract, series(x, 12)::F1(CX))$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+
+xj := toX1(C, toF1C mmj, 'J)
+xj1 := toX1(C, toF1C mmj1, J1)
+xj2 := toX1(C, toF1C mmj2, J2)
+
+-- ## Compute samba with $j$, $j_{11}$, and `xgens`
+
+-- Unfortunately the following basis computation only leads to number of gaps = 31.
+
+gens := concat([xj, xj1, xj2], xgens)
+
+cfjab := samba(first xt, [first x for x in gens], 0, cfonet1Step!)$QSAMBA1(C)
+
+grades := [qcoerce(qetaGrade x)@P for x in basis cfjab]
+nog := numberOfGaps(qetaGrade xt, grades)
 
 
 
--- END basis for M^\infty(121)
 
 
 
@@ -567,36 +626,7 @@ rs2 := [members(- vector x) for x in rs1]
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- -----------------------------------------------------------------
--- # Investigate another $f_2
--- $ whose generating series corresponds to $c(11n+1)$
+-- # Investigate another $f_2$ whose generating series corresponds to $c(11n+1)$
 
 -- The first $f$ had used the parameter $s=(-1,0)$.
 
@@ -626,7 +656,6 @@ f2x: X := xembed(fe2, F)
 r2x: X := reduce(f2x, tx, abfx);
 zero? r2x
 
--- -----------------------------------------------------------------
 -- # Yet another try with $f_{11}$ corresponding to $p(121n+116)$
 
 mm: P := 121; s: List Z := [-1, 0, 0]; m: P := 121;
@@ -680,7 +709,6 @@ zero? red121f
 
 
 
--- -----------------------------------------------------------------
 -- # Algebraic Curve setup
 
 h := etaQuotientIdealGenerators(nn, rgens)$QEtaIdeal(C, L0);
@@ -707,7 +735,6 @@ disflfactors.5,disflfactors.6
 
 
 
--- -----------------------------------------------------------------
 -- ## Try with built-in AlgebraicFunctionField
 
 U ==> UnivariatePolynomial('M1, Q)
@@ -731,3 +758,7 @@ basis()$AFF
 
 
 reduce((xeqgens.2)^2, tex, [tex])
+
+((196-1) + (147-2) + (98-3) + (49-4))/5
+
+

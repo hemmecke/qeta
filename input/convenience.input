@@ -1,0 +1,74 @@
+-- This functions defined in this file assume that the missing values
+-- for the macros in etamacros.input have been set.
+-- In particular C, xiord, and CX.
+
+QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
+
+F1Z ==> F1 Z
+abmap(A, B, x) ==> _
+  map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
+zcmap(x) ==> abmap(Z, C, x)
+
+--generatingSeries for p(m*n+t)
+siftedPartitionSeries(m: P, t: N): F1Z ==
+  ps := partitionSeries(1)$QFunctions(Z, F1Z)
+  choose((n: Z): Z +-> m*n+t, ps, 0)$QFunctionTools(Z, F1Z)
+
+-- generating series for p(m*n+t) with cofactor eta quotient and
+-- the fractional q power.
+modularSiftedPartitionSeries(nn: P, m: P, t: N): F1Z ==
+  mmdivs: List P := DIVISORS m
+  s: List Z := cons(-1, rest [0 for i in mmdivs]);
+  r: List Z := etaCoFactorInfinity(nn, m, s, m, t)$QEtaModularFunctionTools
+  shat: Z := sigmaInfinity(mmdivs, s)
+  orbs := [orb for tt in 0..m-1 | (orb := orbit(shat, m, tt::N); one? # orb)]
+  if not(one? # orbs and one? # first orbs and t = first first orbs) then
+    error "not a single element orbit"
+  -- The following also checks whether we get a modular function.
+  expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn) -- grade at cusp
+  cofact := etaQuotient(DIVISORS nn, r)$EtaQuotient(Z, F1Z); --cofactor for rm
+  e := ((qetaGrade series cofact)-expectedGrade)*24 - prefactor cofact
+  fcf := retract(q24(e)$EtaQuotient(Z, F1Z) * cofact)
+  fzf := fcf*siftedPartitionSeries(m, t)
+
+
+kleinJ(n: P, gamma: SL2Z, w: P): LX ==
+  t := splitMatrix(gamma, n).triang
+  j := kleinJInvariant()$QFunctions(C, LS C)
+  d := t(2,2)
+  u: P := t(1,1)*w/d
+  v: N := t(1,2)*xiord/d
+  substVar ==> substituteVariable $ EtaQuotientGamma(C, xiord, CX, xi, LX)
+  map(substVar(u, v), j)$QFunctionTools2(C, LS C, CX, LX)
+
+)if false
+hj: XHashTable(Q, LX) := table()
+hj11: XHashTable(Q, LX) := table()
+for cusp in cuspsOfGamma0(nn) repeat (_
+  hj.cusp := kleinJ(1, cuspToMatrix(nn, cusp), WIDTH(nn, denom cusp));_
+  hj11.cusp := kleinJ(11, cuspToMatrix(nn, cusp), WIDTH(nn, denom cusp)))
+
+mj   := hj  ::MODFUNX; qetaGrades mj
+mj11 := hj11::MODFUNX; qetaGrades mj11
+)endif
+
+expansionModular(xiord, CX, xi, y, w) ==
+    e := expansion(puiseux(y, w)$SETAQG)::F1(CX)
+    abmap(CX, C, e)
+
+expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
+  w: P := WIDTH(nn, gamma(2,1))
+  y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG
+  xiord: P := minimalRootOfUnity y
+  if xiord > 2 then
+    CX ==> UnityRootExtension(C, xiord)
+    expansionModular(xiord, CX, generator()$CX, y, w)
+  else
+    CX ==> Q
+    expansionModular(xiord, CX, -(-1)^xiord, y, w)
+
+numOfGaps(ab) ==
+  t := multiplier ab
+  n := qetaGrade t
+  grades := [qetaGrade first basis(ab, i) for i in 1..n-1]
+  numberOfGaps(n, grades)$QAuxiliaryModularEtaQuotientPackage

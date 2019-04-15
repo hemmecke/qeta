@@ -6,43 +6,33 @@
 
 )clear completely
 
-)set output linear on
-)set output algebra off
-
-)set output linear off
-)set output algebra on
-
 -- ### Load macros and Choose coefficient domain
 
--- +
 )cd /home/hemmecke/g/qeta/tmp
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
-C ==> Q
---C ==> Z;
---C ==> IntegerLocalizedAtPrime 11
-CF ==> CF1 C
-X ==> X1 C
-)r ../input/tracemacros
-
-F1Z ==> Finite0Series(Z , 'q, 0);
-abmap(A, B, x) ==> _
-  map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
-zcmap(x) ==> abmap(Z, C, x)
-
-)set mess time on
 )set output linear off
 )set output algebra on
 )set stream calculate 20
+)set mess time on
+--C ==> Q
+--C ==> Z;
+C ==> IntegerLocalizedAtPrime 11
+CF ==> CF1 C
+X ==> X1 C
+xiord := 2;
+xi := -1;
+CX := Q
+)r ../input/convenience
+)r ../input/tracemacros
 )set mess type on
--- -
 
 -- ## Samba computation
 
-nn: P := 26; -- level
+nn: P := 22; -- level
 nndivs := DIVISORS nn;
-rgens := etaQuotientMonoidExponentVectors(nn)$QEtaQuotientMonoidExponentVectors4ti2
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
 eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
 
 
@@ -54,18 +44,15 @@ xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
 
 genus := genusOfGamma0 nn
 xt: X := xgens.1
-xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C)
--- xab := samba(xt, xgens)$QXSAMBA1(C)
+--xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C)
+xab := samba(xt, xgens)$QXSAMBA1(C)
 
-grades := [qcoerce(qetaGrade x)@P for x in basis xab];
-# basis xab, grades
-nog := numberOfGaps(qetaGrade xt, grades)
+nog := numOfGaps(xab)
 nog - genus
-
 
 -- The input basis reduces to zero modulo the algebra basis.
 
-rbas := [reduce(x, xab)$QXRED(C) for x in xgens];
+rbas := [reduce(x, xab)$QXRED(C) for x in xgens]
 removeDuplicates sort [zero? x for x in rbas]
 
 -- # Series F: $p(13n+6)$ generating series
@@ -79,43 +66,32 @@ removeDuplicates sort [zero? x for x in rbas]
 
 )clear completely
 
-)set output linear on
-)set output algebra off
-
-)set output linear off
-)set output algebra on
-
 -- ### Load macros and Choose coefficient domain
 
--- +
 )cd /home/hemmecke/g/qeta/tmp
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
+)set output linear off
+)set output algebra on
+)set stream calculate 20
+)set mess time on
 C ==> Q
 --C ==> Z;
 --C ==> IntegerLocalizedAtPrime 11
 CF ==> CF1 C
 X ==> X1 C
+xiord := 2;
+xi := -1;
+CX := Q
+)r ../input/convenience
 )r ../input/tracemacros
-
-F1Z ==> Finite0Series(Z , 'q, 0);
-abmap(A, B, x) ==> _
-  map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
-zcmap(x) ==> abmap(Z, C, x)
-
-)set mess time on
-)set output linear off
-)set output algebra on
-)set stream calculate 20
-)set mess type on
--- -
+--)set mess type on
 
 -- ## p(m n + t)
 
 -- We only need to specify the level $nn$, $m$ (and $mm$) and compute the $t$ automatically.
 
--- +
 nn: P := 26; -- level
 m: P := 13; mm: P := m; s: List Z := [-1, 0];
 mmdivs: List P := DIVISORS mm
@@ -123,31 +99,50 @@ shat: Z := sigmaInfinity(mmdivs, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
 t: N := first first orbs
 
-r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
--- -
-
-ps: F1Z := partitionSeries(1)$QFunctions(Z, F1Z)
-rm: F1Z := choose((n: Z): Z +-> m*n+t, ps, 0)
-
--- Let's compute the expansion of
+-- Let's compute the expansion (at $i\infty$) of
 -- $$
--- F(\tau) = g_r(tau)
+-- F(\tau) = g_r(\tau)
 --           q^{\frac{e}{24}}
 --           \sum_{k=0}^{\infty}p(m k + t)q^k.
 -- $$
 
-nndivs := DIVISORS nn
-expectedGrade := qetaGrades(nn, r, mm, s, m, t).(1/nn)
-eqcf := etaQuotient(nndivs, r)$EtaQuotient(Z, F1Z); --cofactor for rm
-qfactor := ((qetaGrade series eqcf)-expectedGrade)*24 - prefactor eqcf
-fcf := retract(q24(qfactor)$EtaQuotient(Z, F1Z) * eqcf)
-fzf := rm * fcf; -- modular f with integer coefficients
+fzf := modularSiftedPartitionSeries(nn, m, t);
 ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in F1
 xf := toX1(C, ff, F)
+
+nndivs := DIVISORS nn;
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
+msyms := indexedSymbols("M", #rgens)
+mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
+xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
+genus := genusOfGamma0 nn;
+xt: X := xgens.1;
+xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C);
 
 xr := reduce(xf, xab)$QXRED(C)
 
 -- # Series U: N=242, r=[6, - 3, - 1, 1, 5, - 8]
+
+)clear completely
+
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+)set output linear off
+)set output algebra on
+)set stream calculate 20
+)set mess time on
+C ==> Q
+CF ==> CF1 C
+X ==> X1 C
+xiord := 2;
+xi := -1;
+CX := Q
+)r ../input/convenience
+)r ../input/tracemacros
+)set mess type on
 
 -- We can generate a new modular function by applying the trace to
 -- a modular function from $M^\infty(242)$.
@@ -272,40 +267,40 @@ cftraceeq242 := (eq242 + 2*u2eq242g)::CF
 
 xu: X := toX1(C, cftraceeq242, 'U);
 
--- ## `cfuab`=Samba($t, u \cup `xab`$)
+-- # Denominator polynomial for $u$ with respect to `xab`
 
--- Now we can add this element to the algebra basis computed earlier
--- and hope that we end with a algebra basis for all modular functions
--- of level 121, i.e., $M^\infty(121)$.
+-- Take the computation of $u$ = `xu` from the section above.
 
-cft := first xtt
-cfabbasis := [first x for x in basis xab];
-cftracebas := cons(cftraceeq242, cfabbasis)
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+)set output linear off
+)set output algebra on
+)set stream calculate 20
+)set mess time on
+C ==> Q
+--C ==> Z;
+--C ==> IntegerLocalizedAtPrime 11
+CF ==> CF1 C
+X ==> X1 C
+xiord := 2;
+xi := -1;
+CX := Q
+)r ../input/convenience
+)r ../input/tracemacros
+)set mess type on
 
-
-genus
-
-cfuab := samba(cft, cftracebas, genus, cfonet1Step!)$QSAMBA1(C);
-
-
-cfuab
-
-grades := [qcoerce(qetaGrade x)@P for x in basis cfuab]
-nog := numberOfGaps(qetaGrade xt, grades)
-
--- ## xuab=Samba($t, \{m_2,u\}$)
-
-xtracebas := [xtt, xgens.2, xu]
-
-
-xuab := samba(xtt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
-
-
-# basis xuab
-grades := [qcoerce(qetaGrade x)@P for x in basis xuab]
-numberOfGaps(qetaGrade xtt, grades)
-
--- ## Denominator polynomial for $u$ with respect to `xab`
+nn := 121
+nndivs := DIVISORS nn;
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
+msyms := indexedSymbols("M", #rgens)
+mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
+xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
+genus := genusOfGamma0 nn;
+xt: X := xgens.1;
+xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C);
 
 -- We try to find a polynomial $p(t)$ such that .. see below.
 
@@ -370,40 +365,6 @@ gcd cons(c1,c0s)
 fl := factorList factor c1;
 [x.exponent for x in fl]
 flfactors := [x.factor for x in fl]
-
--- ## Try to reduce the order -15 element that comes from level 242
-
-r242_1 := rgens242.1
-
-eqt242_1 := (retract etaQuotient(divs242, r242_1)$ETA(Z))::F1(C)
-
-yeq242_1g: YETAQG := etaQuotient(242, divs242, r242_1, gamma);
-eq242_1g := (expansion(etaQuotient(yeq242_1g)$ETAQG))::F1(C);
-
-ordu2eq242_1g := (order(eq242_1g)/2)::Z
-u2eq242_1g := choose((n: Z): Z +-> 2*n, eq242_1g, ordu2eq242_1g)
-
-cftraceeq242_1 := (eqt242_1 + 2*u2eq242_1g)::CF
-
-xu_1 := toX1(C, cftraceeq242_1, 'U1)
-xr_1 := reduce(xu_1, xuab)$QXRED(C);
-zero? xr_1
-[coefficient(first(xr_1)::F1(C), i) for i in -30..30]
-
--- Note that the `zero?` function only tests negative coefficients. That is not sufficient here, otherwise we could "prove" that some function is a modular functio for $\Gamma_0(121)$ when it is actually not.
-
-xu_u := toX1(C, eqt242_1, 'UU)
-xr_u := reduce(xu_u, xuab)$QXRED(C);
-zero? xr_u
-[coefficient(first(xr_u)::F1(C), i) for i in -30..3]
-
--- However, we see it more easily by reducing the product with
--- $t$ by the algebra basis.
-
-xr_tu := reduce(xt*xu_u, xuab)$QXRED(C);
-first xr_tu
-zero? xr_tu
-
 
 
 
