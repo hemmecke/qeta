@@ -428,8 +428,16 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
       ++ basis that is order-complete, i.e., for each k in 1..qetaGrade(t)-1
       ++ it contain an element b with
       ++ k = positiveRemainder(qetaGrade b, qetaGrade t).
-      ++ If (in case C is not a field) there are several b with that
-      ++ property, then the one with smallest qetaGrade is counted.
+      ++ In case C is not a field, a basis only counts as
+      ++ order-complete if among the b belonging to the same k the one
+      ++ with the highest grade has a unit as leading coefficient.
+      ++ WARNING!
+      ++ If C is not a field it cannot be guaranteed that that the
+      ++ resulting basis is the same as if computing without the genus
+      ++ = number of gaps criterion. One of the untreated elements
+      ++ might lead to a basis element of smaller grade that does not
+      ++ influence the number of gaps, but the property whether or not
+      ++ an element reduces to zero modulo the resulting basis.
     samba: (F, List F, Z, Y -> Y) -> AB
       ++ samba(t, m, g, oneStep!) repeats oneStep! as long as
       ++ there are critical elements in the internal "computation"
@@ -448,8 +456,12 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
     continue?(grdt: Z, g: Z, v: Vector Z, y: Y): Boolean ==
         ab: AB := algebraBasis y
         basis: H := basisElements ab
-        for bas in entries basis repeat
-            grdb := qetaGrade last bas
+        for bas in entries basis | unit? qetaLeadingCoefficient last bas repeat
+            -- bas can contain several element. We know that that list
+            -- is complete if the leading coefficient of the last
+            -- element is a unit. Only then we count the grade of
+            -- the first element of bas.
+            grdb := qetaGrade first bas
             k: Z := positiveRemainder(grdb, grdt)
             if grdb < v.k then v.k := grdb
         numOfGaps: Z := 0
