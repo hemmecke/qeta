@@ -569,7 +569,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
             for j in 2..n repeat -- for all divisors > 1
                 qsetelt!(mat, i+3, j, primePower(qcoerce(d.j)@P, p))
             qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
-        vPrint("rstarConditionMatrix", mat)
+        --vPrint("rstarConditionMatrix", mat)
         return mat
 
     integerNullSpace(mat: MZ): List VZ ==
@@ -592,19 +592,19 @@ QEtaQuotientMonoidExponentVectorsStar: with
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
         rStar: MZ := rStarConditionMatrix m
         gens: List VZ := integerNullSpace rStar
-        vPrint("mgens", gens)
+        --vPrint("mgens", gens)
         mat: MZ := matrix [[x for x in entries v for d in divs] for v in gens]
-        vPrint("mat", mat);
+        --vPrint("mat", mat);
         ligozat: MZ := matrixLigozat(m)$QAuxiliaryModularEtaQuotientPackage
         ligozat := transpose ligozat
-        vPrint("ligozat", ligozat);
+        --vPrint("ligozat", ligozat);
         ords := mat * ligozat
-        vPrint("ords", ords)
+        --vPrint("ords", ords)
         rec: Record(lll: MZ, trf: MZ) := extendedLLL(ords)$LLLReduction
         t: MZ := rec.trf
-        vPrint("rec", rec)
+        --vPrint("rec", rec)
         lat: MZ := t*mat
-        vPrint("lat", lat)
+        --vPrint("lat", lat)
         ll: List List Z := listOfLists lat
         ll2: List List Z := [[-x for x in l] for l in ll]
         sort(ascend $ QMEVAUX, concat(ll, ll2))
