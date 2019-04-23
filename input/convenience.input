@@ -20,6 +20,7 @@ modularSiftedPartitionSeries(nn: P, m: P, t: N): F1Z ==
   mmdivs: List P := DIVISORS m
   s: List Z := cons(-1, rest [0 for i in mmdivs]);
   r: List Z := etaCoFactorInfinity(nn, m, s, m, t)$QEtaModularFunctionTools
+  vPrint("-- cofactor", r)
   shat: Z := sigmaInfinity(mmdivs, s)
   orbs := [orb for tt in 0..m-1 | (orb := orbit(shat, m, tt::N); one? # orb)]
   if not(one? # orbs and one? # first orbs and t = first first orbs) then
@@ -28,10 +29,11 @@ modularSiftedPartitionSeries(nn: P, m: P, t: N): F1Z ==
   expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn) -- grade at cusp
   cofact := etaQuotient(DIVISORS nn, r)$EtaQuotient(Z, F1Z); --cofactor for rm
   e := ((qetaGrade series cofact)-expectedGrade)*24 - prefactor cofact
+  vPrint("-- fractional exponent", e)
   fcf := retract(q24(e)$EtaQuotient(Z, F1Z) * cofact)
   fzf := fcf*siftedPartitionSeries(m, t)
 
-
+-- expansion of j(n*tau) at cusp gamma(1,1)/gamma(2,1).
 kleinJ(n: P, gamma: SL2Z, w: P): LX ==
   t := splitMatrix(gamma, n).triang
   j := kleinJInvariant()$QFunctions(C, LS C)
@@ -40,6 +42,15 @@ kleinJ(n: P, gamma: SL2Z, w: P): LX ==
   v: N := t(1,2)*xiord/d
   substVar ==> substituteVariable $ EtaQuotientGamma(C, xiord, CX, xi, LX)
   map(substVar(u, v), j)$QFunctionTools2(C, LS C, CX, LX)
+
+-- expansion of j(n*tau) at all cusps of Gamma0(nn).
+kleinJn(nn: P, n: N): MODFUNX == (_
+  h := table()$XHashTable(Q, LX);_
+  for cusp in cuspsOfGamma0(nn) repeat (_
+    w := WIDTH(nn, denom cusp);_
+    gamma := cuspToMatrix(nn, cusp);_
+    h.cusp  := kleinJ(n, gamma, w));_
+  h :: MODFUNX)
 
 )if false
 hj: XHashTable(Q, LX) := table()
@@ -69,6 +80,6 @@ expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
 
 numOfGaps(ab) ==
   t := multiplier ab
-  n := qetaGrade t
-  grades := [qetaGrade first basis(ab, i) for i in 1..n-1]
+  n := qetaGrade(t)::P
+  grades := [qetaGrade(first basis(ab, i))::P for i in 1..n-1]
   numberOfGaps(n, grades)$QAuxiliaryModularEtaQuotientPackage
