@@ -21,35 +21,21 @@ X ==> X1 C
 
 )r ../input/tracemacros )quiet
 
-F1Z ==> F1 Z
-abmap(A, B, x) ==> _
-  map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
-zcmap(x) ==> abmap(Z, C, x)
+nn: P := 121; -- level
+nndivs := DIVISORS nn;
 
-expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
-    w: P := WIDTH(nn, gamma(2,1))
-    y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG
-    xiord: P := minimalRootOfUnity y
-    if xiord > 2 then
-        CX := UnityRootExtension(C, xiord)
-        xi := generator()$CX
-    else
-        CX := Q
-        xi :=  -(-1)^xiord
-    e := expansion(puiseux(y, w)$SETAQG)::F1(CX)
-    abmap(CX, C, e)
-    --map(retract, e)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+xiord: P := 2;
+xi := -1;
+CX := Q;
+)r ../input/convenience )quiet
+
+-- We do expansion at the cusp $\infty$ which corresponds to $1/N$ or to `1/nn` in terms of our session variables.
 
 )set mess time on
 )set mess type on
 )set output linear off
 )set output algebra on
 )set stream calculate 2
-
-nn: P := 121; -- level
-nndivs := DIVISORS nn;
-
--- We do expansion at the cusp $i\infty$ which corresponds to $1/N$ or to `1/nn` in terms of our session variables.
 
 QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
 eqmev ==> etaQuotientMonoidExponentVectors $ QEQMEV
@@ -76,10 +62,10 @@ xab := samba(xt, xgens, 0, onet1Step!)$QXSAMBA1(C)
 xtt := toX1(C, first xt, T);
 bsyms := indexedSymbols("B", # basis xab);
 xabbasis := [toX1(C, first x, s) for x in basis xab for s in bsyms];
-grades := [qcoerce(qetaGrade x)@P for x in xabbasis]
-nog := numberOfGaps(qetaGrade xt, grades)
+--grades := [qcoerce(qetaGrade x)@P for x in xabbasis]
+nog := numOfGaps(xab)
 genus := genusOfGamma0 121
-xabb := samba(xtt, xabbasis, nog, onet1Step!)$QXSAMBA1(C)
+xabb := samba(xtt, xabbasis, nog)$QXSAMBA1(C);
 
 -- With this number of gaps (96), we have not yet reached the
 -- genus of the modular curve. Thus we must find another modular
@@ -374,13 +360,17 @@ xf := toX1(C, ff, F)
 -- The generating series does not reduce to zero modulo the
 -- algebra basis `xab`, but it does modulo the basis `xuab`.
 
--- +
+)set output linear on
+)set output algebra off
+
+ff := zcmap modularSiftedPartitionSeries(121, m, t);
+xf := toX1(C, ff, F)
+
 xr := reduce(xf, xab)$QXRED(C);
 zero? xr
 
 xfr := reduce(xf, xuab)$QXRED(C);
 zero? xfr
--- -
 
 -- Note the the relation looks pretty ugly. Coefficients are too big.
 
@@ -562,58 +552,105 @@ rs2 := [members(- vector x) for x in rs1]
 
 -- First expand $j(\tau)$ and $j(11\tau)$ at every cusp of $\Gamma_0(121)$.
 
-mm:=11
-
 rgens := etaQuotientMonoidExponentVectors(nn)$QEtaQuotientMonoidExponentVectors4ti2
-ys := [etaQuotient(nn, r, mm, [0, 0], 1, 0) for r in rgens];
+ys := [etaQuotient(nn, r, 1, [0], 1, 0) for r in rgens];
 xiord := max [minimalRootOfUnity x for x in ys]
 
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+CX := UnityRootExtension(C, xiord);
+xi := generator()$CX;
 
 fs := [expandAtAllCusps(x)$MSETAQ for x in ys];
-
 ms := [expansions(x)::MODFUNX for x in fs];
-
 [qetaGrades x for x in ms]
 
 )r ../input/convenience
 
-hj : XHashTable(Q, LX) := table()
-hj1: XHashTable(Q, LX) := table()
-hj2: XHashTable(Q, LX) := table()
+mj0 := kleinJn(nn, 11^0); qetaGrades mj0
+mj1 := kleinJn(nn, 11^1); qetaGrades mj1
+mj2 := kleinJn(nn, 11^2); qetaGrades mj2
 
-for cusp in cuspsOfGamma0(nn) repeat (_
-  w := WIDTH(nn, denom cusp);_
-  gamma := cuspToMatrix(nn, cusp);_
-  hj.cusp  := kleinJ(1,   gamma, w);_
-  hj1.cusp := kleinJ(11,  gamma, w);_
-  hj2.cusp := kleinJ(121, gamma, w))  
-
-mj  := hj  :: MODFUNX; qetaGrades mj
-mj1 := hj1 :: MODFUNX; qetaGrades mj1
-mj2 := hj2 :: MODFUNX; qetaGrades mj2
-
-mmj  := mj*ms.2*ms.1^25;   qetaGrades mmj
-mmj1 := mj1*ms.1^3*ms.2^3; qetaGrades mmj1
-mmj2 := mj2*ms.1*ms.2;     qetaGrades mmj2
+mmj0 := mj0*ms.1^25*ms.2;   qetaGrades mmj0
+mmj1 := mj1*ms.1^3 *ms.2^3; qetaGrades mmj1
+mmj2 := mj2*ms.1   *ms.2;   qetaGrades mmj2
 
 toF1C x ==> map(retract, series(x, 12)::F1(CX))$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
 
-xj := toX1(C, toF1C mmj, 'J)
+xj0 := toX1(C, toF1C mmj0,'J0)
 xj1 := toX1(C, toF1C mmj1, J1)
 xj2 := toX1(C, toF1C mmj2, J2)
 
--- ## Compute samba with $j$, $j_{11}$, and `xgens`
+-- ## Compute samba with $j_0$, $j_1$, and `xgens`
 
 -- Unfortunately the following basis computation only leads to number of gaps = 31.
+--
+-- We do not compute with the extended basis, since then the computation takes quite some time (1440 seconds) to reduce the representation part.
+--
+-- Since we already know that the computation will end with a basis having gap number 31, we can abort the computation when we have reached a basis with gap number 31.
 
-gens := concat([xj, xj1, xj2], xgens)
+gens := concat([xj0, xj1], xgens)
 
-cfjab := samba(first xt, [first x for x in gens], 0, cfonet1Step!)$QSAMBA1(C)
+cfjab := samba(first xt, [first x for x in gens], 31, cfonet1Step!)$QSAMBA1(C)
 
 grades := [qcoerce(qetaGrade x)@P for x in basis cfjab]
-nog := numberOfGaps(qetaGrade xt, grades)
+numOfGaps(cfjab)
+
+-- ## Compute samba with $j_0$, $j_2$, and `xgens`
+
+-- Computing with $j(121\tau)$ instead of $j(11\tau)$ leads to an integral basis with gap number 6.
+
+gens := concat([xj0, xj2], xgens)
+
+-- With aborting the computation when we have reached gap number = genus, it takes about 400 seconds to compute this basis.
+
+xjab := samba(xt, gens, genus, onet1Step!)$QXSAMBA1(C)
+
+numOfGaps(xjab)
+
+
+
+
+
+
+-- # nthRoot and functional inverse
+
+)clear completely
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+)set output linear off
+)set output algebra on
+)set stream calculate 20
+)set mess time on
+C ==> Q
+CF ==> CF1 C
+X ==> X1 C
+xiord := 5;
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+)r ../input/convenience
+)r ../input/tracemacros
+)set mess type on
+
+nn: P := 22; -- level
+nndivs := DIVISORS nn;
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
+t := (eqgens.1)::F1(C)
+
+p := nthRoot(t, 5)
+px := map(coerce, p)$Finite0SeriesFunctions2(C, CX, 'q, 'q, 0, 0)
+ix := 1/px
+qx: F1(CX) := monomial(1,1)
+
+h := qx*px
+g := laurent(0, lagrange(taylorRep h))$F1(CX)
+
+qs := [g(xi^i * ix) for i in 0..5];
+qs.1
+
+reduce(_+, qs,0)
+
 
 
 
@@ -760,5 +797,7 @@ basis()$AFF
 reduce((xeqgens.2)^2, tex, [tex])
 
 ((196-1) + (147-2) + (98-3) + (49-4))/5
+
+xfr
 
 
