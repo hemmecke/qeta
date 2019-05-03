@@ -194,7 +194,7 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
       ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
       ++ cusps(m) returns all the cusps for Gamma_0(m) sorted first by
-      ++ denominator and then (among the cusps with the same denominatore)
+      ++ denominator and then (among the cusps with the same denominator)
       ++ by the numerator of the cusp.
     numberOfCuspsOfGamma0: P -> P
       ++ numberOfCuspsOfGamma0(m) returns the number of cusps of level m.
@@ -216,11 +216,21 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ as described in qetafun.spad, i.e., such that 0<=m2(1,2)<det(mat)/g
       ++ where g = gcd(a, c) and mat=[[a,b],[c,d]].
       ++ Input condition: a*d-b*c>0.
-    cuspToMatrix: (P, Q) -> MZ
+    cuspToMatrix: (P, Q) -> SL2Z
       ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]] such
       ++ that splitMatrix(gamma, m) returns two matrices [m1, m2] with
       ++ m1*m2 = [[m*a, c], m*b, d]] and m1 being in SL_2(Z) and m2 being
       ++ a triangular matrix with 0 <= m2(1,2) < m/c.
+    rightCosetRepresentatives: (P, P) -> List SL2Z
+      ++ rightCosetRepresentatives(mm, nn) returns a list of right
+      ++ coset representatives of
+      ++ $\Gamma_0(mm*nn) \backslash \Gamma_0(mm)$.
+    doubleCosetRepresentatives: P -> List SL2Z
+      ++ doubleCosetRepresentatives(nn) returns a list of right double
+      ++ coset representatives of
+      ++ $\Gamma_0(mm*nn) \backslash \Gamma_0(nn) / SL_2(\setZ)_\infty$
+      ++ where $SL_2(\setZ)_\infty are matrices of the form [[1,h],[0,1]]
+      ++ with h being an integer.
     rationalSquareRoot: Q -> Record(rat: Q, rootOf: P)
       ++ if z = rationalSquareRoot(x) then x = (z.rat)^2 * z.root
     minimalSquareRootOfUnity: P -> P
@@ -539,6 +549,57 @@ $a\in X_c$.
         x: Z := d
         while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
         return e
+
+-------------------------------------------------------------------
+-- auxiliary function
+-------------------------------------------------------------------
+
+    -- This function corresponds to $\rho_{m,n}(\lambda)$ in
+    -- \cite[Definition~2.42]{Radu:PhD:2010}.
+    -- The loop terminates because of \cite[Lemma~2.41]{Radu:PhD:2010}.
+    rho(lambda: Z, m: Z, n: Z): Z ==
+        --assert(lambda>=0)
+        --assert(m*n>0)
+        --assert(one? gcd [lambda, m, n])
+        r := lambda
+        while not one? gcd(r, n) repeat r := r + m
+        return r
+
+    -- This function corresponds to S_{N,\delta} in
+    -- \cite[Definition~2.44]{Radu:PhD:2010}.
+    lambdas(delta: Z, nn: Z): List Z ==
+        --assert(delta*nn>0)
+        --assert((nn exquo delta) case Z)
+        m: Z := (nn exquo delta)::Z
+        g: Z := gcd(m, delta)
+        [rho(lambda, m, delta) for lambda in 0..m-1 | one? gcd(g, lambda)]
+
+    -- This function corresponds to just one matrix from R_{N,\delta}
+    -- for a concrete \lambda.
+    cosetRep(lambda: Z, delta: Z, qm: Z): SL2Z ==
+        --assert(lambda>=0)
+        --assert(delta*qm>0)
+        --assert(one? gcd(delta, qm))
+        c := lambda * qm
+        REC ==> Record(coef1: Z, coef2: Z, generator: Z)
+        rec: REC := extendedEuclidean(delta, lambda*qm)
+        return matrix [[rec.coef1, -rec.coef2], [c, delta]]
+
+    -- This function corresponds to R_{N,\delta} in
+    -- \cite[Lemma~2.44]{Radu:PhD:2010}.
+    rightCosetReps(delta: Z, mm: Z, nn: Z): List SL2Z ==
+        --assert(delta * mm * nn > 0)
+        [cosetRep(lambda, delta, mm) for lambda in lambdas(delta, nn)]
+
+-------------------------------------------------------------------
+-- exported function
+-------------------------------------------------------------------
+    rightCosetRepresentatives(mm: P, nn: P): List SL2Z ==
+        concat [rightCosetReps(delta, mm, nn) for delta in divisors(nn)$INTF]
+
+    doubleCosetRepresentatives(nn: P): List SL2Z ==
+        [cuspToMatrix(nn, cusp) for cusp in cuspsOfGamma0(nn)]
+
 
 )if LiterateDoc
 \bibliography{qeta}
