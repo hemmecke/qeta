@@ -37,6 +37,7 @@ xdbgPrint(x,y) ==> rhx:="42"
 
 \newcommand{\setS}{\mathbb{S}}
 \newcommand{\modularOrbit}[1]{\mathcal{O}_{#1}}
+\DeclareMathOperator{\trace}{tr}
 
 \usepackage{makeidx}
 \makeindex
@@ -1563,6 +1564,135 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
 
 
 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Application of $U_m$ to $g_{r,\gamma}$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $m \in \setN$, $m>0$, $r \in R^*(mN)$,
+$\defineNotation[gamma]{\gamma} =
+\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+SL_2(\setZ)$.
+%
+We define
+\begin{gather}
+  g_{r, \gamma}(\tau) := g_r(\gamma\tau).
+\end{gather}
+
+In this section we want to determine a formula for
+$(U_m g_{r, \gamma})$.
+
+\begin{align*}
+  (U_m g_{r, \gamma})(\tau)
+  &=
+    \frac{1}{m}\sum_{\lambda=0}^{m-1}
+    g_{r,\gamma}\left(\frac{\tau+\lambda}{m}\right)\\
+  &=
+    \frac{1}{m}\sum_{\lambda=0}^{m-1}
+    g_r\left(
+    \gamma
+    \begin{pmatrix}1&\lambda\\0&m\end{pmatrix}
+    \tau\right)\\
+  &=
+    \frac{1}{m}\sum_{\lambda=0}^{m-1}
+    g_r\left( \gamma_{m,\lambda} \tau\right)
+\end{align*}
+where
+$ \gamma_{m,\lambda} = \gamma
+ \left(\begin{smallmatrix}1&\lambda\\0&m\end{smallmatrix}\right)
+ = \left(\begin{smallmatrix}
+     a & a \lambda + b m\\
+     c & c \lambda + d m
+   \end{smallmatrix}\right)$.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \subsection{The trace and the Atkin-Lehner involution applied to
+   $g_r$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+See, for example, \cite{Kohnen:WeierstrassPointsAtInfinity:2004}.
+
+We only treat the special case where $m=2$ and $N=121$.
+
+Then
+\begin{align*}
+  W = W_2^{242}
+  &=
+    \begin{pmatrix}
+      2 & 0\\
+      242 & 1
+    \end{pmatrix}\\
+    %
+  \gamma_{2,0}
+  &=
+    \begin{pmatrix}
+      2 & 0\\
+      242 & 1
+    \end{pmatrix}
+    \begin{pmatrix}
+      1 & 0\\
+      0 & 2
+    \end{pmatrix}
+  =
+    \begin{pmatrix}2&0\\242&2\end{pmatrix}
+  =
+    \begin{pmatrix}1&0\\121&1\end{pmatrix}
+    \begin{pmatrix}2&0\\0&2\end{pmatrix}
+  \\
+  \gamma_{2,1}
+  &=
+    \begin{pmatrix}
+      2 & 0\\
+      242 & 1
+    \end{pmatrix}
+    \begin{pmatrix}
+      1 & 1\\
+      0 & 2
+    \end{pmatrix}
+  =
+    \begin{pmatrix}2&2\\242&244\end{pmatrix}
+  =
+    \begin{pmatrix}1&1\\121&122\end{pmatrix}
+    \begin{pmatrix}2&0\\0&2\end{pmatrix}
+\end{align*}
+
+Since $\left(\begin{smallmatrix}2&0\\0&2\end{smallmatrix}\right)\tau =
+\tau$, we can simply ignore this matrix and write
+\begin{align*}
+  (U_2 g_{r, W})(\tau)
+  &=
+    \frac{1}{2}\left(g_r(\gamma'_{2,0}\tau) + g_r(\gamma'_{2,1}\tau)\right)
+\end{align*}
+for
+$\gamma'_{2,0} =
+\left(\begin{smallmatrix}1&0\\121&1\end{smallmatrix}\right)$ and
+$\gamma'_{2,0} =
+\left(\begin{smallmatrix}1&1\\121&122\end{smallmatrix}\right)$.
+
+Since 2 is a prime, we get from
+\cite{Kohnen:WeierstrassPointsAtInfinity:2004} that
+$\trace_{121}^{242}: M^\infty(242) \to M^\infty(121)$ can be computed via
+\begin{gather*}
+  g_r|\trace_{121}^{242}
+  = g_r + 2 U_2(g_r|W_2^{242})
+  = g_r + g_r|\gamma'_{2,0} + g_r|\gamma'_{2,1}.
+\end{gather*}
+Note that the width of $\gamma'_{2,0}$ and $\gamma'_{2,1}$ is 2, so in
+our formula \eqref{eq:modular-g_r(gamma*tau)} we have
+$x=q^{\frac{1}{2}}$.
+
+Indeed the identity matrix, $\gamma'_{2,0}$, and $\gamma'_{2,1}$ are
+three coset representative for
+$\Gamma_0(242) \backslash \Gamma_0(121)$.
+%
+See function \code{rightCosetRepresentatives} in
+\PathName{qetaauxmeq.spad} and \cite[Lemma~2.44]{Radu:PhD:2010}.
 
 
 
