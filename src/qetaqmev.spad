@@ -106,6 +106,7 @@ SQ ==> Matrix Q -- SquareMatrix(n, Q)
 MZ ==> Matrix Z
 VZ ==> Vector Z
 VQ ==> Vector Q
+QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -452,52 +453,45 @@ QEtaQuotientMonoidExponentVectors4ti2: with
       ++ the formula (16) from \cite{Radu:RamanujanKolberg:2015}, i.e.
       ++ (together with the zero vector) they describe the monoid
       ++ E^\infty(m).
+    etaQuotientMonoidExponentVectors: (P, List Z) -> List List Z
   == add
-    a ==> aLigozat $ QAuxiliaryModularEtaQuotientPackage
+    a ==> aLigozat $ QAuxMEQ
     QMEVAUX ==> QEtaQuotientMonoidExponentVectorsAux
 
-    monoidGenerators(m: P, n: N, d: VZ): List VZ ==
-        fl: List Record(factor: Z, exponent: N) := factors factor m
-        cols: P := qcoerce(n + 2 + #fl)@P
-        rows: P := cols
-        mat: MZ := new(rows, cols, 0)
-        for i in 1..n-1 repeat -- do not include row for d.j=m
-            for j in 1..n repeat qsetelt!(mat, i, j, a(m, d.i, d.j))
-        -- sum(r(d.i), i=1..n)=0
-        for j in 1..n repeat qsetelt!(mat, n, j, 1)
-        -- sum(d.i * r(d.i), i=1..n+1) = 0 (mod 24)
-        for j in 1..n repeat qsetelt!(mat, n+1, j, d.j)
-        qsetelt!(mat, n+1, n+1, 24) -- additional variable for (mod 24)
-        -- sum(d.(n+2-i) * r(d.i), i=1..n+1) = 0 (mod 24)
-        for j in 1..n repeat qsetelt!(mat, n+2, j, d(n+1-j))
-        qsetelt!(mat, n+2, n+2, 24) -- additional variable for (mod 24)
-        -- product is rational square
-        for i in 1..#fl for fe in fl repeat
-            k := n+2+i
-            p: P := qcoerce(fe.factor)@P
-            for j in 2..n repeat -- for all divisors > 1
-                dj: P := qcoerce(d.j)@P
-                e: N := primePower(dj, p)$QAuxiliaryModularEtaQuotientPackage
-                qsetelt!(mat, k, j, e)
-            qsetelt!(mat, k, k, 2) -- additional variable for (mod 2)
-
+    -- monoidGenerators(nn, idivs) takes the level nn and a list of
+    -- indices idivs (subset of 1..n, which corresponds to the cusps
+    -- a/d.i for i in idivs).
+    -- For matrix A_N^\infty of formula (9) in
+    -- \cite{Hemmecke+Radu:EtaRelations:2018}, the variable idivs
+    -- should be [i for i in 1..n-1].
+    -- In general this function computes the (vertical) concatenation
+    -- of B_m and a submatrix of A_N corresponding to the indices idivs.
+    monoidGenerators(m: P, idivs: List Z): List VZ ==
+        mat: MZ := rStarNonNegativeMatrix(m, idivs)$QAuxMEQ
+        rows := nrows mat
         b: VZ := new(rows, 0)
         rels: VZ := new(rows, 0) -- all equations
-        -- However the first n entries are inequations A x >= b.
-        for i in 1..n-1 repeat rels.i := 1
+        -- However the last #idivs entries are inequations A x >= b.
+        for i in rows - #idivs + 1..rows repeat rels.i := 1
         res := zsolve(mat, rels, b)$X4ti2
-        -- We only need the zhom part, since the zinhom part should
-        -- contain only zeros..
-        result: List(VZ) := empty()$List(VZ)
-        [row(1..n) for row in res.zhom]
+        -- We only need the zhom and zfree part, since the zinhom part
+        -- should contain only zeros.
+        result: List VZ := res.zhom
+        for x in res.zfree repeat result := cons(x, cons(-x, result))
+        result
 
     -- exported functions
+    etaQuotientMonoidExponentVectors(m: P, idivs: List Z): List List Z ==
+        monoidgens: List VZ := monoidGenerators(m, idivs)
+        n: Z := numberOfDivisors(m)$IntegerNumberTheoryFunctions
+        expogens: List VZ := [row(1..n) for row in monoidgens]
+        sort(ascend $ QMEVAUX, [entries x for x in expogens])
+
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
-        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions --$
-        n: N := # divs
-        vdivs: VZ := vector divs
-        monoidgens: List VZ := monoidGenerators(m, n, vdivs)
-        sort(ascend $ QMEVAUX, [entries x for x in monoidgens])
+        -- generators for R^\infty(m)
+        n: Z := numberOfDivisors(m)$IntegerNumberTheoryFunctions
+        idivs: List Z := [i for i in 1..n-1]
+        etaQuotientMonoidExponentVectors(m, idivs)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -529,48 +523,8 @@ QEtaQuotientMonoidExponentVectorsStar: with
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}).
       ++ The version with X at the end tries to make the resulting
       ++ vector of the orders of the series small in absolute value.
-    rStarConditionMatrix: P -> MZ
-      ++ rStarConditionMatrix(nn) returns a matrix mat such that
-      ++ nullSpace(mat) returns the vectors that generate R^*(nn) over
-      ++ Z.
   == add
     QMEVAUX ==> QEtaQuotientMonoidExponentVectorsAux
-
-    -- Compute B_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
-    primePower(d: P, p: P): N ==
-        import from Factored Z
-        fl: List Record(factor: Z, exponent: N) := factors factor d
-        for fe in fl repeat
-            if fe.factor = p then return fe.exponent
-        return 0
-
-    -- nullSpace(m) returns the vectors that generate
-    -- R^*(m) over Z.
-    rStarConditionMatrix(m: P): MZ ==
-        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
-        n: N := # divs
-        d: VZ := vector divs
-        fl: List Record(factor: Z, exponent: N) := factors factor m
-        cols: P := qcoerce(n + 2 + #fl)@P
-        rows: P := qcoerce(3 + #fl)@P
-        mat: MZ := new(rows, cols, 0)
-        -- sum(r(d.i), i=1..n)=0
-        for j in 1..n repeat qsetelt!(mat, 1, j, 1)
-        -- sum(d.i * r(d.i), i=1..n+1) = 0 (mod 24)
-        for j in 1..n repeat qsetelt!(mat, 2, j, d.j)
-        qsetelt!(mat, 2, n+1, 24) -- additional variable for (mod 24)
-        -- sum(d.(n+2-i) * r(d.i), i=1..n+1) = 0 (mod 24)
-        for j in 1..n repeat qsetelt!(mat, 3, j, d(n+1-j))
-        qsetelt!(mat, 3, n+2, 24) -- additional variable for (mod 24)
-        -- product is rational square
-        for i in 1..#fl for fe in fl repeat
-            k := n+2+i
-            p: P := qcoerce(fe.factor)@P
-            for j in 2..n repeat -- for all divisors > 1
-                qsetelt!(mat, i+3, j, primePower(qcoerce(d.j)@P, p))
-            qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
-        --vPrint("rstarConditionMatrix", mat)
-        return mat
 
     integerNullSpace(mat: MZ): List VZ ==
         v: VZ := new(nrows mat, 0)
@@ -579,9 +533,8 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
-        rStar: MZ := rStarConditionMatrix m
+        rStar: MZ := rStarConditionMatrix(m)$QAuxMEQ
         gens: List VZ := integerNullSpace rStar
-        --vPrint("mgens", monoidgens)
         mat: MZ := matrix [entries v for v in gens]
         lat: MZ := LLL(mat)$LLLReduction
         ll: List List Z := listOfLists lat
@@ -590,12 +543,12 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
-        rStar: MZ := rStarConditionMatrix m
+        rStar: MZ := rStarConditionMatrix(m)$QAuxMEQ
         gens: List VZ := integerNullSpace rStar
         --vPrint("mgens", gens)
         mat: MZ := matrix [[x for x in entries v for d in divs] for v in gens]
         --vPrint("mat", mat);
-        ligozat: MZ := matrixLigozat(m)$QAuxiliaryModularEtaQuotientPackage
+        ligozat: MZ := matrixLigozat(m)$QAuxMEQ
         ligozat := transpose ligozat
         --vPrint("ligozat", ligozat);
         ords := mat * ligozat

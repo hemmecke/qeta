@@ -96,7 +96,8 @@ Let us start with a few common macros.
 First of all for debugging.
 )endif
 OF==>OutputForm
-dbgPrint(x,y) ==> display(([x::Symbol::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 77)
+display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
 
 )if LiterateDoc
 These two technical macros are necessary to distinguish between Rep
@@ -160,6 +161,23 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ rStarConditions returns 0 if all conditions are fulfilled.
       ++ Otherwise it returns a positive number in the range 1 to 4 that
       ++ corresponds to the condition that is not met.
+    rStarConditionMatrix: P -> MZ
+      ++ rStarConditionMatrix(nn) returns a matrix mat such that if
+      ++ n=#divisors(nn) and v is such that mat*v=0 then v(1..n) is in
+      ++ R^*(nn), in other words, the nullspace of mat "generates"
+      ++ R^*(nn).
+      -- It computes matrix B_N (equation (8) in
+      -- \cite{Hemmecke+Radu:EtaRelations:2018}
+      -- (DOI:10.1016/j.jsc.2018.10.001).
+    rStarNonNegativeMatrix: (P, List Z) -> MZ
+      ++ rStarNonNegativeMatrix(nn, idivs) returns a matrix mat which
+      ++ is a vertical concatenation of rStarConditionMatrix(nn) and
+      ++ (a part of) matrixLigozat(nn) whose rowindices correspond to
+      ++ idivs.
+      ++ It computes matrix B_N equation (8) in
+      ++ \cite{Hemmecke+Radu:EtaRelations:2018}
+      ++ (DOI:10.1016/j.jsc.2018.10.001) joined with the respective rows
+      ++ of matrix A_N from the same article.
     upsilonExponent: (Z, Z, Z, Z) -> Z24
       ++ upsilonExponent(a,b,c,d) returns z \in {0..23} such that
       ++ exp(\pi*i*z/12) is a multiplier in the transformation of an
@@ -278,7 +296,7 @@ QAuxiliaryModularEtaQuotientPackage: with
         divs: List Z := divisors(m)$INTF
         n: N := # divs
         mat: MZ := new(n, n, 0)
-        for i in 1..n for di in divs repeat -- do not include row for d.j=m
+        for i in 1..n for di in divs repeat
             for j in 1..n for dj in divs repeat
               qsetelt!(mat, i, j, aLigozat(m, di, dj))
         mat
@@ -304,6 +322,47 @@ QAuxiliaryModularEtaQuotientPackage: with
         not zero? positiveRemainder(b, 24) => 3
         for fe in factors c repeat if odd?(fe.exponent) then return 4
         return 0
+
+    rStarConditionMatrix(m: P): MZ ==
+        divs: List Z := divisors(m)$INTF
+        n: N := # divs
+        d: Vector Z := vector divs
+        fl: List Record(factor: Z, exponent: N) := factors factor m
+        cols: P := qcoerce(n + 2 + #fl)@P
+        rows: P := qcoerce(3 + #fl)@P
+        mat: MZ := new(rows, cols, 0)
+        -- sum(r(d.i), i=1..n)=0
+        for j in 1..n repeat qsetelt!(mat, 1, j, 1)
+        -- sum(d.i * r(d.i), i=1..n+1) = 0 (mod 24)
+        for j in 1..n repeat qsetelt!(mat, 2, j, d.j)
+        qsetelt!(mat, 2, n+1, 24) -- additional variable for (mod 24)
+        -- sum(d.(n+2-i) * r(d.i), i=1..n+1) = 0 (mod 24)
+        for j in 1..n repeat qsetelt!(mat, 3, j, d(n+1-j))
+        qsetelt!(mat, 3, n+2, 24) -- additional variable for (mod 24)
+        -- product is rational square
+        for i in 1..#fl for fe in fl repeat
+            k := n+2+i
+            p: P := qcoerce(fe.factor)@P
+            for j in 2..n repeat -- for all divisors > 1
+                qsetelt!(mat, i+3, j, primePower(qcoerce(d.j)@P, p))
+            qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
+        --vPrint("rstarConditionMatrix", mat)
+        return mat
+
+    rStarNonNegativeMatrix(m: P, idivs: List Z): MZ ==
+        matRStar: MZ := rStarConditionMatrix m
+        empty? idivs => return matRStar
+        matLigozat: MZ := matrixLigozat m -- is a square matrix
+        l: N := ncols matLigozat
+        n: N := # idivs
+        rows: N := nrows matRStar
+        cols: N := ncols matRStar
+        mat: MZ := new(rows + n, cols, 0)
+        for i in 1..rows repeat for j in 1..cols repeat
+            qsetelt!(mat, i, j, qelt(matRStar, i, j))
+        for i in idivs for k in rows+1.. repeat for j in 1..l repeat
+            qsetelt!(mat, k, j, qelt(matLigozat, i, j))
+        return mat
 
     jacobiLowerStar(c: Z, d: Z): Z == -- result either 1 or -1
         --assert(one? gcd(c,d))
