@@ -2761,9 +2761,14 @@ it computes the building blocks for $F_{r, s, m, t}(\gamma\tau)$.
 ++ expansions of F_{r, s, m, t}(\gamma\tau) at all cusps of $Gamma_0(N)$.
 ++ See \eqref{eq:F_r-s-m-t(gamma*tau)}.
 SymbolicModularSiftedEtaQuotient: SetCategory with
+    etaQuotient: (P, LZ, P, LZ, P, N, List Q) -> %
+      ++ etaQuotient(nn, r, mm, s, m, t, cusps) represents the expansion
+      ++ of F_{r,s, m, t}(\gamma\tau) for all gamma corresponding to
+      ++ the given cusps.
     etaQuotient: (P, LZ, P, LZ, P, N) -> %
-      ++ etaQuotient(nn, r, mm, s, m, t) represents the expansion
-      ++ of F_{r,s, m, t}(\gamma\tau).
+      ++ etaQuotient(nn, r, mm, s, m, t) represents the expansion of
+      ++ F_{r,s, m, t}(\gamma\tau) for all gamma corresponding to the
+      ++ cusps of $\Gamma_0(nn)$.
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_0(nn).
@@ -2788,16 +2793,19 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): % ==
+    etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N, cusps: List Q): % ==
         h: HT := empty()
         minroot: P := 1
-        cusps: LQ := cuspsOfGamma0(nn)$QAuxMEQ
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ
             e: YMSETAQG := etaQuotient(nn, r, mm, s, m, t, gamma)
             h.cusp := e
             minroot := lcmP(minroot, minimalRootOfUnity e)
         per [nn, cusps, h, minroot]
+
+    etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): % ==
+        cusps: LQ := cuspsOfGamma0(nn)$QAuxMEQ
+        etaQuotient(nn, r, mm, s, m, t, cusps)
 
     level(x: %): P == xx.flevel
     elt(x: %, cusp: Q): YMSETAQG == xx.fmseq.cusp
