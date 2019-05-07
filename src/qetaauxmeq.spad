@@ -157,6 +157,12 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ where di and dj run over all positive divisors of m.
       ++ This matrix is A_N as described after Theorem 5.2 in
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}.
+    matrixAtkinLehner: (P, P) -> MZ
+      ++ matrixAtkinLehner(m, t) with t a Hall divisor
+      ++ (https://en.wikipedia.org/wiki/Hall_subgroup) of m returns
+      ++ the 2x2 matrix with entries [[t, -a], [m, t*b]] such that
+      ++ n=m/t and t*b + n*a = 1, see
+      ++ \cite{Kohnen:WeierstrassPointsAtInfinity:2004}.
     rStarConditions: (P, List Z) -> Z
       ++ rStarConditions returns 0 if all conditions are fulfilled.
       ++ Otherwise it returns a positive number in the range 1 to 4 that
@@ -298,8 +304,17 @@ QAuxiliaryModularEtaQuotientPackage: with
         mat: MZ := new(n, n, 0)
         for i in 1..n for di in divs repeat
             for j in 1..n for dj in divs repeat
-              qsetelt!(mat, i, j, aLigozat(m, di, dj))
+                qsetelt!(mat, i, j, aLigozat(m, di, dj))
         mat
+
+    matrixAtkinLehner(m: P, t: P): MZ ==
+        -- t is a Hall divisor of m.
+        -- https://en.wikipedia.org/wiki/Hall_subgroup
+        --assert((m exquo t) case Z)
+        n: Z := (m exquo t)::Z -- input condition is that t divides m
+        --assert(one? gcd(n, t))
+        exgcd: EXGCD := extendedEuclidean(n, t)
+        matrix [[t, -exgcd.coef1], [m, t*exgcd.coef2]]
 
     -- These are the conditions (1) to (4) of
     -- \cite{Hemmecke+Radu:EtaRelations:2018} that have to be fulfilled
