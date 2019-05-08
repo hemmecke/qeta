@@ -3334,7 +3334,7 @@ QEtaModularFunctionTools: Exports == Implementation where
     LX ==> UnivariateLaurentSeries(CX, xsym, 0)
     YMSETAQ ==> SymbolicModularSiftedEtaQuotient
     MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi, LX)
-    a ==> aLigozat $ QAuxiliaryModularEtaQuotientPackage
+    a ==> aLigozat $ QAuxMEQ
 
     -- order of eta^r at cusp a/c.
     grade(nn: P, divs: LP, c: Z, r: LZ): Z ==
@@ -3405,24 +3405,31 @@ QEtaModularFunctionTools: Exports == Implementation where
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{ModularFunctionExpansions}
+\subsection{ModularFunctionExpansionsAtCusps}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 If $N\in\setN$, $r\in R(N)$, and \code{e = etaQuotient(N, r)}, \code{v
   = coerce(expansions e)} then $v$ represents the vector of Laurent
-expansions of an eta quotient (corresponding to $r$) at each cusp of
-$\Gamma_0(N)$. These vectors form an algebra that similar to
+expansions of an eta quotient (corresponding to $r$) at the cusps of
+$\Gamma_0(N)$ given in the argument of the constructor.
+It is assumed that the corresponding modular function has only poles
+at these cusps.
+%
+These vectors form an algebra that similar to
 \code{Finite0Series} have a finite zero test. A vector $v$ is zero, if
 \code{qetaGrade(v, k)} is smaller than 0 for all indices $k$ from 1 to
-$n$ where $n$ is the number of cusps of $\Gamma_0(N)$.
+$n$ where $n$ is the number of cusps of the given cusps.
 
 )endif
-)abbrev domain MODFUNX ModularFunctionExpansions
-++ ModularFunctionExpansions(C, L, m) represents the algebra of
-++ eta quotients that are modular functions for Gamma_0(m).
-ModularFunctionExpansions(C, L, m): Exports == Implementation where
+)abbrev domain MODFUNC ModularFunctionExpansionsAtCusps
+++ ModularFunctionExpansionsAtCusps(C, L, m, cusps) represents the
+++ algebra of eta quotients that are modular functions for Gamma_0(m)
+++ and have only poles at the given cusps.
+ModularFunctionExpansionsAtCusps(C, L, m, cusps): Exports == Implementation
+ where
   C: IntegralDomain
   L: UnivariateLaurentSeriesCategory C
   m: P -- level
+  cusps: LQ
   Exports ==> XEtaGradedAlgebra C with
     coerce: XHashTable(Q, L) -> %
       ++ If t is a hashtable containing (for each cusp of Gamma_0(m)
@@ -3432,11 +3439,7 @@ ModularFunctionExpansions(C, L, m): Exports == Implementation where
       ++ series(x, n) returns the series corresponding to the n-th index.
       ++ Indices can run from 1 to maxIndex().
   Implementation ==> add
-    divs: LP := DIVISORS m
-    ndivs: N := # divs
-    cusps: LQ := cuspsOfGamma0(m)$QAuxiliaryModularEtaQuotientPackage
     ncusps: P := qcoerce(#cusps)@P
-    RVector ==> DirectProduct(ndivs, Z)
     Rep ==> DirectProduct(ncusps, L)
     xx ==> rep x
     yy ==> rep y
@@ -3444,7 +3447,7 @@ ModularFunctionExpansions(C, L, m): Exports == Implementation where
     coerce(t: XHashTable(Q, L)): % ==
         -- sanity check
         # (cs := keys t) ~= ncusps or sort cs ~= sort cusps =>
-            error "keys do not agree with cusps of Gamma0(m)"
+            error "keys do not agree with cusps of this domain"
         per directProduct vector [t.c for c in cusps]
 
     coerce(x: %): OutputForm == xx::OutputForm
@@ -3489,9 +3492,44 @@ ModularFunctionExpansions(C, L, m): Exports == Implementation where
 
 
 
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ModularFunctionExpansions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+If $N\in\setN$, $r\in R(N)$, and \code{e = etaQuotient(N, r)}, \code{v
+  = coerce(expansions e)} then $v$ represents the vector of Laurent
+expansions of an eta quotient (corresponding to $r$) at each cusp of
+$\Gamma_0(N)$. These vectors form an algebra that similar to
+\code{Finite0Series} have a finite zero test. A vector $v$ is zero, if
+\code{qetaGrade(v, k)} is smaller than 0 for all indices $k$ from 1 to
+$n$ where $n$ is the number of cusps of $\Gamma_0(N)$.
 
+)endif
+)abbrev domain MODFUNX ModularFunctionExpansions
+++ ModularFunctionExpansions(C, L, m) represents the algebra of
+++ eta quotients that are modular functions for Gamma_0(m).
+ModularFunctionExpansions(C, L, m): Exports == Implementation where
+  C: IntegralDomain
+  L: UnivariateLaurentSeriesCategory C
+  m: P -- level
+  Exports ==> XEtaGradedAlgebra C with
+    coerce: XHashTable(Q, L) -> %
+      ++ If t is a hashtable containing (for each cusp of Gamma_0(m)
+      ++ the series expansions at the cusps, then etaQuotient(t) creates
+      ++ a data structure that can be used for computations.
+    series: (%, P) -> L
+      ++ series(x, n) returns the series corresponding to the n-th index.
+      ++ Indices can run from 1 to maxIndex().
+  cog0 ==> cuspsOfGamma0(m)$QAuxMEQ
+  Implementation ==> ModularFunctionExpansionsAtCusps(C, L, m, cog0)
 
 
 
