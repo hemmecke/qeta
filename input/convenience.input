@@ -83,3 +83,26 @@ numOfGaps(ab) ==
   n := qetaGrade(t)::P
   grades := [qetaGrade(first basis(ab, i))::P for i in 1..n-1]
   numberOfGaps(n, grades)$QAuxiliaryModularEtaQuotientPackage
+
+
+-- trace(nn, t, r) applies the trace function, see
+-- \cite{Kohnen:WeierstrassPointsAtInfinity:2004}, to the modular
+-- eta-quotient of M(nn*t) given by the exponent vector r.
+-- The result is a modular function in M(nn).
+-- Input condition: #r = #DIVISORS(nn*t), gcd(nn, t)=1.
+trace(nn: P, t: P, r: List Z): F1 C ==
+  divs: List P := DIVISORS(nn*t)
+  #divs ~= #r => error "length of r must match number of divisors)"
+  idgamma: SL2Z := matrix [[1,0],[0,1]]
+  ye: YETAQG := etaQuotient(nn*t, divs, r, idgamma)
+  e: F1(C) := (expansion(etaQuotient(ye)$ETAQG))::F1(C)
+  alw: MZ := matrixAtkinLehner(nn*t, t)
+  sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
+  gamma := sm.red
+  yeg: YETAQG := etaQuotient(nn*t, divs, r, gamma)
+  eg: F1(C) := (expansion(etaQuotient(yeg)$ETAQG))::F1(C)
+  -- finally apply U2 operator
+  ordu2eg := (order(eg)/2)::Z
+  u2eg := choose((n: Z): Z +-> 2*n, eg, ordu2eg)
+  -- and add things up
+  e + 2*u2eg
