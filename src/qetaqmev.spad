@@ -523,6 +523,15 @@ QEtaQuotientMonoidExponentVectorsStar: with
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}).
       ++ The version with X at the end tries to make the resulting
       ++ vector of the orders of the series small in absolute value.
+    basisReduction: (List VZ, Vector Z) -> List VZ
+    extendedBasisReduction: (List VZ, Vector Z) -> List VZ
+      ++ basisReduction(basis, ix) assumes that for each vector b in
+      ++ basis and each i in 1..#ix:
+      ++ If ix.i > 0, then b.i > 0, if ix.i < 0, then b.i <= 0,
+      ++ if ix.i = 0, then this entry is ignored.
+      ++ It returns another basis bas such that with the same property
+      ++ as the input basis and additionally, for each i in 1..ix,
+      ++ length(bas.i)^2 <= length(basis.i).
   == add
     QMEVAUX ==> QEtaQuotientMonoidExponentVectorsAux
 
@@ -545,22 +554,71 @@ QEtaQuotientMonoidExponentVectorsStar: with
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
         rStar: MZ := rStarConditionMatrix(m)$QAuxMEQ
         gens: List VZ := integerNullSpace rStar
-        --vPrint("mgens", gens)
         mat: MZ := matrix [[x for x in entries v for d in divs] for v in gens]
-        --vPrint("mat", mat);
         ligozat: MZ := matrixLigozat(m)$QAuxMEQ
         ligozat := transpose ligozat
-        --vPrint("ligozat", ligozat);
         ords := mat * ligozat
-        --vPrint("ords", ords)
         rec: Record(lll: MZ, trf: MZ) := extendedLLL(ords)$LLLReduction
         t: MZ := rec.trf
-        --vPrint("rec", rec)
         lat: MZ := t*mat
-        --vPrint("lat", lat)
         ll: List List Z := listOfLists lat
         ll2: List List Z := [[-x for x in l] for l in ll]
         sort(ascend $ QMEVAUX, concat(ll, ll2))
+
+    good?(v: VZ, ix: VZ): Boolean ==
+        for i in 1..#ix repeat if ix.i < 0 and v.i > 0 then return false
+        true
+
+    greater?(x: VZ, y: VZ, ix: VZ): Boolean ==
+        for i in 1..#ix repeat
+            if ix.i < 0 and x.i > y.i then return false
+        true
+
+    length2(v: VZ, ix: VZ): Z ==
+        len := 0
+        for i in 1..#ix repeat if ix.i > 0 and v.i > 0 then
+            len := len + (v.i)^2
+        len
+
+    basisReduction(basis: List VZ, ix: VZ): List VZ ==
+        for b in basis repeat if not good?(b, ix) then
+            vPrint("b", b)
+            vPrint("ix", ix)
+            error "basis does not fulfil input condition"
+        red? := true
+        n: Z := #ix
+        bas: Vector VZ := vector basis
+        while zero? ix.n repeat n := n - 1
+        while red? repeat
+            red? := false
+            for i in 1..#bas repeat
+                b := bas.i
+                lb := length2(b, ix)
+                vPrint("i,lb,b", [vector [i, lb], b]@List VZ)
+                for k in 1..#bas | k ~= i repeat
+                    v := bas.k
+                    while greater?(b, v, ix) and
+                          (r: VZ := b - v; lr: Z := length2(r, ix);  lr < lb)
+                      repeat
+                        b := r
+                        lb := lr
+                        red? := true -- one reduction happened
+                bas.i := b
+        return members bas
+
+    extendedBasisReduction(basis: List VZ, ix: VZ): List VZ ==
+        empty? basis => return empty()
+        l: N := # first basis
+        n: N := # basis
+        e: N := l + n
+        bas: List VZ := empty()
+        for b in basis for i in l+1.. repeat
+           v: VZ := new(e, 0)
+           copyInto!(v, b, 1)
+           qsetelt!(v, i, 1) -- construct attached unit matrix
+           bas := cons(v, bas)
+        bas := reverse!(bas)
+        red := basisReduction(bas, ix)
 
 )if LiterateDoc
 \bibliography{qeta}
