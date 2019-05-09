@@ -101,7 +101,7 @@ xfr := reduce(xf, xab)$QXRED(C);
 zero? xfr
 xfr
 
-reduce(xf, xabb)$QXRED(C)
+xfrb := reduce(xf, xabb)$QXRED(C)
 
 -- Note the the relation looks pretty ugly. Coefficients are too big.
 
@@ -157,7 +157,7 @@ df := (second lc)::Pol C;
 variables df
 [degree(df, x) for x in variables df]
 
--- ### Computation of the corresponding polynomials $d_0,..,d_4$
+-- ### Computation of the corresponding polynomials $c_0,..,c_4$
 
 -- In order to find the respective cofactors to the `c1` from above, we must do the whole computation with different attached values, namely T, and B1, B2, B3, B4, for the elements in basis `ab`.
 
@@ -206,88 +206,31 @@ zero?(dfint-d)
 xdfredb := reduce(xdf, xabb)$QXRED(C);
 zero? xdfredb
 
-xdfredb2 := second(xdfredb)::Pol(Q);
-df0rat := coefficient(xdfredb2, F, 0)::Pol(Q); -- the representation
-df1rat := coefficient(xdfredb2, F, 1)::Pol(Q); -- the poly d
-dendf1 := (denom df1rat)::Z;
-df1int :=(dendf1 * df1rat)::Pol(Z);
+xdfredb2 := clearDenominator(second(xdfredb)::Pol(Q));
+
+df0int := coefficient(xdfredb2, F, 0); -- the representation
+df1int := coefficient(xdfredb2, F, 1); -- the poly d
 zero?(df1int - d)
 
-factorList factor dendf1
+vars := variables df0int, variables df1int
 
-dendf0 := (denom df0rat)::Z;
-df0int :=(dendf0 * df0rat)::Pol(Z);
+-- This representaion demonstrates divisibility by 11 of the
+-- coefficients of $d(t)*f$.
 
-factorList factor dendf0
+removeDuplicates sort [positiveRemainder(x, 11) for x in coefficients df0int]
 
--- Now compute the respective $d_0, \ldots, d_4$ as integer polynomials.
+-- ## Now compute the respective $c_0, \ldots, c_4$ as integer polynomials.
 
-xabbas := basis xabb
-
-11 * xabbas.3 - (xgens.2-xt^10)
-
-vars
-
-df00 := ((dendf1*coefficient(df0rat, vars, [0 for i in vars])))::Pol(Z);
-df0s := [(dendf1*coefficient(df0rat, x, 1))::Pol(Z) for x in vars];
+df00 := coefficient(df0int, bsyms, [0 for i in bsyms])
+df0s := [coefficient(df0int, x, 1) for x in bsyms];
 ds := cons(df00, df0s);
-
 [[unit factor x, degree x] for x in ds]
-
--- Unfortunately, because of the relation for `xabbas.2` above these factors of 11 are not enough.
-
-[factorList factor x for x in ds]
 
 -- ## Express $d(T)F$ in terms of $T$ and $U$
 
 xdfred := reduce(xdf, xab)$QXRED(C);
 zero? xdfred
 
--- Because of the factor 11 in `xgens.2 - xgens.1^10`, we need here a prefactor of 11^3 to make the result an integer polynomial.
---
--- That makes it clear that without the localization trick, we have no relation that demonstrates that $p(11n+6)$ is divisible by 11.
-
-xdfred2 := second(xdfred)::Pol(Q);
-xdf0rat := coefficient(xdfred2, F, 0)::Pol(Q); -- the representation
-xdf0int :=(11^3*dendf1 * xdf0rat)::Pol(Z);
-
-[(c := coefficient(xdf0int, 'U, i); [#factorList factor c, degree(c,T)]) for i in 0..4]
-qetaGrade(xu)
-
-invxp := 1/(first(xd)::F1(Q));
-ft := first(xt)::F1(Q);
-fs := first(xu)::F1(Q);
-invxd*fs^0*ft^65
-invxd*fs^1*ft^55
-invxd*fs^2*ft^45
-invxd*fs^3*ft^35
-invxd*fs^4*ft^25
-
-
-xpfrep := eval(xd0fint, (c:Z):X +-> c*1$X, ['T, 'U], xgens)$PolynomialEvaluation(Z, X);
-
-xf5 := xf^5-161051*xu^5*xt^4
-
-xj0
-
-xjp := reduce(xj2*xp, xab)$QXRED(C)
-
-zero? xjp
-
-xpfrepfred := reduce(xj0, xab)$QXRED(C);
-
-xpfrepred
-
-zero? xpfrepfred
-
-q := (monomial(1,1)$F1(Q))^(-1);
-xq: X := embed(q, 'Q::Pol(Q))
-reduce(xq^0*xpfrep, xab)$QXRED(C)
-
-xpf2red := reduce(xt^66*xf, xab)$QXRED(C);
-zero? xpf2red
-
-xf
 
 -- ## Polynomial for $F^2$
 
@@ -395,26 +338,32 @@ xj2 := toX1(C, toF1C mmj2, T*U*J2)
 
 -- ## cfj01ab=samba($t$, $\{u, j_0, j_1\})$
 
--- Unfortunately the following basis computation only leads to number of gaps = 31.
+-- Unfortunately the following basis computation only leads to number
+-- of gaps = 31.
 --
--- We do not compute with the extended basis, since then the computation takes quite some time (1440 seconds) to reduce the representation part.
+-- We do not compute with the extended basis, since then the computation
+-- takes quite some time (1440 seconds) to reduce the representation part.
 --
--- Since we already know that the computation will end with a basis having gap number 31, we can abort the computation when we have reached a basis with gap number 31.
+-- Since we already know that the computation will end with a basis having
+-- gap number 31, we can abort the computation when we have reached a
+-- basis with gap number 31.
 
 gens := concat([xj0, xj1], xgens)
 
 cfj01ab := samba(first xt, [first x for x in gens], 31, cfonet1Step!)$QSAMBA1(C)
 
 grades := [qcoerce(qetaGrade x)@P for x in basis cfj01ab]
-numOfGaps(cfjab)
+numOfGaps(cfj01ab)
 
 -- ## xjab=samba($t$, $\{u, j_0, j_2\})$
 
--- Computing with $j(121\tau)$ instead of $j(11\tau)$ leads to an integral basis with gap number 6.
+-- Computing with $j(121\tau)$ instead of $j(11\tau)$ leads to an
+-- integral basis with gap number 6.
 
 gens := concat([xj0, xj2], xgens)
 
--- With aborting the computation when we have reached gap number = genus, it takes about 400 seconds to compute this basis.
+-- With aborting the computation when we have reached gap number = genus,
+-- it takes about 400 seconds to compute this basis.
 
 xjab := samba(xt, gens, genus, onet1Step!)$QXSAMBA1(C);
 
@@ -450,6 +399,10 @@ gens
 
 -- We can generate a new modular function by applying the trace to
 -- a modular function from $M^\infty(242)$.
+
+CX := Q;
+xiord := 2;
+xi := -1; -- a second root of unity
 
 -- ## OLD Atkin-Lehner involution $W_2^{242}$
 
@@ -501,10 +454,6 @@ egens242 := [(retract etaQuotient(divs242, r)$ETA(Z))::F1(C) for r in rgens242];
 -- For all the series we compute that we need at most a second root of unity, i.e. we continue our computation in $C=\mathbb{Q}$.
 
 [minimalRootOfUnity etaQuotient(242, divs242, r, gamma) for r in rgens242]
-
-CX := Q;
-xiord := 2;
-xi := -1; -- a second root of unity
 
 -- We have tried to compute the algebra basis for N=121 with
 -- the addition of one of the series coming from the N=242
@@ -569,7 +518,7 @@ u2seq242g := choose((n: Z): Z +-> 2*24*n, eseq242g, ordseq242g)::F1(C)
 
 cftraceeq242 := (eq242 + 2*u2eq242g)::CF
 
-xu: X := toX1(C, cftraceeq242, 'U);
+xhh: X := toX1(C, cftraceeq242, 'HH);
 
 -- ## Atkin-Lehner involution $W_2^{242}$
 
@@ -710,10 +659,88 @@ xgab
 nog := numOfGaps(cfgab)
 
 xr := reduce(xf, xgab)$QXRED(C);
-xr := reduce(first(xf)::F1(C), xgab)$QRED(C);
+cfr := reduce(first(xf)::F1(C), cfgab)$QRED(C)
 
 first xr
 qetaGrade xr
+
+-- ## Compute denominator polynomial for integral basis
+
+-- \textcolor{red}{TODO}
+-- We only need the coefficients of the pricipal part of
+-- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$
+-- where $h_i \in \langle 1, b_1, b_2, b_3, b_4 \rangle_{C[t]}$
+-- in order to find a relation among these $q$-series.
+--
+-- Note that $t$ corresponds to our variable `xt` and $b_1,\ldots,b_4$ to our basis `abex`.
+--
+-- Then $t^i f - h_i$ corresponds to `reduce(xt^i xf, xt, xabb)`.
+--
+-- Note that the result $r$ contains in its second component its representation in terms of the given $F$, and the $B_i$.
+
+e1:=0; e2:=4;
+rfgs := [reduce(xt^e1*xf, xgab)$QXRED(C)];
+for i in e1+1..e2 repeat (_
+  print(i);_
+  rfgs := cons(reduce(xt*first(rfgs), xgab)$QXRED(C), rfgs))
+rfgs := reverse! rfgs;
+[qetaGrade x for x in rfgs]
+
+[coefficient(second(x)::Pol C, F, 1) for x in rfgs]
+
+-- Extract the 192 coefficients corresponding to the orders $-191, \ldots, 0$ and compute the kernel of the corresponding matrix.
+
+lfg := [[qetaCoefficient(first x, i) for i in 0..8] for x in rfgs];
+matfg := transpose matrix lfg;
+nsfg := nullSpace matfg
+#nsfg
+
+
+-- Extract the coefficients from the vector in the nullspace.
+
+cfgs := members first nsfg;
+
+-- Check that the resulting vector indeed yields a relation.
+
+lincompfg := [c*rr for c in cfgs for rr in rfgs];
+lcfg := reduce(_+, lincompfg);
+zero? lcfg
+
+qetaCoefficient(lcfg, 0)
+
+-- \textcolor{red}{TODO}
+-- Indeed, we have just shown a relation for
+-- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$.
+--
+-- In the second component of this "zero" is it's relation in terms of $F$, $B_1$, $B_2$, $B_3$, and $B_4$.
+-- The "denominator polynomial" is given by the coefficient of $F$.
+
+dfg := (second lcg)::Pol C;
+variables dfg
+[degree(dfg, x) for x in variables dfg]
+
+-- ### Computation of the corresponding polynomials $c_0,..,c_4$
+
+-- In order to find the respective cofactors to the `c1` from above, we must do the whole computation with different attached values, namely T, and B1, B2, B3, B4, for the elements in basis `ab`.
+
+cfg1:=coefficient(dfg,F,1);
+cfg0:=coefficient(dfg,F,0);
+
+variables cfg0
+varsfg := [U, G]
+cfg0s := [coefficient(cfg0, x, 1) for x in varsfg];
+degree(cfg1, T), [degree(x, T) for x in cfg0s]
+gcd cons(cfg1,cfg0s)
+
+-- Apart from the $t^{37}$ factor, we get other factors.
+
+flfg := factorList factor cfg1;
+
+[x.exponent for x in flfg]
+flfgfactors := [x.factor for x in flfg]
+
+
+
 
 -- ## xfgab=samba($t, \{u,f,g\}$)
 
@@ -733,14 +760,15 @@ xghab := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
 grades := [qcoerce(qetaGrade x)@P for x in basis xghab]
 numOfGaps(xghab)
 
-xr := reduce(xf, xghab)$QXRED(C);
+xtracebas := concat([xt, xg, xh], basis xabb)
+xghabb := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
+xr := reduce(xf, xghabb)$QXRED(C);
 
-xrpol := (second xr)::Pol(C);
+xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
 # monomials(xrpol)
-xrden := denom xrpol
-
-xrden * xrpol
+factor gcd(coefficient(xrpol, 'F, 1), 11)
+content coefficient(xrpol, 'F, 0)
 
 -- ## xhab=samba($t, \{u,h\}$)
 
@@ -754,21 +782,21 @@ numOfGaps(xhab)
 
 xr := reduce(xf, xhab)$QXRED(C);
 
-xrpol := (second xr)::Pol(C);
+xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
 # monomials(xrpol)
-xrden := denom xrpol
-
-xrden * xrpol
+factor gcd(coefficient(xrpol, 'F, 1), 11)
+content coefficient(xrpol, 'F, 0)
 
 -- There must be a relation for $g$ in terms of $\{t,u,h\}$.
 
 xr := reduce(xg, xhab)$QXRED(C);
-xrpol := (second xr)::Pol(C);
+first xr
+xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
 # monomials(xrpol)
-xrden := denom xrpol
-xrden * xrpol
+factor gcd(coefficient(xrpol, 'F, 1), 11)
+content coefficient(xrpol, 'F, 0)
 
 -- ## Denominator polynomial for $g$ with respect to `xab`
 
@@ -805,7 +833,7 @@ zero? lcg
 qetaCoefficient(lcg, 0)
 
 -- Indeed, we have just shown a relation for
--- $t^{39}g-h_{39}, \ldots, t^{129}g-h_{129}$.
+-- $t^{29}g-h_{39}, \ldots, t^{129}g-h_{129}$.
 --
 -- In the second component of this "zero" is it's relation in terms of $G$, $T$, and $U$.
 -- The "denominator polynomial" is given by the coefficient of $G$.
@@ -814,7 +842,7 @@ dg := (second lcg)::Pol C;
 variables dg
 [degree(dg, x) for x in variables dg]
 
--- ### Computation of the corresponding polynomials $d_0,..,d_4$
+-- ### Computation of the corresponding polynomials $c_0,..,c_4$
 
 -- In order to find the respective cofactors to the $c_1$
 -- from above, we must do the whole computation with
@@ -845,7 +873,7 @@ rhs := [reduce(xt^e1*xh, xab)$QXRED(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
   rhs := cons(reduce(xt*first(rhs), xab)$QXRED(C), rhs))
-rs := reverse! rhs;
+rhs := reverse! rhs;
 [qetaGrade x for x in rhs]
 [variables(second(x)::Pol(C)) for x in rhs]
 [coefficient(second(x)::Pol C, H, 1) for x in rhs]
@@ -910,36 +938,25 @@ flhfactors := [x.factor for x in flh]
 
 -- ## Try to reduce the order -15 element that comes from level 242
 
-r242_1 := rgens242.1
-
-eqt242_1 := (retract etaQuotient(divs242, r242_1)$ETA(Z))::F1(C)
-
-yeq242_1g: YETAQG := etaQuotient(242, divs242, r242_1, gamma);
-eq242_1g := (expansion(etaQuotient(yeq242_1g)$ETAQG))::F1(C);
-
-ordh2eq242_1g := (order(eq242_1g)/2)::Z
-h2eq242_1g := choose((n: Z): Z +-> 2*n, eq242_1g, ordh2eq242_1g)
-
-cftraceeq242_1 := (eqt242_1 + 2*h2eq242_1g)::CF
-
-xh_1 := toX1(C, cftraceeq242_1, 'H1)
-xr_1 := reduce(xh_1, xhab)$QXRED(C);
+xgr := reduce(xg, xhab)$QXRED(C);
 zero? xr_1
 [coefficient(first(xr_1)::F1(C), i) for i in -30..30]
 
 -- Note that the `zero?` function only tests negative coefficients. That is not sufficient here, otherwise we could "prove" that some function is a modular function for $\Gamma_0(121)$ when it is actually not.
 
-xh_h := toX1(C, eqt242_1, 'HH)
-xr_h := reduce(xh_h, xhab)$QXRED(C);
-zero? xr_h
-[coefficient(first(xr_h)::F1(C), i) for i in -30..3]
+r242_1 := rgens242.1
+eqt242_1 := (retract etaQuotient(divs242, r242_1)$ETA(Z))::F1(C)
+xgg := toX1(C, eqt242_1, 'GG)
+xggr := reduce(xgg, xhab)$QXRED(C);
+zero? xggr
+[coefficient(first(xggr)::F1(C), i) for i in -30..3]
 
 -- However, we see it more easily by reducing the product with
 -- $t$ by the algebra basis.
 
-xr_th := reduce(xt*xh_h, xhab)$QXRED(C);
-first xr_th
-zero? xr_th
+xggtr := reduce(xt*xgg, xhab)$QXRED(C);
+first xggtr
+zero? xggtr
 
 -- # Add F-expansion at 1 instead of $\infty$
 
