@@ -1,3 +1,270 @@
+-- # Demo for the what qetafun provides
+
+-- ## Init
+
+)clear completely
+
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+)set output linear off
+)set output algebra on
+)set stream calculate 20
+)set mess time on
+C ==> Q
+--C ==> Z;
+--C ==> IntegerLocalizedAtPrime 11
+CF ==> CF1 C
+X ==> X1 C
+xiord := 2;
+xi := -1;
+CX := Q;
+nn: P := 2;
+)r ../input/convenience
+)r ../input/tracemacros
+)set mess type on
+
+-- ## $g_s(\tau) \in M(N)$ --- EtaQuotient
+
+-- ### $g_s(\tau) \in M(N)$ non-modular
+
+nn: P := 22; -- level N
+nndivs := DIVISORS nn;
+r := [1,2,-1,-1]
+e := etaQuotient(nndivs, r)$ETA(Z)
+
+-- We can get the exponent of the prefactor $q^{1/24}$ and the actual
+-- $q$-series. Note that for the prefactor exponent it always holds
+-- $0\le f<24$.
+
+f := prefactor(e)$ETA(Z)
+series(e)$ETA(Z)
+
+-- ### $g_s(\tau) \in M^\infty(N)$
+
+-- In case that the vector $r$ lives in $R^*(N)$, the prefactor
+-- exponent is a multiple of 24, and thus the series can be combined
+-- with the prefactor to get a $q$-series.
+
+r := [24,0,0,0]
+e := etaQuotient(nndivs, r)$ETA(Z)
+--retract e
+
+-- ### $g_s(\tau) \in M^\infty(N)$ --- the monoid generators
+
+nn: P := 22; -- level N
+nndivs := DIVISORS nn;
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens]
+
+-- ### Create $g_s(\tau)$ with attached part
+
+msyms := indexedSymbols("M", #rgens)
+mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
+xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens)
+
+-- ## $g_{s,m}(\gamma\tau)\in M(N)$ --- SymbolicSiftedEtaQuotientGamma
+
+-- ### $g_{s,m}(\gamma\tau)$ --- Expansion at cusp $\infty$
+
+-- Importand, we simply set t=-1 and let the code handle the rest.
+
+t := -1
+C ==> Q
+nn: P := 13;
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+m: P := 13; mm: P := m; s: List Z := first rgens;
+mmdivs: List P := DIVISORS mm
+gamma: SL2Z := matrix [[1,0],[0,1]]
+y: YSETAQG := etaQuotient(nn, mmdivs, s, m, t, gamma);
+xiord := minimalRootOfUnity y
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+w := width(nn, gamma(2,1))
+
+)set stream calc 4
+)set mess type on
+p := puiseux(y, w)$SETAQG
+r := rationalPowerDenominator(p)
+e := expansion p
+order e
+
+-- The above data structure actually represents the Puiseux series
+-- where $q$ is replaced by $q^{1/\mathrm{den}}=q^{1/24}$.
+--
+-- We can also represent it as a product of $q^{1/24}$ and a Laurent
+-- series (here even a Taylor series) in $q$.
+
+s1 := choose((n:Z):Z +-> 24*n, e, (order(e) exquo 24)::Z)::F1(CX)
+
+-- ### $g_{s,m}(\gamma\tau)$ --- Expansion at cusp $1$
+
+gamma := cuspToMatrix(nn, 1)
+
+y: YSETAQG := etaQuotient(nn, mmdivs, s, m, t, gamma);
+xiord := minimalRootOfUnity y
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+w := width(nn, gamma(2,1))
+
+)set stream calc 4
+)set mess type on
+p := puiseux(y, w)$SETAQG
+r := rationalPowerDenominator(p)
+e := expansion p
+order e
+
+s1 := choose((n:Z):Z +-> 24*n, e, (order(e) exquo 24)::Z)::F1(CX)
+
+-- ## $g_{s,m,t}(\gamma\tau)$ --- SymbolicSiftedEtaQuotientGamma
+
+-- ### $g_{s,m,t}(\gamma\tau)$ --- Expansion at cusp $\infty$
+
+C ==> Q
+nn: P := 13;
+m: P := 13; mm: P := m; s: List Z := [-1, 0];
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t := first first orbs
+gamma: SL2Z := matrix [[1,0],[0,1]]
+y: YSETAQG := etaQuotient(nn, mmdivs, s, m, t, gamma);
+xiord := minimalRootOfUnity y
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+w := width(nn, gamma(2,1))
+
+)set stream calc 20
+)set mess type on
+p := puiseux(y, w)$SETAQG
+
+-- The above data structure actually represents the Puiseux series
+-- where $q$ is replaced by $q^{1/\mathrm{den}}=q^{1/24}$.
+--
+-- We can also represent it as a product of $q^{1/24}$ and a Laurent
+-- series (here even a Taylor series) in $q$.
+
+e := expansion p
+s1 := choose((n:Z):Z +-> 24*n+11, e, order(e))::F1(CX)
+
+-- ### Change coefficient domain from $\mathbb{Q}[\xi]$ to $\mathbb{Z}$
+
+-- We can simplify the coefficient domain to Integer by retracting
+-- from $\mathbb{Q}[\xi]$ to $\mathbb{Z}$.
+
+rx := map(retract, s1)$Finite0SeriesFunctions2(CX, Z, 'q, 'q, 0, 0)
+
+-- For our special choice of $s$, $m=13$, $t=6$, the above series is
+-- the generating series for the partitions, i.e., $\sum_{n=0}^\infty
+-- p(13n+6)q^n$.
+
+s2 := siftedPartitionSeries(13,6);
+rx-s2
+
+-- ### $g_{s,m,t}(\gamma\tau)$ --- Expansion at cusp 1
+
+gamma := cuspToMatrix(nn, 1)
+
+y := etaQuotient(nn, mmdivs, s, m, t, gamma)$YSETAQG;
+xiord := minimalRootOfUnity y
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+w := width(nn, gamma(2,1))
+
+)set mess type on
+)set stream calc 10
+p := puiseux(y, w)$SETAQG
+e := expansion p;
+order e
+
+s1 := choose((n:Z):Z +-> 24*n+23, e, order e)::F1(CX);
+qetaLeadingCoefficient s1, qetaGrade s1
+s1
+
+-- ## $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- SymbolicModularSiftedEtaQuotientGamma
+
+nn: P := 26; -- level N
+m: P := 13; mm: P := m; s: List Z := [-1, 0];
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t := first first orbs
+
+-- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $\infty$
+
+cusp := 1/nn; gamma := cuspToMatrix(nn, cusp); w := width(nn, denom cusp)
+r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
+)clear prop y
+y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
+xiord: P := minimalRootOfUnity y
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+puiseux(y, w)$SETAQG
+
+-- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $1$
+
+cusp := 1; gamma := cuspToMatrix(nn, cusp); w := width(nn, denom cusp)
+r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
+y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
+xiord: P := minimalRootOfUnity y
+CX := UnityRootExtension(C, xiord)
+xi := generator()$CX
+puiseux(y, w)$SETAQG
+
+-- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at all cusp
+
+nn, r, mm, s, m, t, gamma
+
+y := etaQuotient(nn, r, mm, s, m, t)$YMSETAQ;
+f := expandAtAllCusps(y)$MSETAQ;
+
+-- For each of the cusps we get one expansion in terms in the canonical
+-- variable $q^{1/w}$ where $w$ is the width of the respective cusp.
+-- As customary, we show $q$ instead of $q^{1/w}$.
+
+cuspsOfGamma0(nn)
+)set stream calc 3
+mf := expansions(f)::MODFUNX
+
+-- Strangely, one has to reread `input/convenience`.
+--
+-- **TODO:** Create a `QEtaConvenienceTool` as a SPAD package.
+
+)r ../input/convenience
+expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma)
+
+-- ## $\sum_{n=0}^\infty p(m\,n+t)\,q^n$ "sifted" partition series
+
+xiord := 2; xi := -1; CX := Q; nn: P := 22; -- just for convenience.input
+)r ../input/convenience
+
+siftedPartitionSeries(13,6)
+
+-- # $\eta^r \cdot q^{k/24} \cdot \sum_{n=0}^\infty p(m\,n+t)\,q^n \in M^\infty(N)$
+
+-- Unfortunately, the current jupyter-fricas connection does not
+-- output the respective cofactor exponent $r$ and the exponent $k$.
+-- One can see it if run in the commandline version of FriCAS.
+
+m13 := modularSiftedPartitionSeries(13,13,6)
+
+m26 := modularSiftedPartitionSeries(26,13,6)
+
+--
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- # Samba for level $N$
 
 -- ## Init
@@ -23,32 +290,82 @@ CF ==> CF1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
-CX := Q
+CX := Q;
+nn: P := 22;
 )r ../input/convenience
 )r ../input/tracemacros
 )set mess type on
 
--- ## Samba computation
+-- ### Samba: setting up the input
+
+-- Here we use all the generators of the monoid of all $\eta$-quotients.
 
 nn: P := 22; -- level
 nndivs := DIVISORS nn;
-rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
-eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
+etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
+rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+eqgens := [etaQ r for r in rgens];
 
 
--- The generators
+-- The generators get a variable attached so that in the end each element
+-- contains its representation in terms of the input elements.
 
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
+xt := xgens.1
+
+-- If the extended computation costs too much (too big
+-- coefficients of the polynomials), then we can drop the
+-- attached part, but still use cached powers of series.
+
+cfgens := [first x for x in xgens];
+cft := first xt;
+
+-- ## Samba (nonextended, but still with cached powers)
+
+-- ### Samba invocation
+
+cfab := samba(cft, cfgens)$QSAMBA1(C);
+
+-- ### Samba with aborting when a certain number of gaps has been reached
+
+cfab := samba(cft, cfgens, 31)$QSAMBA1(C);
+
+-- ### Samba with aborting when a certain number of gaps has been reached and with live tracing
+
+cfab := samba(cft, cfgens, 31, cfonet1Step!)$QSAMBA1(C);
+
+-- ## Extended Samba
+
+-- ### Extended Samba invocation
+
+xab := samba(xt, xgens)$QXSAMBA1(C);
+
+-- ### Extended Samba with genus abortion criterion
 
 genus := genusOfGamma0 nn
-xt: X := xgens.1
---xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C)
-xab := samba(xt, xgens)$QXSAMBA1(C)
+xab := samba(xt, xgens, genus)$QXSAMBA1(C);
+
+-- ### Extended Samba with genus abortion criterion and trace
+
+-- The output is currently not shown in the jupyter notebook. Use
+-- Emacs or bash invocation to see the trace.
+--
+-- See `input/tracingmacros.input` for a definition of `onet1Step!`.
+
+xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C)
+
+-- ## Number of gaps of a algebra basis
+
+-- The `numOfGaps` function is defined in `input/convenience.input`.
 
 nog := numOfGaps(xab)
 nog - genus
+numOfGaps(cfab)
+
+-- ## Extended reduction modulo an algebra basis
 
 -- The input basis reduces to zero modulo the algebra basis.
 
@@ -58,7 +375,8 @@ removeDuplicates sort [zero? x for x in rbas]
 -- # Series F: $p(13n+6)$ generating series
 
 
--- We do expansion at the cusp $i\infty$ which corresponds to $1/N$ or to `1/nn` in terms of our session variables.
+-- We do expansion at the cusp $i\infty$ which corresponds to $1/N$ or
+-- to `1/nn` in terms of our session variables.
 
 -- ## Init
 
@@ -76,30 +394,32 @@ removeDuplicates sort [zero? x for x in rbas]
 )set output algebra on
 )set stream calculate 20
 )set mess time on
-C ==> Q
+--C ==> Q
 --C ==> Z;
---C ==> IntegerLocalizedAtPrime 11
+C ==> IntegerLocalizedAtPrime 13
 CF ==> CF1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
 CX := Q
+nn: P := 13
 )r ../input/convenience
 )r ../input/tracemacros
 --)set mess type on
 
 -- ## p(m n + t)
 
--- We only need to specify the level $nn$, $m$ (and $mm$) and compute the $t$ automatically.
+-- We only need to specify the level $nn$, $m$ (and $mm$) and compute
+-- the $t$ automatically.
 
-nn: P := 26; -- level
+nn: P := 13; -- level
 m: P := 13; mm: P := m; s: List Z := [-1, 0];
 mmdivs: List P := DIVISORS mm
 shat: Z := sigmaInfinity(mmdivs, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
 t: N := first first orbs
 
--- Let's compute the expansion (at $i\infty$) of
+-- Let's compute the expansion (at $\infty$) of
 -- $$
 -- F(\tau) = g_r(\tau)
 --           q^{\frac{e}{24}}
@@ -111,16 +431,36 @@ ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in F1
 xf := toX1(C, ff, F)
 
 nndivs := DIVISORS nn;
-rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
-eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
+etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
+rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+eqgens := [etaQ r for r in rgens];
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
+[qetaGrade x for x in xgens]
 genus := genusOfGamma0 nn;
-xt: X := xgens.1;
+xt := xgens.1
+
 xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C);
 
+[qetaGrade x for x in basis xab]
+numOfGaps xab
+
+cft := first xt
+cfgens := [first x for x in xgens];
+[qetaGrade x for x in cfgens]
+
+xab
+
 xr := reduce(xf, xab)$QXRED(C)
+
+p := second(xr)::Pol(C);
+[[e, x] for x in monomials p| zero?(e:=exponent leadingCoefficient x)]
+
+xf - 11*(xgens.1)^6
+
+[[exponent leadingCoefficient x] for x in monomials((11*T^6-F)+second(xr)::Pol(C))]
 
 -- # Series U: N=242, r=[6, - 3, - 1, 1, 5, - 8]
 
@@ -368,4 +708,8 @@ flfactors := [x.factor for x in fl]
 
 
 
+sps := siftedPartitionSeries(13,6);
 
+[factor coefficient(sps, i) for i in 0..10]
+
+rgens
