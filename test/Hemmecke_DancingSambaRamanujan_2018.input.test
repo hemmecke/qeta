@@ -863,3 +863,107 @@ assertEquals(pol, polExpected)
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+
+-- -
+
+-- # With $\mathbb{Z}_{(11)}$ and division by 11
+
+-- +
+-----------------------------------------------------------------
+--test:Hemmecke2
+-----------------------------------------------------------------
+-- -
+
+-- **TODO:**
+-- Introduce vectors in the second component so that we can track
+-- whether the just reduced element is divisible by 11.
+
+nn: P := 22; -- level
+m: P := 11; mm: P := m; s: List Z := [-1, 0];
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+
+-- Let's compute the expansion (at $\infty$) of
+-- $$
+-- F(\tau) = g_r(\tau)
+--           q^{\frac{e}{24}}
+--           \sum_{k=0}^{\infty}p(m k + t)q^k.
+-- $$
+
+-- ## From input/convenience.input
+
+-- generatingSeries for p(m*n+t)
+
+siftedPartitionSeries(m: P, t: N): F1(Z) == (_
+  ps := partitionSeries(1)$QFunctions(Z, F1(Z));_
+  choose((n: Z): Z +-> m*n+t, ps, 0)$QFunctionTools(Z, F1(Z)))
+
+-- generating series for p(m*n+t) with cofactor eta quotient and
+-- the fractional q power.
+
+modularSiftedPartitionSeries(nn: P, m: P, t: N): F1(Z) == (_
+  mmdivs: List P := DIVISORS m;_
+  s: List Z := cons(-1, rest [0 for i in mmdivs]);_
+  r: List Z := etaCoFactorInfinity(nn, m, s, m, t)$QEtaModularFunctionTools;_
+  vPrint("-- cofactor", r);_
+  shat: Z := sigmaInfinity(mmdivs, s);_
+  orbs := [orb for tt in 0..m-1 | (orb := orbit(shat, m, tt::N); one? # orb)];_
+  if not(one? # orbs and one? # first orbs and t = first first orbs) then _
+    error "not a single element orbit";_
+  expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn);_
+  cofact := etaQuotient(DIVISORS nn, r)$EtaQuotient(Z, F1(Z));_
+  e := ((qetaGrade series cofact)-expectedGrade)*24 - prefactor cofact;_
+  vPrint("-- fractional exponent", e);_
+  fcf := retract(q24(e)$EtaQuotient(Z, F1(Z)) * cofact);_
+  fzf := fcf*siftedPartitionSeries(m, t));
+
+-- ## Create modular series for p(11n+6)
+
+fzf := modularSiftedPartitionSeries(nn, m, t);
+ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in F1
+xf := toX1(C, ff, F)
+
+-- The generators of the $\eta$-quotients of level 22 are given by
+-- these exponents for the $\eta$ functions (with arguments being the
+-- divisors of 22). The variable `rgens` corresponds to the generators
+-- of $R^\infty(22)$.
+
+rgens := etaQuotientMonoidExponentVectors level;
+nndivs := DIVISORS(nn);
+etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
+QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
+rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+eqgens := [etaQ r for r in rgens];
+msyms := indexedSymbols("M", #rgens)
+mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
+xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
+
+xt: X := xgens.1
+xab := samba(xt, xgens)$QXSAMBA1(C)
+
+-- Due to another critical element selection strategy, the resulting
+-- polynomial is a bit different.
+
+bas := sort(smallerGrade?, basis xab);
+
+-- We show that the basis element of degree 3 has coefficients that are
+-- all divisible by 11. So we can divide it by 11.
+-- The method is to multiply by t and track the cofactors of the
+-- basis elements used in this reduction.
+-- That this reduction should give 0 is clear, since xab is an
+-- algebra basis.
+
+x3 := xt * bas.1 - 11*(bas.5 - (- 5)::C * bas.4 - 21::C*bas.3 - (-89)::C*xt - 11*(-53)*bas.2 - 32::C*bas.1 - 11*(-12)::C*1$X)
+
+assert(zero? x3)
+
+p := second(x3)::Pol(C);
+[[e, x] for x in monomials(p)| zero?(e:=exponent leadingCoefficient x)]
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
