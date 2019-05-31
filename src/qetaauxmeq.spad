@@ -246,13 +246,13 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ m1*m2 = [[m*a, c], m*b, d]] and m1 being in SL_2(Z) and m2 being
       ++ a triangular matrix with 0 <= m2(1,2) < m/c.
     rightCosetRepresentatives: (P, P) -> List SL2Z
-      ++ rightCosetRepresentatives(mm, nn) returns a list of right
+      ++ rightCosetRepresentatives(nn, mm) returns a list of right
       ++ coset representatives of
       ++ $\Gamma_0(mm*nn) \backslash \Gamma_0(mm)$.
     doubleCosetRepresentatives: P -> List SL2Z
-      ++ doubleCosetRepresentatives(nn) returns a list of right double
+      ++ doubleCosetRepresentatives(nn) returns a list of double
       ++ coset representatives of
-      ++ $\Gamma_0(mm*nn) \backslash \Gamma_0(nn) / SL_2(\setZ)_\infty$
+      ++ $\Gamma_0(nn) \backslash \Gamma_0(1) / SL_2(\setZ)_\infty$
       ++ where $SL_2(\setZ)_\infty are matrices of the form [[1,h],[0,1]]
       ++ with h being an integer.
     rationalSquareRoot: Q -> Record(rat: Q, rootOf: P)
@@ -274,7 +274,9 @@ QAuxiliaryModularEtaQuotientPackage: with
     jacobiLowerStar: (Z, Z) -> Z
     coprimePart: (Z, Z) -> Z
     nu2: P -> Z
+      ++ \cite[p.~25]{Shimura:ArithmeticTheory:1994}
     nu3: P -> Z
+      ++ \cite[p.~25]{Shimura:ArithmeticTheory:1994}
 
   == add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
@@ -661,15 +663,15 @@ $a\in X_c$.
 
     -- This function corresponds to R_{N,\delta} in
     -- \cite[Lemma~2.44]{Radu:PhD:2010}.
-    rightCosetReps(delta: Z, mm: Z, nn: Z): List SL2Z ==
+    rightCosetReps(delta: Z, nn: Z, mm: Z): List SL2Z ==
         --assert(delta * mm * nn > 0)
         [cosetRep(lambda, delta, mm) for lambda in lambdas(delta, nn)]
 
 -------------------------------------------------------------------
 -- exported function
 -------------------------------------------------------------------
-    rightCosetRepresentatives(mm: P, nn: P): List SL2Z ==
-        concat [rightCosetReps(delta, mm, nn) for delta in divisors(nn)$INTF]
+    rightCosetRepresentatives(nn: P, mm: P): List SL2Z ==
+        concat [rightCosetReps(delta, nn, mm) for delta in divisors(nn)$INTF]
 
     doubleCosetRepresentatives(nn: P): List SL2Z ==
         [cuspToMatrix(nn, cusp) for cusp in cuspsOfGamma0(nn)]
