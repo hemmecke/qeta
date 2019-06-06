@@ -1,0 +1,263 @@
+-- -*- coding: utf-8 -*-
+-- # Series F: $p(11n+6)$ in $\Gamma_0(22)$
+
+-- We work in the finite field $F_{11}$.
+
+-- We do expansion at the cusp $\infty$ which corresponds to $1/N$ or
+-- to `1/nn` in terms of our session variables.
+
+-- ## Init
+
+-- ### Clear and set output format
+
+)clear completely
+
+-- ### Load macros and Choose coefficient domain $F_{11}$
+
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+)set output linear off
+)set output algebra on
+)set stream calculate 2
+)set mess time on
+C ==> PrimeField(11)
+CF ==> CF1 C
+X ==> X1 C
+xiord := 2;
+xi := -1;
+CX := C
+nn: P := 22
+)r ../input/convenience
+)r ../input/tracemacros
+--)set mess type on
+
+-- ### Auxiliary functions
+
+-- +
+rpol(x, ab) == second(reduce(x, ab)$QXRED(C))::Pol(C)
+
+relgens(gens, ab) == (_
+  bas0 := basis ab;_
+  h := [rpol(x, ab) for x in gens];_
+  bas := bas0;_
+  while not empty? bas repeat (_
+    b := first bas;_
+    bs := bas;_
+    while not empty? bs repeat (_
+      h := cons(rpol(b*first(bs), ab), h);_
+      bs := rest bs);_
+    bas := rest bas);_
+  [x for x in h | not zero? x])
+-- -
+
+F0F ==> Finite0SeriesFunctions2(Z, Z, 'q, q, 0, 0)
+divBy(n: Z, c: Z): Z == (c exquo n)::Z
+divideBy(n: Z): Z -> Z == (c: Z): Z +-> divBy(n, c)
+divSeriesBy11(f: F1(Z)): F1(Z) == map(divideBy 11, f)$F0F
+PE C ==> PolynomialEvaluation(C, F1 C)
+PEZ ==> PE Z
+PEQ ==> PE Q
+
+-- ## Eta Quotient generators
+
+-- We only need to specify the level $nn$.
+
+)set mess type on
+nn: P := 22; -- level
+nndivs := DIVISORS nn;
+etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+-- smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
+-- rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+eqgens := [etaQ r for r in rgens];
+elf := 11*1$F1(Z)
+egens := eqgens
+
+msyms := indexedSymbols("M", #rgens)
+mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
+[qetaGrade x for x in mxgens]
+genus := genusOfGamma0 nn
+g := mxgens
+[qetaGrade x for x in g]
+
+-- Compute an algebra basis for `mxgens`.
+
+xab := samba(first mxgens, mxgens, genus, onet1Step!)$QXSAMBA1(C)
+
+-- ### Gröbner basis of eta quotient combinations divisible by 11
+
+h := relgens(mxgens, xab)
+
+-- Relgens correspond to combinations of eta quotients that have
+-- coefficients divisible by 11.
+-- Thus we interpret the coefficients of h as integers and substitute
+-- the respective eta quotient for the M_i and then divide the
+-- coefficients by 11.
+
+syms := msyms
+dim := #syms
+D ==> HomogeneousDirectProduct(dim, N)
+E ==> Monomials(dim, D, syms)
+R ==> PolynomialRing(C, E)
+
+gb := groebner(h, syms)$QEtaGroebner(C,E)
+
+pt := (3*M1+8*M2)::Pol(C);
+pz1 := (-5*M1+16*M2)::Pol(C);
+pz2 := (M1-12*M2)::Pol(C);
+extendedNormalForms([pt,pz1,pz2], gb, syms, "F", "G")$QEtaGroebner(C,E)
+
+-- # Substitute integer series (divided by 11) for the $M_i$
+
+-- We interpret the coefficients of h as integers and substitute
+-- the respective eta quotient for the M_i and then divide the
+-- coefficients by 11.
+
+gz := gb::List(Pol(Z));
+gsyms := indexedSymbols("G", #gb)
+e2gens := [divSeriesBy11 eval(x, c +-> c*1$F1(Z), syms, egens)$PEZ, xab) for x in gz];
+--mx2gens0 := sort(smallerGrade?, [toX1(C, first x, sym) for x in mxgens for sym in msyms]);
+mx2gens1 := sort(smallerGrade?, [toX1(C,       x, sym) for x in e2gens for sym in gsyms]);
+mx2gens := mx2gens1 --concat(mx2gens0, mx2gens1)
+[qetaGrade x for x in mx2gens]
+
+x2ab := samba(first mx2gens, mx2gens, 0, onet1Step!)$QXSAMBA1(C)
+
+h2 := relgens(mx2gens, x2ab);
+h2mz := h2::List(Pol(Z))
+
+gdim := #gsyms
+DG ==> HomogeneousDirectProduct(gdim, N)
+EG ==> Monomials(gdim, DG, gsyms)
+RG ==> PolynomialRing(C, EG)
+gb2 := groebner(h2, gsyms)$QEtaGroebner(C,EG)
+
+subs := [sym=x/11 for sym in gsyms for x in gz];
+h2z := [(z:=eval(x, subs); z) for x in h2mz];
+
+g2z := gb2::List(Pol(Z));
+hsyms := indexedSymbols("H", #gb2)
+e3gens := [divSeriesBy11 eval(x, c +-> c*1$F1(Z), gsyms, e2gens)$PEZ for x in g2z];
+--mx3gens0 := sort(smallerGrade?, [toX1(C, first x, sym) for x in mxgens for sym in msyms]);
+mx3gens1 := sort(smallerGrade?, [toX1(C,       x, sym) for x in e3gens for sym in hsyms]);
+mx3gens := mx3gens1 --concat(mx2gens0, mx2gens1)
+[qetaGrade x for x in mx3gens]
+
+-- +
+--x3ab := samba(first mx3gens, mx3gens, 0, onet1Step!)$QXSAMBA1(C); -- takes too long in polynomial part
+-- -
+
+-- # p(11n+6) Representation of F wrt. Gröbner Basis
+
+m: P := 11; mm: P := m; s: List Z := [-1, 0];
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+
+-- Let's compute the expansion (at $\infty$) of
+-- $$
+-- F(\tau) = g_r(\tau)
+--           q^{\frac{e}{24}}
+--           \sum_{k=0}^{\infty}p(m k + t)q^k.
+-- $$
+
+fzf := modularSiftedPartitionSeries(nn, m, t);
+ff := abmap(Z, Q, fzf);
+xqf := toX1(Q, ff, F)
+
+mxq2gens := sort(smallerGrade?, [toX1(Q, x, sym) for x in e2gens for sym in gsyms])
+
+xq2ab := samba(first mxq2gens, mxq2gens)$QXSAMBA1(Q)
+
+xr := reduce(xf, xq2ab)$QXRED(Q)
+
+p := clearDenominator(second(xr)::Pol(Q));
+
+[positiveRemainder(numer leadingCoefficient x, 11) for x in monomials p]
+
+factor (abs coefficient(p, F, 1)::Z)
+
+-- ### Clear and set output format
+
+)clear completely
+
+-- ### Load macros and Choose coefficient domain $\mathbb{Q}$
+
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+)set output linear off
+)set output algebra on
+)set stream calculate 20
+)set mess time on
+C ==> Q
+CF ==> CF1 C
+X ==> X1 C
+xiord := 2;
+xi := -1;
+CX := C
+nn: P := 22
+)r ../input/convenience
+)r ../input/tracemacros
+--)set mess type on
+
+-- ## p(m n + t)
+
+-- We only need to specify the level $nn$, $m$ (and $mm$) and compute
+-- the $t$ automatically.
+
+)set mess type on
+nn: P := 22; -- level
+m: P := 11; mm: P := m; s: List Z := [-1, 0];
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+
+-- Let's compute the expansion (at $\infty$) of
+-- $$
+-- F(\tau) = g_r(\tau)
+--           q^{\frac{e}{24}}
+--           \sum_{k=0}^{\infty}p(m k + t)q^k.
+-- $$
+
+fzf := modularSiftedPartitionSeries(nn, m, t);
+ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in F1
+xf := toX1(C, ff, F)
+
+nndivs := DIVISORS nn;
+etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
+rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+eqgens := [etaQ r for r in rgens];
+
+msyms := indexedSymbols("M", #rgens)
+mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
+xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
+[qetaGrade x for x in xgens]
+genus := genusOfGamma0 nn
+xm1:= mxgens.1
+xt := xgens.1
+g := mxgens
+[qetaGrade x for x in g]
+
+rpol(x, ab)==second(reduce(x, ab)$QXRED(C))::Pol(C)
+
+xab := samba(xm1, mxgens, genus, onet1Step!)$QXSAMBA1(C);
+[qetaGrade x for x in basis xab]
+xbas := basis xab
+x2t := toX1(C, first(xbas.4), 'T)
+xbas := rest reverse! xbas
+x2gens := cons(x2t, xbas)
+x2ab := samba(x2t, x2gens, genus, onet1Step!)$QXSAMBA1(C);
+[qetaGrade x for x in basis x2ab]
+x2bas := basis x2ab
+
+
+xr := reduce(xf, x2ab)$QXRED(C)
+
+p := second(xr)::Pol(C)
