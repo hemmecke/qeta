@@ -246,11 +246,14 @@ PolynomialEvaluation(_
       _^: (%, NonNegativeInteger) -> %)_
  ): with
     eval: (Polynomial C, C -> S, LSym, List S) -> S
+    eval: (C -> S, LSym, List S) -> Polynomial C -> S
  == add
     eval(p: Polynomial C, embed: C -> S, vars: LSym, vals: List S): S ==
         E ==> IndexedExponents Symbol
         PE ==> PolynomialCategoryLifting(E, Symbol, C, Polynomial C, S)
         map((s:Symbol):S +-> vals.position(s, vars), embed, p)$PE
+    eval(embed: C -> S, vars: LSym, vals: List S): Polynomial C -> S ==
+      (p: Polynomial C): S +-> eval(p, embed, vars, vals)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
