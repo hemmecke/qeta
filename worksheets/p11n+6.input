@@ -31,12 +31,33 @@ CX := C
 nn: P := 22
 )r ../input/convenience
 )r ../input/tracemacros
---)set mess type on
+)set mess type ff
 
 -- ### Auxiliary functions
 
--- +
+F0F ==> Finite0SeriesFunctions2(Z, Z, 'q, q, 0, 0)
+divBy(n: Z, c: Z): Z == (c exquo n)::Z
+divideBy(n: Z): Z -> Z == (c: Z): Z +-> divBy(n, c)
+divideSeriesBy(n: Z, f: F1(Z)): F1(Z) == map(divideBy n, f)$F0F
+
+PE C ==> PolynomialEvaluation(C, F1 C)
+PEZ ==> PE Z
+PEQ ==> PE Q
+VZ==>Vector Z
+
 rpol(x, ab) == second(reduce(x, ab)$QXRED(C))::Pol(C)
+
+prods(bas)==(_
+  bas0 := cons(1, bas);_
+  h := empty()$List(Pol Z);_
+  while not empty? bas0 repeat (_
+    b := first bas0;_
+    bs := bas0;_
+    while not empty? bs repeat (_
+      h := cons(b*first bs, h);_
+      bs := rest bs);_
+    bas0 := rest bas0);_
+  h)
 
 relgens(gens, ab) == (_
   bas0 := basis ab;_
@@ -50,104 +71,211 @@ relgens(gens, ab) == (_
       bs := rest bs);_
     bas := rest bas);_
   [x for x in h | not zero? x])
--- -
 
-F0F ==> Finite0SeriesFunctions2(Z, Z, 'q, q, 0, 0)
-divBy(n: Z, c: Z): Z == (c exquo n)::Z
-divideBy(n: Z): Z -> Z == (c: Z): Z +-> divBy(n, c)
-divSeriesBy11(f: F1(Z)): F1(Z) == map(divideBy 11, f)$F0F
-PE C ==> PolynomialEvaluation(C, F1 C)
-PEZ ==> PE Z
-PEQ ==> PE Q
+groebnerBasis(h, syms) == (_
+  dim := #syms;_
+  D ==> HomogeneousDirectProduct(dim, N);_
+  E ==> Monomials(dim, D, syms);_
+  groebner(h, syms)$QEtaGroebner(C, E))
+
+xNFs(hs, gb, syms, f, g) == (_
+  dim := #syms;_
+  D ==> HomogeneousDirectProduct(dim, N);_
+  E ==> Monomials(dim, D, syms);_
+  extendedNormalForms(hs, gb, syms, f, g)$QEtaGroebner(C, E))
+
+
+qGrades(l) == [qetaGrade x for x in l]
+
+-- ### Initialize computation vectors
+
+vlen := 5;
+syms  := new(vlen, [])$IndexedVector(List Symbol, 0);
+igens  := new(vlen, [])$IndexedVector(List F1 Z, 0);
+xgens  := new(vlen, [])$IndexedVector(List X1 C, 0);
+ez     := new(vlen, [])$IndexedVector(List Equation Pol Z, 0);
+en     := new(vlen, [])$IndexedVector(List Equation Pol Z, 0);
+xt    := new(vlen, 1$X1(C))$IndexedVector(X1 C, 0); -- the multiplier
+h     := new(vlen, [])$IndexedVector(List Pol C, 0);
+g     := new(vlen, [])$IndexedVector(List Pol C, 0);
+gz    := new(vlen, [])$IndexedVector(List Pol Z, 0);
+az    := new(vlen, [])$IndexedVector(List Pol Z, 0);
+xab   := new(vlen, initialize(1$X1(C)))$IndexedVector(QXAB1 C, 0);
+)set stream calc 2
 
 -- ## Eta Quotient generators
 
 -- We only need to specify the level $nn$.
 
-)set mess type on
 nn: P := 22; -- level
-nndivs := DIVISORS nn;
+genus := genusOfGamma0 nn
 etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
--- smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
--- rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
 eqgens := [etaQ r for r in rgens];
-elf := 11*1$F1(Z)
-egens := eqgens
 
-msyms := indexedSymbols("M", #rgens)
-mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
-[qetaGrade x for x in mxgens]
-genus := genusOfGamma0 nn
-g := mxgens
-[qetaGrade x for x in g]
+igens.0 := eqgens
+syms.0 := indexedSymbols("M", #rgens)
+xgens.0 := [toX1(C, x, sym) for x in igens.0 for sym in syms.0];
+qGrades xgens.0
 
--- Compute an algebra basis for `mxgens`.
+-- Compute an algebra basis for `xgens.0`.
 
-xab := samba(first mxgens, mxgens, genus, onet1Step!)$QXSAMBA1(C)
+xt.0 := first xgens.0
+xab.0 := samba(xt.0, xgens.0, genus, onet1Step!)$QXSAMBA1(C)
 
--- ### Gröbner basis of eta quotient combinations divisible by 11
+-- ## Gröbner basis over $F_{11}$ of eta quotient combinations divisible by 11
 
-h := relgens(mxgens, xab)
+-- Reduce the generators and products of basis elements by the basis.
+-- It gives the generators of the ideal of all relations (over $F_{11}$).
 
--- Relgens correspond to combinations of eta quotients that have
--- coefficients divisible by 11.
--- Thus we interpret the coefficients of h as integers and substitute
--- the respective eta quotient for the M_i and then divide the
--- coefficients by 11.
+h.0 := relgens(xgens.0, xab.0)
 
-syms := msyms
-dim := #syms
-D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, D, syms)
-R ==> PolynomialRing(C, E)
+g.0 := groebnerBasis(h.0, syms.0)
 
-gb := groebner(h, syms)$QEtaGroebner(C,E)
+-- Check that the relations of Radu are expressible in terms of the
+-- Gröbner basis.
 
 pt := (3*M1+8*M2)::Pol(C);
 pz1 := (-5*M1+16*M2)::Pol(C);
 pz2 := (M1-12*M2)::Pol(C);
-extendedNormalForms([pt,pz1,pz2], gb, syms, "F", "G")$QEtaGroebner(C,E)
+xNFs([pt,pz1,pz2], g.0, syms.0, "F", "G")
 
 -- # Substitute integer series (divided by 11) for the $M_i$
 
+-- Relgens correspond to combinations of eta quotients that have
+-- coefficients divisible by 11.
+--
 -- We interpret the coefficients of h as integers and substitute
 -- the respective eta quotient for the M_i and then divide the
 -- coefficients by 11.
 
-gz := gb::List(Pol(Z));
-gsyms := indexedSymbols("G", #gb)
-e2gens := [divSeriesBy11 eval(x, c +-> c*1$F1(Z), syms, egens)$PEZ, xab) for x in gz];
---mx2gens0 := sort(smallerGrade?, [toX1(C, first x, sym) for x in mxgens for sym in msyms]);
-mx2gens1 := sort(smallerGrade?, [toX1(C,       x, sym) for x in e2gens for sym in gsyms]);
-mx2gens := mx2gens1 --concat(mx2gens0, mx2gens1)
-[qetaGrade x for x in mx2gens]
+)set stream calc 4
+gz.0 := (g.0)::List(Pol(Z));
+syms.1 := indexedSymbols("A", #(g.0))
+evz ==> eval(c+->c*1$F1(Z), syms.0, igens.0)
+igens.1 := [divideSeriesBy(11, evz x) for x in gz.0];
+xgens.1 := sort(smallerGrade?, [toX1(C, x, sym) for x in igens.1 for sym in syms.1])
+qGrades xgens.1
 
-x2ab := samba(first mx2gens, mx2gens, 0, onet1Step!)$QXSAMBA1(C)
+-- We can take these series as input and iterate.
+-- Thus we would get another Gröbner basis (over $F_{11}$ in term of the new
+-- variables $A_i$ that describe the ideal of eta quotient combinations that
+-- are divisible by 11^2.
 
-h2 := relgens(mx2gens, x2ab);
-h2mz := h2::List(Pol(Z))
+-- ## Can do better
 
-gdim := #gsyms
-DG ==> HomogeneousDirectProduct(gdim, N)
-EG ==> Monomials(gdim, DG, gsyms)
-RG ==> PolynomialRing(C, EG)
-gb2 := groebner(h2, gsyms)$QEtaGroebner(C,EG)
+-- Consider the all products of variables (including 1) corresponding
+-- to the input eta-quotients.
+--
+-- Adding a 11-multiple of such a product to a Gröbner basis polynomial
+-- does not change the GB over $F_11$.
+--
+-- However, when considered over $\mathbb{Z}$, we might be able to
+-- reduce the order of the corresponding series over $\mathbb{Z}$,
+-- by cleverly choosing the multiple.
 
-subs := [sym=x/11 for sym in gsyms for x in gz];
-h2z := [(z:=eval(x, subs); z) for x in h2mz];
+ps := prods(syms.0)
+[evz x for x in ps]
 
-g2z := gb2::List(Pol(Z));
-hsyms := indexedSymbols("H", #gb2)
-e3gens := [divSeriesBy11 eval(x, c +-> c*1$F1(Z), gsyms, e2gens)$PEZ for x in g2z];
---mx3gens0 := sort(smallerGrade?, [toX1(C, first x, sym) for x in mxgens for sym in msyms]);
-mx3gens1 := sort(smallerGrade?, [toX1(C,       x, sym) for x in e3gens for sym in hsyms]);
-mx3gens := mx3gens1 --concat(mx2gens0, mx2gens1)
-[qetaGrade x for x in mx3gens]
+-- Combination leads to a linear diophantine equation system.
+--
+-- That function is programmed in `annihilatecoefficients`.
 
--- +
---x3ab := samba(first mx3gens, mx3gens, 0, onet1Step!)$QXSAMBA1(C); -- takes too long in polynomial part
--- -
+--annlc ==> annihilateLeadingCoefficients(11, evz)$QAuxiliaryModularPackage(F1 Z)
+--az.0 := [annlc(x) for x in gz.0];
+annc ==> annihilateCoefficients(11, ps, evz)$QAuxiliaryModularPackage(F1 Z)
+az.0 := [annc(x) for x in gz.0];
+
+igens.1 := [divideSeriesBy(11, evz x) for x in az.0];
+qGrades igens.1
+
+-- Interestingly, some combinations yield a zero series over $\mathbb{Z}$.
+-- The corresponding polynomial, is a relation over $\mathbb{Z}$ for the
+-- $\mathbb{Z}$-linear eta-quotient combinations having $q$-series
+-- expansions with each coefficient divisible by 11.
+
+tmp := [toX1(Z, x, sym) for x in igens.1 for sym in syms.1];
+ez.1 := [second a = p for a in tmp for p in az.0| zero? a]
+en.1 := [second a = p for a in tmp for p in az.0| not zero? a];
+
+rhs last en.1
+tmp := evz(- 1469831*M4 + 1068968 * M2 + 400863 * M1)
+[factor qetaCoefficient(tmp, i) for i in 0..qetaGrade tmp]
+
+tmp := sort(smallerGrade?, [toX1(C, x, sym) for x in igens.1 for sym in syms.1]);
+xgens.1 := [x for x in tmp | not member?(second(x)::Pol(C), [lhs e for e in ez.1])]
+qGrades xgens.1
+
+-- Compute an algebra basis for the non-zero elements of `xgens.1`.
+
+xt.1 := first [x for x in xgens.1 | qetaGrade(x) > 0]
+xab.1 := samba(xt.1, xgens.1, genus, onet1Step!)$QXSAMBA1(C)
+
+h.1 := relgens(xgens.1, xab.1)
+
+g.1 := groebnerBasis(h.1, syms.1)
+
+
+
+
+
+-- ## Iterate 11^2
+
+gz.1 := (g.1)::List(Pol(Z));
+syms.2 := indexedSymbols("B", #(g.1))
+
+-- Substitute the $M_i$ for the $A_i$.
+
+gz.1 := eval(gz.1, en.1)
+
+annc2 ==> annihilateCoefficients(11^2, ps, evz)$QAuxiliaryModularPackage(F1 Z)
+az.1 := [annc2(x) for x in gz.1];
+
+#az.1
+igens.2 := [divideSeriesBy(11^2, evz x) for x in az.1];
+qGrades igens.2
+
+igens.2
+
+tmp := [toX1(Z, x, sym) for x in igens.2 for sym in syms.2];
+ez.2 := [second a = p for a in tmp for p in az.1| zero? a]
+en.2 := [second a = p for a in tmp for p in az.1| not zero? a];
+
+ez.2
+zero? evz rhs ez.2.1
+
+tmp :=  [evz rhs x for x in en.2]
+
+tmp := sort(smallerGrade?, [toX1(C, x, sym) for x in igens.2 for sym in syms.2]);
+xgens.2 := [x for x in tmp | not member?(second(x)::Pol(C), [lhs e for e in ez.2])]
+qGrades xgens.2
+
+xt.2 := first [x for x in xgens.2 | qetaGrade(x) > 0]
+xab.2 := samba(xt.2, xgens.2, genus, onet1Step!)$QXSAMBA1(C)
+
+h.2 := relgens(xgens.2, xab.2)
+
+g.2 := groebnerBasis(h.2, syms.2)
+
+
+
+-- ## Iterate 11^3
+
+gz.2 := (g.2)::List(Pol(Z));
+syms.2 := indexedSymbols("C", #(g.2))
+
+-- Substitute the $M_i$ for the $B_i$.
+
+gz.2 := eval(gz.2, en.2)
+
+annc3 ==> annihilateCoefficients(11^3, ps, evz)$QAuxiliaryModularPackage(F1 Z)
+az.2 := [annc2(x) for x in gz.2];
+
+#az.2
+igens.3 := [divideSeriesBy(11^3, evz x) for x in az.2];
+qGrades igens.3
+
+igens.3
 
 -- # p(11n+6) Representation of F wrt. Gröbner Basis
 
@@ -172,13 +300,256 @@ mxq2gens := sort(smallerGrade?, [toX1(Q, x, sym) for x in e2gens for sym in gsym
 
 xq2ab := samba(first mxq2gens, mxq2gens)$QXSAMBA1(Q)
 
-xr := reduce(xf, xq2ab)$QXRED(Q)
+xr := reduce(xqf, xq2ab)$QXRED(Q)
 
 p := clearDenominator(second(xr)::Pol(Q));
 
 [positiveRemainder(numer leadingCoefficient x, 11) for x in monomials p]
 
 factor (abs coefficient(p, F, 1)::Z)
+
+ab
+
+xqf
+
+xqf -
+
+
+-- ## Algebra basis over $\mathbb{Q}$ and representation of F
+
+tmp0 := [toX1(Q, x, sym) for x in igens.0 for sym in syms.0];
+tmp1 := [toX1(Q, x, sym) for x in igens.1 for sym in syms.1];
+tmp1n:= [a for a in tmp1 | not zero? a];
+tmpt := first tmp0
+tmp := concat(tmp0, tmp1n)
+
+ab := samba(first tmp, tmp, genus)$QXSAMBA1(Q)
+
+b := basis ab
+xqt := multiplier ab
+
+xx := xqf - 11*(xqt^2*(b.3 + 33*b.2 + 6*1499*1$X1(Q)) + _
+                xqt*  (2*9*25*b.4 + 2*587*b.1 + 2*11*4657*b.3 +_
+                       40*11*463*b.2 + 2^4*7*11*5839*1$X1(Q)) +_
+                      (2^9*7*11^2*b.4 - 2^7*3*5*7*11^2*b.1 +_
+                       2^7*5^2*11^4*b.3 - 2^8*11^3*83*b.2 + 2^8*5*7*11^3*1$X1(Q)));
+zero? xx
+xx
+
+tmp16 := reduce(tmp1.13, ab)$QXRED(Q)
+
+pol := (eval(second(xx)::Pol(Q), A6=-320402/133621/11*A13));
+fpol := eval(pol, en.1) - F
+
+sf := (4*first xqf)::F1(Q)::F1(Z);
+sp := evz((4*fpol)::Pol(Z));
+ser := sf + sp
+zero?(ser)
+
+
+
+
+
+
+-- # Gröbner basis with reduced series.
+
+mxqgens := [toX1(Q, x, sym) for x in eqgens for sym in msyms];
+
+-- Compute an algebra basis for `mxqgens`.
+
+xqab := samba(first mxqgens, mxqgens, genus)$QXSAMBA1(Q)
+
+xqbas := basis xqab
+
+-- Create an algebra basis with representation involving the $G_i$.
+
+fsyms := indexedSymbols("F", #xqbas)
+nfxqpols := xNFs([(second(x)::Pol(Q)) for x in basis xqab], gz, msyms, "F", "G")
+mgxqpols := [(c:=coefficient(x,f,1); f-x/c) for f in fsyms for x in nfxqpols]
+mgxqgens := [toX1(Q, first x, pol) for x in xqbas for pol in mgxqpols]
+mgxqab := samba(first mxqgens, mgxqgens, genus)$QXSAMBA1(Q)
+b := basis mgxqab
+mgxzgens := [toX1(Z, (first x)::F1(Q)::F1(Z), second(x)::Pol(Q)::Pol(Z)) for x in [b.1, 88*b.2, 8*b.3, b.4]]
+mxzgens := [toX1(Z, x, sym) for x in eqgens for sym in msyms]
+
+mgxzab := samba(first mxzgens, mgxzgens, genus)$QXSAMBA1(Z)
+
+gxz2gens := [toX1(Z, x, sym) for x in e2gens for sym in gsyms]
+
+mgxz2gens := [reduce(x, mgxzab)$QXRED(Z) for x in gxz2gens]
+
+
+
+-- # Gröbner basis with annihilated series
+
+annlc ==> annihilateLeadingCoefficients(11, evz)$QAuxiliaryModularPackage(F1 Z)
+hz := h :: List Pol(Z)
+annhz :=  [annlc(x) for x in hz]
+((annhz :: List Pol C) = h)@Boolean
+
+ea2gens := [divideSeriesBy(11, evz x) for x in annhz]
+ea2gensnz := [x for x in ea2gens| not zero? x]
+mxa2gens := sort(smallerGrade?, [toX1(C, x, sym) for x in ea2gens for sym in gsyms])
+mxa2gensnz := sort(smallerGrade?, [toX1(C, x, sym) for x in ea2gensnz for sym in gsyms])
+mxa2gensz  := [x for x in mxa2gens|zero? x]
+mxa2gensnz := [x for x in mxa2gens|not zero? x]
+xa2ab := samba(first mxa2gensnz, mxa2gensnz,0 )$QXSAMBA1(C)
+
+
+-- # Closer Look at Gröbner basis in $F_{11}$
+
+-- Add multiples of the generators such that the grade becomes small.
+
+annlc ==> annihilateLeadingCoefficients(11, evz)$QAuxiliaryModularPackage(F1 Z)
+anngz := [annlc(x) for x in gz]
+er2gens := [divideSeriesBy(11, evz x) for x in anngz]
+er2gensnz := [x for x in er2gens| not zero? x]
+#er2gens
+mxr2gens := sort(smallerGrade?, [toX1(C, x, sym) for x in er2gens for sym in gsyms])
+--mxr2gensnz := sort(smallerGrade?, [toX1(C, x, sym) for x in er2gensnz for sym in gsyms])
+mxr2gensz  := [x for x in mxr2gens|zero? x]
+mxr2gensnz := [x for x in mxr2gens|not zero? x]
+
+xr2ab := samba(3*first mxr2gensnz, mxr2gensnz, 0)$QXSAMBA1(C)
+numOfGaps xr2ab
+
+hr2 := relgens(mxr2gensnz, xr2ab);
+hr2z := hr2 :: List Pol Z
+
+gbr2 := groebnerBasis(hr2, gsyms)
+
+gr2z := gbr2 :: List Pol Z
+hsyms := indexedSymbols("H", #gb2)
+evrz2 ==> eval(c+->c*1$F1(Z), gsyms, er2gens)
+
+er3gens := [divideSeriesBy(11, evrz2 x) for x in gr2z]
+
+mxr3gens := sort(smallerGrade?, [toX1(C, x, sym) for x in er2gens for sym in hsyms])
+
+mxr3gensnz := [x for x in mxr3gens|not zero? x]
+
+xr3ab := samba(3*first mxr3gensnz, mxr3gensnz, 0)$QXSAMBA1(C)
+numOfGaps xr3ab
+
+
+
+
+
+-- ---------------------------------------------------
+
+b := gz.1
+ez b
+grdb := qetaGrade ez b
+mons := monomials b
+csyms := indexedSymbols("C", #mons)
+
+coeffs := [(leadingCoefficient x + 11*c)::Pol(Z) for x in mons for c in csyms]
+
+rp := reduce(+, [c*(monomial(1, degree x)$Pol(Z)) for x in mons for c in coeffs])
+rr := reduce(+, [c*ez(monomial(1, degree x))::F1(Pol Z) for x in mons for c in coeffs]);
+
+nc:=#mons -1
+eqs := reverse! [qetaCoefficient(rr, i) for i in grdb-nc+1..grdb]
+mat := new(nc, #csyms, 0)$MZ;
+for i in 1..nc for eq in eqs repeat for j in 1..#mons for c in csyms repeat (_
+  setelt!(mat, i,j, coefficient(eq, c, 1)::Z));
+mat
+
+v := vector [coefficient(eq, csyms, [0 for c in csyms]) for eq in eqs]
+sol := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+
+rp0 := eval(rp, [c=-val for c in csyms for val in members(sol.particular)])
+divSeriesBy11 ez rp0
+
+
+b := xqbas
+
+xzbas := [toX1(Z, (first x)::F1(Q)::F1(Z), second(x)::Pol(Q)::Pol(Z)) for x in [b.1, 8*b.2, b.3, 88*b.4]]
+
+ez2gens := [divSeriesBy11 ez x for x in gz];
+
+mxz2gens1 := [toX1(Z, x, sym) for x in e2gens for sym in gsyms]
+
+mxz2gensred := [reduce(x, mgxzab)$QXRED(Z) for x in mxz2gens1]
+
+-- +
+CONTINUE HERE
+
+Multiply polynomials by 11
+substitiute the Gi by the respective Gröbner polynomial in the Mj
+PROBLEM G13^2
+
+-- -
+
+[(11*(second(x)::Pol(Z) - gsym) + pol) for x in mxz2gensred for gsym in gsyms for pol in gz]
+
+ez(gz.13 - 11*M2)
+
+
+
+
+
+
+
+
+
+gz.1 -- (4*M4+7*M2+7)*M7+(9*M4+3*M2+1)*M6+(8*M4+3)*M5+2*M3+M2^2+10*M2
+
+gz.2 -- (9*M4+2*M2+5)*M7+(9*M4+7*M2+7)*M6+(9*M4+2)*M5+(M2+10)*M3
+
+gz.3 -- (8*M4+3*M2+8)*M7+(9*M4+4*M2+9)*M6+(10*M4+10)*M5+M3^2
+
+gz.4 -- (4*M4+7*M2+10)*M7+(9*M4+3*M2+8)*M6+8*M4*M5+M2*M4
+
+gz.5 -- (8*M4+3*M2+4)*M7+(4*M4+9*M2+2)*M6+7*M4*M5+M3*M4
+
+gz.6 -- (4*M4+7*M2+2)*M7+(9*M4+3*M2+6)*M6+(8*M4+4)*M5+M4^2+2*M4+9*M3+10*M2+1
+
+b
+ez(M4*M7)
+ez(M2*M7)
+ez M7
+ez(M4*M6)
+ez(M2*M6)
+ez M6
+ez(M4*M5)
+ez(M2*M5)
+ez(M5)
+ez(M2*M6)
+ez(M3*M5)
+
+ez(gz.7 -11*M4*M7 - 22*M4*M6 - 11*M4*M5) -- (8*M4+3*M2+8)*M7+(9*M4+4*M2+9)*M6+(10*M4+M2+10)*M5
+
+zero? ez(gz.8 - 11*M2*M6) -- 10*M2*M6+M3*M5
+
+zero? ez(gz.9 - 11*M2*M7) -- 10*M2*M7+M5^2
+
+zero? ez(gz.10 -11*M2*M7) -- 10*M2*M7+M3*M6
+
+zero? ez(gz.11 - 11*M3*M7) -- 10*M3*M7+M5*M6
+
+zero? ez(gz.12 - 11*M5*M7)-- 10*M5*M7+M6^2
+
+ez(gz.13 -11*M2)  -- 10*M2+M1
+
+)set output linear off
+)set output algebra on
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- # CONTINUE HERE
+
+
 
 -- ### Clear and set output format
 
