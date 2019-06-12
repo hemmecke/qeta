@@ -29,7 +29,8 @@ xi := -1;
 CX := Q;
 )r ../input/convenience )quiet
 
--- We do expansion at the cusp $\infty$ which corresponds to $1/N$ or to `1/nn` in terms of our session variables.
+-- We do expansion at the cusp $\infty$ which corresponds to $1/N$ or
+-- to `1/nn` in terms of our session variables.
 
 )set mess time on
 )set mess type on
@@ -113,15 +114,41 @@ q := monomial(1,1)$F1(C) -- d/d(tau) q(tau) = 2*pi*i*exp(2*pi*i*tau) = 2*pi*i*q
 dt := q*D(eqgens.1)/retract toeta((E1^2*E11^2))
 xdt := toX1(C, dt, 'T1)
 xdgens := [xt, xdt]
-
 xdab := samba(xt, xdgens, 1, onet1Step!)$QXSAMBA1(C);
+
+d2t := q*D(dt)/retract toeta((E1^2*E11^2))
+xd2t := toX1(C, d2t, 'T2)
+xd2ab := samba(xt, [xt, xdt, xd2t], 1, onet1Step!)$QXSAMBA1(C);
+
+d3t := q*D(d2t)/retract toeta((E1^2*E11^2))
+xd3t := toX1(C, d3t, 'T3)
+xd3ab := samba(xt, [xt, xdt, xd2t, xd3t], 1, onet1Step!)$QXSAMBA1(C);
+
+d4t := q*D(d3t)/retract toeta((E1^2*E11^2))
+xd4t := toX1(C, d4t, 'T4)
+xd4ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t], 1, onet1Step!)$QXSAMBA1(C);
+
+xr := reduce(xf, xd4ab)$QXRED(C);
+xr
+
+d5t := q*D(d4t)/retract toeta((E1^2*E11^2))
+xd5t := toX1(C, d5t, 'T5)
+xd5ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t], 0, onet1Step!)$QXSAMBA1(C);
+
+-- The following stuff gives nonsense, because it is no longer in M^\infty(11).
+
+d6t := q*D(d5t)/retract toeta((E1^2*E11^2))
+xd6t := toX1(C, d6t, 'T6)
+xd6ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t], 0, onet1Step!)$QXSAMBA1(C);
+
+d7t := q*D(d5t)/retract toeta((E1^2*E11^2))
+xd7t := toX1(C, d7t, 'T7)
+xd7ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t, xd7t], 0, onet1Step!)$QXSAMBA1(C);
+
 
 cft := first xt
 cfdgens := [first x for x in xdgens]
 cfab := samba(first xt, cfdgens, 1, cfonet1Step!)$QSAMBA1(C);
-
-xr := reduce(xf, xdab)$QXRED(C);
-zero? xr
 
 
 xdfgens := [xt, xdt, xf]
