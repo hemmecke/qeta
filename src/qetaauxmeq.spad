@@ -677,6 +677,17 @@ $a\in X_c$.
         [cuspToMatrix(nn, cusp) for cusp in cuspsOfGamma0(nn)]
 
 
+)if LiterateDoc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Auxiliary package to annihilate leading coefficients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Add $p$-multiples of original generators in order to reduce the
+order of the series. Return the respective (adjustment) polynomial.
+
+)endif
+
 
 )abbrev package QAUXMOD QAuxiliaryModularPackage
 QAuxiliaryModularPackage(L): Exports == Implementation where
@@ -686,6 +697,7 @@ QAuxiliaryModularPackage(L): Exports == Implementation where
   term x ==> monomial(1, degree x)$ZX
   lc x ==> leadingCoefficient x
   Exports ==> with
+    annihilateCoefficients: (P, List ZX, ZX -> L) -> ZX -> ZX
     annihilateLeadingCoefficients: (P, ZX -> L) -> ZX -> ZX
       ++ annihilateLeadingCoefficients(p, ev)(pol) adds a p-multiple
       ++ to any monomial of pol and returns a polynomial z such that
@@ -695,14 +707,13 @@ QAuxiliaryModularPackage(L): Exports == Implementation where
       ++ order(ev z) = order(ev pol) + #monomials(pol) - 1.
       ++ The polynomial pol is assumed to be nonzero.
   Implementation ==> add
-    annihilateLeadingCoefficients(p: P, ev: ZX -> L): ZX -> ZX ==
+    annihilateCoefficients(p: P, mons: List ZX, ev: ZX -> L): ZX -> ZX ==
       (pol: ZX): ZX +->
         --assert(not zero? pol)
-        mons: List ZX := monomials pol
-        vPrint("mons", [term(x) for x in mons])
         ll: L := ev pol
+        zero? ll => primitivePart pol
         ls: List L := [ev term x for x in mons]
-        ords: List Z := [order l for l in ls]
+        ords: List Z := [order(l, 1) for l in ls]
         o: Z := min ords
         nmons: N := # mons      -- number of variables
         for neqs in nmons..1 by -1 repeat
@@ -721,10 +732,21 @@ QAuxiliaryModularPackage(L): Exports == Implementation where
             if sol.particular case VZ then
                 s := (sol.particular) :: VZ
                 adjust := [p*c*term(x) for c in members s for x in mons]
-                return pol + reduce(_+, adjust, 0)
-                -- should minimize the leading coefficient of the series
-                -- by adding 11*(combination of basis elements).
-        error "annihilateLeadingCoefficients: failed" -- should not happen
+                z := pol + reduce(_+, adjust, 0)
+                ll := ev z
+                c: Z := coefficient(ll, 0) quo p
+                z := z - p*c*1$ZX
+                zero? ev z => return primitivePart z
+                return z
+        vPrint("annihilateLeadingCoefficients", "nothing annihilated"::Symbol)
+        return primitivePart pol
+
+    annihilateLeadingCoefficients(p: P, ev: ZX -> L): ZX -> ZX ==
+      (pol: ZX): ZX +->
+        --assert(not zero? pol)
+        mons: List ZX := monomials pol
+        vPrint("mons", [term(x) for x in mons])
+        annihilateCoefficients(p, mons, ev)(pol)
 
 
 
