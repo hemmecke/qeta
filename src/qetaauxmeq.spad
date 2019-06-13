@@ -737,7 +737,13 @@ QAuxiliaryModularPackage(L): Exports == Implementation where
                 c: Z := coefficient(ll, 0) quo p
                 z := z - p*c*1$ZX
                 zero? ev z => return primitivePart z
-                return z
+                -- divide by primes not in p
+                c := content z
+                primesp := [x.factor for x in factorList factor p]
+                for x in primesp repeat
+                    while zero? positiveRemainder(c, x) repeat
+                        c := (c exquo x)::Z
+                return (z exquo c)::ZX
         vPrint("annihilateLeadingCoefficients", "nothing annihilated"::Symbol)
         return primitivePart pol
 
