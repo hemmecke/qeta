@@ -12,7 +12,7 @@
 
 )clear completely
 
--- ### Load macros and Choose coefficient domain $F_{11}$
+-- ### Load macros and Choose coefficient domain $\mathbb{Z}_{11}$
 
 )cd /home/hemmecke/g/qeta/tmp
 )set mess type off
@@ -24,6 +24,7 @@
 )set mess time on
 ell := 11
 C ==> PrimeField(ell)
+--C ==> IntegerLocalizedAtPrime(ell)
 CF ==> CF1 C
 X ==> X1 C
 xiord := 2;
@@ -170,7 +171,7 @@ eqgens.2 + 10*eqgens.1
 -- coefficients divisible by 11.
 --
 -- We interpret the coefficients of h as integers and substitute
--- the respective eta quotient for the M_i and then divide the
+-- the respective eta quotient for the $M_i$ and then divide the
 -- coefficients by 11.
 
 )set stream calc 4
@@ -182,9 +183,8 @@ xgens.1 := sort(smallerGrade?, [toX1(C, x, sym) for x in igens.1 for sym in syms
 qGrades xgens.1
 
 -- We can take these series as input and iterate.
--- Thus we would get another Gröbner basis (over $F_{11}$ in term of the new
--- variables $A_i$ that describe the ideal of eta quotient combinations that
--- are divisible by 11^2.
+-- Thus we would get another Gröbner basis (over $\mathbb{Z}_{11}$
+-- in term of the new variables $A_i$ that describe the ideal of eta quotient combinations that are divisible by 11^2.
 
 -- ## Can do better
 
@@ -192,7 +192,7 @@ qGrades xgens.1
 -- to the input eta-quotients.
 --
 -- Adding a 11-multiple of such a product to a Gröbner basis polynomial
--- does not change the GB over $F_11$.
+-- does not change the GB over $\mathbb{Z}_{11}$.
 --
 -- However, when considered over $\mathbb{Z}$, we might be able to
 -- reduce the order of the corresponding series over $\mathbb{Z}$,
@@ -218,7 +218,8 @@ qGrades igens.1
 -- $\mathbb{Z}$-linear eta-quotient combinations having $q$-series
 -- expansions with each coefficient divisible by 11.
 
-tmp := [toX1(Z, x, sym) for x in igens.1 for sym in syms.1];
+tmp := [toX1(Z, x, sym) for x in igens.1 for sym in syms.1]
+
 ez.1 := [second a = p for a in tmp for p in az.0| zero? a]
 en.1 := [second a = p for a in tmp for p in az.0| not zero? a];
 
@@ -250,11 +251,13 @@ g.1 := groebnerBasis(h.1, syms.1)
 -- This is to be interpreted as a GB that gives series coefficients
 -- divisible by 11^2.
 
+)if 0
 xt.0
 tmpxgens := concat(xgens.0, xgens.1)
 tmpab := samba(xt.0, tmpxgens, genus, onet1Step!)$QXSAMBA1(C)
 tmph := relgens(tmpxgens, tmpab)
 tmpg := groebnerBasis(tmph, concat(syms.0, syms.1))
+)endif
 
 -- ## Iterate 11^2
 
@@ -294,8 +297,6 @@ xab.2 := samba(xt.2, xgens.2, genus, onet1Step!)$QXSAMBA1(C)
 h.2 := relgens(xgens.2, xab.2)
 
 g.2 := groebnerBasis(h.2, syms.2)
-
-
 
 -- ## Iterate 11^3
 
@@ -352,14 +353,12 @@ t: N := first first orbs
 --           \sum_{k=0}^{\infty}p(m k + t)q^k.
 -- $$
 
+)set output linear on
+)set output mathjax on
+)set output algebra off
+)set stream calc 16
+
 fzf := modularSiftedPartitionSeries(nn, m, t);
 ff := abmap(Z, Q, fzf);
 xqf := toX1(Q, ff, F)
-
-cm x ==> concat members x
-
-mxqgens := sort(smallerGrade?, [toX1(Q, x, sym) for x in cm igens for sym in cm syms])
-
-mxqt := toX1(Q, igens.0.1, 'M1)
-
-xqab := samba(mxqt, mxqgens)$QXSAMBA1(Q)
+1/11*xqf
