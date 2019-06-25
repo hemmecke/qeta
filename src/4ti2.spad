@@ -18,6 +18,108 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------
 
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\begin{document}
+\title{Interface to 4ti2}
+\author{Ralf Hemmecke}
+\date{21-Feb-2014}
+\maketitle
+\begin{abstract}
+  This package implements a way to call the \code{zsolve} function of
+  4ti2.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The software 4ti2, \cite{4ti2}, is a package that solve algebraic,
+geometric and combinatorial problems on linear spaces. We take
+advantage of the efficiency of 4ti2 by providing an interface to the
+(already installed) \code{zsolve} function.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Example}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+First of all, you have to compile the package.
+\begin{verbatim}
+)comile 4ti2.spad
+\end{verbatim}
+
+Then load it into a session.
+\begin{verbatim}
+)lib X4ti2
+\end{verbatim}
+
+Suppose you want to solve the following system of linear inequalities.
+\begin{align*}
+    x - y &\le 2\\
+  -3x + y &\le 1\\
+    x + y &\ge 1\\
+        y &\ge 0
+\end{align*}
+Then setup your session (or \code{.spad} file) as follows.
+
+\begin{verbatim}
+Z ==> Integer
+VZ ==> Vector Z
+MZ ==> Matrix Z
+LVZ ==> List VZ
+ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
+mat: MZ := matrix [[1, -1], [-3, 1], [1, 1], [0, 1]]
+rels: VZ := vector [-1, -1, 1, 1]
+b: VZ := vector [2, 1, 1, 0]
+zresult: ZRESULT := zsolve(mat, rels, b)$X4ti2
+\end{verbatim}
+
+As result we obtain
+\begin{verbatim}
+[zinhom = [[1, 1], [1, 0], [0, 1], [2, 0]],
+ zhom   = [[1, 2], [1, 1], [1, 3]],
+ zfree  = []]
+\end{verbatim}
+that must be interpreted as follows. If $z=(x,y)$ is a solution of the
+system above, and $I$, $H$, $F$ represent the sets/lists
+\code{zinhom}, \code{zhom}, \code{zfree}, respectively, then there
+exists $i\in I$ and non-negative integers $\alpha_h$ and integers
+$\beta_f$ such that
+\begin{align*}
+  z = i + \sum_{h\in H} \alpha_h h + \sum_{f\in F} \beta_f f.
+\end{align*}
+See \url{https://4ti2.github.io/4ti2_manual.pdf} for more detail.
+
+The default location where \code{X4ti2} looks for the \code{zsolve}
+function on your file system is tailored to the Debian/Ubuntu package
+for 4ti2, namely, it is \code{/usr/bin/4ti2-zsolve}.
+
+So if you install 4ti2 via
+\begin{verbatim}
+sudo apt install 4ti2
+\end{verbatim}
+everything should be fine.
+
+If you have installed 4ti2 in another location or called it
+differently, you can set the executable via
+\begin{verbatim}
+setExecutable("/home/hemmecke/bin/zsolve")$X4ti2
+\end{verbatim}
+
+The function \code{zsolve} creates random files in the current
+directory. These files start with the prefix \code{4ti2} and are
+removed after a successful computation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
 )abbrev package X4TI2 X4ti2
 
 S ==> String
@@ -48,12 +150,30 @@ X4ti2: with
       ++ and from 4ti2. These files will be written to the current
       ++ directory and start with the prefix "4ti2-" followed by a
       ++ random number. They will be removed after the computation.
+    setExecutable: S -> S
+      ++ setExecutable(path) sets a path for an executable that is
+      ++ called during the zsolve function call.
+      ++ It returns the old path. The default path is "/usr/bin/4ti2-zsolve".
+    setOptions: S -> S
+      ++ setOptions(options) sets a options for an executable that is
+      ++ called during the zsolve function call.
+      ++ It returns the old options. The default option is "-q".
   == add
     rep x ==> (x@%) pretend Rep
     per x ==> (x@Rep) pretend %
 
     zsolvepath: Reference S := ref "/usr/bin/4ti2-zsolve"
     zsolveoptions: Reference S := ref "-q"
+
+    setExecutable(path: S): S ==
+         s: S := deref zsolvepath
+         setref(zsolvepath, path)
+         return s
+
+    setOptions(options: S): S ==
+         s: S := deref zsolveoptions
+         setref(zsolveoptions, options)
+         return s
 
     writeMatrix(fn: FileName, mat: MZ): Void ==
         -- create .mat
@@ -103,3 +223,8 @@ X4ti2: with
         dir: S := ""
         basename: String := concat("4ti2-", string r)
         localzsolve(mat, rels, b, dir, basename)
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
