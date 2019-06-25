@@ -74,7 +74,8 @@ ${patsubst %,${TMP}/%,${PREREQS_SAGE}}: ${TMP}/%: sagemath/%
 # documentation
 # Compile all .spad files to .pdf and join them together.
 pdfall: pdf
-	cd ${TMP} && pdftk ${patsubst %,%.pdf, ${SPADFILES}} output project.pdf
+	cd ${TMP} && \
+	pdfjoin --outfile project.pdf qeta.pdf ${patsubst %,%.pdf, ${SPADFILES}}
 pdf: ${patsubst %,${TPROJECT}.%, tex bib sty} \
      ${patsubst %,${TMP}/%.pdf,${SPADFILES}}
 	cd ${TMP} && pdflatex ${PROJECT}.tex && bibtex ${PROJECT}.aux
