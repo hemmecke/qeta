@@ -9,9 +9,10 @@ function usageDIR {
 }
 
 function usageVARIANT {
-    echo "If an argument VARIANT=[Hemmecke|Radu|Samba] is given, it"
-    echo "is interpreted as the variant that is used to compute the result."
+    echo "If an argument VARIANT=[HemmeckeCached|Hemmecke|Radu|Samba] is given,"
+    echo "it is interpreted as the variant that is used to compute the result."
     echo "Default is VARIANT=Hemmecke."
+    echo "The variants Radu and Samba can be compiled, but are no longer maintained."
 }
 
 ###################################################################

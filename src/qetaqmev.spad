@@ -27,14 +27,28 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
-\title{Eta Quotients}
+\title{Monoid basis of $R^*(N)$ and $R^\infty(N)$}
 \author{Ralf Hemmecke}
 \date{10-Dec-2015}
 \maketitle
 \begin{abstract}
-We compute a monoid basis for the set of $\eta$-quotients that are
-modular functions and have a (multiple) pole, if any, at infinity
-only.
+  We compute a monoid basis for the set of $\eta$-quotients of level
+  $N$ that are modular functions and have a (multiple) pole, if any,
+  at infinity only. In fact, we only compute the exponent vectors of
+  the respective generators, \ie, a basis for $R^\infty(N)$.
+
+  The code implements both,
+  \begin{itemize}
+  \item an algorithm due to Radu \cite{Radu:RamanujanKolberg:2015}.
+  \item another version as described in
+    \cite{Hemmecke+Radu:EtaRelations:2018}, \ie, it builds the
+    respective matrices of an integer problem and then lets the
+    program \algo{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}} solve that
+    system.
+  \end{itemize}
+
+  Furthermore, another algorithm is employed to compute a basis for
+  $R^*(N)$.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -147,7 +161,7 @@ QEtaQuotientMonoidExponentVectorsAux: with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{First version as given by Radu}
+\subsection{Monoid generators for $R^\infty(N)$ by Radu's algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 From the proof of Lemma~25 of the article
@@ -265,7 +279,7 @@ QEtaQuotientMonoidExponentVectors: with
     -- rStarConditions $ QAuxiliaryModularEtaQuotientPackage.
     -- We keep it as it was programmed first and is probably faster
     -- for the purpose it is used for. Furthermore, since
-    -- etaQuotientMonoidExponentVectors $ QEtaQuotientMonoidExponentVectors4ti2
+    -- etaQuotientMonoidExponentVectors$QEtaQuotientMonoidExponentVectors4ti2
     -- is much more efficient. There is no reason to refactor.
     rConditions?(n: N, vdivs: VZ, rtilde: VQ): Boolean ==
         --assert(divs1=delete!(divisors(m)$IntegerNumberTheoryFunctions, 1)
@@ -432,7 +446,7 @@ QEtaQuotientMonoidExponentVectors: with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Alternative version using 4ti2}
+\subsection{Monoid generators for $R^\infty(N)$ by using 4ti2}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A description of which data has to be fed to the program

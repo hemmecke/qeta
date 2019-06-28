@@ -28,16 +28,18 @@
 
 \begin{document}
 \title{Computation of polynomial relations among Dedekind Eta
-Functions---Variant Hemmecke}
+Functions---Variant HemmeckeCached}
 \author{Ralf Hemmecke}
 \date{03-Aug-2017}
 \maketitle
 \begin{abstract}
-
-Based on articles of Radu and Hemmecke, we compute the polynomial
-relations among Dedekind $\eta$-functions.
-
+  The packages \code{QEtaIdealHemmeckeCached} implements the variant
+  of the computation of $\eta$-relations as described in
+  \cite{Hemmecke+Radu:EtaRelations:2018}. In fact, it is identical to
+  \code{QEtaIdealHemmecke} except that before the computation every
+  element is embedded into a cached form.
 \end{abstract}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \tableofcontents
@@ -78,6 +80,7 @@ vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, _
                                    ":="::Symbol::OF, y::OF]$List(OF)))
 
 )if LiterateDoc
+% $
 These two technical macros are necessary to distinguish between Rep
 and \%.
 )endif
@@ -105,13 +108,13 @@ QEtaIdealHemmeckeCached(C, L): Exports == Implementation where
     relationsIdealGenerators(mgens: List L): LPol ==
         CL ==> QEtaAlgebraCachedPower(C, L)
         CPol ==> QEtaAlgebraCachedPower(C, Pol)
+        import from CPol
         X ==> QEtaExtendedAlgebra(C, CL, CPol);
         AB ==> QEtaAlgebraBasis(C, X)
         RED ==> QEtaExtendedReduction(C, CL, X, AB)
         xembed(a, b) ==> embed(x::CL, m::Pol::CPol)$X
         lpol l ==> [second(x)::Pol for x in l]
         import from Pol
-        import from CPol
 
         Y ==> QEtaComputation(C, X, AB, RED)
         QSAMBA ==> QEtaSambaPackage(C, X, AB, Y)
@@ -185,6 +188,7 @@ QEtaIdealHemmeckeCached(C, L): Exports == Implementation where
         return mrels
 
 )if LiterateDoc
+%$
 \bibliography{qeta}
 \end{document}
 )endif

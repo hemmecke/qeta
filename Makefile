@@ -37,10 +37,13 @@ TPROJECT=${TMP}/${PROJECT}
 ###################################################################
 # toplevel targets
 all: compile-spad
+# The files in SPADFILES_OLD are here only for historical reasons.
+# They are not used or maintained anymore.
+SPADFILES_OLD = qetaradu qeta3hdp qetair qetais
 SPADFILES=4ti2 qfunct cachedpow \
   qetaalg qetasqrt qetaqmev qetadom qetatool \
-  qetasamba qetaradu \
-  qetaicat qetaih qetaihc qeta3hdp qetair qetais qetasomos \
+  qetasamba \
+  qetaicat qetaih qetaihc qetasomos \
   qetaauxmeq qetapowersamba qetakolberg qetafun
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
@@ -76,10 +79,23 @@ ${patsubst %,${TMP}/%,${PREREQS_SAGE}}: ${TMP}/%: sagemath/%
 pdfall: pdf
 	cd ${TMP} && \
 	pdfjoin --outfile project.pdf qeta.pdf ${patsubst %,%.pdf, ${SPADFILES}}
-pdf: ${patsubst %,${TPROJECT}.%, tex bib sty} \
+
+pdf: ${patsubst %,${TPROJECT}.%, tex bib sty} ${TPROJECT}abstracts.tex \
      ${patsubst %,${TMP}/%.pdf,${SPADFILES}}
 	cd ${TMP} && pdflatex ${PROJECT}.tex && bibtex ${PROJECT}.aux
-${patsubst %,tmp/%.pdf,${SPADFILES}}: tmp/%.pdf: src/%.spad
+
+${TPROJECT}abstracts.tex: ${patsubst %,${TMP}/%, ${PREREQS_SPAD}}
+	(echo '\\begin{description}'; \
+	for f in $^; do \
+	    b=$$(echo $$f | sed 's|${TMP}/||'); \
+	    echo "\\item[$$b:]"; \
+	    awk '/^\\begin{abstract}/,/\\end{abstract}/ {print}' $$f \
+	    | grep -Ev '^\\begin{abstract}|^\\end{abstract}'; \
+	done; \
+	echo '\\end{description}') \
+	> $@
+
+${patsubst %,${TMP}/%.pdf,${SPADFILES}}: ${TMP}/%.pdf: src/%.spad
 	EXECUTE=: ${LITDOC} $<
 	if grep 'LaTeX Warning: There were undefined references' ${TMP}/$*.log;\
 	    then EXECUTE=: ${LITDOC} $<; fi

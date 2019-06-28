@@ -27,14 +27,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
-\title{Eta Quotients}
+\title{Auxiliary functions for modular functions}
 \author{Ralf Hemmecke}
 \date{26-Jan-2018}
 \maketitle
 \begin{abstract}
-We compute a monoid basis for the set of $\eta$-quotients that are
-modular functions and have a (multiple) pole, if any, at infinity
-only.
+  The packages \code{QAuxiliaryModularEtaQuotientPackage} and
+  \code{QAuxiliaryModularPackage(L)} contain helper functions for
+  transformations of eta quotients. Furthermore, there are a number of
+  functions that are connected to modular functions, like genus,
+  number of gaps, index of $\Gamma_0(N)$ in $SL_2(\setZ)$.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -62,32 +64,6 @@ This file contains code to compute a (finite) monoid basis for
 $E^\infty(N)$ in two variants.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Representing square roots by roots of unity}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-According to \cite[Section~IV.3]{Lang:AlgebraicNumberTheory:1986} we
-have
-\begin{gather*}
-  \sum_{k=0}^{m-1} \unityPower{\frac{k^2}{m}}
-  =
-  \begin{cases}
-    (1+i)\sqrt{m} & \text{if $m \equiv 0 \pmod{4}$},\\
-    \sqrt{m}      & \text{if $m \equiv 1 \pmod{4}$},\\
-    0             & \text{if $m \equiv 2 \pmod{4}$},\\
-    i\sqrt{m}     & \text{if $m \equiv 3 \pmod{4}$},
-  \end{cases}
-\end{gather*}
-where $\unityPower{x} := \exp(2\pi i x)$.
-%
-Note that
-$2=\left(\unityPower{\frac{1}{8}}+\unityPower{-\frac{1}{8}}\right)^2$.
-
-If $m\equiv 2 \pmod{4}$, then $m=2m'$ with $m'\not\equiv 2 \pmod{4}$.
-Then, we can compute $\sqrt{m}$ by computing $\sqrt{m'}$ and
-multiplying by
-$\sqrt{2}$.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -100,6 +76,7 @@ display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
 vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
 
 )if LiterateDoc
+%$
 These two technical macros are necessary to distinguish between Rep
 and \%.
 )endif
@@ -136,8 +113,12 @@ The function \code{matrixLigozat} computes the respective matrix $A_N$
 whereas \code{rStarConditions} checks which of the conditions for an
 $r$ vector to correspond to a modular $\eta$-quotient is violated.
 
-width of a cusp \cite[Lemma~2.37]{Radu:PhD:2010} and
-\cite[Definition~2.9]{Radu:PhD:2010}
+The width of a cusp is implemented according to
+\cite[Lemma~2.37]{Radu:PhD:2010} and
+\cite[Definition~2.9]{Radu:PhD:2010}.
+
+For the computation of the genus of $X_0(N)$ we use
+\cite[p.~25]{Shimura:ArithmeticTheory:1994}.
 
 
 )endif
@@ -204,14 +185,14 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ dedekindPsi(n) computes the value of the Dedekind psi function.
       ++ https://en.wikipedia.org/wiki/Dedekind_psi_function
     indexOfGamma0: P -> P
-        ++ indexOfGamma0(n) computes the index of Gamma_0(n) in SL2Z.
-        ++ indexOfGamma0(n) is equal to dedekindPsi(n).
+      ++ indexOfGamma0(n) computes the index of Gamma_0(n) in SL2Z.
+      ++ indexOfGamma0(n) is equal to dedekindPsi(n).
     cusps2OfGamma0: P -> List Q
       ++ According to
       ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
       ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
-      ++ cusps(m) returns all the cusps for Gamma_0(m)$
+      ++ cusps(m) returns all the cusps for $\Gamma_0(m)$
     cuspsOfGamma0: P -> List Q
       ++ According to
       ++ \cite[Lemma~2.45]{Radu:PhD:2010},
@@ -253,7 +234,7 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ doubleCosetRepresentatives(nn) returns a list of double
       ++ coset representatives of
       ++ $\Gamma_0(nn) \backslash \Gamma_0(1) / SL_2(\setZ)_\infty$
-      ++ where $SL_2(\setZ)_\infty are matrices of the form [[1,h],[0,1]]
+      ++ where $SL_2(\setZ)_\infty$ are matrices of the form [[1,h],[0,1]]
       ++ with h being an integer.
     rationalSquareRoot: Q -> Record(rat: Q, rootOf: P)
       ++ if z = rationalSquareRoot(x) then x = (z.rat)^2 * z.root
@@ -678,7 +659,7 @@ $a\in X_c$.
 
 
 )if LiterateDoc
-
+%$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Auxiliary package to annihilate leading coefficients}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -757,6 +738,7 @@ QAuxiliaryModularPackage(L): Exports == Implementation where
 
 
 )if LiterateDoc
+%$
 \bibliography{qeta}
 \end{document}
 )endif

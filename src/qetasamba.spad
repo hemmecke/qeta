@@ -32,8 +32,13 @@
 \date{10-Dec-2015}
 \maketitle
 \begin{abstract}
-This code implements the \algoSamba{} algorithm from
-\cite{Hemmecke:DancingSambaRamanujan:2018}.
+  This code implements the \algoSamba{} algorithm from
+  \cite{Hemmecke:DancingSambaRamanujan:2018} in simple and extended
+  form.
+  Additionally, there is a variant that aborts the computation if the
+  number of gaps is equal to the genus of the respective curve.
+  Furthermore, since some computations take too long, computation can
+  be done with trace output.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -64,6 +69,7 @@ rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
 )if LiterateDoc
+%$
 Now some abbreviations for common domains.
 )endif
 
@@ -74,7 +80,7 @@ Q ==> Fraction Z
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Data structure for \algoSamba}
+\subsection{Category for Data structure for \algoSamba}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
@@ -130,7 +136,7 @@ QEtaAlgebraBasis(C, F): Exports == Implementation where
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Data structure for \algoSamba}
+\subsection{Data structure for an extended \algoSamba}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
@@ -213,7 +219,7 @@ According to \cite{Hemmecke:DancingSambaRamanujan:2018}, we use a
 restricted reduction for the algorithm \algoSamba.
 
 An element $x$ is not reducible by $b$ not only when its grade is
-bigger than that of $b$, but also with the grades are equal and the
+bigger than that of $b$, but also when the grades are equal and the
 (Euclidean) size of the leading coefficient of $x$ is smaller than
 that of $b$.
 
@@ -351,8 +357,9 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
         return u
 
 )if LiterateDoc
+%$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Restricted reduction}
+\subsection{Restricted reduction for extended elements}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
@@ -432,7 +439,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
       ++ order-complete if among the b belonging to the same k the one
       ++ with the highest grade has a unit as leading coefficient.
       ++ WARNING!
-      ++ If C is not a field it cannot be guaranteed that that the
+      ++ If C is not a field it cannot be guaranteed that the
       ++ resulting basis is the same as if computing without the genus
       ++ = number of gaps criterion. One of the untreated elements
       ++ might lead to a basis element of smaller grade that does not
@@ -457,7 +464,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
         ab: AB := algebraBasis y
         basis: H := basisElements ab
         for bas in entries basis | unit? qetaLeadingCoefficient last bas repeat
-            -- bas can contain several element. We know that that list
+            -- bas can contain several element. We know that list
             -- is complete if the leading coefficient of the last
             -- element is a unit. Only then we count the grade of
             -- the first element of bas.
@@ -486,6 +493,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
         samba(t, m, g, oneStepComputation!)
 
 )if LiterateDoc
+%$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Algorithm \algoSamba: using pairs as critical elements}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
