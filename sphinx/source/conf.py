@@ -260,7 +260,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'QEta', u'QEta Documentation',
-   u'Ralf Hemmecke', 'QEta', 'One line description of project.',
+   u'Ralf Hemmecke', 'QEta', 'Computation with Eta Quotients.',
    'Miscellaneous'),
 ]
 
@@ -289,14 +289,11 @@ rst_epilog = """
 .. |PACKAGE_NAME| replace:: %s
 
 .. |PACKAGE_HOME| replace:: `Official %s Homepage`_
-.. _Official %s Homepage: http://fricas.sourceforge.net
+.. _Official %s Homepage: https://hemmecke.github.io/qeta
 
 .. |PACKAGE_CODE| replace:: `%s Git Repository`_
-.. _%s Git Repository: https://github.com/fricas/fricas
+.. _%s Git Repository: https://github.com/hemmecke/qeta
 
-.. |PACKAGE_DOC_HOME| replace:: `%s Documentation Homepage`_
-.. _%s Documentation Homepage: http://fricas.github.io/
 """ % (project.lower(), project,
-       project, project,
        project, project,
        project, project)
