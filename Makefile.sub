@@ -369,6 +369,14 @@ ${ALLINPUT}: %.input: %.out
 # The path to the source .spad files.
 SPADSOURCEURL=file:///home/hemmecke/g/qeta/src
 API_SPAD=$(HOME)/g/fricas-bisect/fricas-rhx/src/doc/api.spad
+sphinx/api.spad:
+	if test -r ${API_SPAD}; then cp ${API_SPAD} sphinx/; \
+	else \
+	   G="https://raw.githubusercontent.com/hemmecke/fricas"; \
+	   A="$$G/master-hemmecke/src/doc/api.spad"; \
+	   curl $$A > sphinx/api.spad; \
+	fi
+
 abbrev.list:
 #--rhx: TODO: Does not work for in-source-build!!!
 	(cd ${ROOT}/src; \
@@ -386,7 +394,8 @@ sphinx/source/history.rst:
 
 sphinx/stamp: abbrev.list sphinx/source/history.rst
 	$(MKDIR_P) sphinx/source
-	((echo ')compile "$(API_SPAD)"'; \
+	make sphinx/api.spad
+	((echo ')compile sphinx/api.spad'; \
 	  echo ')read projectlibs'; \
 	  echo ")cd sphinx/source"; \
 	  echo 'documentAll("../../abbrev.list")') \
