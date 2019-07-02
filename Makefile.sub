@@ -364,27 +364,28 @@ ${ALLINPUT}: %.input: %.out
 	$< | grep -v '^-- ' > $@
 
 ###################################################################
-# api documentation
+# General and API documentation
 # Create a HTML site (locally) for the API similar to fricas.github.io/api.
 # The path to the source .spad files.
 SPADSOURCEURL=file:///home/hemmecke/g/qeta/src
-API_SPAD=$(HOME)/g/fricas-bisect/fricas-rhx/src/doc/api.spad
+API_SPAD=$(HOME)/g/fricas/src/doc/api.spad
+SPHINX_DIR=sphinx/source
+API_DIR=${SPHINX_DIR}/api
 sphinx/api.spad:
-	if test -r ${API_SPAD}; then cp ${API_SPAD} sphinx/; \
+	if test -r ${API_SPAD}; then cp ${API_SPAD} $@; \
 	else \
 	   G="https://raw.githubusercontent.com/hemmecke/fricas"; \
 	   A="$$G/master-hemmecke/src/doc/api.spad"; \
-	   curl $$A > sphinx/api.spad; \
+	   curl $$A > $@; \
 	fi
 
-abbrev.list:
-#--rhx: TODO: Does not work for in-source-build!!!
+abbrev.list: ${patsubst %,%.spad, ${SPADFILES}}
 	(cd ${ROOT}/src; \
-	grep -nH '^)ab[a-z]* [a-z]*  *[A-Z0-9]* *[^ ]*' *.spad \
-	| sed -e 's/\.spad:/ /' -e 's/:)abbrev//') > $@
+	grep -nH '^.*$$' $^ \
+	| awk '/:[)]if (LiterateDoc|false) *$$/,/:[)]endif/ {next}; /:[)]abbrev / {gsub(/[.:]/," "); print $$1, $$3, $$5, $$6, $$7}') > $@
 
-sphinx/source/history.rst:
-	$(MKDIR_P) sphinx/source
+${API_DIR}/history.rst:
+	$(MKDIR_P) ${API_DIR}
 	echo "Commit History" > $@
 	echo "==============" >>$@
 	echo                  >>$@
@@ -392,19 +393,30 @@ sphinx/source/history.rst:
 	echo                  >>$@
 	(cd ${ROOT}; git log --decorate master^^^..HEAD | sed 's/^/    /') >> $@
 
-sphinx/stamp: abbrev.list sphinx/source/history.rst
-	$(MKDIR_P) sphinx/source
-	make sphinx/api.spad
+sphinx/stamp: abbrev.list ${API_DIR}/history.rst
+	${MAKE} sphinx/api.spad
+	$(MKDIR_P) ${API_DIR}
 	((echo ')compile sphinx/api.spad'; \
 	  echo ')read projectlibs'; \
-	  echo ")cd sphinx/source"; \
-	  echo 'documentAll("../../abbrev.list")') \
+	  echo ")cd ${API_DIR}"; \
+	  echo 'documentAll("../../../abbrev.list")') \
 	  | FRICAS_INITFILE='' fricas -nosman) > $@
+	sed -i 's/:maxdepth: 1/:maxdepth: 2/; /|PACKAGE_DOC_HOME|/d' ${API_DIR}/index.rst
 
 mysphinx: sphinx/stamp
 	. ${VIRTUALENV}/sphinx/bin/activate && cd sphinx && make html
 
-api: compile-spad
+html: compile-spad
 	-rm -rf sphinx
 	cp -r ${ROOT}/sphinx .
 	${MAKE} mysphinx
+
+# Update the gh-pages branch.
+GHPAGES=/tmp/qeta_gh-pages
+github.io-local: html
+	git worktree add ${GHPAGES} gh-pages
+	cp -r sphinx/build/html/* ${GHPAGES}
+	(cd ${GHPAGES} && git add -u && git add . \
+	 && (git diff --cached  --exit-code \
+             || git commit -m '${shell date +"%Y-%m-%d %H:%M:%S"}'))
+	git worktree remove ${GHPAGES}

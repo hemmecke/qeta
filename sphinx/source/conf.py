@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# QEta package API documentation build configuration file
+# QEta package documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -66,7 +66,7 @@ copyright = u'2015-2019, Ralf Hemmecke'
 # built documents.
 #
 # The short X.Y version.
-version = '0.0.2'
+version = '2.0.0'
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -118,14 +118,18 @@ html_theme = 'fricas-theme'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+  "stickysidebar": "True",
+  "externalrefs": "True",
+  "relbarbgcolor": "green",
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['_theme']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = '%s %s API' % (project, version)
+html_title = '%s %s' % (project, version)
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -215,7 +219,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'QEta.tex', u'QEta API',
+  ('index', 'QEta.tex', u'QEta',
    u'Ralf Hemmecke', 'manual'),
 ]
 
@@ -245,7 +249,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'qeta', u'QEta API',
+    ('index', 'qeta', u'QEta',
      [u'Ralf Hemmecke'], 1)
 ]
 

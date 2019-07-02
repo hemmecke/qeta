@@ -1,4 +1,4 @@
-# QEta 1.0.0
+# QEta 2.0.0
 
 The QEta Project is connected to 3 articles.
 
@@ -22,12 +22,12 @@ Functions](http://www.risc.jku.at/publications/download/risc_5719/thetarelations
 
 ### Prerequisites
 
-In order to use this package you need [FriCAS] 1.3.4. In fact, the
-package has been created on top of the
+In order to use this package you need [FriCAS] 1.3.4 or higher.
+In fact, the package has been created on top of the
 [master-hemmecke](https://github.com/hemmecke/fricas/commits/master-hemmecke)
 branch of a clone of the FriCAS repository.
 
-We assume that [SBCL] is installed in version 1.4.5 or higher.
+We assume that [SBCL] is installed in version 1.4.11 or higher.
 
 ```
 cd SOMEDIR
@@ -76,8 +76,11 @@ make compile-spad
 
 ## Getting Started
 
-Produce the documentation (overview and source code comments) into
-`tmp/pdfall.pdf`.
+Online documentation and API description can be found at
+[https://hemmecke.github.io/qeta](https://hemmecke.github.io/qeta).
+
+Further documentation (overview and source code comments) can be
+compiled into `tmp/pdfall.pdf`.
 
 ```
 make pdf

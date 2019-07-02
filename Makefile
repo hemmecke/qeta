@@ -52,7 +52,7 @@ PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQ
 
 prerequisites: ${PREREQS}
 
-recompile-spad compile-spad clean distclean api \
+recompile-spad compile-spad clean distclean html github.io-local\
     compute-all eqmev eqig elig er checksomos runfricassomos seg slg ceg clg:
 	${MAKE} prerequisites
 	cd ${TMP} && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@
