@@ -398,7 +398,6 @@ maximal degree in $x$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 Let us start with a few common macros.
 
 These two technical macros are necessary to distinguish between Rep
@@ -409,6 +408,7 @@ rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
 )if LiterateDoc
+%$
 Now some abbreviations for common domains.
 )endif
 
@@ -425,27 +425,21 @@ H ==> XHashTable(Z, List F)
     -- be a basisElement b such that grade(b, k) = i mod gk
 V ==> Vector H -- mapping k -> H
 
-
-
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Data structure for \algoPowerSamba}
+\subsection{Category for Data structure for \algoPowerSamba}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
 
-)abbrev domain XETAABC XEtaAlgebraBasis
-++ XEtaAlgebraBasis(C, F) is a domain holding the special
-++ structure of a algebra basis with elements that can be used during
-++ a reduction in arbitrary positive power (the multipliers), the
-++ linear basis elements and an order on the component given by an
-++ index permutation idx if i<j then component idx.i should be counted
-++ as smaller than component idx.j.
-XEtaAlgebraBasis(C, F): Exports == Implementation where
+)abbrev domain XABC XEtaAlgebraBasisCategory
+++ XEtaAlgebraBasisCategory(C, F) is a category for a data
+++ structure that can be used for reduction modulo an algebra basis
+++ (samba basis).
+XEtaAlgebraBasisCategory(C, F): Category == Exports where
   C: EuclideanDomain
   F: XEtaGradedAlgebra C
   Exports ==> CoercibleTo OutputForm with
-    empty: () -> %
     indexPermutation: % -> IDX
       ++ indexPermutaion(x) returns a computed permutation of the
       ++ component indices of F so that it fit best during the
@@ -469,6 +463,26 @@ XEtaAlgebraBasis(C, F): Exports == Implementation where
       ++ c is the idx(max(J)) if
       ++ J = [i for i in I | grade(u, k) = grade(u, idx.i)] is nonempty.
       ++ If J is empty, then c = -k otherwise.
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data structure for \algoPowerSamba}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev domain XETAABC XEtaAlgebraBasis
+++ XEtaAlgebraBasis(C, F) is a domain holding the special
+++ structure of a algebra basis with elements that can be used during
+++ a reduction in arbitrary positive power (the multipliers), the
+++ linear basis elements and an order on the component given by an
+++ index permutation idx if i<j then component idx.i should be counted
+++ as smaller than component idx.j.
+XEtaAlgebraBasis(C, F): Exports == Implementation where
+  C: EuclideanDomain
+  F: XEtaGradedAlgebra C
+  Exports ==> XEtaAlgebraBasisCategory(C, F) with
+    empty: () -> %
 
   Implementation ==> add
     Rep ==> Record(idx: IDX, mul: MUL, be: V)
@@ -503,42 +517,8 @@ XEtaAlgebraBasis(C, F): Exports == Implementation where
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Common category for the \algoPowerSamba{} algorithm}
+\subsection{Category of restricted reduction packages}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Since we don't know in advance
-
-)endif
-
-)abbrev category XETACAT XEtaComputationCategory
-XEtaComputationCategory(C: EuclideanDomain, F: XEtaGradedAlgebra C): Category ==
-  CoercibleTo OutputForm with
---    update!: (F, Z, %) -> Void
---      ++ update!(u, grdt, x) adds u to the basis and updates the critical
---      ++ elements. The argument grdt is considered to be the grade of a
---      ++ special basis element.
-    initialize: List F -> %
-      ++ initialize(basis) creates a new structure ready to be processed.
-    criticalElements?: % -> Boolean
-      ++ criticalElements?(x) returns true if x represents a structure that
-      ++ still contains critical elements.
-    algebraBasis: % -> XEtaAlgebraBasis(C, F)
-      ++ algebraBasis(x) extracts the currently computed basis from
-      ++ the data structure.
-    oneStepComputation!: % -> %
-      ++ oneStepComputation!(t, x) computes one step of the computation.
-      ++ It extracts a critical element and removes it from the list of
-      ++ critical elements. Then it reduces it and updates the basis and
-      ++ the critical elements if the reduction did not end with 0.
-      ++ It should hold criticalElements?(x), otherwise the result
-      ++ is undefined.
-    postProcess!: % -> %
-      ++ postProcess!(x) postprocesses the result. It might interreduce
-      ++ the basis or do other kinds of cleanup.
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Restricted reduction}
 
 \begin{Hemmecke}
 According to \cite{Hemmecke:DancingSambaRamanujan:2018}, we use a
@@ -554,11 +534,11 @@ that of $b$.
 )endif
 
 
-)abbrev package XETARED XEtaReduction
-XEtaReduction(C, F): Exports == Implementation where
+)abbrev category XREDCAT XEtaReductionCategory
+XEtaReductionCategory(C, F, AB): Category == Exports where
   C: EuclideanDomain
   F: XEtaGradedAlgebra C
-  AB ==> XEtaAlgebraBasis(C, F)
+  AB: Type -- XEtaAlgebraBasisCategory(C, F)
   Exports ==> with
     topReducible?: (F, F, P) -> Boolean
       ++ topReducible?(u, b, k) returns true iff there exists f in F
@@ -574,7 +554,7 @@ XEtaReduction(C, F): Exports == Implementation where
       ++ greaterGrade?(k)(x, y) returns qetaGrade(x, k)>qetaGrade(y,k).
 
     reducer: (F, H, Z, P) -> Union(F, "failed")
-  Implementation ==> add
+   add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
 
@@ -623,6 +603,35 @@ XEtaReduction(C, F): Exports == Implementation where
             if topReducible?(u, b, k) then return b::Union(F, "failed")
         "failed"
 
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Restricted reduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package XETARED XEtaReduction
+XEtaReduction(C, F, AB): Exports == Implementation where
+  C: EuclideanDomain
+  F: XEtaGradedAlgebra C
+  AB: XEtaAlgebraBasisCategory(C, F)
+  Exports ==> with
+    topReducible?: (F, F, P) -> Boolean
+      ++ topReducible?(u, b, k) returns true iff there exists f in F
+      ++ such that for v = u - f*b and lc = leadingCoefficient:
+      ++ (grade(u, k) > grade(v, k) or
+      ++ (grade(u, k) = grade(v, k) and
+      ++ euclideanSize lc(u, k) > euclideanSize lc(v, k)
+    reduce: (F, AB) -> F
+      ++ reduce(u, ab) returns an element v such that
+      ++ v is not reducible modulo ab and
+      ++ "u reduces modulo ab to v".
+    greaterGrade?: P -> (F, F) -> Boolean
+      ++ greaterGrade?(k)(x, y) returns qetaGrade(x, k)>qetaGrade(y,k).
+
+    reducer: (F, H, Z, P) -> Union(F, "failed")
+  Implementation ==> add
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
     reduce(u: F, ab: AB): F ==
         -- Reduce component qetaIndex u!!! as long as u is nonzero and
         -- a reducer does exist. If there does not exist a reducer, then
@@ -680,11 +689,11 @@ of \algoSamba{}.
 ++ Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-XEtaSambaPackage(C, F, Y): Exports == Implementation where
+XEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
   C: EuclideanDomain
   F: XEtaGradedAlgebra C
-  Y: XEtaComputationCategory(C, F)
-  AB ==> XEtaAlgebraBasis(C, F)
+  AB: XEtaAlgebraBasisCategory(C, F)
+  Y: QEtaComputationCategory(F, AB)
   Exports ==> with
     sambaComputation: List F -> Y
     samba: List F -> AB
@@ -710,20 +719,24 @@ XEtaSambaPackage(C, F, Y): Exports == Implementation where
 )endif
 
 )abbrev domain XETAC XEtaComputation
-XEtaComputation(C, F): Exports == Implementation where
+XEtaComputation(C, F, AB, R): Exports == Implementation where
   C: EuclideanDomain
   F: XEtaGradedAlgebra C
+  AB: XEtaAlgebraBasisCategory(C, F) with
+      empty: () -> %
+      initialize: F -> %
+      basisElements: % -> V
+  R: XEtaReductionCategory(C, F, AB)
   FF ==> Record(f1: F, f2: F)
   Products ==> XHashTable(Z, List FF)
-  AB ==> XEtaAlgebraBasis(C, F)
-  Exports ==> XEtaComputationCategory(C, F)
+  Exports ==> QEtaComputationCategory(F, AB)
   Implementation ==> add
     Rep ==> Record(ab: AB, ce: List F, havepairs?: Boolean, pairs: Products)
     -- bel contains the L part of elements of be.
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
     xx ==> rep x
-    import from XEtaReduction(C, F)
+    import from XEtaReduction(C, F, AB)
     import from Rep
     import from AB
 

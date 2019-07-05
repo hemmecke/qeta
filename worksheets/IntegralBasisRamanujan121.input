@@ -97,11 +97,11 @@ xf := toX1(C, ff, F)
 -- The generating series does not reduce to zero modulo the
 -- algebra basis `xab`, but it does modulo the basis `xuab`.
 
-xfr := reduce(xf, xab)$QXRED(C);
+xfr := reduce(xf, xab)$QXRED1(C);
 zero? xfr
 xfr
 
-xfrb := reduce(xf, xabb)$QXRED(C)
+xfrb := reduce(xf, xabb)$QXRED1(C)
 
 -- Note the the relation looks pretty ugly. Coefficients are too big.
 
@@ -119,10 +119,10 @@ xfrb := reduce(xf, xabb)$QXRED(C)
 -- Note that the result $r$ contains in its second component its representation in terms of the given $F$, and the $B_i$.
 
 e1:=37; e2:=102
-rs := [reduce(xt^e1*xf, xabb)$QXRED(C)];
+rs := [reduce(xt^e1*xf, xabb)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rs := cons(reduce(xt*first(rs), xabb)$QXRED(C), rs))
+  rs := cons(reduce(xt*first(rs), xabb)$QXRED1(C), rs))
 rs := reverse! rs;
 [qetaGrade x for x in rs]
 
@@ -203,7 +203,7 @@ xdf2 := second(xdf)::Pol(Q);
 dfint := coefficient(xdf2, F, 1)::Pol(Z);
 zero?(dfint-d)
 
-xdfredb := reduce(xdf, xabb)$QXRED(C);
+xdfredb := reduce(xdf, xabb)$QXRED1(C);
 zero? xdfredb
 
 xdfredb2 := clearDenominator(second(xdfredb)::Pol(Q));
@@ -228,17 +228,17 @@ ds := cons(df00, df0s);
 
 -- ## Express $d(T)F$ in terms of $T$ and $U$
 
-xdfred := reduce(xdf, xab)$QXRED(C);
+xdfred := reduce(xdf, xab)$QXRED1(C);
 zero? xdfred
 
 
 -- ## Polynomial for $F^2$
 
 e1:=37; e2:=102
-rs2 := [reduce(xt^e1*xf^2, xab)$QXRED(C)];
+rs2 := [reduce(xt^e1*xf^2, xab)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rs2 := cons(reduce(xtt*first(rs2), xabb)$QXRED(C), rs2))
+  rs2 := cons(reduce(xtt*first(rs2), xabb)$QXRED1(C), rs2))
 rs2 := reverse! rs2;
 [qetaGrade x for x in rs2]
 
@@ -658,8 +658,8 @@ xgab
 
 nog := numOfGaps(cfgab)
 
-xr := reduce(xf, xgab)$QXRED(C);
-cfr := reduce(first(xf)::F1(C), cfgab)$QRED(C)
+xr := reduce(xf, xgab)$QXRED1(C);
+cfr := reduce(first(xf)::F1(C), cfgab)$QRED1(C)
 
 first xr
 qetaGrade xr
@@ -679,10 +679,10 @@ qetaGrade xr
 -- Note that the result $r$ contains in its second component its representation in terms of the given $F$, and the $B_i$.
 
 e1:=0; e2:=4;
-rfgs := [reduce(xt^e1*xf, xgab)$QXRED(C)];
+rfgs := [reduce(xt^e1*xf, xgab)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rfgs := cons(reduce(xt*first(rfgs), xgab)$QXRED(C), rfgs))
+  rfgs := cons(reduce(xt*first(rfgs), xgab)$QXRED1(C), rfgs))
 rfgs := reverse! rfgs;
 [qetaGrade x for x in rfgs]
 
@@ -762,7 +762,7 @@ numOfGaps(xghab)
 
 xtracebas := concat([xt, xg, xh], basis xabb)
 xghabb := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
-xr := reduce(xf, xghabb)$QXRED(C);
+xr := reduce(xf, xghabb)$QXRED1(C);
 
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
@@ -780,7 +780,7 @@ xhab := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
 grades := [qcoerce(qetaGrade x)@P for x in basis xhab]
 numOfGaps(xhab)
 
-xr := reduce(xf, xhab)$QXRED(C);
+xr := reduce(xf, xhab)$QXRED1(C);
 
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
@@ -790,7 +790,7 @@ content coefficient(xrpol, 'F, 0)
 
 -- There must be a relation for $g$ in terms of $\{t,u,h\}$.
 
-xr := reduce(xg, xhab)$QXRED(C);
+xr := reduce(xg, xhab)$QXRED1(C);
 first xr
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
@@ -803,10 +803,10 @@ content coefficient(xrpol, 'F, 0)
 -- We try to find a polynomial $d(t)$ such that .. see below.
 
 e1:=29; e2:=129
-rgs := [reduce(xt^e1*xg, xab)$QXRED(C)];
+rgs := [reduce(xt^e1*xg, xab)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rgs := cons(reduce(xt*first(rgs), xab)$QXRED(C), rgs))
+  rgs := cons(reduce(xt*first(rgs), xab)$QXRED1(C), rgs))
 rgs := reverse! rgs;
 [qetaGrade x for x in rgs]
 [variables(second(x)::Pol(C)) for x in rgs]
@@ -869,10 +869,10 @@ flgfactors := [x.factor for x in flg]
 -- We try to find a polynomial $d(t)$ such that .. see below.
 
 e1:=29; e2:=129
-rhs := [reduce(xt^e1*xh, xab)$QXRED(C)];
+rhs := [reduce(xt^e1*xh, xab)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rhs := cons(reduce(xt*first(rhs), xab)$QXRED(C), rhs))
+  rhs := cons(reduce(xt*first(rhs), xab)$QXRED1(C), rhs))
 rhs := reverse! rhs;
 [qetaGrade x for x in rhs]
 [variables(second(x)::Pol(C)) for x in rhs]
@@ -938,7 +938,7 @@ flhfactors := [x.factor for x in flh]
 
 -- ## Try to reduce the order -15 element that comes from level 242
 
-xgr := reduce(xg, xhab)$QXRED(C);
+xgr := reduce(xg, xhab)$QXRED1(C);
 zero? xgr
 [coefficient(first(xgr)::F1(C), i) for i in -30..30]
 
@@ -947,14 +947,14 @@ zero? xgr
 r242_1 := rgens242.1
 eqt242_1 := (retract etaQuotient(divs242, r242_1)$ETA(Z))::F1(C)
 xgg := toX1(C, eqt242_1, 'GG)
-xggr := reduce(xgg, xhab)$QXRED(C);
+xggr := reduce(xgg, xhab)$QXRED1(C);
 zero? xggr
 [coefficient(first(xggr)::F1(C), i) for i in -30..3]
 
 -- However, we see it more easily by reducing the product with
 -- $t$ by the algebra basis.
 
-xggtr := reduce(xt*xgg, xhab)$QXRED(C);
+xggtr := reduce(xt*xgg, xhab)$QXRED1(C);
 first xggtr
 zero? xggtr
 
@@ -1149,12 +1149,12 @@ xf2 := toX1(C, ff2, F2)
 cfbas := [first x for x in basis xab]
 cfab := samba(first xt, cfbas, 96, cfonet1Step!)$QSAMBA1(C);
 
-red121 := reduce(first xf2, cfab)$QRED(C);
+red121 := reduce(first xf2, cfab)$QRED1(C);
 zero? red121
 
 qetaGrade red121
 
-red121f := reduce(red121, cffab)$QRED(C);
+red121f := reduce(red121, cffab)$QRED1(C);
 zero? red121f
 
 red121f

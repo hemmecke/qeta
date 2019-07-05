@@ -171,7 +171,7 @@ QEtaExtendedAlgebraBasis(C, L, F, AB): Exports == Implementation where
 )endif
 
 )abbrev category QETACC QEtaComputationCategory
-++ QEtaComputationCategory provides the functions necessary for the
+++ QEtaComputationCategory(F, AB) provides the functions necessary for the
 ++ internal functioning of basis elements and critical elements.
 ++ This category is an abstraction of the functionality to implement
 ++ variants of the samba algorithm from an article of Ralf Hemmecke
@@ -179,17 +179,13 @@ QEtaExtendedAlgebraBasis(C, L, F, AB): Exports == Implementation where
 ++ Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-QEtaComputationCategory(C, F, AB): Category == Exports where
-  C: EuclideanDomain
-  F: QEtaGradedAlgebra C
-  AB: QEtaAlgebraBasisCategory(C, F)
+QEtaComputationCategory(F, AB): Category == Exports where
+  F: Type -- QEtaGradedAlgebra C
+  AB: Type -- can be [QX]EtaAlgebraBasisCategory(C, F)
   Exports ==> CoercibleTo OutputForm with
---    update!: (F, %) -> Void
---      ++ update!(u, x) adds u to the basis and updates the critical
---      ++ elements.
-    initialize: (F, List F) -> %
-      ++ initialize(t, basis) creates a new structure ready to be processed.
-      ++ Assume that qetaGrade(t)>0.
+    initialize: List F -> %
+      ++ initialize(bas) creates a new structure ready to be processed.
+      ++ Assume that the first element of bas has positive qetaGrade.
     criticalElements?: % -> Boolean
       ++ criticalElements?(x) returns true if x represents a structure that
       ++ still contains critical elements.
@@ -216,6 +212,7 @@ QEtaComputationCategory(C, F, AB): Category == Exports where
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Category of restricted reduction packages}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 According to \cite{Hemmecke:DancingSambaRamanujan:2018}, we use a
 restricted reduction for the algorithm \algoSamba.
@@ -421,7 +418,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
   F: QEtaGradedAlgebra C
   AB: QEtaAlgebraBasisCategory(C, F) with
       basisElements: % -> H
-  Y: QEtaComputationCategory(C, F, AB)
+  Y: QEtaComputationCategory(F, AB)
   Exports ==> with
     samba: (F, List F) -> AB
       ++ samba(t, m) returns a list z such that
@@ -458,7 +455,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
     samba(t: F, m: List F): AB ==
         --assert(not empty? m)
         --assert(qetaGrade t > 0)
-        y: Y := initialize(t, m)
+        y: Y := initialize cons(t, m)
         while criticalElements? y repeat y := oneStepComputation! y
         return algebraBasis y
 
@@ -487,7 +484,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
         tooBig := 1 + g + reduce(_+, l, 0)
         -- make initial entries too big
         v: Vector Z := new(qcoerce(grdt-1)@N, grdt * tooBig)
-        y: Y := initialize(t, m)
+        y: Y := initialize cons(t, m)
         while continue?(grdt, g, v, y) repeat y := oneStep! y
         return algebraBasis y
 
@@ -528,7 +525,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
       initialize: F -> %
       basisElements: % -> H
   R: QEtaReductionCategory(C, F, AB)
-  Exports ==> Join(QEtaComputationCategory(C, F, AB), CoercibleTo OutputForm)
+  Exports ==> Join(QEtaComputationCategory(F, AB), CoercibleTo OutputForm)
   Implementation ==> add
     FF ==> Record(f1: F, f2: F)
     Products ==> XHashTable(Z, List FF)
@@ -646,9 +643,11 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
             computePairs! x
         return void()
 
-    initialize(t: F, m: List F): % ==
+    initialize(m: List F): % ==
+        --assert(not empty? m)
+        t: F := first m
         --assert(qetaGrade t > 0)
-        per [initialize(t)$AB, sort(smallerGrade?, m), empty()]
+        per [initialize(t)$AB, sort(smallerGrade?, rest m), empty()]
 
     criticalElements?(x: %): Boolean ==
         not empty?(xx.cbe) or not empty?(xx.pairs)

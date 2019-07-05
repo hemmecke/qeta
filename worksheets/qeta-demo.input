@@ -369,7 +369,7 @@ numOfGaps(cfab)
 
 -- The input basis reduces to zero modulo the algebra basis.
 
-rbas := [reduce(x, xab)$QXRED(C) for x in xgens]
+rbas := [reduce(x, xab)$QXRED1(C) for x in xgens]
 removeDuplicates sort [zero? x for x in rbas]
 
 -- # Series F: $p(13n+6)$ generating series
@@ -453,7 +453,7 @@ cfgens := [first x for x in xgens];
 
 xab
 
-xr := reduce(xf, xab)$QXRED(C)
+xr := reduce(xf, xab)$QXRED1(C)
 
 p := second(xr)::Pol(C);
 [[e, x] for x in monomials p| zero?(e:=exponent leadingCoefficient x)]
@@ -640,15 +640,16 @@ mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
 genus := genusOfGamma0 nn;
 xt: X := xgens.1;
+)r ../input/tracemacros
 xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C);
 
 -- We try to find a polynomial $p(t)$ such that .. see below.
 
 e1:=29; e2:=129
-rs := [reduce(xt^e1*xu, xab)$QXRED(C)];
+rs := [reduce(xt^e1*xu, xab)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rs := cons(reduce(xt*first(rs), xab)$QXRED(C), rs))
+  rs := cons(reduce(xt*first(rs), xab)$QXRED1(C), rs))
 rs := reverse! rs;
 [qetaGrade x for x in rs]
 [variables(second(x)::Pol(C)) for x in rs]
@@ -713,3 +714,5 @@ sps := siftedPartitionSeries(13,6);
 [factor coefficient(sps, i) for i in 0..10]
 
 rgens
+
+

@@ -48,21 +48,21 @@ toX1(C, a, b) ==> embed(a::CF1(C), b::CPol(C))$X1(C)
 
 -- We always use CachedPower versions
 QAB1 C ==> QEtaAlgebraBasis(C, CF1 C)
-QRED C ==> QEtaReduction(C, CF1 C, QAB1 C)
-QCOMP C ==> QEtaComputation(C, CF1 C, QAB1 C, QRED C)
-QSAMBA1 C ==> QEtaSambaPackage(C, CF1 C, QAB1 C, QCOMP C)
+QRED1 C ==> QEtaReduction(C, CF1 C, QAB1 C)
+QCOMP1 C ==> QEtaComputation(C, CF1 C, QAB1 C, QRED1 C)
+QSAMBA1 C ==> QEtaSambaPackage(C, CF1 C, QAB1 C, QCOMP1 C)
 
 -- Now samba in extended form, i.e., with attached part (all cahed powers)
 QXAB1 C ==> QEtaAlgebraBasis(C, X1 C)
-QXRED C ==> QEtaReduction(C, X1 C, QXAB1 C)
-QXCOMP C ==> QEtaComputation(C, X1 C, QXAB1 C, QXRED C)
-QXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMP C)
+QXRED1 C ==> QEtaReduction(C, X1 C, QXAB1 C)
+QXCOMP1 C ==> QEtaComputation(C, X1 C, QXAB1 C, QXRED1 C)
+QXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMP1 C)
 
 -- The following macros yield samba with a zero-reduction test
 -- before the reduction with attached part is repeated.
-QFXRED C ==> QEtaExtendedReduction(C, CF1 C, X1 C, QXAB1 C)
-QFXCOMP C ==> QEtaComputation(C, X1 C, QXAB1 C, QFXRED C)
-QFXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QFXCOMP C)
+QFXRED1 C ==> QEtaExtendedReduction(C, CF1 C, X1 C, QXAB1 C)
+QFXCOMP1 C ==> QEtaComputation(C, X1 C, QXAB1 C, QFXRED1 C)
+QFXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QFXCOMP1 C)
 -------------------------------------------------------------------
 -- related to computation with eta quotients having poles at any cusp
 -- Must set:
@@ -97,7 +97,13 @@ PolCX ==> Polynomial CX
 CPolCX ==> QEtaAlgebraCachedPower(CX, PolCX) -- computation with cached pols
 Xn ==> QEtaExtendedAlgebra(CX, CFn, CPolCX);
 toXn(a, b) ==> embed(a, b::CPolCX)$Xn
-QABPn ==> XEtaSambaPackage(CX, Xn, XEtaComputation(CX, Xn))
+
+-- Now powersamba in extended form, i.e., with attached part (all cahed powers)
+QXABn C ==> XEtaAlgebraBasis(C, Xn C)
+QXREDn C ==> XEtaReduction(C, Xn C, QXABn C)
+QXCOMPn C ==> XEtaComputation(C, Xn C, QXABn C, QXREDn C)
+QXSAMBAn C ==> XEtaSambaPackage(C, Xn C, QXABn C, QXCOMPn C)
+
 
 -------------------------------------------------------------------
 -- Auxiliary functions
