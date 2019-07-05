@@ -194,10 +194,11 @@ QEtaComputationCategory(F, AB): Category == Exports where
       ++ algebra basis.
     oneStepComputation!: % -> %
       ++ oneStepComputation!(x) computes one step of the computation.
-      ++ It extracts a critical element and removes it from the list of
-      ++ critical elements. Then it reduces it and updates the basis and
-      ++ the critical elements if the reduction did not end with 0.
-      ++ It should hold criticalElements?(x), otherwise the result is undefined.
+      ++ It extracts a critical element and removes it from the list
+      ++ of critical elements. Then it reduces it and updates the
+      ++ basis and the critical elements if the reduction did not end
+      ++ with 0. It should hold criticalElements?(x), otherwise the
+      ++ result is undefined.
     oneTracedStep!: (% -> Void, (F, AB) -> Void, F -> Void, F -> Void) _
                     -> (% -> %)
       ++ oneTracedStep!(x, trace, traceEnter, traceLoop, traceReturn)
@@ -226,9 +227,10 @@ that of $b$.
 )endif
 
 )abbrev category QREDCAT QEtaReductionCategory
-++ QEtaReductionCategory implements the restricted reduction as
-++ described in "Dancing Samba with Ramanujan Partition Congruences"
-++ (Journal of Symbolic Computation). doi:10.1016/j.jsc.2017.02.001
+++ QEtaReductionCategory lists the functions used in the restricted
+++ reduction as described in "Dancing Samba with Ramanujan Partition
+++ Congruences" (Journal of Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
 QEtaReductionCategory(C, F, AB): Category == Exports where
   C: EuclideanDomain
@@ -238,7 +240,8 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
   Exports ==> with
     topReducible?: (F, F) -> Boolean
       ++ topReducible?(u, b) returns true iff there exists f in F such that
-      ++ for v = u - f*b and lc = leadingCoefficient:
+      ++ for v = u - f*b, lc = qetaLeadingCoefficient, and
+      ++ grade = qetaGrade:
       ++ (grade u > grade v or
       ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
     reducer: (F, AB) -> Union(F, "failed")
@@ -252,23 +255,25 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ the requirement that "basis" is appropriately sorted by
       ++ greaterGrade?.
     noTraceAtEnter: (F, AB) -> Void
+      ++ A functions that does nothing.
     noTrace: F -> Void
+      ++ A function that does nothing.
     tracedReduce: ((F, AB) -> Void, F -> Void, F -> Void) -> ((F, AB) -> F)
       ++ tracedReduce(traceEnter, traceLoop, traceReturn)(u, ab) behaves
       ++ identical to reduce(u, ab) except that at enter and exit
       ++ time the functions traceEnter(u, ab) and traceExit(w)
       ++ are called where w is the value that will be returned. Inside
-      ++ the internal while look the function traceLoop(v) is called
+      ++ the internal while loop the function traceLoop(v) is called
       ++ with v being the intermediately reduced u.
       ++ These hooks are provided to print a trace of the reduction.
     reduce: (F, AB) -> F
-      ++ reduce(u, ab) returns an element v such that v is not reducible
-      ++ modulo ab and "u reduces modulo t and basis to v" where
-      ++ basis is given by the lists of basis(ab, d) for all grades.
-      ++ These element lists of h are
-      ++ assumed to be sorted by greaterGrade?.
-      ++ We assume that qetaLeadingCoefficient(t)=1 and no element of the
-      ++ basis has a qetaGrade that is divisible by the qetaGrade of t.
+      ++ reduce(u, ab) returns an element v such that v is not
+      ++ reducible modulo ab and "u reduces modulo t and basis to v"
+      ++ where t = multiplier(ab) and basis is given by the lists of
+      ++ basis(ab, d) for all grades. These element lists of ``ab``
+      ++ are assumed to be sorted by greaterGrade?. We assume that
+      ++ qetaLeadingCoefficient(t)=1 and no element of the basis has a
+      ++ qetaGrade that is divisible by the qetaGrade of t.
     greaterGrade?: (F, F) -> Boolean
       ++ greaterGrade?(x, y) returns qetaGrade(x)>qetaGrade(y).
    add

@@ -121,6 +121,12 @@ Dedekind $\eta$-functions}
 )endif
 
 )abbrev category QETAIDC QEtaIdealCategory
+++ QEtaIdealCategory(C, L) is a category that implements a number of
+++ functions connected to relations among Dedekind eta-functions. It
+++ allows for differend implementation of the function
+++ relationsIdealGenerator, which does the main job of computing the
+++ generators of the ideal of relations of modular eta-quotients
+++ having a pole at most at infinity.
 QEtaIdealCategory(C, L): Category == Exports where
   C: EuclideanDomain
   L: Join(UnivariateLaurentSeriesCategory C, QEtaAlgebra C)
@@ -129,11 +135,21 @@ QEtaIdealCategory(C, L): Category == Exports where
   Exports ==> with
     relationsIdealGenerators: List L -> LPol
         ++ relationsIdealGenerators(qseries) returns
-        ++ a set of generators of the ideal of all relations among
-        ++ the given qseries.
+        ++ a set of generators in the variables M_i of the ideal
+        ++ of all relations among the given qseries.
+        ++ THe initial series correspond to the variables M_i in the output
+        ++ of this function.
         ++ We assume that qseries is a list of Laurent series in q that
         ++ correspond to modular functions having a pole (if any) at
         ++ infinity only.
+        ++ The samba algorithm can be used in its extended form in order to
+        ++ also get a representation of resulting algebra basis in terms
+        ++ of the original elements.
+        ++ Algoritm samba is described in: Ralf Hemmecke,
+        ++ "Dancing Samba with Ramanujan Partition Congruences",
+        ++ Journal of Symbolic Computation, 84, 2018.
+        ++ See Hemmecke+Radu:EtaRelations:2018 for more detail
+        ++ and the package \spadtype{QEtaIdealHemmecke}.
     etaQuotientIdealGenerators: (P, List List Z) -> LPol
         ++ etaQuotientIdealGenerators(level, rgens) returns polynomials
         ++ in the variables M_i (where i runs from 1 to #rgens)
@@ -141,32 +157,27 @@ QEtaIdealCategory(C, L): Category == Exports where
         ++ of the eta-quotients of the given level
         ++ where rgens is assumed to be the exponents of the eta-quotients
         ++ given by etaQuotientMonoidExponentVectors(level) from the package
-        ++ QEtaQuotientMonoidExponentVector.
+        ++ \spadtype{QEtaQuotientMonoidExponentVectors}.
         ++ It is assumed that each entry in rgens has length equal to
         ++ the number of divisors of level.
-        ++ The samba algorithm is used in its extended form in order to
-        ++ also get an representation of resulting algebra basis in terms
-        ++ of the original elements.
-        ++ Algoritm samba is described in: Ralf Hemmecke,
-        ++ "Dancing Samba with Ramanujan Partition Congruences",
-        ++ Journal of Symbolic Computation, 84, 2018.
-        ++ See Hemmecke+Radu:EtaRelations:2018 for
-        ++ more detail.
+        ++ This function just sets up a the q-series and then calls
+        ++ relationsIdealGenerators on these series.
     etaQuotientIdealGenerators: P -> LPol
         ++ etaQuotientIdealGenerators(level) returns
         ++ etaQuotientIdealGenerators(level, rgens) where rgens is given by
-        ++ etaQuotientMonoidExponentVectors(level) from the package
-        ++ QEtaQuotientMonoidExponentVector.
+        ++ rgens := etaQuotientMonoidExponentVectors(level) from the package
+        ++ \spadtype{QEtaQuotientMonoidExponentVectors}.
     etaLaurentIdealGenerators: (P, List List Z, LPol) -> LPol
-        ++ etaLaurentIdealGenerators(level, rgens, eqigens) computes
-        ++ eqigens := etaQuotientIdealGenerators(level, rgens)
-        ++ and replaces each of the M_i by the corresponding product of
-        ++ E_d and Y_d variables given by rgens.i. Positive entries in
-        ++ rgens.i correspond to E variables and negative entries to
-        ++ Y variables, the Y variables correspond to inverses of eta
-        ++ functions.
-        ++ The generators E_d*Y_d-1 for each divisor of level are also
-        ++ added to the resulting polynomials from above.
+        ++ etaLaurentIdealGenerators(level, rgens, eqigens) assumes
+        ++ that epigens is a list of polynomials in the variables M_i,
+        ++ for example, eqigens = etaQuotientIdealGenerators(level, rgens)
+        ++ and replaces each of the M_i by the corresponding
+        ++ product of E_d and Y_d variables given by rgens.i. Positive
+        ++ entries in rgens.i correspond to E variables and negative
+        ++ entries to Y variables, the Y variables correspond to
+        ++ inverses of eta functions. The generators E_d*Y_d-1 for
+        ++ each divisor of level are also added to the resulting
+        ++ polynomials from above.
     etaLaurentIdealGenerators: P -> LPol
         ++ etaLaurentIdealGenerators(level) returns
         ++ etaLaurentIdealGenerators(level, rgens, eqigens) for
@@ -179,11 +190,12 @@ QEtaIdealCategory(C, L): Category == Exports where
         ++ etaRelations(n) returns
         ++ etaRelations(n, etaLaurentIdealGenerators(n)).
         ++ The result describes the ideal of all relations among the
-        ++ eta-functions of level n.
+        ++ eta-functions of level n where the variable E_d stands for
+        ++ the eta-function $\eta(d*\tau)$.
     laurentRelations: P -> LPol
-        ++ laurentRelations(level) returns laurentRelations(esyms, ysyms) where
-        ++ esyms and ysyms correspond to the variables indexed by the
-        ++ divisors of level.
+        ++ laurentRelations(level) returns laurentRelations(esyms,
+        ++ ysyms) where esyms and ysyms correspond to the variables
+        ++ E_d and Y_d indexed by the divisors of level.
     laurentRelations: (LSym, LSym) -> LPol
         ++ laurentRelations(esyms, ysyms) returns
         ++ [e*y-1 for e in esyms for y in ysyms].

@@ -108,11 +108,12 @@ QEtaAlgebra(C: CommutativeRing): Category ==
     zero?: % -> Boolean
       ++ zero?(x) returns true if x is the neutral element with respect to +.
     _-: % -> %
-      ++ Negation.
+      ++ -x returns an element y such that x+y=0.
     _+: (%, %) -> %
       ++ Commutative addition.
     _-: (%, %) -> %
-      ++ Inverse operation to addition.
+      ++ Inverse operation to addition. x-y returns an elements z such
+      ++ that x = z + y.
     _*: (%, %) -> %
       ++ Commutative multiplication
     _*: (C, %) -> %
@@ -139,7 +140,7 @@ Laurent polynomials).
 ++ that is Z-graded. Simplest example is a univariate polynomial ring
 ++ over C, but since it is expected that respective domains will be
 ++ created on the fly, we list here only the functions that are
-++ actually used in QEtaPackage.
+++ actually used in QEtaSambaPackage.
 QEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
     qetaGrade: % -> Z
       ++ qetaGrade(x) returns the grade of an element.
@@ -149,7 +150,7 @@ QEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
       ++ qetaCoefficient(x, n) returns the coefficient corresponding
       ++ to grade n.
     qetaLeadingCoefficient: % -> C
-      ++ qetaLeadingCoefficient(x) returns qetaCoefficient(x, grade x).
+      ++ qetaLeadingCoefficient(x) returns qetaCoefficient(x, qetaGrade x).
       ++ The qetaLeadingCoefficient of 0 is undefined.
 
 )if LiterateDoc
@@ -183,7 +184,7 @@ XEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
       ++ The qetaLeadingCoefficient of 0 is undefined.
     qetaGrades: % -> List Z
       ++ qetaGrades(x) returns [qetaGrade(x, k) for k in 1..maxIndex())]
-      ++ for nonzero x and [0 for k in 1..maxIndex()] for x=0.
+      ++ for nonzero x and [-1 for k in 1..maxIndex()] for x=0.
     if C has Field then
         _/: (%, %) -> %
           ++ Division. It's dangerous, because sums of eta quotients
