@@ -260,7 +260,11 @@ Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
       ++ \spad{coerce(var)} converts the series variable \spad{var} into a
       ++ Laurent series.
     coerce: ULS -> %
+      ++ coerce(x) assumes that the Laurent series x belongs to the
+      ++ subalgebra of series with the properties of this damain.
+      ++ No check is made.
     coerce: % -> ULS
+      ++ coerce(x) returns the element x as a Laurent series.
   Impl ==> ULS add
     Rep ==> ULS
     Rec ==> Record(expon: Z, ps: UTS) -- hack!!!
@@ -297,6 +301,10 @@ product element.
 )endif
 
 )abbrev domain MONOMS Monomials
+++ Monomials(dim, D, vl) behaves exactly like D, i.e. is an
+++ AbelianMonoid, but prints its elements in a multiplicative form.
+++ For example, if dim = 2, vl = [A,B] and x::Vector(NNI) = [2,3],
+++ then the element x (coerced to OutputForm) looks like A^2*B^3.
 Monomials(_
   dim: N,_
   D: DirectProductCategory(dim, N),_

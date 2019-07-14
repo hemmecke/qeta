@@ -188,11 +188,8 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ indexOfGamma0(n) computes the index of Gamma_0(n) in SL2Z.
       ++ indexOfGamma0(n) is equal to dedekindPsi(n).
     cusps2OfGamma0: P -> List Q
-      ++ According to
-      ++ \cite[Lemma~5.3]{Radu:AlgebraicRelationsInvolvingEtaQuotients:2016},
-      ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
-      ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
-      ++ cusps(m) returns all the cusps for $\Gamma_0(m)$
+      ++ Do not use that function! It is just another implementation of
+      ++ cuspsOfGamma0.
     cuspsOfGamma0: P -> List Q
       ++ According to
       ++ \cite[Lemma~2.45]{Radu:PhD:2010},
@@ -204,8 +201,9 @@ QAuxiliaryModularEtaQuotientPackage: with
     numberOfCuspsOfGamma0: P -> P
       ++ numberOfCuspsOfGamma0(m) returns the number of cusps of level m.
     genusOfGamma0: P -> N
-      ++ genusOfGamma0(level) returns the genus of the congruence subgroup
-      ++ Gamma_0.`It corresponds to the series <https://oeis.org/A001617> .
+      ++ genusOfGamma0(level) returns the genus of the congruence
+      ++ subgroup Gamma_0(level). It corresponds to the series
+      ++ https://oeis.org/A001617 .
     splitMatrix: (SL2Z, Z, P, N) -> Rec
       ++ splitMatrix(mat, delta, m, lambda) computes
       ++ splitMatrix(a, b, c, d) where the arguments are the matrix
@@ -224,7 +222,7 @@ QAuxiliaryModularEtaQuotientPackage: with
     cuspToMatrix: (P, Q) -> SL2Z
       ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]] such
       ++ that splitMatrix(gamma, m) returns two matrices [m1, m2] with
-      ++ m1*m2 = [[m*a, c], m*b, d]] and m1 being in SL_2(Z) and m2 being
+      ++ m1*m2 = [[m*a, c], [m*b, d]] and m1 being in SL_2(Z) and m2 being
       ++ a triangular matrix with 0 <= m2(1,2) < m/c.
     rightCosetRepresentatives: (P, P) -> List SL2Z
       ++ rightCosetRepresentatives(nn, mm) returns a list of right
@@ -252,8 +250,15 @@ QAuxiliaryModularEtaQuotientPackage: with
 -- Temporarily exported
 -------------------------------------------------------------------
     jacobiUpperStar: (Z, Z) -> Z
+      ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
+      ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
     jacobiLowerStar: (Z, Z) -> Z
+      ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
+      ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
     coprimePart: (Z, Z) -> Z
+       ++ coPrimePart(n, c) splits n into u*v such that gcd(u,c)=1
+       ++ and returns u.
+       ++ We assume that all input numbers are positive.
     nu2: P -> Z
       ++ \cite[p.~25]{Shimura:ArithmeticTheory:1994}
     nu3: P -> Z
@@ -265,9 +270,6 @@ QAuxiliaryModularEtaQuotientPackage: with
 
     -- Auxiliary functions
     coprimePart(n: Z, c: Z): Z ==
-       -- coPrimePart(n, c) splits n into u*v such that gcd(u,c)=1
-       -- and returns u.
-       -- We assume that all input numbers are positive.
        u := n
        while (g := gcd(u, c)) > 1 repeat u := (u exquo g)::Z
        u

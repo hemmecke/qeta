@@ -201,15 +201,20 @@ XEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
 )abbrev domain QETAEALG QEtaExtendedAlgebra
 ++ The domain QEtaExtendedAlgebra(C, A, B) behaves like the given
 ++ QEtaAlgebra A, but every algebra operation is executed on the
-++ (hidden) B part as well and can later be extracted.
+++ (hidden) B part as well and can later be extracted. THe purpose of
+++ this domain is to record the computation trace of its elements,
+++ i.e., how an element is represented in terms of initial elements.
 QEtaExtendedAlgebra(_
     C: CommutativeRing,_
     A: QEtaAlgebra C,_
     B: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)_
   ): QEtaAlgebra C with
     embed: (A, B) -> %
+      ++ embed(a, b) attaches the element b to the element a.
     first: % -> A
+      ++ first(x) returns the (main) algebra element from x.
     second: % -> B
+      ++ second(x) returns the attached part of x.
     if A has QEtaGradedAlgebra C then QEtaGradedAlgebra C
     if A has XEtaGradedAlgebra C then XEtaGradedAlgebra C
     if A has Field and B has Field then
@@ -217,6 +222,8 @@ QEtaExtendedAlgebra(_
           ++ Division. It's dangerous, because sums of eta quotients
           ++ might have zeros so that inverses of such function
           ++ usually have poles not only at the cusps of Gamma_0(m).
+          ++ No check is made whether the result actually is an
+          ++ element of the domains, it is simply assumed.
  == add
     Rep ==> Record(aa: A, bb: B)
     -- local functions
@@ -258,11 +265,15 @@ QEtaExtendedAlgebra(_
 ++ The domain QEtaAlgebraCachedPower(C, A) behaves like the given
 ++ QEtaAlgebra A, but to each of its elements x a power x^n is never
 ++ computed twice, but rather stored and then accessed from the cache.
+++ Although the implementation of formulated with weaker conditions on
+++ the input parameter, we assume that A forms a C algebra.
 QEtaAlgebraCachedPower(C, A): Exports == Implementation where
   C: CommutativeRing
   A: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)
   Exports ==> Join(Monoid, AbelianGroup, CoercibleFrom A, CoercibleTo A) with
     _*: (C, %) -> %
+      ++ c * x return the product of a constant (from the coefficient
+      ++ domain) with x.
     if A has QEtaGradedAlgebra C then QEtaGradedAlgebra C
     if A has XEtaGradedAlgebra C then XEtaGradedAlgebra C
   Implementation ==> CachedPower A add
