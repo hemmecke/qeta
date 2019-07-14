@@ -67,7 +67,7 @@ nog := numOfGaps(xab)
 xabb := samba(xt, xabbasis, nog)$QXSAMBA1(C);
 
 -- With this number of gaps (96), we have not yet reached the
--- genus of the modular curve. Thus we must find another modular
+-- genus of the modular curve $X_0(121)$. Thus we must find another modular
 -- function.
 
 -- # Series F: $p(11n+6)$ generating series
@@ -103,8 +103,6 @@ xfr
 
 xfrb := reduce(xf, xabb)$QXRED1(C)
 
--- Note the the relation looks pretty ugly. Coefficients are too big.
-
 -- ## Compute denominator polynomial for integral basis
 
 -- We only need the coefficients of the pricipal part of
@@ -112,7 +110,7 @@ xfrb := reduce(xf, xabb)$QXRED1(C)
 -- where $h_i \in \langle 1, b_1, b_2, b_3, b_4 \rangle_{C[t]}$
 -- in order to find a relation among these $q$-series.
 --
--- Note that $t$ corresponds to our variable `xt` and $b_1,\ldots,b_4$ to our basis `abex`.
+-- Note that $t$ corresponds to our variable `xt` and $b_1,\ldots,b_4$ to our basis `xabb`.
 --
 -- Then $t^i f - h_i$ corresponds to `reduce(xt^i xf, xt, xabb)`.
 --
@@ -190,9 +188,9 @@ cf00 := ((denf*coefficient(cf0, varsf, [0 for i in varsf]))/T^37)::Pol(Z);
 
 dis := cons(cf00, [(denf*(x/T^37))::Pol(Z) for x in cf0s]);
 
+-- Each of the polynomials has a constant factor that is divisible by 11.
+
 [[unit factor(di), degree(di,T)] for di in dis]
-
-
 
 -- ## Express $d(T)F$ in terms of $T$, $B_1, \ldots, B_4$
 
@@ -215,7 +213,7 @@ zero?(df1int - d)
 vars := variables df0int, variables df1int
 
 -- This representaion demonstrates divisibility by 11 of the
--- coefficients of $d(t)*f$.
+-- coefficients of $d(t) f$.
 
 removeDuplicates sort [positiveRemainder(x, 11) for x in coefficients df0int]
 
@@ -358,7 +356,7 @@ numOfGaps(cfj01ab)
 -- ## xjab=samba($t$, $\{u, j_0, j_2\})$
 
 -- Computing with $j(121\tau)$ instead of $j(11\tau)$ leads to an
--- integral basis with gap number 6.
+-- integral basis with gap number 6, i.e., an integral basis for $M^\infty(121)$.
 
 gens := concat([xj0, xj2], xgens)
 
