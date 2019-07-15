@@ -8,7 +8,7 @@ The **QEta** package is a collection of programs written in the
 FriCAS_ computer algebra system that allow to compute with
 `Dedekind eta-functions
 <https://en.wikipedia.org/wiki/Dedekind_eta_function>`_
-and related :math:`q`-series where :math:`q=e^{2\pi i}`.
+and related :math:`q`-series where :math:`q=e^{2\pi i \tau}`.
 
 Furthermore, we provide a number of functions connected to the theory
 of modular functions.
