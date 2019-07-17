@@ -47,16 +47,6 @@ FRICAS=FRICAS_INITFILE='' fricas -nosman
               -e 's/^.abbrev[ ]*category[ \t]*[A-Z0-9]*[ \t]*/    --C /' \
               -e 's/^.abbrev[ ]*package[ \t]*[A-Z0-9]*[ \t]*/    --P /' \
 	>> projectcompile.input
-	echo >> projectcompile.input
-	echo "-- )compile $<" >> projectlibs.input
-	grep '^)abbrev' $< \
-	| awk '{print};/category/ {print $$1, $$2, $$3"-", $$4}' \
-	| sed -e 's/^.abbrev[ ]*domain[ \t]*/)lib /' \
-	      -e 's/^.abbrev[ ]*category[ \t]*/)lib /' \
-	      -e 's/^.abbrev[ ]*package[ \t]*/)lib /' \
-	      -e 's/[ \t][ \t]*[^ \t]*$$//' \
-	>> projectlibs.input
-	echo >> projectlibs.input
 	touch $@
 
 qetadom.compile: qfunct.compile qetaalg.compile
@@ -74,11 +64,26 @@ qetakolberg.compile: qetaqmev.compile
 qetafun.compile: qetadom.compile qetaauxmeq.compile qetasqrt.compile \
   qetakolberg.compile qetapowersamba.compile
 
-compile-spad: ${patsubst %,%.spad, ${SPADFILES}}
-	-rm projectlibs.input projectcompile.input
-	-rm ${patsubst %,%.compile, ${SPADFILES}}
+projectcompile.input: ${patsubst %,%.spad, ${SPADFILES}}
+	rm -f projectcompile.input ${patsubst %,%.compile, ${SPADFILES}}
 	${MAKE} ${patsubst %,%.compile, ${SPADFILES}}
+
+compile-project: projectcompile.input
 	echo ')read projectcompile.input' | ${FRICAS} | tee $@
+
+projectlibs.input: compile-project
+	grep '^)compile ' projectcompile.input \
+        | while read c f; do \
+	    echo "-- )compile $$f"; \
+	    grep '^)abbrev' $$f \
+	    | awk '{print};/category/ {print $$1, $$2, $$3"-", $$4}' \
+	    | while read A C S L; do \
+	        if test -d $$S.NRLIB; then echo ")lib $$S"; fi; \
+              done; \
+          done >> $@
+	echo >> projectlibs.input
+
+compile-spad: projectlibs.input
 
 ###################################################################
 DIR=${ROOT}/etafiles
