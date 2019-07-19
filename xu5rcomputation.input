@@ -1,0 +1,232 @@
+)clear completely
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+
+)r projectlibs )quiet
+)r etamacros.input )quiet
+C ==> Q;
+CF ==> CF1 C
+X ==> X1 C
+
+)r ../input/tracemacros )quiet
+
+-- ## Monoid basis for $E^\infty(121)$
+
+-- We do expansion at the cusp $\infty$ which corresponds to `1/nn` in terms of our session variables.
+
+nn: P := 121; -- level
+nndivs := DIVISORS nn;
+
+-- All our expansions do not require an extension with a root of unity,
+-- i.e., we can take rational numbers as the coefficient domain.
+
+xiord: P := 2;
+xi := -1;
+CX := Q;
+)r ../input/convenience )quiet
+
+-- Show only a few terms of the $q$-series expansion.
+
+)set stream calculate 2
+
+-- We use 4ti2 to find the monoid basis of the eta-quotients
+-- of level `nn`.
+
+QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
+eqmev ==> etaQuotientMonoidExponentVectors $ QEQMEV
+rgens := eqmev nn
+eqgens := [retract(etaQuotient(nndivs, r)$ETA C) for r in rgens]
+
+-- ## `xab`=samba($t, \{u\}$) --- Samba with T and U
+
+-- The generators of the $\eta$-quotients of level 121 are given by these exponents for the $\eta$ functions (with arguments being the divisors of 121).
+-- The variable `rgens` corresponds to the generators of $R^\infty(121)$.
+
+xgens := [toX1(C, eqgens.1, 'T), toX1(C, eqgens.2, 'U)]
+
+-- We take a minimal (in terms the order in q) element from the generators and make it special.b
+-- Then we compute an algebra basis for $C[T,U]$.
+
+xt: X := xgens.1; xu := xgens.2;
+
+xab := samba(xt, xgens, 0, onet1Step!)$QXSAMBA1(C)
+# basis xab, [qetaGrade x for x in basis xab]
+
+genus := genusOfGamma0 nn
+)read ../xu5rib.input
+)set mess type on
+)set mess time on
+db5 := denom b5;
+nb5 := numer b5;
+PE C ==> PolynomialEvaluation(C, X1 C)
+syms: List Symbol := ['T, 'U]
+elems: List X1 C := [xt, xu]
+ev ==> eval((c:C):X1(C)+->c*1$X1(C), ['T, 'U], [xt,xu])$PE(C)
+edb5 := ev db5;
+enb5 := ev nb5;
+fdb5 := (first edb5)::F1(C);
+fnb5 := (first enb5)::F1(C);
+cfv0 := (fnb5/fdb5)::CF1(C)
+cfv := (1/qetaLeadingCoefficient(cfv0))*cfv0
+xv := toX1(C, cfv, 'V)
+qetaGrade cfv
+
+tReduce ==> tracedReduce(rEnter, rLoop, rReturn)$QXRED1(C);
+xw := tReduce(xv, xab);
+
+QXCOMPNP1 C ==> QEtaComputationNoPairs(C, X1 C, QXAB1 C, QXRED1 C)
+QXSAMBANP1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMPNP1 C)
+YNP ==> QXCOMPNP1 C
+onet1StepNP!(y: YNP): YNP == _
+  (oneTracedStep!$YNP)(ynptrace, rEnter, rLoop, rReturn)(y)
+ynptrace(y: YNP): Void == (_
+    vPrint("-- ==================================step(#cbe,#pairs)",_
+           [#(yy.cbe), #(yy.pairs)]$List(Z));_
+    vPrint("-- +++ grades(cbe, pairs)",_
+           [[qetaGrade x for x in yy.cbe], keys yy.pairs]$List(List Z)))
+
+
+-- cfbas := [first x for x in basis xab]
+-- cfab := samba(first xt, cfbas, 96, cfonet1Step!)$QSAMBA1(C);
+-- [qetaGrade x for x in basis cfab]
+-- cft := first xt;
+-- cfu := first xu;
+-- cfr := reduce(cfv, cfab)$QRED1(C)
+-- tReduce ==> tracedReduce(cfrEnter, cfrLoop, cfrReturn)$QRED1(C)
+-- cfw := tReduce(cfv, cfab)
+-- cfvab := samba(cft, [cfu, cfw], genus, cfonet1Step!)$QSAMBA1(C);
+)set mess time on
+xwab := samba(xt, [xu, xu^2, xu^3, xu^4, xw], genus, onet1StepNP!)$QXSAMBANP1(C);
+
+xvab := samba(xt, [xu, xu^2, xu^3, xu^4, xv], genus, onet1StepNP!)$QXSAMBANP1(C);
+
+xz := toX1(C, first((1/11)*(xu - xt^10)), 'Z)
+xzab := samba(xt, [xz, xz^2, xz^3, xz^4, xv], genus, onet1StepNP!)$QXSAMBANP1(C);
+szbas := sort(smallerGrade?, basis xzab);
+[qetaGrade x for x in szbas]
+
+
+xr := szbas.1;
+xr := xr - qetaCoefficient(szbas.1, 5)*xt;
+rzb1 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb1
+
+xr := szbas.2;
+xr := xr - qetaCoefficient(szbas.2, 5)*xt;
+xr := xr - qetaCoefficient(xr, 7)*rzb1;
+rzb2 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb2
+
+xr := szbas.3;
+xr := xr - qetaCoefficient(xr, 8)*rzb2;
+xr := xr - qetaCoefficient(xr, 7)*rzb1;
+xr := xr - qetaCoefficient(xr, 5)*xt;
+rzb3 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb3
+
+xr := szbas.4;
+xr := xr - qetaCoefficient(xr, 15)*xt^3;
+xr := xr - qetaCoefficient(xr, 14)*rzb3*xt;
+xr := xr - qetaCoefficient(xr, 13)*rzb2*xt;
+xr := xr - qetaCoefficient(xr, 12)*rzb1*xt;
+xr := xr - qetaCoefficient(xr, 10)*xt^2;
+
+xr := xr - qetaCoefficient(xr, 9)*rzb3;
+xr := xr - qetaCoefficient(xr, 8)*rzb2;
+xr := xr - qetaCoefficient(xr, 7)*rzb1;
+xr := xr - qetaCoefficient(xr, 5)*xt;
+rzb4 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb4
+
+r := [rzb1,rzb2,rzb3,rzb4];
+
+[degree m for m in monomials(second(r.1)::Pol C)]
+[degree m for m in monomials(second(r.2)::Pol C)]
+[degree m for m in monomials(second(r.3)::Pol C)]
+[degree m for m in monomials(second(r.4)::Pol C)]
+
+[first x for x in r]
+
+p := [second(x)::Pol(C) for x in r];
+[degree coefficient(p.1, ['Z, 'V], [i, 0]) for i in 0..5]
+ct := coefficient(p.1, ['Z, 'V, 'T], [0, 1, 0])
+ip := (81402749386839761113321*356353478478043561795579695539*denom ct * coefficient(p.1, ['Z, 'V], [0, 1]))::Polynomial(Z);
+contip := content ip
+content(1/contip * ip)
+
+-- Prefactor polynomials for p1 in terms of v.
+pv := coefficient(p.1, ['Z, 'V], [0, 1]);
+variables pv, degree pv
+den := lcm [denom leadingCoefficient x for x in monomials pv];
+num := gcd [numer leadingCoefficient x for x in monomials (den*pv)];
+num/den
+ipv := den/num*pv
+
+
+cofactors := [concat([coefficient(p.i, ['Z, 'V], [j, 0]) for j in 0..3], coefficient(p.i, ['Z, 'V], [0, 1])) for i in 1..#p];
+matrix [[degree(x, 'T) for x in l] for l in cofactors]
+
+
+
+variables pz0
+den := lcm [denom leadingCoefficient x for x in monomials pz0];
+num := gcd [numer leadingCoefficient x for x in monomials (den*pz0)];
+num/den
+ipz0 := den/num*pz0;
+degree ipz0
+ipz0
+
+#p
+
+-------------------------------------------------------------------
+svbas := sort(smallerGrade?, basis xvab);
+[qetaGrade x for x in svbas]
+
+
+xr := svbas.1;
+xr := xr - qetaCoefficient(svbas.1, 5)*xt;
+rzb1 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb1
+
+xr := svbas.2;
+xr := xr - qetaCoefficient(svbas.2, 5)*xt;
+xr := xr - qetaCoefficient(xr, 7)*rzb1;
+rzb2 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb2
+
+xr := svbas.3;
+xr := xr - qetaCoefficient(xr, 8)*rzb2;
+xr := xr - qetaCoefficient(xr, 7)*rzb1;
+xr := xr - qetaCoefficient(xr, 5)*xt;
+rzb3 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb3
+
+xr := svbas.4;
+xr := xr - qetaCoefficient(xr, 15)*xt^3;
+xr := xr - qetaCoefficient(xr, 14)*rzb3*xt;
+xr := xr - qetaCoefficient(xr, 13)*rzb2*xt;
+xr := xr - qetaCoefficient(xr, 12)*rzb1*xt;
+xr := xr - qetaCoefficient(xr, 10)*xt^2;
+
+xr := xr - qetaCoefficient(xr, 9)*rzb3;
+xr := xr - qetaCoefficient(xr, 8)*rzb2;
+xr := xr - qetaCoefficient(xr, 7)*rzb1;
+xr := xr - qetaCoefficient(xr, 5)*xt;
+rzb4 := xr - qetaCoefficient(xr, 0)*1$X;
+first rzb4
+
+r := [rzb1,rzb2,rzb3,rzb4];
+
+p := [second(x)::Pol(C) for x in r];
+
+cofactors := [concat([coefficient(p.i, ['U, 'V], [j, 0]) for j in 0..3], coefficient(p.i, ['U, 'V], [0, 1])) for i in 1..#p];
+[[variables(x) for x in l] for l in cofactors]
+matrix [[degree(x, 'T) for x in l] for l in cofactors]
+
+-- Prefactor polynomials for p1 in terms of v.
+pv := coefficient(p.1, ['U, 'V], [0, 1]);
+variables pv, degree pv
+den := lcm [denom leadingCoefficient x for x in monomials pv];
+num := gcd [numer leadingCoefficient x for x in monomials (den*pv)];
+num/den
+ipv := den/num*pv
