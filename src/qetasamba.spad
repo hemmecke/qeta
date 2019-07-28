@@ -95,6 +95,8 @@ QEtaAlgebraBasisCategory(C, F): Category == Exports where
   Exports ==> CoercibleTo OutputForm with
     multiplier: % -> F
       ++ multiplier(x) returns multiplier element.
+    basis: % -> List F
+      ++ basis(x) returns all basis elements.
     basis: (%, Z) -> List F
       ++ basis(x, d) returns the basis elements of grade d.
 
@@ -117,9 +119,6 @@ QEtaAlgebraBasis(C, F): Exports == Implementation where
     initialize: F -> %
       ++ initialize(t) creates an empty basis that contains only
       ++ the multiplier t.
-    basis: % -> List F
-      ++ basis(x) returns all basis elements. It is equal to
-      ++ concat(entries basisElements x).
     basisElements: % -> H
       ++ basisElements(x) returns the basis elements of all grades.
   Implementation ==> add
@@ -165,6 +164,7 @@ QEtaExtendedAlgebraBasis(C, L, F, AB): Exports == Implementation where
     coerce(x: %): OutputForm == xx::OutputForm
     coerce(ab: AB): % == per ab
     multiplier(x: %): L == first multiplier xx
+    basis(x: %): List L == [first f for f in basis xx]
     basis(x: %, d: Z): List L == [first f for f in basis(xx, d)]
 
 
@@ -534,10 +534,40 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
       initialize: F -> %
       basisElements: % -> H
   R: QEtaReductionCategory(C, F, AB)
-  Exports ==> Join(QEtaComputationCategory(F, AB), CoercibleTo OutputForm)
+  FF ==> Record(f1: F, f2: F)
+  Products ==> XHashTable(Z, List FF)
+  Exports ==> QEtaComputationCategory(F, AB) with
+    basis: % -> List F
+      ++ basis x returns basis(algebraBasis x).
+    addPair!: (F, F, Products) -> Products
+      ++ addPair!(f1, f2, p) adds the pair (f1,f2) to the list
+      ++ corresponding to p.qetaGrade(f1*f2).
+    addBasisElementPairs!: (F, List F, %) -> Void
+    addNewBasisElementPairs!: (F, %) -> Void
+    addGapPair!: (F, F, F, Products) -> Products
+      ++ addGapPair!(t, f1, f2, p) adds the pair (t^j, f1) to p
+      ++ where the j>0 is chosen in such a way that
+      ++ qetaGrade(t^j*f1) = qetaGrade(f2).
+      ++ It is assumed that the input is such that j is an integer.
+      ++ If j=0 then nothing is added.
+    addGapPairs!: % -> Void
+      ++ addGapPairs!(x) adds gap-pair for every pair in the current
+      ++ basis that differ in qetaGrade by a multiple of qetaGrade(t)
+      ++ where t = multiplier(algebraBasis x).
+    computePairs!: % -> Void
+      ++ computePairs!(x) discards all previously computed pairs and
+      ++ then computes all the n*(n+1)/2 (commutative) pairs of the
+      ++ current elements of the basis and additionally adds all the
+      ++ gap-pairs where n is the number of basis elements.
+    selectNext!: % -> F
+      ++ selectNext!(x) chooses one of the critical elements and
+      ++ returns it. At the same time this critical element is
+      ++ (destructively) removed from the structure of critical elements.
+    update!: (F, %) -> %
+      ++ update!(u, x) adds a new basis element and updates the
+      ++ critical elements accordingly. Note that older basis elements
+      ++ might become critical elements in this process.
   Implementation ==> add
-    FF ==> Record(f1: F, f2: F)
-    Products ==> XHashTable(Z, List FF)
     Rep ==> Record(ab: AB, cbe: List F, pairs: Products)
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
@@ -547,8 +577,9 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
     smallerGrade?(x: F, y: F): Boolean == grade x < grade y
 
     algebraBasis(x: %): AB == xx.ab
-    basisList(x: %): List F == concat entries basisElements xx.ab
+    basis(x: %): List F == basis algebraBasis x
 
+    -- Add the pair (f1, f2) to products.
     addPair!(f1: F, f2: F, products: Products): Products ==
         g := grade f1 + grade f2
         products.g := cons([f1, f2], elt(products, g, empty()))
@@ -563,9 +594,10 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         for b in basis repeat addPair!(u, b, products)
 
     addNewBasisElementPairs!(u: F, x: %): Void ==
-        addBasisElementPairs!(u, basisList x, x)
+        addBasisElementPairs!(u, basis x, x)
 
     addGapPair!(t: F, b1: F, b2: F, products: Products): Products ==
+        --assert(((grade b2 - grade b1) exquo grade t) case Z)
         g := grade b2
         j: Z := ((g - grade b1) exquo grade t) :: Z
         zero? j => products -- b2 anyway enters into cbe!!!
@@ -577,7 +609,8 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         t: F := multiplier xx.ab
         products: Products := xx.pairs
         -- Additionally, we have to add products of the form t^j*b
-        -- where qetaGrade(b)+j*d=qetaGrade(b') and b, b' in x.be
+        -- where qetaGrade(b)+j*d=qetaGrade(b') and b, b' are in the
+        -- current list of basis elements of algebraBasis(x),
         -- b different from b' and j>0 is minimal with that property.
         -- That corresponds to the set S (line 13) in the algorithm samba
         -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
@@ -594,7 +627,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
 
     computePairs!(x: %): Void ==
         --assert(not empty?(xx.be)) -- so there is at least one product
-        bas: List F := basisList x
+        bas: List F := basis x
         xx.pairs := table()$Products
         while not empty? bas repeat
             addBasisElementPairs!(first bas, bas, x)
@@ -602,7 +635,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         addGapPairs! x
 
     -- Destructively updates basis and critical elements
-    update!(u: F, x: %): Void() ==
+    update!(u: F, x: %): % ==
         t: F := multiplier xx.ab
         grdt: Z := grade t
         grdu: Z := grade u
@@ -650,7 +683,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         else
             xx.cbe := sort(smallerGrade?, concat(red, xx.cbe))
             computePairs! x
-        return void()
+        return x
 
     initialize(m: List F): % ==
         --assert(not empty? m)
@@ -686,7 +719,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         -- Selection process: Take the first element from cbe or
         -- products with smallest degree prefer cbe if equal degree.
         f: F := selectNext! x
-        if not zero?(u := reduce(f, xx.ab)$R) then update!(u, x)
+        if not zero?(u := reduce(f, algebraBasis x)$R) then update!(u, x)
         return x
 
     oneTracedStep!(trace: % -> Void, _
@@ -700,9 +733,10 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         trace x
         f: F := selectNext! x
         tReduce ==> tracedReduce $ R
-        u := tReduce(traceEnter, traceLoop, traceReturn)(f, xx.ab)
+        u := tReduce(traceEnter, traceLoop, traceReturn)(f, algebraBasis x)
         if not zero? u then update!(u, x)
         return x
+
 
 
 )if LiterateDoc
