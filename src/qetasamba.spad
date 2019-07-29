@@ -280,6 +280,9 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ qetaGrade that is divisible by the qetaGrade of t.
     greaterGrade?: (F, F) -> Boolean
       ++ greaterGrade?(x, y) returns qetaGrade(x)>qetaGrade(y).
+    rawReduce: (F, AB) -> F
+      ++ rawReduce(u, ab) behaves essentially like reduce(u, ab) except
+      ++ that there is no normalization of the leading coefficient to 1.
    add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
@@ -362,6 +365,24 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
         uca := unitNormal leadingCoefficient u
         u := (uca.associate)*u
         traceReturn u
+        return u
+
+    rawReduce(u: F, ab: AB): F ==
+        --assert(grade(t)>0)
+        --assert(one? leadingCoefficient t)
+        --assert grade(b)>0 for all b in basis
+        --assert(not zero? positiveRemainder(grade(b), grade t)
+        --       for all b in basis)
+        t: F := multiplier ab
+        grdt: Z := grade t
+        while not ((r := reducer(u, ab)) case "failed") repeat
+            grdu: Z := grade u
+            v: F := r :: F
+            j: Z := ((grdu - grade v) exquo grdt) :: Z
+            v := v*t^(qcoerce(j)@N)
+            -- cc: Record(quotient: C, remainder: C)
+            cc := divide(leadingCoefficient u, leadingCoefficient v)
+            u := u - (cc.quotient)*v
         return u
 
 )if LiterateDoc
