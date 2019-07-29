@@ -543,7 +543,8 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
       ++ addPair!(f1, f2, p) adds the pair (f1,f2) to the list
       ++ corresponding to p.qetaGrade(f1*f2).
     addBasisElementPairs!: (F, List F, %) -> Void
-    addNewBasisElementPairs!: (F, %) -> Void
+      ++ addBasisElementPairs!(u, basis, x) adds all pairs (u, b) for
+      ++ each element in the given list.
     addGapPair!: (F, F, F, Products) -> Products
       ++ addGapPair!(t, f1, f2, p) adds the pair (t^j, f1) to p
       ++ where the j>0 is chosen in such a way that
@@ -592,9 +593,6 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         grdu := grade u
         products: Products := xx.pairs
         for b in basis repeat addPair!(u, b, products)
-
-    addNewBasisElementPairs!(u: F, x: %): Void ==
-        addBasisElementPairs!(u, basis x, x)
 
     addGapPair!(t: F, b1: F, b2: F, products: Products): Products ==
         --assert(((grade b2 - grade b1) exquo grade t) case Z)
@@ -679,7 +677,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         -- We don't need to redo reduction of pairs if no basis element
         -- has been removed.
         if empty? red then
-            addNewBasisElementPairs!(u, x)
+            addBasisElementPairs!(u, basis x, x)
         else
             xx.cbe := sort(smallerGrade?, concat(red, xx.cbe))
             computePairs! x
@@ -737,6 +735,123 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         if not zero? u then update!(u, x)
         return x
 
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algorithm \algoSamba: without computing pairs}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+NOTE: This is a temporary hack that depends on QEtaComputation and its
+representation.
+
+Critical elements are only the basis elements that become critical
+(reducible by the new element).
+)endif
+
+
+)abbrev domain QETACNP QEtaComputationNoPairs
+++ QEtaComputationNoPairs implements a variant of the algorithm Samba
+++ from an article of Ralf Hemmecke:
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ In this variant, no products of basis elements are computed, but
+++ only a (linear) interreduction of the elements is done.
+QEtaComputationNoPairs(C, F, AB, R): Exports == Implementation where
+  H ==> XHashTable(Z, List F)
+  C: EuclideanDomain
+  F: QEtaGradedAlgebra C
+  AB: QEtaAlgebraBasisCategory(C, F) with
+      initialize: F -> %
+      basisElements: % -> H
+  R: QEtaReductionCategory(C, F, AB)
+  Exports ==> QEtaComputationCategory(F, AB)
+  Implementation ==> QEtaComputation(C, F, AB, R) add
+    Rep ==> QEtaComputation(C, F, AB, R)
+    import from Rep
+    Rec ==> Record(ab: AB, cbe: List F, pairs: Products)
+    import from Rec
+    grade ==> qetaGrade$F
+    leadingCoefficient ==> qetaLeadingCoefficient$F
+    criticalBasisElements x ==> (x pretend Rec).cbe
+    smallerGrade?(x: F, y: F): Boolean == grade x < grade y
+
+    -- Destructively updates basis and critical elements
+    update!(u: F, x: %): % ==
+        t: F := multiplier algebraBasis x
+        grdt: Z := grade t
+        grdu: Z := grade u
+        --assert(grade u > 0)
+        --assert(grdt > 0)
+        --assert(not zero?(positiveRemainder(grade u, grdt)
+        --assert(not topReducible?(u, b) for all b in basis)
+        -- update basis
+        -- Since u is not top-reducible by any basis element, we can add
+        -- u to the basis. We move elements that become top-reducible by u
+        -- from the basis into the critical elements.
+        i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
+        basis: H := basisElements algebraBasis x
+        bas: List F := basis(algebraBasis x, i)
+        red: List F := empty()
+        irr: List F := empty()
+
+        -- Assune that bas is sorted by greaterGrade?.
+        while not empty? bas and greaterGrade?(u, first bas) repeat
+            irr := cons(first bas, irr)
+            bas := rest bas
+
+        -- We include the new element here ...
+        irr := cons(u, irr)
+        -- ... and separate the remaining elements according to
+        -- whether or not they are reducible.
+        -- We assume that all elements of bas will go to irr.
+        for b in bas repeat
+            if topReducible?(b, u)$R then
+                -- add b to criticalElements
+                red := cons(b, red)
+            else
+                irr := cons(b, irr)
+        basis.i := reverse! irr
+        -- We don't need to redo reduction of pairs if no basis element
+        -- has been removed.
+        if not empty? red then
+            criticalBasisElements(x) :=
+               sort(smallerGrade?, concat(red, criticalBasisElements(x)))
+        return x
+
+    criticalElements?(x: %): Boolean == not empty? criticalBasisElements x
+
+    selectNext!(x: %): F ==
+        --assert(criticalElements? x)
+        f := first criticalBasisElements x
+        criticalBasisElements(x) := rest criticalBasisElements x
+        f
+
+    oneStepComputation!(x: %): % ==
+        --assert(criticalElements? x)
+        -- Selection process: Take the first element from the critical
+        -- basis elements.
+        f: F := selectNext! x
+        if not zero?(u := reduce(f, algebraBasis x)$R) then update!(u, x)
+        return x
+
+    oneTracedStep!(trace: % -> Void, _
+                   traceEnter: (F, AB) -> Void,_
+                   traceLoop: F -> Void,_
+                   traceReturn: F -> Void): (% -> %) ==
+      (x: %): % +->
+        --assert(criticalElements? x)
+        -- Selection process: Take the first element from the critical
+        -- basis elements.
+        trace x
+        f: F := selectNext! x
+        tReduce ==> tracedReduce $ R
+        u := tReduce(traceEnter, traceLoop, traceReturn)(f, algebraBasis x)
+        if not zero? u then update!(u, x)
+        return x
 
 
 )if LiterateDoc
