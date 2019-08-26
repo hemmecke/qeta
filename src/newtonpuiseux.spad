@@ -1,0 +1,156 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QFunctions
+--- Copyright (C) 2019,  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- Redistribution and use in source and binary forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+
+-- 1. Redistributions of source code must retain the above copyright notice,
+--    this list of conditions and the following disclaimer.
+-- 2. Redistributions in binary form must reproduce the above copyright
+--    notice, this list of conditions and the following disclaimer in the
+--    documentation and/or other materials provided with the distribution.
+
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+-- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+-- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+-- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+-- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+-- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+-- LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+-- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\begin{document}
+\title{Newton-Puiseux Method}
+\author{Ralf Hemmecke}
+\date{08-Aug-2019}
+\maketitle
+\begin{abstract}
+  \url{https://homepages.math.uic.edu/~jan/mcs563s14/puiseux.pdf}
+\end{abstract}
+
+\tableofcontents
+
+\section{Overview}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+
+)endif
+
+OF==>OutputForm
+dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
+
+Z ==> Integer
+Q ==> Fraction Z
+
+)abbrev package NEWPUI NewtonPuiseux
+++ Author: Ralf Hemmecke
+++ Description:
+++ Implement Newton-Puiseux Method
+NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
+  K: Field
+  var: Symbol
+  cen: K
+  ULS ==> UnivariateLaurentSeries(K, var, cen)
+  PX: UnivariatePuiseuxSeriesConstructorCategory(K, ULS) -- K<<x>>
+  PXY: UnivariatePolynomialCategory PX                   -- K<<x>>[y]
+  Point ==> Record(ypow: Z, xpow: Q) -- actually: ypow >= 0
+
+  Exports ==> with
+    pointsOfNewtonPolygon: PXY -> List Point
+      ++ pointsOfNewtonPolygon(p) returns the vertices of the
+      ++ Newton polygon corresponding to p.
+      ++ Assume that degree(p)>0 and #monomials(p)>0.
+    toPXY: (Polynomial K, Symbol, Symbol) -> PXY
+
+  Implementation ==> add
+    pointsOfNewtonPolygon(p: PXY): List Point ==
+        --assert(#monomials(p)>1)
+        points: List Point := empty()
+        while not zero? p repeat
+            yp: Z := degree p
+            xp: Q := order leadingCoefficient p
+            points := cons([yp, xp], points)
+            p := reductum p
+        -- points are ordered with smallest ypow first
+        -- Note that all ypow of points are different.
+        --assert(#points>1) -- condition on p
+        -- points.1 and points(#points) are certainly vertices of the
+        -- Newton polygon. We start with points.1, add new points, but
+        -- while adding new points, old points are removed from the
+        -- Newton polygon, if they lie above the edge with a previous
+        -- point of the current Newton polygon.
+--        dbgPrint("POINTS", points)
+        p1: Point := first points;  points := rest points
+        p2: Point := first points;  points := rest points
+        npPoints: List Point := [p2, p1] -- Newton polygon points
+        slopes: List Q := [(p2.xpow  - p1.xpow) * (1 / (p2.ypow - p1.ypow))]
+        for np in points repeat -- newpoint
+--            dbgPrint("points", points)
+--            dbgPrint("npPoints", npPoints)
+--            dbgPrint("slopes", slopes)
+--            dbgPrint("np", np)
+            pt: Point := first npPoints
+            slope: Q := (np.xpow - pt.xpow) * (1 / (np.ypow - pt.ypow))
+            while not empty? slopes and slope < first slopes repeat
+                -- remove old points
+                slopes := rest slopes
+                npPoints := rest npPoints
+                pt := first npPoints
+                slope := (np.xpow - pt.xpow) * (1 / (np.ypow - pt.ypow))
+            slopes := cons(slope, slopes)
+            npPoints := cons(np, npPoints)
+        reverse! npPoints
+
+    toPXY(p: Polynomial K, x: Symbol, y: Symbol): PXY ==
+        s: PXY := 0
+        -- sanity check
+        sort variables p ~= sort [x, y] =>
+            error "not a polynomial in the given variables"
+        mons := monomials p
+        dbgPrint("mons", mons)
+        for m in mons repeat
+            mx := monomial(leadingCoefficient m, degree(m, x)::Q)$PX
+            s := s + monomial(mx, degree(m, y))$PXY
+        s
+
+)abbrev package NEWPUIM NewtonPuiseuxMethod
+++ Author: Ralf Hemmecke
+++ Description:
+++ Implement qPochhammer and friends.
+NewtonPuiseuxMethod(K): Exports == Implementation where
+  K: Field
+  PX ==> UnivariatePuiseuxSeries(K, x, 0) -- K<<x>>
+  PXY ==> UnivariatePolynomial(y, PX)  -- K<<x>>[y]
+  Point ==> Record(ypow: Z, xpow: Q) -- actually: ypow >= 0
+
+  Exports ==> with
+    pointsOfNewtonPolygon: (Polynomial K, Symbol, Symbol) -> List Point
+      ++ pointsOfNewtonPolygon(p) returns the vertices of the
+      ++ Newton polygon corresponding to p.
+      ++ Assume that degree(p)>0 and #monomials(p)>0.
+
+  Implementation ==> add
+
+    pointsOfNewtonPolygon(p: Polynomial K, x: Symbol, y: Symbol): List Point ==
+        import from NewtonPuiseux(K, x, 0, PX, PXY)
+        pxy: PXY := toPXY(p, x, y)
+        pointsOfNewtonPolygon(pxy)
+
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
