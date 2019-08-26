@@ -28,6 +28,8 @@ CX := Q;
 -- Show only a few terms of the $q$-series expansion.
 
 )set stream calculate 2
+)set message time on
+)set message type on
 
 -- We use 4ti2 to find the monoid basis of the eta-quotients
 -- of level `nn`.
@@ -54,8 +56,7 @@ xab := samba(xt, xgens, 0, onet1Step!)$QXSAMBA1(C)
 
 genus := genusOfGamma0 nn
 )read ../xu5rib.input
-)set mess type on
-)set mess time on
+
 db5 := denom b5;
 nb5 := numer b5;
 PE C ==> PolynomialEvaluation(C, X1 C)
@@ -68,6 +69,8 @@ fdb5 := (first edb5)::F1(C);
 fnb5 := (first enb5)::F1(C);
 cfv0 := (fnb5/fdb5)::CF1(C)
 cfv := (1/qetaLeadingCoefficient(cfv0))*cfv0
+
+xv := toX1(C, cfv0, 'V)
 xv := toX1(C, cfv, 'V)
 qetaGrade cfv
 
@@ -98,7 +101,7 @@ ynptrace(y: YNP): Void == (_
 )set mess time on
 xwab := samba(xt, [xu, xu^2, xu^3, xu^4, xw], genus, onet1StepNP!)$QXSAMBANP1(C);
 
-xvab := samba(xt, [xu, xu^2, xu^3, xu^4, xv], genus, onet1StepNP!)$QXSAMBANP1(C);
+xvab := samba(xt, [xu, xu^2, xu^3, xv], genus, onet1StepNP!)$QXSAMBANP1(C);
 
 xz := toX1(C, first((1/11)*(xu - xt^10)), 'Z)
 xzab := samba(xt, [xz, xz^2, xz^3, xz^4, xv], genus, onet1StepNP!)$QXSAMBANP1(C);
@@ -182,7 +185,7 @@ ipz0
 svbas := sort(smallerGrade?, basis xvab);
 [qetaGrade x for x in svbas]
 
-
+)set stream calc 16
 xr := svbas.1;
 xr := xr - qetaCoefficient(svbas.1, 5)*xt;
 rzb1 := xr - qetaCoefficient(xr, 0)*1$X;
