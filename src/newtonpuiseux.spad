@@ -66,11 +66,17 @@ NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
   PX: UnivariatePuiseuxSeriesConstructorCategory(K, ULS) -- K<<x>>
   PXY: UnivariatePolynomialCategory PX                   -- K<<x>>[y]
   Point ==> Record(ypow: Z, xpow: Q) -- actually: ypow >= 0
+  SlopePoints ==> Record(slope: Q, start: Point, end: List Point)
 
   Exports ==> with
     pointsOfNewtonPolygon: PXY -> List Point
       ++ pointsOfNewtonPolygon(p) returns the vertices of the
       ++ Newton polygon corresponding to p.
+      ++ Assume that degree(p)>0 and #monomials(p)>0.
+    slopePointsOfNewtonPolygon: PXY -> List SlopePoints
+      ++ slopePointsOfNewtonPolygon(p) returns the slopes
+      ++ of the Newton polygon corresponding to p together with the
+      ++ points forming this slope.
       ++ Assume that degree(p)>0 and #monomials(p)>0.
     toPXY: (Polynomial K, Symbol, Symbol) -> PXY
 
@@ -103,7 +109,7 @@ NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
 --            dbgPrint("np", np)
             pt: Point := first npPoints
             slope: Q := (np.xpow - pt.xpow) * (1 / (np.ypow - pt.ypow))
-            while not empty? slopes and slope < first slopes repeat
+            while not empty? slopes and slope <= first slopes repeat
                 -- remove old points
                 slopes := rest slopes
                 npPoints := rest npPoints
@@ -112,6 +118,56 @@ NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
             slopes := cons(slope, slopes)
             npPoints := cons(np, npPoints)
         reverse! npPoints
+
+    slopePointsOfNewtonPolygon(p: PXY): List SlopePoints ==
+        --assert(#monomials(p)>1)
+        points: List Point := empty()
+        while not zero? p repeat
+            yp: Z := degree p
+            xp: Q := order leadingCoefficient p
+            points := cons([yp, xp], points)
+            p := reductum p
+        -- points are ordered with smallest ypow first
+        -- Note that all ypow of points are different.
+        --assert(#points>1) -- condition on p
+        -- points.1 and points(#points) are certainly vertices of the
+        -- Newton polygon. We start with points.1, add new points, but
+        -- while adding new points, old points are removed from the
+        -- Newton polygon, if they lie above the edge with a previous
+        -- point of the current Newton polygon.
+--        dbgPrint("POINTS", points)
+        p1: Point := first points;  points := rest points
+        p2: Point := first points;  points := rest points
+        npPoints: List Point := [p2, p1] -- Newton polygon points
+        slope: Q := (p2.xpow  - p1.xpow) * (1 / (p2.ypow - p1.ypow))
+        slopes: List Q := [slope]
+        slopePointList: List SlopePoints := [[slope, p1, [p2]]]
+        for np in points repeat -- newpoint
+--            dbgPrint("points", points)
+--            dbgPrint("npPoints", npPoints)
+--            dbgPrint("slopes", slopes)
+--           dbgPrint("np", np)
+--            dbgPrint("slopePointList", slopePointList)
+            pt: Point := first npPoints
+            slope: Q := (np.xpow - pt.xpow) * (1 / (np.ypow - pt.ypow))
+--            dbgPrint("slope", slope)
+            if slope = first slopes then
+                slopePoints: SlopePoints := first slopePointList
+                endPoints := slopePoints.end
+                slopePoints.end := cons(np, endPoints)
+                npPoints := cons(np, rest npPoints)
+            else
+                while not empty? slopes and slope < first slopes repeat
+                    -- remove old points
+                    slopes := rest slopes
+                    slopePointList := rest slopePointList
+                    npPoints := rest npPoints
+                    pt := first npPoints
+                    slope := (np.xpow - pt.xpow) * (1 / (np.ypow - pt.ypow))
+                slopes := cons(slope, slopes)
+                slopePointList := cons([slope, pt, [np]], slopePointList)
+                npPoints := cons(np, npPoints)
+        reverse! slopePointList
 
     toPXY(p: Polynomial K, x: Symbol, y: Symbol): PXY ==
         s: PXY := 0
@@ -134,12 +190,18 @@ NewtonPuiseuxMethod(K): Exports == Implementation where
   PX ==> UnivariatePuiseuxSeries(K, x, 0) -- K<<x>>
   PXY ==> UnivariatePolynomial(y, PX)  -- K<<x>>[y]
   Point ==> Record(ypow: Z, xpow: Q) -- actually: ypow >= 0
+  SlopePoints ==> Record(slope: Q, start: Point, end: List Point)
 
   Exports ==> with
     pointsOfNewtonPolygon: (Polynomial K, Symbol, Symbol) -> List Point
-      ++ pointsOfNewtonPolygon(p) returns the vertices of the
+      ++ pointsOfNewtonPolygon(p, x, y) returns the vertices of the
       ++ Newton polygon corresponding to p.
-      ++ Assume that degree(p)>0 and #monomials(p)>0.
+      ++ Assume that degree(p, y) > 0 and #monomials(p) > 0.
+    slopePointsOfNewtonPolygon: (Polynomial K, Symbol, Symbol) -> List SlopePoints
+      ++ slopePointsOfNewtonPolygon(p, x, y) returns the slopes
+      ++ of the Newton polygon corresponding to p together with the
+      ++ points forming this slope.
+      ++ Assume that degree(p, y) > 0 and #monomials(p) > 0.
 
   Implementation ==> add
 
@@ -147,6 +209,11 @@ NewtonPuiseuxMethod(K): Exports == Implementation where
         import from NewtonPuiseux(K, x, 0, PX, PXY)
         pxy: PXY := toPXY(p, x, y)
         pointsOfNewtonPolygon(pxy)
+
+    slopePointsOfNewtonPolygon(p: Polynomial K, x: Symbol, y: Symbol): List SlopePoints ==
+        import from NewtonPuiseux(K, x, 0, PX, PXY)
+        pxy: PXY := toPXY(p, x, y)
+        slopePointsOfNewtonPolygon(pxy)
 
 
 
