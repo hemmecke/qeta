@@ -54,11 +54,11 @@ dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF)
 Z ==> Integer
 Q ==> Fraction Z
 
-)abbrev package NEWPUI NewtonPuiseux
+)abbrev package GNEWTONP GeneralNewtonPolygon
 ++ Author: Ralf Hemmecke
 ++ Description:
-++ Implement Newton-Puiseux Method
-NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
+++ Implement Newton polygon computation
+GeneralNewtonPolygon(K, var, cen, PX, PXY): Exports == Implementation where
   K: Field
   var: Symbol
   cen: K
@@ -181,11 +181,11 @@ NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
             s := s + monomial(mx, degree(m, y))$PXY
         s
 
-)abbrev package NEWPUIM NewtonPuiseuxMethod
+)abbrev package NEWTONP NewtonPolygon
 ++ Author: Ralf Hemmecke
 ++ Description:
-++ Implement qPochhammer and friends.
-NewtonPuiseuxMethod(K): Exports == Implementation where
+++ Implements computaton of Newton polygon
+NewtonPolygon(K): Exports == Implementation where
   K: Field
   PX ==> UnivariatePuiseuxSeries(K, x, 0) -- K<<x>>
   PXY ==> UnivariatePolynomial(y, PX)  -- K<<x>>[y]
@@ -206,16 +206,14 @@ NewtonPuiseuxMethod(K): Exports == Implementation where
   Implementation ==> add
 
     pointsOfNewtonPolygon(p: Polynomial K, x: Symbol, y: Symbol): List Point ==
-        import from NewtonPuiseux(K, x, 0, PX, PXY)
+        import from GeneralNewtonPolygon(K, x, 0, PX, PXY)
         pxy: PXY := toPXY(p, x, y)
         pointsOfNewtonPolygon(pxy)
 
     slopePointsOfNewtonPolygon(p: Polynomial K, x: Symbol, y: Symbol): List SlopePoints ==
-        import from NewtonPuiseux(K, x, 0, PX, PXY)
+        import from GeneralNewtonPolygon(K, x, 0, PX, PXY)
         pxy: PXY := toPXY(p, x, y)
         slopePointsOfNewtonPolygon(pxy)
-
-
 
 )if LiterateDoc
 \bibliography{qeta}
