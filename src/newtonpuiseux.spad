@@ -51,6 +51,7 @@
 OF==>OutputForm
 dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
 
+N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 
@@ -146,7 +147,7 @@ GeneralNewtonPolygon(K, var, cen, PX, PXY): Exports == Implementation where
 --            dbgPrint("points", points)
 --            dbgPrint("npPoints", npPoints)
 --            dbgPrint("slopes", slopes)
---           dbgPrint("np", np)
+--            dbgPrint("np", np)
 --            dbgPrint("slopePointList", slopePointList)
             pt: Point := first npPoints
             slope: Q := (np.xpow - pt.xpow) * (1 / (np.ypow - pt.ypow))
@@ -175,7 +176,7 @@ GeneralNewtonPolygon(K, var, cen, PX, PXY): Exports == Implementation where
         sort variables p ~= sort [x, y] =>
             error "not a polynomial in the given variables"
         mons := monomials p
-        dbgPrint("mons", mons)
+--        dbgPrint("mons", mons)
         for m in mons repeat
             mx := monomial(leadingCoefficient m, degree(m, x)::Q)$PX
             s := s + monomial(mx, degree(m, y))$PXY
@@ -214,6 +215,53 @@ NewtonPolygon(K): Exports == Implementation where
         import from GeneralNewtonPolygon(K, x, 0, PX, PXY)
         pxy: PXY := toPXY(p, x, y)
         slopePointsOfNewtonPolygon(pxy)
+
+-------------------------------------------------------------------
+
+)abbrev package NEWTPUIS NewtonPuiseux
+++ Author: Ralf Hemmecke
+++ Description:
+++ Implements computaton of Newton polygon
+NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
+  K: AlgebraicallyClosedField
+  var: Symbol
+  cen: K
+  ULS ==> UnivariateLaurentSeries(K, var, cen)
+  PX: UnivariatePuiseuxSeriesConstructorCategory(K, ULS) -- K<<x>>
+  PXY: UnivariatePolynomialCategory PX                   -- K<<x>>[y]
+  KX ==> SparseUnivariatePolynomial K -- K[x]
+  Point ==> Record(ypow: Z, xpow: Q) -- actually: ypow >= 0
+  SlopePoints ==> Record(slope: Q, start: Point, end: List Point)
+
+  Exports ==> with
+    puiseuxCoefficients: PXY -> List Record(coef: K, expo: Q)
+      ++ puiseuxCoefficients(p) returns the leading coefficients
+      ++ together with the respective negative slope of the Newton
+      ++ polygon.
+
+  Implementation ==> add
+
+    coefficientRelation(p: PXY, points: List Point): KX ==
+        defPoly: KX := 0
+        minypow: Z := first(points).ypow
+        for point in points repeat
+            yex: Z := point.ypow
+            cx: PX := coefficient(p, qcoerce(yex)@N)
+            c: K := coefficient(cx, point.xpow)
+            defPoly := defPoly + monomial(c, qcoerce(yex - minypow)@N)
+        primitivePart defPoly
+
+    puiseuxCoefficients(p: PXY): List Record(coef: K, expo: Q) ==
+        import from GeneralNewtonPolygon(K, var, cen, PX, PXY)
+        slopePointList: List SlopePoints := slopePointsOfNewtonPolygon p
+        result: List Record(coef: K, expo: Q) := empty()
+        for slopePoints in slopePointList repeat
+            points := cons(slopePoints.start, slopePoints.end)
+            dp := coefficientRelation(p, points)
+            result := cons([rootOf dp, - slopePoints.slope], result)
+        result
+
+
 
 )if LiterateDoc
 \bibliography{qeta}
