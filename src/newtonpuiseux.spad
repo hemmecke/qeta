@@ -99,18 +99,11 @@ NewtonPolygon(K: Join(Field, OrderedSet)): Exports == Implementation where
         -- while adding new points, old points are removed from the
         -- Newton polygon, if they lie above the edge with a previous
         -- point of the current Newton polygon.
---        dbgPrint("POINTS", points)
-        dbgPrint("points", points)
         p1: Point K := first points;  points := rest points
         p2: Point K := first points;  points := rest points
         npPoints: List Point K := [p2, p1] -- Newton polygon points
-        dbgPrint("npPoints", npPoints)
         slopes: List K := [(p2.2  - p1.2) / (p2.1 - p1.1)]
         for np in points repeat -- newpoint
-            dbgPrint("points", points)
-            dbgPrint("npPoints", npPoints)
-            dbgPrint("slopes", slopes)
-            dbgPrint("np", np)
             pt: Point K := first npPoints
             slope: K := (np.2 - pt.2) / (np.1 - pt.1)
             while not empty? slopes and slope <= first slopes repeat
@@ -130,39 +123,26 @@ NewtonPolygon(K: Join(Field, OrderedSet)): Exports == Implementation where
         -- while adding new points, old points are removed from the
         -- Newton polygon, if they lie above the edge with a previous
         -- point of the current Newton polygon.
---        dbgPrint("POINTS", points)
         p1: Point K := first points;  points := rest points
         p2: Point K := first points;  points := rest points
-        npPoints: List Point K := [p2, p1] -- Newton polygon points
         slope: K := (p2.2  - p1.2) * (1 / (p2.1 - p1.1))
-        slopes: List K := [slope]
         slopePointList: List SlopePoints K := [[slope, [p1, p2]]]
         for np in points repeat -- newpoint
---            dbgPrint("points", points)
---            dbgPrint("npPoints", npPoints)
---            dbgPrint("slopes", slopes)
---            dbgPrint("np", np)
---            dbgPrint("slopePointList", slopePointList)
-            pt: Point K := first npPoints
+            slopePoints: SlopePoints K := first slopePointList
+            sPoints: List Point K := slopePoints.points
+            -- p1 := sPoints.1 -- startpoint of last slope
+            pt := sPoints.2 -- endpoint of last slope
             slope: K := (np.2 - pt.2) / (np.1 - pt.1)
---            dbgPrint("slope", slope)
-            if slope = first slopes then
-                slopePoints: SlopePoints K := first slopePointList
-                sPoints: List Point K := slopePoints.points
-                firstPoint := first(sPoints)
-                slopePoints.points := cons(firstPoint, cons(np, rest sPoints))
-                npPoints := cons(np, rest npPoints)
+            if slope = slopePoints.slope then
+                slopePoints.points := cons(sPoints.1, cons(np, rest sPoints))
             else
-                while not empty? slopes and slope < first slopes repeat
-                    -- remove old points
-                    slopes := rest slopes
+                while not empty? slopePointList and
+                      slope < first(slopePointList).slope repeat
+                    -- remove useless slopes (and points)
+                    pt := first(first(slopePointList).points) --
                     slopePointList := rest slopePointList
-                    npPoints := rest npPoints
-                    pt := first npPoints
                     slope := (np.2 - pt.2) / (np.1 - pt.1)
-                slopes := cons(slope, slopes)
                 slopePointList := cons([slope, [pt, np]], slopePointList)
-                npPoints := cons(np, npPoints)
         reverse! slopePointList
 
 
