@@ -54,6 +54,8 @@ dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF)
 N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
+SY ==> Symbol
+POLYK ==> Polynomial K
 SlopePoints K ==> Record(slope: K, points: List Point K)
 
 )abbrev package NEWTONP NewtonPolygon
@@ -153,11 +155,11 @@ NewtonPolygon(K: Join(Field, OrderedSet)): Exports == Implementation where
 NewtonPolygonFromPolynomial(K): Exports == Implementation where
   K: Field
   Exports ==> with
-    pointsOfNewtonPolygon: (Polynomial K, Symbol, Symbol) -> List Point Q
+    pointsOfNewtonPolygon: (POLYK, Symbol, Symbol) -> List Point Q
       ++ pointsOfNewtonPolygon(p, x, y) returns the vertices of the
       ++ Newton polygon corresponding to p.
       ++ Assume that degree(p, y) > 0 and #monomials(p) > 0.
-    slopePointsOfNewtonPolygon: (Polynomial K, Symbol, Symbol) -> List SlopePoints Q
+    slopePointsOfNewtonPolygon: (POLYK, SY, SY) -> List SlopePoints Q
       ++ slopePointsOfNewtonPolygon(p, x, y) returns the slopes
       ++ of the Newton polygon corresponding to p together with the
       ++ points forming this slope.
@@ -165,87 +167,96 @@ NewtonPolygonFromPolynomial(K): Exports == Implementation where
 
   Implementation ==> add
 
-    polynomial2Points(p: Polynomial K, x: Symbol, y: Symbol): List Point Q ==
+    polynomial2Points(p: POLYK, x: Symbol, y: Symbol): List Point Q ==
         sort variables p ~= sort [x, y] =>
             error "not a polynomial in the given variables"
         [point [degree(m, y)::Q, degree(m, x)::Q] for m in monomials p]
 
-    pointsOfNewtonPolygon(p: Polynomial K, x: Symbol, y: Symbol): List Point Q ==
+    pointsOfNewtonPolygon(p: POLYK, x: SY, y: SY): List Point Q ==
         points: List Point Q := polynomial2Points(p, x, y)
         pointsOfNewtonPolygon(points)$NewtonPolygon(Q)
 
-    slopePointsOfNewtonPolygon(p: Polynomial K, x: Symbol, y: Symbol): List SlopePoints Q ==
+    slopePointsOfNewtonPolygon(p: POLYK, x: SY, y: SY): List SlopePoints Q ==
         points: List Point Q := polynomial2Points(p, x, y)
         slopePointsOfNewtonPolygon(points)$NewtonPolygon(Q)
-)fin
+
 -------------------------------------------------------------------
 
 )abbrev package NEWTPUIS NewtonPuiseux
 ++ Author: Ralf Hemmecke
 ++ Description:
-++ Implements computaton of Newton polygon
-NewtonPuiseux(K, var, cen, PX, PXY): Exports == Implementation where
+++ Implements the computation of a Puiseux series satisfying a bivariate
+++ polynomial.
+NewtonPuiseux(K): Exports == Implementation where
   K: AlgebraicallyClosedField
-  var: Symbol
-  cen: K
-  ULS ==> UnivariateLaurentSeries(K, var, cen)
-  PX: UnivariatePuiseuxSeriesConstructorCategory(K, ULS) -- K<<x>>
-  PXY: UnivariatePolynomialCategory PX                   -- K<<x>>[y]
   KX ==> SparseUnivariatePolynomial K -- K[x]
-  Point ==> Record(ypow: Z, xpow: Q) -- actually: ypow >= 0
-  SlopePoints ==> Record(slope: Q, start: Point, end: List Point)
+  KXY ==> SparseUnivariatePolynomial KX -- KX[y]
+  PUIMON ==> Record(coef: K, expo: Q)
 
   Exports ==> with
-    puiseuxCoefficients: PXY -> List Record(coef: K, expo: Q)
-      ++ puiseuxCoefficients(p) returns the leading coefficients
-      ++ together with the respective negative slope of the Newton
-      ++ polygon.
+    leadingPuiseuxMonomials: KXY -> List PUIMON
+      ++ leadingPuiseuxMonomials(p) returns for each slope of the Newton
+      ++ polygon of p the leading monomial of the Puiseux series Y
+      ++ satisfying p(x, Y(x)) = 0.
+    leadingPuiseuxMonomials: (POLYK, Symbol, Symbol) -> List PUIMON
+      ++ leadingPuiseuxMonomials(p, x, y) returns for each slope of
+      ++ the Newton polygon of p the leading monomial of the Puiseux
+      ++ series Y satisfying p(x, Y(x)) = 0. together with the
+      ++ respective negative slope of the Newton polygon.
 
   Implementation ==> add
 
-    coefficientRelation(p: PXY, points: List Point): KX ==
+    coefficientRelation(p: KXY, points: List Point Z): KX ==
+        --assert(#point > 1)
         defPoly: KX := 0
-        minypow: Z := first(points).ypow
+        ymin: Z := first(points).1
+        for point in rest points repeat if ymin > point.1 then ymin := point.1
         for point in points repeat
-            yex: Z := point.ypow
-            cx: PX := coefficient(p, qcoerce(yex)@N)
-            c: K := coefficient(cx, point.xpow)
-            defPoly := defPoly + monomial(c, qcoerce(yex - minypow)@N)
+            yex: Z := point.1
+            cx: KX := coefficient(p, qcoerce(yex)@N)
+            c: K := coefficient(cx, qcoerce(point.2)@N)
+            defPoly := defPoly + monomial(c, qcoerce(yex - ymin)@N)
         primitivePart defPoly
 
-    puiseuxCoefficients(p: PXY): List Record(coef: K, expo: Q) ==
-        import from GeneralNewtonPolygon(K, var, cen, PX, PXY)
-        slopePointList: List SlopePoints := slopePointsOfNewtonPolygon p
-        result: List Record(coef: K, expo: Q) := empty()
-        for slopePoints in slopePointList repeat
-            points := cons(slopePoints.start, slopePoints.end)
-            dp := coefficientRelation(p, points)
-            result := cons([rootOf dp, - slopePoints.slope], result)
-        result
-
--------------------------------------------------------------------
-    polyExponents: (Polynomial K, Symbol, Symbol) -> List QPoint
-    polynomialExponents: (Polynomial K, Symbol, Symbol) -> List QPoint
-    polynom2Points(p: KXY): List QPoint ==
-        points: List QPoint := empty()
+    polynomial2Points(p: KXY): List Point Q ==
+        points: List Point Q := empty()
         while not zero? p repeat
-            points := cons([degree p, order leadingCoefficient p], points)
+            ydeg := degree p
+            cx: KX := leadingCoefficient p
             p := reductum p
-        points
+            while not zero? cx repeat
+                xdeg := degree cx
+                c: K := leadingCoefficient cx
+                cx := reductum cx
+                points := cons(point [ydeg::Q, xdeg::Q], points)
+        return points
 
-
-
-    toPXY(p: Polynomial K, x: Symbol, y: Symbol): PXY ==
-        s: PXY := 0
+    toKXY(p: POLYK, x: Symbol, y: Symbol): KXY ==
         -- sanity check
         sort variables p ~= sort [x, y] =>
             error "not a polynomial in the given variables"
-        mons := monomials p
---        dbgPrint("mons", mons)
-        for m in mons repeat
-            mx := monomial(leadingCoefficient m, degree(m, x)::Q)$PX
-            s := s + monomial(mx, degree(m, y))$PXY
+        s: KXY := 0
+        for m in monomials p repeat
+            mx := monomial(leadingCoefficient m, degree(m, x))$KX
+            s := s + monomial(mx, degree(m, y))$KXY
         s
+
+    pointsQZ(points: List Point Q): List Point Z ==
+        [point [numer(p.1), numer(p.2)] for p in points]
+
+    leadingPuiseuxMonomials(p: KXY): List PUIMON ==
+        import from NewtonPolygon(Q)
+        points: List Point Q := polynomial2Points p
+        slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
+        result: List PUIMON := empty()
+        for slopePoints in slopePointList repeat
+            dp := coefficientRelation(p, pointsQZ slopePoints.points)
+            result := cons([rootOf dp, - slopePoints.slope], result)
+        result
+
+    leadingPuiseuxMonomials(p: POLYK, x: Symbol, y: Symbol): List PUIMON ==
+        leadingPuiseuxMonomials toKXY(p, x, y)
+
 
 
 )if LiterateDoc
