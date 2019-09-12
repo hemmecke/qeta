@@ -37,7 +37,7 @@ WIDTH(nn, c) == qcoerce(width(nn, c)$QAuxMEQ)@P
 -- However, our series are dense anyway.
 -------------------------------------------------------------------
 -- related to computation with eta quotients having poles only at infinity
-LS C  ==> UnivariateLaurentSeries(C , 'q, 0);
+LS C  ==> UnivariateLaurentSeries(C, 'q, 0);
 F1 C ==> Finite0Series(C, 'q, 0) -- actual computation domain
 ETA C  ==> EtaQuotient(C, F1 C)
 toeta ==> toEta $ ETA(C)
@@ -58,6 +58,9 @@ QXRED1 C ==> QEtaReduction(C, X1 C, QXAB1 C)
 QXCOMP1 C ==> QEtaComputation(C, X1 C, QXAB1 C, QXRED1 C)
 QXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMP1 C)
 
+QXCOMPDP1 C ==> QEtaComputationDelayedPairs(C, X1 C, QXAB1 C, QXRED1 C)
+QXSAMBADP1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMPDP1 C)
+
 -- The following macros yield samba with a zero-reduction test
 -- before the reduction with attached part is repeated.
 QFXRED1 C ==> QEtaExtendedReduction(C, CF1 C, X1 C, QXAB1 C)
@@ -73,7 +76,7 @@ SUPZ2SUP(C, x) ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
 SUP2UP(C, x) ==> unmakeSUP(SUPZ2SUP(C, x))$UPxi(C)
 
 -- minimal polynomial for n-th root of unity
-MINROOTPOL(C, n) ==> SUP2UP(C, cyclotomic(n)$CyclotomicPolynomialPackage);
+MINROOTPOL(C, n) ==> SUP2UP(C, cyclotomic(n)$CyclotomicPolynomialPackage)
 -- If xiord = 1 or 2 then set xi==>1 or xi==>-1 respectively and,
 -- furthermore, CX ==> C.
 -- Extension of C with n-th root of unity
@@ -83,20 +86,17 @@ UnityRootExtension(C, n) ==> _
 -------------------------------------------------------------------
 -- TODO: The following macros must be made more parametrized.
 -- Problem is that we need C, xiord, and xi.
-LX ==> LS CX
-YMSETAQ ==> SymbolicModularSiftedEtaQuotient;
-YMSETAQG ==> SymbolicModularSiftedEtaQuotientGamma;
-ETAQG ==> EtaQuotientGamma(C, xiord, CX, xi, LX);
-METAQ ==> ModularEtaQuotient(C, xiord, CX, xi, LX)
-SETAQG ==> SiftedEtaQuotientGamma(C, xiord, CX, xi, LX);
-MSETAQ ==> ModularSiftedEtaQuotient(C, xiord, CX, xi, LX);
-MODFUNX ==> ModularFunctionExpansions(CX, LX, nn);
-Fn ==> MODFUNX
-CFn ==> QEtaAlgebraCachedPower(CX, Fn) -- computation domain in cached version
-PolCX ==> Polynomial CX
-CPolCX ==> QEtaAlgebraCachedPower(CX, PolCX) -- computation with cached pols
-Xn ==> QEtaExtendedAlgebra(CX, CFn, CPolCX);
-toXn(a, b) ==> embed(a, b::CPolCX)$Xn
+YMSETAQ ==> SymbolicModularSiftedEtaQuotient
+YMSETAQG ==> SymbolicModularSiftedEtaQuotientGamma
+ETAQG(C, CX) ==> EtaQuotientGamma(C, xiord, CX, xi, LS CX);
+METAQ(C, CX) ==> ModularEtaQuotient(C, xiord, CX, xi, LS CX)
+SETAQG(C, CX) ==> SiftedEtaQuotientGamma(C, xiord, CX, xi, LS CX)
+MSETAQ(C, CX) ==> ModularSiftedEtaQuotient(C, xiord, CX, xi, LS CX)
+MODFUNX CX ==> ModularFunctionExpansions(CX, LS CX, nn)
+Fn CX ==> MODFUNX CX
+CFn CX ==> QEtaAlgebraCachedPower(CX, Fn CX) -- domain in cached version
+Xn CX ==> QEtaExtendedAlgebra(CX, CFn CX, CPol CX)
+toXn(CX, a, b) ==> embed(a, b::CPol(CX))$Xn(CX)
 
 -- Now powersamba in extended form, i.e., with attached part (all cahed powers)
 QXABn C ==> XEtaAlgebraBasis(C, Xn C)

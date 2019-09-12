@@ -196,23 +196,56 @@ QEtaComputationCategory(F, AB): Category == Exports where
     algebraBasis: % -> AB
       ++ algebraBasis(x) returns the structure from x that holds the
       ++ algebra basis.
-    oneStepComputation!: % -> %
-      ++ oneStepComputation!(x) computes one step of the computation.
-      ++ It extracts a critical element and removes it from the list
-      ++ of critical elements. Then it reduces it and updates the
-      ++ basis and the critical elements if the reduction did not end
-      ++ with 0. It should hold criticalElements?(x), otherwise the
-      ++ result is undefined.
-    oneTracedStep!: (% -> Void, (F, AB) -> Void, F -> Void, F -> Void) _
-                    -> (% -> %)
-      ++ oneTracedStep!(x, trace, traceEnter, traceLoop, traceReturn)
-      ++ behaves like oneStepComputation!(x) except that
-      ++ trace(x) is called at the beginning of the function and
-      ++ tracedReduce(traceEnter, traceLoop, traceReturn) is used
-      ++ instead of the ordinary reduce function.
     postProcess!: % -> %
       ++ postProcess!(x) postprocesses the result. It might interreduce
       ++ the basis or do other kinds of cleanup.
+    extractNext!: % -> F
+      ++ extractNext!(x) chooses one of the critical elements and
+      ++ returns it. At the same time this critical element is
+      ++ (destructively) removed from the structure of critical elements.
+      ++ extractNext!(x) can only be called if criticalElements?(x)
+      ++ returns true.
+      ++ This function implements a selection strategy.
+    oneStepComputation!: (%, % -> F) -> %
+      ++ oneStepComputation!(x, next!) computes one step of the
+      ++ computation. It uses the function next! to extract and
+      ++ destructively remove the the next element that is to be
+      ++ considered in the computation. Then it reduces it
+      ++ and updates the basis and the critical elements if the
+      ++ reduction did not end with 0. It should hold
+      ++ criticalElements?(x), otherwise the result is undefined.
+    oneTracedStepComputation!: (% -> Void, _
+      (F, AB) -> Void, F -> Void, F -> Void) -> (%, % -> F) -> %
+      ++ oneTracedStepComputation!(x, trace, traceEnter, traceLoop,
+      ++ traceReturn)(x) behaves like oneStepComputation!(x, next!)
+      ++ except that trace(x) is called at the beginning of the
+      ++ function and tracedReduce(traceEnter, traceLoop, traceReturn)
+      ++ is used instead of the ordinary reduce function.
+    oneStep!: % -> %
+      ++ oneStep!(x) computes oneStepComputation!(x, extractNext!).
+    oneTracedStep!: (% -> Void, (F, AB) -> Void, F -> Void, F -> Void) _
+                    -> (% -> %)
+      ++ oneTracedStep!(trace, traceEnter, traceLoop, traceReturn)(x)
+      ++ computes
+      ++ oneTracedStepComputation!(trace, traceEnter, traceLoop, traceReturn)(x, extractNext!).
+   add
+    postProcess!(x: %): % == x
+    noTrace(x: %): Void == void()
+    noTraceAtEnter(f: F, ab: AB): Void == void()
+    nt(f: F): Void == void()
+
+    oneStepComputation!(x: %, next!: % -> F): % ==
+        otsc! ==> oneTracedStepComputation!(noTrace, noTraceAtEnter, nt, nt)
+        otsc!(x, next!)
+
+    oneStep!(x: %): % == oneStepComputation!(x, extractNext!)
+
+    oneTracedStep!(trace: % -> Void, _
+                   traceEnter: (F, AB) -> Void,_
+                   traceLoop: F -> Void,_
+                   traceReturn: F -> Void): % -> % ==
+      (x: %): % +->
+        oneTracedStepComputation!(trace, traceEnter, traceLoop, traceReturn)(x, extractNext!)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -249,9 +282,9 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ (grade u > grade v or
       ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
     reducer: (F, AB) -> Union(F, "failed")
-      ++ reducer(u, basis, grdt) returns an element b from the basis
-      ++ or b=1 such that grade u - grade b is divisible by grdt or
-      ++ return "failed" if no such b exists.
+      ++ reducer(u, ab) returns an element b from basis(ab)
+      ++ or b=1 such that grade u - grade b is divisible by
+      ++ grade(multiplier ab) or returns "failed" if no such b exists.
       ++ This functions corresponds to the function
       ++ "select_{t,basis}(u)" as in Definition 2.6 of
       ++ \cite{Hemmecke:DancingSambaRamanujan:2018}. That reducer
@@ -486,7 +519,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
         --assert(not empty? m)
         --assert(qetaGrade t > 0)
         y: Y := initialize cons(t, m)
-        while criticalElements? y repeat y := oneStepComputation! y
+        while criticalElements? y repeat y := oneStep! y
         return algebraBasis y
 
     continue?(grdt: Z, g: Z, v: Vector Z, y: Y): Boolean ==
@@ -518,8 +551,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
         while continue?(grdt, g, v, y) repeat y := oneStep! y
         return algebraBasis y
 
-    samba(t: F, m: List F, g: Z): AB ==
-        samba(t, m, g, oneStepComputation!)
+    samba(t: F, m: List F, g: Z): AB == samba(t, m, g, oneStep!)
 
 )if LiterateDoc
 %$
@@ -581,10 +613,6 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
       ++ then computes all the n*(n+1)/2 (commutative) pairs of the
       ++ current elements of the basis and additionally adds all the
       ++ gap-pairs where n is the number of basis elements.
-    selectNext!: % -> F
-      ++ selectNext!(x) chooses one of the critical elements and
-      ++ returns it. At the same time this critical element is
-      ++ (destructively) removed from the structure of critical elements.
     update!: (F, %) -> %
       ++ update!(u, x) adds a new basis element and updates the
       ++ critical elements accordingly. Note that older basis elements
@@ -713,7 +741,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
     criticalElements?(x: %): Boolean ==
         not empty?(xx.cbe) or not empty?(xx.pairs)
 
-    selectNext!(x: %): F ==
+    extractNext!(x: %): F ==
         p: Products := xx.pairs
         grdc: Z := -1
         grdp: Z := -1
@@ -733,24 +761,16 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         if empty? l then remove!(g, p) else p.g := l
         r.f1 * r.f2
 
-    oneStepComputation!(x: %): % ==
-        --assert(criticalElements? x)
-        -- Selection process: Take the first element from cbe or
-        -- products with smallest degree prefer cbe if equal degree.
-        f: F := selectNext! x
-        if not zero?(u := reduce(f, algebraBasis x)$R) then update!(u, x)
-        return x
-
-    oneTracedStep!(trace: % -> Void, _
+    oneTracedStepComputation!(trace: % -> Void, _
                    traceEnter: (F, AB) -> Void,_
                    traceLoop: F -> Void,_
-                   traceReturn: F -> Void): (% -> %) ==
-      (x: %): % +->
+                   traceReturn: F -> Void): (%, % -> F) -> % ==
+      (x: %, next!: % -> F): % +->
         --assert(criticalElements? x)
         -- Selection process: Take the first element from cbe or
         -- products with smallest degree prefer cbe if equal degree.
         trace x
-        f: F := selectNext! x
+        f: F := next! x
         tReduce ==> tracedReduce $ R
         u := tReduce(traceEnter, traceLoop, traceReturn)(f, algebraBasis x)
         if not zero? u then update!(u, x)
@@ -764,24 +784,22 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
 \subsection{Algorithm \algoSamba: without computing pairs}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-NOTE: This is a temporary hack that depends on QEtaComputation and its
-representation.
-
 Critical elements are only the basis elements that become critical
-(reducible by the new element).
+(reducible by the new element). Only after all critical (basis)
+elements have been considered, pairs are taken into account.
+
 )endif
 
 
-)abbrev domain QETACNP QEtaComputationNoPairs
-++ QEtaComputationNoPairs implements a variant of the algorithm Samba
-++ from an article of Ralf Hemmecke:
-++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
-++ Symbolic Computation).
+)abbrev domain QETACDP QEtaComputationDelayedPairs
+++ QEtaComputationDelayedPairs implements a variant of the algorithm
+++ Samba from an article of Ralf Hemmecke: "Dancing Samba with
+++ Ramanujan Partition Congruences" (Journal of Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
-++ In this variant, no products of basis elements are computed, but
-++ only a (linear) interreduction of the elements is done.
-QEtaComputationNoPairs(C, F, AB, R): Exports == Implementation where
+++ In this variant, products of basis elements are computed if no
+++ other critical elements are available.
+QEtaComputationDelayedPairs(C, F, AB, R): Exports == Implementation where
   H ==> XHashTable(Z, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
@@ -789,90 +807,32 @@ QEtaComputationNoPairs(C, F, AB, R): Exports == Implementation where
       initialize: F -> %
       basisElements: % -> H
   R: QEtaReductionCategory(C, F, AB)
+  FF ==> Record(f1: F, f2: F)
+  Products ==> XHashTable(Z, List FF)
   Exports ==> QEtaComputationCategory(F, AB)
   Implementation ==> QEtaComputation(C, F, AB, R) add
     Rep ==> QEtaComputation(C, F, AB, R)
     import from Rep
     Rec ==> Record(ab: AB, cbe: List F, pairs: Products)
     import from Rec
-    grade ==> qetaGrade$F
-    leadingCoefficient ==> qetaLeadingCoefficient$F
     criticalBasisElements x ==> (x pretend Rec).cbe
-    smallerGrade?(x: F, y: F): Boolean == grade x < grade y
+    products x ==> (x pretend Rec).pairs
 
-    -- Destructively updates basis and critical elements
-    update!(u: F, x: %): % ==
-        t: F := multiplier algebraBasis x
-        grdt: Z := grade t
-        grdu: Z := grade u
-        --assert(grade u > 0)
-        --assert(grdt > 0)
-        --assert(not zero?(positiveRemainder(grade u, grdt)
-        --assert(not topReducible?(u, b) for all b in basis)
-        -- update basis
-        -- Since u is not top-reducible by any basis element, we can add
-        -- u to the basis. We move elements that become top-reducible by u
-        -- from the basis into the critical elements.
-        i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
-        basis: H := basisElements algebraBasis x
-        bas: List F := basis(algebraBasis x, i)
-        red: List F := empty()
-        irr: List F := empty()
-
-        -- Assune that bas is sorted by greaterGrade?.
-        while not empty? bas and greaterGrade?(u, first bas) repeat
-            irr := cons(first bas, irr)
-            bas := rest bas
-
-        -- We include the new element here ...
-        irr := cons(u, irr)
-        -- ... and separate the remaining elements according to
-        -- whether or not they are reducible.
-        -- We assume that all elements of bas will go to irr.
-        for b in bas repeat
-            if topReducible?(b, u)$R then
-                -- add b to criticalElements
-                red := cons(b, red)
-            else
-                irr := cons(b, irr)
-        basis.i := reverse! irr
-        -- We don't need to redo reduction of pairs if no basis element
-        -- has been removed.
-        if not empty? red then
-            criticalBasisElements(x) :=
-               sort(smallerGrade?, concat(red, criticalBasisElements(x)))
-        return x
-
-    criticalElements?(x: %): Boolean == not empty? criticalBasisElements x
-
-    selectNext!(x: %): F ==
-        --assert(criticalElements? x)
-        f := first criticalBasisElements x
-        criticalBasisElements(x) := rest criticalBasisElements x
-        f
-
-    oneStepComputation!(x: %): % ==
-        --assert(criticalElements? x)
-        -- Selection process: Take the first element from the critical
-        -- basis elements.
-        f: F := selectNext! x
-        if not zero?(u := reduce(f, algebraBasis x)$R) then update!(u, x)
-        return x
-
-    oneTracedStep!(trace: % -> Void, _
-                   traceEnter: (F, AB) -> Void,_
-                   traceLoop: F -> Void,_
-                   traceReturn: F -> Void): (% -> %) ==
-      (x: %): % +->
-        --assert(criticalElements? x)
-        -- Selection process: Take the first element from the critical
-        -- basis elements.
-        trace x
-        f: F := selectNext! x
-        tReduce ==> tracedReduce $ R
-        u := tReduce(traceEnter, traceLoop, traceReturn)(f, algebraBasis x)
-        if not zero? u then update!(u, x)
-        return x
+    extractNext!(x: %): F ==
+        not empty? criticalBasisElements x =>
+            f := first criticalBasisElements x
+            criticalBasisElements(x) := rest criticalBasisElements x
+            f
+        p: Products := products x
+        grdc: Z := -1
+        grdp: Z := -1
+        g := -1 -- dummy value
+        --assert(not empty? p)
+        g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+        r: FF := first(p.g) -- the element of this grade
+        l: List FF := rest(p.g) -- remove u
+        if empty? l then remove!(g, p) else p.g := l
+        r.f1 * r.f2
 
 
 )if LiterateDoc
