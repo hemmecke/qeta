@@ -281,6 +281,13 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ grade = qetaGrade:
       ++ (grade u > grade v or
       ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
+    tailReducible?: (F, Z, F) -> Boolean
+      ++ tailReducible?(u, n, b) returns true iff there exists f in F
+      ++ such that for v = u - f*b,
+      ++ c = qetaCoefficient(u, n), and
+      ++ d = qetaCoefficient(v, n)
+      ++ zero? d holds or euclideanSize c > euclideanSize d.
+      ++ Initially it is assumed that not zero?(c).
     reducer: (F, AB) -> Union(F, "failed")
       ++ reducer(u, ab) returns an element b from basis(ab)
       ++ or b=1 such that grade u - grade b is divisible by
@@ -311,11 +318,30 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ are assumed to be sorted by greaterGrade?. We assume that
       ++ qetaLeadingCoefficient(t)=1 and no element of the basis has a
       ++ qetaGrade that is divisible by the qetaGrade of t.
+      ++ We require qetaGrade(multiplier ab)>0,
+      ++ one? leadingCoefficient multiplier ab,
+      ++ qetaGrade(b)>0 for all b in basis(ab), and
+      ++ not zero? positiveRemainder(qetaGrade(b), grade multiplier ab)
+      ++ for all b in basis(ab).
+      ++ Whether reduce performs only a top-reduction or an additional
+      ++ tail-reduction, is an implementation detail of the package.
+    tracedTopReduce: ((F, AB) -> Void, F -> Void, F -> Void) -> ((F, AB) -> F)
+      ++ tracedTopReduce behaves like tracedReduce, but performing
+      ++ only top-reductions.
+    tracedTailReduce: ((F, AB) -> Void, F -> Void, F -> Void) -> ((F, AB) -> F)
+      ++ tracedTailReduce behaves performs only tail-reductions, i.e.,
+      ++ the qetaGrade of the result will be the same as the qetaGrade
+      ++ of the input element.
+      ++ Tail-reductions are reductions that are performed on the
+      ++ non-leading terms of the input up to (and including) the
+      ++ constant term of the series.
+    topReduce: (F, AB) -> F
+      ++ topReduce == tracedTopReduce(noTraceAtEnter, noTrace, noTrace)
+    tailReduce: (F, AB) -> F
+      ++ tailReduce == tracedTailReduce(noTraceAtEnter, noTrace, noTrace)
+
     greaterGrade?: (F, F) -> Boolean
       ++ greaterGrade?(x, y) returns qetaGrade(x)>qetaGrade(y).
-    rawReduce: (F, AB) -> F
-      ++ rawReduce(u, ab) behaves essentially like reduce(u, ab) except
-      ++ that there is no normalization of the leading coefficient to 1.
    add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
@@ -330,6 +356,14 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
         lcb: C := leadingCoefficient b
         euclideanSize lcu >= euclideanSize lcb
 
+    tailReducible?(u: F, n: Z, b: F): Boolean ==
+        --assert(not zero? b)
+        --assert(not zero? u)
+        n < grade b => false
+        lcu: C := qetaCoefficient(u, n)
+        lcb: C := leadingCoefficient b
+        euclideanSize lcu >= euclideanSize lcb
+
     -- For tracing the computation, other functions (that print
     -- something) could be used.
     noTraceAtEnter(u: F, ab: AB): Void == void()
@@ -337,6 +371,10 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
 
     reduce(u: F, ab: AB): F ==
         tracedReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
+    topReduce(u: F, ab: AB): F ==
+        tracedTopReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
+    tailReduce(u: F, ab: AB): F ==
+        tracedTailReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -350,6 +388,8 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
 ++ Symbolic Computation).
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ Note that here we not only reduce the top term, but also the
+++ remaining terms up to (and including) qetaGrade = 0.
 QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
@@ -372,15 +412,25 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
             if topReducible?(u, b) then return b::Union(F, "failed")
         "failed"
 
-    tracedReduce(traceEnter: (F, AB) -> Void,_
-                 traceLoop: F -> Void,_
-                 traceReturn: F -> Void): (F, AB) -> F ==
+    tailReducer(u: F, n: Z, ab: AB): Union(F, "failed") ==
+        zero? qetaCoefficient(u, n) => "failed"
+        grdt: Z := grade multiplier ab
+        i: Z := positiveRemainder(n, grdt)
+        -- if zero? i there is no corresponding element in basis, but
+        -- we can use the element 1, i.e. we reduce u by a power of t.
+        zero? i => return (1$F)::Union(F, "failed")
+        candidates: List F := basis(ab, i)
+            -- candidates contains all basis elements b with
+            -- positiveRemainder(grade b, grdt) = i in the same order
+            -- as given in basis.
+        for b in candidates repeat
+            if tailReducible?(u, n, b) then return b::Union(F, "failed")
+        "failed"
+
+    tracedTopReduce(traceEnter: (F, AB) -> Void,_
+                    traceLoop: F -> Void,_
+                    traceReturn: F -> Void): (F, AB) -> F ==
       (u: F, ab: AB): F +->
-        --assert(grade(t)>0)
-        --assert(one? leadingCoefficient t)
-        --assert grade(b)>0 for all b in basis
-        --assert(not zero? positiveRemainder(grade(b), grade t)
-        --       for all b in basis)
         traceEnter(u, ab)
         t: F := multiplier ab
         grdt: Z := grade t
@@ -400,23 +450,57 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
         traceReturn u
         return u
 
-    rawReduce(u: F, ab: AB): F ==
-        --assert(grade(t)>0)
-        --assert(one? leadingCoefficient t)
-        --assert grade(b)>0 for all b in basis
-        --assert(not zero? positiveRemainder(grade(b), grade t)
-        --       for all b in basis)
+    tracedTailReduce(traceEnter: (F, AB) -> Void,_
+                     traceLoop: F -> Void,_
+                     traceReturn: F -> Void): (F, AB) -> F ==
+      (u: F, ab: AB): F +->
+        traceEnter(u, ab)
         t: F := multiplier ab
         grdt: Z := grade t
-        while not ((r := reducer(u, ab)) case "failed") repeat
-            grdu: Z := grade u
-            v: F := r :: F
-            j: Z := ((grdu - grade v) exquo grdt) :: Z
-            v := v*t^(qcoerce(j)@N)
-            -- cc: Record(quotient: C, remainder: C)
-            cc := divide(leadingCoefficient u, leadingCoefficient v)
-            u := u - (cc.quotient)*v
+        n := grade u -- non-top-reduction
+        while n>0 repeat
+            n := n-1
+            while not ((r := tailReducer(u, n, ab)) case "failed") repeat
+                v := r :: F
+                j: Z := ((n - grade v) exquo grdt) :: Z
+                v := v*t^(qcoerce(j)@N)
+                traceLoop v
+                -- cc: Record(quotient: C, remainder: C)
+                cc := divide(qetaCoefficient(u, n), leadingCoefficient v)
+                u := u - (cc.quotient)*v
+        traceReturn u
         return u
+
+    tracedReduce(traceEnter: (F, AB) -> Void,_
+                 traceLoop: F -> Void,_
+                 traceReturn: F -> Void): (F, AB) -> F ==
+      (u: F, ab: AB): F +->
+        u := tracedTopReduce(traceEnter, traceLoop, traceReturn)(u, ab)
+        tracedTailReduce(traceEnter, traceLoop, traceReturn)(u, ab)
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Restricted reduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package QETATRED QEtaTopReduction
+++ QEtaTopReduction implements the restricted reduction as described in
+++ "Dancing Samba with Ramanujan Partition Congruences" (Journal of
+++ Symbolic Computation).
+++ doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ Here reduce is the same as top-reduce.
+QEtaTopReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
+  C: EuclideanDomain
+  F: QEtaGradedAlgebra C
+  AB: QEtaAlgebraBasisCategory(C, F)
+  Impl ==> QEtaReduction(C, F, AB) add
+    tracedReduce(traceEnter: (F, AB) -> Void,_
+                 traceLoop: F -> Void,_
+                 traceReturn: F -> Void): (F, AB) -> F ==
+      (u: F, ab: AB): F +->
+        tracedTopReduce(traceEnter, traceLoop, traceReturn)(u, ab)
 
 )if LiterateDoc
 %$
@@ -455,6 +539,45 @@ QEtaExtendedReduction(C, L, F, AB): Exports == Implementation where
             traceReturn(0$F)
             return 0$F
         tReduce ==> tracedReduce $ QEtaReduction(C, F, AB)
+        return tReduce(traceEnter, traceLoop, traceReturn)(u, ab)
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Restricted top reduction for extended elements}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package QXTOPRED QEtaExtendedTopReduction
+++ QEtaExtendedTopReduction implements the restricted top-reduction as
+++ described in "Dancing Samba with Ramanujan Partition Congruences"
+++ (Journal of Symbolic Computation). doi:10.1016/j.jsc.2017.02.001
+++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+++ It differs from QEtaReduction in that the reduction is first
+++ performed on an element of L and only if non-zero repeated also on
+++ the extended part.
+QEtaExtendedTopReduction(C, L, F, AB): Exports == Implementation where
+  C: EuclideanDomain
+  L: QEtaGradedAlgebra C
+  F: QEtaGradedAlgebra C with (first: % -> L)
+  AB: QEtaAlgebraBasisCategory(C, F)
+  XAB ==> QEtaExtendedAlgebraBasis(C, L, F, AB)
+  Exports ==> QEtaReductionCategory(C, F, AB)
+  Implementation ==> add
+    tracedReduce(traceEnter: (F, AB) -> Void,_
+                 traceLoop: F -> Void,_
+                 traceReturn: F -> Void): (F, AB) -> F ==
+      (u: F, ab: AB): F +->
+        --assert(grade(t)>0)
+        --assert(one? leadingCoefficient t)
+        --assert grade(b)>0 for all b in basis
+        --assert(not zero? positiveRemainder(grade(b), grade t)
+        --       for all b in basis)
+        ul: L := reduce(first u, ab :: XAB)$QEtaTopReduction(C, L, XAB)
+        zero? ul =>
+            traceReturn(0$F)
+            return 0$F
+        tReduce ==> tracedReduce $ QEtaTopReduction(C, F, AB)
         return tReduce(traceEnter, traceLoop, traceReturn)(u, ab)
 
 )if LiterateDoc

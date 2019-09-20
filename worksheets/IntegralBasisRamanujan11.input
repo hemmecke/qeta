@@ -58,7 +58,7 @@ xgens := [toX1(C, eqgens.1, 'T)]
 
 xt: X := xgens.1
 
-xab := samba(xt, xgens, 0, onet1Step!)$QXSAMBA1(C)
+xab := samba(xt, xgens, 0, onet1Step!)$QXTOPSAMBA1(C)
 # basis xab, [qetaGrade x for x in basis xab]
 
 genus := genusOfGamma0 11
@@ -68,7 +68,7 @@ genus := genusOfGamma0 11
 bsyms := indexedSymbols("B", # basis xab);
 xabbasis := [toX1(C, first x, s) for x in basis xab for s in bsyms];
 nog := numOfGaps(xab)
-xabb := samba(xt, xabbasis, genus)$QXSAMBA1(C);
+xabb := samba(xt, xabbasis, genus)$QXTOPSAMBA1(C);
 
 -- With this number of gaps (96), we have not yet reached the
 -- genus of the modular curve. Thus we must find another modular
@@ -102,11 +102,11 @@ xf := toX1(C, ff, F)
 -- The generating series does not reduce to zero modulo the
 -- algebra basis `xab`, but it does modulo the basis `xuab`.
 
-xfr := reduce(xf, xab)$QXRED1(C);
+xfr := reduce(xf, xab)$QXTOPRED1(C);
 zero? xfr
 xfr
 
-xfrb := reduce(xf, xabb)$QXRED1(C)
+xfrb := reduce(xf, xabb)$QXTOPRED1(C)
 
 -- # xfab=samba($t$, $\{dt\}$)
 
@@ -114,45 +114,45 @@ q := monomial(1,1)$F1(C) -- d/d(tau) q(tau) = 2*pi*i*exp(2*pi*i*tau) = 2*pi*i*q
 dt := q*D(eqgens.1)/retract toeta((E1^2*E11^2))
 xdt := toX1(C, dt, 'T1)
 xdgens := [xt, xdt]
-xdab := samba(xt, xdgens, 1, onet1Step!)$QXSAMBA1(C);
+xdab := samba(xt, xdgens, 1, onet1Step!)$QXTOPSAMBA1(C);
 
 d2t := q*D(dt)/retract toeta((E1^2*E11^2))
 xd2t := toX1(C, d2t, 'T2)
-xd2ab := samba(xt, [xt, xdt, xd2t], 1, onet1Step!)$QXSAMBA1(C);
+xd2ab := samba(xt, [xt, xdt, xd2t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
 d3t := q*D(d2t)/retract toeta((E1^2*E11^2))
 xd3t := toX1(C, d3t, 'T3)
-xd3ab := samba(xt, [xt, xdt, xd2t, xd3t], 1, onet1Step!)$QXSAMBA1(C);
+xd3ab := samba(xt, [xt, xdt, xd2t, xd3t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
 d4t := q*D(d3t)/retract toeta((E1^2*E11^2))
 xd4t := toX1(C, d4t, 'T4)
-xd4ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t], 1, onet1Step!)$QXSAMBA1(C);
+xd4ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
-xr := reduce(xf, xd4ab)$QXRED1(C);
+xr := reduce(xf, xd4ab)$QXTOPRED1(C);
 xr
 
 d5t := q*D(d4t)/retract toeta((E1^2*E11^2))
 xd5t := toX1(C, d5t, 'T5)
-xd5ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t], 0, onet1Step!)$QXSAMBA1(C);
+xd5ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
 -- The following stuff gives nonsense, because it is no longer in M^\infty(11).
 
 d6t := q*D(d5t)/retract toeta((E1^2*E11^2))
 xd6t := toX1(C, d6t, 'T6)
-xd6ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t], 0, onet1Step!)$QXSAMBA1(C);
+xd6ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
 d7t := q*D(d5t)/retract toeta((E1^2*E11^2))
 xd7t := toX1(C, d7t, 'T7)
-xd7ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t, xd7t], 0, onet1Step!)$QXSAMBA1(C);
+xd7ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t, xd7t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
 
 cft := first xt
 cfdgens := [first x for x in xdgens]
-cfab := samba(first xt, cfdgens, 1, cfonet1Step!)$QSAMBA1(C);
+cfab := samba(first xt, cfdgens, 1, cfonet1Step!)$QTOPSAMBA1(C);
 
 
 xdfgens := [xt, xdt, xf]
-xdfab := samba(xt, xdfgens, 1, onet1Step!)$QXSAMBA1(C);
+xdfab := samba(xt, xdfgens, 1, onet1Step!)$QXTOPSAMBA1(C);
 
 
 -- # Add Klein's $j$-invariant
@@ -184,16 +184,16 @@ toF1C x ==> map(retract, series(x, 2)::F1(CX))$Finite0SeriesFunctions2(CX, C, 'q
 xj0 := toX1(C, toF1C mmj0, T^3*J0)
 xj1 := toX1(C, toF1C mmj1, T*J1)
 
-xdab   := samba(xt, [xt,     xdt          ], 1, onet1Step!)$QXSAMBA1(C); --10
-xj01ab := samba(xt, [xt,          xj0, xj1], 1, onet1Step!)$QXSAMBA1(C); --5
-xdj0ab := samba(xt, [xt,     xdt, xj0],      1, onet1Step!)$QXSAMBA1(C); --5
-xdj1ab := samba(xt, [xt,     xdt,      xj1], 1, onet1Step!)$QXSAMBA1(C); --5
-xdj01ab:= samba(xt, [xt,     xdt, xj0, xj1], 1, onet1Step!)$QXSAMBA1(C); --4
-xfj01ab:= samba(xt, [xt, xf,      xj0, xj1], 1, onet1Step!)$QXSAMBA1(C); --1
-xdfab  := samba(xt, [xt, xf, xdt],           0, onet1Step!)$QXSAMBA1(C); --1
+xdab   := samba(xt, [xt,     xdt          ], 1, onet1Step!)$QXTOPSAMBA1(C); --10
+xj01ab := samba(xt, [xt,          xj0, xj1], 1, onet1Step!)$QXTOPSAMBA1(C); --5
+xdj0ab := samba(xt, [xt,     xdt, xj0],      1, onet1Step!)$QXTOPSAMBA1(C); --5
+xdj1ab := samba(xt, [xt,     xdt,      xj1], 1, onet1Step!)$QXTOPSAMBA1(C); --5
+xdj01ab:= samba(xt, [xt,     xdt, xj0, xj1], 1, onet1Step!)$QXTOPSAMBA1(C); --4
+xfj01ab:= samba(xt, [xt, xf,      xj0, xj1], 1, onet1Step!)$QXTOPSAMBA1(C); --1
+xdfab  := samba(xt, [xt, xf, xdt],           0, onet1Step!)$QXTOPSAMBA1(C); --1
 
-xr := reduce(xj0, xdfab)$QXRED1(C);
+xr := reduce(xj0, xdfab)$QXTOPRED1(C);
 first xr
 
-xr := reduce(xdt, xj01ab)$QXRED1(C);
+xr := reduce(xdt, xj01ab)$QXTOPRED1(C);
 zero? xr

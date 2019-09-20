@@ -327,26 +327,26 @@ cft := first xt;
 
 -- ### Samba invocation
 
-cfab := samba(cft, cfgens)$QSAMBA1(C);
+cfab := samba(cft, cfgens)$QTOPSAMBA1(C);
 
 -- ### Samba with aborting when a certain number of gaps has been reached
 
-cfab := samba(cft, cfgens, 31)$QSAMBA1(C);
+cfab := samba(cft, cfgens, 31)$QTOPSAMBA1(C);
 
 -- ### Samba with aborting when a certain number of gaps has been reached and with live tracing
 
-cfab := samba(cft, cfgens, 31, cfonet1Step!)$QSAMBA1(C);
+cfab := samba(cft, cfgens, 31, cfonet1Step!)$QTOPSAMBA1(C);
 
 -- ## Extended Samba
 
 -- ### Extended Samba invocation
 
-xab := samba(xt, xgens)$QXSAMBA1(C);
+xab := samba(xt, xgens)$QXTOPSAMBA1(C);
 
 -- ### Extended Samba with genus abortion criterion
 
 genus := genusOfGamma0 nn
-xab := samba(xt, xgens, genus)$QXSAMBA1(C);
+xab := samba(xt, xgens, genus)$QXTOPSAMBA1(C);
 
 -- ### Extended Samba with genus abortion criterion and trace
 
@@ -355,7 +355,7 @@ xab := samba(xt, xgens, genus)$QXSAMBA1(C);
 --
 -- See `input/tracingmacros.input` for a definition of `onet1Step!`.
 
-xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C)
+xab := samba(xt, xgens, genus, onet1Step!)$QXTOPSAMBA1(C)
 
 -- ## Number of gaps of a algebra basis
 
@@ -369,7 +369,7 @@ numOfGaps(cfab)
 
 -- The input basis reduces to zero modulo the algebra basis.
 
-rbas := [reduce(x, xab)$QXRED1(C) for x in xgens]
+rbas := [reduce(x, xab)$QXTOPRED1(C) for x in xgens]
 removeDuplicates sort [zero? x for x in rbas]
 
 -- # Series F: $p(13n+6)$ generating series
@@ -442,7 +442,7 @@ xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
 genus := genusOfGamma0 nn;
 xt := xgens.1
 
-xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C);
+xab := samba(xt, xgens, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 [qetaGrade x for x in basis xab]
 numOfGaps xab
@@ -453,7 +453,7 @@ cfgens := [first x for x in xgens];
 
 xab
 
-xr := reduce(xf, xab)$QXRED1(C)
+xr := reduce(xf, xab)$QXTOPRED1(C)
 
 p := second(xr)::Pol(C);
 [[e, x] for x in monomials p| zero?(e:=exponent leadingCoefficient x)]
@@ -641,15 +641,15 @@ xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
 genus := genusOfGamma0 nn;
 xt: X := xgens.1;
 )r ../input/tracemacros
-xab := samba(xt, xgens, genus, onet1Step!)$QXSAMBA1(C);
+xab := samba(xt, xgens, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 -- We try to find a polynomial $p(t)$ such that .. see below.
 
 e1:=29; e2:=129
-rs := [reduce(xt^e1*xu, xab)$QXRED1(C)];
+rs := [reduce(xt^e1*xu, xab)$QXTOPRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rs := cons(reduce(xt*first(rs), xab)$QXRED1(C), rs))
+  rs := cons(reduce(xt*first(rs), xab)$QXTOPRED1(C), rs))
 rs := reverse! rs;
 [qetaGrade x for x in rs]
 [variables(second(x)::Pol(C)) for x in rs]
@@ -714,5 +714,3 @@ sps := siftedPartitionSeries(13,6);
 [factor coefficient(sps, i) for i in 0..10]
 
 rgens
-
-

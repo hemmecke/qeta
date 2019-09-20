@@ -54,7 +54,7 @@ xgens := [toX1(C, eqgens.1, 'T), toX1(C, eqgens.2, 'U)]
 
 xt: X := xgens.1; xu := xgens.2;
 
-xab := samba(xt, xgens, 0, onet1Step!)$QXSAMBA1(C)
+xab := samba(xt, xgens, 0, onet1Step!)$QXTOPSAMBA1(C)
 # basis xab, [qetaGrade x for x in basis xab]
 
 genus := genusOfGamma0 nn
@@ -64,7 +64,7 @@ genus := genusOfGamma0 nn
 bsyms := indexedSymbols("B", # basis xab);
 xabbasis := [toX1(C, first x, s) for x in basis xab for s in bsyms];
 nog := numOfGaps(xab)
-xabb := samba(xt, xabbasis, nog)$QXSAMBA1(C);
+xabb := samba(xt, xabbasis, nog)$QXTOPSAMBA1(C);
 
 -- With this number of gaps (96), we have not yet reached the
 -- genus of the modular curve $X_0(121)$. Thus we must find another modular
@@ -97,11 +97,11 @@ xf := toX1(C, ff, F)
 -- The generating series does not reduce to zero modulo the
 -- algebra basis `xab`, but it does modulo the basis `xuab`.
 
-xfr := reduce(xf, xab)$QXRED1(C);
+xfr := reduce(xf, xab)$QXTOPRED1(C);
 zero? xfr
 xfr
 
-xfrb := reduce(xf, xabb)$QXRED1(C)
+xfrb := reduce(xf, xabb)$QXTOPRED1(C)
 
 -- ## Compute denominator polynomial for integral basis
 
@@ -117,10 +117,10 @@ xfrb := reduce(xf, xabb)$QXRED1(C)
 -- Note that the result $r$ contains in its second component its representation in terms of the given $F$, and the $B_i$.
 
 e1:=37; e2:=102
-rs := [reduce(xt^e1*xf, xabb)$QXRED1(C)];
+rs := [reduce(xt^e1*xf, xabb)$QXTOPRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rs := cons(reduce(xt*first(rs), xabb)$QXRED1(C), rs))
+  rs := cons(reduce(xt*first(rs), xabb)$QXTOPRED1(C), rs))
 rs := reverse! rs;
 [qetaGrade x for x in rs]
 
@@ -201,7 +201,7 @@ xdf2 := second(xdf)::Pol(Q);
 dfint := coefficient(xdf2, F, 1)::Pol(Z);
 zero?(dfint-d)
 
-xdfredb := reduce(xdf, xabb)$QXRED1(C);
+xdfredb := reduce(xdf, xabb)$QXTOPRED1(C);
 zero? xdfredb
 
 xdfredb2 := clearDenominator(second(xdfredb)::Pol(Q));
@@ -226,17 +226,17 @@ ds := cons(df00, df0s);
 
 -- ## Express $d(T)F$ in terms of $T$ and $U$
 
-xdfred := reduce(xdf, xab)$QXRED1(C);
+xdfred := reduce(xdf, xab)$QXTOPRED1(C);
 zero? xdfred
 
 
 -- ## Polynomial for $F^2$
 
 e1:=37; e2:=102
-rs2 := [reduce(xt^e1*xf^2, xab)$QXRED1(C)];
+rs2 := [reduce(xt^e1*xf^2, xab)$QXTOPRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rs2 := cons(reduce(xtt*first(rs2), xabb)$QXRED1(C), rs2))
+  rs2 := cons(reduce(xtt*first(rs2), xabb)$QXTOPRED1(C), rs2))
 rs2 := reverse! rs2;
 [qetaGrade x for x in rs2]
 
@@ -295,11 +295,11 @@ cffgens := [first x for x in xfgens];
 
 -- We know already that the number of gaps will be 31.
 
-cffab := samba(cft, cffgens, 31, cfonet1Step!)$QSAMBA1(C);
+cffab := samba(cft, cffgens, 31, cfonet1Step!)$QTOPSAMBA1(C);
 grades := [qcoerce(qetaGrade x)@P for x in basis cffab]
 nog := numOfGaps(cffab)
 
-xfab := samba(xt, xfgens, 31, onet1Step!)$QXSAMBA1(C);
+xfab := samba(xt, xfgens, 31, onet1Step!)$QXTOPSAMBA1(C);
 
 
 -- # Add Klein's $j$-invariant
@@ -348,7 +348,7 @@ xj2 := toX1(C, toF1C mmj2, T*U*J2)
 
 gens := concat([xj0, xj1], xgens)
 
-cfj01ab := samba(first xt, [first x for x in gens], 31, cfonet1Step!)$QSAMBA1(C)
+cfj01ab := samba(first xt, [first x for x in gens], 31, cfonet1Step!)$QTOPSAMBA1(C)
 
 grades := [qcoerce(qetaGrade x)@P for x in basis cfj01ab]
 numOfGaps(cfj01ab)
@@ -363,7 +363,7 @@ gens := concat([xj0, xj2], xgens)
 -- With aborting the computation when we have reached gap number = genus,
 -- it takes about 400 seconds to compute this basis.
 
-xjab := samba(xt, gens, genus, onet1Step!)$QXSAMBA1(C);
+xjab := samba(xt, gens, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 grades := [qcoerce(qetaGrade x)@P for x in basis xjab]
 numOfGaps(xjab)
@@ -648,16 +648,16 @@ cft := first xt
 xtracebas := [xt, xu, xg]
 cftracebas := [first x for x in xtracebas];
 
-cfgab := samba(cft, cftracebas, genus, cfonet1Step!)$QSAMBA1(C);
+cfgab := samba(cft, cftracebas, genus, cfonet1Step!)$QTOPSAMBA1(C);
 cfgab
 
-xgab := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
+xgab := samba(xt, xtracebas, genus, onet1Step!)$QXTOPSAMBA1(C);
 xgab
 
 nog := numOfGaps(cfgab)
 
-xr := reduce(xf, xgab)$QXRED1(C);
-cfr := reduce(first(xf)::F1(C), cfgab)$QRED1(C)
+xr := reduce(xf, xgab)$QXTOPRED1(C);
+cfr := reduce(first(xf)::F1(C), cfgab)$QTOPRED1(C)
 
 first xr
 qetaGrade xr
@@ -677,10 +677,10 @@ qetaGrade xr
 -- Note that the result $r$ contains in its second component its representation in terms of the given $F$, and the $B_i$.
 
 e1:=0; e2:=4;
-rfgs := [reduce(xt^e1*xf, xgab)$QXRED1(C)];
+rfgs := [reduce(xt^e1*xf, xgab)$QXTOPRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rfgs := cons(reduce(xt*first(rfgs), xgab)$QXRED1(C), rfgs))
+  rfgs := cons(reduce(xt*first(rfgs), xgab)$QXTOPRED1(C), rfgs))
 rfgs := reverse! rfgs;
 [qetaGrade x for x in rfgs]
 
@@ -743,7 +743,7 @@ flfgfactors := [x.factor for x in flfg]
 -- ## xfgab=samba($t, \{u,f,g\}$)
 
 xtracebas := [xt, xu, xf, xg]
-xfgab := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
+xfgab := samba(xt, xtracebas, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 nog := numOfGaps(xfgab)
 
@@ -751,7 +751,7 @@ nog := numOfGaps(xfgab)
 -- ## xghab=samba($t, \{u,g,h\}$)
 
 xtracebas := [xt, xu, xg, xh]
-xghab := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
+xghab := samba(xt, xtracebas, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 
 # basis xghab
@@ -759,8 +759,8 @@ grades := [qcoerce(qetaGrade x)@P for x in basis xghab]
 numOfGaps(xghab)
 
 xtracebas := concat([xt, xg, xh], basis xabb)
-xghabb := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
-xr := reduce(xf, xghabb)$QXRED1(C);
+xghabb := samba(xt, xtracebas, genus, onet1Step!)$QXTOPSAMBA1(C);
+xr := reduce(xf, xghabb)$QXTOPRED1(C);
 
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
@@ -771,14 +771,14 @@ content coefficient(xrpol, 'F, 0)
 -- ## xhab=samba($t, \{u,h\}$)
 
 xtracebas := [xt, xu, xh]
-xhab := samba(xt, xtracebas, genus, onet1Step!)$QXSAMBA1(C);
+xhab := samba(xt, xtracebas, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 
 # basis xhab
 grades := [qcoerce(qetaGrade x)@P for x in basis xhab]
 numOfGaps(xhab)
 
-xr := reduce(xf, xhab)$QXRED1(C);
+xr := reduce(xf, xhab)$QXTOPRED1(C);
 
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
@@ -788,7 +788,7 @@ content coefficient(xrpol, 'F, 0)
 
 -- There must be a relation for $g$ in terms of $\{t,u,h\}$.
 
-xr := reduce(xg, xhab)$QXRED1(C);
+xr := reduce(xg, xhab)$QXTOPRED1(C);
 first xr
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
@@ -801,10 +801,10 @@ content coefficient(xrpol, 'F, 0)
 -- We try to find a polynomial $d(t)$ such that .. see below.
 
 e1:=29; e2:=129
-rgs := [reduce(xt^e1*xg, xab)$QXRED1(C)];
+rgs := [reduce(xt^e1*xg, xab)$QXTOPRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rgs := cons(reduce(xt*first(rgs), xab)$QXRED1(C), rgs))
+  rgs := cons(reduce(xt*first(rgs), xab)$QXTOPRED1(C), rgs))
 rgs := reverse! rgs;
 [qetaGrade x for x in rgs]
 [variables(second(x)::Pol(C)) for x in rgs]
@@ -867,10 +867,10 @@ flgfactors := [x.factor for x in flg]
 -- We try to find a polynomial $d(t)$ such that .. see below.
 
 e1:=29; e2:=129
-rhs := [reduce(xt^e1*xh, xab)$QXRED1(C)];
+rhs := [reduce(xt^e1*xh, xab)$QXTOPRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
-  rhs := cons(reduce(xt*first(rhs), xab)$QXRED1(C), rhs))
+  rhs := cons(reduce(xt*first(rhs), xab)$QXTOPRED1(C), rhs))
 rhs := reverse! rhs;
 [qetaGrade x for x in rhs]
 [variables(second(x)::Pol(C)) for x in rhs]
@@ -936,7 +936,7 @@ flhfactors := [x.factor for x in flh]
 
 -- ## Try to reduce the order -15 element that comes from level 242
 
-xgr := reduce(xg, xhab)$QXRED1(C);
+xgr := reduce(xg, xhab)$QXTOPRED1(C);
 zero? xgr
 [coefficient(first(xgr)::F1(C), i) for i in -30..30]
 
@@ -945,14 +945,14 @@ zero? xgr
 r242_1 := rgens242.1
 eqt242_1 := (retract etaQuotient(divs242, r242_1)$ETA(Z))::F1(C)
 xgg := toX1(C, eqt242_1, 'GG)
-xggr := reduce(xgg, xhab)$QXRED1(C);
+xggr := reduce(xgg, xhab)$QXTOPRED1(C);
 zero? xggr
 [coefficient(first(xggr)::F1(C), i) for i in -30..3]
 
 -- However, we see it more easily by reducing the product with
 -- $t$ by the algebra basis.
 
-xggtr := reduce(xt*xgg, xhab)$QXRED1(C);
+xggtr := reduce(xt*xgg, xhab)$QXTOPRED1(C);
 first xggtr
 zero? xggtr
 
@@ -1020,7 +1020,7 @@ xt
 
 xf1bas := [xt, xgens.2, xf1]
 
-xf1ab := samba(xtt, xf1bas, genus, onet1Step!)$QXSAMBA1(C);
+xf1ab := samba(xtt, xf1bas, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 # basis xf1ab
 
@@ -1032,7 +1032,7 @@ nog := numberOfGaps(qetaGrade xt, grades1)
 
 xff1bas := [xtt, xgens.2, xf1, xf]
 
-xff1ab := samba(xtt, xf1bas, genus, onet1Step!)$QXSAMBA1(C);
+xff1ab := samba(xtt, xf1bas, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 gradesff1 := [qcoerce(qetaGrade x)@P for x in basis xff1ab]
 
@@ -1145,14 +1145,14 @@ xf2 := toX1(C, ff2, F2)
 -- We reduce first by `xab` and only then by `xfab`.
 
 cfbas := [first x for x in basis xab]
-cfab := samba(first xt, cfbas, 96, cfonet1Step!)$QSAMBA1(C);
+cfab := samba(first xt, cfbas, 96, cfonet1Step!)$QTOPSAMBA1(C);
 
-red121 := reduce(first xf2, cfab)$QRED1(C);
+red121 := reduce(first xf2, cfab)$QTOPRED1(C);
 zero? red121
 
 qetaGrade red121
 
-red121f := reduce(red121, cffab)$QRED1(C);
+red121f := reduce(red121, cffab)$QTOPRED1(C);
 zero? red121f
 
 red121f
