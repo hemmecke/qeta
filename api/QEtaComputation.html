@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>QEtaComputation(C, F, AB, R) &#8212; QEta package 2.0.0</title>
+    <title>QEtaComputation(C, F, AB, R) &#8212; QEta package 2.1</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/style.css" />
@@ -20,7 +20,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="QEtaExtendedAlgebra(C, A, B)" href="QEtaExtendedAlgebra.html" />
+    <link rel="next" title="QEtaComputationDelayedPairs(C, F, AB, R)" href="QEtaComputationDelayedPairs.html" />
     <link rel="prev" title="QEtaAlgebraCachedPower(C, A)" href="QEtaAlgebraCachedPower.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -30,12 +30,12 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="QEtaExtendedAlgebra.html" title="QEtaExtendedAlgebra(C, A, B)"
+          <a href="QEtaComputationDelayedPairs.html" title="QEtaComputationDelayedPairs(C, F, AB, R)"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="QEtaAlgebraCachedPower.html" title="QEtaAlgebraCachedPower(C, A)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">QEta package 2.0.0</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">QEta package 2.1</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >QEta package API</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="Domains.html" accesskey="U">Domains</a> &#187;</li> 
       </ul>
@@ -48,7 +48,7 @@
             
   <div class="section" id="qetacomputation-c-f-ab-r">
 <span id="l-q-eta-computation"></span><span id="index-0"></span><h1>QEtaComputation(C, F, AB, R)<a class="headerlink" href="#qetacomputation-c-f-ab-r" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://github.com/hemmecke/qeta/blob/master/src/qetasamba.spad#L516">qetasamba.spad line 516</a></p>
+<p><a class="reference external" href="https://github.com/hemmecke/qeta/blob/master/src/qetasamba.spad#L692">qetasamba.spad line 692</a></p>
 <ul>
 <li><p class="first">C: <a class="reference external" href="https://fricas.github.io/api/EuclideanDomain.html">EuclideanDomain</a></p>
 </li>
@@ -64,21 +64,53 @@
 </li>
 </ul>
 <p>QEtaComputation implements a variant of the algorithm Samba from an article of Ralf Hemmecke: “Dancing Samba with Ramanujan Partition Congruences” (Journal of Symbolic Computation). <code class="docutils literal notranslate"><span class="pre">doi:10</span></code>.1016/j.<code class="docutils literal notranslate"><span class="pre">jsc</span></code>.2017.02.001 <a class="reference external" href="http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan">http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan</a>.<code class="docutils literal notranslate"><span class="pre">pdf</span></code> In this variant, the critical elements are the basis elements that became reducible and products of basis elements. Products are kept as pairs and will only be evaluated when the critical element is considered. The pairs are only computed (and considered as critical elements) when there are no reducible basis elements left to consider.</p>
-<dl class="docutils">
+<span class="target" id="l-q-eta-computation-add-basis-element-pairs"></span><dl class="docutils">
+<dt><span class="spadfun">addBasisElementPairs!</span>: (F, <a class="reference external" href="https://fricas.github.io/api/List.html">List</a>  F, %) -&gt; Void</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">addBasisElementPairs!(u,</span> <span class="pre">basis,</span> <span class="pre">x)</span></code> adds all pairs (<code class="docutils literal notranslate"><span class="pre">u</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code>) for each element in the given list.</dd>
+</dl>
+<span class="target" id="l-q-eta-computation-add-gap-pair"></span><dl class="docutils">
+<dt><span class="spadfun">addGapPair!</span>: (F, F, F, <a class="reference external" href="https://fricas.github.io/api/XHashTable.html">XHashTable</a> (<a class="reference external" href="https://fricas.github.io/api/Integer.html">Integer</a> , <a class="reference external" href="https://fricas.github.io/api/List.html">List</a>  Record(f1: F, f2: F))) -&gt; <a class="reference external" href="https://fricas.github.io/api/XHashTable.html">XHashTable</a> (<a class="reference external" href="https://fricas.github.io/api/Integer.html">Integer</a> , <a class="reference external" href="https://fricas.github.io/api/List.html">List</a>  Record(f1: F, f2: F))</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">addGapPair!(t,</span> <span class="pre">f1,</span> <span class="pre">f2,</span> <span class="pre">p)</span></code> adds the pair (<code class="docutils literal notranslate"><span class="pre">t^j</span></code>, <code class="docutils literal notranslate"><span class="pre">f1</span></code>) to <code class="docutils literal notranslate"><span class="pre">p</span></code> where the <code class="docutils literal notranslate"><span class="pre">j&gt;0</span></code> is chosen in such a way that qetaGrade(<code class="docutils literal notranslate"><span class="pre">t^j*f1</span></code>) = qetaGrade(<code class="docutils literal notranslate"><span class="pre">f2</span></code>). It is assumed that the input is such that <code class="docutils literal notranslate"><span class="pre">j</span></code> is an integer. If <code class="docutils literal notranslate"><span class="pre">j=0</span></code> then nothing is added.</dd>
+</dl>
+<span class="target" id="l-q-eta-computation-add-gap-pairs"></span><dl class="docutils" id="index-3">
+<dt><span class="spadfun">addGapPairs!</span>: % -&gt; Void</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">addGapPairs!(x)</span></code> adds gap-pair for every pair in the current basis that differ in qetaGrade by a multiple of qetaGrade(<code class="docutils literal notranslate"><span class="pre">t</span></code>) where <code class="docutils literal notranslate"><span class="pre">t</span></code> = multiplier(algebraBasis <code class="docutils literal notranslate"><span class="pre">x</span></code>).</dd>
+</dl>
+<span class="target" id="l-q-eta-computation-add-pair"></span><dl class="docutils">
+<dt><span class="spadfun">addPair!</span>: (F, F, <a class="reference external" href="https://fricas.github.io/api/XHashTable.html">XHashTable</a> (<a class="reference external" href="https://fricas.github.io/api/Integer.html">Integer</a> , <a class="reference external" href="https://fricas.github.io/api/List.html">List</a>  Record(f1: F, f2: F))) -&gt; <a class="reference external" href="https://fricas.github.io/api/XHashTable.html">XHashTable</a> (<a class="reference external" href="https://fricas.github.io/api/Integer.html">Integer</a> , <a class="reference external" href="https://fricas.github.io/api/List.html">List</a>  Record(f1: F, f2: F))</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">addPair!(f1,</span> <span class="pre">f2,</span> <span class="pre">p)</span></code> adds the pair (<code class="docutils literal notranslate"><span class="pre">f1</span></code>,<code class="docutils literal notranslate"><span class="pre">f2</span></code>) to the list corresponding to <code class="docutils literal notranslate"><span class="pre">p</span></code>.qetaGrade(<code class="docutils literal notranslate"><span class="pre">f1*f2</span></code>).</dd>
 <dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-algebra-basis"><span class="std std-ref">algebraBasis</span></a>: % -&gt; AB</dt>
 <dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
+</dl>
+<span class="target" id="l-q-eta-computation-basis"></span><dl class="docutils">
+<dt><span class="spadfun">basis</span>: % -&gt; <a class="reference external" href="https://fricas.github.io/api/List.html">List</a>  F</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">basis</span> <span class="pre">x</span></code> returns basis(algebraBasis <code class="docutils literal notranslate"><span class="pre">x</span></code>).</dd>
 <dt><span class="xref std std-ref">coerce</span>: % -&gt; <a class="reference external" href="https://fricas.github.io/api/OutputForm.html">OutputForm</a></dt>
 <dd>from <a class="reference external" href="https://fricas.github.io/api/CoercibleTo.html">CoercibleTo</a>  <a class="reference external" href="https://fricas.github.io/api/OutputForm.html">OutputForm</a></dd>
+</dl>
+<span class="target" id="l-q-eta-computation-compute-pairs"></span><dl class="docutils" id="index-6">
+<dt><span class="spadfun">computePairs!</span>: % -&gt; Void</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">computePairs!(x)</span></code> discards all previously computed pairs and then computes all the <code class="docutils literal notranslate"><span class="pre">n*</span></code>(<code class="docutils literal notranslate"><span class="pre">n+1</span></code>)<code class="docutils literal notranslate"><span class="pre">/2</span></code> (commutative) pairs of the current elements of the basis and additionally adds all the gap-pairs where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of basis elements.</dd>
 <dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-critical-elements"><span class="std std-ref">criticalElements?</span></a>: % -&gt; <a class="reference external" href="https://fricas.github.io/api/Boolean.html">Boolean</a></dt>
+<dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
+<dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-extract-next"><span class="std std-ref">extractNext!</span></a>: % -&gt; F</dt>
 <dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
 <dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-initialize"><span class="std std-ref">initialize</span></a>: <a class="reference external" href="https://fricas.github.io/api/List.html">List</a>  F -&gt; %</dt>
 <dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
-<dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-one-step-computation"><span class="std std-ref">oneStepComputation!</span></a>: % -&gt; %</dt>
+<dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-one-step"><span class="std std-ref">oneStep!</span></a>: % -&gt; %</dt>
+<dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
+<dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-one-step-computation"><span class="std std-ref">oneStepComputation!</span></a>: (%, % -&gt; F) -&gt; %</dt>
 <dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
 <dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-one-traced-step"><span class="std std-ref">oneTracedStep!</span></a>: (% -&gt; Void, (F, AB) -&gt; Void, F -&gt; Void, F -&gt; Void) -&gt; % -&gt; %</dt>
 <dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
+<dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-one-traced-step-computation"><span class="std std-ref">oneTracedStepComputation!</span></a>: (% -&gt; Void, (F, AB) -&gt; Void, F -&gt; Void, F -&gt; Void) -&gt; (%, % -&gt; F) -&gt; %</dt>
+<dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
 <dt><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category-post-process"><span class="std std-ref">postProcess!</span></a>: % -&gt; %</dt>
 <dd>from <a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</dd>
+</dl>
+<span class="target" id="l-q-eta-computation-update"></span><dl class="docutils" id="index-7">
+<dt><span class="spadfun">update!</span>: (F, %) -&gt; %</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">update!(u,</span> <span class="pre">x)</span></code> adds a new basis element and updates the critical elements accordingly. Note that older basis elements might become critical elements in this process.</dd>
 </dl>
 <p><a class="reference external" href="https://fricas.github.io/api/CoercibleTo.html">CoercibleTo</a>  <a class="reference external" href="https://fricas.github.io/api/OutputForm.html">OutputForm</a></p>
 <p><a class="reference internal" href="QEtaComputationCategory.html#l-q-eta-computation-category"><span class="std std-ref">QEtaComputationCategory</span></a>(F, AB)</p>
@@ -123,12 +155,12 @@
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="QEtaExtendedAlgebra.html" title="QEtaExtendedAlgebra(C, A, B)"
+          <a href="QEtaComputationDelayedPairs.html" title="QEtaComputationDelayedPairs(C, F, AB, R)"
              >next</a> |</li>
         <li class="right" >
           <a href="QEtaAlgebraCachedPower.html" title="QEtaAlgebraCachedPower(C, A)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">QEta package 2.0.0</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">QEta package 2.1</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >QEta package API</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="Domains.html" >Domains</a> &#187;</li> 
       </ul>
