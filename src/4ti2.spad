@@ -204,9 +204,9 @@ X4ti2: with
 
     localzsolve(mat: MZ, rels: RELS, b: VZ, dir: S, basename: S): ZRESULT ==
         import from FileName
-        writeMatrix(filename(dir, basename, "mat"), mat)
-        writeMatrix(filename(dir, basename, "rhs"), transpose(b)$MZ)
         writeMatrix(filename(dir, basename, "rel"), transpose(rels)$MZ)
+        writeMatrix(filename(dir, basename, "rhs"), transpose(b)$MZ)
+        writeMatrix(filename(dir, basename, "mat"), mat)
         cmd: S := concat ["system ",
             deref zsolvepath, " ", deref zsolveoptions, " ", basename]
         systemCommand(cmd)$MoreSystemCommands
@@ -222,8 +222,12 @@ X4ti2: with
         r: Z := value hashUpdate!(hashUpdate!(hashUpdate!(h, mat), rels), b)
         dir: S := ""
         basename: String := concat("4ti2-", string r)
-        localzsolve(mat, rels, b, dir, basename)
-
+        for i in 0..100 repeat -- return for non-existing file
+            base: String := concat(basename, string i)
+            fn: FileName := filename(dir, base, "rel")
+            not exists? fn => return localzsolve(mat, rels, b, dir, base)
+        -- We should never come here.
+        error "zsolve: could not create temporary filename"
 )if LiterateDoc
 \bibliography{qeta}
 \end{document}
