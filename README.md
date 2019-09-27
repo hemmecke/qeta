@@ -1,4 +1,4 @@
-# QEta 2.0.0
+# QEta 2.1
 
 The QEta Project is connected to 3 articles.
 
