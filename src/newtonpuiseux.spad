@@ -44,7 +44,10 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
 
@@ -63,6 +66,12 @@ KPX ==> PolynomialRing(K, Q) -- Puiseux polynomials
 KPXY ==> SparseUnivariatePolynomial KPX -- KPX[y]
 SlopePoints K ==> Record(slope: K, points: List Point K)
 
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{NewtonPolygon}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
 )abbrev package NEWTONP NewtonPolygon
 ++ Author: Ralf Hemmecke
 ++ Description:
@@ -152,7 +161,13 @@ NewtonPolygon(K: Join(Field, OrderedSet)): Exports == Implementation where
                 slopePointList := cons([slope, [pt, np]], slopePointList)
         reverse! slopePointList
 
--------------------------------------------------------------------
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{NewtonPuiseux}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
 
 )abbrev package NEWTPUIS NewtonPuiseux
 ++ Author: Ralf Hemmecke
@@ -160,38 +175,64 @@ NewtonPolygon(K: Join(Field, OrderedSet)): Exports == Implementation where
 ++ Implements the computation of a Puiseux series satisfying a bivariate
 ++ polynomial.
 NewtonPuiseux(K): Exports == Implementation where
-  K: AlgebraicallyClosedField
-  PUIMON ==> Record(defpoly: KX, expo: Q)
+  K: Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
+  PUIMON ==> Record(defpoly: KX, root: K, expo: Q)
+  PUIREC ==> Record(mons: List PUIMON, nextpol: KPXY)
 
   Exports ==> with
+    leadingPuiseuxMonomials: (KPXY, Q) -> List PUIREC
+    leadingPuiseuxMonomials: KPXY -> List PUIREC
+      ++ leadingPuiseuxMonomials(p) returns for each slope of the
+      ++ Newton polygon of p the leading monomial of the Puiseux
+      ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
+      ++ polynomial for the leading coefficient, i.e., one monomial
+      ++ might correspond to several coefficients according to the
+      ++ degree of the defining polynomial.
+    leadingPuiseuxMonomials: KXY -> List PUIREC
+      ++ leadingPuiseuxMonomials(p) returns for each slope of the
+      ++ Newton polygon of p the leading monomial of the Puiseux
+      ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
+      ++ polynomial for the leading coefficient, i.e., one monomial
+      ++ might correspond to several coefficients according to the
+      ++ degree of the defining polynomial.
+    leadingPuiseuxMonomials: (POLYK, Symbol, Symbol) -> List PUIREC
+      ++ leadingPuiseuxMonomials(p, x, y) returns for each slope of
+      ++ the Newton polygon of p the leading monomial of the Puiseux
+      ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
+      ++ polynomial for the leading coefficient, i.e., one monomial
+      ++ might correspond to several coefficients according to the
+      ++ degree of the defining polynomial.
+
     polynomial2Points: (POLYK, Symbol,Symbol) -> List Point Q
     polynomial2Points: KXY -> List Point Q
     polynomial2Points: KPXY -> List Point Q
 
-    leadingPuiseuxMonomials: KPXY -> List PUIMON
-      ++ leadingPuiseuxMonomials(p) returns for each slope of the
-      ++ Newton polygon of p the leading monomial of the Puiseux
-      ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
-      ++ polynomial for the leading coefficient.
-    leadingPuiseuxMonomials: KXY -> List PUIMON
-      ++ leadingPuiseuxMonomials(p) returns for each slope of the
-      ++ Newton polygon of p the leading monomial of the Puiseux
-      ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
-      ++ polynomial for the leading coefficient.
-    leadingPuiseuxMonomials: (POLYK, Symbol, Symbol) -> List PUIMON
-      ++ leadingPuiseuxMonomials(p, x, y) returns for each slope of the
-      ++ Newton polygon of p the leading monomial of the Puiseux
-      ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
-      ++ polynomial for the leading coefficient.
-
-    leadingPuiseuxMonomials2: (KPXY, PUIMON) -> List PUIMON
     poly2KPXY: (POLYK, Symbol, Symbol) -> KPXY
     nextY: (KPXY, PUIMON) -> KPXY
-    nextPuiseuxMonomials: (KPXY, Q) -> List PUIMON
+    nextPuiseuxMonomials: List PUIREC -> List PUIREC
+    coefficientRelation: (KPXY, List Point Q) -> List KX
 
   Implementation ==> add
+    -- For hacking the fact that the implementation of AlgebraicNumber
+    -- is actually not of category noZeroDivisors, we introduce the
+    -- functions removeZeroCoefficients[X].
+    removeZeroCoefficientsX(p: KPX): KPX ==
+        zero? p => p
+        m := leadingMonomial p
+        z := removeZeroCoefficientsX reductum p
+        c: K := leadingCoefficient m
+        zero? c => z
+        m + z
 
-    coefficientRelation(p: KPXY, points: List Point Q): KX ==
+    removeZeroCoefficients(p: KPXY): KPXY ==
+        zero? p => p
+        m := leadingMonomial p
+        z := removeZeroCoefficients reductum p
+        c: KPX := leadingCoefficient m
+        zero? removeZeroCoefficientsX c => z
+        m + z
+
+    coefficientRelation(p: KPXY, points: List Point Q): List KX ==
         --assert(#point > 1)
         --assert(one? denom(p.1) for all p in points)
         defPoly: KX := 0
@@ -201,8 +242,12 @@ NewtonPuiseux(K): Exports == Implementation where
             yex: Z := numer(point.1)
             cx: KPX := coefficient(p, qcoerce(yex)@N)
             c: K := coefficient(cx, point.2)
-            defPoly := defPoly + monomial(c, qcoerce(yex - ymin)@N)
-        primitivePart squareFreePart defPoly
+            if not zero? c then
+                defPoly := defPoly + monomial(c, qcoerce(yex - ymin)@N)
+        defPoly := squareFreePart defPoly
+        factors := [x.factor for x in factorList factor defPoly]
+        zero? ymin => factors
+        cons(monomial(1,1)$KX, factors)
 
     toKPX(p: KX): KPX ==
         z: KPX := 0
@@ -225,6 +270,30 @@ NewtonPuiseux(K): Exports == Implementation where
             mx: KPX := monomial(leadingCoefficient m, degree(m, x)::Q)$KPX
             z := z + monomial(mx, degree(m, y))$KPXY
         z
+
+    -- We don't need exponents in the result that are smaller than e.
+    biggerOrderThan?(e: Q): Q -> Boolean == (o: Q): Boolean +-> o > e
+    leadingPuiseuxMonomialsOrder(p: KPXY, cond?: Q -> Boolean): List PUIREC ==
+        import from NewtonPolygon(Q)
+        points: List Point Q := polynomial2Points p
+        slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
+        result: List PUIREC := empty()
+        for slopePoints in slopePointList | cond?(-slopePoints.slope) repeat
+            ldp: List KX := coefficientRelation(p, slopePoints.points)
+            for dp in ldp repeat -- loop over the factors of the defining poly
+                c: K := rootOf dp
+                m: PUIMON := [dp, c, - slopePoints.slope]
+                y := monomial(monomial(c, m.expo)$KPX, 0) + monomial(1, 1)$KPXY
+                newpol: KPXY := p y
+                -- Hack: If K is AlgebraicNumber then the new element
+                -- c might have introduced zerodivisors.
+                -- https://groups.google.com/forum/#!msg/fricas-devel/sowcAymy04s/xWBnEr1QCAAJ
+                -- In order to avoid zero coefficients in polynomials
+                -- from KPX, we explicitly remove such possible zero
+                -- coefficients.
+                rec: PUIREC := [[m], removeZeroCoefficients newpol]
+                result := cons(rec, result)
+        result
 
 -- exported functions
 
@@ -259,31 +328,35 @@ NewtonPuiseux(K): Exports == Implementation where
                 points := cons(point [ydeg::Q, xdeg], points)
         return points
 
-    leadingPuiseuxMonomials(p: KPXY): List PUIMON ==
-        import from NewtonPolygon(Q)
-        points: List Point Q := polynomial2Points p
-        slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
-        result: List PUIMON := empty()
-        for slopePoints in slopePointList repeat
-            dp: KX := coefficientRelation(p, slopePoints.points)
-            result := cons([dp, - slopePoints.slope], result)
-        result
+    leadingPuiseuxMonomials(p: KPXY, e: Q): List PUIREC ==
+        leadingPuiseuxMonomialsOrder(p, biggerOrderThan? e)
 
-    leadingPuiseuxMonomials(p: KXY): List PUIMON ==
+    leadingPuiseuxMonomials(p: KPXY): List PUIREC ==
+        l := leadingPuiseuxMonomialsOrder(p, (o: Q): Boolean +-> true)
+        -- We only need non-zero terms.
+        [x for x in l | not zero?(x.mons.1.root)]
+
+    leadingPuiseuxMonomials(p: KXY): List PUIREC ==
         pp: KPXY := toKPXY p
         leadingPuiseuxMonomials(pp)
 
-    leadingPuiseuxMonomials(p: POLYK, x: Symbol, y: Symbol): List PUIMON ==
+    leadingPuiseuxMonomials(p: POLYK, x: Symbol, y: Symbol): List PUIREC ==
         leadingPuiseuxMonomials poly2KPXY(p, x, y)
 
-    nextY(y: KPXY, m: PUIMON): KPXY ==
-        c: K := rootOf(m.defpoly)
-        monomial(monomial(c, m.expo)$KPX, 0) + y
-
-    nextPuiseuxMonomials(p: KPXY, ex: Q): List PUIMON ==
-        lpm: List PUIMON := leadingPuiseuxMonomials p
-        [pm for pm in lpm | pm.expo > ex]
-
+    nextPuiseuxMonomials(l: List PUIREC): List PUIREC ==
+        result := empty()$List(PUIREC)
+        for r in l repeat
+            p := r.nextpol
+            zero? p => result := cons(r, result)
+            m := r.mons
+            -- We only need monomials that are bigger than what we
+            -- already have.
+            ex: Q := first(m).expo
+            lr: List PUIREC := leadingPuiseuxMonomials(p, ex)
+            empty? lr => result := cons([r.mons, 0], result)
+            ln: List PUIREC := [[concat(x.mons, r.mons), x.nextpol] for x in lr]
+            result := concat(result, ln)
+        result
 
 
 )if LiterateDoc

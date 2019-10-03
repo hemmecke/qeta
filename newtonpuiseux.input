@@ -10,42 +10,55 @@
 
 -- http://jaypantone.com/courses/winter16math118/lecture-notes/lecture-notes-25.pdf
 
--- Winkler: https://www.risc.jku.at/education/courses/ss2016/caag/09-puiseux.pdf
-p := (x^3+x^4) + (2*x+2*x^2)*y + (-x+2*x^2)*y^2 + (4)*y^3 + (-4)*y^4 + (1)*y^5
+-- Winkler: https://www.risc.jku.at/education/courses/ss2016/caag/09-puiseux.
+pp := (x^3+x^4) + (2*x+2*x^2)*y + (-x+2*x^2)*y^2 + (4)*y^3 + (-4)*y^4 + (1)*y^5
 
 -- Winkler RISC Report 97-38 (page 6)
 -- ftp://risc.jku.at/pub/techreports/1007/97-38.ps.gz
 -- p := y^5 - 2*x^2*y^2 + 3*y*x^4 - x^6
 
-K ==> AlgebraicNumber
+K ==> AlgebraicNumbe
+KX ==> SparseUnivariatePolynomial K
 KPX ==> PolynomialRing(K, Q)
 KPXY ==> SparseUnivariatePolynomial KPX
+SlopePoints K ==> Record(slope: K, points: List Point K)
+SPQ ==> SlopePoints Q
 
-pp := poly2KPXY(p, 'x, 'y)
+p := poly2KPXY(pp, 'x, 'y)
 
-y := monomial(1, 1)$KPXY
-mons := leadingPuiseuxMonomials(pp)
-ys := [nextY(y, m) for m in mons]
+-- Compute the leading monomials of the puiseux series that solve
+-- the polynomial p.
+m := [leadingPuiseuxMonomials p]
 
-mons2 := concat [nextPuiseuxMonomials(pp y, m.expo) for y in ys for m in mons]
-y2s := [nextY(y, m) for m in mons2 for y in ys]
+m := cons(nextPuiseuxMonomials first m, m); first m
 
-mons3 := concat [nextPuiseuxMonomials(pp y, m.expo) for y in y2s for m in mons2]
-y3s := [nextY(y, m) for m in mons3 for y in y2s]
+pm := first(m).1
+mns := pm.mons
+ex := first(mns).expo
+pol := pm.nextpol
+pnts := polynomial2Points pol
+spnts: List SPQ := slopePointsOfNewtonPolygon(pnts)
+spnts := [x for x in slopePointsOfNewtonPolygon pnts | x.slope < -ex]
+slopePoints := first spnts
+dp := coefficientRelation(pol, slopePoints.points)
+c := rootOf dp
+yy := monomial(monomial(c, 2)$KPX, 0)$KPXY + monomial(1, 1)$KPXY
 
-mons4 := concat [nextPuiseuxMonomials(pp y, m.expo) for y in y3s for m in mons3]
-y4s := [nextY(y, m) for m in mons4 for y in y3s]
 
+ymin := numer(first(spnts.1.points).1)
+for point in rest spnts.1.points repeat ymin := min(ymin, numer point.1)
+yex := numer(spnts.1.points.1.1)
+cx: KPX := coefficient(pol, qcoerce(yex)@N)
 
-
-# concat mons2
-# concat y2s
 -------------------------------------------------------------------
 
 
 )fin
 
 
+pp := (y-(1+x)) * (y-(1-2*x))
+pp := (y-(1+x))*(y-(1-x+x^2))
+pp := (y-(1+x)) * (y-(1+x+x^2))
 
 
 
