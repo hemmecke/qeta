@@ -10,19 +10,30 @@
 
 -- http://jaypantone.com/courses/winter16math118/lecture-notes/lecture-notes-25.pdf
 
--- Winkler: https://www.risc.jku.at/education/courses/ss2016/caag/09-puiseux.
-pp := (x^3+x^4) + (2*x+2*x^2)*y + (-x+2*x^2)*y^2 + (4)*y^3 + (-4)*y^4 + (1)*y^5
-
--- Winkler RISC Report 97-38 (page 6)
--- ftp://risc.jku.at/pub/techreports/1007/97-38.ps.gz
--- p := y^5 - 2*x^2*y^2 + 3*y*x^4 - x^6
-
 K ==> AlgebraicNumbe
 KX ==> SparseUnivariatePolynomial K
 KPX ==> PolynomialRing(K, Q)
 KPXY ==> SparseUnivariatePolynomial KPX
 SlopePoints K ==> Record(slope: K, points: List Point K)
 SPQ ==> SlopePoints Q
+
+
+-- Winkler: https://www.risc.jku.at/education/courses/ss2016/caag/09-puiseux.
+pp := (x^3+x^4) + (2*x+2*x^2)*y + (-x+2*x^2)*y^2 + (4)*y^3 + (-4)*y^4 + (1)*y^5
+
+-- Winkler RISC Report 97-38 (page 6)
+-- ftp://risc.jku.at/pub/techreports/1007/97-38.ps.gz
+-- pp := y^5 - 2*x^2*y^2 + 3*y*x^4 - x^6
+pp := (y-(1+x)) * (y-(1-2*x));
+pp := (y-(1+x))*(y-(1-x+x^2));
+pp := (y-(1+x)) * (y-(1+x+x^2));
+pp := (y^3-x)*(y^2-x);
+pp := (y-x+x^2+x^3)*(y-x+x^2+x^3+x^4);
+pp := (x^2+y^2)^3-4*x^2*y^2; -- \cite[p.~119]{Duval:RationalPuiseuxExpansions:1989}
+pp := (2*x^2+y^2)^3-8*x^2*y^2; -- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
+pp := y^2+x; -- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
+pp := y^7+9*x^5; -- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
+
 
 p := poly2KPXY(pp, 'x, 'y)
 
@@ -32,71 +43,7 @@ m := [leadingPuiseuxMonomials p]
 
 m := cons(nextPuiseuxMonomials first m, m); first m
 
-pm := first(m).1
-mns := pm.mons
-ex := first(mns).expo
-pol := pm.nextpol
-pnts := polynomial2Points pol
-spnts: List SPQ := slopePointsOfNewtonPolygon(pnts)
-spnts := [x for x in slopePointsOfNewtonPolygon pnts | x.slope < -ex]
-slopePoints := first spnts
-dp := coefficientRelation(pol, slopePoints.points)
-c := rootOf dp
-yy := monomial(monomial(c, 2)$KPX, 0)$KPXY + monomial(1, 1)$KPXY
 
-
-ymin := numer(first(spnts.1.points).1)
-for point in rest spnts.1.points repeat ymin := min(ymin, numer point.1)
-yex := numer(spnts.1.points.1.1)
-cx: KPX := coefficient(pol, qcoerce(yex)@N)
 
 -------------------------------------------------------------------
-
-
 )fin
-
-
-pp := (y-(1+x)) * (y-(1-2*x))
-pp := (y-(1+x))*(y-(1-x+x^2))
-pp := (y-(1+x)) * (y-(1+x+x^2))
-
-
-
-
--------------------------------------------------------------------
--------------------------------------------------------------------
--------------------------------------------------------------------
--------------------------------------------------------------------
--------------------------------------------------------------------
-
--------------------------------------------------------------------
-
-p := (x^4+3*x^3+2*x)*y^2 + (x^4-x^3)*y + x
-pointsOfNewtonPolygon(p, 'x, 'y)
-p := x^4+x^3*y+x*(y^2+y^3+y^4)
-pointsOfNewtonPolygon(p, 'x, 'y)
-slopePointsOfNewtonPolygon(p, 'x, 'y)
-p := x^4+x^3*y+x*(y^2+y^3+y^4)+x^2*y^5
-pointsOfNewtonPolygon(p, 'x, 'y)
-slopePointsOfNewtonPolygon(p, 'x, 'y)
-p := x^4+x^3*y+x*(y^2+y^3+y^4)+x^2*y^5+(x^4+x^2)*y^6
-pointsOfNewtonPolygon(p, 'x, 'y)
-slopePointsOfNewtonPolygon(p, 'x, 'y)
-p := 2*x^4+7*x^3*y+x*y^2*(5+3*y+11*y^2)
-pointsOfNewtonPolygon(p, 'x, 'y)
-slopePointsOfNewtonPolygon(p, 'x, 'y)
-
-
-
-
-m := mons.1
-dp := m.defpoly
-a := rootOf dp
-e := m.expo
-s := monomial(monomial(a, e)$KPX, 0)$KPXY + monomial(1,1)$KPXY
-p2 := pp(s)
-points := polynomial2Points p2
-pointsOfNewtonPolygon(points)
-slopePointsOfNewtonPolygon(points)
-
-mons2 := [leadingPuiseuxMonomials2(pp, m) for m in mons]

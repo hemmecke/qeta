@@ -1,6 +1,6 @@
 -------------------------------------------------------------------
 ---
---- FriCAS QFunctions
+--- FriCAS QEta
 --- Copyright (C) 2019,  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
@@ -211,6 +211,7 @@ NewtonPuiseux(K): Exports == Implementation where
     nextY: (KPXY, PUIMON) -> KPXY
     nextPuiseuxMonomials: List PUIREC -> List PUIREC
     coefficientRelation: (KPXY, List Point Q) -> List KX
+    numberOfSolutions: List PUIREC -> N
 
   Implementation ==> add
     -- For hacking the fact that the implementation of AlgebraicNumber
@@ -358,6 +359,13 @@ NewtonPuiseux(K): Exports == Implementation where
             result := concat(result, ln)
         result
 
+    numberOfSolutions(x: List PUIREC): N ==
+        n: N := 0
+        for r in x repeat
+            m: N := 1
+            for pm in r.mons repeat m := m * degree(pm.defpoly)
+            n := n + m
+        return n
 
 )if LiterateDoc
 \bibliography{qeta}
