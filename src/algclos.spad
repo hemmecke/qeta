@@ -1,0 +1,425 @@
+-------------------------------------------------------------------
+---
+--- DynamicAlgebraicClosureField
+--- Copyright (C) 2019,  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{url}
+\DeclareUrlCommand\code{\urlstyle{tt}}
+\begin{document}
+\title{Dynamic Algebraic Closure Field}
+\author{Ralf Hemmecke}
+\date{22-Oct-2019}
+\maketitle
+\begin{abstract}
+\begin{verbatim}
+@article{Steel:AlgebraicallyClosedFields:2010,
+  title =        {Computing with algebraically closed fields},
+  journal =      JSC,
+  volume =       45,
+  number =       3,
+  pages =        {342 - 372},
+  year =         2010,
+  issn =         {0747-7171},
+  doi =          {10.1016/j.jsc.2009.09.005},
+  url =
+                  {http://www.sciencedirect.com/science/article/pii/S0747717109001497},
+  author =       {Allan K. Steel},
+  keywords =     {Algebraic closure, Algebraic number field, Algebraic
+                  function field, Field extension, Inseparability,
+                  Non-perfect field, Polynomial factorization, Root
+                  finding},
+}
+\end{verbatim}
+\end{abstract}
+
+\tableofcontents
+
+\section{Overview}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+OF==>OutputForm
+dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+SI ==> SingleInteger
+SY ==> Symbol
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+asZ x ==> x pretend Z
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Dynamic Algebraic Closure Field}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The constructor \code{DynamicAlgebraicClosureField} takes as input a
+field $K$ and returns the algebraic closure of $K$ in the sense of
+\cite{Steel:AlgebraicallyClosedFields:2010}.
+
+)endif
+
+
+)abbrev domain DACF DynamicAlgebraicClosureField
+++ Author: Ralf Hemmecke
+++ Description:
+++ Implement an ACF according to \cite{Steel:AlgebraicallyClosedFields:2010}.
+DynamicAlgebraicClosureField(): Exports == Implementation where
+  K ==> Q
+  V ==> IndexedVariable("r")
+  EX ==> IndexedExponents V
+  R ==> NewSparseMultivariatePolynomial(K, V)
+  TS ==> RegularTriangularSet(K, EX, V, R)
+  NUP ==> NewSparseUnivariatePolynomial
+  SUP ==> SparseUnivariatePolynomial
+
+  PSU ==> PolynomialSetUtilitiesPackage(Q, EX, V, R)
+  RREC ==> Record(ee: E, rr: %)
+
+  Exports ==> Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
+   with
+    rank: () -> Z
+    show: () -> Void
+    extendBy!: SUP % -> % -- yields a root (lifted variable)
+    extensionPolynomial: P -> SUP %
+    getRoot: P -> %
+    -- if f = extensionPolynomial n and r = getGenerator n then zero? f(r)
+
+
+  Implementation ==> R add
+    -- Since the triangular set does not necessarily consist of irreducible
+    -- polynomials (over the respective lower ranked field),
+    -- we cannot  assume that all elements are always reduced wrt. the
+    -- triangular set ts.
+    Rep ==> R
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    -- modular evaluation field E
+    maxSI2 ==> shift(max()$SI, -1)
+    p: P := asP(prevPrime(maxSI2::Z)$IntegerPrimesPackage(Z))
+    E ==> DynamicAlgebraicClosurePrimeField PrimeField p
+    EZ ==> SUP E -- corr. to $E[z]$
+
+    RZ ==> SUP R
+    G1 ==> Record(gcd: NUP %, coef1: NUP %) -- for "inv" computation
+
+    FUNION ==> Union("nil", "sqfr", "irred", "prime")
+
+    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: N)
+    FL ==> List FREC
+
+    univar(r, v) ==> (univariate(r, v)$R) pretend SUP % -- (%, V) -> SUP %
+    nunivar(r, v) ==> (univariate(r, v)$R) pretend NUP % -- (%, V) -> NUP %
+    multivar(s, v) ==> per(multivariate(s pretend RZ, v)$R) -- (NUP %, V) -> %
+
+    -- We want extension polynomials to be at least square-free.
+    STATE ==> Record(
+        -- rnk is the number of elements in ts, vars, and gammas
+        -- elements of ts are sorted by main variable (decreasing)
+        -- vars internally used vars, sorted decreasingly r4,r3,r2,r1
+        -- gamma is sorted decreasingly like mvars
+        vars: List V,_
+        ts: TS,_
+        roots: List RREC,_
+        xroots: List RREC,_
+        rnk: Z)
+
+    -- The domain state is changed destructively.
+    state: STATE := [_
+        empty()$List(V),_
+        empty()$TS,_
+        empty()$List(RREC),_
+        empty()$List(RREC),_
+        0]
+
+    mon: SUP % := monomial(1, 1)$SUP(%)
+
+    rank(): Z == state.rnk
+
+    getRec(n: P): RREC ==
+        --assert(not zero? state.rnk)
+        rts: List RREC := state.roots
+        rts(state.rnk - asZ(n) + 1)
+
+    getGamma(n: P): E == getRec(n).ee
+    getRoot(n: P): % == getRec(n).rr
+
+    getRelations(): TS == state.ts
+
+    knownRoots(): List RREC == state.roots
+
+    getRelation(n: P): R ==
+        --assert(not zero? state.rnk)
+        triset: List R := getRelations()::List(R)
+        triset(state.rnk - asZ(n) + 1)
+
+    extensionPolynomial(n: P): SUP % ==
+        f: R := getRelation n
+        univar(f, mvar f)
+
+    show(): Void ==
+        print([univar(r, mvar r) for r in getRelations()::List(R)]::OF)$OF
+        print(knownRoots()::OF)$OF
+        print((state.xroots)::OF)$OF
+        show()$E
+
+    -- applyPhi(c) projects an element c of the ground field to
+    -- the finite field E.
+    -- We assume that the input is such that this projection works,
+    -- i.e., that the prime p does not divide the denominator of c.
+    applyPhiK(c: K): E ==
+        num := numer(c)::E
+        den := denom(c)::E
+        zero? den ==> error "cannot invert denominator"
+        num * inv(den)
+
+    applyPhiGamma(x: %): E ==
+        ground? xx => applyPhiK ground xx
+        --assert(not zero? x)
+        v: V := mvar xx
+        n: P := lookup v
+        s: NUP % := nunivar(xx, v)
+        g: E := getGamma n
+        e: E := applyPhiGamma(leadingCoefficient s) * g^degree(s)
+        while not zero?(s := reductum s) repeat
+            e := e + applyPhiGamma(leadingCoefficient s) * g^degree(s)
+        return e
+
+    evalPolynomial(s: NUP %): EZ ==
+        zero? s => 0$EZ
+        e: E := applyPhiGamma leadingCoefficient s
+        monomial(e, degree s)$EZ + evalPolynomial reductum s
+
+    --assert(zero? state.rnk or (state.rnk = #(state.ts)))
+    --assert(zero? state.rnk or (state.rnk = #(stete.vars)))
+    --assert(zero? state.rnk or (state.rnk = lookup first state.vars))
+    extendBy!(f: SUP %): % ==
+        --assert(not ground? f)
+        -- Make polynomial monic.
+        c: % := leadingCoefficient f
+        if not one? c then f := inv(c)*f
+        e: E := rootOf(evalPolynomial(f pretend NUP %))$E
+        v: V := new()
+        minpoly: R := rep multivar(f, v)
+        -- We set the state destructively.
+        state.vars := cons(v, state.vars)$List(V)
+        r: % := multivar(mon, v)
+        rrec: RREC := [e, r]
+        state.roots := cons(rrec, state.roots)$List(RREC)
+        state.ts := _extend(state.ts, minpoly)$TS
+        state.rnk := state.rnk + 1
+        r
+
+    reduce(r: Rep): % ==
+        z: Record(rnum: K, polnum: R, den: K) := remainder(r, getRelations())$TS
+        per((z.rnum/z.den) * z.polnum)
+
+    -- gcd $ SUP(%) is implemented by calling gcdPolynomial $ %.
+    -- If we do not override it here, it is inherited from Rep.
+    -- Our Rep is a multivariate polynomial domain, but we must implement
+    -- a gcd algorithm of univariate polynomials over the field %.
+    gcdPolynomial(p1: SUP %, p2: SUP %): SUP % ==
+        zero? p1 => p2  -- subResultantGcd can't handle 0
+        zero? p2 => p1
+        subResultantGcd(p1, p2)$PseudoRemainderSequence(%, SUP %)
+
+    _-(x: %): % == reduce(- xx)
+    ((x: %) + (y: %)): % == reduce(xx + yy)
+    ((x: %) - (y: %)): % == reduce(xx - yy)
+    ((x: %) * (y: %)): % == reduce(xx * yy)
+
+    ((x: %) ^ (n: P)): % == expt(x, n)$RepeatedSquaring(%)
+    ((x: %) ^ (n: N)): % ==
+        zero? n => 1
+        x^asP(n)
+    ((x: %) ^ (n: Z)): % ==
+        n < 0 => inv(x) ^ asP(-n)
+        x^asN(n)
+
+    -- zeroTest uses the algorithm ZeroTest from
+    -- \cite{Steel:AlgebraicClosure:2002} in order to adjust
+    -- the ideal I (which in our case is given by the triangular
+    -- set state.ts. ts might get updated by zeroTest!.
+    -- zeroTest! returns false if x can definitely not be zero
+    zeroTest!(x: R): Boolean ==
+        -- Step number (i) according to
+        -- \cite[ZeroTest]{Steel:AlgebraicClosure:2002}.
+        --assert(not ground? x)a
+        --assert(x = rep reduce x)
+        -- Step (3)
+        v: V := mvar x
+        n: P := lookup v
+        f: NUP % := nunivar(x, v)
+        gn: R := getRelation n
+        g: NUP % := nunivar(gn, v)
+        -- Step (4)
+        fbar: EZ := evalPolynomial f
+        gbar: EZ := evalPolynomial g
+        hbar := gcd(fbar, gbar)
+        one? hbar => return false
+        -- Step (5)
+        c: NUP % := gcd(f, g) -- This might destructively change ts!!!
+        --ASSUME that c is the *monic* gcd!!!
+        -- Step (6)
+        one? c => return false
+        --assume(getRelation n = reduce gn)
+        --assume(multvar(c, v) = reduce multvar(c, v))
+        x: % := multivar(c, v)
+        getRelation n = xx => return error "zeroTest!: true"
+        -- Step (7)
+        e: E := applyPhiGamma x
+        h: NUP % := if zero? e then c else (g exquo c)::NUP(%)
+        -- make h monic
+        lc: % := leadingCoefficient h
+        if not one? lc then h := inv(lc)*h
+        -- Step (8)
+        s: R := rep multivar(h, v) -- that's the new n-th poly of ts.
+        -- update the triangular set by reducing all bigger polynomials
+        triset: TS := getRelations()
+        trilst: List R := cons(s, triset::List(R))
+        state.ts := construct(interReduce(trilst)$PSU)
+        return true
+
+    zero?(x: %): Boolean ==
+        x := reduce xx
+        ground? xx => zero?(ground xx)$K
+        not zeroTest! xx => false -- might modify x destructively
+        x := reduce xx
+        ground? xx and zero?(ground xx)$K
+
+    ((x: %) = (y: %)): Boolean == zero?(x-y)
+    ((x: %) / (y: %)): % == x * inv y
+    ((x: %) exquo (y: %)): Union(%, "failed") ==
+        zero? y => "failed"
+        x / y
+
+    inv(x: %): % ==
+        -- Step number (i) according to
+        -- \cite[ZeroTest]{Steel:AlgebraicClosure:2002}.
+        zero? x => error "cannot invert zero element"
+        --assert(not zero? x)
+        ground? xx => per((inv(ground xx)$K)::R)
+        -- Step (3)
+        v: V := mvar xx
+        f: NUP % := nunivar(xx, v)
+        n: P := lookup v
+        gn: R := getRelation n
+        g: NUP % := nunivar(gn, v)
+        -- Step (4)
+        cu: G1 := halfExtendedSubResultantGcd1(f, g)
+        -- Step (5)
+        c: NUP % := cu.gcd
+        import from N
+        not zero? degree c => error "ffalgclos: inv: gcd is not a constant"
+        lcc: % := leadingCoefficient c
+        inv(lcc) * multivar(cu.coef1, v)
+
+    squareFreePolynomial(poly: SUP %): Factored SUP % ==
+        squareFree(poly)$UnivariatePolynomialSquareFree(%, SUP %)
+
+    rootOfSquareFreePolynomial(f: SUP %, sy: Symbol): % ==
+        -- Check whether one of the existing roots or their negation
+        -- is a result.
+        fbar: EZ := evalPolynomial(f pretend NUP %)
+        for rrec in state.roots repeat
+            e := rrec.ee
+            r := rrec.rr
+            if zero? fbar(e) and zero? f(r) then return r
+        for rrec in state.xroots repeat
+            e := rrec.ee
+            r := rrec.rr
+            if zero? fbar(e) and zero? f(r) then return r
+
+        extendBy!(f) -- Must extend by a squarefree factor
+
+    rootOf(poly: SUP %, sy: Symbol): % ==
+        -- First determine a minimal degree squarefree factor
+        fl: FL := factorList(squareFreePolynomial poly)$Factored(SUP %)
+        f: SUP % := first(fl).factor
+        d: N := degree f
+        one? d => return -coefficient(f, 0)
+        for frec in rest fl repeat
+            if degree(frec.factor) < d then
+                f := frec.factor
+                d := degree f
+                one? d => return -coefficient(f, 0)
+        -- now f is squarefee and of min degree in the squarefree decomposition
+        rootOfSquareFreePolynomial(f, sy)
+
+    ((x: %) ^ (q: Q)): % ==
+        n: Z := numer q
+        d: N := asN denom q
+        f: SUP % := mon - (x^n)::SUP(%)
+        rootOf f
+
+    sqrt(x: %): % ==
+        import from N
+        f: SUP % := mon^2 - x::SUP(%)
+        rootOf f
+
+    fsfp(f: SUP %, n: N): Factored(SUP %) ==
+        --assert(squareFree? f)
+        --assert(one? leadingCoefficient(f))
+        roots: List % := rootsOf f
+        fl: FL := [["prime", mon - r::SUP(%), n] for r in roots]
+        for rrec in state.xroots repeat roots := remove!(rrec.rr, roots)
+        rroots: List RREC := [[applyPhiGamma r, r] for r in roots]
+        state.xroots := concat!(state.xroots, rroots)
+        makeFR(1, fl)
+
+    factorSquareFreePolynomial(poly: SUP %): Factored(SUP %) == fsfp(poly, 1)
+
+    factorPolynomial(poly: SUP %): Factored(SUP %) ==
+        sqfr: Factored SUP % := squareFree poly
+        u: SUP % := unit sqfr
+        fl: FL := factorList sqfr
+        fac := first fl
+        res: Factored SUP % := fsfp(fac.factor, fac.exponent)
+        for w in rest fl repeat
+            fac := first fl
+            f: SUP % := fac.factor
+            res := mergeFactors(res, fsfp(f, fac.exponent))
+        makeFR(u*unit res, factorList res)
+
+
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

@@ -1,0 +1,468 @@
+-------------------------------------------------------------------
+---
+--- FiniteFieldExtensionByTriangularSet
+--- Copyright (C) 2019,  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{url}
+\DeclareUrlCommand\code{\urlstyle{tt}}
+\begin{document}
+\title{Dynamic Algebraic Closure Prime Field}
+\author{Ralf Hemmecke}
+\date{19-Dec-2019}
+\maketitle
+\begin{abstract}
+\begin{verbatim}
+@article{Steel:AlgebraicallyClosedFields:2010,
+  title =        {Computing with algebraically closed fields},
+  journal =      JSC,
+  volume =       45,
+  number =       3,
+  pages =        {342 - 372},
+  year =         2010,
+  issn =         {0747-7171},
+  doi =          {10.1016/j.jsc.2009.09.005},
+  url =
+                  {http://www.sciencedirect.com/science/article/pii/S0747717109001497},
+  author =       {Allan K. Steel},
+  keywords =     {Algebraic closure, Algebraic number field, Algebraic
+                  function field, Field extension, Inseparability,
+                  Non-perfect field, Polynomial factorization, Root
+                  finding},
+}
+\end{verbatim}
+\end{abstract}
+
+\tableofcontents
+
+\section{Overview}
+
+For the implementation of an ACF in the sense of
+\cite{Steel:AlgebraicallyClosedFields:2010} we need finite fields. In
+fact we need a finite field extension that is the splitting field of
+certain polynomials that appear during the computation. We, therefore,
+use the same idea to implement a dynamic algebraic closure for finite
+fields.
+
+We do this in two steps. First we create a domain that behaves exactly
+like a multiple finite field extension by (successivly) irreducible
+polynomials (over the previous field). We assume that irreducibility
+condition when we create the field.
+
+Since for the dynamic algebraic closure we do not know beforehand what
+these polynomials are, and we need \emph{one} type, that does not
+depend on the exact triangular set, we only take the underlying finite
+field as an argument of the domain constructor and set the triangular
+set dynamically.
+
+Note that this domain intended to be used for
+DynamicAlgebraicClosurePrimeField and should not be used otherwise.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+OF==>OutputForm
+dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+asZ x ==> x pretend Z
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Inner Finite Field Extension by Triangular Set}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The constructor \code{InnerFiniteFieldExtensionByTriangularSet} takes as
+input a finite field $K$ and returns a finite field extension given by
+the triangular set that is maintained inside and created via the
+\texttt{extendBy!} function.
+
+)endif
+
+
+)abbrev domain IFFTS InnerFiniteFieldExtensionByTriangularSet
+++ Author: Ralf Hemmecke
+++ Description:
+++ Implement an ACF according to \cite{Steel:AlgebraicallyClosedFields:2010}
+++ but here for a prime field of characteristic p.
+InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
+  K: FiniteFieldCategory
+  V ==> IndexedVariable("f")
+  EX ==> IndexedExponents V
+  R ==> NewSparseMultivariatePolynomial(K, V)
+  NUP ==> NewSparseUnivariatePolynomial
+  SUP ==> SparseUnivariatePolynomial
+
+  Exports ==> FiniteFieldCategory with
+    rank: () -> Z
+    show: () -> Void
+    extendBy!: SUP % -> % -- yields a root (lifted variable)
+    getRelations: () -> List R
+    getRelation: P -> R
+    minimalPolynomial: P -> SUP %
+    getGenerator: P -> %
+
+    size: () -> N
+    charthRoot: % -> % -- not that x^p = x if p=char(K)
+    random: () -> %
+
+  Implementation ==> R add
+    -- We assume that all elements are always reduced wrt. the
+    -- triangular set ts.
+    Rep ==> R
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    RZ ==> SUP R
+    G1 ==> Record(gcd: NUP %, coef1: NUP %) -- for "inv" computation
+
+    FUNION ==> Union("nil", "sqfr", "irred", "prime")
+
+    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: N)
+    FL ==> List FREC
+
+    univar(r, v) ==> (univariate(r, v)$R) pretend SUP % -- (%, V) -> SUP %
+    nunivar(r, v) ==> (univariate(r, v)$R) pretend NUP % -- (%, V) -> NUP %
+    multivar(s, v) ==> per(multivariate(s pretend RZ, v)$R) -- (NUP %, V) -> %
+
+    -- In contrast to \cite{Steel:AlgebraicallyClosedFields:2010} we
+    -- only allow irreducible polynomial to extend. In other words,
+    -- if ts belongs to the current representation of the extension field
+    -- and f is the polynomial with the highest variable, then f is
+    -- irreducible over the field that belongs to ts without f.
+    -- We assume that we can construct all roots of f in the current
+    -- field belonging to ts. Not that the highest variable is such a root.
+
+    STATE ==> Record(
+        -- rnk is the number of elements in ts, vars, and powers.
+        -- elements of ts are sorted by main variable (decreasing)
+        -- vars internally used vars, sorted decreasingly r4,r3,r2,r1
+        -- lvlsz corresponds to the number of elements of the field
+        --   after each extension. It is [s4, s3, s2, s1, s0] where
+        --   s0 = size()$$, and s{i+1} = si^di where
+        --   di = degree(getRelation(i)) and the i-th polynomial of
+        --   the triangular set is considered as a univariate polynomial
+        --   in its highest variable.
+        --   Note that #lvlsz = 1+#ts.
+        -- powers.i contains [
+        vars: List V,_
+        lvlsz: List Z,_
+        ts: List R,_
+        powers: List PrimitiveArray SUP %,
+        rnk: Z)
+
+    -- The domain state is changed destructively.
+    state: STATE := [_
+        empty()$List(V),_
+        [size()$K]$List(Z),_
+        empty()$List(R), _
+        empty()$List(PrimitiveArray SUP %),_
+        0]
+
+    rank(): Z == state.rnk
+
+    getRelations(): List R == state.ts
+
+    show(): Void ==
+        print(getRelations()::OF)$OF
+        print((state.powers)::OF)$OF
+
+    getRelation(n: P): R ==
+        --assert(not zero? state.rnk)
+        triset: List R := getRelations()::List(R)
+        triset(state.rnk - asZ(n) + 1)
+
+    minimalPolynomial(n: P): SUP % ==
+        f: R := getRelation n
+        univar(f, mvar f)
+
+    getPower(n: P): PrimitiveArray SUP % ==
+        --assert(not zero? state.rnk)
+        (state.powers)(state.rnk - asZ(n) + 1)
+
+    getGenerator(n: P): % ==
+        --assert(not zero? state.rnk)
+        --assert(n <= state/rnk)
+        v: V := index(n)$V
+        multivar(monomial(1, 1$N)$RZ, v)
+
+    getLevelSizes(): List Z == state.lvlsz
+
+    size(): N == asN first getLevelSizes()
+
+    indexRec(n: Z, ls: List Z): % ==
+        --assert(not empty? ls)
+        --assert(n < first ls)
+        --assert(n >= 0)
+        zero? n => 0
+
+        empty? ls => per((index(asP n)$K)::R) -- Base case; element of K
+        b: Z := first ls
+        n < b => indexRec(n, rest ls)
+
+        k: P := asP(#ls)
+        v: V := index(k)$V
+        -- Now find the "digits" of n in base b
+        s: NUP % := 0
+        j: N := 0
+        while n > 0 repeat
+            rec: Record(quotient: Z, remainder: Z) := divide(n, b)
+            r: Z := rec.remainder
+            if not zero? r then
+                c: % := indexRec(r, ls)
+                s := s + monomial(c, j)$NUP(%)
+            n := rec.quotient
+            j := j + 1
+        multivar(s, v)
+
+    index(n: P): % ==
+        -- Important: Even after extending the field, i.e. growing ts,
+        -- index(n) should give the same element as before.
+        -- The basic ideas is that we consider the constant of the
+        -- polynomial first.
+        -- The following algorithm works recursively.
+        ls: List Z := getLevelSizes()
+        nn: Z := first ls
+        -- Note that index expects n in the range 1..size(), but
+        -- indexRec in the range 0..size()-1.
+        indexRec(positiveRemainder(asZ n - 1, nn), rest ls)
+
+    lookupRec(r: R, triset: List R, ls: List Z): Z == -- local function
+        zero? r => 0
+        ground? r => asZ(lookup(ground r)$K)
+
+        -- assert(#triset + 1 = #ls
+        -- lookupRec returns values in the range 0..size()-1.
+        v: V := mvar r
+        while v < mvar first triset repeat
+            triset := rest triset
+            ls := rest ls
+        triset := rest triset
+        ls := rest ls
+        sz: Z := first ls
+        result: Z := lookupRec(leadingCoefficient(r, v), triset, ls)
+        d: Z := asZ mdeg r
+        while not zero?(r := reductum r) repeat
+            e: N := asN(d - (d := asZ mdeg r))
+            c: Z := lookupRec(leadingCoefficient(r, v), triset, ls)
+            result := result * sz^e + c
+        result * sz^asN(d)
+
+    lookup(x: %): P ==
+        -- lookup returns values in the range 1..size().
+        import from R
+        triset: List R := getRelations()
+        ls: List Z := getLevelSizes()
+        asP(1 + lookupRec(xx, triset, ls))
+
+    charthRoot(x: %): % == x^(size() quo characteristic())
+
+    randomLevel(triset: List R): % ==
+        empty? triset => per((random()$K)::R)
+        r: R := first triset
+        v: V := mvar r
+        d: Z := asZ mdeg r
+        triset := rest triset
+        z: NUP % := 0
+        for i in 0..d-1 repeat z := monomial(randomLevel(triset), i) + z
+        multivar(z, v)
+
+    -- returns random element corresponding to the current struture of
+    -- the field
+    random(): % == randomLevel(getRelations())
+
+    _-(x: %): % == per(- xx)
+    ((x: %) + (y: %)): % == per(xx + yy)
+    ((x: %) - (y: %)): % == per(xx - yy)
+
+    ((x: %) * (y: %)): % ==
+        ground? xx or ground? yy => per(xx * yy)
+        vx: V := mvar xx
+        vy: V := mvar yy
+        if vx > vy then -- exchange x and y
+            t := x; x := y; y := t
+            vx := vy
+            vy := mvar yy
+        uy: SUP % := univar(yy, vy)
+        vx < vy =>
+            z: SUP % := monomial(x * leadingCoefficient(uy), degree uy)
+            while not zero?(uy := reductum uy) repeat
+                z := z + monomial(x * leadingCoefficient(uy), degree uy)
+            return multivar(z, vy)
+        --assert(vx = vy)
+        n: P := lookup vx
+        pow: PrimitiveArray SUP % := getPower n
+        ux: SUP % := univar(xx, vx)
+        uz: SUP % := ux * uy
+        z: SUP % := 0
+        d: Z := asZ degree(getRelation n, vx)
+        --assert(degree(uz) < 2*d-1)
+        while ((dd:Z := asZ degree uz) >= d) repeat
+            z := z + leadingCoefficient(uz)*pow(dd-d)
+            uz := reductum uz
+        multivar(z + uz, vx)
+
+    ((x: %) ^ (n: P)): % == expt(x, n)$RepeatedSquaring(%)
+    ((x: %) ^ (n: N)): % ==
+        zero? n => 1
+        x^asP(n)
+    ((x: %) ^ (n: Z)): % ==
+        n < 0 => inv(x) ^ asP(-n)
+        x^asN(n)
+
+    ((x: %) / (y: %)): % == x * inv y
+    ((x: %) quo (y: %)): % == x / y
+    ((x: %) rem (y: %)): % ==
+        zero? y => error "division by zero"
+        0
+
+    inv(x: %): % ==
+        zero? x => error "cannot invert zero element"
+        --assert(not zero? x)
+        ground? xx => per((inv(ground xx)$K)::R)
+        v: V := mvar xx
+        f: NUP % := nunivar(xx, v)
+        n: P := lookup v
+        gn: R := getRelation n
+        g: NUP % := nunivar(gn, v)
+        cu: G1 := halfExtendedSubResultantGcd1(f, g)
+        c: NUP % := cu.gcd
+        import from N
+        not zero? degree c => error "IFFTS: inv: gcd is not a constant"
+        lcc: % := leadingCoefficient c
+        inv(lcc) * multivar(cu.coef1, v)
+
+    associator(x: %, y: %, z: %): % == 0
+    commutator(x: %, y: %): % == 0
+    commutator(x: %, y: %): % == 0
+    antiCommutator(x: %, y: %): % == 2*x*y
+    associates?(x: %, y: %): Boolean ==
+        if zero? x then zero? y else not(zero? y)
+
+    characteristic(): N == characteristic()$K
+    recip(x: %): Union(%, "failed") ==
+        zero? x => "failed"
+        inv x
+    ((x: %) exquo (y: %)): Union(%, "failed") ==
+        zero? y => "failed"
+        x / y
+
+    gcd(x: %, y: %): % ==
+        zero? x and zero? y => 0
+        1
+    extendedEuclidean(x: %, y: %, g: %):
+      Union(Record(coef1: %, coef2: %), "failed") ==
+        zero? g => [0, 0]
+        zero? y =>
+            zero? x => "failed"
+            [g * inv x, 0]
+        [0, g * inv y]
+
+    extendedEuclidean(x: %, y: %): Record(coef1: %, coef2: %, generator: %) ==
+        zero? y =>
+            zero? x => [1, 0, 0]
+            [inv x, 0, 1]
+        [0, inv y, 1]
+
+    unit?(x: %): Boolean == not zero? x
+    unitCanonical(x: %): % == if zero? x then 0 else 1
+    unitNormal(x: %): Record(unit: %, canonical: %, associate: %) ==
+        zero? x => [1, 0, 1]
+        [x, 1, inv x]
+
+
+    enumerate(): List % == error "IFFTS: 'enumerate' not implemented"
+    createPrimitiveElement(): % ==
+        error "IFFTS: 'createPrimitiveElement' not implemented"
+    primitiveElement(): % == error "IFFTS: 'primitiveElement; not implemented"
+    discreteLog(x: %): N == error "IFFTS: 'discreteLog' not implemented"
+    discreteLog(x: %, y: %): Union(N, "failed") ==
+        error "IFFTS: 'discreteLog' not implemented"
+    factorsOfCyclicGroupSize(): List Record(factor: Z, exponent: N) ==
+        error "IFFTS: 'factorsOfCyclicGroupSize' not implemented"
+    representationType(): Union("prime", "polynomial", "normal", "cyclic") ==
+        error "IFFTS: 'representationType' not implemented"
+    tableForDiscreteLogarithm(n: Z): Table(P, N) ==
+        error "IFFTS: 'tableForDiscreteLogarithm' not implemented"
+
+    --:     -- tableForDiscreteLogarithm(a, n) returns a table of the discrete
+    --:     -- logarithms of a^0 up to a^(n-1) which, called with key
+    --:     -- lookup(a^i) returns i for i in 0..n-1. Error: if not called for
+    --:     -- prime divisors of order of multiplicative group.
+
+
+    --assert(zero? state.rnk or (state.rnk = #(state.ts)))
+    --assert(zero? state.rnk or (state.rnk = #(stete.vars)))
+    --assert(zero? state.rnk or (state.rnk = lookup first state.vars))
+    extendBy!(f: SUP %): % ==
+        v: V := new()
+        x := monomial(1, 1)$SUP(%)
+        d: N := degree f
+        arr: PrimitiveArray SUP % := new(d, 0)
+        arr.0 := - reductum f
+        i: N := 1
+        while i < d repeat
+            arr.i := x * arr.(i-1)
+            if degree(arr.i) = d then
+                arr.i := reductum(arr.i) + leadingCoefficient(arr.i) * arr.0
+            i := i+1
+
+        -- We set the state destructively.
+        minpoly: R := rep multivar(f, v)
+        state.vars := cons(v, state.vars)$List(V)
+        ls := state.lvlsz
+        state.lvlsz := cons(first(ls)^d, ls)
+        state.ts := cons(minpoly, state.ts)
+        state.powers := cons(arr, state.powers)
+        state.rnk := state.rnk + 1
+        -- special call to reset the setting of ModMonic during factorization
+        -- I.e. we kill the cache in ModMonic.
+        -- This is necessary, since the size()$% changes. Otherwise,
+        -- calling factor(f) before and after extendBy!(f) would still
+        -- not compute a factorization after the extension.
+        -- hopefully this isn't compiled away
+        -- The polynomials here are chosen to be relatively simple, but
+        -- complicated enough to trigger a recomputation of the cache in
+        -- ModMonic.
+        n: N := if d = 2 and characteristic() = 2 then 3 else 2
+        factor(monomial(1$%, n)$SUP(%) - 1$SUP(%))
+        factor(monomial(1$%, n)$SUP(%) + 1$SUP(%))
+        multivar(monomial(1, 1$N)$SUP(R), v)
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

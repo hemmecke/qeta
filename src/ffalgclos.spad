@@ -1,0 +1,166 @@
+-------------------------------------------------------------------
+---
+--- DynamicAlgebraicClosurePrimeField
+--- Copyright (C) 2019,  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{url}
+\DeclareUrlCommand\code{\urlstyle{tt}}
+\begin{document}
+\title{Dynamic Algebraic Closure Prime Field}
+\author{Ralf Hemmecke}
+\date{22-Oct-2019}
+\maketitle
+\begin{abstract}
+\begin{verbatim}
+@article{Steel:AlgebraicallyClosedFields:2010,
+  title =        {Computing with algebraically closed fields},
+  journal =      JSC,
+  volume =       45,
+  number =       3,
+  pages =        {342 - 372},
+  year =         2010,
+  issn =         {0747-7171},
+  doi =          {10.1016/j.jsc.2009.09.005},
+  url =
+                  {http://www.sciencedirect.com/science/article/pii/S0747717109001497},
+  author =       {Allan K. Steel},
+  keywords =     {Algebraic closure, Algebraic number field, Algebraic
+                  function field, Field extension, Inseparability,
+                  Non-perfect field, Polynomial factorization, Root
+                  finding},
+}
+\end{verbatim}
+\end{abstract}
+
+\tableofcontents
+
+\section{Overview}
+
+For the implementation of an ACF in the sense of
+\cite{Steel:AlgebraicallyClosedFields:2010} we need finite fields and
+algebraic extensions of them. Since in FriCAS we the type of the
+finite field must be known at compile time, we create a finite field
+that behaves like the algebraic closure of $GF(p)$.
+
+Maybe, eventually, we must create a domain that behaves like the union
+of such fields for all primes $p$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+OF==>OutputForm
+dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+asZ x ==> x pretend Z
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Dynamic Algebraic Closure Prime Field}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The constructor \code{DynamicAlgebraicClosurePrimeField} takes as
+input a prime $p$ and returns the algebraic closure of
+$GF(p)$ in the sense of \cite{Steel:AlgebraicallyClosedFields:2010}.
+
+)endif
+
+
+)abbrev domain DACPF DynamicAlgebraicClosurePrimeField
+++ Author: Ralf Hemmecke
+++ Description:
+++ Implement an ACF according to \cite{Steel:AlgebraicallyClosedFields:2010}
+++ but here for a prime field of characteristic p.
+DynamicAlgebraicClosurePrimeField(K): Exports == Implementation where
+  K: FiniteFieldCategory
+  V ==> IndexedVariable("f")
+  EX ==> IndexedExponents V
+  SUP ==> SparseUnivariatePolynomial
+
+  Exports ==> Join(AlgebraicallyClosedField, FieldOfPrimeCharacteristic,
+                   DifferentialRing, PolynomialFactorizationExplicit) with
+    rank: () -> Z
+    show: () -> Void
+    extendBy!: SUP % -> % -- yields a root (lifted variable)
+    getGenerator: P -> %
+    minimalPolynomial: P -> SUP %
+    -- if f = minimalPolynomial n and r = getGenerator n then zero? f(r)
+
+  Implementation ==> InnerFiniteFieldExtensionByTriangularSet K add
+    -- We assume that all elements are always reduced wrt. the
+    -- triangular set ts.
+    Rep ==> InnerFiniteFieldExtensionByTriangularSet K
+    import from Rep
+    xx ==> rep x
+    suprep x ==> x pretend SUP(%)
+
+    FUNION ==> Union("nil", "sqfr", "irred", "prime")
+    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: N)
+    FL ==> List FREC
+
+    rootOf(poly: SUP %, sy: Symbol): % ==
+        -- We currently ignore the second parameter.
+        -- Call rootOf$Rep first.
+        -- Otherwise a partial factorization, i.e, getting just ONE
+        -- factor (possibly of minimal degree) is enough.
+        fl: FL := factorList(factor(poly pretend SUP(Rep))) pretend FL
+        -- Note that fl cannot be empty.
+        for frec in fl repeat
+            f: SUP % := frec.factor
+            if one? degree f then return (- coefficient(f, 0))
+        -- Arriving here means that there was no linear factor, i.e.,
+        -- we must extend our field by an irreducible polynomial.
+        -- For simplicity, we simply take the first element in fl.
+        extendBy!(first(fl).factor)
+
+    ((x: %) ^ (q: Q)): % ==
+        n: Z := numer q
+        d: N := asN denom q
+        f: SUP % := monomial(1, d)$SUP(%) - (x^n)::SUP(%)
+        rootOf f
+
+    sqrt(x: %): % ==
+        import from N
+        f: SUP % := monomial(1, 2)$SUP(%) - x::SUP(%)
+        rootOf f
+
+    factorPolynomial(poly: SUP %): Factored(SUP %) ==
+        roots: List % := rootsOf(poly)
+        factor(poly pretend SUP(Rep)) pretend Factored(SUP %)
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
