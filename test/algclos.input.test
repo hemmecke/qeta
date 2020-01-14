@@ -1,0 +1,81 @@
+--setup
+P ==> PositiveInteger
+Z ==> Integer
+Q ==> Fraction Z
+A ==> DynamicAlgebraicClosureField()
+AZ ==> SUP(A)
+x ==> monomial(1, 1)$AZ
+
+CHECKFACTORS f ==>
+  d := degree f
+  fl := factorList factor f
+  assertEquals(reduce(_+, [rec.exponent for rec in fl]), d)
+  assertEquals(reduce(_*, [rec.factor^rec.exponent for rec in fl]), f)
+--endsetup
+
+--test:dacf-1
+ax := x^2 + 17*x + 13
+f1 := rootOf(ax)
+assertTrue(zero?(ax f1))
+CHECKFACTORS ax
+assertTrue((ax exquo (x-f1::AZ)) case AZ)
+r := rootsOf ax
+assertEquals(ax, (x-r.1::AZ)*(x-r.2::AZ))
+--endtest
+
+--test:dacf-2
+ax := x^5 - 29
+CHECKFACTORS ax
+rts := rootsOf(ax)
+assertEquals(#rts, 5)
+assertEquals([r^5 for r in rts], [29,29,29,29,29])
+assertEquals([ax r for r in rts], [0,0,0,0,0])
+--endtest
+
+--test:dacf-3
+ax := x^7 - 29
+CHECKFACTORS ax
+--endtest
+
+--test:dacf-4
+ax2 := x^2 - 1
+CHECKFACTORS ax2
+ax3 := x^3 - 1
+CHECKFACTORS ax3
+ax6 := x^6 - 1
+CHECKFACTORS ax6
+rts2 := rootsOf ax2
+assertTrue(zero? reduce(_+, rts2))
+rts3 := rootsOf ax3
+assertTrue(zero? reduce(_+, rts3))
+rts6 := rootsOf ax6
+assertTrue(zero? reduce(_+, rts6))
+for r in concat(rts2, rts3) repeat assertTrue(member?(r, rts6))
+--endtest
+
+--test:dacf-5
+ax4 := x^4 + 1
+rts4 := rootsOf ax4
+assertTrue(zero? reduce(_+, rts4))
+assertTrue(one?  reduce(_*, rts4))
+--endtest
+
+--test:dacf-6
+a2 := 2::A
+a3 := 3::A
+a6 := 6::A
+r2 := a2^(1/2)
+r3 := a3^(1/2)
+r6 := a6^(1/2)
+zp := r6 + r2*r3
+zm := r6 - r2*r3
+-- It is not predictable whether zp or zm is zero.
+assertTrue(zero? zp or zero? zm)
+--endtest
+
+--test:x71
+f := x^7 - 1
+r := rootsOf f
+a := r.1 - 1
+assertTrue(zero? a);
+--endtest

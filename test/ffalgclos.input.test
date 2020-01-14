@@ -1,0 +1,231 @@
+--setup
+P ==> PositiveInteger
+Z ==> Integer
+SI ==> SingleInteger
+maxi2 ==> shift(max()$SI, -1)::Z
+K ==> PrimeField p
+A ==> DynamicAlgebraicClosureFiniteField(K)
+AZ ==> SUP(A)
+x ==> monomial(1, 1)$AZ
+pmax ==> qcoerce(prevPrime(maxi2)$IntegerPrimesPackage(Z))@P
+
+CHECKFACTORS f ==>
+  d := degree f
+  fl := factorList factor f
+  assertEquals(reduce(_+, [rec.exponent for rec in fl]), d)
+  assertEquals(reduce(_*, [rec.factor^rec.exponent for rec in fl]), f)
+
+TEST1 q ==>
+  p := q
+  ax := x^2 + 17*x + 13
+  f1 := rootOf(ax)
+  assertTrue(zero?(ax f1))
+  CHECKFACTORS ax
+  assertTrue((ax exquo (x-f1::AZ)) case AZ)
+  r := rootsOf ax
+  assertEquals(ax, (x-r.1::AZ)*(x-r.2::AZ))
+
+TEST2 q ==>
+  p := q
+  ax := x^5 - 29
+  CHECKFACTORS ax
+  rts := rootsOf(ax)
+  assertEquals(#rts, 5)
+  assertEquals([r^5 for r in rts], [29,29,29,29,29])
+  assertEquals([ax r for r in rts], [0,0,0,0,0])
+
+TEST3 q ==>
+  p := q
+  ax := x^7 - 29
+  CHECKFACTORS ax
+
+TEST4 q ==>
+  p := q
+  ax2 := x^2 - 1
+  CHECKFACTORS ax2
+  ax3 := x^3 - 1
+  CHECKFACTORS ax3
+  ax6 := x^6 - 1
+  CHECKFACTORS ax6
+  rts2 := rootsOf ax2
+  assertTrue(zero? reduce(_+, rts2))
+  rts3 := rootsOf ax3
+  assertTrue(zero? reduce(_+, rts3))
+  rts6 := rootsOf ax6
+  assertTrue(zero? reduce(_+, rts6))
+  for r in concat(rts2, rts3) repeat assertTrue(member?(r, rts6))
+
+TEST5 q ==>
+  p := q
+  ax4 := x^4 + 1
+  rts4 := rootsOf ax4
+  assertTrue(zero? reduce(_+, rts4))
+  assertTrue(one?  reduce(_*, rts4))
+
+TEST6 q ==>
+  p := q
+  a2 := 2::A
+  a3 := 3::A
+  a6 := 6::A
+  r2 := a2^(1/2)
+  r3 := a3^(1/2)
+  r6 := a6^(1/2)
+  zp := r6 + r2*r3
+  zm := r6 - r2*r3
+  -- It is not predictable whether zp or zm is zero.
+  assertTrue(zero? zp or zero? zm)
+--endsetup
+
+--test:ffa1-2
+TEST1 2
+--endtest
+
+--test:ffa2-2
+TEST2 2
+--endtest
+
+--test:ffa3-2
+TEST3 2
+--endtest
+
+--test:ffa4-2
+TEST4 2
+--endtest
+
+--test:ffa5-2
+TEST5 2
+--endtest
+
+--test:ffa6-2
+TEST6 2
+--endtest
+
+-------------------------------------------------------------------
+
+--test:ffa1-3
+TEST1 3
+--endtest
+
+--test:ffa2-3
+TEST2 3
+--endtest
+
+--test:ffa3-3
+TEST3 3
+--endtest
+
+--test:ffa4-3
+TEST4 3
+--endtest
+
+--test:ffa5-3
+TEST5 3
+--endtest
+
+--test:ffa6-3
+TEST6 3
+--endtest
+
+-------------------------------------------------------------------
+
+--test:ffa1-43
+TEST1 43
+--endtest
+
+--test:ffa2-43
+TEST2 43
+--endtest
+
+--test:ffa3-43
+TEST3 43
+--endtest
+
+--test:ffa4-43
+TEST4 43
+--endtest
+
+--test:ffa5-43
+TEST5 43
+--endtest
+
+--test:ffa6-43
+TEST6 43
+--endtest
+
+-------------------------------------------------------------------
+
+--test:ffa1-53
+TEST1 53
+--endtest
+
+--test:ffa2-53
+TEST2 53
+--endtest
+
+--test:ffa3-53
+TEST3 53
+--endtest
+
+--test:ffa4-53
+TEST4 53
+--endtest
+
+--test:ffa5-53
+TEST5 53
+--endtest
+
+--test:ffa6-53
+TEST6 53
+--endtest
+
+-------------------------------------------------------------------
+
+--test:ffa1-98765441
+TEST1 98765441
+--endtest
+
+--test:ffa2-98765441
+TEST2 98765441
+--endtest
+
+--test:ffa3-98765441
+TEST3 98765441
+--endtest
+
+--test:ffa4-98765441
+TEST4 98765441
+--endtest
+
+--test:ffa5-98765441
+TEST5 98765441
+--endtest
+
+--test:ffa6-98765441
+TEST6 98765441
+--endtest
+
+-------------------------------------------------------------------
+
+--test:ffa1-pmax
+TEST1 pmax
+--endtest
+
+--test:ffa2-pmax
+TEST2 pmax
+--endtest
+
+--test:ffa3-pmax
+TEST3 pmax
+--endtest
+
+--test:ffa4-pmax
+TEST4 pmax
+--endtest
+
+--test:ffa5-pmax
+TEST5 pmax
+--endtest
+
+--test:ffa6-pmax
+TEST6 pmax
+--endtest
