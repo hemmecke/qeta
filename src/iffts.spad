@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FiniteFieldExtensionByTriangularSet
---- Copyright (C) 2019,  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2019-2020,  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -114,8 +114,14 @@ the triangular set that is maintained inside and created via the
 )abbrev domain IFFTS InnerFiniteFieldExtensionByTriangularSet
 ++ Author: Ralf Hemmecke
 ++ Description:
-++ Implement an ACF according to \cite{Steel:AlgebraicallyClosedFields:2010}
-++ but here for a prime field of characteristic p.
+++ Implement an ACF according to
+++ \cite{Steel:AlgebraicallyClosedFields:2010} but here for a finite
+++ field of characteristic p.
+--
+++ TODO: This domain allows only extensions by irreducible polynomials
+++ (not checked), i.e., factorization over the current (finite) field
+++ is needed. A future version might work without this irreducibility
+++ requirement.
 InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
   K: FiniteFieldCategory
   V ==> IndexedVariable("f")
@@ -126,16 +132,35 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
 
   Exports ==> FiniteFieldCategory with
     rank: () -> Z
-    show: () -> Void
+      ++ rank() returns the size of the current triangular set used
+      ++ for the extension.
     extendBy!: SUP % -> % -- yields a root (lifted variable)
-    getRelations: () -> List R
-    getRelation: P -> R
+      ++ extendBy!(p) adds a new polynomial p to the triangular set
+      ++ that is used to internally describe the extension. It is
+      ++ assumed that p is irreducible with respect to the current
+      ++ extension. The return value is a root of the given polynomial
+      ++ (then considered to be an element of this domain.
     minimalPolynomial: P -> SUP %
-    getGenerator: P -> %
+      ++ minimalPolynomial(n) for n < rank() returns the n-th extension
+      ++ polynomial.
+    -- charthRoot: % -> % -- not that x^p = x if p=char(K)
 
+    -- only exported for debugging purposes
+    getRelations: () -> List R
+      ++ getRelations() returns the triangular set that is used for
+      ++ the extension. The list is sorted descendingly by the main
+      ++ variable of the respective polynomial.
+    getRelation: P -> R
+      ++ getRelation(n) for n<= rank() returns the n-th extension
+      ++ polynomial.
+    getGenerator: P -> %
+      ++ getGenerator(n) for n < rank() returns a root of the n-th
+      ++ extension polynomial.
     size: () -> N
-    charthRoot: % -> % -- not that x^p = x if p=char(K)
-    random: () -> %
+      ++ size() returns the number of elements in the current
+      ++ extension. size() changes with every extension, i.e., with
+      ++ every call to extendBy!(p).
+    show: () -> Void
 
   Implementation ==> R add
     -- We assume that all elements are always reduced wrt. the
