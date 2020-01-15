@@ -113,11 +113,15 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
    with
     rank: () -> Z
     show: () -> Void
-    extendBy!: SUP % -> % -- yields a root (lifted variable)
     extensionPolynomial: P -> SUP %
     getRoot: P -> %
-    -- if f = extensionPolynomial n and r = getGenerator n then zero? f(r)
+    -- if f = extensionPolynomial n and r = getRoot n then zero? f(r)
 
+    -- The following functions are only exported for debugging purposes.
+    extendBy!: SUP % -> % -- yields a root (lifted variable)
+      ++ extendBy!(f) is only exported for debugging purposes.
+      ++ If used then zero?(f(r)) should not hold for any of the known
+      ++ roots stored internally (including xroots).
 
   Implementation ==> R add
     -- Since the triangular set does not necessarily consist of irreducible
@@ -149,10 +153,14 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
 
     -- We want extension polynomials to be at least square-free.
     STATE ==> Record(
-        -- rnk is the number of elements in ts, vars, and gammas
+        -- rnk is the number of elements in ts, vars, roots
         -- elements of ts are sorted by main variable (decreasing)
         -- vars internally used vars, sorted decreasingly r4,r3,r2,r1
-        -- gamma is sorted decreasingly like mvars
+        -- roots the values corresponding to the elements in vars
+        --   together with a gamma value (root of the projected minimal
+        --   polynomial)
+        -- xroots is a list of distict known roots of one of the polynomials
+        --   of ts.
         vars: List V,_
         ts: TS,_
         roots: List RREC,_
@@ -181,8 +189,6 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
 
     getRelations(): TS == state.ts
 
-    knownRoots(): List RREC == state.roots
-
     getRelation(n: P): R ==
         --assert(not zero? state.rnk)
         triset: List R := getRelations()::List(R)
@@ -194,7 +200,6 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
 
     show(): Void ==
         print([univar(r, mvar r) for r in getRelations()::List(R)]::OF)$OF
-        print(knownRoots()::OF)$OF
         print((state.xroots)::OF)$OF
         show()$E
 
@@ -241,6 +246,14 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
         r: % := multivar(mon, v)
         rrec: RREC := [e, r]
         state.roots := cons(rrec, state.roots)$List(RREC)
+        -- All negations of previous roots are already in xroots, thus
+        -- the new root and its negation are not equal to one of the
+        -- xroots already existing and we can add the negation
+        -- of the new root to xroots.
+        -- Note that extendBy! is only called by rootOfSquareFreePolynomial.
+        -- To keep consistency of xroots, extendBy! should NOT be exported.
+        state.xroots := cons([-rrec.ee, -rrec.rr], state.xroots)$List(RREC)
+        state.xroots := cons(rrec, state.xroots)$List(RREC)
         state.ts := _extend(state.ts, minpoly)$TS
         state.rnk := state.rnk + 1
         r
@@ -353,13 +366,9 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
         squareFree(poly)$UnivariatePolynomialSquareFree(%, SUP %)
 
     rootOfSquareFreePolynomial(f: SUP %, sy: Symbol): % ==
-        -- Check whether one of the existing roots or their negation
+        -- Check whether one of the existing roots (or their negation)
         -- is a result.
         fbar: EZ := evalPolynomial(f pretend NUP %)
-        for rrec in state.roots repeat
-            e := rrec.ee
-            r := rrec.rr
-            if zero? fbar(e) and zero? f(r) then return r
         for rrec in state.xroots repeat
             e := rrec.ee
             r := rrec.rr
@@ -392,10 +401,11 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
         f: SUP % := mon^2 - x::SUP(%)
         rootOf f
 
+    -- auxiliary factorSquareFreePolynomial
     fsfp(f: SUP %, n: N): Factored(SUP %) ==
         --assert(squareFree? f)
         --assert(one? leadingCoefficient(f))
-        roots: List % := rootsOf f
+        roots: List % := rootsOf f -- if squarefree then all roots distinct!
         fl: FL := [["prime", mon - r::SUP(%), n] for r in roots]
         for rrec in state.xroots repeat roots := remove!(rrec.rr, roots)
         rroots: List RREC := [[applyPhiGamma r, r] for r in roots]
