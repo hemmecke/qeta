@@ -79,3 +79,38 @@ r := rootsOf f
 a := r.1 - 1
 assertTrue(zero? a);
 --endtest
+
+--test:negative-root
+f := x^4 - 1
+r1 := rootOf f
+s1 := rootOf f
+assertEquals(r1, s1)
+g := (f exquo (x-r1))::AZ
+r2 := rootOf g
+assertTrue(zero?(r1+r2))
+h := (g exquo (x-r2))::AZ
+r3 := rootOf h
+k := (h exquo (x-r3))::AZ
+r4 := rootOf k
+assertTrue(zero?(r3+r4))
+show()$A -- just one linear and one quadratic extension
+
+f := x^2 - 2
+tm := rootOf f
+f := x^2 + 2
+tp := rootOf f
+
+assertTrue(zero?(tp - r3*tm))
+f := (x^2-1)*(x-r1)*(x^2+2)
+fl := factorList factor f
+-- Note that r1=-1, so the result is: (?-1)*(?+1)^2*(?-r2*r3)*(?+r2*r3)
+assertEquals(#fl, 4)
+show()$A
+--endtest
+
+--test:switch-prime
+-- p := 2305843009213693921 -- First prime used internally.
+f := p * x - 1
+fl := factorList factor f
+assertEquals(p * first(fl).factor, f)
+--endtest
