@@ -1,7 +1,7 @@
 ###################################################################
 #
 # Eta relations
-# Copyright 2015-2018,  Ralf Hemmecke <ralf@hemmecke.org>
+# Copyright 2015-2020,  Ralf Hemmecke <ralf@hemmecke.org>
 #
 ###################################################################
 # This program is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ SPADFILES=4ti2 qfunct cachedpow \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
   qetapowersamba qetakolberg qetafun \
-  ivar iffts ffalgclos algclos
+  ivar iffts ffalgclos algclos newtonpuiseux
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
 PREREQS_SAGE=etagb.sage

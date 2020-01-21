@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2019,  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2019-2020,  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,9 @@
 OF==>OutputForm
 dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
 
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
 P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
@@ -65,6 +68,26 @@ KXY ==> SparseUnivariatePolynomial KX -- KX[y]
 KPX ==> PolynomialRing(K, Q) -- Puiseux polynomials
 KPXY ==> SparseUnivariatePolynomial KPX -- KPX[y]
 SlopePoints K ==> Record(slope: K, points: List Point K)
+PRENP(K) ==> PreNewtonPuiseux K
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+asZ x ==> x pretend Z
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{QPowers}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+)abbrev domain QPOWER QPower
+QPower(v: SY): Join(QuotientFieldCategory Z, OpenMath, Canonical) == Q add
+    Rep ==> Q
+    xx ==> rep x
+    coerce(x: %): OutputForm ==
+        o: OutputForm := v::OutputForm
+        if not one? xx then o := o ^ (xx::OutputForm)
+        return o
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -164,6 +187,52 @@ NewtonPolygon(K: Join(Field, OrderedSet)): Exports == Implementation where
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{PreNewtonPuiseux}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+PreNewtonPuiseux holds data that is later used for the creation of the
+Puiseux series that are zeros of the given (bivariate) polynomial.
+
+)endif
+
+)abbrev domain PRENP PreNewtonPuiseux
+++ Author: Ralf Hemmecke
+++ Description:
+++ A container that holds all data necessary to create the respective
+++ Puiseux series in case maxidx = #arr.
+PreNewtonPuiseux(K): Exports == Implementation where
+  K: Field
+  PUIMON ==> Record(root: K, expo: Q)
+  PUIREC ==> Record(mons: List PUIMON, nextpol: KPXY)
+  Exports ==> CoercibleTo OutputForm with
+    new: N -> %
+    _#: % -> N
+    maxIndex: % -> N
+    elt: (%, N) -> PUIREC
+    setelt!: (%, N, PUIREC) -> PUIREC
+    extend!: (%, PUIREC) -> PUIREC
+  Implementation ==> add
+    Rep ==> Record(maxidx: N, arr: PrimitiveArray PUIREC)
+    import from Rep
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    emptyPUIREC: PUIREC := [empty()$List(PUIMON), 0$KPXY]
+    new(n: N): % == per [0, new(n, emptyPUIREC)]
+    #(x: %): N == #(rep(x).arr)
+    maxIndex(x: %):N == rep(x).maxidx
+    elt(x: %, i: N): PUIREC == rep(x).arr.(asZ(i)-1)
+    setelt!(x: %, i: N, pr: PUIREC): PUIREC ==
+        a: PrimitiveArray PUIREC := rep(x).arr
+        a.(asZ(i) - 1) := pr
+    extend!(x: %, pr: PUIREC): PUIREC ==
+        a: PrimitiveArray PUIREC := rep(x).arr
+        i: N := rep(x).maxidx
+        dbgPrint("maxidx", i)
+        rep(x).maxidx := i+1
+        a.i := pr
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{NewtonPuiseux}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -176,26 +245,27 @@ NewtonPolygon(K: Join(Field, OrderedSet)): Exports == Implementation where
 ++ polynomial.
 NewtonPuiseux(K): Exports == Implementation where
   K: Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
-  PUIMON ==> Record(defpoly: KX, root: K, expo: Q)
+  PUIMON ==> Record(root: K, expo: Q)
+  PUIREC0 ==> Record(mon: PUIMON, nextpol: KPXY)
   PUIREC ==> Record(mons: List PUIMON, nextpol: KPXY)
 
   Exports ==> with
-    leadingPuiseuxMonomials: (KPXY, Q) -> List PUIREC
-    leadingPuiseuxMonomials: KPXY -> List PUIREC
+    leadingPuiseuxMonomials: (KPXY, Q) -> List PUIREC0
+    leadingPuiseuxMonomials: KPXY -> List PUIREC0
       ++ leadingPuiseuxMonomials(p) returns for each slope of the
       ++ Newton polygon of p the leading monomial of the Puiseux
       ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
       ++ polynomial for the leading coefficient, i.e., one monomial
       ++ might correspond to several coefficients according to the
       ++ degree of the defining polynomial.
-    leadingPuiseuxMonomials: KXY -> List PUIREC
+    leadingPuiseuxMonomials: KXY -> List PUIREC0
       ++ leadingPuiseuxMonomials(p) returns for each slope of the
       ++ Newton polygon of p the leading monomial of the Puiseux
       ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
       ++ polynomial for the leading coefficient, i.e., one monomial
       ++ might correspond to several coefficients according to the
       ++ degree of the defining polynomial.
-    leadingPuiseuxMonomials: (POLYK, Symbol, Symbol) -> List PUIREC
+    leadingPuiseuxMonomials: (POLYK, Symbol, Symbol) -> List PUIREC0
       ++ leadingPuiseuxMonomials(p, x, y) returns for each slope of
       ++ the Newton polygon of p the leading monomial of the Puiseux
       ++ series Y satisfying p(x, Y(x)) = 0 in terms of the defining
@@ -209,9 +279,11 @@ NewtonPuiseux(K): Exports == Implementation where
 
     poly2KPXY: (POLYK, Symbol, Symbol) -> KPXY
     nextY: (KPXY, PUIMON) -> KPXY
-    nextPuiseuxMonomials: List PUIREC -> List PUIREC
-    coefficientRelation: (KPXY, List Point Q) -> List KX
-    numberOfSolutions: List PUIREC -> N
+    nextPuiseuxMonomials: PRENP K -> PRENP K
+    coefficientRelation: (KPXY, List Point Q) -> KX
+      ++ coefficientRelation(p, points) returns the relation that the
+      ++ coefficient must fulfil in order to be a coefficient of the
+      ++ puiseux series.
 
   Implementation ==> add
     -- For hacking the fact that the implementation of AlgebraicNumber
@@ -233,22 +305,21 @@ NewtonPuiseux(K): Exports == Implementation where
         zero? removeZeroCoefficientsX c => z
         m + z
 
-    coefficientRelation(p: KPXY, points: List Point Q): List KX ==
+    coefficientRelation(p: KPXY, points: List Point Q): KX ==
         --assert(#point > 1)
-        --assert(one? denom(p.1) for all p in points)
-        defPoly: KX := 0
+        --assert(one? denom(pt.1) for all pt in points)
+        coefficientPoly: KX := 0
         ymin: Z := numer(first(points).1)
         for point in rest points repeat ymin := min(ymin, numer point.1)
         for point in points repeat
             yex: Z := numer(point.1)
-            cx: KPX := coefficient(p, qcoerce(yex)@N)
+            cx: KPX := coefficient(p, asN(yex))
             c: K := coefficient(cx, point.2)
             if not zero? c then
-                defPoly := defPoly + monomial(c, qcoerce(yex - ymin)@N)
-        defPoly := squareFreePart defPoly
-        factors := [x.factor for x in factorList factor defPoly]
-        zero? ymin => factors
-        cons(monomial(1,1)$KX, factors)
+                coefficientPoly := coefficientPoly + monomial(c, asN(yex-ymin))
+        coefficientPoly := squareFreePart coefficientPoly
+        zero? ymin => coefficientPoly
+        monomial(1,1)$KX * coefficientPoly
 
     toKPX(p: KX): KPX ==
         z: KPX := 0
@@ -274,17 +345,16 @@ NewtonPuiseux(K): Exports == Implementation where
 
     -- We don't need exponents in the result that are smaller than e.
     biggerOrderThan?(e: Q): Q -> Boolean == (o: Q): Boolean +-> o > e
-    leadingPuiseuxMonomialsOrder(p: KPXY, cond?: Q -> Boolean): List PUIREC ==
+    leadingPuiseuxMonomialsOrder(p: KPXY, cond?: Q -> Boolean): List PUIREC0 ==
         import from NewtonPolygon(Q)
         points: List Point Q := polynomial2Points p
         slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
-        result: List PUIREC := empty()
-        for slopePoints in slopePointList | cond?(-slopePoints.slope) repeat
-            ldp: List KX := coefficientRelation(p, slopePoints.points)
-            for dp in ldp repeat -- loop over the factors of the defining poly
-                c: K := rootOf dp
-                m: PUIMON := [dp, c, - slopePoints.slope]
-                y := monomial(monomial(c, m.expo)$KPX, 0) + monomial(1, 1)$KPXY
+        result: List PUIREC0 := empty()$List(PUIREC0)
+        for slopePoints in slopePointList | cond?(e:=-slopePoints.slope) repeat
+            cp: KX := coefficientRelation(p, slopePoints.points)
+            roots: List K := rootsOf cp
+            for c in roots repeat -- loop over the roots of the defining poly
+                y := monomial(monomial(c, e)$KPX, 0) + monomial(1, 1)$KPXY
                 newpol: KPXY := p y
                 -- Hack: If K is AlgebraicNumber then the new element
                 -- c might have introduced zerodivisors.
@@ -292,10 +362,9 @@ NewtonPuiseux(K): Exports == Implementation where
                 -- In order to avoid zero coefficients in polynomials
                 -- from KPX, we explicitly remove such possible zero
                 -- coefficients.
-                rec: PUIREC := [[m], removeZeroCoefficients newpol]
+                rec: PUIREC0 := [[c, e]$PUIMON, removeZeroCoefficients newpol]
                 result := cons(rec, result)
         result
-
 -- exported functions
 
     polynomial2Points(p: POLYK, x: Symbol, y: Symbol): List Point Q ==
@@ -329,43 +398,45 @@ NewtonPuiseux(K): Exports == Implementation where
                 points := cons(point [ydeg::Q, xdeg], points)
         return points
 
-    leadingPuiseuxMonomials(p: KPXY, e: Q): List PUIREC ==
+    leadingPuiseuxMonomials(p: KPXY, e: Q): List PUIREC0 ==
         leadingPuiseuxMonomialsOrder(p, biggerOrderThan? e)
 
-    leadingPuiseuxMonomials(p: KPXY): List PUIREC ==
+    leadingPuiseuxMonomials(p: KPXY): List PUIREC0 ==
         l := leadingPuiseuxMonomialsOrder(p, (o: Q): Boolean +-> true)
         -- We only need non-zero terms.
-        [x for x in l | not zero?(x.mons.1.root)]
+        [x for x in l | not zero?(x.mon.root)]
 
-    leadingPuiseuxMonomials(p: KXY): List PUIREC ==
+    leadingPuiseuxMonomials(p: KXY): List PUIREC0 ==
         pp: KPXY := toKPXY p
         leadingPuiseuxMonomials(pp)
 
-    leadingPuiseuxMonomials(p: POLYK, x: Symbol, y: Symbol): List PUIREC ==
+    leadingPuiseuxMonomials(p: POLYK, x: Symbol, y: Symbol): List PUIREC0 ==
         leadingPuiseuxMonomials poly2KPXY(p, x, y)
 
-    nextPuiseuxMonomials(l: List PUIREC): List PUIREC ==
-        result := empty()$List(PUIREC)
-        for r in l repeat
-            p := r.nextpol
-            zero? p => result := cons(r, result)
+    nextPuiseuxMonomials(prenp: PRENP K): PRENP K ==
+        maxidx: N := maxIndex prenp
+        for i in 1..maxidx | (r := prenp.i; p := r.nextpol; not zero? p) repeat
+            dbgPrint("i", i)
             m := r.mons
             -- We only need monomials that are bigger than what we
             -- already have.
             ex: Q := first(m).expo
-            lr: List PUIREC := leadingPuiseuxMonomials(p, ex)
-            empty? lr => result := cons([r.mons, 0], result)
-            ln: List PUIREC := [[concat(x.mons, r.mons), x.nextpol] for x in lr]
-            result := concat(result, ln)
-        result
-
-    numberOfSolutions(x: List PUIREC): N ==
-        n: N := 0
-        for r in x repeat
-            m: N := 1
-            for pm in r.mons repeat m := m * degree(pm.defpoly)
-            n := n + m
-        return n
+            lr: List PUIREC0 := leadingPuiseuxMonomials(p, ex)
+            -- If it is empty we mark that we don't have to do anything
+            -- in the next step, i.e., we set nextpol:=0.
+            dbgPrint("lr", lr)
+            empty? lr => r.nextpol := 0
+            puirec0: PUIREC0 := first lr
+            lr := rest lr
+            r.mons := cons(puirec0.mon, m)
+            r.nextpol := puirec0.nextpol
+            while not empty? lr repeat -- extend the prenp array
+                puirec0: PUIREC0 := first lr
+                lr := rest lr
+                newpuirec: PUIREC := [cons(puirec0.mon, m), puirec0.nextpol]
+                dbgPrint("newpuirec", newpuirec)
+                extend!(prenp, newpuirec)
+        prenp
 
 )if LiterateDoc
 \bibliography{qeta}
