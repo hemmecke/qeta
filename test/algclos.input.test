@@ -108,9 +108,76 @@ assertEquals(#fl, 4)
 show()$A
 --endtest
 
+--test:x530
+f := x^5 + x^3 + 1
+r := rootsOf f
+s := reduce(_+, r)
+assertTrue(zero? s)
+--endtest
+
+
 --test:switch-prime
--- p := 2305843009213693921 -- First prime used internally.
+p := 2305843009213693921 -- First prime used internally.
 f := p * x - 1
 fl := factorList factor f
 assertEquals(p * first(fl).factor, f)
+--endtest
+
+--test:not-sqarefree-p
+p := 2305843009213693921 -- First prime used internally.
+f := x^3 + (p+3)* x^2 + (p+3) * x + 1 -- not squarefree mod p
+r1 := rootOf f
+r := rootsOf f
+assertEquals((x-r.1)*(x-r.2)*(x-r.3), f)
+--endtest
+
+--test:Steel-2010
+f := x^3 - x^2 - 2*x + 1
+r := rootsOf f
+r1:=r.1; r2 := r.2; r3 := r.3;
+assertEquals(#r, 3)
+r1^3
+1/r1
+1/r2
+(r1+r2)^2
+(r1+r.2)^3
+1/(r1+r2)
+zero?(r1+r2+r3)
+1/(r1+r2+r3)
+1/(r1-r2)
+1/(r1-r3)
+1/(r2-r3)
+a := (r2-r1^2+r1+1)
+show()$A
+assertTrue(false)
+--endtest
+
+--test:special-sqrt1
+a1 := 1$A
+i := (-a1)^(1/2) -- imaginary unit
+assertEquals(i^2, -a1)
+assertEquals(sqrt a1, a1) -- could be also -a1
+assertEquals(i, sqrt(-a1))
+a2 := a1+a1
+sqrt2 := a2^(1/2)
+assertEquals(sqrt a2, sqrt2)
+assertEquals(sqrt2^2, a2)
+sqrti2 := sqrt(- a2)
+assertEquals(sqrti2, i*sqrt2)
+a4 := a2+a2
+sqrt4 := sqrt a4
+assertEquals(sqrt4, a2)
+sqrti4 := sqrt(- a4)
+assertEquals(i*sqrt4, sqrti4)
+ah:=1/a2
+sqrtinv2 := sqrt ah
+assertEquals(2*sqrtinv2, sqrt2)
+sqrtiinv2 := sqrt(- ah)
+assertEquals(sqrtiinv2, 1/2*i*sqrt2)
+f := x^2-2*x-1
+r := rootsOf f
+assertTrue(member?(1+sqrt2, r))
+assertTrue(member?(1+sqrt2, r))
+sqrt8 := sqrt(8*a1)
+assertEquals(sqrt8, 2*sqrt2)
 --endtest
