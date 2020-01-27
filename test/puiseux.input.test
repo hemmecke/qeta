@@ -1,0 +1,226 @@
+--setup
+P ==> PositiveInteger
+Z ==> Integer
+Q ==> Fraction Z
+Qx ==> QPower('x)
+A ==> DynamicAlgebraicClosureField()
+K ==> A
+AZ ==> SUP(A)
+-- x ==> monomial(1, 1)$AZ
+NP ==> NewtonPuiseux A
+SY ==> Symbol
+POLYK ==> Polynomial K
+KX ==> SparseUnivariatePolynomial K -- K[x]
+KXY ==> SparseUnivariatePolynomial KX -- KX[y]
+KPX ==> PolynomialRing(K, Q) -- Puiseux polynomials
+KPXY ==> SparseUnivariatePolynomial KPX -- KPX[y]
+KQX ==> PolynomialRing(K, Qx) -- Puiseux polynomials
+KQXY ==> SparseUnivariatePolynomial KQX -- KQX[y]
+kqx p ==> p pretend KQX
+kqxy p ==> p pretend KQXY
+SlopePoints K ==> Record(slope: K, points: List Point K)
+SPQ ==> SlopePoints Q
+
+PUIMON ==> Record(root: K, expo: Q)
+PUIREC ==> Record(mons: List PUIMON, nextpol: KPXY)
+PRENP K ==> PreNewtonPuiseux K
+terms prenp ==> [prenp.i.mons for i in 1..maxIndex prenp]
+--endsetup
+
+--test:NP1
+-- Winkler: https://www.risc.jku.at/education/courses/ss2016/caag/09-puiseux.pdf
+pp := (x^3+x^4) + (2*x+2*x^2)*y + (-x+2*x^2)*y^2 + (4)*y^3 + (-4)*y^4 + (1)*y^5
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP2
+-- Winkler RISC Report 97-38 (page 6)
+-- ftp://risc.jku.at/pub/techreports/1007/97-38.ps.gz
+pp := y^5 - 2*x^2*y^2 + 3*y*x^4 - x^6
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP3
+pp := (y-(1+x)) * (y-(1-2*x));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP4
+pp := (y-(1+x))*(y-(1-x+x^2));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP5
+pp := (y-(1+x))*(y-(1-x+x^2+x^3));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP6
+pp := (y-(1+x)) * (y-(1+x+x^2));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP7
+pp := (y-(1+x)) * (y-(1+x-x^3));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP8
+pp := (y-(1+x-x^3)) * (y-(1+x+x^2-x^3));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP9
+pp := (y-(1+x)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP10
+pp := (y-(1+x+x^4)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP1
+pp := (y-(1+x)) * (y-(1+x+x^4)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:NP11
+pp := (y-(1+x)) * (y-(1+x+x^2)) * (y-(1+x+x^2+x^3)) *(y-(1+x+x^2+x^3+x^4));
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
+
+--test:y3y2
+pp := (y^3-x)*(y^2-x);
+p := poly2KPXY(pp, 'x, 'y)$NP
+d := degree p
+puimons := leadingPuiseuxMonomials p
+m := new(d, puimons, p)$PRENP(K);
+terms m
+while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
+terms m
+m := nextPuiseuxMonomials m; terms m
+m := nextPuiseuxMonomials m; terms m
+show()$K
+assertTrue(false)
+--endtest
