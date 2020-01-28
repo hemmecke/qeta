@@ -198,7 +198,7 @@ Puiseux series that are zeros of the given (bivariate) polynomial.
 ++ Puiseux series in case maxidx = #arr.
 PreNewtonPuiseux(K): Exports == Implementation where
   K: Field
-  PUIMON ==> Record(root: K, expo: Q)
+  PUIMON ==> Record(k: Q, c: K)
   PUIREC ==> Record(mons: List PUIMON, curpol: KPXY)
   Exports ==> CoercibleTo OutputForm with
     new: (N, List PUIMON, KPXY) -> %
@@ -245,7 +245,7 @@ PreNewtonPuiseux(K): Exports == Implementation where
 ++ polynomial.
 NewtonPuiseux(K): Exports == Implementation where
   K: Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
-  PUIMON ==> Record(root: K, expo: Q)
+  PUIMON ==> Record(k: Q, c: K)
   PUIREC ==> Record(mons: List PUIMON, curpol: KPXY)
 
   Exports ==> with
@@ -352,7 +352,7 @@ NewtonPuiseux(K): Exports == Implementation where
             cp: KX := coefficientRelation(p, pnts) -- assert(not zero? cp 0)
             roots: List K := rootsOf cp
             -- loop over the roots of the defining poly
-            for c in roots repeat mons := cons([c, e]$PUIMON, mons)
+            for c in roots repeat mons := cons([e, c]$PUIMON, mons)
         mons
 
 -- exported functions
@@ -407,8 +407,8 @@ NewtonPuiseux(K): Exports == Implementation where
         for i in 1..maxidx | (r := prenp.i; p := r.curpol; not zero? p) repeat
             puimons: List PUIMON := r.mons
             puimon := first puimons
-            c: K := puimon.root
-            e: Q := puimon.expo
+            c: K := puimon.c
+            e: Q := puimon.k
 
             -- First check whether a finite series is a solution.
             cxe: KPXY := monomial(monomial(c, e)$KPX, 0)$KPXY
