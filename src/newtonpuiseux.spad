@@ -243,8 +243,11 @@ PreNewtonPuiseux(K): Exports == Implementation where
 ++ Description:
 ++ Implements the computation of a Puiseux series satisfying a bivariate
 ++ polynomial.
-NewtonPuiseux(K): Exports == Implementation where
+NewtonPuiseux(K, var, cen): Exports == Implementation where
   K: Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
+  var: Symbol
+  cen: K
+  UPX ==> UnivariatePuiseuxSeries(K, var, cen)
   PUIMON ==> Record(k: Q, c: K)
   PUIREC ==> Record(mons: List PUIMON, curpol: KPXY)
 
@@ -283,6 +286,10 @@ NewtonPuiseux(K): Exports == Implementation where
       ++ coefficientRelation(p, points) returns the relation that the
       ++ coefficient must fulfil in order to be a coefficient of the
       ++ puiseux series.
+
+    puiseuxSolutions: KPXY -> List UPX
+     ++ puiseuxSolutions(p) returns degree(p) Puiseux series solutions
+     ++ s such that p(s)=0.
 
   Implementation ==> add
     -- For hacking the fact that the implementation of AlgebraicNumber
@@ -354,6 +361,23 @@ NewtonPuiseux(K): Exports == Implementation where
             -- loop over the roots of the defining poly
             for c in roots repeat mons := cons([e, c]$PUIMON, mons)
         mons
+
+    -- Here we assume that there is no branching anymore.
+    --TODO: Code should be optimized, since we only need exponent > expo.
+    leadingPuiseuxMonomial(p: KPXY, expo: Q): PUIMON ==
+        import from NewtonPolygon(Q)
+        dbgPrint("lm expo", expo)
+        points: List Point Q := polynomial2Points p
+        slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
+        for slopePoints in slopePointList | (e:=-slopePoints.slope)>expo repeat
+            pnts := slopePoints.points
+            cp: KX := coefficientRelation(p, pnts) -- assert(not zero? cp 0)
+            dbgPrint("lm e", e)
+            return [e, rootOf cp]$PUIMON
+        error "leadingPuiseuxMonomial: should never come here"
+        --TODO: Can this "error" ever appear? Before we call this function,
+        -- We check whether the last monomial is a root of the previous
+        -- polynomial. the new p shouldn't have that monomial as root.
 
 -- exported functions
 
@@ -442,6 +466,53 @@ NewtonPuiseux(K): Exports == Implementation where
                 extend!(prenp, [cons(puimon, puimons), pnew]$PUIREC)
         prenp
 
+    puiseuxStream(p: KPXY, mon: PUIMON): Stream PUIMON == delay
+        dbgPrint("pst mon", mon)
+        zero? p =>
+            dbgPrint("pstz", p)
+            empty()
+        -- First check whether a finite series is a solution.
+        e: Q := mon.k
+        cxe: KPXY := monomial(monomial(mon.c, e)$KPX, 0)$KPXY
+        zero? p cxe =>
+            dbgPrint("pst zeropcxe", cxe)
+            empty()
+        y := monomial(1, 1)$KPXY + cxe
+        pnew := p y --substiture p(y+c*x^e) for the new polynomial
+        pnew := removeZeroCoefficients pnew -- work over algebraic extension
+
+        -- We only need monomials with bigger degree than e=monnew.k.
+        monnew: PUIMON := leadingPuiseuxMonomial(pnew, e)
+        cons(monnew, puiseuxStream(pnew, monnew))
+
+
+    puiseux(puirec: PUIREC): UPX ==
+        terms: List PUIMON := puirec.mons
+        dbgPrint("pui terms", terms)
+        --assert(not empty? terms)
+        den: N := asN lcm [denom(m.k) for m in terms]
+        dbgPrint("pui den", den)
+        st: Stream PUIMON := puiseuxStream(puirec.curpol, first terms)
+        for mon in terms repeat
+            dbgPrint("pui mon", mon)
+            st := cons(mon, st)
+        upx := series(den, st)
+        dbgPrint("pui", upx)
+        upx
+
+    puiseuxSolutions(p: KPXY): List UPX ==
+        d := degree p
+        puimons: List PUIMON := leadingPuiseuxMonomials p
+        dbgPrint("ps puimons", puimons)
+        m := new(d, puimons, p)$PRENP(K)
+        -- repeat until the initial segments of all solutions can be
+        -- distinguished.
+        while d > maxIndex m repeat m := nextPuiseuxMonomials m
+        dbgPrint("ps m", m)
+        -- Now construct Puiseux series from the PreNewtonPuiseux data.
+        l := [puiseux(m.i) for i in 1..d]$List(UPX)
+        dbgPrint("ps l", l)
+        l
 
 )if LiterateDoc
 \bibliography{qeta}
