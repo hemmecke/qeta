@@ -288,8 +288,13 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
       ++ puiseux series.
 
     puiseuxSolutions: KPXY -> List UPX
-     ++ puiseuxSolutions(p) returns degree(p) Puiseux series solutions
-     ++ s such that p(s)=0.
+      ++ puiseuxSolutions(p) returns degree(p) Puiseux series solutions
+      ++ s such that p(s)=0.
+
+    coerce: KPX -> UPX
+    elt: (KPXY, UPX) -> UPX
+      ++ p(s) replaces the variable in the univariate polynomial ring
+      ++ by the Puiseux series s.
 
   Implementation ==> add
     -- For hacking the fact that the implementation of AlgebraicNumber
@@ -366,13 +371,11 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
     --TODO: Code should be optimized, since we only need exponent > expo.
     leadingPuiseuxMonomial(p: KPXY, expo: Q): PUIMON ==
         import from NewtonPolygon(Q)
-        dbgPrint("lm expo", expo)
         points: List Point Q := polynomial2Points p
         slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
         for slopePoints in slopePointList | (e:=-slopePoints.slope)>expo repeat
             pnts := slopePoints.points
             cp: KX := coefficientRelation(p, pnts) -- assert(not zero? cp 0)
-            dbgPrint("lm e", e)
             return [e, rootOf cp]$PUIMON
         error "leadingPuiseuxMonomial: should never come here"
         --TODO: Can this "error" ever appear? Before we call this function,
@@ -467,16 +470,11 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
         prenp
 
     puiseuxStream(p: KPXY, mon: PUIMON): Stream PUIMON == delay
-        dbgPrint("pst mon", mon)
-        zero? p =>
-            dbgPrint("pstz", p)
-            empty()
+        zero? p => empty()
         -- First check whether a finite series is a solution.
         e: Q := mon.k
         cxe: KPXY := monomial(monomial(mon.c, e)$KPX, 0)$KPXY
-        zero? p cxe =>
-            dbgPrint("pst zeropcxe", cxe)
-            empty()
+        zero? p cxe => empty()
         y := monomial(1, 1)$KPXY + cxe
         pnew := p y --substiture p(y+c*x^e) for the new polynomial
         pnew := removeZeroCoefficients pnew -- work over algebraic extension
@@ -488,31 +486,47 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
 
     puiseux(puirec: PUIREC): UPX ==
         terms: List PUIMON := puirec.mons
-        dbgPrint("pui terms", terms)
         --assert(not empty? terms)
         den: N := asN lcm [denom(m.k) for m in terms]
-        dbgPrint("pui den", den)
         st: Stream PUIMON := puiseuxStream(puirec.curpol, first terms)
-        for mon in terms repeat
-            dbgPrint("pui mon", mon)
-            st := cons(mon, st)
-        upx := series(den, st)
-        dbgPrint("pui", upx)
-        upx
+        for mon in terms repeat st := cons(mon, st)
+        series(den, st)
 
     puiseuxSolutions(p: KPXY): List UPX ==
         d := degree p
         puimons: List PUIMON := leadingPuiseuxMonomials p
-        dbgPrint("ps puimons", puimons)
         m := new(d, puimons, p)$PRENP(K)
         -- repeat until the initial segments of all solutions can be
         -- distinguished.
         while d > maxIndex m repeat m := nextPuiseuxMonomials m
-        dbgPrint("ps m", m)
         -- Now construct Puiseux series from the PreNewtonPuiseux data.
-        l := [puiseux(m.i) for i in 1..d]$List(UPX)
-        dbgPrint("ps l", l)
-        l
+        [puiseux(m.i) for i in 1..d]$List(UPX)
+
+    coerce(p: KPX): UPX ==
+        z: UPX := 0
+        terms: List PUIMON := empty()
+        den: Z := 1
+        while not zero? p repeat
+            t := leadingTerm p
+            den := lcm(den, denom t.k)
+            terms := cons(leadingTerm p, terms)
+            p := reductum p
+        st: Stream PUIMON := coerce terms
+        series(asN den, st)
+
+    elt(p: KPXY, y: UPX): UPX ==
+        d := degree p
+        lc: KPX := leadingCoefficient p
+        p := reductum p
+        z := lc::UPX
+        while not zero? p repeat
+            e := degree p
+            lc: KPX := leadingCoefficient p
+            p := reductum p
+            z := z*y^(d-e) + (lc::UPX)
+            d := e
+        z * y^d
+
 
 )if LiterateDoc
 \bibliography{qeta}

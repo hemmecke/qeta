@@ -1,303 +1,97 @@
 --setup
-P ==> PositiveInteger
 Z ==> Integer
 Q ==> Fraction Z
-Qx ==> QPower('x)
-A ==> DynamicAlgebraicClosureField()
-K ==> A
-AZ ==> SUP(A)
--- x ==> monomial(1, 1)$AZ
-NP ==> NewtonPuiseux A
-SY ==> Symbol
+K ==> DynamicAlgebraicClosureField()
+NP ==> NewtonPuiseux(K, 'x, 0)
 POLYK ==> Polynomial K
-KX ==> SparseUnivariatePolynomial K -- K[x]
-KXY ==> SparseUnivariatePolynomial KX -- KX[y]
 KPX ==> PolynomialRing(K, Q) -- Puiseux polynomials
 KPXY ==> SparseUnivariatePolynomial KPX -- KPX[y]
-KQX ==> PolynomialRing(K, Qx) -- Puiseux polynomials
-KQXY ==> SparseUnivariatePolynomial KQX -- KQX[y]
-kqx p ==> p pretend KQX
-kqxy p ==> p pretend KQXY
-SlopePoints K ==> Record(slope: K, points: List Point K)
-SPQ ==> SlopePoints Q
+UPX ==> UnivariatePuiseuxSeries(K, 'x, 0)
 
-PUIMON ==> Record(root: K, expo: Q)
-PUIREC ==> Record(mons: List PUIMON, nextpol: KPXY)
-PRENP K ==> PreNewtonPuiseux K
-terms prenp ==> [prenp.i.mons for i in 1..maxIndex prenp]
+T(pp) ==>
+  p := poly2KPXY(pp, 'x, 'y)$NP
+  d := degree p
+  z := puiseuxSolutions(p)$NP
+  for i in 1..d repeat assertEquals(order(elt(p, z.i)$NP, 20), 20)
+  show()$K
+  z
 --endsetup
 
 --test:NP1
 -- Winkler: https://www.risc.jku.at/education/courses/ss2016/caag/09-puiseux.pdf
-pp := (x^3+x^4) + (2*x+2*x^2)*y + (-x+2*x^2)*y^2 + (4)*y^3 + (-4)*y^4 + (1)*y^5
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((x^3+x^4) + (2*x+2*x^2)*y + (-x+2*x^2)*y^2 + (4)*y^3 + (-4)*y^4 + (1)*y^5)
 --endtest
 
 --test:NP2
 -- Winkler RISC Report 97-38 (page 6)
 -- ftp://risc.jku.at/pub/techreports/1007/97-38.ps.gz
-pp := y^5 - 2*x^2*y^2 + 3*y*x^4 - x^6
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T(y^5 - 2*x^2*y^2 + 3*y*x^4 - x^6)
 --endtest
 
 --test:NP3
-pp := (y-(1+x)) * (y-(1-2*x));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x)) * (y-(1-2*x)))
 --endtest
 
 --test:NP4
-pp := (y-(1+x))*(y-(1-x+x^2));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x))*(y-(1-x+x^2)))
 --endtest
 
 --test:NP5
-pp := (y-(1+x))*(y-(1-x+x^2+x^3));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x))*(y-(1-x+x^2+x^3)))
 --endtest
 
 --test:NP6
-pp := (y-(1+x)) * (y-(1+x+x^2));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x)) * (y-(1+x+x^2)))
 --endtest
 
 --test:NP7
-pp := (y-(1+x)) * (y-(1+x-x^3));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x)) * (y-(1+x-x^3)))
 --endtest
 
 --test:NP8
-pp := (y-(1+x-x^3)) * (y-(1+x+x^2-x^3));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x-x^3)) * (y-(1+x+x^2-x^3)))
 --endtest
 
 --test:NP9
-pp := (y-(1+x)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3)))
 --endtest
 
 --test:NP10
-pp := (y-(1+x+x^4)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x+x^4)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3)))
 --endtest
 
 --test:NP11
-pp := (y-(1+x)) * (y-(1+x+x^4)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x)) * (y-(1+x+x^4)) * (y-(1+x-x^3)) *(y-(1+x+x^2-x^3)))
 --endtest
 
 --test:NP12
-pp := (y-(1+x)) * (y-(1+x+x^2)) * (y-(1+x+x^2+x^3)) *(y-(1+x+x^2+x^3+x^4));
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-(1+x)) * (y-(1+x+x^2)) * (y-(1+x+x^2+x^3)) *(y-(1+x+x^2+x^3+x^4)))
 --endtest
 
 --test:NP13
-pp := (y-x+x^2+x^3)*(y-x+x^2+x^3+x^4);
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y-x+x^2+x^3)*(y-x+x^2+x^3+x^4))
 --endtest
 
 --test:Duval119
 -- \cite[p.~119]{Duval:RationalPuiseuxExpansions:1989}
-pp := (x^2+y^2)^3-4*x^2*y^2;
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((x^2+y^2)^3-4*x^2*y^2)
 --endtest
 
 --test:Duval133
 -- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
-pp := (2*x^2+y^2)^3-8*x^2*y^2;
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((2*x^2+y^2)^3-8*x^2*y^2)
 --endtest
 
 --test:Duval133-2
-pp := y^2+x; -- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+-- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
+T(y^2+x)
 --endtest
 
 --test:Duval133-7
-pp := y^7+9*x^5; -- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+-- \cite[p.~133]{Duval:RationalPuiseuxExpansions:1989}
+T(y^7+9*x^5)
 --endtest
 
 --test:y3y2
-pp := (y^3-x)*(y^2-x);
-p := poly2KPXY(pp, 'x, 'y)$NP
-d := degree p
-puimons := leadingPuiseuxMonomials p
-m := new(d, puimons, p)$PRENP(K);
-terms m
-while d > maxIndex m repeat (print(maxIndex m); m := nextPuiseuxMonomials m)
-terms m
-m := nextPuiseuxMonomials m; terms m
-m := nextPuiseuxMonomials m; terms m
-show()$K
-assertTrue(false)
+T((y^3-x)*(y^2-x))
 --endtest
