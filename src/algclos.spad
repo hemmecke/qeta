@@ -113,6 +113,9 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
    with
     rank: () -> Z
     show: () -> Void
+    primitiveNthRootOfUnity: Z -> %
+      +++ primitiveNthRootOfUnity(n) returns a number x such that
+      ++ x^n=1 and x^k is not 1 for every 1<k<n.
     extensionPolynomial: P -> SUP %
     getRoot: P -> %
     -- if f = extensionPolynomial n and r = getRoot n then zero? f(r)
@@ -165,6 +168,7 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
         ts: TS,_
         roots: List RREC,_
         xroots: List RREC,_
+        nthRootsOfUnity: XHashTable(Z, %),_
         rnk: Z)
 
     -- The domain state is changed destructively.
@@ -173,10 +177,11 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
         empty()$TS,_
         empty()$List(RREC),_
         empty()$List(RREC),_
+        empty()$XHashTable(Z, %),_
         0]
 
     mon: SUP % := monomial(1, 1)$SUP(%)
-    defPolI: SUP := mon^2 + 1$SUP(%)
+    dummysy: Symbol := new()$SY
 
     rank(): Z == state.rnk
 
@@ -366,16 +371,109 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
     squareFreePolynomial(poly: SUP %): Factored SUP % ==
         squareFree(poly)$UnivariatePolynomialSquareFree(%, SUP %)
 
+    complexI(): % == -- sqrt(-1)
+        t: XHashTable(Z, %) := state.nthRootsOfUnity
+        key?(4, t) => return t.4
+        -- Is ther a extension polynomial of the form x^2+1?
+        triset: List R := getRelations()::List(R)
+        for f in triset for rrec in state.roots repeat
+            ff := univar(f, mvar f)
+            --assert(not zero? reductum ff)
+            if degree ff = 2 then
+                g := reductum ff
+                zero? degree g and one? leadingCoefficient g =>
+                    t.4 := rrec.rr
+                    return rrec.rr
+
+        -- Note that we should store the positive I first in xroots.
+        for rrec in state.xroots repeat -- already among xroots
+            zero?((rrec.ee)^2+1) and zero?((r:=rrec.rr)^2+1) =>
+                t.4 := r
+                return r
+        extendBy!(monomial(1, 2)$SUP(%) + monomial(1, 0)$SUP(%))
+
+    sqrtOfSquareFreePositiveInteger(z: Z): % ==
+        --assert(z>0)
+        zx: % := (- z)::Q::%
+        e := z::E
+        for rrec in state.xroots repeat
+            if (rrec.ee)^2=e then
+                if zero?((r := rrec.rr)^2 + zx) then return r
+        extendBy!(monomial(1, 2)$SUP(%) + monomial(zx, 0)$SUP(%))
+
+    sqrtOfRational(xq: Q): % ==
+        i: % := 1
+        dr: Z := 1; nr: Z := 1 -- root of denom and numer
+        d: Z := denom xq -- assume that is positive
+        n: Z := numer xq
+        if n < 0 then
+            n := -n
+            i: % := complexI()
+            one? d and one? n => return i
+
+        zx: % := (- xq)::%
+        e := applyPhiK(-xq)
+        for rrec in state.xroots repeat -- check existing roots
+            zero?((rrec.ee)^2+e) and zero?((r:=rrec.rr)^2+zx) => return i*r
+
+        not(d < max()$SI and n < max()$SI) =>
+            extendBy!(monomial(1, 2)$SUP(%) - monomial(xq::%, 0)$SUP(%))
+
+        -- xq is sufficiently small
+        z: % := 1
+        fl := factorList factor n
+        for f in fl repeat
+            a := f.factor
+            if odd?(f.exponent) then z := z * sqrtOfSquareFreePositiveInteger a
+            nr := nr * a^shift(f.exponent, -1)
+        fl := factorList factor d
+        for f in fl repeat
+            a: Z := f.factor
+            dr := dr * a^shift(f.exponent, -1)
+            if odd?(f.exponent) then
+                dr := dr * a
+                z := z * sqrtOfSquareFreePositiveInteger a -- numerator
+        (nr/dr)*i*z
+
+    retractToQIfCan(poly: SUP %): Union(SUP Q, "failed") ==
+        result: SUP Q := 0
+        while not zero? poly repeat
+            lc: % := leadingCoefficient poly
+            not ground? rep lc => return "failed"
+            result := result + monomial(ground rep lc, degree poly)$SUP(Q)
+            poly := reductum poly
+        result :: Union(SUP Q, "failed")
+
     rootOfSquareFreePolynomial(f: SUP %, sy: Symbol): % ==
         -- Check whether one of the existing roots (or their negation)
         -- is a result.
         fbar: EZ := evalPolynomial(f pretend NUP %)
         for rrec in state.xroots repeat
-            e := rrec.ee
-            r := rrec.rr
-            if zero? fbar(e) and zero? f(r) then return r
+            if zero? fbar(rrec.ee) and zero? f(r := rrec.rr) then return r
 
-        extendBy!(f) -- Must extend by a squarefree factor
+        -- If poly has only small rational coefficients, we try to
+        -- factor over Q, otherwise we just extend by f
+        fq := retractToQIfCan f
+        fq case "failed" => extendBy! f
+
+        fl := factorList factor(fq::SUP(Q))
+        g: SUP Q := first(fl).factor
+        d: N := degree g
+        one? d => return (-coefficient(g, 0))::%
+        for frec in rest fl repeat
+            if degree(frec.factor) < d then
+                g := frec.factor
+                d := degree g
+                one? d => return (-coefficient(g, 0))::%
+
+        d > 2 =>
+            f := map(coerce, g)$SparseUnivariatePolynomialFunctions2(Q, %)
+            extendBy! f
+
+        -- use formula for quadratic equations (f is monoic)
+        b: Q := (1/2)*coefficient(g, 1)
+        c: Q := coefficient(g, 0)
+        sqrtOfRational(b^2-c) - b::%
 
     rootOf(poly: SUP %, sy: Symbol): % ==
         -- First determine a minimal degree squarefree factor
@@ -389,53 +487,57 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
                 d := degree f
                 one? d => return -coefficient(f, 0)
         -- now f is squarefee and of min degree in the squarefree decomposition
-        d > 2 => return rootOfSquareFreePolynomial(f, sy)
-        -- use formula for quadratic equations (f is monoic)
-        b: % := (1/2)*coefficient(f, 1)
-        c: % := coefficient(f, 0)
-        ground? rep b and ground? rep c => return sqrt(b^2-c) - b
         return rootOfSquareFreePolynomial(f, sy)
 
+    addRoots(e: E, r: %, roots: List RREC): List RREC ==
+        for rrec in roots repeat
+            if e = rrec.ee then
+                if r = rrec.rr then return roots -- nothing to add
+        return cons([-e, -r]$RREC, cons([e, r]$RREC, roots))
+
+    addToRoots(r: %, n: Z, primNthRootOfUnity: %, xr: List RREC): List RREC ==
+        e: E := applyPhiGamma r
+        pe: E := applyPhiGamma primNthRootOfUnity
+        for i in 1..n-1 repeat
+            r := r * primNthRootOfUnity
+            e := e * pe
+            xr := addRoots(e, r, xr)
+        reverse! xr
+
+    internalPrimitiveNthRootOfUnity(n: Z): % ==
+        n < 2 => 1
+        n = 2 => -1
+        cyclo: SUP Z := (cyclotomic(n)$CyclotomicPolynomialPackage)
+        f := map(coerce, cyclo)$SparseUnivariatePolynomialFunctions2(Z, %)
+        rootOfSquareFreePolynomial(f, dummysy)
+
+    primitiveNthRootOfUnity(n: Z): % ==
+        t: XHashTable(Z, %) := state.nthRootsOfUnity
+        key?(n, t) => return t.n
+        r: % := internalPrimitiveNthRootOfUnity n
+        t.n := r -- remember that we know an nth root of unity
+        xr := reverse(state.xroots)
+        state.xroots := addToRoots(1$%, n, r, xr)
+        return r
+
     ((x: %) ^ (q: Q)): % ==
-        (n: Z := numer q) < 0 => inv(x)^(-n/denom(q))
-        one? n and denom q = 2 => sqrt x
+        one? x => x
         n: Z := numer q
+        n < 0 => inv(x)^(-n/denom(q))
+        zero? x => x
+        denom q = 2 => (sqrt x)^n
         d: N := asN denom q
-        f: SUP % := mon^d - (x^n)::SUP(%)
-        rootOf f
+        f: SUP % := monomial(1, d)$SUP(%) - monomial(x, 0)$SUP(%)
+        r: % := rootOf f
+        xr := reverse(state.xroots)
+        state.xroots := addToRoots(r, d, primitiveNthRootOfUnity d, xr)
+        return r^n
 
     sqrt(x: %): % ==
         zero? x => 0
-        import from N
-        not ground? xx =>
-            f: SUP % := mon^2 - x::SUP(%)
-            rootOf f
-        i: % := 1
-        dr: Z := 1; nr: Z := 1 -- root of denom and numer
-        xq: Q := ground xx
-        d: Z := denom xq -- assume that is positive
-        n: Z := numer xq
-        if n < 0 then
-            n := -n
-            i: % := rootOfSquareFreePolynomial(defPolI, new()$SY)
-        if d < max()$SI and n < max()$SI then -- sufficiently small
-            fl := factorList factor d
-            d := 1
-            for f in fl repeat
-                if odd?(f.exponent) then d := d * f.factor
-                dr := dr * (f.factor)^shift(f.exponent, -1)
-            fl := factorList factor n
-            n := 1
-            for f in fl repeat
-                if odd?(f.exponent) then n := n * f.factor
-                nr := nr * (f.factor)^shift(f.exponent, -1)
-            n  := d * n   -- mult numer and denom by d
-            dr := d * dr  -- that makes d a sqrt of the denom.
-            d  := 1
-        z: % := (nr/dr)*i
-        one? n => z
-        f: SUP % := mon^2 - n*1$SUP(%)
-        z * rootOfSquareFreePolynomial(f, new()$SY)
+        ground? xx => sqrtOfRational ground xx
+        f: SUP % := monomial(1, 2)$SUP(%) - monomial(x, 0)$SUP(%)
+        rootOf f
 
     -- auxiliary factorSquareFreePolynomial
     fsfp(f: SUP %, n: N): Factored(SUP %) ==
