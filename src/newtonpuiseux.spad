@@ -529,6 +529,56 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
 
 
 )if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Functional Laurent Inverse}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev package FLAUINV FunctionalLaurentInverse
+++ Author: Ralf Hemmecke
+++ Description:
+++ For a Laurent series f(q) = q^(-n)(1 + a1*q + a2*q^2 + ...) find
+++ all n Puiseux series q1(v), ..., qn(v) such that f(qi(v))=v for
+++ all v in a close neighborhood of v_0.
+++ Algorithm follows \cite{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+++ Section 6.
+FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
+  K: Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
+  var: Symbol
+  cen: K
+  LX ==> UnivariateLaurentSeries(K, var, cen)
+  TX ==> UnivariateTaylorSeries(K, var, cen)
+  Exports ==> with
+    functionalInverse: LX -> LX
+      ++ functionalInverse(t) where d = order(t) < 0 returns
+      ++ a Laurent series w of order 1 such that t(w(q))=q^d
+  Implementation ==> add
+    functionalInverse(l: LX): LX ==
+        --assert(not zero? t)
+        --assert(order(t) < 0)
+        --assert(one? leadingCoefficient t)
+        -- below assume q = monomial(1,1)
+        n: Z := - order l
+        t: TX := taylorRep l -- t = q^n * l
+          -- t corresponds to (1+\phi(q)) in the article.
+        r: TX := nthRoot(t, n) -- order(t) = 0 = order(r)
+        --assert(r^n = q^n*l)
+        -- r corresponds to (1+\phi(q))^(1/n) = 1/(1+\psi(q))^(1/n) = q/U(q)
+        -- in \cite[Sect.~6]{Paule+Radu:ProofWeierstrassGapTheorem:
+        w := lagrange r
+        --assert(order(w)=1)
+        -- w corresponds W(q) in
+        -- \cite[Sect.~6]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+        -- Note that by specification of lagrange we have:
+        -- w(q) = q * r(w(q))
+        --      = q * (w(q)/U(w(q)))
+        --      = q * w(q) / U(w(q)),
+        -- i.e., U(w(q)) = q.
+        return laurent(0, w)
+
+
+)if LiterateDoc
 \bibliography{qeta}
 \end{document}
 )endif
