@@ -577,6 +577,55 @@ FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
         -- i.e., U(w(q)) = q.
         return laurent(0, w)
 
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Compute Determinant by Leibniz formula}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev package LEIBDET DeterminantByLeibnizFormula
+++ Author: Ralf Hemmecke
+++ Description:
+++ Laurent series in FriCAS are declared to be of category Field, but
+++ due to the non-existing zero test they do not form an "algorithmic"
+++ field.
+DeterminantByLeibnizFormula(R): Exports == Implementation where
+  R: CommutativeRing -- We do not use "zero?" or "=".
+  Exports ==> with
+    determinantLeibniz: Matrix R -> R
+      ++ determinantLeibniz(m) computes the determinant of m by
+      ++ applying Leibniz' formula and recursively calling the same
+      ++ algorithm on the submatrices.
+  Implementation ==> add
+    det(m: Matrix R, ndim: Z, ri: List Z, ci: List Z): R ==
+        zero? ndim => 1
+        j := first ci; ci := rest ci
+        i := first ri; ri := rest ri
+        one? ndim => qelt(m, i, j)
+        ndim = 2 =>
+            i2 := first ri; j2 := first ci
+            m(i,j) * m(i2,j2) - m(i,j2) * m(i2,j)
+        n: Z := ndim - 1
+        d := m(i,j) * det(m, n, ri, ci)
+        s: Z := -1; l: List Z := [i]
+        while not empty? ri repeat
+            i := first ri
+            mij: R := m(i,j)
+            ri := rest ri
+            ri2: List Z := ri
+            for k in l repeat ri2 := cons(k, ri2)
+            d := d + s * mij * det(m, n, ri2, ci)
+            s := -s
+            l := cons(i, l)
+        return d
+
+    determinantLeibniz(m: Matrix R): R ==
+        (ndim: Z := nrows m) ~= (ncols m) =>
+            error "determinant: matrix must be square"
+        ci: List Z := [i for i in 1..ndim] -- column indices
+        ri: List Z := [i for i in 1..ndim] -- row indices
+        det(m, ndim, ri, ci)
 
 )if LiterateDoc
 \bibliography{qeta}
