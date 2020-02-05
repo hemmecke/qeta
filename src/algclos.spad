@@ -109,7 +109,10 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
   PSU ==> PolynomialSetUtilitiesPackage(Q, EX, V, R)
   RREC ==> Record(ee: E, rr: %)
 
-  Exports ==> Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
+  Exports ==> Join(_
+      AlgebraicallyClosedField,_
+      PolynomialFactorizationExplicit,_
+      RetractableTo Q) _
    with
     rank: () -> Z
     show: () -> Void
@@ -267,6 +270,16 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
     reduce(r: Rep): % ==
         z: Record(rnum: K, polnum: R, den: K) := remainder(r, getRelations())$TS
         per((z.rnum/z.den) * z.polnum)
+
+    retractIfCan(x: %): Union(Q, "failed") ==
+        x := reduce xx
+        not ground? xx => "failed"
+        ground(xx)::Union(Q, "failed")
+
+    retract(x: %): Q ==
+        x := reduce xx
+        not ground? xx => error "retract: not a rational number"
+        ground xx
 
     -- gcd $ SUP(%) is implemented by calling gcdPolynomial $ %.
     -- If we do not override it here, it is inherited from Rep.
