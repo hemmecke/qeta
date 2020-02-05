@@ -425,6 +425,9 @@ H ==> XHashTable(Z, List F)
     -- be a basisElement b such that grade(b, k) = i mod gk
 V ==> Vector H -- mapping k -> H
 
+asN x ==> x pretend N
+asP x ==> x pretend P
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Category for Data structure for \algoPowerSamba}
@@ -508,7 +511,7 @@ XEtaAlgebraBasis(C, F): Exports == Implementation where
         k: P := qetaIndex u
         empty? ix => -k -- no multiplier available
         g: Z := qetaGrade(u, k)
-        for ii in n .. 1 by -1 | key?(i := qcoerce(ii)@P, ix) repeat
+        for ii in n .. 1 by -1 | key?(i := asP ii, ix) repeat
             c := ix.i
             qetaGrade(u, c) = g => return c::Z
         return -k
@@ -657,7 +660,7 @@ XEtaReduction(C, F, AB): Exports == Implementation where
             traceLoop u
             kz := component(u, idx)
             kz <= 0 => return u -- no top-reduction possible
-            k: P := qcoerce(kz)@P
+            k: P := asP kz
             -- u := reduceComponents(u, mul.k, be.k, k)
             t: F := mul.k
             grdt: Z := grade(t, k)
@@ -674,7 +677,8 @@ XEtaReduction(C, F, AB): Exports == Implementation where
             grdu: Z := grade(u, k)
             v: F := r :: F
             j: Z := ((grdu - grade(v, k)) exquo grdt) :: Z
-            v: F := v*t^(qcoerce(j)@N)
+            v: F := v*t^asN(j)
+
             -- cc: Record(quotient: C, remainder: C)
             cc := divide(leadingCoefficient(u, k), leadingCoefficient(v, k))
             u := u - (cc.quotient)*v
@@ -749,11 +753,13 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
       empty: () -> %
       basisElements: % -> V
   R: XEtaReductionCategory(C, F, AB)
-  FF ==> Record(f1: F, f2: F)
+  G ==> Record(sgi: List List Z, elem: F)
+  FF ==> Record(sgi: List List Z, xf1: F, xf2: F)
   Products ==> XHashTable(Z, List FF)
   Exports ==> QEtaComputationCategory(F, AB)
   Implementation ==> add
-    Rep ==> Record(ab: AB, cbe: List F, pairs: Products)
+    QEVAUX ==> QEtaQuotientExponentVectorsAux
+    Rep ==> Record(ab: AB, cbe: List G, pairs: Products)
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
     xx ==> rep x
@@ -766,20 +772,29 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
     multipliers(x: %): MUL == multipliers(xx.ab)
     basisElements(x: %): V == basisElements(xx.ab)
 
-    -- Compute the maximal grade of f1*f2.
-    maxProductGrade(f1: F, f2: F): Z ==
-        --assert(not zero? f1)
-        --assert(not zero? f2)
-        gmax: Z := -1 -- dummy, because there is at least one >= 0.
-        for kn in 1..n repeat
-            k: P := qcoerce(kn)@P
-            g: Z := grade(f1, k) + grade(f2, k)
-            if g > gmax then gmax := g
-        gmax
+    smallerGradeG?(g1: G, g2: G): Boolean ==
+        smallerGrade?(g1.sgi, g2.sgi)$QEVAUX
 
-    addPair!(products: Products, xf1: F, xf2: F): Products ==
-        g := maxProductGrade(xf1, xf2)
-        products.g := cons([xf1, xf2], elt(products, g, empty()))
+    smallerGradeFF?(ff1: FF, ff2: FF): Boolean ==
+        smallerGrade?(ff1.sgi, ff2.sgi)$QEVAUX
+
+    toG(f: F): G ==
+        ffsgi: List List Z := sort!(_>, [[grade(f, asP k), k] for k in 1..n])
+        [ffsgi, f]$G
+
+    toFF(f1: F, f2: F): FF ==
+        ffsgi: List List Z :=
+            sort!(_>, [[grade(f1, asP k) + grade(f2, asP k), k] for k in 1..n])
+        [ffsgi, f1, f2]$FF
+
+    insertNew!(ff: FF, ffs: List FF): List FF ==
+        merge!(smallerGradeFF?, [ff], ffs)
+
+    addPair!(products: Products, f1: F, f2: F): Products ==
+        ff: FF := toFF(f1, f2)
+        -- ff.sgi = [[g1,i1], [g2,i2], ...,[gn,in]] where g1 is highest grade
+        g := first first ff.sgi -- this gives g1
+        products.g := insertNew!(ff, elt(products, g, empty()))
         products
 
     addMultiplierPairs!(x: %): Void ==
@@ -829,7 +844,7 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
                 b := first bas
                 e: Z := grade(b, k)
                 j: Z := ((g - e) exquo d) :: Z
-                tj: F := t^(qcoerce(j)@N)
+                tj: F := t^asN(j)
                 --assert(grade(tj*b, k)=g)
                 --It might happen that qetaIndex(tj*b)~=k!!!
                 addPair!(products, tj, b)
@@ -848,7 +863,7 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
         -- That corresponds to the set S (line 13) in the algorithm samba
         -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
         -- We do this for each component separately.
-        for kn in 1..n | key?(k := qcoerce(kn)@P, mul) repeat
+        for kn in 1..n | key?(k := asP kn, mul) repeat
             addComponentGapPairs!(products, mul.k, be.k, k)
 
     computePairs!(x: %): Void ==
@@ -885,13 +900,14 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
             else
                 irr := cons(b, irr)
         basis.i := sort(greaterGrade? k, cons(u, irr))
-        red := concat(red, xx.cbe)
         -- We don't need to redo reduction of pairs if no basis element
         -- has been removed.
         if empty? red then
             addNewBasisElementPairs!(u, x)
         else
-            xx.cbe := sort(greaterGrade? k, red)
+            gred: List G := [toG f for f in red]
+            gred := sort!(smallerGradeG?, gred)
+            xx.cbe := merge!(smallerGradeG?, gred, xx.cbe)
             computePairs! x
 
     -- Destructively updates multipliers, basis, and critical elements
@@ -903,28 +919,22 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
         --    for all k in keys(multipliers x)]))
         idx: IDX := indexPermutation x
         kz := component(u, idx) --assert(not zero? kz)
-        kz > 0 => updateNonMultiplier!(u, x, qcoerce(kz)@P)
-        k: P := qcoerce(-kz)@P
+        kz > 0 => updateNonMultiplier!(u, x, asP kz)
+        k: P := asP(-kz)
         -- There must still be an unassigned index.
         -- maybe we should reduce all the other multipliers by u.
         i: P := n
-        while key?(i, idx) repeat i := qcoerce(i - 1)@P
+        while key?(i, idx) repeat i := asP(i - 1)
         idx.i := k
         mul: MUL := multipliers x
         mul.k := u -- we've found a new multiplier
         -- if a new multiplier has been added, then remove the pairs
         computePairs! x
 
-    maxGrade(x: F): Z == qetaGrade(x, qetaIndex x)
-    smallerMaxGrade?(f1: F, f2: F): Boolean ==
-        -- there is optimization potential wrt use of unity roots
-        m1 := maxGrade f1
-        m2 := maxGrade f2
-        m1 < m2 or (m1 = m2 and qetaIndex f1 < qetaIndex f2)
-
     initialize(m: List F): % ==
         --assert(not empty? m)
-        x: % := per [empty()$AB, sort(smallerMaxGrade?, m), empty()]
+        gm: List G := sort!(smallerGradeG?, [toG f for f in m])
+        x: % := per [empty()$AB, gm, empty()]
         computePairs! x
         x
 
@@ -933,23 +943,20 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
 
     extractNext!(x: %): F ==
         p: Products := xx.pairs
-        grdc: Z := -1
-        grdp: Z := -1
-        g := -1 -- dummy value
-        if not empty? xx.cbe then grdc := maxGrade first(xx.cbe)
+        sgic: List List Z := empty()
+        if not empty? xx.cbe then sgic := first(xx.cbe).sgi
         if not empty? p then
             g: Z := reduce(min, indices p)$List(Z) -- minimal grade
             r: FF := first(p.g) -- the element of this grade
-            grdp := maxProductGrade(r.f1, r.f2)
-        grdp < 0 or (grdc >=0 and grdc <= grdp) =>
-            f := first xx.cbe
-            xx.cbe := rest xx.cbe
-            f
-        --assert(not empty? indices p)
-        r: FF := first(p.g) -- the element of this grade
-        l: List FF := rest(p.g) -- remove u
-        if empty? l then remove!(g, p) else p.g := l
-        r.f1 * r.f2
+            sgip: List List Z := r.sgi
+            if empty? sgic or smallerGrade?(sgip, sgic)$QEVAUX then
+                l: List FF := rest(p.g) -- remove u
+                if empty? l then remove!(g, p) else p.g := l
+                return r.xf1 * r.xf2
+        --assert(empty? p or (not empty? sgic and not(sgip < sgic)))
+        f := first(xx.cbe).elem
+        xx.cbe := rest xx.cbe
+        f
 
     oneTracedStepComputation!(trace: % -> Void, _
                    traceEnter: (F, AB) -> Void,_

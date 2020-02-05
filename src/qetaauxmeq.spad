@@ -136,7 +136,7 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ matrixLigozat(m) returns the (n,n) matrix with entries a_m(di,dj)
       ++ given by Notation 3.2.6 in \cite{Ligozat:CourbesModulaires:1975}
       ++ where di and dj run over all positive divisors of m.
-      ++ This matrix is A_N as described after Theorem 5.2 in
+      ++ This matrix is A_N as described after Lemma 5.2 in
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}.
     matrixAtkinLehner: (P, P) -> MZ
       ++ matrixAtkinLehner(m, t) with t a Hall divisor
@@ -156,11 +156,11 @@ QAuxiliaryModularEtaQuotientPackage: with
       -- It computes matrix B_N (equation (8) in
       -- \cite{Hemmecke+Radu:EtaRelations:2018}
       -- (DOI:10.1016/j.jsc.2018.10.001).
-    rStarNonNegativeMatrix: (P, List Z) -> MZ
-      ++ rStarNonNegativeMatrix(nn, idivs) returns a matrix mat which
-      ++ is a vertical concatenation of rStarConditionMatrix(nn) and
-      ++ (a part of) matrixLigozat(nn) whose rowindices correspond to
-      ++ idivs.
+    matrixLigozatRStar: (P, List Z) -> MZ
+      ++ matrixLigozatRStar(nn, idivs) returns a matrix mat which
+      ++ is a vertical concatenation (a part of) matrixLigozat(nn)
+      ++ whose rowindices correspond to idivs and
+      ++ rStarConditionMatrix(nn).
       ++ It computes matrix B_N equation (8) in
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}
       ++ (DOI:10.1016/j.jsc.2018.10.001) joined with the respective rows
@@ -349,7 +349,7 @@ QAuxiliaryModularEtaQuotientPackage: with
         --vPrint("rstarConditionMatrix", mat)
         return mat
 
-    rStarNonNegativeMatrix(m: P, idivs: List Z): MZ ==
+    matrixLigozatRStar(m: P, idivs: List Z): MZ ==
         matRStar: MZ := rStarConditionMatrix m
         empty? idivs => return matRStar
         matLigozat: MZ := matrixLigozat m -- is a square matrix
@@ -358,10 +358,10 @@ QAuxiliaryModularEtaQuotientPackage: with
         rows: N := nrows matRStar
         cols: N := ncols matRStar
         mat: MZ := new(rows + n, cols, 0)
-        for i in 1..rows repeat for j in 1..cols repeat
-            qsetelt!(mat, i, j, qelt(matRStar, i, j))
-        for i in idivs for k in rows+1.. repeat for j in 1..l repeat
+        for i in idivs for k in 1..n repeat for j in 1..l repeat
             qsetelt!(mat, k, j, qelt(matLigozat, i, j))
+        for i in 1..rows repeat for j in 1..cols repeat
+            qsetelt!(mat, n+i, j, qelt(matRStar, i, j))
         return mat
 
     jacobiLowerStar(c: Z, d: Z): Z == -- result either 1 or -1

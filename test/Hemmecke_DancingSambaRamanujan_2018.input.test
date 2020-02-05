@@ -124,8 +124,9 @@ smallerT(x: PolC, y: PolC):Boolean == degree(x, 'T) < degree(y, 'T)
 
 rgens := etaQuotientMonoidExponentVectors level;
 rgensExpected: List List Z := [_
-    [7, -3, 3, -7], [-4, 8, 4, -8], [-2, 6, 6, -10], [-1, 1, 11, -11], _
-    [0, 4, 8, -12], [2, 2, 10, -14], [4, 0, 12, -16]];
+    [- 1, 1, 11, - 11], [- 4, 8, 4, - 8], [7, - 3, 3, - 7], _
+    [- 2, 6, 6, - 10], [0, 4, 8, - 12], [2, 2, 10, - 14], [4, 0, 12, - 16]];
+
 assertEquals(rgens, rgensExpected)
 
 divs := divisors(level)$IntegerNumberTheoryFunctions;
@@ -134,17 +135,17 @@ for x in etaquotgensZ repeat assertTrue(zero? prefactor x)
 
 eqgensZ: List LZ := [retract x for x in etaquotgensZ];
 rfeqgensZ: List Fraction PolZ := [_
-  (-21*q^5+2*q^4-14*q^3+17*q^2-7*q+1)/q^5,_
-  (12*q^5+13*q^4+8*q^3+6*q^2+4*q+1)/q^5,_
-  (-6*q^5-q^4-2*q^3-q^2+2*q+1)/q^6,_
   (3*q^5+2*q^4+2*q^3+q^2+q+1)/q^5,_
+  (12*q^5+13*q^4+8*q^3+6*q^2+4*q+1)/q^5,_
+  (-21*q^5+2*q^4-14*q^3+17*q^2-7*q+1)/q^5,_
+  (-6*q^5-q^4-2*q^3-q^2+2*q+1)/q^6,_
   (8*q^6+2*q^4-4*q^2+1)/q^7,_
   (-10*q^7-q^6+2*q^4+6*q^3-3*q^2-2*q+1)/q^8,_
   (9*q^8+8*q^7-10*q^6-4*q^5-5*q^4+8*q^3+2*q^2-4*q+1)/q^9];
 assertEquals([rationalFunction(x, 0) for x in eqgensZ], rfeqgensZ)
 
 eqgens: List L := [zcmap x for x in eqgensZ];
-assertEquals([qetaGrade x for x in eqgens], [5, 5, 6, 5, 7, 8, 9])
+assertEquals([qetaGrade x for x in eqgens], [5, 5, 5, 6, 7, 8, 9])
 
 msyms := indexedSymbols("M", #eqgens)
 assertEquals(msyms, [M1, M2, M3, M4, M5, M6, M7])
@@ -154,8 +155,10 @@ xeqgens: List X := [toX1(C, x, s) for x in eqgens for s in msyms];
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_7]$.
-
-tex: X := xeqgens.1
+-- 19-Feb-2020: Interestingly, it does not work for the element
+-- corresponding to [- 1, 1, 11, - 11].
+-- We choose the vector corresponding to [- 4, 8, 4, - 8].
+tex: X := xeqgens.2
 abex := samba(tex, xeqgens)$QXTOPSAMBA1(C)
 
 -- Due to another critical element selection strategy, the resulting
@@ -165,7 +168,7 @@ bas := sort(smallerGrade?, basis abex);
 abexExpectedArticle: LPol C := [1/128*M7-5/128*M6+21/128*M5_
   +(-1/1024*M1+11*213/1024)*M4-85/128*M3+1/1024*M1^2+505/1024*M1,_
   1/8*M4-1/8*M1, M3, M5, M6]
-abexExpected: LPol C := [11*(-1/8)*M4+M2+3/8*M1, 1/8*M4-1/8*M1, M3, M5, M6]
+abexExpected: LPol C := [3/8*M3+M2+11*(-1/8)*M1, 1/3*M2-1/3*M1, M4, M5, M6]
 assertEquals([second(x)::PolC for x in bas], abexExpected)
 assertEquals(# bas, 5)
 
@@ -232,8 +235,8 @@ mrexExpectedArticle: LPol C := _
   [F, 11*M1^2, 11*M1^3, 11*M1*M3, 11*M1^2*M4, 11*M1*M5, 11^2*M1, 11^2*M3,_
   11^2*M1*M4, 11^2*M5, 11^2*M1*M6, 11^2*M6, 11^2*M7, 11^3, 11^3*M4]
 mrexExpected: LPol C := _
-  [F, 11*M1^3, 11*M1^2*M2, 11*M1*M2, 11*M1*M3, 11*M1^2*M4, 11*M1*M5,_
-  11^2*M1^2, 11^2*M1, 11^2*M1*M4, 11^3*M2, 11^3*M3, 11^3*M5, 11^4, 11^4*M4]
+  [F, 11*M2^2, 11*M2^3, 11*M1*M2^2, 11*M2*M3, 11*M2^2*M3, 11*M2*M4, _
+  11*M2*M5, 11^2*M2, 11^2*M1*M2, 11^3*M3, 11^3*M4, 11^3*M5, 11^4, 11^5*M1]
 assertEquals(sort(smaller11, mrex), mrexExpected)
 
 -- Let's normalize the leading coefficient of $F$ to 1.
@@ -242,7 +245,7 @@ rexq := (second rex)::PolC;
 cfxq := coefficient(rexq, 'F, 1)
 lcfxq := leadingCoefficient cfxq
 lcfxqArticle := -1/1360
-assertEquals(lcfxq, 1/8960)
+assertEquals(lcfxq, 1)
 ilcfxq: C := (inv lcfxq)::C
 rxq := ilcfxq * rexq
 rxqExpectedArticle: PolC := _
@@ -250,20 +253,24 @@ rxqExpectedArticle: PolC := _
   +11^2*(-5972))*M5+(11*(-1/8)*M1^2+11^2*(-4497/8)*M1+11^3*(-789/2))*M4_
   +(11*(-1867)*M1+11^2*(-2476))*M3+11*1/8*M1^3+11*1011/8*M1^2_
   +11^2*1647/2*M1+F+11^3*1360
-rxqExpected: PolC := _
-  11*((-450)*M1+11^2*(-3584))*M5_
-  + 11*(4*M1^2+11*4603/4*M1+11^3*(-7056))*M4_
-  + 11*((-1174)*M1+11^2*13440)*M3_
-  + 11*((-3)*M1^2+(-18520)*M1+11^2*21248)*M2_
-  + 11*((-1)*M1^3+11*(-1139/4)*M1^2+11*(-33920)*M1+11^3*(-8960))_
-  + F
+rxqExpected: PolC := 11*(
+  (M2+11^2*7)*M5_
+  +(3*M2+11^2*5)*M4_
+  +((-1/4)*M2^2+(-245/8)*M2+11^2*(-1/8))*M3_
+  +(-1)*M2^3+(5/4*M1+3)*M2^2_
+  +(11*(-49/8)*M1+11*(-13))*M2_
+  +11^4*1/8*M1+11^3*(-1))_
+  +F
 assertEquals(rxq, rxqExpected)
 
 -- Let's plug in the original $\eta$-quotients into `rxq`.
 
 
 sers: List L := cons(first fex,eqgens)
-ezArticle := eval(rxqExpectedArticle, c+->c::L, cons('F,msyms), sers)_
+-- Note that after some changes to the sorting order in the
+-- implementation, the old Mi correspond to other new Mi.
+sersArticle:=cons(first fex, [eqgens.i for i in [3,2,4,1,5,6,7]])
+ezArticle := eval(rxqExpectedArticle, c+->c::L, cons('F,msyms), sersArticle)_
       $ PolynomialEvaluation(C, L)
 assertTrue(zero? ezArticle)
 ez := eval(rxq, c+->c::L, cons('F,msyms), sers)_
@@ -773,14 +780,14 @@ assertEquals(monoms, monomsExpected)
 LZ ==> F1 Z
 XZ ==> X1 Z
 divs := divisors(level)$IntegerNumberTheoryFunctions;
-QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
+QEQMEV ==> QEtaQuotientExponentVectors4ti2
 eqmev ==> etaQuotientMonoidExponentVectors $ QEQMEV
 rgens := eqmev level;
 etaquotgensZ: List ETAZ := [etaQuotient(divs, r) for r in rgens];
 eqgensZ: List LZ := [retract x for x in etaquotgensZ];
 msyms := indexedSymbols("M", #rgens)
 xeqgensZ: List XZ := [toX1(Z, x, s) for x in eqgensZ for s in msyms]
-tez := xeqgensZ.1
+tez := xeqgensZ.3
 abez := samba(tez, xeqgensZ)$QXTOPSAMBA1(Z)
 assertEquals(# basis abez, 5)
 
@@ -790,18 +797,20 @@ r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
 fe := pfZ * r11
 fez: XZ := toX1(Z, fe, F)
 
--- Interestingly, we have to multiply by 4, because otherwise the reduction would not return 0.
+-- Interestingly, we have to multiply by 4, because otherwise the
+-- reduction would not return 0.
 
 rez := reduce(4*fez, abez)$QXTOPRED1(Z)
 assertTrue(zero? rez)
 
 rz := (second rez)::PolZ;
-rzExpected: PolZ := _
-  11*((-1800)*M1+11^2*(-14336))*M5_
-  + 11*(16*M1^2+11*4603*M1+11^3*(-28224))*M4_
-  + 11*((-4696)*M1+11^2*53760)*M3_
-  + 11*((-12)*M1^2+(-74080)*M1+11^2*84992)*M2_
-  + 11*((-4)*M1^3+11*(-1139)*M1^2+11*(-135680)*M1+11^3*(-35840))_
+rzExpected: PolZ := 11*(_
+  ((-1800)*M3+11^2*(-14336))*M5_
+  + ((-4696)*M3+11^2*53760)*M4_
+  + (-4)*M3^3_
+  + ((-12)*M2+16*M1+11*(-1139))*M3^2_
+  + ((-74080)*M2+11*4603*M1+11*(-135680))*M3_
+  + 11^2*84992*M2+11^3*(-28224)*M1+11^3*(-35840))_
   + 4*F
 assertEquals(rz, rzExpected)
 
@@ -933,12 +942,10 @@ xf := toX1(C, ff, F)
 -- divisors of 22). The variable `rgens` corresponds to the generators
 -- of $R^\infty(22)$.
 
-rgens := etaQuotientMonoidExponentVectors level;
 nndivs := DIVISORS(nn);
 etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
-smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
-QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
-rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+QEQEV ==> QEtaQuotientExponentVectors4ti2
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 eqgens := [etaQ r for r in rgens];
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
@@ -950,6 +957,7 @@ xab := samba(xt, xgens)$QXTOPSAMBA1(C)
 -- Due to another critical element selection strategy, the resulting
 -- polynomial is a bit different.
 
+be := basisElements xab
 bas := sort(smallerGrade?, basis xab);
 
 -- We show that the basis element of degree 3 has coefficients that are
@@ -959,10 +967,12 @@ bas := sort(smallerGrade?, basis xab);
 -- That this reduction should give 0 is clear, since xab is an
 -- algebra basis.
 
-x3 := (xt+1$X) * bas.1 - 11*(bas.5 + 3*bas.4 + 5*bas.3 - xt + 9*bas.2 - 4*1$X)
-
+x3 := (xt+1$X)*be.3.1-11*(be.3.2+3*be.2.1+5*be.1.1-xt+9*be.4.1-4*1$X)
+(xt+1$X)
+--x3 := xt*bas.1-11*(bas.5-5*bas.4+21*bas.3-89*xt+32*bas.1-11*(53*bas.2+12*1$X))
 assertTrue(zero? x3)
 
+-- It's still not a representation in terms of the Mi.
 p := second(x3)::Pol(C);
 [[e, x] for x in monomials(p)| zero?(e:=exponent leadingCoefficient x)]
 

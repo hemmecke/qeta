@@ -20,6 +20,7 @@ LX ==> LS CX
 nn: P := 10;
 mm: P := 5; s: List Z := [-1, 0]
 m: P := 5;
+cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
 
 mmdivs: List P := DIVISORS mm
 shat: Z := sigmaInfinity(mmdivs, s)
@@ -51,6 +52,7 @@ assertTrue zero?(mf+minusfive)
 nn: P := 14;
 mm: P := 7; s: List Z := [-1, 0];
 m: P := 7;
+cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
 
 mmdivs: List P := DIVISORS mm
 shat: Z := sigmaInfinity(mmdivs, s)
@@ -93,7 +95,7 @@ assertTrue(zero?(mf - rhs))
 --endtest
 
 -------------------------------------------------------------------
---test:Ramanujan7.4-4
+--test:Ramanujan7_4-4
 -- Check that the sifted computation equals modular computation as prefactor.
 nn: P := 14;
 mm: P := 7;
@@ -109,8 +111,8 @@ for cusp in cusps repeat (_
   gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
   y1: YMSETAQG := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0,gamma);_
   y2: YMSETAQG := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0,gamma);_
-  p1: SETAQG := puiseux(y1, w);_
-  p2: SETAQG := puiseux(y2, w);_
+  p1: SETAQG(Q, CX) := puiseux(y1, w);_
+  p2: SETAQG(Q, CX) := puiseux(y2, w);_
   eqx1.cusp := expansion p1;_
   eqx2.cusp := expansion p2_
   )
@@ -127,6 +129,7 @@ nn: P := 22;
 --nn: P := 22; r: List Z := [-10,10,-9,10]
 mm: P := 11; s: List Z := [-1, 0]
 m: P := 11;
+cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
 
 mmdivs: List P := DIVISORS mm
 shat: Z := sigmaInfinity(mmdivs, s)
@@ -153,13 +156,13 @@ mf := expansions(f)::MODFUNX(CX)
 -- The M_1, ..., M_7 from \cite{Hemmecke:DancingSambaRamanujan:2018}.
 nndivs := DIVISORS nn
 rgens: List List Z := [_
-  [7, -3,  3,  -7],_
-  [-4, 8,  4,  -8],_
-  [-2, 6,  6, -10],_
-  [-1, 1, 11, -11],_
-  [0,  4,  8, -12],_
-  [2,  2, 10, -14],_
-  [4,  0, 12, -16]]
+  [- 1,   1, 11, - 11],_
+  [- 4,   8,  4,  - 8],_
+  [  7, - 3,  3,  - 7],_
+  [- 2,   6,  6, - 10],_
+  [  0,   4,  8, - 12],_
+  [  2,   2, 10, - 14],_
+  [  4,   0, 12, - 16]]
 
 assertEquals(rgens, etaQuotientMonoidExponentVectors nn)
 
@@ -169,12 +172,13 @@ M: List MODFUNX CX := [expansions(x)::MODFUNX(CX) for x in mgens];
 F ==> mf
 X n ==> n * 1$MODFUNX(CX)
 
-repr := 11^2*3068*M.7_
-      + 11^2*(3*M.1 + X 4236)*M.6_
-      + 11*(285*M.1+X(11*5972))*M.5_
-      + 11/8*(M.1^2+11*4497*M.1+X(11^2*3156))*M.4_
-      + 11*(1867*M.1+X(11*2476))*M.3_
-      + (- 11/8)*(M.1^3+1011*M.1^2+11*6588*M.1+X(11^2*10880));
+repr := 11*(_
+  11*3068*M.7_
+  + 11*(3*M.3 + X 4236)*M.6_
+  + (285*M.3+X(11*5972))*M.5_
+  + 1/8*(M.3^2+11*4497*M.3+X(11^2*3156))*M.1_
+  + (1867*M.3+X(11*2476))*M.4_
+  + (-1/8)*(M.3^3+1011*M.3^2+11*6588*M.3+X(11^2*10880)));
 
 ZERO := F - repr;
 

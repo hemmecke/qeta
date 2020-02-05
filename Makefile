@@ -41,10 +41,10 @@ all: compile-spad
 # They are not used or maintained anymore.
 SPADFILES_OLD = qetaradu qeta3hdp qetair qetais
 SPADFILES=4ti2 qfunct cachedpow \
-  qetaalg qetasqrt qetaqmev qetadom qetatool \
+  qetaalg qetasqrt qetaauxmeq qetaqmev qetadom qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
-  qetaauxmeq qetapowersamba qetakolberg qetafun
+  qetapowersamba qetakolberg qetafun
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
 PREREQS_SAGE=etagb.sage

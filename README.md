@@ -56,7 +56,7 @@ The QEta package contains code to compute eta relations completely
 done in FriCAS, but for efficiency reasons, some computations are done
 by external programs.
 
-For example, by default, `QEtaQuotientMonoidExponentVectors4ti2` is
+For example, by default, `QEtaQuotientExponentVectors4ti2` is
 used by `make eqmev` and requires [4ti2].
 
 The Gröbner basis computation during `make er` is done by calling

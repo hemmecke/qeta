@@ -30,8 +30,8 @@ function QuotientMonoidExponentVectors {
 )read etacompute.input
 )set message type off
 )set message time on
-QEQMEV ==> QEtaQuotientMonoidExponentVectors4ti2
-eqmev ==> etaQuotientMonoidExponentVectors \$ QEQMEV
+QEQEV ==> QEtaQuotientExponentVectors4ti2
+eqmev ==> etaQuotientMonoidExponentVectors \$ QEQEV
 result := eqmev $1;
 )set message time off
 vPrint("etaQuotientMonoidExponentVectors$1", result)

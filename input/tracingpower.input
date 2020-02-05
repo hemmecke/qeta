@@ -1,27 +1,28 @@
 -------------------------------------------------------------------
 -- Tracing functions for powersamba
 -------------------------------------------------------------------
-HXn ==> XHashTable(Z, List Xn CX);
--------------------------------------------------------------------
 rEntern(u: Xn CX, ab: QXABn CX): Void == (_
-    vPrint("-- -----------------------------------------------red u", u);_
-    vPrint("ab", ab)_
+    vPrint("-- -----------------------------------------------red u", qetaGrades u);_
+    vPrint("-- ---------------------------red lc u", [qetaLeadingCoefficient(u, k) for k in 1..maxIndex()$Xn(CX)])_
     );
 -------------------------------------------------------------------
 rLoopn(u: Xn CX): Void == (_
-    vPrint("-- red loop", u));
+    vPrint("-- red loop", qetaGrades u));
 -------------------------------------------------------------------
 rReturnn(u: Xn CX): Void == vPrint("-- redx", first u);
 -------------------------------------------------------------------
 Yn ==> QXCOMPn CX;
-XXn ==> Record(f1: Xn CX, f2: Xn CX);
+SXn ==> Record(sgi: List List Z, elem: Xn CX);
+XXn ==> Record(sgi: List List Z, xf1: Xn CX, xf2: Xn CX);
 Products ==> XHashTable(Z, List XXn);
-YnRep ==> Record(ab: QXABn CX, cbe: List Xn CX, pairs: Products);
+YnRep ==> Record(ab: QXABn CX, cbe: List SXn, pairs: Products);
 yyn ==> y pretend YnRep;
 -------------------------------------------------------------------
 ytracen(y: Yn): Void == (_
     vPrint("-- ==================================step(#cbe,#pairs)",_
            [#(yyn.cbe), #(yyn.pairs)]$List(Z))_
     )
+-- noTrace(x: Yn): Void == void()
 -------------------------------------------------------------------
+-- onetnStep!(y: Yn): Yn == (oneTracedStep!$Yn)(noTrace, rEntern, rLoopn, rReturnn)(y)
 onetnStep!(y: Yn): Yn == (oneTracedStep!$Yn)(ytracen, rEntern, rLoopn, rReturnn)(y)
