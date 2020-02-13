@@ -1,0 +1,177 @@
+-- This is a testfile for methods of the article
+-- \cite{Paule+Radu:ProofWeierstrassGapTheorem:2019}.
+
+-- Via jupytext this file can be shown as a jupyter notebook.
+-- For that one would have to move or link it to a file with
+-- extension ".input".
+
+)clear complete
+assertEquals(x,y)==>(x=y)@Boolean
+assertTrue x ==> x
+
+)cd /home/hemmecke/g/spadunit/build
+)library SPADZERO
+)library SPADUNIT
+
+)read loadlibs.input
+)cd /home/hemmecke/g/spadunit/build
+
+)set mess type off
+)r /home/hemmecke/g/qeta/tmp/etamacros.input )quiet
+
+--setup
+C ==> Q
+CX ==> DynamicAlgebraicClosureField
+LZ  ==> LS Z
+LX ==> LS CX
+FX ==> FunctionalLaurentInverse(CX, 'q, 0)
+
+U(m, f) ==> choose((n: Z): Z +-> m*n, f, ceiling(order(f)/m))$QFunctionTools(CX, LX)
+U2 f ==> U(2, f)
+equot(n, l) ==> (retract etaQuotient(divisors n, l)$ETA(CX))::LX
+--endsetup
+
+-------------------------------------------------------------------
+--test:ordpoly-z11
+-- See \cite{Paule+Radu:ProofWeierstrassGapTheorem:2019}.
+ell: Z := 11
+nn: P := 2*ell;
+expo: Z := 24 exquo gcd(ell-1, 12)
+t := equot(ell, [expo, -expo]) -- = 1/z_{11}
+grdt := - order t
+f2 := equot(nn, [1, 3, -3, -1]) -- in M_{\setZ}(22) \cite[p.~4]{...}
+f3 := equot(nn, [3, 1, -1, -3]) -- in M_{\setZ}(22) \cite[p.~4]{...}
+
+-- See \cite[p.~5]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+
+F2 := f2 - U2 f3
+F3 := f3 - 4*U2 f2
+F4 := f2^2 + 1/2*U(2,f3^2)
+F6 := f3^2 + 8*U2(f2^2)
+
+-- Check conditions of the functional inverse.
+
+w := functionalInverse(t)$FX
+q := monomial(1, 1)$LX
+z := t w - q^(-grdt)
+assertEquals(removeDuplicates [coefficient(z, i) for i in -10..50], [0])
+
+F := [F2, F3, F4, F6];
+zeta := primitiveNthRootOfUnity(grdt)
+vec := vector [f(w) for f in F]
+vecs := [vector [f(w(zeta^i*q)) for f in F] - vec for i in 1..grdt-1];
+mat := matrix [members v for v in vecs];
+nrows mat, ncols mat
+
+dt := determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX)
+ordser := U(grdt, dt^2)
+cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)];
+mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
+pol := reduce(_+, mons)
+
+-- See \cite[p.~13]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+
+x := monomial(1,1)$UP('x, Q)
+polPaper := x^4 * (5^5*11^6 - 2*3^2*439081*x + 5^5*x^2)
+assertEquals(pol, polPaper)
+
+
+F := [F2, F4^2, F4, F6];
+vec := vector [f(w) for f in F]
+vecs := [vector [f(w(zeta^i*q)) for f in F] - vec2 for i in 1..grdt-1];
+mat := matrix [members v for v in vecs];
+nrows mat, ncols mat
+
+dt := determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX)
+ordser := U(grdt, dt^2)
+cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)];
+mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
+pol2 := reduce(_+, mons)
+
+-- See \cite[p.~13]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+
+assertEquals(pol2, (11^3 + x)^2 * pol)
+
+--endtest
+
+-------------------------------------------------------------------
+--test:ordpoly-etaquot22
+-- The generators of the $\eta$-quotients of level 22 are given by
+-- these exponents for the $\eta$ functions (with arguments being the
+-- divisors of 22). The variable `rgens` corresponds to the generators
+-- of $R^\infty(22)$.
+
+nn := 22
+sgens := etaQuotientMonoidExponentVectors nn
+egens := [equot(nn, s) for s in sgens];
+msyms := indexedSymbols("M", #egens)
+xgens := [toX1(CX, x, s) for x in egens for s in msyms];
+tex := xgens.1
+abex := samba(tex, xgens)$QXTOPSAMBA1(CX)
+bas := sort(smallerGrade?, basis abex);
+assertEquals([qetaGrade x for x in bas], [3, 4, 6, 7])
+
+grdt := qetaGrade tex
+t := (first tex)::F1(CX)::LX
+w := functionalInverse(t)
+zeta := primitiveNthRootOfUnity(grdt)
+q := monomial(1,1)$LX
+F := [(first x)::F1(CX)::LX for x in bas]
+vec := vector [f(w) for f in F];
+vecs := [vector [f(w(zeta^i*q)) for f in F] - vec for i in 1..grdt-1];
+mat := matrix [members v for v in vecs];
+nrows mat, ncols mat
+dt := (determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX))
+ordser := U(grdt, dt^2);
+cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)]
+mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
+pol := reduce(_+, mons)
+factor pol
+px := pol::UP('x, CX)
+factor px
+
+x := monomial(1,1)$UP('x, CX)
+polPaper := x^4 * (5^5*11^6 - 2*3^2*439081*x + 5^5*x^2)
+
+--endtest
+
+-------------------------------------------------------------------
+--test:ordpoly-etaquot121
+-- The generators of the $\eta$-quotients of level 22 are given by
+-- these exponents for the $\eta$ functions (with arguments being the
+-- divisors of 22). The variable `rgens` corresponds to the generators
+-- of $R^\infty(22)$.
+
+nn := 121
+sgens := etaQuotientMonoidExponentVectors nn
+egens := [equot(nn, s) for s in sgens];
+msyms := indexedSymbols("M", #egens)
+xgens := [toX1(CX, x, s) for x in egens for s in msyms];
+tex := xgens.1
+abex := samba(tex, xgens)$QXTOPSAMBA1(CX)
+bas := sort(smallerGrade?, basis abex);
+assertEquals([qetaGrade x for x in bas], [49, 98, 147, 196])
+
+grdt := qetaGrade tex
+t := (first tex)::F1(CX)::LX
+w := functionalInverse(t)
+zeta := primitiveNthRootOfUnity(grdt)
+q := monomial(1,1)$LX
+F := [(first x)::F1(CX)::LX for x in bas]
+vec := vector [f(w) for f in F];
+vecs := [vector [f(w(zeta^i*q)) for f in F] - vec for i in 1..grdt-1];
+mat := matrix [members v for v in vecs];
+nrows mat, ncols mat
+dt := (determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX))
+ordser := U(grdt, dt^2);
+cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)]
+mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
+pol := reduce(_+, mons)
+factor pol
+px := pol::UP('x, CX)
+factor px
+
+x := monomial(1,1)$UP('x, CX)
+polPaper := x^4 * (5^5*11^6 - 2*3^2*439081*x + 5^5*x^2)
+
+--endtest
