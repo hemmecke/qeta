@@ -59,7 +59,7 @@ $DEP: List(List Z) := [];
 dim: N := # $DEP
 syms: LSym := indexedSymbols("M", dim) \$ QAuxiliaryTools
 D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, D, syms) -- show DirectProduct as monomials.
+E ==> Monomials(dim, N, D, syms) -- show DirectProduct as monomials.
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 )set message type off
@@ -100,7 +100,7 @@ ysyms: LSym := indexedSymbols("Y", divs) \$ QAuxiliaryTools
 syms: LSym := concat(ysyms, esyms)
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, D, syms)
+E ==> Monomials(dim, N, D, syms)
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 )set message type off
@@ -136,7 +136,7 @@ divs: List Z := divisors($1)\$IntegerNumberTheoryFunctions
 syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
-E ==> Monomials(dim, D, syms)
+E ==> Monomials(dim, N, D, syms)
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 )set message type off

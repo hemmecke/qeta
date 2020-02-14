@@ -79,7 +79,7 @@ divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
 syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
-E ==> Monomials(dim, D, syms)
+E ==> Monomials(dim, N, D, syms)
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 xnf ==> extendedNormalForm\$QEtaGroebner(C, E);
@@ -90,7 +90,7 @@ display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
 vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
 printPol(k: Symbol, lsyms: LSym, ldim: N, p: PolC): Void == (_
     DX := DirectProduct(ldim, N); _
-    EX := Monomials(ldim, DX, lsyms); _
+    EX := Monomials(ldim, N, DX, lsyms); _
     RX := PolynomialRing(R, EX); _
     r: RX := 0; _
     z: PolC := p; _

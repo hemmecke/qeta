@@ -307,10 +307,13 @@ product element.
 ++ then the element x (coerced to OutputForm) looks like A^2*B^3.
 Monomials(_
   dim: N,_
-  D: DirectProductCategory(dim, N),_
+  R: OrderedAbelianMonoid,
+  D: DirectProductCategory(dim, R),_
   vl: LSym_
- ): Join(DirectProductCategory(dim, N), OrderedAbelianMonoidSup) == D add
+ ): DirectProductCategory(dim, R) == D add
     --assert(dim = # vl)
+    noOneTest? := not (R has one?: R -> Boolean)
+    notOne? x ==> noOneTest? or not one? x
     coerce(x: %): OutputForm ==
         vs: LSym := vl
         zero? x => (1$Integer)::OutputForm
@@ -321,10 +324,10 @@ Monomials(_
             k := k + 1
         --assert(k<=dim)
         o: OutputForm := (first vs)::OutputForm
-        if x.k > 1 then o := o ^ ((x.k)::OutputForm)
+        if notOne? x.k then o := o ^ ((x.k)::OutputForm)
         for i in k+1..dim for v in rest vs | not zero?(x.i) repeat
             oo: OutputForm := v::OutputForm
-            if x.i > 1 then oo := oo ^ ((x.i)::OutputForm)
+            if notOne? x.i then oo := oo ^ ((x.i)::OutputForm)
             o := o * oo
         return o
 

@@ -69,7 +69,7 @@ printRelations(fdim: N, fsyms: LSym, f: List R, _
     ldim := fdim + gdim;_
     lsyms := concat(fsyms, gsyms);_
     DX := DirectProduct(ldim, N);_
-    EX := Monomials(ldim, DX, lsyms);_
+    EX := Monomials(ldim, N, DX, lsyms);_
     RX := PolynomialRing(R, EX);_
     fvars: List RX := [monomial(1, unitVector(i::P)\$EX)\$RX for i in 1..fdim];_
     gvars: List RX := [monomial(1, unitVector(fdim+i::P)\$EX)\$RX for i in 1..gdim];_
