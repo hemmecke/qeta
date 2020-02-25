@@ -27,6 +27,7 @@ assertTrue x ==> x
 C ==> Q
 L ==> F1 C
 X ==> X1 C
+S(CX) ==> UnivariateLaurentSeries(CX, 'q, 0)
 
 -- The following function simply maps the integer coefficients of the
 -- series into the localized coefficient domain or into the rational
@@ -40,6 +41,9 @@ zqmap(x) ==> abmap(Z, Q, x)
 
 PolC ==> Pol C; LC ==> F1 C
 PolZ ==> Pol Z; LZ ==> F1 Z
+
+asP x ==> x pretend P
+asLP x ==> x pretend List(P)
 
 numOfGaps(ab) == (_
   t := multiplier ab; _
@@ -68,6 +72,7 @@ QEQEV ==> QEtaQuotientExponentVectors4ti2
 -- these exponents for the $\eta$ functions (with arguments being the
 -- divisors of 128). The variable `rgens` corresponds to the generators
 -- of $R^\infty(128)$.
+
 level := 128;
 
 rgens := etaQuotientMonoidExponentVectors(level)$QEQEV;
@@ -181,18 +186,20 @@ assertEquals(pol,_
 pol0 := M0*pol -- Corresponds to the original f128.
 assertEquals(# monomials pol0, 25)
 
-
 h(l) == E1^l.1*E2^l.2*E4^l.3*E8^l.4*E16^l.5*E32^l.6*E64^l.7*E128^l.8
 
 rgens0 := members(- vector rcofactor)
 vals := cons(h(rgens0), [h x for x in rgens])
 vars := cons(M0, msyms)
 
+-- The following gives f_45 in terms of eta-quotients
+
 FPZ ==> Fraction PolZ
 PE==>PolynomialEvaluation(Z, FPZ)
 
 -- Let's first check whether the expansion for the modular function f is
 -- correctly expressed in eta-quotients.
+
 epol := (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol);
 epoln := numer epol;
 epold := denom epol;
@@ -206,7 +213,6 @@ toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
 
 E ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
 rez x ==> x pretend  PolynomialRing(C, E)
-
 e(l) ==> retract etaQuotient(divs, l)$ETA(C)
 
 rpoln := toRZ epoln
@@ -215,13 +221,18 @@ irpold := (-rpold)::RZ
 rpol := rpoln * irpold
 ms := [leadingCoefficient x * e members degree x for x in monomials rpol];
 z := reduce(_+, ms) - f
+
 -- The function z is a modular function, so we only need to check the
 -- negative exponents.
+
 assertTrue(zero? z)
+
 -- But we kill all the given coefficients for f128.
+
 assertEquals(order(z::L, 300), 231)
 
 -- Show nicely
+
 num := rez rpoln
 den := rez(rpold :: RZ)
 
@@ -242,15 +253,18 @@ z0 := reduce(_+, ms0) - f128
 
 -- We must check 300 coeffients (see the given f128 in order to see
 -- that our computation expands to the same coefficients.
+
 assertEquals(removeDuplicates [qetaCoefficient(z0, -i) for i in 0..300], [0])
 assertEquals(#monomials(rez rpol0n), 25)
 
 -- Show nicely
+
 num0 := rez rpol0n
 den0 := rez(rpol0d :: RZ)
 
 -------------------------------------------------------------------
 -- Mail Zudillin 17-Feb-2020:
+
 equ(l) ==> etaQuotient(divs, l)$ETA(C)
 
 brunaultterms := [_
@@ -274,7 +288,114 @@ f128brunault := reduce(_+, [first(x)*retract(equ rest x) for x in brunaultterms]
 z := f128brunault - f128
 assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 
+-------------------------------------------------------------------
+-- Finding other symmetry group for f_128.
+-------------------------------------------------------------------
 
+o := reduce(_+, [width(level, denom cusp) for cusp in cuspsOfGamma0(level)])
+assertEquals(o, indexOfGamma0 level)
+reps := rightCosetRepresentatives level;
+assertEquals(# reps, o)
+reta24 := [24, 0,0,0,0,0,0,0] -- exponent vector for delta(\tau)=eta^24
+eta24 := e reta24 -- = eta^(-24)
+
+-- f128^3/eta24 = f^3*(eta24*eqcofactor^3)
+-- f6 is modular function with poles only at the cusps, but not necessarily
+-- only at infinity.
+
+cvector := - (vector reta24 + 3*vector rcofactor)
+f3 := f^3  / (        eta24 *         eqcofactor^3)
+
+-- f^6 corresponds to xf^6, i.e., pol^6. To each of the variables Mi in pol
+-- corresponds the r-vector rgens.i
+
+assertTrue(zero? reduce(_+, members cvector))
+
+yeq3g(l, g) ==> etaQuotient(level, asLP divs, l, g)$YETAQG
+eq3g(l, g) ==> expansion(etaQuotient(yeq3g(l,g))$ETAQG(C,CX))
+
+-- Check that cvector indeed belongs to a modular eta-quotient for Gamma0(45).
+
+idmat := matrix [[1,0],[0,1]]
+yeq := yeq3g(members cvector, idmat);
+modular? yeq
+
+xiord := 24*level
+CX := UnityRootExtension(C, xiord); xi := generator()$CX
+eq := etaQuotient(yeq)$ETAQG(C,CX);
+expansion eq
+
+-- We change to all cusps, i.e., we also change some domains.
+
+equn(r) ==> etaQuotient(level, r, 1, [0], 1, 0, cusps)$YMSETAQ
+expand e ==> expansions(expandAtAllCusps(e)$MSETAQ(C, CX))::Fn(CX);
+
+cusps := cuspsOfGamma0(level)
+ycogen := equn members cvector;
+minimalRootOfUnity ycogen
+mcogen := expand ycogen;
+qetaGrades mcogen
+
+-- Now we can multiply rpol^6 with the monomial corresponding to cvector.
+-- This will give a representation of f45^6/eta24 as a Q-linear combination
+-- of eta-quotients.
+-- We cannot reduce this representation by our samba basis abex, because
+-- f45^6/eta24 does not only have poles at infinity.
+
+cpol := directProduct(cvector)$DZ::RZ
+f3pol := rpol^3 * cpol;
+mons3 := monomials f3pol;
+
+-- Obviously, the coefficients are integers, so we can form a list of
+-- vectors similar to brunaultterms.
+
+terms3 := [cons(leadingCoefficient(m)::Z, members degree m) for m in mons3];
+
+-- terms6 corresponds to a sum of eta-quotients.
+
+-- Check that we do not need a bigger root of unity.
+
+ygens3 := [equn rest x for x in terms3];
+assertTrue(xiord > max [minimalRootOfUnity y for y in ygens3])
+
+-- Check that all eta-quotients in terms6 correspond really to modular
+-- functions.
+
+assertEquals(removeDuplicates [modular? yeq3g(rest x, idmat) for x in terms3], [true])
+
+
+-- We now apply SL2Z transformations to each of the summands and check
+-- whether we obtain equal power series expansions. The
+-- transformations are the indexOfGamma0(level)
+-- reps:=rightCosetRepresentatives(level) stored in the variable reps.
+
+tsum(terms, gamma) == reduce(_+, [first(x)*eq3g(rest x, gamma) for x in terms])
+
+-- Safety check whether the identity matrix gives the already known
+-- expansion.
+
+f3id := tsum(terms3, first reps) -- first reps = identity matrix
+f3x := abmap(C, CX, f3)::S(CX)
+fdiff := f3id - f3x
+assertEquals(removeDuplicates [coefficient(fdiff, i) for i in -20..50], [0])
+
+-- Now we can compute all the expansions at all other gamma from reps.
+
+tsers :=[tsum(terms3, gamma) for gamma in reps];
+
+)set stream calc 4
+
+oics := [[order x, i, leadingCoefficient x]$Record(fo: Z, fi: Z, fc: CX) for x in tsers for i in 1..#tsers];
+
+l := oics;
+while not empty? l repeat (_
+  a := first l;_
+  l2 := rest l;_
+  while not empty? l2 repeat (_
+    b := first l2;_
+    if a.fo = b.fo and a.fc = b.fc then (print([a.fi, b.fi]);print(tsers(a.fi) - tsers(b.fi)));_
+    l2 := rest l2);_
+  l := rest l)
 
 
 -- +
@@ -389,13 +510,11 @@ assertEquals([qetaGrade x for x in eqcofactors], _
 f := f45 * eqcofactor
 xf := toX1(C, f, 'F)
 xfr := reduce(xf, abex)$QXTOPRED1(C)
-ixfr := 5 * xfr
 assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..200], [0])
 
-FPZ ==> Fraction PolZ
-PE==>PolynomialEvaluation(Z, FPZ)
-
+ixfr := 5 * xfr
 pol := ((second(ixfr)::PolC + F)::PolZ)
+
 -- pol corresponds to the modular function f_45 * eqcofactor
 assertEquals(pol, (-M1^3+3*M1^2)*M3+(M1^3-6*M1^2-5*M1)*M2+4*M1^3-M1^2-5*M1)
 
@@ -410,14 +529,52 @@ rgens0 := members(- vector rcofactor)
 vals := cons(h(rgens0), [h x for x in rgens])
 vars := cons(M0, msyms)
 
--- The following give f_45 in terms of eta-quotients
-efun := (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol)
-assertEquals(efun, _
+-- The following gives f_45 in terms of eta-quotients
+
+FPZ ==> Fraction PolZ
+PE==>PolynomialEvaluation(Z, FPZ)
+
+-- Let's first check whether the expansion for the modular function f is
+-- correctly expressed in eta-quotients.
+
+epol := (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol);
+assertEquals(epol, _
   (-E1*E15^4*E45*E5*E9^11+E15^8*E9^10+4*E15^3*E3*E45^5*E9^9 _
    +3*E1*E15^3*E3*E45^4*E5*E9^8-6*E15^7*E3*E45^3*E9^7 _
    -E15^2*E3^2*E45^8*E9^6-5*E15^6*E3^2*E45^6*E9^4-5*E15*E3^3*E45^11*E9^3)_
    /_
    (E3^4*E45^14))
+
+epoln := numer epol;
+epold := denom epol;
+
+esyms := indexedSymbols("E", divs)
+dim: N := #esyms
+DN ==> HomogeneousDirectProduct(dim, N);
+DZ ==> HomogeneousDirectProduct(dim, Z);
+RZ ==> PolynomialRing(C, DZ)
+toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
+
+E ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
+rez x ==> x pretend  PolynomialRing(C, E)
+e(l) ==> retract etaQuotient(divs, l)$ETA(C)
+
+rpoln := toRZ epoln
+rpold := degree toRZ epold
+irpold := (-rpold)::RZ
+rpol := rpoln * irpold
+ms := [leadingCoefficient x * e members degree x for x in monomials rpol];
+z := reduce(_+, ms) - f
+
+-- The function z is a modular function, so we only need to check the
+-- negative exponents.
+
+assertTrue(zero? z)
+
+-- Show nicely
+
+num := rez rpoln
+den := rez(rpold :: RZ)
 
 -------------------------------------------------------------------
 -- # Problem: Zudilin has a relation with only 7 terms for f_45.
@@ -444,7 +601,7 @@ assertEquals(efun, _
 
 -- We store the terms as a list of [coeff, etaexponents].
 
-zudilinterms := [_
+brunaultterms := [_
   [  3, 0,-2,0,4,4,-2],_
   [-15, 0,-1,0,1,3, 1],_
   [- 5, 0,-1,3,1,3,-2],_
@@ -454,13 +611,13 @@ zudilinterms := [_
   [  1, 1, 1,1,0,1, 0] _
  ]
 
-f45zudilin := reduce(_+, [first(x)*retract(equ rest x) for x in zudilinterms])
-f45diff := f45zudilin-f45;
+f45brunault := reduce(_+, [first(x)*retract(equ rest x) for x in brunaultterms])
+f45diff := f45brunault-f45;
 coeffsf45 :=  [qetaCoefficient(f45diff, -i) for i in 0..300];
 assertEquals(removeDuplicates coeffsf45, [0])
 
 
-rzudilin := rest(zudilinterms.1)
+rbrunault := rest(brunaultterms.1)
 -- It corresponds to the denominator (exponent 2) and the monomial
 -- eta(q^9)^4*eta(q^15).
 
@@ -488,15 +645,14 @@ nn := level
 --rs := eqmevx level
 rs := etaQuotientMonoidExponentVectors(level, [2,3,4,5])$QEQEV;
 
---cusps := cuspsOfGamma0 level
---cusps := [1,1/5, 1/9, 1/45]
+allcusps := cuspsOfGamma0 level
 cusps := [1, 1/45]
 
 qsyms := indexedSymbols("Q", #rs)
 ygens := [equn rsi for rsi in rs];
 xiord := max [minimalRootOfUnity y for y in ygens]
 if xiord < 3 then (CX := Q; xi := -(1$CX)) else _
-  (CX ==> UnityRootExtension(C, xiord); xi := generator()$CX)
+  (CX := UnityRootExtension(C, xiord); xi := generator()$CX)
 egens := [expand y for y in ygens];
 [qetaGrades x for x in egens]
 
@@ -591,6 +747,114 @@ xzhsorted := sort((a1:Xn(CX),a2:Xn(CX)):Boolean +-> qetaGrades a1 < qetaGrades a
 abh := samba(xzhsorted)$QXSAMBAn(CX);
 xfhr1 := reduce(xfn1, abh)$QXREDn(CX)
 assertTrue(zero? xfhr1)
+
+-------------------------------------------------------------------
+-- Finding other symmetry group for f_45.
+-------------------------------------------------------------------
+
+o := reduce(_+, [width(level, denom cusp) for cusp in cuspsOfGamma0(level)])
+assertEquals(o, indexOfGamma0 level)
+reps := rightCosetRepresentatives level;
+assertEquals(# reps, o)
+reta24 := [24, 0,0,0,0,0] -- exponent vector for delta(\tau)=eta^24
+eta24 := e reta24 -- = eta^(-24)
+
+-- f45^6/eta24 = f^6*(eta24*eqcofactor^6)
+-- f6 is modular function with poles only at the cusps, but not necessarily
+-- only at infinity.
+
+cvector := - (vector reta24 + 6*vector rcofactor)
+f6 := f^6  / (        eta24 *         eqcofactor^6)
+
+-- f^6 corresponds to xf^6, i.e., pol^6. To each of the variables Mi in pol
+-- corresponds the r-vector rgens.i
+
+assertTrue(zero? reduce(_+, members cvector))
+
+yeq6g(l, g) ==> etaQuotient(level, asLP divs, l, g)$YETAQG
+eq6g(l, g) ==> expansion(etaQuotient(yeq6g(l,g))$ETAQG(C,CX))
+
+-- Check that cvector indeed belongs to a modular eta-quotient for Gamma0(45).
+
+idmat := matrix [[1,0],[0,1]]
+yeq := yeq6g(members cvector, idmat);
+modular? yeq
+
+xiord := 24*level
+CX := UnityRootExtension(C, xiord); xi := generator()$CX
+eq := etaQuotient(yeq)$ETAQG(C,CX);
+expansion eq
+
+-- We change to all cusps, i.e., we also change some domains.
+
+cusps := allcusps
+ygens := [equn rsi for rsi in rs];
+ycogen := equn members cvector;
+minimalRootOfUnity ycogen
+mcogen := expand ycogen
+qetaGrades mcogen
+
+-- Now we can multiply rpol^6 with the monomial corresponding to cvector.
+-- This will give a representation of f45^6/eta24 as a Q-linear combination
+-- of eta-quotients.
+-- We cannot reduce this representation by our samba basis abex, because
+-- f45^6/eta24 does not only have poles at infinity.
+
+cpol := directProduct(cvector)$DZ::RZ
+f6pol := rpol^6 * cpol;
+mons6 := monomials f6pol;
+
+-- Obviously, the coefficients are integers, so we can form a list of
+-- vectors similar to brunaultterms.
+
+terms6 := [cons(leadingCoefficient(m)::Z, members degree m) for m in mons6];
+
+-- terms6 corresponds to a sum of eta-quotients.
+
+-- Check that we do not need a bigger root of unity.
+
+ygens6 := [equn rest x for x in terms6];
+assertTrue(xiord > max [minimalRootOfUnity y for y in ygens6])
+
+-- Check that all eta-quotients in terms6 correspond really to modular
+-- functions.
+
+assertEquals(removeDuplicates [modular? yeq6g(rest x, idmat) for x in terms6], [true])
+
+
+-- We now apply SL2Z transformations to each of the summands and check
+-- whether we obtain equal power series expansions. The
+-- transformations are the indexOfGamma0(level)
+-- reps:=rightCosetRepresentatives(level) stored in the variable reps.
+
+tsum(terms, gamma) == reduce(_+, [first(x)*eq6g(rest x, gamma) for x in terms])
+
+-- Safety check whether the identity matrix gives the already known
+-- expansion.
+
+f6id := tsum(terms6, first reps) -- first reps = identity matrix
+f6x := abmap(C, CX, f6)::S(CX)
+fdiff := f6id - f6x
+assertEquals(removeDuplicates [coefficient(fdiff, i) for i in -20..50], [0])
+
+-- Now we can compute all the expansions at all other gamma from reps.
+
+tsers :=[tsum(terms6, gamma) for gamma in reps];
+
+)set stream calc 4
+
+oics := [[order x, i, leadingCoefficient x]$Record(fo: Z, fi: Z, fc: CX) for x in tsers for i in 1..#tsers];
+
+l := oics;
+while not empty? l repeat (_
+  a := first l;_
+  l2 := rest l;_
+  while not empty? l2 repeat (_
+    b := first l2;_
+    if a.fo = b.fo and a.fc = b.fc then (print([a.fi, b.fi]);print(tsers(a.fi) - tsers(b.fi)));_
+    l2 := rest l2);_
+  l := rest l)
+
 
 -------------------------------------------------------------------
 --endtest
