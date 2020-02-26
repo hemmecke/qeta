@@ -393,9 +393,75 @@ while not empty? l repeat (_
   l2 := rest l;_
   while not empty? l2 repeat (_
     b := first l2;_
-    if a.fo = b.fo and a.fc = b.fc then (print([a.fi, b.fi]);print(tsers(a.fi) - tsers(b.fi)));_
+    if a.fo = b.fo and a.fc = -b.fc then (print([a.fi, b.fi]);print(tsers(a.fi) + tsers(b.fi)));_
     l2 := rest l2);_
   l := rest l)
+
+
+
+
+oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers for i in 1..#tsers];
+
+l := oics;
+while not empty? l repeat (_
+  a := first l;_
+  l2 := rest l;_
+  while not empty? l2 repeat (_
+    b := first l2;_
+    if a.fo = b.fo then (_
+        ser := a.fc/b.fc;_
+        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..20];_
+        if csz = [true] then (print([a.fi, b.fi]); print(ser)));_
+    l2 := rest l2);_
+  l := rest l)
+
+
+-- Square the whole thing...
+
+mons6 := monomials(f3pol^2);
+terms6 := [cons(leadingCoefficient(m)::Z, members degree m) for m in mons6];
+tsers6 :=[tsum(terms6, gamma) for gamma in reps];
+
+oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers6 for i in 1..#tsers];
+
+l := oics;
+while not empty? l repeat (_
+  a := first l;_
+  l2 := rest l;_
+  while not empty? l2 repeat (_
+    b := first l2;_
+    if a.fo = b.fo then (_
+        ser := a.fc/b.fc;_
+        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..20];_
+        if csz = [true] then (print([a.fi, b.fi]); print(ser)));_
+    l2 := rest l2);_
+  l := rest l)
+
+-- Look what happens when we just transform with the matrix [[1,0],[64,1]].
+
+symmat := matrix [[1,0],[64,1]]
+rcpol := directProduct(vector rgens.3)$DZ::RZ
+rmons := monomials(rpol*rcpol);
+rterms := [cons(leadingCoefficient(m)::Z, members degree m) for m in rmons];
+tsers := [tsum(rterms, gamma) for gamma in reps];
+
+oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers for i in 1..#tsers];
+
+l := oics;
+result := empty()$List(List Z)
+while not empty? l repeat (_
+  a := first l;_
+  l2 := rest l;_
+  while not empty? l2 repeat (_
+    b := first l2;_
+    if a.fo = b.fo then (_
+        ser := a.fc/b.fc;_
+        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..5];_
+        if csz = [true] then (print([a.fi, b.fi]); print(ser); result := cons([a.fi, b.fi], result)));_
+    l2 := rest l2);_
+  l := rest l)
+#result
+result
 
 
 -- +
@@ -771,29 +837,6 @@ f6 := f^6  / (        eta24 *         eqcofactor^6)
 
 assertTrue(zero? reduce(_+, members cvector))
 
-yeq6g(l, g) ==> etaQuotient(level, asLP divs, l, g)$YETAQG
-eq6g(l, g) ==> expansion(etaQuotient(yeq6g(l,g))$ETAQG(C,CX))
-
--- Check that cvector indeed belongs to a modular eta-quotient for Gamma0(45).
-
-idmat := matrix [[1,0],[0,1]]
-yeq := yeq6g(members cvector, idmat);
-modular? yeq
-
-xiord := 24*level
-CX := UnityRootExtension(C, xiord); xi := generator()$CX
-eq := etaQuotient(yeq)$ETAQG(C,CX);
-expansion eq
-
--- We change to all cusps, i.e., we also change some domains.
-
-cusps := allcusps
-ygens := [equn rsi for rsi in rs];
-ycogen := equn members cvector;
-minimalRootOfUnity ycogen
-mcogen := expand ycogen
-qetaGrades mcogen
-
 -- Now we can multiply rpol^6 with the monomial corresponding to cvector.
 -- This will give a representation of f45^6/eta24 as a Q-linear combination
 -- of eta-quotients.
@@ -809,12 +852,39 @@ mons6 := monomials f6pol;
 
 terms6 := [cons(leadingCoefficient(m)::Z, members degree m) for m in mons6];
 
--- terms6 corresponds to a sum of eta-quotients.
+-- For each of the terms and for each of the right coset
+-- representatives that are given through reps, we compute an element of
+-- SymbolicEtaQuotientGamma to figure out which root of unity is needed.
 
--- Check that we do not need a bigger root of unity.
+yeq6g(l, g) ==> etaQuotient(level, asLP divs, l, g)$YETAQG
+--yeq6g(l, g) ==> etaQuotient(level, asLP divs, l, asP 1, 0 pretend Z, g pretend MZ)$YSETAQG
+ygterms := [[yeq6g(rest x, gamma) for x in terms6] for gamma in reps];
+xiord := 24*max [max [minimalRootOfUnity y for y in l] for l in ygterms]
+CX := UnityRootExtension(C, xiord); xi := generator()$CX
 
-ygens6 := [equn rest x for x in terms6];
-assertTrue(xiord > max [minimalRootOfUnity y for y in ygens6])
+assertEquals(removeDuplicates [removeDuplicates [modular? y for y in l] for l in ygterms], [[true]])
+
+tsum(terms, gamma) == reduce(_+, [first(x)*eq6g(rest x, gamma) for x in terms])
+
+eq6g(l, g) ==> expansion(etaQuotient(yeq6g(l,g))$ETAQG(C,CX))
+
+-- Check that cvector indeed belongs to a modular eta-quotient for Gamma0(45).
+
+idmat := matrix [[1,0],[0,1]]
+yeq := yeq6g(members(cvector)$Vector(Z), idmat);
+minimalRootOfUnity yeq
+assertTrue(modular? yeq)
+
+eq := etaQuotient(yeq)$ETAQG(C,CX);
+expansion eq
+
+-- We change to all cusps, i.e., we also change some domains.
+
+cusps := allcusps
+ycogen := equn members cvector;
+minimalRootOfUnity ycogen
+mcogen := expand ycogen
+qetaGrades mcogen
 
 -- Check that all eta-quotients in terms6 correspond really to modular
 -- functions.
@@ -843,7 +913,7 @@ tsers :=[tsum(terms6, gamma) for gamma in reps];
 
 )set stream calc 4
 
-oics := [[order x, i, leadingCoefficient x]$Record(fo: Z, fi: Z, fc: CX) for x in tsers for i in 1..#tsers];
+oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers for i in 1..#tsers];
 
 l := oics;
 while not empty? l repeat (_
@@ -851,10 +921,24 @@ while not empty? l repeat (_
   l2 := rest l;_
   while not empty? l2 repeat (_
     b := first l2;_
-    if a.fo = b.fo and a.fc = b.fc then (print([a.fi, b.fi]);print(tsers(a.fi) - tsers(b.fi)));_
+    if a.fo = b.fo then (_
+        ser := a.fc/b.fc;_
+        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..20];_
+        if csz = [true] then (print([a.fi, b.fi]); print(ser)));_
     l2 := rest l2);_
   l := rest l)
 
+mcusps := [cuspToMatrix(level, x) for x in cuspsOfGamma0(45)]
+mats := concat(mcusps, reps);
+l := mats;
+while not empty? l repeat (_
+  a := first l;_
+  l2 := rest l;_
+  while not empty? l2 repeat (_
+    mat := a * (inverse(first l2)::MZ);_
+    if zero? positiveRemainder(mat(2,1), level) then print([a, first l2, mat]);_
+    l2 := rest l2);_
+  l := rest l)
 
 -------------------------------------------------------------------
 --endtest
