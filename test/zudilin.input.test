@@ -385,83 +385,82 @@ tsers :=[tsum(terms3, gamma) for gamma in reps];
 
 )set stream calc 4
 
-oics := [[order x, i, leadingCoefficient x]$Record(fo: Z, fi: Z, fc: CX) for x in tsers for i in 1..#tsers];
+findSimilarExpansions(qseries: List S CX): List List Z == (_
+    REC ==> Record(fo: Z, fi: Z, fc: S CX);_
+    oics := [[order x, i, x]$REC for x in qseries for i in 1..#qseries];_
+    l := oics;_
+    result := empty()$List(List Z);_
+    while not empty? l repeat (_
+        a := first l;_
+        l2 := rest l;_
+        while not empty? l2 repeat (_
+            b := first l2;_
+            if a.fo = b.fo then (_
+                ser := a.fc/b.fc;_
+                cs := [coefficient(ser, i) for i in 1..20];_
+                if removeDuplicates [zero? c for c in cs] = [true] then (_
+                    print(hconcat [[a.fi, b.fi]::OF, [ser]::OF]);_
+                    result := cons([a.fi, b.fi], result)));_
+            l2 := rest l2);_
+        l := rest l);_
+    result);
 
-l := oics;
-while not empty? l repeat (_
-  a := first l;_
-  l2 := rest l;_
-  while not empty? l2 repeat (_
-    b := first l2;_
-    if a.fo = b.fo and a.fc = -b.fc then (print([a.fi, b.fi]);print(tsers(a.fi) + tsers(b.fi)));_
-    l2 := rest l2);_
-  l := rest l)
-
-
-
-
-oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers for i in 1..#tsers];
-
-l := oics;
-while not empty? l repeat (_
-  a := first l;_
-  l2 := rest l;_
-  while not empty? l2 repeat (_
-    b := first l2;_
-    if a.fo = b.fo then (_
-        ser := a.fc/b.fc;_
-        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..20];_
-        if csz = [true] then (print([a.fi, b.fi]); print(ser)));_
-    l2 := rest l2);_
-  l := rest l)
-
-
--- Square the whole thing...
-
-mons6 := monomials(f3pol^2);
-terms6 := [cons(leadingCoefficient(m)::Z, members degree m) for m in mons6];
-tsers6 :=[tsum(terms6, gamma) for gamma in reps];
-
-oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers6 for i in 1..#tsers];
-
-l := oics;
-while not empty? l repeat (_
-  a := first l;_
-  l2 := rest l;_
-  while not empty? l2 repeat (_
-    b := first l2;_
-    if a.fo = b.fo then (_
-        ser := a.fc/b.fc;_
-        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..20];_
-        if csz = [true] then (print([a.fi, b.fi]); print(ser)));_
-    l2 := rest l2);_
-  l := rest l)
-
--- Look what happens when we just transform with the matrix [[1,0],[64,1]].
-
-symmat := matrix [[1,0],[64,1]]
-rcpol := directProduct(vector rgens.3)$DZ::RZ
-rmons := monomials(rpol*rcpol);
-rterms := [cons(leadingCoefficient(m)::Z, members degree m) for m in rmons];
-tsers := [tsum(rterms, gamma) for gamma in reps];
-
-oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers for i in 1..#tsers];
-
-l := oics;
-result := empty()$List(List Z)
-while not empty? l repeat (_
-  a := first l;_
-  l2 := rest l;_
-  while not empty? l2 repeat (_
-    b := first l2;_
-    if a.fo = b.fo then (_
-        ser := a.fc/b.fc;_
-        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..5];_
-        if csz = [true] then (print([a.fi, b.fi]); print(ser); result := cons([a.fi, b.fi], result)));_
-    l2 := rest l2);_
-  l := rest l)
+result := findSimilarExpansions(tsers);
 #result
-result
+
+-- +
+-------------------------------------------------------------------
+-- Find the expansion of f_128 at the cusp 0.
+-------------------------------------------------------------------
+WIDTH(cusp) ==> width(level, denom cusp)$QAuxMEQ
+TOMAT(cusp) ==> cuspToMatrix(level, cusp)
+IMAT(mat) ==> inverse(mat)::MZ
+rmons := monomials rpol;
+rterms := [cons(leadingCoefficient(m)::Z, members degree m) for m in rmons];
+creps := [TOMAT(cusp) for cusp in cusps]
+hmat := matrix [[1,1],[0,1]]
+[WIDTH(cusp) for cusp in cusps]
+xreps := concat [(gamma:=TOMAT(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH(cusp)-1]) for cusp in cusps];
+
+findEquivalentMatrix(mat: MZ, mats: List MZ): List Z == (_
+    res: List Z := empty();_
+    imat := IMAT mat;_
+    for m in mats for i in 1.. repeat (_
+        if zero? positiveRemainder((m * imat)(2,1), level) then (_
+            res := cons(i, res))_
+    );_
+    res);
+
+indexPermutation := [first findEquivalentMatrix(reps.i, xreps) for i in 1..#reps]
+
+tseratcusps := [tsum(rterms, gamma) for gamma in creps];
+xseratcusps := [tsum(rterms, gamma) for gamma in xreps];
+rsers := [tsum(rterms, gamma) for gamma in reps];
+#xseratcusps
+result := findSimilarExpansions(tseratcusps);
+xresult := findSimilarExpansions(xseratcusps);
+#xresult
+rresult := findSimilarExpansions(rsers);
+#rresult
+
+)set stream calc 4
+for i in 1..#xreps repeat (_
+    print("-----------------"::Symbol);_
+    print([[i]]);_
+    print(xreps.i);_
+    print(tsum(rterms, xreps.i)))
+
+-- +
+-------------------------------------------------------------------
+-- Create a modular function with expansion at all cusps.
+-------------------------------------------------------------------
+
+msum(terms) == reduce(_+, [first(x)*expand(equn(rest x)) for x in terms])
+fAtAllCusps := msum(rterms);
+
+cseries := [series(fAtAllCusps, i) - tseratcusps.i for i in 1..#cusps];
+assertEquals(removeDuplicates [removeDuplicates [coefficient(x, i) for i in -60..20] for x in cseries], [[0]])
+
 
 
 -- +
