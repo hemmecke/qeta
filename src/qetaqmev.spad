@@ -507,19 +507,17 @@ QEtaQuotientExponentVectors4ti2: with
       ++ rhs := [0 for i in idivs].
     etaQuotientExponentVectors: (P, List Z, List Z, Z) -> List List Z
       ++ etaQuotientExponentVectors(m, idivs, rhs, weight) computes
-      ++ zsolve4ti2(m, idivs, rhs, weight) and chooses one particular
-      ++ solution and adds it to all homogeneous and free solution vectors.
-      ++ The opposite vectors of the free solutions are also taken
-      ++ into account.
-    zsolve4ti2: (P, List Z, List Z, Z) -> ZRESULT
-      ++ zsolve4ti2(m, idivs, rhs, weight) computes n:=#idivs,
+      ++ zsolve4ti2(m, idivs, concat(rhs, [weight]) and chooses one
+      ++ particular solution and adds it to all homogeneous and free
+      ++ solution vectors. The opposite vectors of the free solutions
+      ++ are also taken into account.
+    zsolve4ti2: (P, List Z, List Z) -> ZRESULT
+      ++ zsolve4ti2(m, idivs, rhs) computes n:=#idivs,
       ++ mat:=matrixLigozatRStar(m,idivs)$QAuxiliaryModularEtaQuotientPackage
-      ++ and the column vector b whose first n entries are given by
-      ++ rhs, whose (n+1)-th entry is weight, and whose remaining
-      ++ entries are 0. It then solves the problem mat*x >= b where
-      ++ for the first n rows >= applies and for the remaining rows
-      ++ equality must hold.
-
+      ++ and the column vector b whose first entries are given by
+      ++ Note that the (n+1)-th entry corresponds to the weight.
+      ++ See in the specification of matrixLigozatRStar about the meaning
+      ++ of the other rows of the matrix.
   == add
     QEVAux ==> QEtaQuotientExponentVectorsAux
 
@@ -534,23 +532,21 @@ QEtaQuotientExponentVectors4ti2: with
     -- Then monoidGenerators computes vectors z such that
     -- B_m*z=b(1..nrows(B_m)) and M*z>=0 where the vector b has the weight
     -- in its first entry and zeros everywhere else.
-    zsolve4ti2(m: P, idivs: List Z, rhs: List Z, weight: Z): ZRESULT ==
+    zsolve4ti2(m: P, idivs: List Z, rhs: List Z): ZRESULT ==
         mat: MZ := matrixLigozatRStar(m, idivs)$QAuxMEQ
         rows := nrows mat
         nidivs: N := #idivs
         --assert(#rhs=nidivs)
         b: VZ := new(rows, 0) -- the right hand side vector
         rels: VZ := new(rows, 0) -- all equations
-        b(nidivs+1) := weight
         -- However the first nidivs entries are inequations A x >= b.
-        for i in 1..nidivs for bi in rhs repeat
-            b.i := bi
-            rels.i := 1
+        for i in 1..nidivs repeat rels.i := 1
+        for bi in rhs for i in 1..min(#rhs, rows) repeat b.i := bi
         zsolve(mat, rels, b)$X4ti2
 
     generatorsWithWeight(m: P, idivs: List Z, weight: Z): List VZ ==
-        rhs: List Z := [0 for i in idivs]
-        res: ZRESULT := zsolve4ti2(m, idivs, rhs, weight)
+        rhs: List Z := concat([0 for i in idivs], weight)
+        res: ZRESULT := zsolve4ti2(m, idivs, rhs)
         result: List VZ := res.zhom
         for x in res.zfree repeat result := cons(x, cons(-x, result))
         -- We only need the zhom and zfree part, since the zinhom part
