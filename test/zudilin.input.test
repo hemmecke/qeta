@@ -443,6 +443,13 @@ xresult := findSimilarExpansions(xseratcusps);
 rresult := findSimilarExpansions(rsers);
 #rresult
 
+
+xtsers :=[tsum(terms3, gamma) for gamma in xreps];
+ctsers :=[tsum(terms3, gamma) for gamma in creps];
+x3result := findSimilarExpansions(xtsers);
+#x3result
+
+
 )set stream calc 4
 for i in 1..#xreps repeat (_
     print("-----------------"::Symbol);_
@@ -457,9 +464,100 @@ for i in 1..#xreps repeat (_
 
 msum(terms) == reduce(_+, [first(x)*expand(equn(rest x)) for x in terms])
 fAtAllCusps := msum(rterms);
+f3AtAllCusps := msum(terms3);
 
 cseries := [series(fAtAllCusps, i) - tseratcusps.i for i in 1..#cusps];
 assertEquals(removeDuplicates [removeDuplicates [coefficient(x, i) for i in -60..20] for x in cseries], [[0]])
+
+-- +
+-------------------------------------------------------------------
+-- Adjust f to other cofactor. Then g := f*fadjust is a modular function,
+-- but with poles not only at infinity.
+-------------------------------------------------------------------
+
+idivs := empty()$List(Z)
+z:=zsolve4ti2(level, idivs, concat([0 for i in idivs], -8))$QEQEV;
+vmodadjust := (first z.zinhom)(1..#divs) - vector rcofactor
+radjustterms := [cons(first x, members(vector rest x + vmodadjust)) for x in rterms]
+fadjustAtAllCusps := msum(radjustterms);
+
+-- fadjustAtAllCusps has series expansion of the form q*series(q^2) at
+-- every cusp.
+
+qetaGrades fadjustAtAllCusps
+xtadjustsers :=[tsum(radjustterms, gamma) for gamma in xreps];
+xadjustresult := findSimilarExpansions(xtadjustsers);
+#xadjustresult
+ser := xtadjustsers.3 - xtadjustsers.145
+cs := [coefficient(ser, i) for i in -24..100]
+
+-- +
+-------------------------------------------------------------------
+-- Try to find an adjustment with just poles at cusp 1/1.
+-------------------------------------------------------------------
+reta := [-24,24,0,0,0,0,0,0]
+yeta := equn reta;
+eeta := expand yeta;
+qetaGrades eeta
+fadjusteta := fadjustAtAllCusps * eeta;
+qetaGrades fadjusteta
+
+-- We can do the samba computation just for the cusp 1/1.
+
+)set stream calc 2
+)set stream showall off
+nn := level
+--rs := eqmevx level
+rs64 := etaQuotientMonoidExponentVectors(64, [2,3,4,5,6,7])$QEQEV;
+cusps64 := cuspsOfGamma0 64
+cusps := cusps64
+equn64(r) ==> etaQuotient(64, r, 1, [0], 1, 0, cusps64)$YMSETAQ
+qsyms64 := indexedSymbols("Q", #rs64)
+ygens64 := [equn64 rsi for rsi in rs64];
+--xiord := max [minimalRootOfUnity y for y in ygens64]
+egens64 := [expand y for y in ygens64];
+[qetaGrades x for x in egens64]
+
+)read /home/hemmecke/g/qeta/input/tracing.input
+)read /home/hemmecke/g/qeta/input/tracingpower.input
+
+--ab64 := samba(xgens64,onetnStep!)$QXSAMBAn(CX);
+--ab64 := samba(xgens64)$QXSAMBAn(CX);
+
+-- The above computation does not work, so we do the compuation just
+-- at the cusp 1/1.
+
+xgens64 := [toX1(CX, series(x, 1)::F1(CX), s) for x in egens64 for s in qsyms64]
+tex64 := 2*xgens64.1
+abex64 := samba(tex64, xgens64)$QXTOPSAMBA1(CX)
+assertEquals(genusOfGamma0(64), numOfGaps(abex64))
+fadjusteta1 := series(fadjusteta, 1)::F1(CX)
+[qetaCoefficient(fadjusteta1, i) for i in 0..95]
+)set stream calc 20
+abex64
+xfadjusteta1 := toX1(CX, fadjusteta1, 'F);
+xfr64 := reduce(xfadjusteta1, abex64)$QXTOPRED1(CX)
+512*xfr64
+
+f3eta1 := series(f3AtAllCusps*eeta, 1)::F1(CX)
+xf3eta1 := toX1(CX, f3eta1, 'F3);
+xf3r64 := reduce(xf3eta1, abex64)$QXTOPRED1(CX); -- takes > 30 min
+
+qetaGrades fadjustAtAllCusps
+
+
+idivs := [1,2,3,4,5,6]
+z:=zsolve4ti2(64, idivs, concat([31*24,31*24,0,0,0,0], [0,0,12]))$QEQEV;
+rcofac64 := concat(members((z.zinhom.1)(1..7)), 0)
+fadjust2 := expand equn rcofac64
+fadjusted := fadjustAtAllCusps * fadjust2
+qetaGrades fadjusted
+
+[[WIDTH x, width(64, denom x)$QAuxMEQ,x] for x in cusps]
+[[cusps.i, WIDTH(cusps.i), width(64, denom(cusps.i))$QAuxMEQ, series(fadjusted, i)] for i in 1..#cusps]
+
+-- fadjusted is, in fact a modular function for Gamma_0(64). So let's
+-- multiply with another nice eta-quotient that brings it to M^\infty(64).
 
 
 
@@ -787,7 +885,7 @@ assertEquals(removeDuplicates [order(series(first(xfr)::Fn(CX), i), 9) for i in 
 -- We have already such eta-quotients given by rs (or egens).
 -- Multiplying xfn by xgens.1
 
-z := zsolve4ti2(level, [2,3,4,5,6], [0,0,0,0,24*17], 0)
+z := zsolve4ti2(level, [2,3,4,5,6], [0,0,0,0,24*17])
 zi := [x(1..#divs) for x in z.zinhom]
 zsyms := indexedSymbols("Z", #zi)
 xzi := [toXn(CX, expand equn x, s) for x in zi for s in zsyms];
