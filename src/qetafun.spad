@@ -2125,21 +2125,27 @@ we have \code{e.cusp} is the corresponding data from
 -------------------------------------------------------------------
 )abbrev domain YETAQ SymbolicEtaQuotient
 ++ SymbolicEtaQuotient holds data to compute an eta quotient expansions
-++ of g_r(\tau) at all cusps of $\Gamma_0(N)$.
+++ of g_r(\tau) at all cusps of $\Gamma_0(N)$ or at the given cusps.
 ++ See \eqref{g_r(tau)}
 SymbolicEtaQuotient: SetCategory with
+    etaQuotient: (P, LZ, LQ) -> %
+      ++ etaQuotient(m, r, cusps) represents the expansion of
+      ++ g_r(\tau) at the given cusps a/c
+      ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
+      ++ gamma=cuspToMatrix(m, a/c).
     etaQuotient: (P, LZ) -> %
       ++ etaQuotient(m, r) represents the expansion of
       ++ g_r(\tau) at all cusps a/c of Gamma0(m)
       ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
       ++ gamma=cuspToMatrix(m, a/c).
+      ++ It is the same as etaQuotient(m, r, cuspsOfGamma0 m).
     level: % -> P
       ++ If x=etaQuotient(m, r) then level(x) returns the level of
       ++ the eta quotient, i.e., level(x)=m.
     exponents: % -> LZ
       ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
       ++ exponents, i.e., exponents(x)=r.
-    cusps: % -> List Q
+    cusps: % -> LQ
       ++ If x=etaQuotient(m, r), then
       ++ cusps(x)=cuspsOfGamma0(m)$QAuxiliaryModularEtaQuotientPackage.
     minimalRootOfUnity: % -> P
@@ -2164,9 +2170,8 @@ SymbolicEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(m: P, r: LZ): % ==
+    etaQuotient(m: P, r: LZ, cusps: LQ): % ==
         divs: LP := DIVISORS m
-        cusps: LQ := cuspsOfGamma0(m)$QAuxMEQ
         h: HT := empty()
         minroot: P := 1
         for cusp in cusps repeat
@@ -2175,6 +2180,8 @@ SymbolicEtaQuotient: SetCategory with
             h.cusp := e
             minroot := lcmP(minroot, minimalRootOfUnity e)
         per [m, r, cusps, h, minroot]
+
+    etaQuotient(m: P, r: LZ): % == etaQuotient(m, r, cuspsOfGamma0(m)$QAuxMEQ)
 
     level(x: %): P == xx.flevel
     exponents(x: %): LZ == xx.fexponents
@@ -2881,7 +2888,7 @@ it computes the building blocks for $F_{r, s, m, t}(\gamma\tau)$.
 ++ quotient expansions of $F_{r, s, m, t}(\gamma \tau)$ at all cusps
 ++ of $Gamma_0(N)$. See \eqref{eq:F_r-s-m-t(gamma*tau)}.
 SymbolicModularSiftedEtaQuotient: SetCategory with
-    etaQuotient: (P, LZ, P, LZ, P, N, List Q) -> %
+    etaQuotient: (P, LZ, P, LZ, P, N, LQ) -> %
       ++ etaQuotient(nn, r, mm, s, m, t, cusps) represents the expansion
       ++ of $F_{r,s, m, t}(\gamma \tau)$ for all gamma corresponding to
       ++ the given cusps.
@@ -2892,8 +2899,11 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_0(nn).
-    cusps: % -> List Q
-      ++ cusps(x)=cuspsOfGamma0(level x)$QAuxiliaryModularEtaQuotientPackage.
+    cusps: % -> LQ
+      ++ cusps(x) either returns the value that was given to
+      ++ etaQuotient at creation time or cuspsOfGamma0(level
+      ++ x)$QAuxiliaryModularEtaQuotientPackage if the cusps where not
+      ++ given.
     elt: (%, Q) -> SymbolicModularSiftedEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
@@ -2913,7 +2923,7 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N, cusps: List Q): % ==
+    etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N, cusps: LQ): % ==
         h: HT := empty()
         minroot: P := 1
         for cusp in cusps repeat
@@ -2924,8 +2934,7 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
         per [nn, cusps, h, minroot]
 
     etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): % ==
-        cusps: LQ := cuspsOfGamma0(nn)$QAuxMEQ
-        etaQuotient(nn, r, mm, s, m, t, cusps)
+        etaQuotient(nn, r, mm, s, m, t, cuspsOfGamma0(nn)$QAuxMEQ)
 
     level(x: %): P == xx.flevel
     elt(x: %, cusp: Q): YMSETAQG == xx.fmseq.cusp
