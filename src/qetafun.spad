@@ -3383,15 +3383,15 @@ ModularSiftedEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   xi: CX --primitive mx-th root of unity.
   LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
   Exports ==> SetCategory with
-    expandAtAllCusps: SymbolicModularSiftedEtaQuotient -> %
-      ++ expandAtAllCusps(y) represents the q-expansion of
+    coerce: SymbolicModularSiftedEtaQuotient -> %
+      ++ coerce(y) represents the q-expansion of
       ++ $F_{r,s,m,t}(\gamma \tau)$ at all cusps of $\Gamma_0(N)$ where
       ++ N=level(y).
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_0(nn).
     metadata: % -> SymbolicModularSiftedEtaQuotient
-      ++ metadata(x) returns y such that expandAtAllCusps(y)=x
+      ++ metadata(x) returns y such that coerce(y) = x.
     expansions: % -> XHashTable(Q, LX)
       ++ expansions(x) returns the Laurent series expansions of
       ++ $F_{r, s, m, t}(tau)$ at all cusps of Gamma_0(N).
@@ -3401,7 +3401,7 @@ ModularSiftedEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
     Rep ==> Record(meta: YMSETAQ, ser: XHashTable(Q, LX))
     xx ==> rep x
 
-    expandAtAllCusps(y: SymbolicModularSiftedEtaQuotient): % ==
+    coerce(y: SymbolicModularSiftedEtaQuotient): % ==
         import from SiftedEtaQuotientGamma(C, mx, CX, xi, LX)
         nn: P := level y
         hser: XHashTable(Q, LX) := empty()
@@ -3483,7 +3483,7 @@ QEtaModularFunctionTools: Exports == Implementation where
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
-        e: XHashTable(Q, LX) := expansions expandAtAllCusps(y)$MSETAQ
+        e: XHashTable(Q, LX) := expansions(y::MSETAQ)
         ht: XHashTable(Q, Z) := empty()
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
