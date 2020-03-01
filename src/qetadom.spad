@@ -137,13 +137,18 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
       ++ etaQuotient(divs, r) returns the $\eta$-quotient
       ++ product(eta(divs.i)^(r.i),i=1..#divs).
       ++ It is assumed that the lengths of the input lists are equal.
-    series: % -> L
-      ++ series(x) returns the Laurent series part of x.
-      ++ x = q24(prefactor x)*series(x)
-    retract: % -> L
-      ++ retract(x) aborts with error if prefactor is not divisible by 24.
-      ++ Otherwise it returns q^r*series(x) where r=prefactor(x)/24 and q is
-      ++ the variable of L.
+    etaQuotient: (P, List Z) -> %
+      ++ etaQuotient(m, r) returns the $\eta$-quotient
+      ++ product(eta(divs.i)^(r.i),i=1..#divs) where divs=divisors(m).
+      ++ It returns etaQuotient(divisors m, r).
+      ++ It is assumed that #r = #divisors(m).
+    seriesPart: % -> L
+      ++ seriesPart(x) returns the Laurent series part of x.
+      ++ x = q24(prefactor x)*seriesPart(x)
+    expansion: % -> L
+      ++ expansion(x) aborts with error if prefactor is not divisible
+      ++ by 24. Otherwise it returns q^r*seriesPart(x) where
+      ++ r=prefactor(x)/24 and q is the variable of L.
     etaPower: (P, Z) -> %
       ++ etaPower(d, e) returns eta(d)^e.
 
@@ -156,18 +161,17 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
     -- the same prefactor.
     -- In this sense the function is only partial.
     -- However, we intend only to use it to check whether
-    -- zero?(series toEta p).
+    -- zero?(seriesPart toEta p).
     -- Furthermore, toEta(p) aborts with error if Laurent series with
     -- different prefactor are about to be added, since that cannot be
     -- represented in %.
-    toEta: Polynomial C -> %
-      ++ toEta(p) assumes that all variables are of the form Ei with the
-      ++ letter E and a positive number i. In the polynomial p the powers
-      ++ Ei^ni will be replaced by eta(i)^ni.
-      ++ If l is the leading monomial p, then it is
-      ++ assumed that prefactor(toEta(l))=prefactor(toEta(m)) for every
+    polynomialToEta: Polynomial C -> %
+      ++ polynomialToEta(p) assumes that all variables are of the form
+      ++ Ei with the letter E and a positive number i. In the
+      ++ polynomial p the powers Ei^ni will be replaced by eta(i)^ni.
+      ++ If l is the leading monomial p, then it is assumed that
+      ++ prefactor(toEta(l))=prefactor(polynomialToEta(m)) for every
       ++ monomial m of p.
-      ++ If
   == add
     Rep ==> Record(fractExpo: N, ser: L)
     new(n: Z, s: L): % ==
@@ -175,13 +179,13 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         q: Z := ((n-r) exquo 24)::Z
         return per [qcoerce(r)@N, monomial(1, q) * s]
     prefactor(x: %): N == rep(x).fractExpo
-    series(x: %): L == rep(x).ser
+    seriesPart(x: %): L == rep(x).ser
     1: % == new(0, 1$L)
     coerce(c: C): % == new(0, c::L)
-    retract(x: %): L ==
+    expansion(x: %): L ==
         e: Z := prefactor x
-        not zero? e => error "cannot retract"
-        return series x
+        not zero? e => error "eta-quotient has fractional expansion"
+        return seriesPart x
     eta(n: P): % == new(n, eulerFunction(n)$QFunctions(C, L))
     etaPower(n: P, e: Z): % ==
         import from RepeatedSquaring(%)
@@ -190,19 +194,22 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         inv(expt(eta n, qcoerce(-e)@PositiveInteger))
     q24(n: Z): % == new(n, 1$L)
     ((x: %) * (y: %)): % ==
-        new(prefactor x + prefactor y, series x * series y)
-    inv(x: %): % == new(- prefactor x, recip(series x)::L)
+        new(prefactor x + prefactor y, seriesPart x * seriesPart y)
+    inv(x: %): % == new(- prefactor x, recip(seriesPart x)::L)
     etaQuotient(divs: List Z, r: List Z): % ==
         import from List %
         reduce(_*, [etaPower(d::P, e) for d in divs for e in r], 1)
+    etaQuotient(level: P, r: List Z): % ==
+        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        etaQuotient(divs, r)
     hashUpdate!(h: HashState, x: %): HashState ==
-        hashUpdate!(hashUpdate!(h, prefactor x), series x)
+        hashUpdate!(hashUpdate!(h, prefactor x), seriesPart x)
     coerce(x: %): OutputForm ==
         q: OutputForm := (variable(0$L)$L)::OutputForm
         r: Q := prefactor(x)/24
-        zero? r => (series x)::OutputForm
+        zero? r => (seriesPart x)::OutputForm
         e: OutputForm := r::OutputForm
-        q^e * (series x)::OutputForm
+        q^e * (seriesPart x)::OutputForm
 
     -- The following functions are convenience functions and not really used.
     --:TODO: Move the functions below into a separate package.
@@ -222,11 +229,11 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         l: List N := degree(m, syms)
         e: % := 1
         for s in syms for x in l repeat e := e*etaPower(idx s, x)
-        new(prefactor e, leadingCoefficient(m) * series(e))
+        new(prefactor e, leadingCoefficient(m) * seriesPart(e))
     ((x: %) + (y: %)): % == -- This is a partial function!!!
         prefactor x ~= prefactor y => error "Cannot add. Unequal prefactor."
-        new(prefactor x, series x + series y)
-    toEta(p: Polynomial C): % ==
+        new(prefactor x, seriesPart x + seriesPart y)
+    polynomialToEta(p: Polynomial C): % ==
         --assert(all variables are of the form En where n is some integer)
         zero? p => (0$C)::%
         -- To get the correct prefactor we cannot start with r:=0.

@@ -7,15 +7,40 @@ QEQEV ==> QEtaQuotientExponentVectors4ti2
 abmap(A, B, x) ==> _
   map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
 zcmap(x) ==> abmap(Z, C, x)
+cqmap(x) ==> abmap(C, Q, x)
+zqmap(x) ==> abmap(Z, Q, x)
+
+-- polyToA1: Polynomial(C) -> A1(C)
+polyToA1 poly ==> expansion(polynomialToEta(poly) $ ETA(C))
+
+-- Implicit global variables:
+-- C: The coefficient ring where we consider the q-expansions.
+-- level: We consider the modular group Gamma_0(level).
+YEQ1C(r) ==> etaQuotient(level, r)$ETA(C)
+EQA1C(r) ==> expansion YEQ1C r -- expansion at infinity (element of A1(C)
+
+-- Implicit global variables:
+-- level:   We consider the modular group Gamma_0(level).
+-- spitzen: The cusps at which to expand.
+-- xiord:   We compute with the xiord-th root of unity
+-- xi:      A xiord-th root of unity in CX
+-- CX:      An C-Algebra containing xi.
+-- Call macro EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi).
+YEQn(r) ==> etaQuotient(level, r, spitzen)$YETAQ
+EXPAND x ==> expansions(x::METAQ(C, CX))::Fn(CX);
+EQFnCX(r) ==> EXPAND YEQn r -- expansion at all cusps for moduler eta-quotients
+
+YEQG1(l, g) ==> etaQuotient(level, l, g)$YETAQG
+EQGL1CX(l, g) ==> expansion(YEQG1(l, g)::ETAQG(C, CX))$ETAQG(C,CX)
 
 --generatingSeries for p(m*n+t)
-siftedPartitionSeries(m: P, t: N): F1 Z ==
-  ps := partitionSeries(1)$QFunctions(Z, F1 Z)
-  choose((n: Z): Z +-> m*n+t, ps, 0)$QFunctionTools(Z, F1 Z)
+siftedPartitionSeries(m: P, t: N): A1 Z ==
+  ps := partitionSeries(1)$QFunctions(Z, A1 Z)
+  choose((n: Z): Z +-> m*n+t, ps, 0)$QFunctionTools(Z, A1 Z)
 
 -- generating series for p(m*n+t) with cofactor eta quotient and
 -- the fractional q power.
-modularSiftedPartitionSeries(nn: P, m: P, t: N): F1 Z ==
+modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 Z ==
   mmdivs: List P := DIVISORS m
   s: List Z := cons(-1, rest [0 for i in mmdivs]);
   r: List Z := etaCoFactorInfinity(nn, m, s, m, t)$QEtaModularFunctionTools
@@ -26,44 +51,51 @@ modularSiftedPartitionSeries(nn: P, m: P, t: N): F1 Z ==
     error "not a single element orbit"
   -- The following also checks whether we get a modular function.
   expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn) -- grade at cusp
-  cofact := etaQuotient(DIVISORS nn, r)$EtaQuotient(Z, F1 Z); --cofactor for rm
-  e := ((qetaGrade series cofact)-expectedGrade)*24 - prefactor cofact
+  cofact := etaQuotient(DIVISORS nn, r)$ETA(Z); --cofactor for rm
+  e := ((qetaGrade seriesPart cofact)-expectedGrade)*24 - prefactor cofact
   vPrint("-- fractional exponent", e)
-  fcf := retract(q24(e)$EtaQuotient(Z, F1 Z) * cofact)
+  fcf := expansion(q24(e)$ETA(Z) * cofact)
   fzf := fcf*siftedPartitionSeries(m, t)
 
 -- expansion of j(n*tau) at cusp gamma(1,1)/gamma(2,1).
-kleinJ(n: P, gamma: SL2Z, w: P): LS CX ==
+kleinJ(n: P, gamma: SL2Z, w: P): L1 CX ==
   t := splitMatrix(gamma, n).triang
-  j := kleinJInvariant()$QFunctions(C, LS C)
+  j := kleinJInvariant()$QFunctions(C, L1 C)
   d := t(2,2)
   u: P := t(1,1)*w/d
   v: N := t(1,2)*xiord/d
   substVar ==> substituteVariable $ ETAQG(C, CX)
-  map(substVar(u, v), j)$QFunctionTools2(C, LS C, CX, LS CX)
+  map(substVar(u, v), j)$QFunctionTools2(C, L1 C, CX, L1 CX)
 
 -- expansion of j(n*tau) at all cusps of Gamma0(nn).
-kleinJn(nn: P, n: N): MODFUNX(CX) == (_
-  h := table()$XHashTable(Q, LS CX);_
+kleinJn(nn: P, n: N): Fn(CX) == (_
+  h := table()$XHashTable(Q, L1 CX);_
   for cusp in cuspsOfGamma0(nn) repeat (_
     w := WIDTH(nn, denom cusp);_
     gamma := cuspToMatrix(nn, cusp);_
     h.cusp  := kleinJ(n, gamma, w));_
-  h :: MODFUNX(CX))
+  h :: Fn(CX))
+
+
+
+
+
+
+
 
 )if false
-hj: XHashTable(Q, LS CX) := table()
-hj11: XHashTable(Q, LS CX) := table()
+hj: XHashTable(Q, L1 CX) := table()
+hj11: XHashTable(Q, L1 CX) := table()
 for cusp in cuspsOfGamma0(nn) repeat (_
   hj.cusp := kleinJ(1, cuspToMatrix(nn, cusp), WIDTH(nn, denom cusp));_
   hj11.cusp := kleinJ(11, cuspToMatrix(nn, cusp), WIDTH(nn, denom cusp)))
 
-mj   := hj  ::MODFUNX(CX); qetaGrades mj
-mj11 := hj11::MODFUNX(CX); qetaGrades mj11
+mj   := hj  ::Fn(CX); qetaGrades mj
+mj11 := hj11::Fn(CX); qetaGrades mj11
 )endif
 
 expansionModular(xiord, CX, xi, y, w) ==
-    e := expansion(puiseux(y, w)$SETAQG(C, CX))::F1(CX)
+    e := expansion(puiseux(y, w)$SETAQG(C, CX))::A1(CX)
     abmap(CX, C, e)
 
 expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
@@ -89,17 +121,17 @@ numOfGaps(ab) ==
 -- eta-quotient of M(nn*t) given by the exponent vector r.
 -- The result is a modular function in M(nn).
 -- Input condition: #r = #DIVISORS(nn*t), gcd(nn, t)=1.
-traceMap(nn: P, t: P, r: List Z): F1 C ==
+traceMap(nn: P, t: P, r: List Z): A1 C ==
   divs: List P := DIVISORS(nn*t)
   #divs ~= #r => error "length of r must match number of divisors)"
   idgamma: SL2Z := matrix [[1,0],[0,1]]
   ye: YETAQG := etaQuotient(nn*t, divs, r, idgamma)
-  e: F1(C) := (expansion(etaQuotient(ye)$ETAQG(C, CX)))::F1(C)
+  e: A1(C) := (expansion(etaQuotient(ye)$ETAQG(C, CX)))::A1(C)
   alw: MZ := matrixAtkinLehner(nn*t, t)
   sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
   gamma := sm.red
   yeg: YETAQG := etaQuotient(nn*t, divs, r, gamma)
-  eg: F1(C) := (expansion(etaQuotient(yeg)$ETAQG(C, CX)))::F1(C)
+  eg: A1(C) := (expansion(etaQuotient(yeg)$ETAQG(C, CX)))::A1(C)
   -- finally apply Ut operator
   orduteg := (order(eg) quo 2)::Z
   uteg := choose((n: Z): Z +-> t*n, eg, orduteg)

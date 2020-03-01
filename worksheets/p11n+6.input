@@ -25,7 +25,7 @@
 ell := 11
 C ==> PrimeField(ell)
 --C ==> IntegerLocalizedAtPrime(ell)
-CF ==> CF1 C
+CA ==> CA1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
@@ -40,9 +40,9 @@ nn: P := 22
 F0F ==> Finite0SeriesFunctions2(Z, Z, 'q, q, 0, 0)
 divBy(n: Z, c: Z): Z == (c exquo n)::Z
 divideBy(n: Z): Z -> Z == (c: Z): Z +-> divBy(n, c)
-divideSeriesBy(n: Z, f: F1(Z)): F1(Z) == map(divideBy n, f)$F0F
+divideSeriesBy(n: Z, f: A1(Z)): F1(Z) == map(divideBy n, f)$F0F
 
-PE C ==> PolynomialEvaluation(C, F1 C)
+PE C ==> PolynomialEvaluation(C, A1 C)
 PEZ ==> PE Z
 PEQ ==> PE Q
 VZ==>Vector Z
@@ -93,7 +93,7 @@ qGrades(l) == [qetaGrade x for x in l]
 
 vlen := 5;
 syms  := new(vlen, [])$IndexedVector(List Symbol, 0);
-igens  := new(vlen, [])$IndexedVector(List F1 Z, 0);
+igens  := new(vlen, [])$IndexedVector(List A1 Z, 0);
 xgens  := new(vlen, [])$IndexedVector(List X1 C, 0);
 ez     := new(vlen, [])$IndexedVector(List Equation Pol Z, 0);
 en     := new(vlen, [])$IndexedVector(List Equation Pol Z, 0);
@@ -111,7 +111,7 @@ xab   := new(vlen, initialize(1$X1(C)))$IndexedVector(QXAB1 C, 0);
 
 nn: P := 22; -- level
 genus := genusOfGamma0 nn
-etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 eqgens := [etaQ r for r in rgens];
 
@@ -177,7 +177,7 @@ eqgens.2 + 10*eqgens.1
 )set stream calc 4
 gz.0 := (g.0)::List(Pol(Z));
 syms.1 := indexedSymbols("A", #(g.0))
-evz ==> eval(c+->c*1$F1(Z), concat members syms, concat members igens)
+evz ==> eval(c+->c*1$A1(Z), concat members syms, concat members igens)
 igens.1 := [divideSeriesBy(ell, evz x) for x in gz.0];
 xgens.1 := sort(smallerGrade?, [toX1(C, x, sym) for x in igens.1 for sym in syms.1])
 qGrades xgens.1
@@ -205,9 +205,9 @@ ps := prods(syms.0)
 --
 -- That function is programmed in `annihilatecoefficients`.
 
---annlc ==> annihilateLeadingCoefficients(ell, evz)$QAuxiliaryModularPackage(F1 Z)
+--annlc ==> annihilateLeadingCoefficients(ell, evz)$QAuxiliaryModularPackage(A1 Z)
 --az.0 := [annlc(x) for x in gz.0];
-annc ==> annihilateCoefficients(ell, ps, evz)$QAuxiliaryModularPackage(F1 Z)
+annc ==> annihilateCoefficients(ell, ps, evz)$QAuxiliaryModularPackage(A1 Z)
 az.0 := [annc(x) for x in gz.0];
 
 igens.1 := [divideSeriesBy(ell, evz x) for x in az.0];
@@ -268,7 +268,7 @@ syms.2 := indexedSymbols("B", #(g.1))
 
 gz.1 := eval(gz.1, en.1)
 
-annc2 ==> annihilateCoefficients(ell^2, ps, evz)$QAuxiliaryModularPackage(F1 Z)
+annc2 ==> annihilateCoefficients(ell^2, ps, evz)$QAuxiliaryModularPackage(A1 Z)
 az.1 := [annc2(x) for x in gz.1];
 
 az.1
@@ -307,7 +307,7 @@ syms.2 := indexedSymbols("C", #(g.2))
 
 gz.2 := eval(gz.2, en.2)
 
-annc3 ==> annihilateCoefficients(ell^3, ps, evz)$QAuxiliaryModularPackage(F1 Z)
+annc3 ==> annihilateCoefficients(ell^3, ps, evz)$QAuxiliaryModularPackage(A1 Z)
 az.2 := [annc2(x) for x in gz.2];
 
 #az.2

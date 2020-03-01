@@ -15,7 +15,7 @@
 C ==> Q
 --C ==> Z;
 --C ==> IntegerLocalizedAtPrime 11
-CF ==> CF1 C
+CA ==> CA1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
@@ -39,7 +39,7 @@ e := etaQuotient(nndivs, r)$ETA(Z)
 -- $0\le f<24$.
 
 f := prefactor(e)$ETA(Z)
-series(e)$ETA(Z)
+seriesPart(e)$ETA(Z)
 
 -- ### $g_s(\tau) \in M^\infty(N)$
 
@@ -49,14 +49,14 @@ series(e)$ETA(Z)
 
 r := [24,0,0,0]
 e := etaQuotient(nndivs, r)$ETA(Z)
---retract e
+--expansion e
 
 -- ### $g_s(\tau) \in M^\infty(N)$ --- the monoid generators
 
 nn: P := 22; -- level N
 nndivs := DIVISORS nn;
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
-eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens]
+eqgens := [expansion(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens]
 
 -- ### Create $g_s(\tau)$ with attached part
 
@@ -96,7 +96,7 @@ order e
 -- We can also represent it as a product of $q^{1/24}$ and a Laurent
 -- series (here even a Taylor series) in $q$.
 
-s1 := choose((n:Z):Z +-> 24*n, e, (order(e) exquo 24)::Z)::F1(CX)
+s1 := choose((n:Z):Z +-> 24*n, e, (order(e) exquo 24)::Z)::A1(CX)
 
 -- ### $g_{s,m}(\gamma\tau)$ --- Expansion at cusp $1$
 
@@ -115,7 +115,7 @@ r := rationalPowerDenominator(p)
 e := expansion p
 order e
 
-s1 := choose((n:Z):Z +-> 24*n, e, (order(e) exquo 24)::Z)::F1(CX)
+s1 := choose((n:Z):Z +-> 24*n, e, (order(e) exquo 24)::Z)::A1(CX)
 
 -- ## $g_{s,m,t}(\gamma\tau)$ --- SymbolicSiftedEtaQuotientGamma
 
@@ -146,7 +146,7 @@ p := puiseux(y, w)$SETAQG
 -- series (here even a Taylor series) in $q$.
 
 e := expansion p
-s1 := choose((n:Z):Z +-> 24*n+11, e, order(e))::F1(CX)
+s1 := choose((n:Z):Z +-> 24*n+11, e, order(e))::A1(CX)
 
 -- ### Change coefficient domain from $\mathbb{Q}[\xi]$ to $\mathbb{Z}$
 
@@ -178,7 +178,7 @@ p := puiseux(y, w)$SETAQG
 e := expansion p;
 order e
 
-s1 := choose((n:Z):Z +-> 24*n+23, e, order e)::F1(CX);
+s1 := choose((n:Z):Z +-> 24*n+23, e, order e)::A1(CX);
 qetaLeadingCoefficient s1, qetaGrade s1
 s1
 
@@ -217,7 +217,7 @@ puiseux(y, w)$SETAQG
 nn, r, mm, s, m, t, gamma
 
 y := etaQuotient(nn, r, mm, s, m, t)$YMSETAQ;
-f := expandAtAllCusps(y)$MSETAQ;
+f := y::MSETAQ;
 
 -- For each of the cusps we get one expansion in terms in the canonical
 -- variable $q^{1/w}$ where $w$ is the width of the respective cusp.
@@ -286,7 +286,7 @@ m26 := modularSiftedPartitionSeries(26,13,6)
 --C ==> Q
 --C ==> Z;
 C ==> IntegerLocalizedAtPrime 11
-CF ==> CF1 C
+CA ==> CA1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
@@ -302,7 +302,7 @@ nn: P := 22;
 
 nn: P := 22; -- level
 nndivs := DIVISORS nn;
-etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
 rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
@@ -397,7 +397,7 @@ removeDuplicates sort [zero? x for x in rbas]
 --C ==> Q
 --C ==> Z;
 C ==> IntegerLocalizedAtPrime 13
-CF ==> CF1 C
+CA ==> CA1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
@@ -427,11 +427,11 @@ t: N := first first orbs
 -- $$
 
 fzf := modularSiftedPartitionSeries(nn, m, t);
-ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in F1
+ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in A1
 xf := toX1(C, ff, F)
 
 nndivs := DIVISORS nn;
-etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
 rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
@@ -475,7 +475,7 @@ xf - 11*(xgens.1)^6
 )set stream calculate 20
 )set mess time on
 C ==> Q
-CF ==> CF1 C
+CA ==> CA1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
@@ -531,7 +531,7 @@ w := WIDTH(242, gamma(2,1))
 
 divs242 := DIVISORS 242;
 rgens242 := etaQuotientMonoidExponentVectors(242)$QEQMEV
-egens242 := [(retract etaQuotient(divs242, r)$ETA(Z))::F1(C) for r in rgens242];
+egens242 := [(expansion etaQuotient(divs242, r)$ETA(Z))::A1(C) for r in rgens242];
 [qetaGrade(x) for x in egens242]
 
 -- For all the series we compute that we need at most a second root of unity, i.e. we continue our computation in $C=\mathbb{Q}$.
@@ -570,12 +570,12 @@ idgamma: SL2Z := matrix [[1,0],[0,1]];
 yeq242: YETAQG := etaQuotient(242, divs242, r242, idgamma);
 modular? yeq242
 
-eq242 := (expansion(etaQuotient(yeq242)$ETAQG))::F1(C)
+eq242 := (expansion(etaQuotient(yeq242)$ETAQG))::A1(C)
 
 zero?(eqt242-eq242)
 
 yeq242g: YETAQG := etaQuotient(242, divs242, r242, gamma);
-eq242g := (expansion(etaQuotient(yeq242g)$ETAQG))::F1(C)
+eq242g := (expansion(etaQuotient(yeq242g)$ETAQG))::A1(C)
 
 -- Now we apply the $U_2$ operator.
 
@@ -595,7 +595,7 @@ seq242g := puiseux(yseq242g, w)$SETAQG
 
 eseq242g := expansion(seq242g)
 ordseq242g := (order eseq242g / 24 / 2)::Z
-u2seq242g := choose((n: Z): Z +-> 2*24*n, eseq242g, ordseq242g)::F1(C)
+u2seq242g := choose((n: Z): Z +-> 2*24*n, eseq242g, ordseq242g)::A1(C)
 
 [coefficient(u2eq242g - u2seq242g, i) for i in 0..100]
 
@@ -603,7 +603,7 @@ u2seq242g := choose((n: Z): Z +-> 2*24*n, eseq242g, ordseq242g)::F1(C)
 
 -- Now we compute $f + 2 f|W_2^{242}|U_2$.
 
-cftraceeq242 := (eq242 + 2*u2eq242g)::CF
+cftraceeq242 := (eq242 + 2*u2eq242g)::CA
 
 xu: X := toX1(C, cftraceeq242, 'U);
 
@@ -622,7 +622,7 @@ xu: X := toX1(C, cftraceeq242, 'U);
 C ==> Q
 --C ==> Z;
 --C ==> IntegerLocalizedAtPrime 11
-CF ==> CF1 C
+CA ==> CA1 C
 X ==> X1 C
 xiord := 2;
 xi := -1;
@@ -634,7 +634,7 @@ CX := Q
 nn := 121
 nndivs := DIVISORS nn;
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
-eqgens := [retract(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
+eqgens := [expansion(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);

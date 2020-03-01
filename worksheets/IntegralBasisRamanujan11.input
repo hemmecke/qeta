@@ -16,7 +16,7 @@
 )r projectlibs )quiet
 )r etamacros.input )quiet
 C ==> Q;
-CF ==> CF1 C
+CA ==> CA1 C
 X ==> X1 C
 
 )r ../input/tracemacros )quiet
@@ -41,7 +41,7 @@ CX := Q;
 QEQEV ==> QEtaQuotientExponentVectors4ti2
 eqmev ==> etaQuotientMonoidExponentVectors $ QEQEV
 rgens := eqmev nn;
-eqgens := [retract(etaQuotient(nndivs, r)$ETA C) for r in rgens]
+eqgens := [expansion(etaQuotient(nndivs, r)$ETA C) for r in rgens]
 
 -- ## `xab`=samba($t, \{\}$) --- Samba with T
 
@@ -110,38 +110,38 @@ xfrb := reduce(xf, xabb)$QXTOPRED1(C)
 
 -- # xfab=samba($t$, $\{dt\}$)
 
-q := monomial(1,1)$F1(C) -- d/d(tau) q(tau) = 2*pi*i*exp(2*pi*i*tau) = 2*pi*i*q
-dt := q*D(eqgens.1)/retract toeta((E1^2*E11^2))
+q := monomial(1,1)$A1(C) -- d/d(tau) q(tau) = 2*pi*i*exp(2*pi*i*tau) = 2*pi*i*q
+dt := q*D(eqgens.1)/polyToA1(E1^2*E11^2)
 xdt := toX1(C, dt, 'T1)
 xdgens := [xt, xdt]
 xdab := samba(xt, xdgens, 1, onet1Step!)$QXTOPSAMBA1(C);
 
-d2t := q*D(dt)/retract toeta((E1^2*E11^2))
+d2t := q*D(dt)/polyToA1a(E1^2*E11^2)
 xd2t := toX1(C, d2t, 'T2)
 xd2ab := samba(xt, [xt, xdt, xd2t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
-d3t := q*D(d2t)/retract toeta((E1^2*E11^2))
+d3t := q*D(d2t)/polyToA1(E1^2*E11^2)
 xd3t := toX1(C, d3t, 'T3)
 xd3ab := samba(xt, [xt, xdt, xd2t, xd3t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
-d4t := q*D(d3t)/retract toeta((E1^2*E11^2))
+d4t := q*D(d3t)/polyToA1((E1^2*E11^2))
 xd4t := toX1(C, d4t, 'T4)
 xd4ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
 xr := reduce(xf, xd4ab)$QXTOPRED1(C);
 xr
 
-d5t := q*D(d4t)/retract toeta((E1^2*E11^2))
+d5t := q*D(d4t)/polyToA1(E1^2*E11^2)
 xd5t := toX1(C, d5t, 'T5)
 xd5ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
 -- The following stuff gives nonsense, because it is no longer in M^\infty(11).
 
-d6t := q*D(d5t)/retract toeta((E1^2*E11^2))
+d6t := q*D(d5t)/polyToA1(E1^2*E11^2)
 xd6t := toX1(C, d6t, 'T6)
 xd6ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
-d7t := q*D(d5t)/retract toeta((E1^2*E11^2))
+d7t := q*D(d5t)/polyToA1(E1^2*E11^2)
 xd7t := toX1(C, d7t, 'T7)
 xd7ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t, xd7t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
@@ -167,7 +167,7 @@ xiord := max [minimalRootOfUnity x for x in ys]
 CX := Q
 xi := 1
 
-fs := [expandAtAllCusps(x)$MSETAQ for x in ys];
+fs := [x::MSETAQ for x in ys];
 ms := [expansions(x)::MODFUNX for x in fs];
 [qetaGrades x for x in ms]
 
@@ -179,10 +179,10 @@ mj1 := kleinJn(nn, 11^1); qetaGrades mj1
 mmj0 := mj0*ms.1^3;   qetaGrades mmj0
 mmj1 := mj1*ms.1;     qetaGrades mmj1
 
-toF1C x ==> map(retract, series(x, 2)::F1(CX))$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+toA1C x ==> map(retract, series(x, 2)::A1(CX))$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
 
-xj0 := toX1(C, toF1C mmj0, T^3*J0)
-xj1 := toX1(C, toF1C mmj1, T*J1)
+xj0 := toX1(C, toA1C mmj0, T^3*J0)
+xj1 := toX1(C, toA1C mmj1, T*J1)
 
 xdab   := samba(xt, [xt,     xdt          ], 1, onet1Step!)$QXTOPSAMBA1(C); --10
 xj01ab := samba(xt, [xt,          xj0, xj1], 1, onet1Step!)$QXTOPSAMBA1(C); --5

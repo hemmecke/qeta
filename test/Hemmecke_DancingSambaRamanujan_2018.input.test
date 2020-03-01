@@ -77,7 +77,7 @@ assertTrue x ==> x
 -- -
 
 C ==> IntegerLocalizedAtPrime 11
-L ==> F1 C
+L ==> A1 C
 X ==> X1 C
 
 -- The following function simply maps the integer coefficients of the
@@ -93,9 +93,9 @@ zqmap(x) ==> abmap(Z, Q, x)
 level := 22;
 
 ETAZ ==> EtaQuotient(Z, LZ)
-PolC ==> Pol C; LC ==> F1 C
-PolZ ==> Pol Z; LZ ==> F1 Z
-PolQ ==> Pol Q; LQ ==> F1 Q
+PolC ==> Pol C; LC ==> A1 C
+PolZ ==> Pol Z; LZ ==> A1 Z
+PolQ ==> Pol Q; LQ ==> A1 Q
 
 smaller11(x: PolC, y: PolC):Boolean == _
   exponent leadingCoefficient x < exponent leadingCoefficient y
@@ -133,7 +133,7 @@ divs := divisors(level)$IntegerNumberTheoryFunctions;
 etaquotgensZ: List EtaQuotient(Z, LZ) := [etaQuotient(divs, r) for r in rgens];
 for x in etaquotgensZ repeat assertTrue(zero? prefactor x)
 
-eqgensZ: List LZ := [retract x for x in etaquotgensZ];
+eqgensZ: List LZ := [expansion x for x in etaquotgensZ];
 rfeqgensZ: List Fraction PolZ := [_
   (3*q^5+2*q^4+2*q^3+q^2+q+1)/q^5,_
   (12*q^5+13*q^4+8*q^3+6*q^2+4*q+1)/q^5,_
@@ -195,7 +195,7 @@ r11Expected: Fraction PolZ := _
   +1121505*q^5+204226*q^4+31185*q^3+3718*q^2+297*q+11
 assertEquals(rationalFunction(r11, 10), r11Expected)
 
-pfZ := retract(q24(13)$EtaQuotient(Z, LZ) *_
+pfZ := expansion(q24(13)$EtaQuotient(Z, LZ) *_
        etaQuotient(divs, [10,2,11,-22])$EtaQuotient(Z, LZ))
 pfZExpected: PolZ := _
   -1079*q^14+715*q^13-2465*q^12-375*q^11+1211*q^10+352*q^9+11*q^8-726*q^7_
@@ -387,7 +387,7 @@ jp: X := embed(ip, Jp); first jp, second jp
 -- \left(\frac{\eta(\tau)}{\eta(11\tau)}\right)^{12}$$ in terms of $q
 -- = \exp(2\pi i \tau)$.
 
-tz: LZ := retract(etaQuotient([1,11],[12,-12])$ETAZ);
+tz: LZ := expansion(etaQuotient([1,11],[12,-12])$ETAZ);
 tt: L := zcmap tz;
 t: X := toX1(C, tt, T); first t, second t
 
@@ -663,8 +663,8 @@ assertEquals(degs, degsExpected)
 
 -- approx. 45 seconds
 fjjpt: List Symbol := [F, J, Jp, T];
-z := eval(r, c+->c::F1, fjjpt, [first f, first j, first jp, first t])_
-     $ PolynomialEvaluation(C, F1)
+z := eval(r, c+->c::A1, fjjpt, [first f, first j, first jp, first t])_
+     $ PolynomialEvaluation(C, A1)
 assertTrue(zero? z)
 
 -- Let's check whether the relation interpreted with rational
@@ -693,13 +693,13 @@ assertTrue(zero? zq)
 -- However, that computation leads to only 5 elements in the algebra
 -- basis.
 
-LQ ==> F1 Q
+LQ ==> A1 Q
 XQ ==> X1 Q
 i: LQ := kleinJInvariant()$QFunctions(Q, LQ);
 ip: LQ := multiplyExponents(i, 11);
 jq:  XQ := toX1(Q, i,  J);
 jpq: XQ := toX1(Q, ip, Jp);
-tz: LZ := retract(etaQuotient([1,11],[12,-12])$ETAZ);
+tz: LZ := expansion(etaQuotient([1,11],[12,-12])$ETAZ);
 tq:  XQ := toX1(Q, zqmap tz,  T);
 mqgens: List XQ := [tq, jq*tq^3, jpq*tq];
 abq := samba(tq, mqgens)$QXTOPSAMBA1(Q);
@@ -777,21 +777,21 @@ assertEquals(monoms, monomsExpected)
 -- Here $\mathbb{Z}$ is considered as a Euclidean domain wrt the
 -- absolute value as the Euclidean size function.
 
-LZ ==> F1 Z
+LZ ==> A1 Z
 XZ ==> X1 Z
 divs := divisors(level)$IntegerNumberTheoryFunctions;
 QEQMEV ==> QEtaQuotientExponentVectors4ti2
 eqmev ==> etaQuotientMonoidExponentVectors $ QEQMEV
 rgens := eqmev level;
 etaquotgensZ: List ETAZ := [etaQuotient(divs, r) for r in rgens];
-eqgensZ: List LZ := [retract x for x in etaquotgensZ];
+eqgensZ: List LZ := [expansion x for x in etaquotgensZ];
 msyms := indexedSymbols("M", #rgens)
 xeqgensZ: List XZ := [toX1(Z, x, s) for x in eqgensZ for s in msyms]
 tez := xeqgensZ.3
 abez := samba(tez, xeqgensZ)$QXTOPSAMBA1(Z)
 assertEquals(# basis abez, 5)
 
-pfZ := retract(q24(13)$ETAZ * etaQuotient(divs, [10,2,11,-22])$ETAZ);
+pfZ := expansion(q24(13)$ETAZ * etaQuotient(divs, [10,2,11,-22])$ETAZ);
 ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
 r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
 fe := pfZ * r11
@@ -836,13 +836,13 @@ assertTrue(zero? ez)
 -----------------------------------------------------------------
 -- -
 
-LZ ==> F1 Z
+LZ ==> A1 Z
 X ==> X1 C
 ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
 r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
 q: LZ := 'q :: LZ
 fz: LZ := q*eulerFunction(11)$QFunctions(Z, LZ)*r11;
-tz: LZ := retract(etaQuotient([1,11],[12,-12])$ETAZ);
+tz: LZ := expansion(etaQuotient([1,11],[12,-12])$ETAZ);
 fep: X := toX1(C, zcmap(tz*fz), Y)
 t: X := toX1(C, zcmap tz, T);
 abp := samba(t, [fep])$QXTOPSAMBA1(C);
@@ -908,14 +908,14 @@ t: N := first first orbs
 
 -- generatingSeries for p(m*n+t)
 
-siftedPartitionSeries(m: P, t: N): F1(Z) == (_
-  ps := partitionSeries(1)$QFunctions(Z, F1(Z));_
-  choose((n: Z): Z +-> m*n+t, ps, 0)$QFunctionTools(Z, F1(Z)))
+siftedPartitionSeries(m: P, t: N): A1(Z) == (_
+  ps := partitionSeries(1)$QFunctions(Z, A1 Z);_
+  choose((n: Z): Z +-> m*n+t, ps, 0)$QFunctionTools(Z, A1 Z))
 
 -- generating series for p(m*n+t) with cofactor eta quotient and
 -- the fractional q power.
 
-modularSiftedPartitionSeries(nn: P, m: P, t: N): F1(Z) == (_
+modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 Z == (_
   mmdivs: List P := DIVISORS m;_
   s: List Z := cons(-1, rest [0 for i in mmdivs]);_
   r: List Z := etaCoFactorInfinity(nn, m, s, m, t)$QEtaModularFunctionTools;_
@@ -925,16 +925,16 @@ modularSiftedPartitionSeries(nn: P, m: P, t: N): F1(Z) == (_
   if not(one? # orbs and one? # first orbs and t = first first orbs) then _
     error "not a single element orbit";_
   expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn);_
-  cofact := etaQuotient(DIVISORS nn, r)$EtaQuotient(Z, F1(Z));_
-  e := ((qetaGrade series cofact)-expectedGrade)*24 - prefactor cofact;_
+  cofact := etaQuotient(DIVISORS nn, r)$ETA(Z);_
+  e := ((qetaGrade seriesPart cofact)-expectedGrade)*24 - prefactor cofact;_
   vPrint("-- fractional exponent", e);_
-  fcf := retract(q24(e)$EtaQuotient(Z, F1(Z)) * cofact);_
+  fcf := expansion(q24(e)$ETA(Z) * cofact);_
   fzf := fcf*siftedPartitionSeries(m, t));
 
 -- ## Create modular series for p(11n+6)
 
 fzf := modularSiftedPartitionSeries(nn, m, t);
-ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in F1
+ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in A1
 xf := toX1(C, ff, F)
 
 -- The generators of the $\eta$-quotients of level 22 are given by
@@ -943,7 +943,7 @@ xf := toX1(C, ff, F)
 -- of $R^\infty(22)$.
 
 nndivs := DIVISORS(nn);
-etaQ(x) == retract(etaQuotient(DIVISORS nn, x)$ETA(Z))
+etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
 QEQEV ==> QEtaQuotientExponentVectors4ti2
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 eqgens := [etaQ r for r in rgens];

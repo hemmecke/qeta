@@ -1980,6 +1980,9 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ in terms of
       ++ x = \exp(2 \pi i \tau/w) where w=width(m, c) and
       ++ gamma=cuspToMatrix(m, a/c) for a cusp a/c.
+    etaQuotient: (P, LZ, SL2Z) -> %
+      ++ etaQuotient(m, r, gamma) computes
+      ++ etaQuotient(m, divisors m, r, gamma).
     level: % -> P
       ++ level(x) returns the level of the eta quotient.
     divisors: % -> LP
@@ -2074,6 +2077,9 @@ SymbolicEtaQuotientGamma: SetCategory with
         for delta in divs repeat
             eta.delta := eta(m, delta, gamma)$SymbolicEtaDeltaGamma
         etaquot(m, divs, r, gamma, eta)
+
+    etaQuotient(m: P, r: LZ, gamma: SL2Z): % ==
+        etaQuotient(m, DIVISORS m, r, gamma)
 
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
@@ -3017,8 +3023,8 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   RecX ==> Record(k: Z, c: CX)
   Exports ==> SetCategory with
     --assert(one? xi^mx)
-    etaQuotient: SymbolicEtaQuotientGamma -> %
-      ++ etaQuotient(s) represents the expansion of
+    coerce: SymbolicEtaQuotientGamma -> %
+      ++ coerce(s) represents the expansion of
       ++ g_r(\gamma \tau) in terms of x = \exp(2 \pi i \tau/w) where
       ++ w=width(m, c),
       ++ r = exponents(s), and g_r is defined by
@@ -3092,7 +3098,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
         ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
-    etaQuotient(e: SymbolicEtaQuotientGamma): % ==
+    coerce(e: SymbolicEtaQuotientGamma): % ==
         m: P := level e
         divs: LP := divisors e
         s: LX := 1
@@ -3149,16 +3155,22 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   YETAQ ==> SymbolicEtaQuotient
   Exports ==> SetCategory with
     --assert(one? xi^mx)
-    etaQuotient: YETAQ -> %
-      ++ etaQuotient(y) represents the expansion of
+    coerce: YETAQ -> %
+      ++ coerce(y) represents the expansion of
       ++ g_r(\tau) in terms of x = \exp(2 \pi i \tau/w) where
       ++ w=width(m, c) at all cusps of Gamma0(level y).
+      ++ See \eqref{eq:g_r(tau)}.
+    etaQuotient: (P, LZ, LQ) -> %
+      ++ etaQuotient(m, r) represents the expansion of
+      ++ g_r(\tau) in terms of x = \exp(2 \pi i \tau/w) where
+      ++ w=width(m, c) at the given cusps.
       ++ See \eqref{eq:g_r(tau)}.
     etaQuotient: (P, LZ) -> %
       ++ etaQuotient(m, r) represents the expansion of
       ++ g_r(\tau) in terms of x = \exp(2 \pi i \tau/w) where
       ++ w=width(m, c) at all cusps of Gamma0(m).
       ++ See \eqref{eq:g_r(tau)}.
+      ++ It is equivalent to etaQuotient(m, r, cuspsOfGamma0 m)
     level: % -> P
       ++ level(x) returns m such that x corresponds to a modular
       ++ function for Gamma_0(m).
@@ -3173,7 +3185,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
     Rep ==> Record(meta: YETAQ, ser: XHashTable(Q, LX))
     xx ==> rep x
 
-    etaQuotient(y: YETAQ): % ==
+    coerce(y: YETAQ): % ==
         m: P := level y
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function, i.e., rStarConditions must be fulfilled.
@@ -3182,10 +3194,12 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
             ye: SymbolicEtaQuotientGamma := y.cusp
-            e: EtaQuotientGamma(C, mx, CX, xi, LX) := etaQuotient ye
+            e := ye :: EtaQuotientGamma(C, mx, CX, xi, LX)
             hser.cusp := expansion e
         per [y, hser]
-    etaQuotient(m: P, r: LZ): % == etaQuotient(etaQuotient(m, r)$YETAQ)
+    etaQuotient(m: P, r: LZ, cusps: LQ): % ==
+        (etaQuotient(m, r, cusps)$YETAQ)::%
+    etaQuotient(m: P, r: LZ): % == (etaQuotient(m, r)$YETAQ)::%
     level(x: %): P == level(xx.meta)
     symbolicEtaQuotient(x: %): YETAQ == xx.meta
     expansions(x: %): XHashTable(Q, LX) == xx.ser

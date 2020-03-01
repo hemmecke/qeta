@@ -12,7 +12,7 @@
 
 --setup
 C ==> Q
-LX ==> LS CX
+LX ==> L1 CX
 --endsetup
 
 -------------------------------------------------------------------
@@ -20,7 +20,7 @@ LX ==> LS CX
 nn: P := 10;
 mm: P := 5; s: List Z := [-1, 0]
 m: P := 5;
-cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
+spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
 
 mmdivs: List P := DIVISORS mm
 shat: Z := sigmaInfinity(mmdivs, s)
@@ -37,7 +37,7 @@ xiord: P := minimalRootOfUnity yf
 assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
-f: MSETAQ(C, CX) :=  expandAtAllCusps yf;
+f :=  yf::MSETAQ(C, CX);
 mf := expansions(f)::MODFUNX(CX)
 -- compare result with formula (4) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
@@ -52,7 +52,7 @@ assertTrue zero?(mf+minusfive)
 nn: P := 14;
 mm: P := 7; s: List Z := [-1, 0];
 m: P := 7;
-cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
+spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
 
 mmdivs: List P := DIVISORS mm
 shat: Z := sigmaInfinity(mmdivs, s)
@@ -76,7 +76,7 @@ assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
 
-modfunx x ==> expansions(expandAtAllCusps(x)$MSETAQ(C, CX))::MODFUNX(CX)
+modfunx x ==> expansions(x::MSETAQ(C, CX))::MODFUNX(CX)
 mf := modfunx yf;
 
 -- compare result with formula (5) from
@@ -105,8 +105,8 @@ xi := generator()$CX
 
 eqx1: XHashTable(Q, LX) := table()
 eqx2: XHashTable(Q, LX) := table()
-cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
-for cusp in cusps repeat (_
+spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
+for cusp in spitzen repeat (_
   w: P := WIDTH(nn, denom cusp);_
   gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
   y1: YMSETAQG := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0,gamma);_
@@ -129,7 +129,7 @@ nn: P := 22;
 --nn: P := 22; r: List Z := [-10,10,-9,10]
 mm: P := 11; s: List Z := [-1, 0]
 m: P := 11;
-cusps: List Q := cuspsOfGamma0(nn)$QAuxMEQ
+spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
 
 mmdivs: List P := DIVISORS mm
 shat: Z := sigmaInfinity(mmdivs, s)
@@ -146,7 +146,7 @@ xiord: P := minimalRootOfUnity yf
 assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
-f: MSETAQ(C, CX) :=  expandAtAllCusps yf;
+f := yf::MSETAQ(C, CX);
 mf := expansions(f)::MODFUNX(CX)
 
 
@@ -167,7 +167,7 @@ rgens: List List Z := [_
 assertEquals(rgens, etaQuotientMonoidExponentVectors nn)
 
 ygens: List YMSETAQ := [etaQuotient(nn,r,mm,[0,0],1,0)$YMSETAQ for r in rgens];
-mgens: List MSETAQ(C, CX) := [expandAtAllCusps(x)$MSETAQ(C, CX) for x in ygens];
+mgens: List MSETAQ(C, CX) := [x::MSETAQ(C, CX) for x in ygens];
 M: List MODFUNX CX := [expansions(x)::MODFUNX(CX) for x in mgens];
 F ==> mf
 X n ==> n * 1$MODFUNX(CX)
@@ -203,7 +203,7 @@ assertTrue zero? ZERO
 
 
 --TODO: Find a "better" r-vector that makes
--- sum(g for cusp in cusps | (g := qetaGrade(F,cusp))>0) is minimal.
+-- sum(g for cusp in spitzen | (g := qetaGrade(F,cusp))>0) is minimal.
 
 -- v = p + x1*v1 + x2*v2 + x3*v3
 

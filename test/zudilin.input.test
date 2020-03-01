@@ -25,9 +25,6 @@ assertTrue x ==> x
 -- -
 
 C ==> Q
-L ==> F1 C
-X ==> X1 C
-S(CX) ==> UnivariateLaurentSeries(CX, 'q, 0)
 
 -- The following function simply maps the integer coefficients of the
 -- series into the localized coefficient domain or into the rational
@@ -39,19 +36,54 @@ zcmap(x) ==> abmap(Z, C, x)
 cqmap(x) ==> abmap(C, Q, x)
 zqmap(x) ==> abmap(Z, Q, x)
 
-PolC ==> Pol C; LC ==> F1 C
-PolZ ==> Pol Z; LZ ==> F1 Z
+PolC ==> Pol C
+PolZ ==> Pol Z
+FPZ ==> Fraction PolZ
+PE ==> PolynomialEvaluation(Z, FPZ)
+EVALFPZ(vars, vals, pol) ==> (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol)
 
 asP x ==> x pretend P
 asLP x ==> x pretend List(P)
+
+DN ==> HomogeneousDirectProduct(dim, N);
+DZ ==> HomogeneousDirectProduct(dim, Z);
+RZ ==> PolynomialRing(C, DZ)
+toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
+
+E ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
+rez x ==> x pretend  PolynomialRing(C, E)
+
+-- Implicit global variables:
+-- C: The coefficient ring where we consider the q-expansions.
+-- level: We consider the modular group Gamma_0(level).
+YEQ1C(r) ==> etaQuotient(level, r)$ETA(C)
+EQA1C(r) ==> expansion YEQ1C r -- expansion at infinity (element of A1(C)
+
+-- Implicit global variables:
+-- level:   We consider the modular group Gamma_0(level).
+-- spitzen: The cusps at which to expand.
+-- xiord:   We compute with the xiord-th root of unity
+-- xi:      A xiord-th root of unity in CX
+-- CX:      An C-Algebra containing xi.
+-- Call macro EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi).
+YEQn(r) ==> etaQuotient(level, r, spitzen)$YETAQ
+EXPAND x ==> expansions(x::METAQ(C, CX))::An(CX);
+EQAnCX(r) ==> EXPAND YEQn r -- expansion at all cusps for moduler eta-quotients
+
+YEQG1(l, g) ==> etaQuotient(level, l, g)$YETAQG
+EQGL1CX(l, g) ==> expansion(YEQG1(l, g)::ETAQG(C, CX))$ETAQG(C,CX)
+
+TOMAT(cusp) ==> cuspToMatrix(level, cusp)
+IMAT(mat) ==> inverse(mat)::MZ
+
+QEQEV ==> QEtaQuotientExponentVectors4ti2
+
 
 numOfGaps(ab) == (_
   t := multiplier ab; _
   n := qetaGrade(t)::P; _
   grades := [qetaGrade(first basis(ab, i))::P for i in 1..n-1]; _
   numberOfGaps(n, grades)$QAuxiliaryModularEtaQuotientPackage)
-
-QEQEV ==> QEtaQuotientExponentVectors4ti2
 
 -- +
 -------------------------------------------------------------------
@@ -94,25 +126,20 @@ rgensExpected: List List Z := [_
     [- 4, 10, - 4, 0, 0, 0, 2, - 4], [4, - 2, 0, 0, 0, 0, 2, - 4]];
 assertEquals(rgens, rgensExpected)
 
-divs := divisors(level)$IntegerNumberTheoryFunctions;
-etaquotgensZ: List EtaQuotient(Z, LZ) := [etaQuotient(divs, r) for r in rgens];
-for x in etaquotgensZ repeat assertTrue(zero? prefactor x)
-
-eqgensZ: List LZ := [retract x for x in etaquotgensZ];
-eqgens: List L := [zcmap x for x in eqgensZ];
+eqgens := [EQA1C r for r in rgens];
 assertEquals([qetaGrade x for x in eqgens],_
   [6, 8, 8, 8, 8, 8, 11, 12, 12, 12, 12, 15, 15, 15, 15, 15, _
   16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16])
 
 msyms := indexedSymbols("M", #eqgens)
 
-xeqgens: List X := [toX1(C, x, s) for x in eqgens for s in msyms];
+xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_28]$.
 
-tex: X := xeqgens.1
+tex: X1 C := xeqgens.1
 abex := samba(tex, xeqgens)$QXTOPSAMBA1(C)
 
 assertEquals(genusOfGamma0(level), 9)
@@ -130,7 +157,7 @@ assertEquals(# bas, grdt-1)
 -- "Hypergeometric motives for rigid Calabi–Yau manifolds"
 -- f_128
 
-q := monomial(1,1)$F1(C)
+q := monomial(1,1)$A1(C)
 f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
   66*q^17 - 162*q^19 + 40*q^21 - 172*q^23 - 89*q^25 + 100*q^27 - 2*q^29 + _
   128*q^31 + 28*q^33 - 120*q^35 + 158*q^37 - 108*q^39 + 202*q^41 + _
@@ -163,8 +190,8 @@ rwgens := etaQuotientExponentVectors(level, [1,2,3,4,5,6,7], -8)$QEQEV;
 
 rcofactor := first rwgens
 assertEquals(rcofactor, [0, 0, 0, 0, -1, 2, 9, -18])
-eqcofactor := retract etaQuotient(divs, rcofactor)$EtaQuotient(C, L)
-eqcofactors := [retract etaQuotient(divs, r)$EtaQuotient(C, L) for r in rwgens];
+eqcofactor := EQA1C rcofactor
+eqcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in eqcofactors],_
   [70, 72, 72, 72, 72, 72, 75, 76, 76, 76, 76, 79, 79, 79, 79, 79, _
   80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80])
@@ -194,32 +221,23 @@ vars := cons(M0, msyms)
 
 -- The following gives f_45 in terms of eta-quotients
 
-FPZ ==> Fraction PolZ
-PE==>PolynomialEvaluation(Z, FPZ)
-
 -- Let's first check whether the expansion for the modular function f is
 -- correctly expressed in eta-quotients.
 
-epol := (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol);
+epol := EVALFPZ(vars, vals, pol);
 epoln := numer epol;
 epold := denom epol;
 
-esyms := indexedSymbols("E", divs)
+esyms := indexedSymbols("E", DIVISORS level)
 dim: N := #esyms
-DN ==> HomogeneousDirectProduct(dim, N);
-DZ ==> HomogeneousDirectProduct(dim, Z);
-RZ ==> PolynomialRing(C, DZ)
-toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
-
-E ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
-rez x ==> x pretend  PolynomialRing(C, E)
-e(l) ==> retract etaQuotient(divs, l)$ETA(C)
 
 rpoln := toRZ epoln
 rpold := degree toRZ epold
 irpold := (-rpold)::RZ
 rpol := rpoln * irpold
-ms := [leadingCoefficient x * e members degree x for x in monomials rpol];
+rmons := monomials rpol;
+rterms := [cons(leadingCoefficient(m)::Z, members degree m) for m in rmons];
+ms := [leadingCoefficient x * EQA1C members degree x for x in rmons];
 z := reduce(_+, ms) - f
 
 -- The function z is a modular function, so we only need to check the
@@ -229,7 +247,7 @@ assertTrue(zero? z)
 
 -- But we kill all the given coefficients for f128.
 
-assertEquals(order(z::L, 300), 231)
+assertEquals(order(z, 300), 231)
 
 -- Show nicely
 
@@ -248,7 +266,7 @@ rpol0n := toRZ epol0n
 rpol0d := degree toRZ epol0d
 irpol0d := (-rpol0d)::RZ
 rpol0 := rpol0n * irpol0d
-ms0 := [leadingCoefficient x * e members degree x for x in monomials rpol0];
+ms0 := [leadingCoefficient x * EQA1C members degree x for x in monomials rpol0];
 z0 := reduce(_+, ms0) - f128
 
 -- We must check 300 coeffients (see the given f128 in order to see
@@ -264,8 +282,6 @@ den0 := rez(rpol0d :: RZ)
 
 -------------------------------------------------------------------
 -- Mail Zudillin 17-Feb-2020:
-
-equ(l) ==> etaQuotient(divs, l)$ETA(C)
 
 brunaultterms := [_
   [   1, 2, 1,3, 3,-1,0,0,0],_
@@ -284,7 +300,7 @@ brunaultterms := [_
   [-512, 0, 0,2, 0, 0,0,2,4]_
  ]
 
-f128brunault := reduce(_+, [first(x)*retract(equ rest x) for x in brunaultterms])
+f128brunault := reduce(_+, [first(x) * EQA1C rest x for x in brunaultterms])
 z := f128brunault - f128
 assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 
@@ -292,12 +308,13 @@ assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 -- Finding other symmetry group for f_128.
 -------------------------------------------------------------------
 
-o := reduce(_+, [width(level, denom cusp) for cusp in cuspsOfGamma0(level)])
+spitzen := cuspsOfGamma0 level
+o := reduce(_+, [width(level, denom cusp) for cusp in spitzen])
 assertEquals(o, indexOfGamma0 level)
 reps := rightCosetRepresentatives level;
 assertEquals(# reps, o)
 reta24 := [24, 0,0,0,0,0,0,0] -- exponent vector for delta(\tau)=eta^24
-eta24 := e reta24 -- = eta^(-24)
+eta24 := EQA1C reta24 -- = eta^(24)
 
 -- f128^3/eta24 = f^3*(eta24*eqcofactor^3)
 -- f6 is modular function with poles only at the cusps, but not necessarily
@@ -311,29 +328,22 @@ f3 := f^3  / (        eta24 *         eqcofactor^3)
 
 assertTrue(zero? reduce(_+, members cvector))
 
-yeq3g(l, g) ==> etaQuotient(level, asLP divs, l, g)$YETAQG
-eq3g(l, g) ==> expansion(etaQuotient(yeq3g(l,g))$ETAQG(C,CX))
-
 -- Check that cvector indeed belongs to a modular eta-quotient for Gamma0(45).
 
 idmat := matrix [[1,0],[0,1]]
-yeq := yeq3g(members cvector, idmat);
+yeq := YEQG1(members cvector, idmat);
 modular? yeq
 
 xiord := 24*level
-CX := UnityRootExtension(C, xiord); xi := generator()$CX
-eq := etaQuotient(yeq)$ETAQG(C,CX);
-expansion eq
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+eq := EQGL1CX(members cvector, idmat)
+eq := EQGL1CX(members cvector, matrix [[0,-1],[1,0]])
 
 -- We change to all cusps, i.e., we also change some domains.
 
-equn(r) ==> etaQuotient(level, r, 1, [0], 1, 0, cusps)$YMSETAQ
-expand e ==> expansions(expandAtAllCusps(e)$MSETAQ(C, CX))::Fn(CX);
-
-cusps := cuspsOfGamma0(level)
-ycogen := equn members cvector;
+ycogen := YEQn members cvector;
 minimalRootOfUnity ycogen
-mcogen := expand ycogen;
+mcogen := EQAnCX members cvector;
 qetaGrades mcogen
 
 -- Now we can multiply rpol^6 with the monomial corresponding to cvector.
@@ -355,13 +365,13 @@ terms3 := [cons(leadingCoefficient(m)::Z, members degree m) for m in mons3];
 
 -- Check that we do not need a bigger root of unity.
 
-ygens3 := [equn rest x for x in terms3];
+ygens3 := [YEQn rest x for x in terms3];
 assertTrue(xiord > max [minimalRootOfUnity y for y in ygens3])
 
 -- Check that all eta-quotients in terms6 correspond really to modular
 -- functions.
 
-assertEquals(removeDuplicates [modular? yeq3g(rest x, idmat) for x in terms3], [true])
+assertEquals(removeDuplicates [modular? YEQG1(rest x, idmat) for x in terms3], [true])
 
 
 -- We now apply SL2Z transformations to each of the summands and check
@@ -369,13 +379,13 @@ assertEquals(removeDuplicates [modular? yeq3g(rest x, idmat) for x in terms3], [
 -- transformations are the indexOfGamma0(level)
 -- reps:=rightCosetRepresentatives(level) stored in the variable reps.
 
-tsum(terms, gamma) == reduce(_+, [first(x)*eq3g(rest x, gamma) for x in terms])
+tsum(terms, gamma) == reduce(_+, [first(x)* EQGL1CX(rest x, gamma) for x in terms])
 
 -- Safety check whether the identity matrix gives the already known
 -- expansion.
 
 f3id := tsum(terms3, first reps) -- first reps = identity matrix
-f3x := abmap(C, CX, f3)::S(CX)
+f3x := abmap(C, CX, f3)::L1(CX)
 fdiff := f3id - f3x
 assertEquals(removeDuplicates [coefficient(fdiff, i) for i in -20..50], [0])
 
@@ -385,8 +395,8 @@ tsers :=[tsum(terms3, gamma) for gamma in reps];
 
 )set stream calc 4
 
-findSimilarExpansions(qseries: List S CX): List List Z == (_
-    REC ==> Record(fo: Z, fi: Z, fc: S CX);_
+findSimilarExpansions(qseries: List L1 CX): List List Z == (_
+    REC ==> Record(fo: Z, fi: Z, fc: L1 CX);_
     oics := [[order x, i, x]$REC for x in qseries for i in 1..#qseries];_
     l := oics;_
     result := empty()$List(List Z);_
@@ -412,15 +422,10 @@ result := findSimilarExpansions(tsers);
 -------------------------------------------------------------------
 -- Find the expansion of f_128 at the cusp 0.
 -------------------------------------------------------------------
-WIDTH(cusp) ==> width(level, denom cusp)$QAuxMEQ
-TOMAT(cusp) ==> cuspToMatrix(level, cusp)
-IMAT(mat) ==> inverse(mat)::MZ
-rmons := monomials rpol;
-rterms := [cons(leadingCoefficient(m)::Z, members degree m) for m in rmons];
-creps := [TOMAT(cusp) for cusp in cusps]
+creps := [TOMAT(cusp) for cusp in spitzen]
 hmat := matrix [[1,1],[0,1]]
-[WIDTH(cusp) for cusp in cusps]
-xreps := concat [(gamma:=TOMAT(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH(cusp)-1]) for cusp in cusps];
+[WIDTH(level, denom cusp) for cusp in spitzen]
+xreps := concat [(gamma:=TOMAT(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH(level, denom cusp)-1]) for cusp in spitzen];
 
 findEquivalentMatrix(mat: MZ, mats: List MZ): List Z == (_
     res: List Z := empty();_
@@ -462,11 +467,11 @@ for i in 1..#xreps repeat (_
 -- Create a modular function with expansion at all cusps.
 -------------------------------------------------------------------
 
-msum(terms) == reduce(_+, [first(x)*expand(equn(rest x)) for x in terms])
+msum(terms) == reduce(_+, [first(x)* EQAnCX(rest x) for x in terms])
 fAtAllCusps := msum(rterms);
 f3AtAllCusps := msum(terms3);
 
-cseries := [series(fAtAllCusps, i) - tseratcusps.i for i in 1..#cusps];
+cseries := [series(fAtAllCusps, i) - tseratcusps.i for i in 1..#spitzen];
 assertEquals(removeDuplicates [removeDuplicates [coefficient(x, i) for i in -60..20] for x in cseries], [[0]])
 
 -- +
@@ -475,6 +480,7 @@ assertEquals(removeDuplicates [removeDuplicates [coefficient(x, i) for i in -60.
 -- but with poles not only at infinity.
 -------------------------------------------------------------------
 
+divs := DIVISORS level
 idivs := empty()$List(Z)
 z:=zsolve4ti2(level, idivs, concat([0 for i in idivs], -8))$QEQEV;
 vmodadjust := (first z.zinhom)(1..#divs) - vector rcofactor
@@ -496,8 +502,7 @@ cs := [coefficient(ser, i) for i in -24..100]
 -- Try to find an adjustment with just poles at cusp 1/1.
 -------------------------------------------------------------------
 reta := [-24,24,0,0,0,0,0,0]
-yeta := equn reta;
-eeta := expand yeta;
+eeta := EQAnCX reta;
 qetaGrades eeta
 fadjusteta := fadjustAtAllCusps * eeta;
 qetaGrades fadjusteta
@@ -508,14 +513,19 @@ qetaGrades fadjusteta
 )set stream showall off
 nn := level
 --rs := eqmevx level
-rs64 := etaQuotientMonoidExponentVectors(64, [2,3,4,5,6,7])$QEQEV;
-cusps64 := cuspsOfGamma0 64
-cusps := cusps64
-equn64(r) ==> etaQuotient(64, r, 1, [0], 1, 0, cusps64)$YMSETAQ
+
+-------------------------------------------------------------------
+-- !!! We change the level here !!!
+-------------------------------------------------------------------
+
+level := 64
+
+rs64 := etaQuotientMonoidExponentVectors(level, [2,3,4,5,6,7])$QEQEV;
+
+spitzen := cuspsOfGamma0 64
+
 qsyms64 := indexedSymbols("Q", #rs64)
-ygens64 := [equn64 rsi for rsi in rs64];
---xiord := max [minimalRootOfUnity y for y in ygens64]
-egens64 := [expand y for y in ygens64];
+egens64 := [EQAnCX r for r in rs64];
 [qetaGrades x for x in egens64]
 
 )read /home/hemmecke/g/qeta/input/tracing.input
@@ -527,11 +537,11 @@ egens64 := [expand y for y in ygens64];
 -- The above computation does not work, so we do the compuation just
 -- at the cusp 1/1.
 
-xgens64 := [toX1(CX, series(x, 1)::F1(CX), s) for x in egens64 for s in qsyms64]
+xgens64 := [toX1(CX, series(x, 1)::A1(CX), s) for x in egens64 for s in qsyms64]
 tex64 := 2*xgens64.1
 abex64 := samba(tex64, xgens64)$QXTOPSAMBA1(CX)
 assertEquals(genusOfGamma0(64), numOfGaps(abex64))
-fadjusteta1 := series(fadjusteta, 1)::F1(CX)
+fadjusteta1 := series(fadjusteta, 1)::A1(CX)
 [qetaCoefficient(fadjusteta1, i) for i in 0..95]
 )set stream calc 20
 abex64
@@ -539,7 +549,7 @@ xfadjusteta1 := toX1(CX, fadjusteta1, 'F);
 xfr64 := reduce(xfadjusteta1, abex64)$QXTOPRED1(CX)
 512*xfr64
 
-f3eta1 := series(f3AtAllCusps*eeta, 1)::F1(CX)
+f3eta1 := series(f3AtAllCusps*eeta, 1)::A1(CX)
 xf3eta1 := toX1(CX, f3eta1, 'F3);
 xf3r64 := reduce(xf3eta1, abex64)$QXTOPRED1(CX); -- takes > 30 min
 
@@ -549,15 +559,28 @@ qetaGrades fadjustAtAllCusps
 idivs := [1,2,3,4,5,6]
 z:=zsolve4ti2(64, idivs, concat([31*24,31*24,0,0,0,0], [0,0,12]))$QEQEV;
 rcofac64 := concat(members((z.zinhom.1)(1..7)), 0)
-fadjust2 := expand equn rcofac64
+
+level := 128
+spitzen := cuspsOfGamma0(level)
+
+fadjust2 := EQAnCX rcofac64
 fadjusted := fadjustAtAllCusps * fadjust2
 qetaGrades fadjusted
 
-[[WIDTH x, width(64, denom x)$QAuxMEQ,x] for x in cusps]
-[[cusps.i, WIDTH(cusps.i), width(64, denom(cusps.i))$QAuxMEQ, series(fadjusted, i)] for i in 1..#cusps]
+[[WIDTH(level, denom x), width(64, denom x)$QAuxMEQ,x] for x in spitzen]
+[[spitzen.i, WIDTH(level, denom spitzen.i), width(64, denom(spitzen.i))$QAuxMEQ, series(fadjusted, i)] for i in 1..#spitzen]
 
 -- fadjusted is, in fact a modular function for Gamma_0(64). So let's
 -- multiply with another nice eta-quotient that brings it to M^\infty(64).
+
+idivs := [1,2,3,4,5,6]
+z:=zsolve4ti2(level, idivs, concat([0 for i in idivs], [-8,0,12]))$QEQEV
+vmodadjust := (first z.zinhom)(1..#divs) - vector rcofactor
+YEQn members vmodadjust
+radjustterms := [cons(first x, members(vector rest x + vmodadjust)) for x in rterms]
+fadjustAtAllCusps := msum(radjustterms);
+
+
 
 
 
@@ -585,26 +608,20 @@ level := 45;
 
 rgens := etaQuotientMonoidExponentVectors(level)$QEQEV;
 
-divs := divisors(level)$IntegerNumberTheoryFunctions;
-etaquotgensZ: List EtaQuotient(Z, LZ) := [etaQuotient(divs, r) for r in rgens];
-for x in etaquotgensZ repeat assertTrue(zero? prefactor x)
-
-eqgensZ: List LZ := [retract x for x in etaquotgensZ];
-
-eqgens: List L := [zcmap x for x in eqgensZ];
+eqgens := [EQA1C r for r in rgens];
 assertEquals([qetaGrade x for x in eqgens],_
     [4, 6, 6, 7, 8, 8, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10, 10, 11, 11, 11,_
     12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 14, 14, 15,_
     16, 16, 16, 16, 17, 18])
 
 msyms := indexedSymbols("M", #eqgens)
-xeqgens: List X := [toX1(C, x, s) for x in eqgens for s in msyms];
+xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_28]$.
 
-tex: X := xeqgens.1
+tex: X1 C := xeqgens.1
 abex := samba(tex, xeqgens)$QXTOPSAMBA1(C)
 
 assertEquals(genusOfGamma0(level), 3)
@@ -622,7 +639,7 @@ assertEquals(# bas, grdt-1)
 -- "Hypergeometric motives for rigid Calabi–Yau manifolds"
 -- f_45
 
-q := monomial(1,1)$F1(C)
+q := monomial(1,1)$A1(C)
 
 -- Zudilin (Mail Silviu "Date: Thu, 6 Feb 2020 14:16:19 +0100")
 -- f_45(\tau) = eta^(1,1,1,0,1,0) + eta^(0,1,0,1,1,1) + 2*eta^(0,1,0,0,3,0) -
@@ -637,34 +654,35 @@ f45silviu := 1*q+1*q^2-1*q^4-1*q^5-3*q^8-1*q^10+4*q^11-2*q^13-1*q^16-2*q^17 _
   -12*q^88+6*q^89-8*q^94-4*q^95+2*q^97-7*q^98
 
 -- generalized eta-quotient
+-- From: Cristian-Silviu Radu <sradu@risc.jku.at>
+-- Date: Thu, 6 Feb 2020 14:16:19 +0100
+
 a(n,k)==(1-q^(45*n+k))
 xn(n) == reduce(_*, [a(n,k) for k in [3,9,12,33,36,42]])
 xd(n) == reduce(_*, [a(n,k) for k in [18,27]])
-s := reduce(_*, [xn(n)/xd(n) for n in 0..10])
-equ(l) ==> etaQuotient(divs, l)$ETA(C)
-equs(l) ==> series equ l
-l := [0,1,0,0,1,2]
-f45trunc := equs[1,1,1,0,1,0] + equs[0,1,0,1,1,1] + 2*equs[0,1,0,0,3,0] _
-  - 4*q^(((7*12+prefactor equ l) exquo 24)::Z)*equs(l)*s
+s1 := reduce(_*, [xn(n)/xd(n) for n in 0..10])
+geqprefactor := expansion((q24(7*12)$ETA(C)) * YEQ1C[0,1,0,0,1,2])
+f45etapart := EQA1C[1,1,1,0,1,0] + EQA1C[0,1,0,1,1,1] + 2*EQA1C[0,1,0,0,3,0]
+f45trunc := f45etapart - 4 * geqprefactor * s1
 
-QF ==> QFunctions(C, F1 C)
+QF ==> QFunctions(C, A1 C)
 p(i) ==> qPochhammer(1, i, 45)$QF
 ns := reduce(_*, [p k for k in [3,9,12,33,36,42]])
 ds := reduce(_*, [p k for k in [18,27]])
-s := ns/ds
+s2 := ns/ds
 
-f45 := equs[1,1,1,0,1,0] + equs[0,1,0,1,1,1] + 2*equs[0,1,0,0,3,0] _
-  - 4*q^(((7*12+prefactor equ l) exquo 24)::Z)*equs(l)*s
+f45 := f45etapart - 4 * geqprefactor * s2
 
 z := f45 - f45trunc
 
+divs := DIVISORS level
 idivs := [i for i in 1.. #divs-1]
-rwgens := etaQuotientExponentVectors(level, idivs,-4)$QEQEV;
+rwgens := etaQuotientExponentVectors(level, idivs, -4)$QEQEV;
 
 rcofactor := rwgens.1
 assertEquals(rcofactor, [0, -2, 0, 6, 4, -12])
-eqcofactor := retract etaQuotient(divs, rcofactor)$EtaQuotient(C, L)
-eqcofactors := [retract etaQuotient(divs, r)$EtaQuotient(C, L) for r in rwgens];
+eqcofactor := EQA1C rcofactor
+eqcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in eqcofactors], _
   [18, 20, 20, 21, 22, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 24, _
   25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, _
@@ -694,13 +712,10 @@ vars := cons(M0, msyms)
 
 -- The following gives f_45 in terms of eta-quotients
 
-FPZ ==> Fraction PolZ
-PE==>PolynomialEvaluation(Z, FPZ)
-
 -- Let's first check whether the expansion for the modular function f is
 -- correctly expressed in eta-quotients.
 
-epol := (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol);
+epol := EVALFPZ(vars, vals, pol);
 assertEquals(epol, _
   (-E1*E15^4*E45*E5*E9^11+E15^8*E9^10+4*E15^3*E3*E45^5*E9^9 _
    +3*E1*E15^3*E3*E45^4*E5*E9^8-6*E15^7*E3*E45^3*E9^7 _
@@ -713,20 +728,12 @@ epold := denom epol;
 
 esyms := indexedSymbols("E", divs)
 dim: N := #esyms
-DN ==> HomogeneousDirectProduct(dim, N);
-DZ ==> HomogeneousDirectProduct(dim, Z);
-RZ ==> PolynomialRing(C, DZ)
-toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
-
-E ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
-rez x ==> x pretend  PolynomialRing(C, E)
-e(l) ==> retract etaQuotient(divs, l)$ETA(C)
 
 rpoln := toRZ epoln
 rpold := degree toRZ epold
 irpold := (-rpold)::RZ
 rpol := rpoln * irpold
-ms := [leadingCoefficient x * e members degree x for x in monomials rpol];
+ms := [leadingCoefficient x * EQA1C members degree x for x in monomials rpol];
 z := reduce(_+, ms) - f
 
 -- The function z is a modular function, so we only need to check the
@@ -774,7 +781,7 @@ brunaultterms := [_
   [  1, 1, 1,1,0,1, 0] _
  ]
 
-f45brunault := reduce(_+, [first(x)*retract(equ rest x) for x in brunaultterms])
+f45brunault := reduce(_+, [first(x) * (EQA1C rest x) for x in brunaultterms])
 f45diff := f45brunault-f45;
 coeffsf45 :=  [qetaCoefficient(f45diff, -i) for i in 0..300];
 assertEquals(removeDuplicates coeffsf45, [0])
@@ -786,9 +793,6 @@ rbrunault := rest(brunaultterms.1)
 
 -- In the following we aim at finding the above relation by means of
 -- powersamba.
-
-equn(r) ==> etaQuotient(level, r, 1, [0], 1, 0, cusps)$YMSETAQ
-expand e ==> expansions(expandAtAllCusps(e)$MSETAQ(C, CX))::Fn(CX);
 
 -------------------------------------------------------------------
 -- We use powersamba to overcome the above problem
@@ -809,14 +813,12 @@ nn := level
 rs := etaQuotientMonoidExponentVectors(level, [2,3,4,5])$QEQEV;
 
 allcusps := cuspsOfGamma0 level
-cusps := [1, 1/45]
+spitzen := [1, 1/45]
 
 qsyms := indexedSymbols("Q", #rs)
-ygens := [equn rsi for rsi in rs];
-xiord := max [minimalRootOfUnity y for y in ygens]
-if xiord < 3 then (CX := Q; xi := -(1$CX)) else _
-  (CX := UnityRootExtension(C, xiord); xi := generator()$CX)
-egens := [expand y for y in ygens];
+xiord := max [minimalRootOfUnity YEQn r for r in rs]
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+egens := [EQAnCX r for r in rs];
 [qetaGrades x for x in egens]
 
 
@@ -855,22 +857,21 @@ qs := [qetaGrades x for x in ms]
 -- In pol, We have to replace the Mi by eta-quotient corresponding to
 -- rgens(i).
 
-valsn := [toXn(CX, expand equn r, msym) for r in rgens for msym in msyms];
-PEX==>PolynomialEvaluation(Z, Xn CX)
+valsn := [toXn(CX, EQAnCX r, msym) for r in rgens for msym in msyms];
 
 1$Xn(CX)
 3 * 1$Xn(CX)
 id(c: Z): Xn(CX) == c*1$Xn(CX)
 id(5)
-xmfn := (eval(id, msyms, valsn)$PEX)(pol);
+xmfn := (eval(id, msyms, valsn)$PolynomialEvaluation(Z, Xn CX))(pol);
 qetaGrades xmfn
 assertEquals(qetaGrades xmfn, [-1, 17])
 -- xmfn corresponds to the same modular function as xf, but with expansion
 -- at the cusps given by the variable "cusps".
 
-[[order series(x,i::P) for i in 1..#cusps] for x in egens]
-mf := (first(xmfn)::Fn(CX))
-[order series(mf,i::P) for i in 1..#cusps]
+[[order series(x,i::P) for i in 1..#spitzen] for x in egens]
+mf := (first(xmfn)::An(CX))
+[order series(mf,i::P) for i in 1..#spitzen]
 xfn := toXn(CX, mf, 'F)
 xfr := reduce(xfn, ab)$QXREDn(CX)
 xfr2 := reduce(xfn, ab2)$QXREDn(CX);
@@ -878,7 +879,7 @@ xfr2 := reduce(xfn, ab2)$QXREDn(CX);
 assertTrue(zero? xfr)
 assertTrue(zero? xfr2)
 
-assertEquals(removeDuplicates [order(series(first(xfr)::Fn(CX), i), 9) for i in 1..#cusps], [9])
+assertEquals(removeDuplicates [order(series(first(xfr)::An(CX), i), 9) for i in 1..#spitzen], [9])
 
 -- Find an eta-quotient that reduces the pole order at infinity at the cost
 -- of increasing the pole order at 0.
@@ -888,12 +889,12 @@ assertEquals(removeDuplicates [order(series(first(xfr)::Fn(CX), i), 9) for i in 
 z := zsolve4ti2(level, [2,3,4,5,6], [0,0,0,0,24*17])
 zi := [x(1..#divs) for x in z.zinhom]
 zsyms := indexedSymbols("Z", #zi)
-xzi := [toXn(CX, expand equn x, s) for x in zi for s in zsyms];
+xzi := [toXn(CX, EQAnCX x, s) for x in zi for s in zsyms];
 xzisorted := sort((a1:Xn(CX),a2:Xn(CX)):Boolean +-> qetaGrades a1 < qetaGrades a2, xzi)
 
 xfn1 := xfn*first(xzisorted)
 xfr1 := reduce(xfn1, ab)$QXREDn(CX)
-assertEquals(removeDuplicates [order(series(first(xfr1)::Fn(CX), i), 9) for i in 1..#cusps], [9])
+assertEquals(removeDuplicates [order(series(first(xfr1)::An(CX), i), 9) for i in 1..#spitzen], [9])
 
 zero? xfr1
 
@@ -903,7 +904,7 @@ sort variables qpol
 
 zh := [x(1..#divs) for x in z.zhom];
 hsyms := indexedSymbols("H", #zh)
-xzh := [toXn(CX, expand equn x, s) for x in zh for s in hsyms];
+xzh := [toXn(CX, EQAnCX x, s) for x in zh for s in hsyms];
 xzhsorted := sort((a1:Xn(CX),a2:Xn(CX)):Boolean +-> qetaGrades a1 < qetaGrades a2, xzh)
 [qetaGrades x for x in xzhsorted]
 
@@ -920,7 +921,7 @@ assertEquals(o, indexOfGamma0 level)
 reps := rightCosetRepresentatives level;
 assertEquals(# reps, o)
 reta24 := [24, 0,0,0,0,0] -- exponent vector for delta(\tau)=eta^24
-eta24 := e reta24 -- = eta^(-24)
+eta24 := EQA1C reta24 -- = eta^(-24)
 
 -- f45^6/eta24 = f^6*(eta24*eqcofactor^6)
 -- f6 is modular function with poles only at the cusps, but not necessarily
@@ -953,40 +954,33 @@ terms6 := [cons(leadingCoefficient(m)::Z, members degree m) for m in mons6];
 -- representatives that are given through reps, we compute an element of
 -- SymbolicEtaQuotientGamma to figure out which root of unity is needed.
 
-yeq6g(l, g) ==> etaQuotient(level, asLP divs, l, g)$YETAQG
---yeq6g(l, g) ==> etaQuotient(level, asLP divs, l, asP 1, 0 pretend Z, g pretend MZ)$YSETAQG
-ygterms := [[yeq6g(rest x, gamma) for x in terms6] for gamma in reps];
-xiord := 24*max [max [minimalRootOfUnity y for y in l] for l in ygterms]
-CX := UnityRootExtension(C, xiord); xi := generator()$CX
+ygterms := [[YEQG1(rest x, gamma) for x in terms6] for gamma in reps];
+xiord := 24 * max [max [minimalRootOfUnity y for y in l] for l in ygterms]
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 
 assertEquals(removeDuplicates [removeDuplicates [modular? y for y in l] for l in ygterms], [[true]])
 
-tsum(terms, gamma) == reduce(_+, [first(x)*eq6g(rest x, gamma) for x in terms])
-
-eq6g(l, g) ==> expansion(etaQuotient(yeq6g(l,g))$ETAQG(C,CX))
+tsum(terms, gamma) == reduce(_+, [first(x) * EQGL1CX(rest x, gamma) for x in terms])
 
 -- Check that cvector indeed belongs to a modular eta-quotient for Gamma0(45).
 
 idmat := matrix [[1,0],[0,1]]
-yeq := yeq6g(members(cvector)$Vector(Z), idmat);
+yeq := YEQG1(members(cvector)$Vector(Z), idmat);
 minimalRootOfUnity yeq
 assertTrue(modular? yeq)
 
-eq := etaQuotient(yeq)$ETAQG(C,CX);
-expansion eq
+eq := EQGL1CX(members(cvector)$Vector(Z), idmat)
 
 -- We change to all cusps, i.e., we also change some domains.
 
-cusps := allcusps
-ycogen := equn members cvector;
-minimalRootOfUnity ycogen
-mcogen := expand ycogen
+spitzen := allcusps
+mcogen := EQAnCX members cvector
 qetaGrades mcogen
 
 -- Check that all eta-quotients in terms6 correspond really to modular
 -- functions.
 
-assertEquals(removeDuplicates [modular? yeq6g(rest x, idmat) for x in terms6], [true])
+assertEquals(removeDuplicates [modular? YEQG1(rest x, idmat) for x in terms6], [true])
 
 
 -- We now apply SL2Z transformations to each of the summands and check
@@ -994,13 +988,11 @@ assertEquals(removeDuplicates [modular? yeq6g(rest x, idmat) for x in terms6], [
 -- transformations are the indexOfGamma0(level)
 -- reps:=rightCosetRepresentatives(level) stored in the variable reps.
 
-tsum(terms, gamma) == reduce(_+, [first(x)*eq6g(rest x, gamma) for x in terms])
-
 -- Safety check whether the identity matrix gives the already known
 -- expansion.
 
 f6id := tsum(terms6, first reps) -- first reps = identity matrix
-f6x := abmap(C, CX, f6)::S(CX)
+f6x := abmap(C, CX, f6)::L1(CX)
 fdiff := f6id - f6x
 assertEquals(removeDuplicates [coefficient(fdiff, i) for i in -20..50], [0])
 
@@ -1010,32 +1002,48 @@ tsers :=[tsum(terms6, gamma) for gamma in reps];
 
 )set stream calc 4
 
-oics := [[order x, i, x]$Record(fo: Z, fi: Z, fc: S CX) for x in tsers for i in 1..#tsers];
+findSimilarExpansions(qseries: List L1 CX): List List Z == (_
+    REC ==> Record(fo: Z, fi: Z, fc: L1 CX);_
+    oics := [[order x, i, x]$REC for x in qseries for i in 1..#qseries];_
+    l := oics;_
+    result := empty()$List(List Z);_
+    while not empty? l repeat (_
+        a := first l;_
+        l2 := rest l;_
+        while not empty? l2 repeat (_
+            b := first l2;_
+            if a.fo = b.fo then (_
+                ser := a.fc/b.fc;_
+                cs := [coefficient(ser, i) for i in 1..20];_
+                if removeDuplicates [zero? c for c in cs] = [true] then (_
+                    print(hconcat [[a.fi, b.fi]::OF, [ser]::OF]);_
+                    result := cons([a.fi, b.fi], result)));_
+            l2 := rest l2);_
+        l := rest l);_
+    result);
 
-l := oics;
-while not empty? l repeat (_
-  a := first l;_
-  l2 := rest l;_
-  while not empty? l2 repeat (_
-    b := first l2;_
-    if a.fo = b.fo then (_
-        ser := a.fc/b.fc;_
-        csz := removeDuplicates [zero? coefficient(ser, i) for i in 1..20];_
-        if csz = [true] then (print([a.fi, b.fi]); print(ser)));_
-    l2 := rest l2);_
-  l := rest l)
+findSimilarExpansions(tsers)
+
+findEquivalentMatrix(mat: MZ, mats: List MZ): List Z == (_
+    res: List Z := empty();_
+    imat := IMAT mat;_
+    for m in mats for i in 1.. repeat (_
+        if zero? positiveRemainder((m * imat)(2,1), level) then (_
+            res := cons(i, res))_
+    );_
+    res);
 
 mcusps := [cuspToMatrix(level, x) for x in cuspsOfGamma0(45)]
 mats := concat(mcusps, reps);
-l := mats;
+l := mats
+res := empty()$List(List Z)
 while not empty? l repeat (_
   a := first l;_
-  l2 := rest l;_
-  while not empty? l2 repeat (_
-    mat := a * (inverse(first l2)::MZ);_
-    if zero? positiveRemainder(mat(2,1), level) then print([a, first l2, mat]);_
-    l2 := rest l2);_
+  res := cons(findEquivalentMatrix(a, rest l), res);_
   l := rest l)
+res := reverse! res
+
+assertTrue(false)
 
 -------------------------------------------------------------------
 --endtest
