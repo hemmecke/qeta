@@ -27,7 +27,7 @@ function usageQuotientMonoidExponentVectors {
 
 function QuotientMonoidExponentVectors {
     cat <<EOF
-)read etacompute.input
+)read etacompute.input )quiet
 )set message type off
 )set message time on
 QEQEV ==> QEtaQuotientExponentVectors4ti2
@@ -51,11 +51,11 @@ function usageQuotientIdealGenerators {
 function QuotientIdealGenerators {
     DEP=etaQuotientMonoidExponentVectors$1
     cat <<EOF
-)read etacompute.input
+)read etacompute.input )quiet
 C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C, A1 C)
 $DEP: List(List Z) := [];
-)read $2/$3/$DEP.input
+)read $2/$3/$DEP.input )quiet
 dim: N := # $DEP
 syms: LSym := indexedSymbols("M", dim) \$ QAuxiliaryTools
 D ==> HomogeneousDirectProduct(dim, N)
@@ -87,13 +87,13 @@ function LaurentIdealGenerators {
     DEPQMEV=etaQuotientMonoidExponentVectors$1
     DEPQIG=etaQuotientIdealGenerators$1
     cat <<EOF
-)read etacompute.input
+)read etacompute.input )quiet
 C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C, A1 C)
 $DEPQMEV: List(List Z) := [];
-)read $2/$3/$DEPQMEV.input
+)read $2/$3/$DEPQMEV.input )quiet
 $DEPQIG: LPol :=[];
-)read $2/$3/$DEPQIG.input
+)read $2/$3/$DEPQIG.input )quiet
 divs: List Z := DIVISORS($1)
 esyms: LSym := indexedSymbols("E", divs) \$ QAuxiliaryTools
 ysyms: LSym := indexedSymbols("Y", divs) \$ QAuxiliaryTools
@@ -127,11 +127,11 @@ function usageRelations {
 function Relations {
     DEP=etaLaurentIdealGenerators$1
     cat <<EOF
-)read etacompute.input
+)read etacompute.input )quiet
 C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C, A1 C)
 $DEP: LPol := [];
-)read $2/$3/$DEP.input
+)read $2/$3/$DEP.input )quiet
 divs: List Z := divisors($1)\$IntegerNumberTheoryFunctions
 syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
