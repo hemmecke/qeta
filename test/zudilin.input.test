@@ -53,27 +53,36 @@ toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
 PERZ ==> PolynomialEvaluation(C, RZ)
 EVALRZ(vars, vals, pol) ==> (eval((c:C):RZ +-> c, vars, vals)$PERZ)(pol)
 
-monRZ(l: List Z): RZ == monomial(1, directProduct(l)$DZ)
+-- monRZ(l: List Z): RZ == monomial(1, directProduct(l)$DZ)
+monRZ(l) ==> monomial(1, directProduct(l)$DZ)$RZ
 
 -- A "term" here is a coefficient (Integer) cons'd to a list of
 -- exponents for every divisor of level. See brunaultterms.
 
-termRZ(term: List Z): RZ == monomial(first term, directProduct(rest term)$DZ)
-polyRZ(terms: List List Z): RZ == reduce(_+, [termRZ x for x in terms], 0$RZ)
+-- termRZ(term: List Z): RZ == monomial(first term, directProduct(rest term)$DZ)
+termRZ(term) ==> monomial(first term, directProduct(rest term)$DZ)$RZ
 
-rzToA1C(x: RZ): A1(C) == _
-    reduce(_+, [leadingCoefficient(mon)*EQA1C(members degree mon) _
-                for mon in monomials x])
-rzToL1CX(x: RZ, gamma: SL2Z): L1(CX) == _
-    reduce(_+, [leadingCoefficient(mon)*EQGL1CX(members degree mon, gamma) _
-                for mon in monomials x])
-rzToAnCX(x: RZ): An(CX) == _
-    reduce(_+, [leadingCoefficient(mon)*EQAnCX(members degree mon) _
-                for mon in monomials x])
+-- polyRZ(terms: List List Z): RZ == reduce(_+, [termRZ x for x in terms], 0$RZ)
+polyRZ(terms) ==> reduce(_+, [termRZ x for x in terms], 0$RZ)
+
+ALGSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
+
+monToA1C(mon) ==> leadingCoefficient(mon)*EQA1C(members degree mon)
+monToL1CX(mon, g) ==> leadingCoefficient(mon)*EQGL1CX(members degree mon, g)
+monToAnCX(mon) ==> leadingCoefficient(mon)*EQAnCX(members degree mon)
+
+-- rzToA1CX: RZ -> A1 C
+rzToA1C(x) ==> ALGSUM(monToA1C, x)
+
+-- rzToL1CX: (RZ, SL2Z) -> L1 CX
+rzToL1CX(x, gamma) ==> ALGSUM(m +-> monToL1CX(m, gamma), x)
+
+-- rzToAnCX: RZ -> An CX
+rzToAnCX(x) ==> ALGSUM(monToAnCX, x)
 
 
-E ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
-rez x ==> x pretend  PolynomialRing(C, E)
+EZ ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
+rez x ==> x pretend  PolynomialRing(C, EZ)
 
 -- Implicit global variables:
 -- C: The coefficient ring where we consider the q-expansions.
@@ -314,9 +323,11 @@ brunaultterms := [_
   [-512, 0, 0,2, 0, 0,0,2,4]_
  ]
 
+# brunaultterms
+
 f128brunault := rzToA1C polyRZ brunaultterms
 
-z := f128brunault - f128b
+z := f128brunault - f128
 assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 
 -------------------------------------------------------------------
@@ -331,64 +342,13 @@ assertEquals(# reps, o)
 reta24 := [24, 0,0,0,0,0,0,0] -- exponent vector for delta(\tau)=eta^24
 eta24 := EQA1C reta24 -- = eta^(24)
 
--- f128^3/eta24 = f^3*(eta24*fcofactor^3)
--- f6 is modular function with poles only at the cusps, but not necessarily
--- only at infinity.
-
-cvector := - (vector reta24 + 3*vector rcofactor)
-f3 := f^3  / (        eta24 *          fcofactor^3)
-
--- f^6 corresponds to xf^6, i.e., pol^6. To each of the variables Mi in pol
--- corresponds the r-vector rgens.i
-
-assertTrue(zero? reduce(_+, members cvector))
-
--- Check that cvector indeed belongs to a modular eta-quotient for Gamma0(45).
-
-idmat := matrix [[1,0],[0,1]]
-yeq := YEQG1(members cvector, idmat);
-modular? yeq
-
 xiord := 24*level
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-eq := EQGL1CX(members cvector, idmat)
-eq := EQGL1CX(members cvector, matrix [[0,-1],[1,0]])
-
--- We change to all cusps, i.e., we also change some domains.
-
-ycogen := YEQn members cvector;
-minimalRootOfUnity ycogen
-mcogen := EQAnCX members cvector;
-qetaGrades mcogen
-
--- Now we can multiply rpol^6 with the monomial corresponding to cvector.
--- This will give a representation of f45^6/eta24 as a Q-linear combination
--- of eta-quotients.
--- We cannot reduce this representation by our samba basis abex, because
--- f45^6/eta24 does not only have poles at infinity.
-
-cpolRZ := monRZ members cvector
-f3polRZ := fpolRZ^3 * cpolRZ;
-
--- Obviously, the coefficients are integers, so we can form a list of
--- vectors similar to brunaultterms.
-
--- Check that all eta-quotients in terms6 correspond really to modular
--- functions.
-
-assertEquals(removeDuplicates [modular? YEQG1(rest x, idmat) for x in terms3], [true])
-
--- Safety check whether the identity matrix gives the already known
--- expansion.
 
 f3id := rzToL1CX(f3polRZ, first reps) -- first reps = identity matrix
 f3x := abmap(C, CX, f3)::L1(CX)
 fdiff := f3id - f3x
 assertEquals(removeDuplicates [coefficient(fdiff, i) for i in -20..50], [0])
-
--- Now we can compute all the expansions at all other gamma from reps.
-
-f3sers :=[rzToL1CX(f3polRZ, gamma) for gamma in reps];
 
 )set stream calc 4
 
@@ -412,8 +372,10 @@ findSimilarExpansions(qseries: List L1 CX): List List Z == (_
         l := rest l);_
     result);
 
+)if false
 result := findSimilarExpansions(f3sers);
 #result
+)endif
 
 -- +
 -------------------------------------------------------------------
@@ -445,12 +407,13 @@ fser := rzToAnCX fpolRZ
 fserreps  := [rzToL1CX(fpolRZ, gamma) for gamma in reps];
 fserxreps := [rzToL1CX(fpolRZ, gamma) for gamma in xreps];
 
+)if false
 result := findSimilarExpansions(fserreps);
 xresult := findSimilarExpansions(fserxreps);
 #xresult
 fresult := findSimilarExpansions([series(fser, i) for i in 1..#spitzen]);
 #fresult
-
+)endif
 
 )set stream calc 4
 for i in 1..#xreps repeat (_
@@ -629,40 +592,51 @@ den0 := rez(den0RZ)
 
 
 
+-- Now we want to reduce this relation with respect to a Gröbner basis
+-- of the eta relations of level 64.
 
+-- etaRelations64 := etaRelations(64)$QEtaIdealHemmeckeCached(C, A1(C))
 
--- +
--------------------------------------------------------------------
--- Compute cofactor for f_128 such that there is only a pole at cusp
--- 1/1 and at all cusps where the the width(64. cusp) is different
--- from width(128, cusp), the series should be a series in q^2.
--------------------------------------------------------------------
+E ==> Monomials(dim, N, DN, esyms) -- show DirectProduct as monomials.
+RE ==> PolynomialRing(C, E)
+PCE ==> PolynomialConversion(C, E, esyms)
 
--- rterms ar the terms of f.
+-- read precomputed Gröbner basis
+)read ../test/etaRelations64.input )quiet
+gb64: List RE := [coerce(x) $ PCE for x in etaRelations64];
 
+num0PolC := coerce(num0 pretend RE) $ PCE
 
-
-divs := DIVISORS level
-idivs := empty()$List(Z)
-z:=zsolve4ti2(level, idivs, concat([0 for i in idivs], -8))$QEQEV;
-zzi := (z.zinhom.1)(1..#divs)
-zzfree := [x(1..#divs) for x in z.zfree];
-zzf := first sort((x1,x2)+->(x1(#divs) > x2(#divs)), zzfree)$List(Vector Z)
-
--- We subtract 9*zff such that there is no eta(128*tau) factor.
-
-vmodadjust := zzi - vector rcofactor - 9*zzf
-rmodadjust := members vmodadjust
-
-
-
-
+num0PolCr := first normalForms([num0PolC], etaRelations64, esyms)$QEtaGroebner(C, E)
 
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
