@@ -339,16 +339,9 @@ o := reduce(_+, [width(level, denom cusp) for cusp in spitzen])
 assertEquals(o, indexOfGamma0 level)
 reps := rightCosetRepresentatives level;
 assertEquals(# reps, o)
-reta24 := [24, 0,0,0,0,0,0,0] -- exponent vector for delta(\tau)=eta^24
-eta24 := EQA1C reta24 -- = eta^(24)
 
 xiord := 24*level
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-
-f3id := rzToL1CX(f3polRZ, first reps) -- first reps = identity matrix
-f3x := abmap(C, CX, f3)::L1(CX)
-fdiff := f3id - f3x
-assertEquals(removeDuplicates [coefficient(fdiff, i) for i in -20..50], [0])
 
 )set stream calc 4
 
@@ -495,11 +488,13 @@ assertEquals(zzh, [_
 zzf := liftTo128 z.zfree
 assertEquals(zzf, [])
 
-rcofactor3 := members(vector(zzi.1) - vector rcofactor)
 --assertEquals(rcofactor3, [0, 0, 0, 1, 0, -3, 6, -4])
 --assertEquals(rcofactor3, [0, -2, 5, 0, 0, 8, -29, 18])
-assertEquals(rcofactor3, [0, 0, 0, 2, -1, 10, -29, 18])
 
+rcofactor3 := members(vector(zzi.1) - vector rcofactor)
+--assertEquals(rcofactor3, [0, 0, 0, 2, -1, 10, -29, 18])
+rcofactor3 := members(vector(zzi.1) - vector(zzh.12) - vector rcofactor)
+assertEquals(rcofactor3, [0, 0, 0, 3, -3, 9, -27, 18])
 fcofactor3 := EQAnCX rcofactor3
 
 fser3 := fser * fcofactor3
@@ -534,8 +529,8 @@ g := map(retract, gx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
 -- Now we want to compute in level 64, i.e. modular function for Gamma_0(64).
 
 level := 64
-rs64 := etaQuotientMonoidExponentVectors(level)$QEQEV;
-assertEquals(rs64, [_
+rgens64 := etaQuotientMonoidExponentVectors(level)$QEQEV;
+assertEquals(rgens64, [_
   [0, 0, 0, -1, 2, 1, -2], [0, 0, 0, 0, -2, 6, -4],_
   [0, 0, -2, 5, -2, 1, -2], [0, 0, 2, -1, 0, 1, -2],_
   [-2, 5, -2, 0, 0, 1, -2], [2, -1, 0, 0, 0, 1, -2],_
@@ -543,13 +538,14 @@ assertEquals(rs64, [_
   [0, -2, 5, -4, 5, 0, -4], [0, 2, -1, -2, 5, 0, -4],_
   [0, 0, 0, -4, 10, -2, -4], [0, -4, 10, -4, 0, 2, -4]])
 
-assertEquals(sort [concat(x,0) for x in rs64], sort zzh)
+rgens64x := [concat(x,0) for x in rgens64]
+assertEquals(sort rgens64x, sort zzh)
 
-egens64 := [EQA1C r for r in rs64]
+egens64 := [EQA1C r for r in rgens64]
 [qetaGrade x for x in egens64]
 
-qsyms64 := indexedSymbols("Q", #rs64)
-xgens64 := [toX1(C, x, s) for x in egens64 for s in qsyms64]
+usyms64 := indexedSymbols("U", #rgens64)
+xgens64 := [toX1(C, x, s) for x in egens64 for s in usyms64]
 
 tx64 := first xgens64
 abx64 := samba(tx64, xgens64)$QXTOPSAMBA1(C)
@@ -558,31 +554,40 @@ xg := toX1(C, g, 'G)
 xgr := reduce(xg, abx64)$QXTOPRED1(C)
 zero? xgr
 gpol := 8192 * second(xgr)::PolC + G
-# monomials gpol
+assertEquals(# monomials gpol, 23)
+assertEquals(gpol,_
+  (U1^10-20*U1^8-24*U1^6-128*U1^4-512*U1^2+2048)*U5_
+ +(-2*U1^8-36*U1^6+208*U1^4-224*U1^2+1024)*U11_
+ -2*U1^11+4*U1^10+40*U1^9+56*U1^8+48*U1^7+368*U1^6+256*U1^5-1024*U1^4+1024*U1^3+2048*U1^2-4096*U1-8192)
 
-rgens640 := members(- vector(zzi.1))
+rgens640 := members(-(vector rcofactor3 + vector rcofactor))
 
--- We must append a zero to the rs64 vectors, because we do evaluation
+-- We must append a zero to the rgens64 vectors, because we do evaluation
 -- into a domain that contains an entry for E128.
 
 -- Now we go back to level 128 to check.
-level := 128
-vals64 := cons(monRZ rgens640, [monRZ concat(x, 0) for x in rs64])
 
-gpolRZ := EVALRZ(cons('Q0, qsyms64), vals64, gpol)
+level := 128
+vals64 := cons(monRZ rgens640, [monRZ concat(x, 0) for x in rgens64])
+
+gpolRZ := EVALRZ(cons('U0, usyms64), vals64, gpol)
 rez gpolRZ
 
 zero?(g - rzToA1C gpolRZ)
 
-gpol0 := Q0 * gpol
-gpol0RZ := EVALRZ(cons('Q0, qsyms64), vals64, gpol0)
+gpol0 := U0 * gpol
+gpol0RZ := EVALRZ(cons('U0, usyms64), vals64, gpol0)
 rez gpol0RZ
+
+series(fser3, 16)
+EQA1C rgens640
+
 
 dzs0 := [degree mon for mon in monomials gpol0RZ]
 den0RZ := (- reduce(minEntries, dzs0, 0$DZ)$List(DZ))::RZ
 
-q0pol := 'Q0::PolC
-EVALRZ(cons('Q0, qsyms64), vals64, q0pol)
+q0pol := 'U0::PolC
+EVALRZ(cons('U0, usyms64), vals64, q0pol)
 
 z0 := rzToA1C gpol0RZ - f128
 assertEquals(order(z0, 301), 301)
@@ -590,7 +595,133 @@ assertEquals(order(z0, 301), 301)
 num0 := rez (gpol0RZ * den0RZ)
 den0 := rez(den0RZ)
 
+-- +
+-------------------------------------------------------------------
+-- Manual reduction of fser3 by means of elemens created by rgens64x
+-------------------------------------------------------------------
 
+)if false
+abx64t := samba(tx64, [xgens64.i for i in [6,5,4,3,2,1,7,8,9,10,11,12]])$QXTOPSAMBA1(C)
+xgrt := reduce(xg, abx64t)$QXTOPRED1(C)
+gpolt := 4096 * second(xgrt)::PolC + G
+assertEquals(gpolt,_
+  (U1^10-20*U1^8-24*U1^6-128*U1^4-512*U1^2+2048)*U2_
+  +(-2*U1^8-36*U1^6+208*U1^4-224*U1^2+1024)*U11_
+  +6*U1^10+16*U1^8+320*U1^6-1280*U1^4+1024*U1^2-4096)
+assertEquals(# monomials gpolt, 17)
+#monomials gpolt
+
+[(pp := second(reduce(x, abx64)$QXTOPRED1(C))::PolC; if zero? pp then 0else 1/coefficient(pp,degree pp)*pp) for x in xgens64]
+)endif
+
+-------------------------------------------------------------------
+
+egens64x := [EQAnCX r for r in rgens64x];
+xgens64x := [toXn(CX, x, s) for x in egens64x for s in usyms64];
+u:=egens64x;
+for x in u for i in 1.. repeat print [i, qetaGrades x]
+qetaGrades fser3
+
+LCi(x, idxs) ==> [leadingCoefficient(series(x, i)) for i in idxs]
+LMi(x, idxs) ==> [leadingMonomial(series(x, i)) for i in idxs]
+LC(x) ==> LCi(x, ixs)
+LM(x) ==> LMi(x, ixs)
+
+ixs := [9,10,11,12, 16]
+lmu := [LM x for x in u];
+for x in lmu for i in 1.. repeat print([i, x])
+
+
+ser := fser3/(u.4*u.1^2*u.3) - u.4*u.7*u.12^3/(u.4*u.1^2*u.3)  + 16*u.8^3*u.2/u.3 + 172*u.12^2
+sx := series(ser, 16)::A1(CX)
+s := map(retract, sx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+xs := toX1(C, s, 'S)
+xsr := reduce(xs, abx64)$QXTOPRED1(C)
+assertTrue(zero? xsr)
+spol := 12288*second(reduce(xs, abx64)$QXTOPRED1(C))::PolC + S
+assertEquals(# monomials spol, 9)
+
+isyms64 := indexedSymbols("I", #rgens64)
+irgens64x := [members(-vector x) for x in rgens64x]
+iegens64x := [EQAnCX r for r in irgens64x];
+ixgens64x := [toXn(CX, x, s) for x in iegens64x for s in isyms64];
+
+assertTrue(zero?(xgens64x.1 * ixgens64x.1 - 1$Xn(CX)))
+
+fpol := spol*U1^2*U3*U4_
+        + U4*U7*U12^3 - 16*U1^2*U2*U4*U8^3 - 172*U1^2*U3*U4*U12^2
+
+ser := fser3
+
+
+fpolRZ := EVALRZ(cons('U0, usyms64), vals64, fpol)
+rez fpolRZ
+g
+rzToA1C fpolRZ
+zero?(g - rzToA1C fpolRZ)
+
+
+fpol0 := U0 * fpol
+fpol0RZ := EVALRZ(cons('U0, usyms64), vals64, fpol0)
+rez fpol0RZ
+z0 := rzToA1C fpol0RZ - f128
+assertEquals(order(z0, 301), 301)
+
+dzs0 := [degree mon for mon in monomials fpol0RZ]
+den0RZ := (- reduce(minEntries, dzs0, 0$DZ)$List(DZ))::RZ
+
+num0 := rez (fpol0RZ * den0RZ)
+den0 := rez(den0RZ)
+
+
+-- +
+-------------------------------------------------------------------
+-- It follows the commands that were tried to figure out the above relation.
+-------------------------------------------------------------------
+
+)if false
+ser1 := fser3
+ser2 := fser3 - u.4*u.7*u.12^3
+ser3 := ser2/(u.4*u.1^2)
+ser := ser3
+
+sx := series(ser, 16)::A1(CX)
+s := map(retract, sx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+xs := toX1(C, s, 'S3)
+xsr := reduce(xs, abx64)$QXTOPRED1(C)
+assertTrue(zero? xsr)
+spol := 4096*second(reduce(xs, abx64)$QXTOPRED1(C))::PolC + S3
+assertEquals(# monomials spol, 13)
+
+ixs := [5,6,7,8,16]
+lmu := [LM x for x in u];
+for x in lmu for i in 1.. repeat print([i, x])
+
+ser4 := (ser3 + 16*u.8^3*u.2)/u.3
+sx := series(ser, 16)::A1(CX)
+s := map(retract, sx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+xs := toX1(C, s, 'S4)
+xsr := reduce(xs, abx64)$QXTOPRED1(C)
+assertTrue(zero? xsr)
+spol := 1280*second(reduce(xs, abx64)$QXTOPRED1(C))::PolC + S4
+assertEquals(# monomials spol, 11)
+
+ser5 := ser4 + 172*u.12^2
+sx := series(ser5, 16)::A1(CX)
+s := map(retract, sx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+xs := toX1(C, s, 'S5)
+xsr := reduce(xs, abx64)$QXTOPRED1(C)
+assertTrue(zero? xsr)
+spol := 12288*second(reduce(xs, abx64)$QXTOPRED1(C))::PolC + S5
+assertEquals(# monomials spol, 9)
+)endif
+
+
+
+-- +
+-------------------------------------------------------------------
+-- Groebner basis reduction
+-------------------------------------------------------------------
 
 -- Now we want to reduce this relation with respect to a Gröbner basis
 -- of the eta relations of level 64.
@@ -603,11 +734,25 @@ PCE ==> PolynomialConversion(C, E, esyms)
 
 -- read precomputed Gröbner basis
 )read ../test/etaRelations64.input )quiet
-gb64: List RE := [coerce(x) $ PCE for x in etaRelations64];
+etaRelations64RE := [coerce(x) $ PCE for x in etaRelations64];
 
-num0PolC := coerce(num0 pretend RE) $ PCE
+num0RE := num0 pretend RE
 
-num0PolCr := first normalForms([num0PolC], etaRelations64, esyms)$QEtaGroebner(C, E)
+NF(x, gb) ==> primitivePart redPol(x, gb)$GroebnerInternalPackage(C, E, RE)
+
+num0RE1 := NF(num0RE, etaRelations64RE);
+
+rhx := [directProduct(members degree x)$DZ for x in monomials num0RE1];
+reduce(minEntries, rhx, 0$DZ)$List(DZ)
+
+num0RE1x := (num0RE1 exquo (coerce(E64^10)$PCE))::RE
+
+num0RE2 := NF(num0RE1x, etaRelations64RE);
+
+##########################################
+--TODO: Consider GB wrt degrevlex(E1, E64, E2, E32, E4, E16,  E8)
+
+[removeDuplicates sort [reduce(_+, members degree x) for x in monomials er] for er in etaRelations64RE]
 
 
 -- +
