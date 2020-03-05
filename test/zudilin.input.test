@@ -8,14 +8,14 @@ assertTrue x ==> x
 
 )cd /home/hemmecke/g/qeta/tmp
 
+)set mess type off
+)set mess time off
+
 )r projectlibs )quiet
 )r etamacros.input )quiet
 
-)set mess type on
 )set output linear on
 )set output algebra off
-
-)set mess time on
 
 
 -- +
@@ -26,95 +26,18 @@ assertTrue x ==> x
 
 C ==> Q
 
--- The following function simply maps the integer coefficients of the
--- series into the localized coefficient domain or into the rational
--- number domain Q.
-
-abmap(A, B, x) ==> _
-  map((c: A): B +-> c::B, x)$Finite0SeriesFunctions2(A, B, 'q, 'q, 0, 0)
-zcmap(x) ==> abmap(Z, C, x)
-cqmap(x) ==> abmap(C, Q, x)
-zqmap(x) ==> abmap(Z, Q, x)
-
-PolC ==> Pol C
-PolZ ==> Pol Z
-FPZ ==> Fraction PolZ
-PE ==> PolynomialEvaluation(Z, FPZ)
-EVALFPZ(vars, vals, pol) ==> (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol)
-
-asP x ==> x pretend P
-asLP x ==> x pretend List(P)
-
-DN ==> HomogeneousDirectProduct(dim, N);
-DZ ==> HomogeneousDirectProduct(dim, Z);
-RZ ==> PolynomialRing(C, DZ)
-toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
-
-PERZ ==> PolynomialEvaluation(C, RZ)
-EVALRZ(vars, vals, pol) ==> (eval((c:C):RZ +-> c, vars, vals)$PERZ)(pol)
-
--- monRZ(l: List Z): RZ == monomial(1, directProduct(l)$DZ)
-monRZ(l) ==> monomial(1, directProduct(l)$DZ)$RZ
-
--- A "term" here is a coefficient (Integer) cons'd to a list of
--- exponents for every divisor of level. See brunaultterms.
-
--- termRZ(term: List Z): RZ == monomial(first term, directProduct(rest term)$DZ)
-termRZ(term) ==> monomial(first term, directProduct(rest term)$DZ)$RZ
-
--- polyRZ(terms: List List Z): RZ == reduce(_+, [termRZ x for x in terms], 0$RZ)
-polyRZ(terms) ==> reduce(_+, [termRZ x for x in terms], 0$RZ)
-
-ALGSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
-
-monToA1C(mon) ==> leadingCoefficient(mon)*EQA1C(members degree mon)
-monToL1CX(mon, g) ==> leadingCoefficient(mon)*EQGL1CX(members degree mon, g)
-monToAnCX(mon) ==> leadingCoefficient(mon)*EQAnCX(members degree mon)
-
--- rzToA1CX: RZ -> A1 C
-rzToA1C(x) ==> ALGSUM(monToA1C, x)
-
--- rzToL1CX: (RZ, SL2Z) -> L1 CX
-rzToL1CX(x, gamma) ==> ALGSUM(m +-> monToL1CX(m, gamma), x)
-
--- rzToAnCX: RZ -> An CX
-rzToAnCX(x) ==> ALGSUM(monToAnCX, x)
-
-
-EZ ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
-rez x ==> x pretend  PolynomialRing(C, EZ)
-
--- Implicit global variables:
--- C: The coefficient ring where we consider the q-expansions.
--- level: We consider the modular group Gamma_0(level).
-YEQ1C(r) ==> etaQuotient(level, r)$ETA(C)
-EQA1C(r) ==> expansion YEQ1C r -- expansion at infinity (element of A1(C)
-
--- Implicit global variables:
--- level:   We consider the modular group Gamma_0(level).
--- spitzen: The cusps at which to expand.
--- xiord:   We compute with the xiord-th root of unity
--- xi:      A xiord-th root of unity in CX
--- CX:      An C-Algebra containing xi.
--- Call macro EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi).
-YEQn(r) ==> etaQuotient(level, r, spitzen)$YETAQ
-EXPAND x ==> expansions(x::METAQ(C, CX))::An(CX);
-EQAnCX(r) ==> EXPAND YEQn r -- expansion at all cusps for moduler eta-quotients
-
-YEQG1(l, g) ==> etaQuotient(level, l, g)$YETAQG
-EQGL1CX(l, g) ==> expansion(YEQG1(l, g)::ETAQG(C, CX))$ETAQG(C,CX)
-
-TOMAT(cusp) ==> cuspToMatrix(level, cusp)
-IMAT(mat) ==> inverse(mat)::MZ
-
-QEQEV ==> QEtaQuotientExponentVectors4ti2
-
+)set mess type off
+)set mess time off
+)read ../input/convenience.input )quiet
 
 numOfGaps(ab) == (_
   t := multiplier ab; _
   n := qetaGrade(t)::P; _
   grades := [qetaGrade(first basis(ab, i))::P for i in 1..n-1]; _
   numberOfGaps(n, grades)$QAuxiliaryModularEtaQuotientPackage)
+
+)set mess type on
+)set mess time on
 
 -- +
 -------------------------------------------------------------------
@@ -491,7 +414,7 @@ assertEquals(zzf, [])
 --assertEquals(rcofactor3, [0, 0, 0, 1, 0, -3, 6, -4])
 --assertEquals(rcofactor3, [0, -2, 5, 0, 0, 8, -29, 18])
 
-rcofactor3 := members(vector(zzi.1) - vector rcofactor)
+--rcofactor3 := members(vector(zzi.1) - vector rcofactor)
 --assertEquals(rcofactor3, [0, 0, 0, 2, -1, 10, -29, 18])
 rcofactor3 := members(vector(zzi.1) - vector(zzh.12) - vector rcofactor)
 assertEquals(rcofactor3, [0, 0, 0, 3, -3, 9, -27, 18])
@@ -723,6 +646,8 @@ assertEquals(# monomials spol, 9)
 -- Groebner basis reduction
 -------------------------------------------------------------------
 
+assertTrue(false) -- stop here
+
 -- Now we want to reduce this relation with respect to a Gröbner basis
 -- of the eta relations of level 64.
 
@@ -859,11 +784,7 @@ geqprefactor := expansion((q24(7*12)$ETA(C)) * YEQ1C[0,1,0,0,1,2])
 f45etapart := EQA1C[1,1,1,0,1,0] + EQA1C[0,1,0,1,1,1] + 2*EQA1C[0,1,0,0,3,0]
 f45trunc := f45etapart - 4 * geqprefactor * s1
 
-QF ==> QFunctions(C, A1 C)
-p(i) ==> qPochhammer(1, i, 45)$QF
-ns := reduce(_*, [p k for k in [3,9,12,33,36,42]])
-ds := reduce(_*, [p k for k in [18,27]])
-s2 := ns/ds
+s2 := generalizedEtaQuotient(45, [3,9,12,33,36,42], [18,27])
 
 f45 := f45etapart - 4 * geqprefactor * s2
 
