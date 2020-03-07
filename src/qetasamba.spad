@@ -223,29 +223,38 @@ QEtaComputationCategory(F, AB): Category == Exports where
       ++ is used instead of the ordinary reduce function.
     oneStep!: % -> %
       ++ oneStep!(x) computes oneStepComputation!(x, extractNext!).
-    oneTracedStep!: (% -> Void, (F, AB) -> Void, F -> Void, F -> Void) _
-                    -> (% -> %)
-      ++ oneTracedStep!(trace, traceEnter, traceLoop, traceReturn)(x)
+    oneTracedStep!: (%->Void, (F, AB)->Void, F->Void, F->Void) -> (% -> %)
+      ++ oneTracedStep!(trace, trEnter, trLoop, trReturn)(x)
       ++ computes
-      ++ oneTracedStepComputation!(trace, traceEnter, traceLoop, traceReturn)(x, extractNext!).
+      ++ oneTracedStepComputation!(trace, trEnter, trLoop, trReturn)(x, extractNext!).
+
+-- Tracing functions support.
+
+    noTrace: % -> Void
+      ++ noTrace(x) just returns x without any side effect.
+    trace: N -> % -> Void
+      ++ trace(n)(x) returns x and depending on the value of n returns
+      ++ more and more information. Where a higer version of n means
+      ++ more information. trace(0) is equivalent with noTrace.
+
    add
     postProcess!(x: %): % == x
     noTrace(x: %): Void == void()
-    noTraceAtEnter(f: F, ab: AB): Void == void()
-    nt(f: F): Void == void()
+    noTraceEnter(f: F, ab: AB): Void == void()
+    noTraceElement(f: F): Void == void()
 
     oneStepComputation!(x: %, next!: % -> F): % ==
-        otsc! ==> oneTracedStepComputation!(noTrace, noTraceAtEnter, nt, nt)
-        otsc!(x, next!)
+        oneTracedStepComputation!(noTrace,
+            noTraceEnter, noTraceElement, noTraceElement)(x, next!)
 
     oneStep!(x: %): % == oneStepComputation!(x, extractNext!)
 
-    oneTracedStep!(trace: % -> Void, _
-                   traceEnter: (F, AB) -> Void,_
-                   traceLoop: F -> Void,_
-                   traceReturn: F -> Void): % -> % ==
-      (x: %): % +->
-        oneTracedStepComputation!(trace, traceEnter, traceLoop, traceReturn)(x, extractNext!)
+    oneTracedStep!(tr: % -> Void, _
+                   tr0: (F, AB) -> Void,_
+                   trl: F -> Void,_
+                   trr: F -> Void): % -> % ==
+        (x: %): % +->
+            oneTracedStepComputation!(tr, tr0, trl, trr)(x, extractNext!)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -298,10 +307,25 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ yields the element with biggest possible grade is ensured by
       ++ the requirement that "basis" is appropriately sorted by
       ++ greaterGrade?.
-    noTraceAtEnter: (F, AB) -> Void
+    noTraceEnter: (F, AB) -> Void
       ++ A functions that does nothing.
     noTrace: F -> Void
       ++ A function that does nothing.
+    traceEnter: N -> (F, AB) -> Void
+      ++ traceEnter(n)(x, a) returns void() and depending on the value
+      ++ of n returns more and more information. Where a higer version
+      ++ of n means more information. trace(0) is equivalent with
+      ++ noTraceEnter.
+    traceLoop: N -> F -> Void
+      ++ traceLoop(n)(x) just returns void() without any side
+      ++ effect and depending on the value of n returns more and more
+      ++ information. Where a higer version of n means more
+      ++ information. trace(0) is equivalent with noTraceElement.
+    traceReturn: N -> F -> Void
+      ++ traceReturn(n)(x) just returns void() without any side
+      ++ effect and depending on the value of n returns more and more
+      ++ information. Where a higer version of n means more
+      ++ information. trace(0) is equivalent with noTraceElement.
     tracedReduce: ((F, AB) -> Void, F -> Void, F -> Void) -> ((F, AB) -> F)
       ++ tracedReduce(traceEnter, traceLoop, traceReturn)(u, ab) behaves
       ++ identical to reduce(u, ab) except that at enter and exit
@@ -336,9 +360,9 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ non-leading terms of the input up to (and including) the
       ++ constant term of the series.
     topReduce: (F, AB) -> F
-      ++ topReduce == tracedTopReduce(noTraceAtEnter, noTrace, noTrace)
+      ++ topReduce == tracedTopReduce(noTraceEnter, noTrace, noTrace)
     tailReduce: (F, AB) -> F
-      ++ tailReduce == tracedTailReduce(noTraceAtEnter, noTrace, noTrace)
+      ++ tailReduce == tracedTailReduce(noTraceEnter, noTrace, noTrace)
 
     greaterGrade?: (F, F) -> Boolean
       ++ greaterGrade?(x, y) returns qetaGrade(x)>qetaGrade(y).
@@ -366,15 +390,37 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
 
     -- For tracing the computation, other functions (that print
     -- something) could be used.
-    noTraceAtEnter(u: F, ab: AB): Void == void()
+    noTraceEnter(u: F, ab: AB): Void == void()
     noTrace(u: F): Void == void()
 
     reduce(u: F, ab: AB): F ==
-        tracedReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
+        tracedReduce(noTraceEnter, noTrace, noTrace)(u, ab)
+
     topReduce(u: F, ab: AB): F ==
-        tracedTopReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
+        tracedTopReduce(noTraceEnter, noTrace, noTrace)(u, ab)
+
     tailReduce(u: F, ab: AB): F ==
-        tracedTailReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
+        tracedTailReduce(noTraceEnter, noTrace, noTrace)(u, ab)
+
+    traceEnter(verbosity: N): (F, AB) -> Void == (f: F, ab: AB): Void +->
+        zero? verbosity => void() -- abort early
+        vPrint("-- -----------------------------red u", traceout(verbosity)(f))
+        if verbosity > 1 and AB has QEtaAlgebraBasisCategory(C, F) then
+            n: Z := qetaGrade multiplier ab - 1
+            l: List List F := [basis(ab, i) for i in 1..n]
+            gs: List List Z := [[qetaGrade x for x in bs] for bs in l]
+            vPrint("-- red gs", gs)
+
+    traceLoop(verbosity: N): F -> Void == (f: F): Void +->
+        zero? verbosity => void() -- abort early
+        vPrint("-- red loop", traceout(verbosity)(f))
+
+    traceReturn(verbosity: N): F -> Void == (f: F): Void +->
+        zero? verbosity => void() -- abort early
+        vPrint("-- redx", traceout(verbosity)(f))
+
+
+
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -427,15 +473,15 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
             if tailReducible?(u, n, b) then return b::Union(F, "failed")
         "failed"
 
-    tracedTopReduce(traceEnter: (F, AB) -> Void,_
-                    traceLoop: F -> Void,_
-                    traceReturn: F -> Void): (F, AB) -> F ==
+    tracedTopReduce(trEnter: (F, AB) -> Void,_
+                    trLoop: F -> Void,_
+                    trReturn: F -> Void): (F, AB) -> F ==
       (u: F, ab: AB): F +->
-        traceEnter(u, ab)
+        trEnter(u, ab)
         t: F := multiplier ab
         grdt: Z := grade t
         while not ((r := reducer(u, ab)) case "failed") repeat
-            traceLoop u
+            trLoop u
             grdu: Z := grade u
             v: F := r :: F
             j: Z := ((grdu - grade v) exquo grdt) :: Z
@@ -447,14 +493,14 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
             u := (uca.associate)*u
         uca := unitNormal leadingCoefficient u
         u := (uca.associate)*u
-        traceReturn u
+        trReturn u
         return u
 
-    tracedTailReduce(traceEnter: (F, AB) -> Void,_
-                     traceLoop: F -> Void,_
-                     traceReturn: F -> Void): (F, AB) -> F ==
+    tracedTailReduce(trEnter: (F, AB) -> Void,_
+                     trLoop: F -> Void,_
+                     trReturn: F -> Void): (F, AB) -> F ==
       (u: F, ab: AB): F +->
-        traceEnter(u, ab)
+        trEnter(u, ab)
         t: F := multiplier ab
         grdt: Z := grade t
         n := grade u -- non-top-reduction
@@ -464,19 +510,19 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
                 v := r :: F
                 j: Z := ((n - grade v) exquo grdt) :: Z
                 v := v*t^(qcoerce(j)@N)
-                traceLoop v
+                trLoop v
                 -- cc: Record(quotient: C, remainder: C)
                 cc := divide(qetaCoefficient(u, n), leadingCoefficient v)
                 u := u - (cc.quotient)*v
-        traceReturn u
+        trReturn u
         return u
 
-    tracedReduce(traceEnter: (F, AB) -> Void,_
-                 traceLoop: F -> Void,_
-                 traceReturn: F -> Void): (F, AB) -> F ==
+    tracedReduce(trEnter: (F, AB) -> Void,_
+                 trLoop: F -> Void,_
+                 trReturn: F -> Void): (F, AB) -> F ==
       (u: F, ab: AB): F +->
-        u := tracedTopReduce(traceEnter, traceLoop, traceReturn)(u, ab)
-        tracedTailReduce(traceEnter, traceLoop, traceReturn)(u, ab)
+        u := tracedTopReduce(trEnter, trLoop, trReturn)(u, ab)
+        tracedTailReduce(trEnter, trLoop, trReturn)(u, ab)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -496,11 +542,10 @@ QEtaTopReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
   F: QEtaGradedAlgebra C
   AB: QEtaAlgebraBasisCategory(C, F)
   Impl ==> QEtaReduction(C, F, AB) add
-    tracedReduce(traceEnter: (F, AB) -> Void,_
-                 traceLoop: F -> Void,_
-                 traceReturn: F -> Void): (F, AB) -> F ==
-      (u: F, ab: AB): F +->
-        tracedTopReduce(traceEnter, traceLoop, traceReturn)(u, ab)
+    tracedReduce(trEnter: (F, AB) -> Void,_
+                 trLoop: F -> Void,_
+                 trReturn: F -> Void): (F, AB) -> F ==
+        tracedTopReduce(trEnter, trLoop, trReturn)
 
 )if LiterateDoc
 %$
@@ -525,21 +570,22 @@ QEtaExtendedReduction(C, L, F, AB): Exports == Implementation where
   XAB ==> QEtaExtendedAlgebraBasis(C, L, F, AB)
   Exports ==> QEtaReductionCategory(C, F, AB)
   Implementation ==> add
-    tracedReduce(traceEnter: (F, AB) -> Void,_
-                 traceLoop: F -> Void,_
-                 traceReturn: F -> Void): (F, AB) -> F ==
+    tracedReduce(trEnter: (F, AB) -> Void,_
+                 trLoop: F -> Void,_
+                 trReturn: F -> Void): (F, AB) -> F ==
       (u: F, ab: AB): F +->
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
         --assert(not zero? positiveRemainder(grade(b), grade t)
         --       for all b in basis)
+        trEnter(u, ab)
         ul: L := reduce(first u, ab :: XAB)$QEtaReduction(C, L, XAB)
         zero? ul =>
-            traceReturn(0$F)
+            trReturn(0$F)
             return 0$F
         tReduce ==> tracedReduce $ QEtaReduction(C, F, AB)
-        return tReduce(traceEnter, traceLoop, traceReturn)(u, ab)
+        return tReduce(noTraceEnter, trLoop, trReturn)(u, ab)
 
 )if LiterateDoc
 %$
@@ -564,21 +610,22 @@ QEtaExtendedTopReduction(C, L, F, AB): Exports == Implementation where
   XAB ==> QEtaExtendedAlgebraBasis(C, L, F, AB)
   Exports ==> QEtaReductionCategory(C, F, AB)
   Implementation ==> add
-    tracedReduce(traceEnter: (F, AB) -> Void,_
-                 traceLoop: F -> Void,_
-                 traceReturn: F -> Void): (F, AB) -> F ==
+    tracedReduce(trEnter: (F, AB) -> Void,_
+                 trLoop: F -> Void,_
+                 trReturn: F -> Void): (F, AB) -> F ==
       (u: F, ab: AB): F +->
         --assert(grade(t)>0)
         --assert(one? leadingCoefficient t)
         --assert grade(b)>0 for all b in basis
         --assert(not zero? positiveRemainder(grade(b), grade t)
         --       for all b in basis)
+        trEnter(u, ab)
         ul: L := reduce(first u, ab :: XAB)$QEtaTopReduction(C, L, XAB)
         zero? ul =>
-            traceReturn(0$F)
+            trReturn(0$F)
             return 0$F
         tReduce ==> tracedReduce $ QEtaTopReduction(C, F, AB)
-        return tReduce(traceEnter, traceLoop, traceReturn)(u, ab)
+        return tReduce(noTraceEnter, trLoop, trReturn)(u, ab)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -740,6 +787,11 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
       ++ update!(u, x) adds a new basis element and updates the
       ++ critical elements accordingly. Note that older basis elements
       ++ might become critical elements in this process.
+
+    oneVerboseStep!: (N, N, N, N) -> (% -> %)
+      ++ oneVerboseStep!(ny, n0, nl, nr) is equivalent with
+      ++ oneTracedStep!(trace ny, traceEnter(n0)$R, traceLoop(nl)$R, traceReturn(nr)$R).
+
   Implementation ==> add
     Rep ==> Record(ab: AB, cbe: List F, pairs: Products)
     grade ==> qetaGrade$F
@@ -884,20 +936,31 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         if empty? l then remove!(g, p) else p.g := l
         r.f1 * r.f2
 
-    oneTracedStepComputation!(trace: % -> Void, _
-                   traceEnter: (F, AB) -> Void,_
-                   traceLoop: F -> Void,_
-                   traceReturn: F -> Void): (%, % -> F) -> % ==
+    oneTracedStepComputation!(tr: % -> Void, _
+        trEnter: (F, AB) -> Void,_
+        trLoop: F -> Void,_
+        trReturn: F -> Void): (%, % -> F) -> % ==
       (x: %, next!: % -> F): % +->
         --assert(criticalElements? x)
         -- Selection process: Take the first element from cbe or
         -- products with smallest degree prefer cbe if equal degree.
-        trace x
+        tr x
         f: F := next! x
         tReduce ==> tracedReduce $ R
-        u := tReduce(traceEnter, traceLoop, traceReturn)(f, algebraBasis x)
+        u := tReduce(trEnter, trLoop, trReturn)(f, algebraBasis x)
         if not zero? u then update!(u, x)
         return x
+
+    trace(n: N): % -> Void == (x: %): Void +->
+        zero? n => void() -- abort early
+        vPrint("-- ==================================step(#cbe,#pairs)",_
+            [#(xx.cbe), #(xx.pairs)]$List(Z))
+        vPrint("-- +++ grades(cbe, pairs)",
+            [[qetaGrade b for b in xx.cbe], sort keys xx.pairs]$List(List Z))
+
+    oneVerboseStep!(ny: N, n0: N, nl: N, nr: N): % -> % ==
+        oneTracedStep!(trace ny, traceEnter(n0)$R,
+                       traceLoop(nl)$R, traceReturn(nr)$R)
 
 
 
@@ -932,7 +995,11 @@ QEtaComputationDelayedPairs(C, F, AB, R): Exports == Implementation where
   R: QEtaReductionCategory(C, F, AB)
   FF ==> Record(f1: F, f2: F)
   Products ==> XHashTable(Z, List FF)
-  Exports ==> QEtaComputationCategory(F, AB)
+  Exports ==> QEtaComputationCategory(F, AB) with
+    oneVerboseStep!: (N, N, N, N) -> (% -> %)
+      ++ oneVerboseStep!(ny, n0, nl, nr) is equivalent with
+      ++ oneTracedStep!(trace ny, traceEnter(n0)$R, traceLoop(nl)$R, traceReturn(nr)$R).
+
   Implementation ==> QEtaComputation(C, F, AB, R) add
     Rep ==> QEtaComputation(C, F, AB, R)
     import from Rep

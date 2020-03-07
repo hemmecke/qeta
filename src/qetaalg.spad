@@ -120,6 +120,10 @@ QEtaAlgebra(C: CommutativeRing): Category ==
       ++ Multiplication by a coefficient.
     _^: (%, N) -> %
       ++ Exponentiation (repeated multiplication)
+    traceout: N -> % -> OutputForm
+      ++ traceout(verbosity)(x) coerces x into OutputForm for tracing
+      ++ purposes. A higher verbosity value shows more information.
+      ++ Smaller values might show only partial information.
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -152,6 +156,13 @@ QEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
     qetaLeadingCoefficient: % -> C
       ++ qetaLeadingCoefficient(x) returns qetaCoefficient(x, qetaGrade x).
       ++ The qetaLeadingCoefficient of 0 is undefined.
+   add
+    traceout(verbosity: N): % -> OF == (x: %): OF +->
+      zero? verbosity => empty()
+      one? verbosity => (qetaGrade x)::OF
+      verbosity = 2 =>
+          bracket [(qetaLeadingCoefficient x)::OF, (qetaGrade x)::OF]
+      x::OF
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -245,6 +256,14 @@ QEtaExtendedAlgebra(_
         qetaGrade(x: %): Z == qetaGrade first x
         qetaCoefficient(x: %, n: Z): C == qetaCoefficient(first x, n)
         qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient first x
+        traceout(verbosity: N): % -> OF == (x: %): OF +->
+            zero? verbosity => empty()
+            one? verbosity => (qetaGrade first x)::OF
+            verbosity = 2 =>
+                bracket [(qetaLeadingCoefficient x)::OF, (qetaGrade x)::OF]
+            verbosity = 3 => (second x) :: OF
+            verbosity = 4 => bracket [(qetaGrade first x)::OF, (second x)::OF]
+            x::OF
     if A has XEtaGradedAlgebra C then
         maxIndex(): P == maxIndex()$A
         qetaIndex(x: %): P == qetaIndex first x
@@ -253,6 +272,16 @@ QEtaExtendedAlgebra(_
         qetaLeadingCoefficient(x: %, k: P): C ==
             qetaLeadingCoefficient(first x, k)
         qetaGrades(x: %): List Z == qetaGrades first x
+        traceout(verbosity: N): % -> OF == (x: %): OF +->
+            zero? verbosity => empty()
+            one? verbosity => (qetaGrades first x)::OF
+            verbosity = 2 =>
+                ix := qetaIndex x
+                lc := qetaLeadingCoefficient(x, ix)
+                bracket [ix::OF, lc::OF, (qetaGrades x)::OF]
+            verbosity = 3 => (second x) :: OF
+            verbosity = 4 => bracket [(qetaGrades x)::OF, (second x)::OF]
+            x::OF
 
 )if LiterateDoc
 %$
@@ -269,7 +298,8 @@ QEtaExtendedAlgebra(_
 ++ the input parameter, we assume that A forms a C algebra.
 QEtaAlgebraCachedPower(C, A): Exports == Implementation where
   C: CommutativeRing
-  A: Join(Monoid, AbelianGroup) with (_*: (C, %) -> %)
+  A: Join(Monoid, AbelianGroup) with
+    _*: (C, %) -> %
   Exports ==> Join(Monoid, AbelianGroup, CoercibleFrom A, CoercibleTo A) with
     _*: (C, %) -> %
       ++ c * x return the product of a constant (from the coefficient
@@ -291,6 +321,9 @@ QEtaAlgebraCachedPower(C, A): Exports == Implementation where
     ((x: %) * (y: %)): % == embed(toA x * toA y)
     ((c: C) * (x: %)): % == embed(c * toA x)
     ((x: %) ^ (n: N)): % == embed(power!(rep x, n))
+    if A has QEtaAlgebra C then
+        traceout(verbosity: N): % -> OF ==
+            (x: %): OF +-> traceout(verbosity)(toA x)
     if A has QEtaGradedAlgebra C then
         qetaGrade(x: %): Z == qetaGrade toA x
         qetaCoefficient(x: %, n: Z): C == qetaCoefficient(toA x, n)
