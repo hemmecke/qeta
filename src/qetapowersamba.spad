@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018-2019  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018-2020  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -19,9 +19,15 @@
 -------------------------------------------------------------------
 
 OF==>OutputForm
+display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
+
 dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
 --dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF)::LinearOutputFormat, 770)
 xdbgPrint(x,y) ==> rhx:="42"
+
+
+
 
 )if LiterateDoc
 \documentclass{article}
@@ -555,10 +561,25 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
       ++ reducer(u, basis, grdt, k) returns an element b from the
       ++ basis or b=1 such that qetaGrade(u, k) - qetaGrade(b, k) is
       ++ divisible by grdt or returns "failed" if no such b exists.
-    noTraceAtEnter: (F, AB) -> Void
+    noTraceEnter: (F, AB) -> Void
       ++ A functions that does nothing.
     noTrace: F -> Void
       ++ A function that does nothing.
+    traceEnter: N -> (F, AB) -> Void
+      ++ traceEnter(n)(x, a) returns void() and depending on the value
+      ++ of n returns more and more information. Where a higer version
+      ++ of n means more information. trace(0) is equivalent with
+      ++ noTraceEnter.
+    traceLoop: N -> F -> Void
+      ++ traceLoop(n)(x) just returns void() without any side
+      ++ effect and depending on the value of n returns more and more
+      ++ information. Where a higer version of n means more
+      ++ information. trace(0) is equivalent with noTraceElement.
+    traceReturn: N -> F -> Void
+      ++ traceReturn(n)(x) just returns void() without any side
+      ++ effect and depending on the value of n returns more and more
+      ++ information. Where a higer version of n means more
+      ++ information. trace(0) is equivalent with noTraceElement.
     tracedReduce: ((F, AB) -> Void, F -> Void, F -> Void) -> ((F, AB) -> F)
       ++ tracedReduce(traceEnter, traceLoop, traceReturn)(u, ab) behaves
       ++ identical to reduce(u, ab) except that at enter and exit
@@ -600,11 +621,11 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
 
     -- For tracing the computation, other functions (that print
     -- something) could be used.
-    noTraceAtEnter(u: F, ab: AB): Void == void()
+    noTraceEnter(u: F, ab: AB): Void == void()
     noTrace(u: F): Void == void()
 
     reduce(u: F, ab: AB): F ==
-        tracedReduce(noTraceAtEnter, noTrace, noTrace)(u, ab)
+        tracedReduce(noTraceEnter, noTrace, noTrace)(u, ab)
 
     -- To save time we assume that u is nonzero.
     -- Return an element b from the basis or b=1 such that
@@ -630,6 +651,32 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
             if topReducible?(u, b, k) then return b::Union(F, "failed")
         "failed"
 
+    traceEnter(verbosity: N): (F, AB) -> Void == (f: F, ab: AB): Void +->
+        zero? verbosity => void() -- abort early
+        vPrint("-------------------------------red u", traceout(verbosity)(f))
+        not (AB has XEtaAlgebraBasisCategory(C, F)) => void()
+        if verbosity > 1 then
+            idx := indexPermutation ab
+            vPrint("red idx", idx)
+        if verbosity > 2 then
+            mults: MUL := multipliers ab
+            vPrint("red mults", [qetaGrades m for m in entries mults])
+        if verbosity > 3 then
+            be: V := basisElements ab
+            n: P := maxIndex()$F
+            v: Vector List List List Z :=
+                l := [[[qetaGrades b for b in lb] for lb in entries be.k] for k in 1..n]
+            vPrint("red be", v)
+
+    traceLoop(verbosity: N): F -> Void == (f: F): Void +->
+        zero? verbosity => void() -- abort early
+        vPrint("red loop", traceout(verbosity)(f))
+
+    traceReturn(verbosity: N): F -> Void == (f: F): Void +->
+        zero? verbosity => void() -- abort early
+        vPrint("redx", traceout(verbosity)(f))
+
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Restricted reduction}
@@ -645,11 +692,11 @@ XEtaReduction(C, F, AB): Exports == Implementation where
   Implementation ==> add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
-    tracedReduce(traceEnter: (F, AB) -> Void,_
-                 traceLoop: F -> Void,_
-                 traceReturn: F -> Void): (F, AB) -> F ==
+    tracedReduce(trEnter: (F, AB) -> Void,_
+                 trLoop: F -> Void,_
+                 trReturn: F -> Void): (F, AB) -> F ==
       (u: F, ab: AB): F +->
-        traceEnter(u, ab)
+        trEnter(u, ab)
         -- Reduce component qetaIndex u!!! as long as u is nonzero and
         -- a reducer does exist. If there does not exist a reducer, then
         -- don't try to reduce in another component.
@@ -657,7 +704,7 @@ XEtaReduction(C, F, AB): Exports == Implementation where
         mul: MUL := multipliers ab
         be: V := basisElements ab
         while not zero? u repeat
-            traceLoop u
+            trLoop u
             kz := component(u, idx)
             kz <= 0 => return u -- no top-reduction possible
             k: P := asP kz
@@ -687,7 +734,7 @@ XEtaReduction(C, F, AB): Exports == Implementation where
 --TODO: zero? u => return u
 --TODO: uca := unitNormal leadingCoefficient(u, k)
 --TODO: u := (uca.associate)*u
-        traceReturn u
+        trReturn u
         return u
 
 )if LiterateDoc
@@ -756,7 +803,10 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
   G ==> Record(sgi: List List Z, elem: F)
   FF ==> Record(sgi: List List Z, xf1: F, xf2: F)
   Products ==> XHashTable(Z, List FF)
-  Exports ==> QEtaComputationCategory(F, AB)
+  Exports ==> QEtaComputationCategory(F, AB) with
+    oneVerboseStep!: (N, N, N, N) -> (% -> %)
+      ++ oneVerboseStep!(ny, n0, nl, nr) is equivalent with
+      ++ oneTracedStep!(trace ny, traceEnter(n0)$R, traceLoop(nl)$R, traceReturn(nr)$R).
   Implementation ==> add
     QEVAUX ==> QEtaQuotientExponentVectorsAux
     Rep ==> Record(ab: AB, cbe: List G, pairs: Products)
@@ -958,20 +1008,34 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
         xx.cbe := rest xx.cbe
         f
 
-    oneTracedStepComputation!(trace: % -> Void, _
-                   traceEnter: (F, AB) -> Void,_
-                   traceLoop: F -> Void,_
-                   traceReturn: F -> Void): (%, % -> F) -> % ==
+    oneTracedStepComputation!(tr: % -> Void, _
+                   trEnter: (F, AB) -> Void,_
+                   trLoop: F -> Void,_
+                   trReturn: F -> Void): (%, % -> F) -> % ==
       (x: %, next!: % -> F): % +->
         --assert(criticalElements? x)
         -- Selection process: Take the first element from cbe or
         -- products with smallest degree prefer cbe if equal degree.
-        trace x
+        tr x
         f: F := next! x
         tReduce ==> tracedReduce $ R
-        u := tReduce(traceEnter, traceLoop, traceReturn)(f, algebraBasis x)
+        u := tReduce(trEnter, trLoop, trReturn)(f, algebraBasis x)
         if not zero? u then update!(u, x)
         return x
+
+    trace(verbosity: N): % -> Void == (x: %): Void +->
+        zero? verbosity => void() -- abort early
+        vPrint("==================================step(#cbe,#pairs)",_
+            [#(xx.cbe), #(xx.pairs)]$List(Z))
+        one? verbosity => void()
+        vPrint("+++ keys(pairs)", [sort keys xx.pairs]$List(Z))
+        verbosity = 2 => void()
+        vPrint("+++ grades(cbe)", [b.sgi for b in xx.cbe]$List(List List Z))
+
+    oneVerboseStep!(ny: N, n0: N, nl: N, nr: N): % -> % ==
+        oneTracedStep!(trace ny, traceEnter(n0)$R,
+                       traceLoop(nl)$R, traceReturn(nr)$R)
+
 
 )if LiterateDoc
 %$

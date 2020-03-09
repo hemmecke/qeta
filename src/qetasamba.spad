@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2015-2017, 2019  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2015-2017, 2019-2020  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -404,20 +404,20 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
 
     traceEnter(verbosity: N): (F, AB) -> Void == (f: F, ab: AB): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("-- -----------------------------red u", traceout(verbosity)(f))
+        vPrint("-------------------------------red u", traceout(verbosity)(f))
         if verbosity > 1 and AB has QEtaAlgebraBasisCategory(C, F) then
             n: Z := qetaGrade multiplier ab - 1
             l: List List F := [basis(ab, i) for i in 1..n]
             gs: List List Z := [[qetaGrade x for x in bs] for bs in l]
-            vPrint("-- red gs", gs)
+            vPrint("red gs", gs)
 
     traceLoop(verbosity: N): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("-- red loop", traceout(verbosity)(f))
+        vPrint("red loop", traceout(verbosity)(f))
 
     traceReturn(verbosity: N): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("-- redx", traceout(verbosity)(f))
+        vPrint("redx", traceout(verbosity)(f))
 
 
 
@@ -953,9 +953,9 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
 
     trace(n: N): % -> Void == (x: %): Void +->
         zero? n => void() -- abort early
-        vPrint("-- ==================================step(#cbe,#pairs)",_
+        vPrint("==================================step(#cbe,#pairs)",_
             [#(xx.cbe), #(xx.pairs)]$List(Z))
-        vPrint("-- +++ grades(cbe, pairs)",
+        if n > 1 then vPrint("+++ grades(cbe, pairs)",_
             [[qetaGrade b for b in xx.cbe], sort keys xx.pairs]$List(List Z))
 
     oneVerboseStep!(ny: N, n0: N, nl: N, nr: N): % -> % ==
