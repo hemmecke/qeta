@@ -4,7 +4,7 @@
 
 -- generating series for p(m*n+t) with cofactor eta quotient and
 -- the fractional q power.
-modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 Z ==
+modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 C ==
   mmdivs: List P := DIVISORS m
   s: List Z := cons(-1, rest [0 for i in mmdivs]);
   r: List Z := etaCoFactorInfinity(nn, m, s, m, t)$QEtaModularFunctionTools
@@ -15,10 +15,10 @@ modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 Z ==
     error "not a single element orbit"
   -- The following also checks whether we get a modular function.
   expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn) -- grade at cusp
-  cofact := etaQuotient(DIVISORS nn, r)$ETA(Z); --cofactor for rm
+  cofact := etaQuotient(DIVISORS nn, r)$ETA(C); --cofactor for rm
   e := ((qetaGrade seriesPart cofact)-expectedGrade)*24 - prefactor cofact
   vPrint("-- fractional exponent", e)
-  fcf := expansion(q24(e)$ETA(Z) * cofact)
+  fcf := expansion(q24(e)$ETA(C) * cofact)
   fzf := fcf*siftedPartitionSeries(m, t)
 
 -- expansion of j(n*tau) at cusp gamma(1,1)/gamma(2,1).
@@ -89,13 +89,13 @@ traceMap(nn: P, t: P, r: List Z): A1 C ==
   divs: List P := DIVISORS(nn*t)
   #divs ~= #r => error "length of r must match number of divisors)"
   idgamma: SL2Z := matrix [[1,0],[0,1]]
-  ye: YETAQG := etaQuotient(nn*t, divs, r, idgamma)
-  e: A1(C) := (expansion(etaQuotient(ye)$ETAQG(C, CX)))::A1(C)
+  ye := etaQuotient(nn*t, divs, r, idgamma)$YETAQG
+  e := (expansion(ye::ETAQG(C, CX)))::A1(C)
   alw: MZ := matrixAtkinLehner(nn*t, t)
   sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
   gamma := sm.red
-  yeg: YETAQG := etaQuotient(nn*t, divs, r, gamma)
-  eg: A1(C) := (expansion(etaQuotient(yeg)$ETAQG(C, CX)))::A1(C)
+  yeg := etaQuotient(nn*t, divs, r, gamma)$YETAQG
+  eg := (expansion(yeg::ETAQG(C, CX)))::A1(C)
   -- finally apply Ut operator
   orduteg := (order(eg) quo 2)::Z
   uteg := choose((n: Z): Z +-> t*n, eg, orduteg)
