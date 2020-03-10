@@ -596,6 +596,40 @@ den0RZ := (- reduce(minEntries, dzs0, 0$DZ)$List(DZ))::RZ
 num0 := rez (fpol0RZ * den0RZ)
 den0 := rez(den0RZ)
 
+-- +
+-------------------------------------------------------------------
+-- Is every eta-quotient in the sum holonomic?
+-------------------------------------------------------------------
+
+vexponents := [vector members degree m for m in monomials fpol0RZ]
+ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
+assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true]])
+
+-- No, it isn't.
+
+-- +
+-------------------------------------------------------------------
+-- Find a basis for all eta-quotients of weight 4 that are modular forms
+-------------------------------------------------------------------
+-- -
+
+idivs := [i for i in 1..#divs]
+z := zsolve4ti2(level, idivs, concat([0 for i in idivs], 4))$QEQEV;
+zzi := [members x(1..ndivs) for x in z.zinhom]
+ords :=[(1/24*matrixLigozat(level)*vector(r)) for r in zzi]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- +
 -------------------------------------------------------------------
@@ -1051,14 +1085,85 @@ den0RZ := (- reduce(minEntries, dzs0, 0$DZ)$List(DZ))::RZ
 num0 := rez (fpol0RZ * den0RZ)
 den0 := rez(den0RZ)
 
-
-
+-- +
 -------------------------------------------------------------------
+-- Is every eta-quotient in the sum holonomic?
+-------------------------------------------------------------------
+-- -
 
+vexponents := [vector members degree m for m in monomials fpol0RZ]
+ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
+assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true]])
 
-xgens := [toXn(CX, EQAnCX r, s) for r in rgens for s in msyms];
-xser := toXn(CX, ser, 'S);
-qetaGrades(xser - xgens.3)
+-- No, it isn't.
+
+-- +
+-------------------------------------------------------------------
+-- Find a basis for all eta-quotients of weight 4 that are modular forms
+-------------------------------------------------------------------
+-- -
+
+idivs := [i for i in 1..#divs]
+zmodform := zsolve4ti2(level, idivs, concat([0 for i in idivs], 4))$QEQEV;
+zmodformzi := [members x(1..ndivs) for x in zmodform.zinhom]
+ords :=[(1/24*matrixLigozat(level)*vector(r)) for r in zmodformzi]
+assertEquals(#zmodformzi, 40)
+
+-- Now add the vectors rcofactorx and rcofactor so that these
+-- vectors correspond to modular functions.
+
+vmodfungens := [vector x + vector rcofactor for x in zmodformzi]
+vdivs := vector(divs)$VZ
+vmodfungenss := sort((x1,x2)+->dot(vdivs,x1)>dot(vdivs,x2), vmodfungens)
+rmodfungens := [members x for x in vmodfungenss]
+modfungrades := [qetaGrades EQAnCX x for x in rmodfungens]
+modfungrds := [[g.position(1/c, spitzen) for c in divs] for g in modfungrades]
+
+-- The order at infinity are negative. At all other cusps the grade
+-- is positive. Note that we compute with grades (= - order).
+
+fgrds := concat([max [x.i for x in modfungrds] for i in 1..ndivs-1],_
+                min [x.ndivs for x in modfungrds])
+assertEquals(fgrds, [0,0,0,-6,0,8])
+
+bval: VZ := new(nrows mat, 0);
+rels: VZ := new(nrows mat, 0);
+for g in fgrds for i in 1..ndivs repeat (_
+    bval.i := 24*g;_
+    rels.i := - sign g;_
+    rels(ndivs+i) := sign g)
+bval
+rels
+zadjust := zsolve(mat, rels, bval)$X4ti2
+zadjustzi := [members x(1..ndivs) for x in zadjust.zinhom]
+radjust := first zadjustzi
+
+rmodfungensx := [vector r + vector radjust for r in rmodfungens]
+modfungradesx := [qetaGrades EQAnCX x for x in rmodfungensx]
+modfungrdsx := [[g.position(1/c, spitzen) for c in divs] for g in modfungradesx]
+
+fgrdsx := concat([max [x.i for x in modfungrdsx] for i in 1..ndivs-1],_
+                  min [x.ndivs for x in modfungrdsx])
+assertEquals(fgrdsx, [0, 0, 0, -2, 0, 4])
+
+usyms := indexedSymbols("U", #rmodfungensx)
+xgens := [toX1(C, EQA1C x, s) for x in rmodfungensx for s in usyms]
+tx := first xgens
+abx := samba(tx, xgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
+
+ser := fser * EQAnCX radjust
+qetaGrades ser
+
+# spitzen
+sx := series(ser, #spitzen)::A1(CX)
+s := map(retract, sx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
+xs := toX1(C, s, 'S)
+xsr := reduce(xs, abx)$QXTOPRED1(C)
+assertTrue(zero? xsr)
+
+spol := 5*(5*second(xsr)::PolC + S)
+assertEquals(# monomials spol, 8)
+
 
 assertTrue(false)
 
