@@ -1097,6 +1097,12 @@ assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o 
 
 -- No, it isn't.
 
+vexponents := [vector rest x for x in brunaultterms]
+ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
+assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true]])
+
+-- Hewever, it is also not the case for the representation of Brunaul.
+
 -- +
 -------------------------------------------------------------------
 -- Find a basis for all eta-quotients of weight 4 that are modular forms
@@ -1164,6 +1170,124 @@ assertTrue(zero? xsr)
 spol := 5*(5*second(xsr)::PolC + S)
 assertEquals(# monomials spol, 8)
 
+-- +
+-------------------------------------------------------------------
+-- Check whether there is a Q-linear combinationn of holomorphic
+-- eta-quotients of level 45 that is equal to f45.
+-------------------------------------------------------------------
+-- -
+
+--$ sage: dimension_modular_forms(Gamma0(45),4)
+--: 22
+
+vmodformgens := [vector x for x in zmodformzi]
+vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens)
+rmodformgens := [members x for x in vmodformgenss]
+emodformgens := [EQA1C r for r in rmodformgens]
+[order x for x in emodformgens]
+cmodformgens := [[coefficient(x, i) for i in 0..22] for x in emodformgens]
+for x in cmodformgens for i in 1.. repeat print [i, x]
+matmodforms := transpose matrix cmodformgens;
+cf45 := [coefficient(f45, i) for i in 0..22]
+rels: VZ := new(nrows matmodforms, 0);
+zmodforms := zsolve(matmodforms, rels, vector cf45)$X4ti2;
+zmodformszi := zmodforms.zinhom
+zmodformszf := zmodforms.zfree
+for x in zmodformszf repeat print x(1..20)
+nzzi := [i for i in 1..#(zmodformszi.1) | not zero? zmodformszi.1.i]
+zzzi := [i for i in 1..#(zmodformszi.1) | zero? zmodformszi.1.i]
+[[x.i for i in nzzi] for x in zmodformszf]
+h := [[x.i for i in zzzi] for x in zmodformszf]
+for x in h repeat print [position(1, x)]
+
+
+
+cmodfuns := [[qetaCoefficient(x, i) for i in 0..14] for x in xgens];
+matmodfuns := transpose matrix cmodfuns;
+cs := [qetaCoefficient(xs, i) for i in 0..14]
+rels: VZ := new(nrows matmodfuns, 0);
+zmodfuns := zsolve(matmodfuns, rels, vector cs)$X4ti2;
+zmodfunzi := zmodfuns.zinhom.1
+zmodfunszf := zmodfuns.zfree
+
+-- Show the positions where zmodfunzi.i is nonzero.
+
+pmodfunzi := [i for i in 1..#(zmodfunzi) | not zero? zmodfunzi.i]
+pmodfunszf := [[i for i in 1..#x | not zero? x.i] for x in zmodfunszf]
+
+for x in pmodfunszf repeat print x
+
+-- These are the indices of the "free" vectors that one should try to
+-- use to create more zeros of zmodfunzi.
+
+pmodfunszfidx := [i for x in pmodfunszf for i in 1..100 | first reverse x = 20]
+
+-- A selection of "free" solutions that are possible candidates to
+-- reduce the number of non-zero entries of zmodfunszi. It's a
+-- subsequence of pmodfunszfidx.
+
+posidx := [13,22,23,24,25,28,29,30]
+
+lz := [j for j in 1..40 | [true] = removeDuplicates [zero? zmodfunszf.i.j for i in posidx]]
+for i in posidx repeat print [i,zmodfunszf.i]
+
+assertEquals(posidx, [j for j in 1..#zmodfunszf | [0]=removeDuplicates [zmodfunszf.j.i for i in lz]])
+
+-- That is, we do not need to consider the indices of zmodfunszf.i
+-- that appear in lz, because their entries are 0.
+
+zmfszf := [[x.i for i in 1..40 | not member?(i, lz)] for x in zmodfunszf]
+for i in posidx repeat print [i,zmfszf.i]
+zmfzi := [zmodfunzi.i for i in 1..40 | not member?(i, lz)]
+
+u := [vector x for x in zmfszf];
+#remove(0, sort members(vector zmfzi - u.29))
+xsw := xs - w
+swpol := - second(xsw)::PolC + S
+assertEquals(# monomials swpol, 7)
+#remove(0, sort members(vector zmfzi - u.30))
+xsw := xs - w
+swpol := - second(xsw)::PolC + S
+assertEquals(# monomials swpol, 7)
+
+
+10*U5+U22+6*U20+6*U2-5*U14-3*U12-U11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+uu := zmodfunzi - zmodfunszf.30
+
+w := 0$X1(C); for i in 1..#uu repeat w := w + uu.i * xgens.i;
+xs - w
+
+
+
+zero? w
+w29:=w
+zero? w29
+w30:=w
+zero? w30
+zero?(w29-w30)
+w29
+w30
+
+)set stream calc 10
+
+[qetaCoefficient(w, i) for i in -10..10]
 
 assertTrue(false)
 
