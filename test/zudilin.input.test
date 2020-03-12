@@ -3,7 +3,7 @@
 -- extension ".input".
 
 )clear complete
-assertEquals(x,y)==>(x=y)@Boolean
+assertEquals(x,y)==>(print x; (x=y)@Boolean)
 assertTrue x ==> x
 
 )cd /home/hemmecke/g/qeta/tmp
@@ -1052,11 +1052,11 @@ for r in zzi repeat (_
           grdrcofactorx := qetaGrade(EQAnCX r, asP #spitzen)))
 
 rcofactorx
-ser := fser * EQAnCX rcofactorx
-qetaGrades ser
+fserx := fser * EQAnCX rcofactorx
+qetaGrades fserx
 
 # spitzen
-sx := series(ser, #spitzen)::A1(CX)
+sx := series(fserx, #spitzen)::A1(CX)
 s := map(retract, sx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
 xs := toX1(C, s, 'S)
 xsr := reduce(xs, abex)$QXTOPRED1(C)
@@ -1101,7 +1101,7 @@ vexponents := [vector rest x for x in brunaultterms]
 ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
 assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true]])
 
--- Hewever, it is also not the case for the representation of Brunaul.
+-- Hewever, it is also not the case for the representation of Brunault.
 
 -- +
 -------------------------------------------------------------------
@@ -1111,17 +1111,22 @@ assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o 
 
 idivs := [i for i in 1..#divs]
 zmodform := zsolve4ti2(level, idivs, concat([0 for i in idivs], 4))$QEQEV;
+vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
 zmodformzi := [members x(1..ndivs) for x in zmodform.zinhom]
-ords :=[(1/24*matrixLigozat(level)*vector(r)) for r in zmodformzi]
 assertEquals(#zmodformzi, 40)
+
+-- Sort the generating exponents according to the resulting series expansion
+
+vmodformgens := [vector x for x in zmodformzi]
+vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens)
+rmodformgens := [members x for x in vmodformgenss]
+ords :=[(1/24*matrixLigozat(level)*vector(r)) for r in rmodformgens]
 
 -- Now add the vectors rcofactorx and rcofactor so that these
 -- vectors correspond to modular functions.
 
-vmodfungens := [vector x + vector rcofactor for x in zmodformzi]
-vdivs := vector(divs)$VZ
-vmodfungenss := sort((x1,x2)+->dot(vdivs,x1)>dot(vdivs,x2), vmodfungens)
-rmodfungens := [members x for x in vmodfungenss]
+vmodfungens := [members(vector x + vector rcofactor) for x in rmodformgens]
+rmodfungens := [members x for x in vmodfungens]
 modfungrades := [qetaGrades EQAnCX x for x in rmodfungens]
 modfungrds := [[g.position(1/c, spitzen) for c in divs] for g in modfungrades]
 
@@ -1177,30 +1182,126 @@ assertEquals(# monomials spol, 8)
 -------------------------------------------------------------------
 -- -
 
---$ sage: dimension_modular_forms(Gamma0(45),4)
---: 22
+--$ sage: dimension_modular_forms(Gamma0(45),2)
+--: 10
 
-vmodformgens := [vector x for x in zmodformzi]
-vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens)
-rmodformgens := [members x for x in vmodformgenss]
 emodformgens := [EQA1C r for r in rmodformgens]
 [order x for x in emodformgens]
-cmodformgens := [[coefficient(x, i) for i in 0..22] for x in emodformgens]
+
+-- The dimension of modular forms of weight 2 for Gamma_0(45) is 10.
+
+dimM45 := 10
+nmodformgens := # rmodformgens
+cmodformgens := [[coefficient(x, i) for i in 0..dimM45] for x in emodformgens]
 for x in cmodformgens for i in 1.. repeat print [i, x]
 matmodforms := transpose matrix cmodformgens;
-cf45 := [coefficient(f45, i) for i in 0..22]
+cf45 := [coefficient(f45, i) for i in 0..dimM45]
 rels: VZ := new(nrows matmodforms, 0);
 zmodforms := zsolve(matmodforms, rels, vector cf45)$X4ti2;
 zmodformszi := zmodforms.zinhom
 zmodformszf := zmodforms.zfree
-for x in zmodformszf repeat print x(1..20)
-nzzi := [i for i in 1..#(zmodformszi.1) | not zero? zmodformszi.1.i]
-zzzi := [i for i in 1..#(zmodformszi.1) | zero? zmodformszi.1.i]
-[[x.i for i in nzzi] for x in zmodformszf]
-h := [[x.i for i in zzzi] for x in zmodformszf]
-for x in h repeat print [position(1, x)]
+
+-- Find the indicies where the entries are zero, i.e., those modular
+-- form generators are irrelevant for the linear combination for f45.
+
+nizi := [i for i in 1..#(zmodformszi.1) | not zero? zmodformszi.1.i]
+zizi := [i for i in 1..#(zmodformszi.1) | zero? zmodformszi.1.i]
+
+-- The shortened (relevant) vectors
+
+nzf := [[x.i for i in nizi] for x in zmodformszf]
+zzf := [[x.i for i in zizi] for x in zmodformszf]
+for x in zzf repeat print [position(1, x), x]
+for x in nzf for i in 1..#nzf repeat print [i, x]
+nzi := [zmodformszi.1.i for i in nizi]
+for x in nzf for i in 1..#nzf repeat (_
+    l := members(vector x - vector nzi);_
+    print [i, # remove(0, l), l])
+
+for x in zmodformszf for i in 1..#zmodformszf repeat (_
+    l := members(vector x - vector zmodformszi.1);_
+    print [i, # remove(0, l), l])
+
+assertEquals([[i,x] for i in 1..nmodformgens|(x:=zmodformszi.1.i;not zero? x)],_
+    [[1, 3], [3, - 1], [5, - 2], [27, 2], [31, - 57], [32, 3], [33, - 39],_
+     [34, 102], [39, 57], [40, 162]])
+
+reduce(_+,[zmodformszi.1.i * emodformgens.i for i in 1..nmodformgens], 0$A1(C)) - f45
+
+relvec := zmodformszi.1 - zmodformszf.30
+assertEquals([[i, relvec.i] for i in 1..40 | not zero? relvec.i],_
+    [[3, 1], [10, -1], [33, -1]])
+
+h := reduce(_+,[relvec.i * emodformgens.i for i in 1..nmodformgens], 0$A1(C))
+h45 := h - f45
+removeDuplicates [qetaCoefficient(h45, -i) for i in -10..200]
+
+u := rmodformgens;
+h := (EQA1C u.3 - EQA1C u.10 - EQA1C u.33)
+h := fcofactor * (EQA1C u.3 - EQA1C u.10 - EQA1C u.33)
+assertTrue(zero?(h - f))
+
+hn := (EQAnCX u.3 - EQAnCX u.10 - EQAnCX u.33)
+hn - (fser/EQAnCX rcofactor)
 
 
+-- Print nicely...
+
+)set stream calc 20
+EQA1C u.3
+EQA1C u.10
+EQA1C u.33
+
+qetaGrades EQAnCX u.3
+qetaGrades EQAnCX u.10
+qetaGrades EQAnCX u.33
+
+qetaGrades YEQn u.3
+qetaGrades YEQn u.10
+qetaGrades YEQn u.33
+
+qsyms := indexedSymbols("Q", #rmodformgens)
+xmfgens: List X1 C := [toX1(C, x, s) for x in emodformgens for s in qsyms];
+
+xmf := xmfgens.3 - xmfgens.10 - xmfgens.33
+mfpol := second(xmf)::PolC
+valsmf := [monRZ x for x in rmodformgens]
+
+fmfpolRZ := EVALRZ(qsyms, valsmf, mfpol)
+z0 := rzToA1C fmfpolRZ - f45
+assertEquals(order(z0, 301), 301)
+
+rez fmfpolRZ
+
+dzmf0 := [degree mon for mon in monomials fmfpolRZ]
+denmf0RZ := (- reduce(minEntries, dzmf0, 0$DZ)$List(DZ))::RZ
+
+assertEquals(#monomials(rez fmfpolRZ), 3)
+
+num0 := rez (fmfpolRZ * denmf0RZ)
+den0 := rez(denmf0RZ)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Let us try with modular functions instead.
 
 cmodfuns := [[qetaCoefficient(x, i) for i in 0..14] for x in xgens];
 matmodfuns := transpose matrix cmodfuns;
@@ -1250,21 +1351,22 @@ xsw := xs - w
 swpol := - second(xsw)::PolC + S
 assertEquals(# monomials swpol, 7)
 
+U(i) ==> EQAnCX zmodformzi(i)
+u45 := 10*U.5+U.22+6*U.20+6*U.2-5*U.14-3*U.12-U.11
 
-10*U5+U22+6*U20+6*U2-5*U14-3*U12-U11
+[ords.i - vector delete(delete(qetaGrades YEQn zmodformzi.i, 7), 3) for i in [19,23]]
+
+qetaGrades u45
+
+series(u45, 8)
+#spitzen
+
+order(f45)
+
+###################################################################
 
 
-
-
-
-
-
-
-
-
-
-
-
+xs
 
 
 
