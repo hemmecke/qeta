@@ -521,17 +521,9 @@ QEtaQuotientExponentVectors4ti2: with
   == add
     QEVAux ==> QEtaQuotientExponentVectorsAux
 
-    -- monoidGenerators(nn, idivs) takes the level nn and a list of
-    -- indices idivs (subset of 1..n, which corresponds to the cusps
-    -- a/d.i for i in idivs).
     -- For matrix A_N^\infty of formula (9) in
     -- \cite{Hemmecke+Radu:EtaRelations:2018}, the variable idivs
     -- should be [i for i in 1..n-1].
-    -- In general this function computes the (vertical) concatenation
-    -- of B_m and a submatrix M of A_N corresponding to the indices idivs.
-    -- Then monoidGenerators computes vectors z such that
-    -- B_m*z=b(1..nrows(B_m)) and M*z>=0 where the vector b has the weight
-    -- in its first entry and zeros everywhere else.
     zsolve4ti2(m: P, idivs: List Z, rhs: List Z): ZRESULT ==
         mat: MZ := matrixLigozatRStar(m, idivs)$QAuxMEQ
         rows := nrows mat
@@ -558,19 +550,9 @@ QEtaQuotientExponentVectors4ti2: with
         n: Z := numberOfDivisors(m)$IntegerNumberTheoryFunctions
         -- Sort according to the order of the expansion at infinity.
         dbgPrint("number of inhomogeneous solutions", #(res.zinhom))
-        --TODO: Could improve by using smallerG?
-        --TODO: Why not using an inhomagenous vector v such that
-        --      there is a smallerG? minimum over all possible res.zinhom
-        --      elements?
-        -- Note that then (n+1)th entry corresponds to the pole order
+        -- Note that the (n+1)th entry corresponds to the pole order
         -- at infinity (first slack variable).
-        zi := sort((x:VZ,y:VZ):Boolean +-> (x(n+1) < y(n+1)), res.zinhom)
-        dbgPrint("inhomogeneous solutions", zi)
-        v := first(zi) -- only choose one inhomogeneous solution
-        [v+x for x in result]
-
-    monoidGenerators(m: P, idivs: List Z): List VZ ==
-        generatorsWithWeight(m, idivs, 0)
+        sort((x:VZ,y:VZ):Boolean +-> (x(n+1) < y(n+1)), res.zinhom)
 
     -- exported functions
     etaQuotientExponentVectors(m: P, idivs: List Z, w: Z): List List Z ==
