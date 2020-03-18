@@ -25,10 +25,13 @@ assertTrue x ==> x
 -- -
 
 C ==> Q
+VZ ==> Vector Z
+MZ ==> Matrix Z
+
 
 )set mess type off
 )set mess time off
-)read ../input/convenience.input )quiet
+)read /home/hemmecke/g/qeta/input/convenience.input )quiet
 
 numOfGaps(ab) == (_
   t := multiplier ab; _
@@ -140,15 +143,14 @@ f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
 
 divs := DIVISORS level
 idivs := [i for i in 1.. #divs-1]
-rwgens := etaQuotientExponentVectors(level, idivs, -8)$QEQEV;
+wght := 4
+rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV;
 
 rcofactor := rwgens.1
-assertEquals(rcofactor, [0, 0, 0, 0, -1, 2, 9, -18])
+assertEquals(rcofactor,[0, 0, 0, 0, 0, 0, 8, - 16])
 fcofactor := EQA1C rcofactor
 fcofactors := [EQA1C r for r in rwgens];
-assertEquals([qetaGrade x for x in fcofactors],_
-  [70, 72, 72, 72, 72, 72, 75, 76, 76, 76, 76, 79, 79, 79, 79, 79, _
-  80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80])
+assertEquals([qetaGrade x for x in fcofactors], [64])
 
 
 f := f128 * fcofactor
@@ -159,10 +161,10 @@ assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
 ixfr := 1024*xfr
 pol := second(ixfr)::PolC + F  -- This corresponds to the mod func f.
 
-assertEquals(pol,_
-  ((-2*M1^8-24*M1^7+8*M1^6-56*M1^5+336*M1^4+368*M1^3+256*M1^2)*M6+2*M1^9_
-  -56*M1^8+12*M1^7-128*M1^6+400*M1^5+704*M1^4-224*M1^3-1024*M1^2-1024*M1)*M7_
-  +(M1^9-20*M1^8+48*M1^7-136*M1^6+96*M1^5+288*M1^4+160*M1^3+64*M1^2-64*M1)*M16)
+assertEquals(pol, (_
+    (-2*M1^7-24*M1^6+8*M1^5-56*M1^4+336*M1^3+368*M1^2+256*M1)*M6+2*M1^8_
+     -56*M1^7+12*M1^6-128*M1^5+400*M1^4+704*M1^3-224*M1^2-1024*M1-1024)*M7_
+    +(M1^8-20*M1^7+48*M1^6-136*M1^5+96*M1^4+288*M1^3+160*M1^2+64*M1-64)*M16)
 
 pol0 := M0*pol -- Corresponds to the original f128.
 assertEquals(# monomials pol0, 25)
@@ -194,7 +196,7 @@ assertTrue(zero? z)
 
 -- But we kill all the given coefficients for f128.
 
-assertEquals(order(z, 300), 231)
+assertEquals(order(z, 300), 237)
 
 -- Show nicely
 -- find common denominator
@@ -346,7 +348,7 @@ for i in 1..#xreps repeat (_
 
 divs := DIVISORS level
 idivs := empty()$List(Z)
-z:=zsolve4ti2(level, idivs, concat([0 for i in idivs], -8))$QEQEV;
+z:=zsolve4ti2(level, idivs, concat([0 for i in idivs], -2*wght))$QEQEV;
 zzi := (z.zinhom.1)(1..#divs)
 
 rcofactor2 := members(zzi - vector rcofactor)
@@ -379,7 +381,7 @@ idivs := [1,2,3,4,5,6]
 -- Note that we look for an approprivate eta-quotient that does not
 -- involve eta(128*tau), i.e., the first argument is 64.
 
-z:=zsolve4ti2(64, idivs, concat([0 for i in idivs], [-8,0,12]))$QEQEV
+z:=zsolve4ti2(64, idivs, concat([0 for i in idivs], [-2*wght,0,12]))$QEQEV
 
 -- We consider the resulting vectors as eta-quotient expinent vectors
 -- where the entry for eta_128 is equal to zero.
@@ -416,8 +418,9 @@ assertEquals(zzf, [])
 
 --rcofactor3 := members(vector(zzi.1) - vector rcofactor)
 --assertEquals(rcofactor3, [0, 0, 0, 2, -1, 10, -29, 18])
+
 rcofactor3 := members(vector(zzi.1) - vector(zzh.12) - vector rcofactor)
-assertEquals(rcofactor3, [0, 0, 0, 3, -3, 9, -27, 18])
+assertEquals(rcofactor3, [0, 0, 0, 3, - 4, 11, - 26, 16])
 fcofactor3 := EQAnCX rcofactor3
 
 fser3 := fser * fcofactor3
@@ -603,7 +606,7 @@ den0 := rez(den0RZ)
 
 vexponents := [vector members degree m for m in monomials fpol0RZ]
 ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
-assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true]])
+assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true, false], [true]])
 
 -- No, it isn't.
 
@@ -613,19 +616,63 @@ assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o 
 -------------------------------------------------------------------
 -- -
 
+level := 64
+divs := DIVISORS level
 idivs := [i for i in 1..#divs]
-z := zsolve4ti2(level, idivs, concat([0 for i in idivs], 4))$QEQEV;
-zzi := [members x(1..ndivs) for x in z.zinhom]
-ords :=[(1/24*matrixLigozat(level)*vector(r)) for r in zzi]
+spitzen := cuspsOfGamma0 level
+rhs := concat([0 for i in idivs], 2*wght)
+zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV; -- takes about 3min40sec
+vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
+zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
+assertEquals(#zmodformzi, 8757)
+
+-- Sort the generating exponents according to the resulting series expansion
+
+vmodformgens := [vector x for x in zmodformzi];
+vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
+rmodformgens := [members x for x in vmodformgenss];
+
+mat := matrixLigozatRStar(level, idivs)$QAuxMEQ
+rmat := mat(1..nrows(mat), 1..#divs)
+rmat * vector rmodformgens.1
 
 
+[order EQA1C r for r in rmodformgens]
+)set out algebra on
+)set out linear off
+(matrix [qetaGrades YEQn x for x in rmodformgens])(1..20, 1..#spitzen)
 
+emodformgens := [EQA1C r for r in rmodformgens];
+[order x for x in emodformgens]
 
+-- +
+-------------------------------------------------------------------
+-- Check whether there is a Q-linear combinationn of holomorphic
+-- eta-quotients of level 42 that is equal to f21.
+-------------------------------------------------------------------
+-- -
 
+--$ sage: dimension_modular_forms(Gamma0(64),2)
+--: 30
 
+dimM := 30
+ncoefs := 32
+nmodformgens := # rmodformgens
+cmodformgens := [[coefficient(x, i) for i in 0..ncoefs] for x in emodformgens];
+assertEquals(rank matrix cmodformgens, dimM)
 
+matmodforms := transpose matrix cmodformgens;
+cf128 := [coefficient(f128, i) for i in 0..ncoefs]
+rels: VZ := new(nrows matmodforms, 0);
+zmodforms := zsolve(matmodforms, rels, vector cf128)$X4ti2;
+zmodformszi := zmodforms.zinhom;
+assertTrue(empty? zmodformszi)
+zmodformszf := zmodforms.zfree;
 
+sol := solve(matmodforms, vector cf128);
+assertTrue(sol.particular case "failed")
 
+-- Unfortunately no solution. :-(
 
 
 
@@ -727,7 +774,7 @@ num0RE2 := NF(num0RE1x, etaRelations64RE);
 -- -
 
 
--- The generators of the $\eta$-quotients of level 128 are given by
+-- The generators of the $\eta$-quotients of level 45 are given by
 -- these exponents for the $\eta$ functions (with arguments being the
 -- divisors of 45). The variable `rgens` corresponds to the generators
 -- of $R^\infty(45)$.
@@ -771,9 +818,6 @@ abex := samba(tex, xeqgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
 
 assertEquals(genusOfGamma0(level), 3)
 assertEquals(numOfGaps(abex), 3)
-
--- Due to another critical element selection strategy, the resulting
--- polynomial is a bit different.
 
 bas := sort(smallerGrade?, basis abex);
 t := multiplier abex
@@ -825,13 +869,11 @@ idivs := [i for i in 1.. #divs-1]
 rwgens := etaQuotientExponentVectors(level, idivs, -4)$QEQEV;
 
 rcofactor := rwgens.1
-assertEquals(rcofactor, [0, -2, 0, 6, 4, -12])
+assertEquals(rcofactor, [0, - 1, 0, 3, 3, - 9])
 fcofactor := EQA1C rcofactor
 fcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in fcofactors], _
-  [18, 20, 20, 21, 22, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 24, _
-  25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, _
-  28, 28, 28, 28, 28, 29, 30, 30, 30, 30, 31, 32])
+  [14, 16, 18, 19, 19, 20, 20, 21, 22, 22, 23, 23, 24, 24, 26])
 
 f := f45 * fcofactor
 xf := toX1(C, f, 'F)
@@ -842,7 +884,8 @@ ixfr := 5*xfr
 pol := second(ixfr)::PolC + F  -- This corresponds to the mod func f.
 
 -- pol corresponds to the modular function f_45 * fcofactor
-assertEquals(pol, (-M1^3+3*M1^2)*M3+(M1^3-6*M1^2-5*M1)*M2+4*M1^3-M1^2-5*M1)
+
+assertEquals(pol, (-M1^2+3*M1)*M3+(M1^2-6*M1-5)*M2+4*M1^2-M1-5)
 
 pol0 := M0*pol -- Corresponds to the original f45.
 assertEquals(# monomials pol0, 8)
@@ -874,6 +917,7 @@ assertTrue(zero? z)
 
 -- Show nicely
 -- find common denominator
+
 minEntries(x: DZ, y: DZ): DZ == (_
     directProduct vector [min(x.i, y.i) for i in 1..#x]);
 
@@ -883,7 +927,7 @@ denRZ := (- reduce(minEntries, dzs, 0$DZ)$List(DZ))::RZ
 rez denRZ
 rez(fpolRZ * denRZ)
 
--- Now we do the same thing for the modular form f128 itself.
+-- Now we do the same thing for the modular form f45 itself.
 
 fpol0RZ := EVALRZ(vars, vals, pol0)
 dzs0 := [degree mon for mon in monomials fpol0RZ]
@@ -1008,15 +1052,12 @@ for i in 1..#xreps repeat (_
 -- Find better cofactor by means of 4ti2.
 -------------------------------------------------------------------
 
-VZ ==> Vector Z
-MZ ==> Matriz Z
-
 -- The grades of an eta quotient at cusps of the form a/c (gcd(a,c)=1)
 -- agrees for all such a. We choose just a=1 (which is relevant for
 -- the Ligozat matrix.
 
 fsergrades := [qetaGrade(fser, asP position(1/c, spitzen)) for c in divs]
-assertEquals(fsergrades, [-1, -1, -1, -7, -1, 17])
+assertEquals(fsergrades, [-1, -1, -1, -3, -1, 13])
 
 -- For the following we have to take the full Ligozat matrix.
 
@@ -1031,7 +1072,7 @@ idivs := [i for i in 1..ndivs]
 mat := matrixLigozatRStar(level, idivs)$QAuxMEQ
 mat := vertConcat(mat(1..ndivs,1..ncols mat), mat)
 
--- The (-24) comes from the fact that the result after applying the
+-- The 24 comes from the fact that the result after applying the
 -- Ligozat matrix gives 24 times the order (not the grade) of the
 -- respective series expansion.
 
@@ -1042,7 +1083,7 @@ for g in fsergrades for i in 1..ndivs repeat (_
     rels.i := - sign g;_
     rels(ndivs+i) := sign g)
 z := zsolve(mat, rels, bval)$X4ti2
-zzi := [members x(1..ndivs) for x in z.zinhom]
+zzi := [members t for x in z.zinhom | (t:=x(1..ndivs); not zero? t)]
 
 rcofactorx := first zzi
 grdrcofactorx := qetaGrade(EQAnCX rcofactorx, #spitzen)
@@ -1093,13 +1134,13 @@ den0 := rez(den0RZ)
 
 vexponents := [vector members degree m for m in monomials fpol0RZ]
 ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
-assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true]])
+assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true, false], [true]])
 
 -- No, it isn't.
 
 vexponents := [vector rest x for x in brunaultterms]
 ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
-assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true]])
+assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true], [true,false]])
 
 -- Hewever, it is also not the case for the representation of Brunault.
 
@@ -1122,58 +1163,9 @@ vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens)
 rmodformgens := [members x for x in vmodformgenss]
 ords :=[(1/24*matrixLigozat(level)*vector(r)) for r in rmodformgens]
 
--- Now add the vectors rcofactorx and rcofactor so that these
--- vectors correspond to modular functions.
-
-vmodfungens := [members(vector x + vector rcofactor) for x in rmodformgens]
-rmodfungens := [members x for x in vmodfungens]
-modfungrades := [qetaGrades EQAnCX x for x in rmodfungens]
-modfungrds := [[g.position(1/c, spitzen) for c in divs] for g in modfungrades]
-
--- The order at infinity are negative. At all other cusps the grade
--- is positive. Note that we compute with grades (= - order).
-
-fgrds := concat([max [x.i for x in modfungrds] for i in 1..ndivs-1],_
-                min [x.ndivs for x in modfungrds])
-assertEquals(fgrds, [0,0,0,-6,0,8])
-
-bval: VZ := new(nrows mat, 0);
-rels: VZ := new(nrows mat, 0);
-for g in fgrds for i in 1..ndivs repeat (_
-    bval.i := 24*g;_
-    rels.i := - sign g;_
-    rels(ndivs+i) := sign g)
-bval
-rels
-zadjust := zsolve(mat, rels, bval)$X4ti2
-zadjustzi := [members x(1..ndivs) for x in zadjust.zinhom]
-radjust := first zadjustzi
-
-rmodfungensx := [vector r + vector radjust for r in rmodfungens]
-modfungradesx := [qetaGrades EQAnCX x for x in rmodfungensx]
-modfungrdsx := [[g.position(1/c, spitzen) for c in divs] for g in modfungradesx]
-
-fgrdsx := concat([max [x.i for x in modfungrdsx] for i in 1..ndivs-1],_
-                  min [x.ndivs for x in modfungrdsx])
-assertEquals(fgrdsx, [0, 0, 0, -2, 0, 4])
-
-usyms := indexedSymbols("U", #rmodfungensx)
-xgens := [toX1(C, EQA1C x, s) for x in rmodfungensx for s in usyms]
-tx := first xgens
-abx := samba(tx, xgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
-
-ser := fser * EQAnCX radjust
-qetaGrades ser
-
-# spitzen
-sx := series(ser, #spitzen)::A1(CX)
-s := map(retract, sx)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
-xs := toX1(C, s, 'S)
-xsr := reduce(xs, abx)$QXTOPRED1(C)
-assertTrue(zero? xsr)
-
-spol := 5*(5*second(xsr)::PolC + S)
-assertEquals(# monomials spol, 8)
+)set out algebra on
+)set out linear off
+matrix [qetaGrades YEQn x for x in rmodformgens]
 
 -- +
 -------------------------------------------------------------------
@@ -1243,7 +1235,7 @@ assertTrue(zero?(h - f))
 
 hn := (EQAnCX u.3 - EQAnCX u.10 - EQAnCX u.33)
 hn - (fser/EQAnCX rcofactor)
-
+hn * EQAnCX rcofactor - fser
 
 -- Print nicely...
 
@@ -1281,117 +1273,221 @@ assertEquals(#monomials(rez fmfpolRZ), 3)
 num0 := rez (fmfpolRZ * denmf0RZ)
 den0 := rez(denmf0RZ)
 
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+
+-- +
+-------------------------------------------------------------------
+--test:Zudilin21-42
+-------------------------------------------------------------------
+-- -
+
+-- We have given f21 as an expression in level 63. So we first
+-- compute the respective q-series and then multiply with
+-- a cofactor of level 42 to get a modular function in level 42.
+
+level := 63;
+ef21 := E7 / (2*E1^2*E3*E9*E21) _
+        *_
+        (3*E1^2*E7^2*E9^4 - E3^5*E7*E9*E21 + 7*E1*E3^2*E9*E21^4_
+         + 3*E1^3*E7*E9^3*E63 - 3*E1*E3^5*E21*E63 + 3*E1^4*E9^2*E63^2)
+rgens := etaQuotientMonoidExponentVectors(level)$QEQEV;
+divs := DIVISORS level
+esyms := indexedSymbols("E", divs)
+dim: N := #esyms
+num21 := toRZ numer ef21
+den21 := 1 exquo toRZ denom ef21
+f21polzudilinRZ := ((toRZ numer ef21) exquo (toRZ denom ef21))::RZ
+f21 := rzToA1C f21polzudilinRZ
+
+-- The generators of the $\eta$-quotients of level 128 are given by
+-- these exponents for the $\eta$ functions (with arguments being the
+-- divisors of 21). The variable `rgens` corresponds to the generators
+-- of $R^\infty(21)$.
+
+level := 42;
+divs := DIVISORS level
+ndivs := #divs
+esyms := indexedSymbols("E", divs)
+dim: N := #esyms
+
+rgens := etaQuotientMonoidExponentVectors(level)$QEQEV;
+vgens := [vector x for x in rgens];
+assertEquals(#rgens, 1517)
+
+eqgens := [EQA1C r for r in rgens];
+msyms := indexedSymbols("M", #eqgens);
+xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
+
+-- We take a minimal (in terms the order in q) element from the
+-- generators and make it special. Then we compute an algebra basis
+-- for $C[M_1,\ldots,M_28]$.
+
+tex: X1 C := xeqgens.1
+abex := samba(tex, xeqgens, 5, oneVerboseStep!(1,1,0,2))$QXTOPSAMBA1(C)
+
+assertEquals(genusOfGamma0(level), 5)
+assertEquals(numOfGaps(abex), 5)
+
+-- From a paper of Zudilin below the table called
+-- "Hypergeometric motives for rigid Calabi–Yau manifolds"
+-- f_21
+
+)set stream calc 4
+idivs := [i for i in 1.. #divs-1]
+wght := 2 -- weight of f21.
+rhs: List Z := concat([0 for i in idivs], -2*wght)
+z := zsolve4ti2(level, idivs, rhs);
+zzi := sortByComponentGrade(level, [x(1..ndivs) for x in z.zinhom]);
+zzh := sortByComponentGrade(level, [x(1..ndivs) for x in z.zhom]);
+rwgens := zzi;
+-- rwgens := etaQuotientExponentVectors(level, idivs, -4)$QEQEV;
+
+)set output linear off
+)set output alg on
+spitzen := cuspsOfGamma0 level
+xiord := 24*level
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+
+matrix [qetaGrades YEQn r for r in zzi]
+matrix [qetaGrades YEQn r for r in zzh]
+
+rcofactor := rwgens.1
+--assertEquals(rcofactor, [-1, 0, 3, 0, -1, 4, 3, -12])
+assertEquals(rcofactor, [1, - 2, - 3, 6, - 3, 6, 9, - 18])
+fcofactor := EQA1C rcofactor
+f := f21 * fcofactor
+xf := toX1(C, f, 'F)
+xfr := reduce(xf, abex)$QXTOPRED1(C)
+assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
+
+ixfr := 49*xfr
+pol := -second(ixfr)::PolC + F  -- This corresponds to the mod func f.
+
+assertEquals(# monomials pol, 17)
 
 
 
+-- +
+-------------------------------------------------------------------
+-- Find a basis for all eta-quotients of weight 4 that are modular forms
+-------------------------------------------------------------------
+-- -
+
+idivs := [i for i in 1..#divs]
+rhs := concat([0 for i in idivs], 2*wght)
+zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV;
+vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
+zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
+assertEquals(#zmodformzi, 138)
+
+-- Sort the generating exponents according to the resulting series expansion
+
+vmodformgens := [vector x for x in zmodformzi];
+vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
+rmodformgens := [members x for x in vmodformgenss]
+
+mat := matrixLigozatRStar(level, idivs)$QAuxMEQ
+rmat := mat(1..nrows(mat), 1..#divs)
+rmat * vector rmodformgens.138
+
+[order EQA1C r for r in rmodformgens]
+)set out algebra on
+)set out linear off
+matrix [qetaGrades YEQn x for x in rmodformgens]
+
+-- +
+-------------------------------------------------------------------
+-- Check whether there is a Q-linear combinationn of holomorphic
+-- eta-quotients of level 42 that is equal to f21.
+-------------------------------------------------------------------
+-- -
+
+--$ sage: dimension_modular_forms(Gamma0(42),2)
+--: 12
+CGRDS(gens, cond) ==> _
+  matrix [cons(i, x) for r in gens for i in 1..#gens| (x := g YEQn r; cond)]
+GRDS(gens) ==> CGRDS(gens, true)
+emodformgens := [EQA1C r for r in rmodformgens];
+[order x for x in emodformgens]
+
+dimM42 := 12
+ncoefs := 14
+nmodformgens := # rmodformgens
+cmodformgens := [[coefficient(x, i) for i in 0..ncoefs] for x in emodformgens];
+assertEquals(rank matrix cmodformgens, dimM42)
+
+matmodforms := transpose matrix cmodformgens;
+cf21 := [coefficient(f21, i) for i in 0..ncoefs]
+rels: VZ := new(nrows matmodforms, 0);
+zmodforms := zsolve(matmodforms, rels, vector cf21)$X4ti2;
+zmodformszi := zmodforms.zinhom
+zmodformszf := zmodforms.zfree;
+zzi := first zmodformszi
+remove(0, zzi)
+[[i, x] for i in 1..#zzi | (x := zzi.i; not zero? x)]
+lz := [i for i in 1..#zzi | (x := zzi.i; zero? x)]
+ln := [i for i in 1..#zzi | (x := zzi.i; not zero? x)]
+l := concat(ln, lz);
+c2modformgens := [cmodformgens.i for i in l];
+mat2modforms := transpose matrix c2modformgens;
+z2modforms := zsolve(mat2modforms, rels, vector cf21)$X4ti2;
+z2modformszi := z2modforms.zinhom
+z2modformszf := z2modforms.zfree;
+
+emodformgens := [EQA1C r for r in rmodformgens]
+[order x for x in emodformgens]
+u:=emodformgens
+h := -2*u.54 -3*u.58 +6*u.59 +2*u.79 +21*u.130
+h42 := h - f21
+removeDuplicates [qetaCoefficient(h42, -i) for i in -10..200]
 
 
+sol := solve(mat2modforms, vector cf21);
 
+s0 := (sol.particular)(1..13)
+sols := cons(s0, [x(1..13) for x in sol.basis]);
+solsZ := [(d:=lcm[denom x for x in members v]; (d*vector(v))::Vector(Z)) for v in sols];
+matrix [cons(i-1, x) for i in 1..#solsZ |(x:=solsZ.i; true)]
+matrix [cons(i-1, x) for i in 1..#solsZ |(x:=solsZ.i; x.1 + x.4 = 0)]
 
+h := sol.particular + 4*sol.basis.89
 
+[[i, x] for i in 1..#h | (x := h.i; not zero? x)]
+ln2 := [l.i for i in 1..#h | (x := h.i; not zero? x)]
+assertEquals(ln2, [1, 3, 4, 100])
 
+hh := 1/36*u.1-2/9*u.3+7/36*u.4+4*u.100
+hh42 := hh - f21
+removeDuplicates [qetaCoefficient(hh42, -i) for i in -10..300]
 
+-- Show nicely
 
+qsyms := indexedSymbols("Q", #rmodformgens)
+xmfgens: List X1 C := [toX1(C, x, s) for x in emodformgens for s in qsyms];
 
+xmf := 1/36*xmfgens.1 - 2/9*xmfgens.3 + 7/36*xmfgens.4 + 4*xmfgens.100
+mfpol := second(xmf)::PolC
+valsmf := [monRZ x for x in rmodformgens]
 
+fmfpolRZ := EVALRZ(qsyms, valsmf, mfpol)
+z0 := rzToA1C fmfpolRZ - f21
+assertEquals(order(z0, 301), 301)
 
+rez fmfpolRZ
 
+minEntries(x: DZ, y: DZ): DZ == (_
+    directProduct vector [min(x.i, y.i) for i in 1..#x]);
 
+dzmf0 := [degree mon for mon in monomials fmfpolRZ]
+denmf0RZ := (- reduce(minEntries, dzmf0, 0$DZ)$List(DZ))::RZ
 
+assertEquals(#monomials(rez fmfpolRZ), 4)
 
-
-
--- Let us try with modular functions instead.
-
-cmodfuns := [[qetaCoefficient(x, i) for i in 0..14] for x in xgens];
-matmodfuns := transpose matrix cmodfuns;
-cs := [qetaCoefficient(xs, i) for i in 0..14]
-rels: VZ := new(nrows matmodfuns, 0);
-zmodfuns := zsolve(matmodfuns, rels, vector cs)$X4ti2;
-zmodfunzi := zmodfuns.zinhom.1
-zmodfunszf := zmodfuns.zfree
-
--- Show the positions where zmodfunzi.i is nonzero.
-
-pmodfunzi := [i for i in 1..#(zmodfunzi) | not zero? zmodfunzi.i]
-pmodfunszf := [[i for i in 1..#x | not zero? x.i] for x in zmodfunszf]
-
-for x in pmodfunszf repeat print x
-
--- These are the indices of the "free" vectors that one should try to
--- use to create more zeros of zmodfunzi.
-
-pmodfunszfidx := [i for x in pmodfunszf for i in 1..100 | first reverse x = 20]
-
--- A selection of "free" solutions that are possible candidates to
--- reduce the number of non-zero entries of zmodfunszi. It's a
--- subsequence of pmodfunszfidx.
-
-posidx := [13,22,23,24,25,28,29,30]
-
-lz := [j for j in 1..40 | [true] = removeDuplicates [zero? zmodfunszf.i.j for i in posidx]]
-for i in posidx repeat print [i,zmodfunszf.i]
-
-assertEquals(posidx, [j for j in 1..#zmodfunszf | [0]=removeDuplicates [zmodfunszf.j.i for i in lz]])
-
--- That is, we do not need to consider the indices of zmodfunszf.i
--- that appear in lz, because their entries are 0.
-
-zmfszf := [[x.i for i in 1..40 | not member?(i, lz)] for x in zmodfunszf]
-for i in posidx repeat print [i,zmfszf.i]
-zmfzi := [zmodfunzi.i for i in 1..40 | not member?(i, lz)]
-
-u := [vector x for x in zmfszf];
-#remove(0, sort members(vector zmfzi - u.29))
-xsw := xs - w
-swpol := - second(xsw)::PolC + S
-assertEquals(# monomials swpol, 7)
-#remove(0, sort members(vector zmfzi - u.30))
-xsw := xs - w
-swpol := - second(xsw)::PolC + S
-assertEquals(# monomials swpol, 7)
-
-U(i) ==> EQAnCX zmodformzi(i)
-u45 := 10*U.5+U.22+6*U.20+6*U.2-5*U.14-3*U.12-U.11
-
-[ords.i - vector delete(delete(qetaGrades YEQn zmodformzi.i, 7), 3) for i in [19,23]]
-
-qetaGrades u45
-
-series(u45, 8)
-#spitzen
-
-order(f45)
-
-###################################################################
-
-
-xs
-
-
-
-
-uu := zmodfunzi - zmodfunszf.30
-
-w := 0$X1(C); for i in 1..#uu repeat w := w + uu.i * xgens.i;
-xs - w
-
-
-
-zero? w
-w29:=w
-zero? w29
-w30:=w
-zero? w30
-zero?(w29-w30)
-w29
-w30
-
-)set stream calc 10
-
-[qetaCoefficient(w, i) for i in -10..10]
-
-assertTrue(false)
+num0 := rez (fmfpolRZ * denmf0RZ)
+den0 := rez(denmf0RZ)
 
 -------------------------------------------------------------------
 --endtest
