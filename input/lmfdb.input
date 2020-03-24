@@ -1,0 +1,84 @@
+assertEquals(x,y)==>(if (x=y)@Boolean then true else (print x; false))
+assertTrue x ==> x
+)cd /home/hemmecke/g/qeta/tmp
+)read ../zudilin/mf-11.2.a.a.input )quiet
+
+)set mess type off
+)set mess time off
+)r projectlibs )quiet
+)r etamacros.input )quiet
+)set output linear on
+)set output algebra off
+
+C ==> Q
+VZ ==> Vector Z
+MZ ==> Matrix Z
+
+)set mess type off
+)set mess time off
+)read /home/hemmecke/g/qeta/input/convenience.input )quiet
+
+numOfGaps(ab) == (_
+  t := multiplier ab; _
+  n := qetaGrade(t)::P; _
+  grades := [qetaGrade(first basis(ab, i))::P for i in 1..n-1]; _
+  numberOfGaps(n, grades)$QAuxiliaryModularEtaQuotientPackage)
+
+)set mess type on
+)set mess time on
+)set stream calc 2
+
+-- The variables coefs, lvl, wgth, dimM, ncoefs are assumed to be set already.
+
+ff := (laurent(0, coefs :: Stream(C))$L1(C))::A1(C)
+level := lvl
+divs := DIVISORS level
+ndivs := #divs
+spitzen := cuspsOfGamma0 level
+dimM := dimensionOfModularFormsOfGamma0(level, wght)
+ncoefs := dimM
+
+-- Check whether there we can find eta-quotients of weight wght.
+idivs := [i for i in 1..ndivs]
+rhs := concat([0 for i in idivs], 2*wght)
+zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV;
+vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
+zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
+assertTrue(#zmodformzi>0)
+
+-- Sort the generating exponents according to the resulting series expansion
+
+vmodformgens := [vector x for x in zmodformzi];
+vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
+rmodformgens := [members x for x in vmodformgenss]
+
+[order EQA1C r for r in rmodformgens]
+)set out algebra on
+)set out linear off
+matrix [qetaGrades YEQn x for x in rmodformgens]
+
+
+-- +
+-------------------------------------------------------------------
+-- Check whether there is a Q-linear combinationn of holomorphic
+-- eta-quotients of level 14 that is equal to f37.
+-------------------------------------------------------------------
+-- -
+emodformgens := [EQA1C r for r in rmodformgens];
+[order x for x in emodformgens]
+
+nmodformgens := # rmodformgens
+cmodformgens := [[coefficient(x, i) for i in 0..ncoefs] for x in emodformgens];
+assertEquals(rank matrix cmodformgens, dimM)
+
+matmodforms := transpose matrix cmodformgens;
+cf := [coefficient(ff, i) for i in 0..ncoefs]
+rels: VZ := new(nrows matmodforms, 0);
+zmodforms := zsolve(matmodforms, rels, vector cf)$X4ti2;
+zmodformszi := zmodforms.zinhom
+zmodformszf := zmodforms.zfree;
+assertTrue(#zmodformszi>0)
+zzi := first zmodformszi
+fz := reduce(_+, [zzi.i * emodformgens.i for i in 1..#zzi])
+fd := fz - ff
+assertEquals(removeDuplicates [coefficient(fd, i) for i in 0..1000], [0])
