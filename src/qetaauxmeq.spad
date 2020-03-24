@@ -101,6 +101,10 @@ Pol ==> SparseUnivariatePolynomial Z
 
 INTF ==> IntegerNumberTheoryFunctions
 
+asN x ==> x pretend N
+asP x ==> x pretend P
+
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Auxiliary package to check modularity of $\eta$ quotients}
@@ -209,6 +213,19 @@ QAuxiliaryModularEtaQuotientPackage: with
       ++ genusOfGamma0(level) returns the genus of the congruence
       ++ subgroup Gamma_0(level). It corresponds to the series
       ++ https://oeis.org/A001617 .
+    dimensionOfCuspFormsOfGamma0: (P, Z) -> N
+      ++ dimensionOfCuspFormsOfGamma0(m, w) computes the dimension of
+      ++ S_w(\Gamma_0(m)). See
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+    dimensionOfEisensteinSubspaceOfGamma0: (P, Z) -> N
+      ++ dimensionOfEisensteinSubspaceOfGamma0(m, w) computes the
+      ++ dimension of E_w(\Gamma_0(m)), the Eisenstein subspace of
+      ++ modular forms See
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+    dimensionOfModularFormsOfGamma0: (P, Z) -> N
+      ++ dimensionOfModularFormsOfGamma0(m, w) computes the dimension of
+      ++ M_w(\Gamma_0(m)). See
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
     splitMatrix: (SL2Z, Z, P, N) -> Rec
       ++ splitMatrix(mat, delta, m, lambda) computes
       ++ splitMatrix(a, b, c, d) where the arguments are the matrix
@@ -324,7 +341,7 @@ QAuxiliaryModularEtaQuotientPackage: with
             s := s + ri
             a := a + ri * d  -- sigma_\infty
             b := b + ri * rd -- sigma_0
-            c := c * factor(d)^(qcoerce(abs(ri))@N)
+            c := c * factor(d)^asN(abs ri)
         -- Check conditions 1, 2, 3, 4.
         not zero? s => 1
         not zero? positiveRemainder(a, 24) => 2
@@ -337,8 +354,8 @@ QAuxiliaryModularEtaQuotientPackage: with
         n: N := # divs
         d: Vector Z := vector divs
         fl: List Record(factor: Z, exponent: N) := factors factor m
-        cols: P := qcoerce(n + 2 + #fl)@P
-        rows: P := qcoerce(3 + #fl)@P
+        cols: P := asP(n + 2 + #fl)
+        rows: P := asP(3 + #fl)
         mat: MZ := new(rows, cols, 0)
         -- sum(r(d.i), i=1..n)=0
         for j in 1..n repeat qsetelt!(mat, 1, j, 1)
@@ -351,9 +368,9 @@ QAuxiliaryModularEtaQuotientPackage: with
         -- product is rational square
         for i in 1..#fl for fe in fl repeat
             k := n+2+i
-            p: P := qcoerce(fe.factor)@P
+            p: P := asP(fe.factor)
             for j in 2..n repeat -- for all divisors > 1
-                qsetelt!(mat, i+3, j, primePower(qcoerce(d.j)@P, p))
+                qsetelt!(mat, i+3, j, primePower(asP(d.j), p))
             qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
         --vPrint("rstarConditionMatrix", mat)
         return mat
@@ -414,7 +431,7 @@ QAuxiliaryModularEtaQuotientPackage: with
     width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
 
     numberOfGaps(n: P, list: List P): N ==
-        qcoerce(reduce(_+, [floor(x /$Q n) for x in list]$List(Z), 0))@N
+        asN reduce(_+, [floor(x /$Q n) for x in list]$List(Z), 0)
 
     -- Split matrix as in Lemma~\ref{thm:matrix-splitting} with
     -- z = delta*lambda.
@@ -476,7 +493,7 @@ QAuxiliaryModularEtaQuotientPackage: with
         r: Q := 1
         for f in factorList factor m repeat
             r := r * (1 + 1/(f.factor))
-        qcoerce(numer(m*r))@P
+        asP numer(m*r)
 
 )if LiterateDoc
 
@@ -538,7 +555,7 @@ $a\in X_c$.
         n: Z := 1  -- eulerPhi(gcd(1, level))
         for c in rest divisors(level)$INTF repeat
             n := n + eulerPhi(gcd(c, (level exquo c)::Z))
-        qcoerce(n)@P
+        asP n
 
     -- Two helper function mu2 and mu3
     nu2(m: P): Z ==
@@ -573,14 +590,38 @@ $a\in X_c$.
         q: Q := indexOfGamma0(m)/12 - nu2(m)/4 - nu3(m)/3
                 - numberOfCuspsOfGamma0(m)/2
         not one? denom q => error "genusOfGamma0: non-vanishing denominator"
-        qcoerce(1 + numer(q))@N
+        asN(1 + numer(q))
+
+    dimensionOfCuspFormsOfGamma0(m: P, w: Z): N ==
+        -- https://www.wstein.org/books/modform/modform/dimension_formulas.html
+        w < 0 or odd? 2 => 0
+        w = 2 => genusOfGamma0 m
+        wz: Z := w::Z
+        w2: Z := shift(wz, -1) -- division by 2
+        d: Z :=   (wz-1) * (genusOfGamma0(m)-1)_
+                + (w2-1) * numberOfCuspsOfGamma0(m)_
+                + nu2(m) * floor(wz/4)$Q_
+                + nu3(m) * floor(wz/3)$Q
+        return d::N
+
+    dimensionOfEisensteinSubspaceOfGamma0(m: P, w: Z): N ==
+        -- https://www.wstein.org/books/modform/modform/dimension_formulas.html
+        w < 0 or odd? w => 0
+        zero? w => 1
+        c: N := numberOfCuspsOfGamma0 m
+        if w = 2 then asN(c - 1) else c
+
+    dimensionOfModularFormsOfGamma0(m: P, w: Z): N ==
+        c: N := dimensionOfCuspFormsOfGamma0(m, w)
+        e: N := dimensionOfEisensteinSubspaceOfGamma0(m, w)
+        c + e
 
     squarePart(fl: FL): Z ==
         -- if fl = factorList factor x and z=squarePart(fl) then
         -- z^2*r=expand(fl) for some squarefree r.
         z: Z := 1
         for x in fl repeat
-            e: P := qcoerce(shift(x.exponent, -1))@P
+            e: P := asP shift(x.exponent, -1)
             z := (x.factor)^e * z
         return z
 
@@ -595,7 +636,7 @@ $a\in X_c$.
         fl := factorList fnum
         r: Z := 1
         for x in fl | odd? (x.exponent) repeat r := x.factor * r
-        return [squarePart(fl)/squarePart(factorList fden), qcoerce(r)@P]
+        return [squarePart(fl)/squarePart(factorList fden), asP r]
 
     square(x: Record(root: P, elem: Pol)): Vector Z ==
         pol: Pol := cyclotomic(x.root)$CyclotomicPolynomialPackage
