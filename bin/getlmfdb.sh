@@ -20,6 +20,7 @@ MODFORM='ModularForm/GL2/Q/holomorphic'
 MODFORMSAGE="${LMFDB}/${MODFORM}/download_qexp"
 
 function get_list {
+    echo "======= $BASEURL$1" >&2
     curl "$BASEURL$1" 2>/dev/null \
         | grep -A1 '^<tr>$' \
         | grep EllipticCurve \
@@ -33,17 +34,34 @@ function get_urls {
     get_list 150
 }
 
-get_urls | while read url; do
-    id=$(curl ${ECQURL}/${url} \
-        | grep "\"/${MODFORM}/.*\">Modular form " \
-        | sed "s|.*href=\"/${MODFORM}/||;s|/\">Modular.*||" \
-        | sed 's|/|.|g')
-    echo ============ $id
+function get_ids {
+    get_urls | while read url; do
+        echo =========== $url >&2
+        curl ${ECQURL}/${url} \
+            | grep "\"/${MODFORM}/.*\">Modular form " \
+            | sed "s|.*href=\"/${MODFORM}/||;s|/\">Modular.*||" \
+            | sed 's|/|.|g'
+    done | sort | uniq
+}
+
+if test -r lmfdb.ids; then
+    echo "lmfdb.ids already exists." >&2
+else
+    get_ids > lmfdb.ids
+fi
+
+cat lmfdb.ids | while read id; do
+    echo ============ $id >&2
     curl "${MODFORMSAGE}/$id" > "mf-$id.sage"
-    ( echo "load(\"mf-$id.sage\")"; echo "make_data()" ) \
+    level=$(echo $id | sed 's|\..*||')
+    weight=$(echo $id | sed 's|[^.]*\.\([0-9]*\)\..*|\1|')
+    echo "lvl := $level" > "mf-$id.input"
+    echo "wght := $weight" >> "mf-$id.input"
+    (echo "load(\"mf-$id.sage\");f=make_data();[f[i] for i in range(0,1000)]")\
     | sage \
-    | grep -A1 'In [[]2[]]:' \
-    | sed 's|$|;|;s|^In.*|ff := _|' > "mf-$id.input"
+    | awk '/^$/{next}/^In .1/,/^In .2/ {print}' \
+    | sed 's|,$|,_|;s|[]]$|];|;s|^In [[]1[]]:.*|coefs := _|;s|^In.*||' \
+    >> "mf-$id.input"
 done
 
 exit
