@@ -75,6 +75,50 @@ ${patsubst %,${TMP}/%,${PREREQS_SAGE}}: ${TMP}/%: sagemath/%
 	cp -a $< $@
 
 ###################################################################
+# Compute the eta-quotient relations for (some) entries of the
+# lmfdb.org database.
+
+# This target creates lmfdb.ids and the zudilin/mf-*.input files.
+zudilin/lmfdb.ids:
+	cd zudilin && ../bin/lmfdb.sh
+
+zudilin/rel-%.tmp: zudilin/mf-%.input
+	bin/lmfdb.sh $*
+
+zudilin/rel-%.input: zudilin/rel-%.tmp
+	if grep 'SUCCESS:=true' $< 2>/dev/null; then \
+	  awk '/^fpol:=/,/SUCCESS:=true/{print}' $< \
+	  | sed '$$d' > $@; else :; fi
+
+IDS=$(shell cat zudilin/lmfdb.ids)
+RELS=$(patsubst %,zudilin/rel-%.input, ${IDS})
+zudilin/allrels: zudilin/lmfdb.ids $(RELS)
+
+zudilin/index.html:
+	echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">' > $@
+	echo '<html>' >>$@
+	echo '  <head>' >>$@
+	echo '    <meta charset="utf-8">' >>$@
+	echo '    <title>Eta-quotient relations for modular form</title>' >>$@
+	echo '  </head>' >>$@
+	echo '  <body>' >>$@
+	echo '    <h1>Eta-quotient relations for modular forms</h1>' >>$@
+	echo '    <p>' >>$@
+	ls -l zudilin/rel-*.input \
+	| sed 's|.* zudilin/||;s|\(rel-\(.*\)\.input\)|<a href="https://www.lmfdb.org/ModularForm/GL2/Q/holomorphic/\2">Modular form \2</a> -- <a href="\1">eta-quotient relation</a><br />|' >>$@
+	echo '    </p>' >>$@
+	echo '    <hr>' >>$@
+	echo '    <address>' >>$@
+	echo '      <a href="mailto:hemmecke@risc.jku.at">Ralf Hemmecke</a>'>>$@
+	echo '    </address>' >>$@
+	echo '  </body>' >>$@
+	echo '</html>' >>$@
+
+toweb: zudilin/index.html
+	scp $< risc:/home/www/people/hemmecke/qeta/lmfdb/
+	scp zudilin/rel-*.input risc:/home/www/people/hemmecke/qeta/lmfdb/
+
+###################################################################
 # documentation
 # Compile all .spad files to .pdf and join them together.
 pdfall: pdf

@@ -1,8 +1,7 @@
+)cd /home/hemmecke/g/qeta/tmp
+)read ../zudilin/mf-20.2.a.a.input
 assertEquals(x,y)==>(if (x=y)@Boolean then true else (print x; false))
 assertTrue x ==> x
-)cd /home/hemmecke/g/qeta/tmp
-)read ../zudilin/mf-11.2.a.a.input )quiet
-
 )set mess type off
 )set mess time off
 )r projectlibs )quiet
@@ -12,6 +11,7 @@ assertTrue x ==> x
 
 C ==> Q
 VZ ==> Vector Z
+VQ ==> Vector Q
 MZ ==> Matrix Z
 
 )set mess type off
@@ -28,57 +28,81 @@ numOfGaps(ab) == (_
 )set mess time on
 )set stream calc 2
 
--- The variables coefs, lvl, wgth, dimM, ncoefs are assumed to be set already.
+-- The variables coefs, lvl, wgth, dimM, ncoefs are assumed to be set
+-- already.
 
-ff := (laurent(0, coefs :: Stream(C))$L1(C))::A1(C)
-level := lvl
-divs := DIVISORS level
-ndivs := #divs
-spitzen := cuspsOfGamma0 level
-dimM := dimensionOfModularFormsOfGamma0(level, wght)
-ncoefs := dimM
+level := lvl;
+divs := DIVISORS level;
+esyms := indexedSymbols("E", divs);
+spitzen := cuspsOfGamma0 level;
+dimM := dimensionOfModularFormsOfGamma0(level, wght);
+dim := #divs;
+vdivs := vector(divs)$VZ;
+grdsrt(x1: VZ, x2: VZ): Boolean == dot(vdivs,x1)$VZ < dot(vdivs,x2)$VZ
 
--- Check whether there we can find eta-quotients of weight wght.
-idivs := [i for i in 1..ndivs]
-rhs := concat([0 for i in idivs], 2*wght)
-zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV;
-vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
-zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
-assertTrue(#zmodformzi>0)
+equalSeries?(f1: A1 C, f2: A1 C): Boolean ==
+    fd := f1 - f2
+    removeDuplicates [coefficient(fd, i) for i in 0..999] ~= [0] =>
+        dbgPrint("difference is not zero", [level, wght])
+        false
+    true
 
--- Sort the generating exponents according to the resulting series expansion
+computation() ==
+    ff := (laurent(0, coefs :: Stream(C))$L1(C))::A1(C)
+    idivs := [i for i in 1..#divs]
+    rhs := concat([0 for i in idivs], 2*wght)
+    zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV
+    zmodformzi := [members x(1..#divs) for x in zmodform.zinhom]
+    zero?(#zmodformzi) =>
+        dbgPrint("no eta-quotients of (level, weight)", [level, wght])
+        false
+    vmodformgens := sort(grdsrt, [vector x for x in zmodformzi])
+    rmodformgens := [members x for x in vmodformgens]
+    emodformgens := [EQA1C r for r in rmodformgens]
 
-vmodformgens := [vector x for x in zmodformzi];
-vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
-rmodformgens := [members x for x in vmodformgenss]
+    rnk := 0
+    for rhxi in 0..20 while rnk < dimM repeat
+        ncoefs := dimM + rhxi
+        cmodformgens := [[coefficient(x, i) for i in 0..ncoefs]
+                          for x in emodformgens]
+        rnk := rank matrix cmodformgens
+        dbgPrint("[ncoefs, rnk, dimM]", [ncoefs, rnk, dimM])
 
-[order EQA1C r for r in rmodformgens]
-)set out algebra on
-)set out linear off
-matrix [qetaGrades YEQn x for x in rmodformgens]
+    if rnk < dim then
+        dbgPrint("WARNING: rank smaller than dimension",
+                 [ncoefs, #rmodformgens, rnk, dimM])
 
+    matmodforms: MZ := transpose matrix cmodformgens
+    vf := vector [coefficient(ff, i)::Z for i in 0..ncoefs]
+    rels: VZ := new(nrows matmodforms, 0)
+    zmodforms := zsolve(matmodforms, rels, vf)$X4ti2
+    zmodformszi := zmodforms.zinhom
 
--- +
--------------------------------------------------------------------
--- Check whether there is a Q-linear combinationn of holomorphic
--- eta-quotients of level 14 that is equal to f37.
--------------------------------------------------------------------
--- -
-emodformgens := [EQA1C r for r in rmodformgens];
-[order x for x in emodformgens]
+    mons := [monRZ x for x in rmodformgens]
 
-nmodformgens := # rmodformgens
-cmodformgens := [[coefficient(x, i) for i in 0..ncoefs] for x in emodformgens];
-assertEquals(rank matrix cmodformgens, dimM)
+    vPrint("divs", divs)
+    if zero?(#zmodformszi) then
+        vPrint("holomorphicRelationWithIntegerCoefficients", false)
+      else
+        sv := (first zmodformszi)::VQ -- solution vector
+        fz := reduce(_+, [sv.i * emodformgens.i for i in 1..#sv])
+        not equalSeries?(fz, ff) => return false
+        fzpol := reduce(_+, [sv.i * mons.i for i in 1..#sv])
+        vPrint("holomorphicRelationWithIntegerCoefficients", true)
+        vPrint("fzpol", fzpol)
+        vPrint("lzpol", rez fzpol)
 
-matmodforms := transpose matrix cmodformgens;
-cf := [coefficient(ff, i) for i in 0..ncoefs]
-rels: VZ := new(nrows matmodforms, 0);
-zmodforms := zsolve(matmodforms, rels, vector cf)$X4ti2;
-zmodformszi := zmodforms.zinhom
-zmodformszf := zmodforms.zfree;
-assertTrue(#zmodformszi>0)
-zzi := first zmodformszi
-fz := reduce(_+, [zzi.i * emodformgens.i for i in 1..#zzi])
-fd := fz - ff
-assertEquals(removeDuplicates [coefficient(fd, i) for i in 0..1000], [0])
+    sol := solve(matmodforms, vf)
+    if sol.particular case "failed" then
+        vPrint("holomorphicRelationWithRationalCoefficients", false)
+      else
+        sv := sol.particular -- solution vector
+        fz := reduce(_+, [sv.i * emodformgens.i for i in 1..#sv])
+        not equalSeries?(fz, ff) => return false
+        fzpol := reduce(_+, [sv.i * mons.i for i in 1..#sv])
+        vPrint("holomorphicRelationWithRationalCoefficients", true)
+        vPrint("fqpol", fzpol)
+        vPrint("lqpol", rez fzpol)
+    true
+
+vPrint("SUCCESS", computation());
