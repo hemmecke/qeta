@@ -49,7 +49,7 @@ cat <<EOF  | $teecmd | timeout 60s fricas -nosman | sed '1,/OUTPUT STARTS HERE/d
 )r etamacros
 )set stream calculate $calc
 
-tPrint(x)==display(x::Symbol::OF::LinearOutputFormat, 77);_
+tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_
 QMEVS==>QEtaQuotientMonoidExponentVectorsStar;
 eqmevx==>etaQuotientMonoidExponentVectorsX\$QMEVS;
 

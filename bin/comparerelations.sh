@@ -58,7 +58,7 @@ V ==> Vector R
 X ==> Record(poly: R, repr: V, mult: C)
 toR ==> coerce\$PolynomialConversion(C, E, syms)
 OF==>OutputForm
-display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+display77(x) ==> display((x::OF)::Formatter(Format1D))
 vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
 
 f: List R := [toR p for p in $F]

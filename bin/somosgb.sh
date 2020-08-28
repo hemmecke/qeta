@@ -72,7 +72,7 @@ dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
 toR ==> coerce\$PC
 OF==>OutputForm
-display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+display77(x) ==> display((x::OF)::Formatter(Format1D))
 vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
 print("-- Somos eta relations --"::Symbol::OF);
 for k in fkeys repeat vPrint(k, toR(f.k));

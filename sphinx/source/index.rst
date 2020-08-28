@@ -1,5 +1,5 @@
-|PACKAGE_NAME|
-==============
+|PACKAGE_NAME| |PACKAGE_VERSION|
+================================
 
 Abstract
 --------
@@ -37,12 +37,13 @@ articles which are also available as RISC_ reports
 `16-06 <http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf>`_,
 `18-03 <http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf>`_.
 
-Further material is in the `git repository
-<https://github.com/hemmecke/qeta>`_ of the project.
+Further material is in the |git repository|.
 
 This package requires a version of FriCAS_ that is compiled from at
-least SVN revision 2328, \ie, where Gröbner basis computations do no
+least SVN revision 2328, i.e. where Gröbner basis computations do no
 longer require variable names.
+
+TODO: MUST FIX
 
 The scripts usually use::
 
@@ -68,8 +69,9 @@ Contents
 Links
 -----
 
-* |PACKAGE_HOME|
-* |PACKAGE_CODE|
+* |home page|
+* |git repository|
+* Bug reports: |PACKAGE_BUGREPORT|
 
 .. _FriCAS: https://fricas.github.io
 .. _RISC: https://risc.jku.at

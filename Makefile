@@ -17,7 +17,54 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################
-PROJECT=qeta
+# This file contain links to the source code and documentation.
+# Do not change the official variables to something else
+# than the official places.
+
+# The official FriCAS homepage. It is supposed that the API description
+# lives under "${FRICAS_URL}/api".
+FRICAS_URL=https://fricas.github.io
+
+# The official package homepage. It is supposed that the API description
+# lives under "${PACKAGE_URL}/api".
+PACKAGE_URL=https://hemmecke.github.io/qeta
+
+# Here lives the official git repository of the package.
+# It should be possible to say "git clone ${PACKAGE_SOURCE}".
+PACKAGE_SOURCE=https://github.com/hemmecke/qeta
+
+# In case we consider another git branch of ${PACKAGE_SOURCE}.
+BRANCH=master
+
+# Base source URL into the git repo. Appending the repsective path
+# should give a valid URL to view/edit a file.
+# Local references must include a absolute path like this:
+# PACKAGE_SOURCE_VIEW="file:///home/hemmecke/g/qeta".
+PACKAGE_SOURCE_VIEW=${PACKAGE_SOURCE}/blob/${BRANCH}
+PACKAGE_SOURCE_EDIT=${PACKAGE_SOURCE}/edit/${BRANCH}
+SHOW_ON_GITHUB_URL=${PACKAGE_SOURCE_VIEW}/sphinx/source/{path}
+EDIT_ON_GITHUB_URL=${PACKAGE_SOURCE_EDIT}/sphinx/source/{path}
+###################################################################
+PACKAGE_NAME=QEta
+PACKAGE_VERSION=2.1
+PACKAGE_TARNAME=qeta
+PACKAGE_BUGREPORT=ralf@hemmecke.org
+###################################################################
+# The following environment variables considered in
+# sphinx/source/conf.py, so we export them for sphinx "make html".
+export PACKAGE_URL
+export FRICAS_URL
+export PACKAGE_SOURCE
+export PACKAGE_SOURCE_VIEW
+export PACKAGE_SOURCE_EDIT
+export PACKAGE_NAME
+export PACKAGE_VERSION
+export PACKAGE_TARNAME
+export PACKAGE_BUGREPORT
+export SHOW_ON_GITHUB_URL
+export EDIT_ON_GITHUB_URL
+###################################################################
+PROJECT=${PACKAGE_TARNAME}
 # Compute the eta relations and generate also intermediate data.
 #
 # Note that generated files that don't count as "results" will be put
@@ -53,7 +100,7 @@ PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQ
 
 prerequisites: ${PREREQS}
 
-recompile-spad compile-spad clean distclean html github.io-local\
+recompile-spad compile-spad clean distclean doc localdoc github.io-local\
     compute-all eqmev eqig elig er checksomos runfricassomos seg slg ceg clg:
 	${MAKE} prerequisites
 	cd ${TMP} && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@
@@ -146,3 +193,13 @@ ${patsubst %,${TMP}/%.pdf,${SPADFILES}}: ${TMP}/%.pdf: src/%.spad
 	    then EXECUTE=: ${LITDOC} $<; fi
 	if grep 'LaTeX Warning: .*Rerun' ${TMP}/$*.log; \
 	    then EXECUTE=: ${LITDOC} $<; fi
+
+###################################################################
+# documentation sphinx
+# Compile all .spad files to .rst files and run sphinx on them.
+# Put the result into the html directory.
+
+html localhtml: %html:
+	-rm -rf html
+	${MAKE} ${*}doc
+	cp -R tmp/sphinx/build/html .

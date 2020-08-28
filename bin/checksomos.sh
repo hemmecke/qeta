@@ -86,7 +86,7 @@ xnf ==> extendedNormalForm\$QEtaGroebner(C, E);
 gsyms: LSym := indexedSymbols("g", #g)\$QAuxiliaryTools
 toR ==> coerce\$PC
 OF==>OutputForm
-display77(x) ==> display((x::OF)::LinearOutputFormat, 77)
+display77(x) ==> display((x::OF)::Formatter(Format1D))
 vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
 printPol(k: Symbol, lsyms: LSym, ldim: N, p: PolC): Void == (_
     DX := DirectProduct(ldim, N); _

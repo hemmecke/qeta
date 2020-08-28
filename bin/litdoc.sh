@@ -16,7 +16,7 @@ If the files
   doc/literatedoc.awk
   doc/literatedoc.sty
 are not available, the will be downloaded from
-  https://raw.githubusercontent.com/hemmecke/fricas/master-hemmecke/src/doc/
+  https://raw.githubusercontent.com/hemmecke/fricas/formatted/src/doc/
 
 If TMP is nonempty then the output is compiled in the directory TMP.
 Otherwise /tmp is used.
@@ -29,7 +29,7 @@ P=`pwd`
 LITDOC=$P/tmp
 
 function maybe_download {
-    L="https://raw.githubusercontent.com/hemmecke/fricas/master-hemmecke/src/doc/"
+    L="https://raw.githubusercontent.com/hemmecke/fricas/formatted/src/doc"
     F="/home/hemmecke/g/fricas/src/doc"
     if test ! -r $LITDOC/$1; then
         mkdir -p $LITDOC
