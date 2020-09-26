@@ -25,7 +25,7 @@ PACKAGE_BUGREPORT = os.environ.get('PACKAGE_BUGREPORT', 'ralf@hemmecke.org')
 PACKAGE_URL = os.environ.get('PACKAGE_URL', 'https://hemmecke.github.io/qeta')
 
 # The official FriCAS homepage.
-FRICAS_URL = 'https://fricas.github.io'
+FRICAS_URL = os.environ.get('FRICAS_URL', 'https://fricas.github.io')
 
 # Place of the official code repository.
 # It should be possible to clone the repository from this URL.
