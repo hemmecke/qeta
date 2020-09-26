@@ -199,6 +199,7 @@ ${patsubst %,${TMP}/%.pdf,${SPADFILES}}: ${TMP}/%.pdf: src/%.spad
 # Compile all .spad files to .rst files and run sphinx on them.
 # Put the result into the html directory.
 
+.PHONY: html
 html localhtml: %html:
 	-rm -rf html
 	${MAKE} ${*}doc

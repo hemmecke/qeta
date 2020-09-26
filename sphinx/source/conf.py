@@ -84,7 +84,7 @@ extensions = [
 extlinks = {'viewsource':(PACKAGE_SOURCE_VIEW + '/%s', ''),
             'viewcode':(PACKAGE_SOURCE_VIEW + '/src/%s', ''),
             'editcode':(PACKAGE_SOURCE_EDIT + '/src/%s', ''),
-            'fricasapi':(FRICAS_URL + '/api/%s.html', '')
+            'fricasapi':(FRICAS_URL + '/api/%s', '')
            }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -111,8 +111,8 @@ html_theme = 'fricas-theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-  "stickysidebar": "True",
-  "externalrefs": "True",
+#  "stickysidebar": "True",
+#  "externalrefs": "True",
   "relbarbgcolor": "green",
 }
 
