@@ -548,15 +548,24 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
 ++ Algorithm follows \cite{Paule+Radu:ProofWeierstrassGapTheorem:2019}
 ++ Section 6.
 FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
-  K: Join(AlgebraicallyClosedField, PolynomialFactorizationExplicit)
+  Z ==> Integer
+  Q ==> Fraction Z
+  K: Join(Algebra Q, PolynomialFactorizationExplicit)
   var: Symbol
   cen: K
   LX ==> UnivariateLaurentSeries(K, var, cen)
   TX ==> UnivariateTaylorSeries(K, var, cen)
   Exports ==> with
     functionalInverse: LX -> LX
-      ++ functionalInverse(t) where d = order(t) < 0 returns
+      ++ functionalInverse(t) where d = order(t) ~= 0 returns
       ++ a Laurent series w of order 1 such that t(w(q))=q^d
+      -- Note that this is the same as doing the following:
+      -- functionalInverse(t) ==
+      --     d := order d
+      --     zero? d => error "no solution"
+      --     d<0 => t := 1/t
+      --     n := order t
+      -- revert nthRoot(t, n)
   Implementation ==> add
     functionalInverse(l: LX): LX ==
         --assert(not zero? t)
@@ -569,16 +578,19 @@ FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
         r: TX := nthRoot(t, n) -- order(t) = 0 = order(r)
         --assert(r^n = q^n*l)
         -- r corresponds to (1+\phi(q))^(1/n) = 1/(1+\psi(q))^(1/n) = q/U(q)
-        -- in \cite[Sect.~6]{Paule+Radu:ProofWeierstrassGapTheorem:
+        -- in \cite[Sect.~6]{Paule+Radu:ProofWeierstrassGapTheorem::2019}
         w := lagrange r
         --assert(order(w)=1)
         -- w corresponds W(q) in
         -- \cite[Sect.~6]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
-        -- Note that by specification of lagrange we have:
+        -- Note that by specification of lagrange we have for
+        -- U(q):=q/r(q):
         -- w(q) = q * r(w(q))
         --      = q * (w(q)/U(w(q)))
         --      = q * w(q) / U(w(q)),
         -- i.e., U(w(q)) = q.
+        -- Therefore, l(w(q))=r(w(q))^n/w(q)^n = (w(q)^n/q^n)/w(q)^n = q^d
+        -- where d = -n = -order(l).
         return laurent(0, w)
 
 )if LiterateDoc
