@@ -29,7 +29,7 @@ P=`pwd`
 LITDOC=$P/tmp
 
 function maybe_download {
-    L="https://raw.githubusercontent.com/hemmecke/fricas/formatted/src/doc"
+    L="https://raw.githubusercontent.com/fricas/fricas/master/src/doc"
     F="/home/hemmecke/g/fricas/src/doc"
     if test ! -r $LITDOC/$1; then
         mkdir -p $LITDOC
