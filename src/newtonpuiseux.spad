@@ -557,41 +557,31 @@ FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
   TX ==> UnivariateTaylorSeries(K, var, cen)
   Exports ==> with
     functionalInverse: LX -> LX
-      ++ functionalInverse(t) where d = order(t) ~= 0 returns
-      ++ a Laurent series w of order 1 such that t(w(q))=q^d
-      -- Note that this is the same as doing the following:
-      -- functionalInverse(t) ==
-      --     d := order d
-      --     zero? d => error "no solution"
-      --     d<0 => t := 1/t
-      --     n := order t
-      -- revert nthRoot(t, n)
+      ++ functionalInverse(t) where t is non-zero and d = order(t) ~=
+      ++ 0 returns a Laurent series w of order 1 such that t(w(q))=q^d
+      ++ Note that this is the same as doing the following:
+      ++ functionalInverse(t) == revert nthRoot(t, n)
   Implementation ==> add
     functionalInverse(l: LX): LX ==
-        --assert(not zero? t)
-        --assert(order(t) < 0)
-        --assert(one? leadingCoefficient t)
+        r: LX := nthRoot(l, order l) -- This gives a series of order =1.
+        not one? order r => error "functionalInverse: order should be 1"
+        laurent(0, revert taylor r)
+
+)if oldCode
+        --assert(not zero? l)
+        --assert(one? leadingCoefficient l)
         -- below assume q = monomial(1,1)
-        n: Z := - order l
-        t: TX := taylorRep l -- t = q^n * l
-          -- t corresponds to (1+\phi(q)) in the article.
-        r: TX := nthRoot(t, n) -- order(t) = 0 = order(r)
-        --assert(r^n = q^n*l)
-        -- r corresponds to (1+\phi(q))^(1/n) = 1/(1+\psi(q))^(1/n) = q/U(q)
-        -- in \cite[Sect.~6]{Paule+Radu:ProofWeierstrassGapTheorem::2019}
+        d: Z := order l
+        t: TX := taylorRep l -- l = q^d * t
+        r: TX := nthRoot(t, -d) -- order(t) = 0 = order(r)
+        --assert(l = (q/r)^d)
         w := lagrange r
         --assert(order(w)=1)
-        -- w corresponds W(q) in
-        -- \cite[Sect.~6]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
-        -- Note that by specification of lagrange we have for
-        -- U(q):=q/r(q):
-        -- w(q) = q * r(w(q))
-        --      = q * (w(q)/U(w(q)))
-        --      = q * w(q) / U(w(q)),
-        -- i.e., U(w(q)) = q.
-        -- Therefore, l(w(q))=r(w(q))^n/w(q)^n = (w(q)^n/q^n)/w(q)^n = q^d
-        -- where d = -n = -order(l).
+        -- Note that by specification of the lagrange function we have
+        -- w(q) = q * r(w(q)), i.e. r(w(q)) = w(q)/q.
+        -- Therefore, l(w)=(w/r(w))^d = (w/(w/q))^d = q^d
         return laurent(0, w)
+)endif
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
