@@ -128,6 +128,10 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
       ++ q24(n) returns q^(n/24).
     coerce: C -> %
       ++ coerce(c) returns an element of this domain corresponding to c.
+    _*: (C, %) -> %
+      ++ This domain behaves like the multiplicative part of a module.
+    _*: (%, C) -> %
+      ++ This domain behaves like the multiplicative part of a module.
     prefactor: % -> N
       ++ prefactor(x) returns the exponent times 24 of the fractional q
       ++ power of x where q is the variable of L. The returned value is
@@ -193,6 +197,8 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         e > 0 => expt(eta n, qcoerce(e)@PositiveInteger)
         inv(expt(eta n, qcoerce(-e)@PositiveInteger))
     q24(n: Z): % == new(n, 1$L)
+    ((c: C) * (x: %)):% == new(prefactor x, c * seriesPart x)
+    ((x: %) * (c: C)):% == c * x
     ((x: %) * (y: %)): % ==
         new(prefactor x + prefactor y, seriesPart x * seriesPart y)
     inv(x: %): % == new(- prefactor x, recip(seriesPart x)::L)
