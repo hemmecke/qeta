@@ -8,10 +8,10 @@
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
-)set output linear off
-)set output algebra on
+)set output algebra off
+setFormat!(FormatMathJax)$JFriCASSupport
 )set stream calculate 20
-)set mess time on
+)set mess time off
 C ==> Q
 --C ==> Z;
 --C ==> IntegerLocalizedAtPrime 11
@@ -23,7 +23,25 @@ CX := Q;
 nn: P := 2;
 )r ../input/convenience
 )r ../input/tracemacros
+
 )set mess type on
+
+-- ## Dedekind Eta Function $\eta(\tau)$
+
+e := eta(1)$ETA(Q)
+
+polynomialToEta(E1)$ETA(Q)
+
+-- Express in terms of $x=q^{1/24}$ but written with $q$ instead of $x$
+
+prefactor e
+
+q := monomial(1,1)$L1(Q)
+monomial(1,prefactor(e))$L1(Q) * (seriesPart(e)::L1(Q))(q^24)
+
+-- Modular discriminant $\Delta(\tau)=\eta(\tau)^{24}$
+
+expansion(eta(24)$ETA(Z))
 
 -- ## $g_s(\tau) \in M(N)$ --- EtaQuotient
 
@@ -33,6 +51,9 @@ nn: P := 22; -- level N
 nndivs := DIVISORS nn;
 r := [1,2,-1,-1]
 e := etaQuotient(nndivs, r)$ETA(Z)
+
+)set message type on
+
 
 -- We can get the exponent of the prefactor $q^{1/24}$ and the actual
 -- $q$-series. Note that for the prefactor exponent it always holds
@@ -49,13 +70,38 @@ seriesPart(e)$ETA(Z)
 
 r := [24,0,0,0]
 e := etaQuotient(nndivs, r)$ETA(Z)
---expansion e
+expansion e
+
+-- ## Jacobi theta functions
+--
+-- The Jacobi theta functions (see  https://en.wikipedia.org/wiki/Theta_function#Relations_to_Dedekind_eta_function) are given by
+-- $$
+-- \theta_2(\tau)=\frac{2 \eta(2\tau)^2}{\eta(\tau)},
+-- \qquad
+-- \theta_3(\tau)=\frac{\eta(\tau)^5}{\eta(\frac{\tau}{2}) \eta(2\tau)},
+-- \qquad
+-- \theta_4(\tau)=\frac{\eta(\frac{\tau}{2})^2}{\eta(\tau)}.
+-- $$
+-- in terms of $q=e^{\pi i \tau}$.
+-- In the following we express the series with $q=e^{2\pi i \omega}$ where $\omega=\frac{\tau}{2}$.
+
+theta2half := etaQuotient(4, [ 0,-1, 2])$ETA(C)
+theta2     := 2*theta2half
+theta3     := etaQuotient(4, [-2, 5,-2])$ETA(C)
+theta4     := etaQuotient(4, [ 2,-1, 0])$ETA(C)
+
+g := expansion(theta3^2) :: L1(C)
+h := expansion((theta2half/theta3)^4) :: L1(C)
+
+-- Express $g$ in terms of $h$, i.e. $f(h) = g$.
+
+f := g(revert h) -- if order(h) is different from 1 then g(revert(nthRoot(h, order h))).
 
 -- ### $g_s(\tau) \in M^\infty(N)$ --- the monoid generators
 
 nn: P := 22; -- level N
 nndivs := DIVISORS nn;
-rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 eqgens := [expansion(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens]
 
 -- ### Create $g_s(\tau)$ with attached part
@@ -73,7 +119,7 @@ xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens)
 t := -1
 C ==> Q
 nn: P := 13;
-rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 m: P := 13; mm: P := m; s: List Z := first rgens;
 mmdivs: List P := DIVISORS mm
 gamma: SL2Z := matrix [[1,0],[0,1]]
@@ -85,7 +131,8 @@ w := width(nn, gamma(2,1))
 
 )set stream calc 4
 )set mess type on
-p := puiseux(y, w)$SETAQG
+p := puiseux(y, 13)$SETAQG(C,CX)
+
 r := rationalPowerDenominator(p)
 e := expansion p
 order e
@@ -110,7 +157,7 @@ w := width(nn, gamma(2,1))
 
 )set stream calc 4
 )set mess type on
-p := puiseux(y, w)$SETAQG
+p := puiseux(y, w)$SETAQG(C, CX)
 r := rationalPowerDenominator(p)
 e := expansion p
 order e
@@ -137,7 +184,7 @@ w := width(nn, gamma(2,1))
 
 )set stream calc 20
 )set mess type on
-p := puiseux(y, w)$SETAQG
+p := puiseux(y, w)$SETAQG(C, CX)
 
 -- The above data structure actually represents the Puiseux series
 -- where $q$ is replaced by $q^{1/\mathrm{den}}=q^{1/24}$.
@@ -153,7 +200,7 @@ s1 := choose((n:Z):Z +-> 24*n+11, e, order(e))::A1(CX)
 -- We can simplify the coefficient domain to Integer by retracting
 -- from $\mathbb{Q}[\xi]$ to $\mathbb{Z}$.
 
-rx := map(retract, s1)$Finite0SeriesFunctions2(CX, Z, 'q, 'q, 0, 0)
+rx := map(retract, s1)$Finite0SeriesFunctions2(CX, C, 'q, 'q, 0, 0)
 
 -- For our special choice of $s$, $m=13$, $t=6$, the above series is
 -- the generating series for the partitions, i.e., $\sum_{n=0}^\infty
@@ -174,7 +221,7 @@ w := width(nn, gamma(2,1))
 
 )set mess type on
 )set stream calc 10
-p := puiseux(y, w)$SETAQG
+p := puiseux(y, w)$SETAQG(C, CX)
 e := expansion p;
 order e
 
@@ -200,7 +247,7 @@ y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
 xiord: P := minimalRootOfUnity y
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
-puiseux(y, w)$SETAQG
+puiseux(y, w)$SETAQG(C, CX)
 
 -- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $1$
 
@@ -210,29 +257,35 @@ y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
 xiord: P := minimalRootOfUnity y
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
-puiseux(y, w)$SETAQG
+puiseux(y, w)$SETAQG(C, CX)
 
 -- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at all cusp
 
 nn, r, mm, s, m, t, gamma
 
 y := etaQuotient(nn, r, mm, s, m, t)$YMSETAQ;
-f := y::MSETAQ;
+f := y::MSETAQ(C, CX);
 
 -- For each of the cusps we get one expansion in terms in the canonical
 -- variable $q^{1/w}$ where $w$ is the width of the respective cusp.
 -- As customary, we show $q$ instead of $q^{1/w}$.
 
-cuspsOfGamma0(nn)
+spitzen := cuspsOfGamma0(nn)
 )set stream calc 3
-mf := expansions(f)::MODFUNX
+mf := expansions(f)::MODFUNX(CX)
 
 -- Strangely, one has to reread `input/convenience`.
 --
 -- **TODO:** Create a `QEtaConvenienceTool` as a SPAD package.
 
+)cd
+)cd g/qeta/tmp
 )r ../input/convenience
-expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma)
+)r ../input/modfuns
+
+-- +
+--expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma)
+-- -
 
 -- ## $\sum_{n=0}^\infty p(m\,n+t)\,q^n$ "sifted" partition series
 
@@ -247,17 +300,11 @@ siftedPartitionSeries(13,6)
 -- output the respective cofactor exponent $r$ and the exponent $k$.
 -- One can see it if run in the commandline version of FriCAS.
 
+--setFormat!(Format1D)$JFriCASSupport
 m13 := modularSiftedPartitionSeries(13,13,6)
+--setFormat!(FormatMathJax)$JFriCASSupport
 
 m26 := modularSiftedPartitionSeries(26,13,6)
-
---
-
-
-
-
-
-
 
 
 
@@ -279,8 +326,7 @@ m26 := modularSiftedPartitionSeries(26,13,6)
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
-)set output linear off
-)set output algebra on
+)set output algebra off
 )set stream calculate 20
 )set mess time on
 --C ==> Q
@@ -293,8 +339,9 @@ xi := -1;
 CX := Q;
 nn: P := 22;
 )r ../input/convenience
-)r ../input/tracemacros
+)r ../input/tracing
 )set mess type on
+setFormat!(FormatMathJax)$JFriCASSupport
 
 -- ### Samba: setting up the input
 
@@ -304,7 +351,7 @@ nn: P := 22; -- level
 nndivs := DIVISORS nn;
 etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
-rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
 
 
@@ -335,7 +382,9 @@ cfab := samba(cft, cfgens, 31)$QTOPSAMBA1(C);
 
 -- ### Samba with aborting when a certain number of gaps has been reached and with live tracing
 
-cfab := samba(cft, cfgens, 31, cfonet1Step!)$QTOPSAMBA1(C);
+cfab := samba(cft, cfgens, 31, caonet1Step!)$QTOPSAMBA1(C);
+
+cfab
 
 -- ## Extended Samba
 
@@ -360,6 +409,11 @@ xab := samba(xt, xgens, genus, onet1Step!)$QXTOPSAMBA1(C)
 -- ## Number of gaps of a algebra basis
 
 -- The `numOfGaps` function is defined in `input/convenience.input`.
+
+spitzen := cuspsOfGamma0(nn)
+
+)r ../input/convenience )quiet
+)r ../input/modfuns )quiet
 
 nog := numOfGaps(xab)
 nog - genus
@@ -390,8 +444,7 @@ removeDuplicates sort [zero? x for x in rbas]
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
-)set output linear off
-)set output algebra on
+)set output algebra off
 )set stream calculate 20
 )set mess time on
 --C ==> Q
@@ -404,8 +457,9 @@ xi := -1;
 CX := Q
 nn: P := 13
 )r ../input/convenience
-)r ../input/tracemacros
---)set mess type on
+)r ../input/tracing
+)set mess type on
+setFormat!(FormatMathJax)$JFriCASSupport
 
 -- ## p(m n + t)
 
@@ -426,14 +480,17 @@ t: N := first first orbs
 --           \sum_{k=0}^{\infty}p(m k + t)q^k.
 -- $$
 
-fzf := modularSiftedPartitionSeries(nn, m, t);
-ff := zcmap fzf; -- modular f with coefficients in C, i.e. living in A1
+spitzen := cuspsOfGamma0(nn)
+
+)r ../input/modfuns
+
+ff := modularSiftedPartitionSeries(nn, m, t);
 xf := toX1(C, ff, F)
 
 nndivs := DIVISORS nn;
 etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
-rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQMEV)$List(List Z)
+rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
@@ -470,8 +527,7 @@ xf - 11*(xgens.1)^6
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
-)set output linear off
-)set output algebra on
+)set output algebra off
 )set stream calculate 20
 )set mess time on
 C ==> Q
@@ -481,8 +537,9 @@ xiord := 2;
 xi := -1;
 CX := Q
 )r ../input/convenience
-)r ../input/tracemacros
+)r ../input/tracing
 )set mess type on
+setFormat!(FormatMathJax)$JFriCASSupport
 
 -- We can generate a new modular function by applying the trace to
 -- a modular function from $M^\infty(242)$.
@@ -530,7 +587,7 @@ w := WIDTH(242, gamma(2,1))
 -- there.
 
 divs242 := DIVISORS 242;
-rgens242 := etaQuotientMonoidExponentVectors(242)$QEQMEV
+rgens242 := etaQuotientMonoidExponentVectors(242)$QEQEV
 egens242 := [(expansion etaQuotient(divs242, r)$ETA(Z))::A1(C) for r in rgens242];
 [qetaGrade(x) for x in egens242]
 
@@ -570,12 +627,12 @@ idgamma: SL2Z := matrix [[1,0],[0,1]];
 yeq242: YETAQG := etaQuotient(242, divs242, r242, idgamma);
 modular? yeq242
 
-eq242 := (expansion(etaQuotient(yeq242)$ETAQG))::A1(C)
+eq242 := (expansion(yeq242::ETAQG(C, CX)))::A1(C)
 
 zero?(eqt242-eq242)
 
 yeq242g: YETAQG := etaQuotient(242, divs242, r242, gamma);
-eq242g := (expansion(etaQuotient(yeq242g)$ETAQG))::A1(C)
+eq242g := (expansion(yeq242g::ETAQG(C,CX)))::A1(C)
 
 -- Now we apply the $U_2$ operator.
 
@@ -587,7 +644,7 @@ u2eq242g := choose((n: Z): Z +-> 2*n, eq242g, ordu2eq242g)
 -- implementation.
 
 yseq242g: YSETAQG := etaQuotient(242, divs242, r242, 1, 0, gamma);
-seq242g := puiseux(yseq242g, w)$SETAQG
+seq242g := puiseux(yseq242g, w)$SETAQG(C,CX)
 
 -- Due to implementation as Laurent series, the above series is computed with $q$ standing for $q^{24}$. The result, however, says (den=24) that we should consider it as a series in $q=(q^{24})^{1/24}$.
 
@@ -615,8 +672,7 @@ xu: X := toX1(C, cftraceeq242, 'U);
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
-)set output linear off
-)set output algebra on
+)set output algebra off
 )set stream calculate 20
 )set mess time on
 C ==> Q
@@ -628,19 +684,20 @@ xiord := 2;
 xi := -1;
 CX := Q
 )r ../input/convenience
-)r ../input/tracemacros
+)r ../input/tracing
 )set mess type on
+setFormat!(FormatMathJax)$JFriCASSupport
 
 nn := 121
 nndivs := DIVISORS nn;
-rgens := etaQuotientMonoidExponentVectors(nn)$QEQMEV
+rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 eqgens := [expansion(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
 genus := genusOfGamma0 nn;
 xt: X := xgens.1;
-)r ../input/tracemacros
+)r ../input/tracing
 xab := samba(xt, xgens, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 -- We try to find a polynomial $p(t)$ such that .. see below.
