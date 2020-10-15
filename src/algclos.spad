@@ -1,6 +1,6 @@
 -------------------------------------------------------------------
 ---
---- DynamicAlgebraicClosureField
+--- DynamicAlgebraicNumber
 --- Copyright (C) 2019-2020,  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
@@ -24,12 +24,12 @@
 \usepackage{qeta}
 \DeclareUrlCommand\code{\urlstyle{tt}}
 \begin{document}
-\title{Dynamic Algebraic Closure Field}
+\title{Dynamic Algebraic Number Field}
 \author{Ralf Hemmecke}
 \date{22-Oct-2019}
 \maketitle
 \begin{abstract}
-  The domain \code{DynamicAlgebraicClosureField} implements ideas
+  The domain \code{DynamicAlgebraicNumber} implements ideas
   similar to those in \cite{Steel:AlgebraicallyClosedFields:2002} and
   \cite{Steel:AlgebraicallyClosedFields:2010}.
 \end{abstract}
@@ -67,21 +67,30 @@ asZ x ==> x pretend Z
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Dynamic Algebraic Closure Field}
+\subsection{Dynamic Algebraic Number Field}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The constructor \code{DynamicAlgebraicClosureField} takes as input a
+The constructor \code{DynamicAlgebraicNumber} takes as input a
 field $K$ and returns the algebraic closure of $K$ in the sense of
 \cite{Steel:AlgebraicallyClosedFields:2010}.
 
 )endif
 
 
-)abbrev domain DACF DynamicAlgebraicClosureField
+)abbrev domain DAN DynamicAlgebraicNumber
 ++ Author: Ralf Hemmecke
 ++ Description:
-++ Implement an ACF according to \cite{Steel:AlgebraicallyClosedFields:2010}.
-DynamicAlgebraicClosureField(): Exports == Implementation where
+++ Implement an ACF according to
+++ \cite{Steel:AlgebraicallyClosedFields:2010}, i.e., the algebraic
+++ closure of rational numbers.
+++ In contrast to the domain AlgebraicNunber in FriCAS, this domain
+++ certifies that that zero tests are corrct.
+++ Let
+++ tst(a, b)==(x:=sqrt(a*b);y:=sqrt(a)*sqrt(b);zero?(x-y) or zero?(x+y)),
+++ then
+++ tst(2::AN,3::AN) returns false whereas
+++ tst(2::DAN,3::DAN) gives true.
+DynamicAlgebraicNumber(): Exports == Implementation where
   K ==> Q
   V ==> IndexedVariable("r")
   EX ==> IndexedExponents V
