@@ -143,14 +143,20 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
 
     -- We want extension polynomials to be at least square-free.
     STATE ==> Record(
-        -- rnk is the number of elements in ts, vars, roots
-        -- elements of ts are sorted by main variable (decreasing)
-        -- vars internally used vars, sorted decreasingly r4,r3,r2,r1
+        -- rnk: is the number of elements in ts, vars, roots
+        -- elements: of ts are sorted by main variable (decreasing)
+        -- ts: is a triangular system sorted like the variables, i.e.,
+        --  higest variable first (like in vars).
+        -- vars: internally used vars, sorted decreasingly r4,r3,r2,r1
         -- roots the values corresponding to the elements in vars
         --   together with a gamma value (root of the projected minimal
         --   polynomial)
-        -- xroots is a list of distict known roots of one of the polynomials
-        --   of ts.
+        -- xroots: is a list of distict known roots of one of the polynomials
+        --   of ts or negations of them. These elements need actually not be
+        --   roots, but they should have already occured during root finding
+        --   so that those elements can be tested before doing a real
+        --   via extendBy!. In fact, extendBy! relies upon the fact that
+        --   known elements have been tested.
         vars: List V,_
         ts: TS,_
         roots: List RREC,_
@@ -389,7 +395,7 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
         -- Note that we should store the positive I first in xroots.
         for rrec in state.xroots repeat -- already among xroots
             zero?((rrec.ee)^2+1) and zero?((r:=rrec.rr)^2+1) =>
-                t.4 := r
+                t.4 := r -- entry for 4th root of unity
                 return r
         extendBy!(monomial(1, 2)$SUP(%) + monomial(1, 0)$SUP(%))
 
@@ -398,8 +404,7 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
         zx: % := (- z)::Q::%
         e := z::E
         for rrec in state.xroots repeat
-            if (rrec.ee)^2=e then
-                if zero?((r := rrec.rr)^2 + zx) then return r
+            if (rrec.ee)^2=e and zero?((r := rrec.rr)^2 + zx) then return r
         extendBy!(monomial(1, 2)$SUP(%) + monomial(zx, 0)$SUP(%))
 
     sqrtOfRational(xq: Q): % ==
@@ -412,13 +417,14 @@ DynamicAlgebraicClosureField(): Exports == Implementation where
             i: % := imaginaryI()
             one? d and one? n => return i
 
-        zx: % := (- xq)::%
-        e := applyPhiK(-xq)
+        mxq: Q := - xq
+        zx: % := mxq :: %
+        e := applyPhiK mxq
         for rrec in state.xroots repeat -- check existing roots
             zero?((rrec.ee)^2+e) and zero?((r:=rrec.rr)^2+zx) => return i*r
 
         not(d < max()$SI and n < max()$SI) =>
-            extendBy!(monomial(1, 2)$SUP(%) - monomial(xq::%, 0)$SUP(%))
+            extendBy!(monomial(1, 2)$SUP(%) + monomial(zx, 0)$SUP(%))
 
         -- xq is sufficiently small
         z: % := 1
