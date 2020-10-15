@@ -178,17 +178,22 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
     -- field belonging to ts. Not that the highest variable is such a root.
 
     STATE ==> Record(
-        -- rnk is the number of elements in ts, vars, and powers.
+        -- rnk: is the number of elements in ts, vars, and powers.
         -- elements of ts are sorted by main variable (decreasing)
-        -- vars internally used vars, sorted decreasingly r4,r3,r2,r1
-        -- lvlsz corresponds to the number of elements of the field
+        -- vars: internally used vars, sorted decreasingly r4,r3,r2,r1
+        -- lvlsz: corresponds to the number of elements of the field
         --   after each extension. It is [s4, s3, s2, s1, s0] where
         --   s0 = size()$$, and s{i+1} = si^di where
         --   di = degree(getRelation(i)) and the i-th polynomial of
         --   the triangular set is considered as a univariate polynomial
         --   in its highest variable.
         --   Note that #lvlsz = 1+#ts.
-        -- powers.i contains [
+        -- powers: Is such that getPowers(i) (where  contains an array
+        --   arr such that arr.j is the precomputed value of si^(di+j) where
+        --   di = degree(getRelation(i)), j=0..d-1 so that in multiplying
+        --   two (representation) polynomials of elements of % (each
+        --   one has a degree < di), we only have to replace the
+        --   powers j >= di by the respective entries in arr(j-di).
         vars: List V,_
         lvlsz: List Z,_
         ts: List R,_
@@ -327,6 +332,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
             t := x; x := y; y := t
             vx := vy
             vy := mvar yy
+        --assert(vx <= vy)
         uy: SUP % := univar(yy, vy)
         vx < vy =>
             z: SUP % := monomial(x * leadingCoefficient(uy), degree uy)
@@ -361,7 +367,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         0
 
     inv(x: %): % ==
-        zero? x => error "cannot invert zero element"
+        zero? x => error "IFFTS: inv: cannot invert zero element"
         --assert(not zero? x)
         ground? xx => per((inv(ground xx)$K)::R)
         v: V := mvar xx
