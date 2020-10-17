@@ -76,8 +76,9 @@ IndexedVariable(v: String): Exports == Implementation where
     lookup: % -> P
       ++ lookup(x) returns the index of the variable.
     index: P -> %
-      ++ index(p) returns the variable v such that lookup(v) = p. It
-      ++ is an error to call index(p) for p > rank().
+      ++ index(p) returns the variable v such that lookup(v) = p.
+      ++ p > rank() all variables with numbers less than or equal to p
+      ++ will internally be created and rank() will be updated..
 
   Implementation ==> P add
     next: Reference Z := ref(1$Z)
@@ -90,7 +91,10 @@ IndexedVariable(v: String): Exports == Implementation where
     index(p: P): % ==
         z: Z := asZ p
         z < deref next => per z
-        error "No variable with that index is yet known."
+        -- Variable does not exist, create every variable with smaller
+        -- index.
+        while deref next < z repeat v: % := new()
+        return new()
     new(): % ==
 --        free next, syms
         m: Z := deref next
