@@ -35,7 +35,7 @@ The underlying theory of the programs is described in the above
 articles which are also available as RISC_ reports
 `15-14 <http://www.risc.jku.at/publications/download/risc_5069/zzz3.pdf>`_,
 `16-06 <http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf>`_,
-`18-03 <http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf>`_.
+`18-03 <http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf>`_.
 
 Further material is in the |git repository|.
 
