@@ -590,6 +590,161 @@ FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
 
 )endif
 
+)abbrev package TULS TruncatedUnivariateLaurentSeries
+++ Author: Ralf Hemmecke
+++ Description:
+++
+++ TruncatedUnivariateLaurentSeries is an implementation of Laurent
+++ series with finite precision, it is a pair of a Laurent series and
+++ the number of coefficients that are considered to be valid
+++ (precision). Such a series is a considered to be zero if all
+++ "valid" coefficients are zero. Two series are equal if they are
+++ equal up to the minimum of their respective validity index.
+TruncatedUnivariateLaurentSeries(R, var, cen) : Exports == Implementation where
+  R: Ring
+  var: Symbol
+  cen: R
+  ULS ==> UnivariateLaurentSeries(R, var, cen)
+  UTS ==> UnivariateTaylorSeries(R, var, cen)
+  Exports ==> Field with
+    truncate: (ULS, Z) -> %
+      ++ truncate(l, n) yields a truncated Laurent series at order n.
+    precision: % -> Z
+      ++ precision(x) returns the number of valid coefficient in
+      ++ coefficients(x).
+    truncatedSeries: % -> ULS
+      ++ truncatedSeries(x) returns the series truncated at the order
+      ++ given by the precision.
+    laurentRep: % -> ULS
+      ++ laurentRep(X) returns the internally used Laurent series
+      ++ representation of the x. That need not necessarily be a
+      ++ finite series.
+  Implementation ==> add
+    Rep ==> Record(ser: ULS, pr: Z) -- (series, precision)
+
+    pZERO ==> -1
+    pNONZEROCONSTANT ==> -2
+
+    truncate(l: ULS, n: Z): % == per [l, max(0, n - order(l, 0))]
+    precision(x: %): Z == rep(x).pr
+    laurentRep(x: %): ULS == rep(x).ser
+    truncatedSeries(x: %): ULS ==
+        l: ULS := laurentRep x
+        d: Z := degree l
+        truncate(l, precision x - d)
+
+    characteristic(): N == characteristic()$R
+    hashUpdate!(s: HashState, x: %): HashState == error "unimplemented"
+    coerce(x: %): OutputForm == truncatedSeries(x)::OutputForm
+    -- We treat 0 and 1 in a special way.
+    0: % == truncate(0$ULS, pZERO)
+    1: % == truncate(1$ULS, pNONZEROCONSTANT)
+
+    zero?(x: %): Boolean ==
+        precision x = pZERO => true  -- x=0
+        precision x = pNONZEROCONSTANT => false -- x=1
+        cs: Stream R := coefficients taylorRep laurentRep x
+        for i in 0.. precision x while not empty? cs repeat
+            not zero? frst cs => return false
+            cs := rest cs
+        true
+
+    one?(x: %): Boolean ==
+        precision x = pZERO => false -- x=0
+        precision x = pNONZEROCONSTANT and
+            one? coefficient(laurentRep x, 0) => true  -- x=1
+        not zero? order(laurentRep x, precision x) => false
+        cs: Stream R := coefficients taylorRep laurentRep x
+        empty? cs or not one? first cs => false
+        cs := rst cs
+        for i in 1 .. precision x while not empty? cs repeat
+            not zero? frst cs => return false
+            cs := rst cs
+        true
+
+    ((x: %) = (y: %)): Boolean ==
+        EQ(x, y)$Lisp => true
+        px := precision x;
+        py := precision y;
+        px = pZERO => zero? y
+        py = pZERO => zero? x
+        px = pNONZEROCONSTANT => one? y
+        py = pNONZEROCONSTANT => one? 1
+        order(laurentRep x, precision x) ~= order(laurentRep y, precision y) =>
+            false
+        zero?(x - y)
+
+    PLUSMINUS(x, y, op, zeroxres) ==>
+        (px: Z := precision x) = pZERO => zeroxres
+        (py: Z := precision y) = pZERO => x
+        lx: ULS := laurentRep x
+        ly: ULS := laurentRep y
+        dx: Z := degree lx
+        dy: Z := degree ly
+        px = pNONZEROCONSTANT =>
+            py = pNONZEROCONSTANT =>
+                lz := op(lx, ly)
+                zero? coefficient(lz, 0) => 0
+                per [lz, pNONZEROCONSTANT]
+            dy <= 0 =>
+                dy + py >= 0 => per [op(lx, ly), py]
+                -- outside of precision
+                y
+            -- dy > 0
+            per [op(lx, ly), dy + py]
+
+        py = pNONZEROCONSTANT =>
+            dx <= 0 =>
+                dx + px >= 0 => per [op(lx, ly), px]
+                -- outside of precision
+                x
+            -- dy > 0
+            per [op(lx, ly), dx + px]
+        -- here we have x and y non-constant series
+
+        p := min(px + dx, py + dy) - min(dx, dy)
+        per [op(lx, ly), p]
+
+    ((x: %) + (y: %)): % == PLUSMINUS(x, y, (_+),  y)
+    ((x: %) - (y: %)): % == PLUSMINUS(x, y, (_-), -y)
+
+    (-(x: %)): % ==
+        (px := precision x) = pZERO => x
+        per [- laurentRep x, px]
+
+    ((x: %) * (y: %)): % ==
+        (px: Z := precision x) = pZERO or (py: Z := precision y) = pZERO => 0
+        lx: ULS := laurentRep x
+        ly: ULS := laurentRep y
+        lz := lx * ly
+        px = pNONZEROCONSTANT =>
+            py = pNONZEROCONSTANT =>
+                zero? coefficient(lz, 0) => 0
+                per [lz, pNONZEROCONSTANT]
+            per [lz, py]
+        py = pNONZEROCONSTANT => per [lz, px]
+        per [lz, min(px, py)]
+
+    ((z: Z) * (y: %)): % == (z::Q) * y
+
+    ((x: %) ^ (n: P)): % == per [laurentRep(x)^n, precision x]
+    ((x: %) ^ (n: N)): % == per [laurentRep(x)^n, precision x]
+    if R has Field then
+        ((x: %) ^ (n: Z)): % == per [laurentRep(x)^n, precision x]
+        inv(x: %): % ==
+            (p := precision x) = pZERO => error "zero is not invertible"
+            per [inv laurentRep x, precision x]
+
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Compute Determinant by Leibniz formula}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
 )abbrev package LEIBDET DeterminantByLeibnizFormula
 ++ Author: Ralf Hemmecke
 ++ Description:
