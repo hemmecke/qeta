@@ -1,3 +1,8 @@
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+
 --setup
 R ==> UnivariatePolynomial('a, Z)
 K ==> Fraction R
@@ -7,11 +12,14 @@ QP ==> qPochhammer$QFunctions(K, L)
 
 -- We truncate at a sufficiently big index.
 -- qp computes
---   prod(1-c*q^r*(q^s)^i, i=0..n-1)    if n>=0
---   1/prod(1-c*q^r*(q^(-s)^i, i=1..-n) if n<0
+--   `prod(1-c*q^r*(q^s)^i, i=0..n-1) `   if `n>=0`
+-- and
+--   `1/prod(1-c*q^r*(q^(-s)^i, i=1..-n)` if `n<0`.
+--
 -- That's the naive definition of the q-Pochhammer symbol for the finite
 -- case as defined, for example, here:
 -- http://mathworld.wolfram.com/q-PochhammerSymbol.html
+
 qp(c: K, r: Z, s: Z, n: Z): L == (_
     l: L := 1$L;_
     a: K := -c;_
@@ -24,24 +32,28 @@ qp(c: K, r: Z, s: Z, n: Z): L == (_
     return inv l);
 
 O ==> OutputForm
-SKIP(r,s,n) ==> print(["====skip":: O, 1::O, [r, s ,n]::O]::O);_
+PRINT(x)==>void()
+SKIP(r,s,n) ==> PRINT(["====skip":: O, 1::O, [r, s ,n]::O]::O);
 
 -- Here we check whether the naive multiplication method to compute
--- (c*q^r, q^s)_n agrees with the one computed via qPochhammer$QFunctions(K, L).
+-- (c*q^r, q^s)_n agrees with the one computed via
+-- qPochhammer$QFunctions(K, L).
+
 aeqn(c, r, s, n) ==> (_
-    print(["========":: O, c::O, [r, s ,n]::O]::O);_
-    ll: L := QP(c, r, s, n); print(["comp"::O, ll::O]::O);_
-    lr: L := qp(c, r, s, n); print(["expt"::O, lr::O]::O);_
+    PRINT(["========":: O, c::O, [r, s ,n]::O]::O);_
+    ll: L := QP(c, r, s, n); PRINT(["comp"::O, ll::O]::O);_
+    lr: L := qp(c, r, s, n); PRINT(["expt"::O, lr::O]::O);_
     assertEquals(_
         rationalFunction(ll, 15),_
         rationalFunction(lr, 15)));
 
 -- Here we check the case n=infinity. We do this by computing the product
 -- for n=20 and then check only the terms up to degree 14.
+
 aeq(c, r, s) ==> (_
-    print(["::::::::":: O, c::O, [r, s]::O]::O);_
-    ll: L := QP(c, r, s);     print(["comp"::O, ll::O]::O);_
-    lr: L := qp(c, r, s, 20); print(["expt"::O, lr::O]::O);_
+    PRINT(["::::::::":: O, c::O, [r, s]::O]::O);_
+    ll: L := QP(c, r, s);     PRINT(["comp"::O, ll::O]::O);_
+    lr: L := qp(c, r, s, 20); PRINT(["expt"::O, lr::O]::O);_
     assertEquals(_
         rationalFunction(ll, 14),_
         rationalFunction(lr, 14)));
@@ -49,6 +61,7 @@ aeq(c, r, s) ==> (_
 -- Check finite case for a="the indeterminate of the coefficient ring".
 -- Check finite case for a=1, but note that this can be a problem
 -- for certain r and s if n<0.
+
 checknc(r, s, n) ==> (_
     aeqn(k, r, s, n);_
     n < 0 => (_
@@ -61,10 +74,12 @@ checknc(r, s, n) ==> (_
     aeqn(1, r, s, n));
 
 -- Check finite cases for different n.
+
 checkn(r, s) ==> for n in 0..3 repeat checknc(r, s, n)
 
 -- Check infinite case and all combinations of finite cases for the
 -- first few n.
+
 check(r, s) ==> (           checkn( r,  s);_
     if s > 0 then           checkn( r, -s);_
     if r > 0 then           checkn(-r,  s);_

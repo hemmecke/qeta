@@ -1,3 +1,9 @@
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+
+-- +
 --setup
 L ==> UnivariateLaurentSeries(Q,'q, 0)
 QFT ==> QFunctionTools(Q, L)
@@ -13,49 +19,48 @@ aeo(ll, lr, ord) ==> assertEquals(_
     rationalFunction(lr, ord));
 ae(ll, lr) ==> aeo(ll, lr, 20)
 --endsetup
+-- -
 
 --test:choose1
-l: L := ch(x+->2*x, ld, 0) -- choose every second, start with 0
-s: Stream Q := [2*n+1 for n in 0..]
+l := ch(x+->2*x, ld, 0) -- choose every second, start with 0
+s := [(2*n+1)::Q for n in 0..]
 ae(l, laurent(0, s)$L)
 --endtest
 
 --test:choose2
-l: L := ch(x+->5*x+4, ld, 0)
-s: Stream Q := [5*n for n in 1..]
+l := ch(x+->5*x+4, ld, 0)
+s := [(5*n)::Q for n in 1..]
 ae(l, laurent(0, s)$L)
 --endtest
 
 --test:choose3
-l: L := ch(x+->if even? x then 1 else 0, ld, 0)
+l := ch(x+->if even? x then 1 else 0, ld, 0)
 s: Stream Q := [(if even? n then 2 else 1) for n in 0..]
 ae(l, laurent(0, s)$L)
 --endtest
 
 --test:choose4
-l: L := ch(x+->3*x+8, ld, -2) -- choose every third, start with -2
-s: Stream Q := [3*n for n in 1..]
+l := ch(x+->3*x+8, ld, -2) -- choose every third, start with -2
+s := [(3*n)::Q for n in 1..]
 ae(l, laurent(-2, s)$L)
 --endtest
 
--------------------------------------------------------------------
-
 --test:chooseAndMap1
-l: L := cm(c+->1/c, x+->2*x+3, ld, -1) -- choose every second, start with 0
-s: Stream Q := [1/(2*n) for n in 1..]
+l := cm(c+->1/c, x+->2*x+3, ld, -1) -- choose every second, start with 0
+s := [1/(2*n) for n in 1..]
 ae(l, laurent(-1, s)$L)
 --endtest
 
 --test:chooseAndMap2
 -- Ramanujan Partition Congruence for 5
-l: L := cm(c+->c/5, n+->5*n+4, inv ef 1, 0)
-r: L := ef(5)^5/ef(1)^6
+l := cm(c+->c/5, n+->5*n+4, inv ef 1, 0)
+r := ef(5)^5/ef(1)^6
 ae(l, r)
 --endtest
 
 --test:chooseAndMap3
 -- Ramanujan Partition Congruence for 7
-l: L := cm(c+->c/7, n+->7*n+5, inv ef 1, 0)
-r: L := ef(7)^3/ef(1)^4 + 7*q*ef(7)^7/ef(1)^8
+l := cm(c+->c/7, n+->7*n+5, inv ef 1, 0)
+r := ef(7)^3/ef(1)^4 + 7*q*ef(7)^7/ef(1)^8
 ae(l, r)
 --endtest

@@ -1,39 +1,49 @@
--- This is a testfile for src/qetafun.spad.
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+
+-- This is a testfile for `src/qetafun.spad`.
 -- It is also connected to \cite{Hemmecke:DancingSambaRamanujan:2018}
 -- formulas (4), (5), (9).
--- sciencedirect.com/science/journal/07477171
--- risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+--
+-- https://www.sciencedirect.com/science/article/abs/pii/S0747717117300147
+-- and
+-- https://risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+--
 -- To each formula corresponds an expression in eta functions.
 -- Here we compute the expansion thereof not only at the cusp infinity
 -- (which is given by (4), (5), (7)), but also at the other cusps of
--- \Gamma_0(10), \Gamma_0(14), \Gamma_0(22).
--- The computation of such an expansion is given by F_{r,s,m,t} (see
--- documentation in src/qetafun.spad).
+-- $\Gamma_0(10)$, $\Gamma_0(14)$, $\Gamma_0(22)$.
+-- The computation of such an expansion is given by $F_{r,s,m,t}$ (see
+-- documentation in `src/qetafun.spad`).
 
 --setup
 C ==> Q
 LX ==> L1 CX
 --endsetup
 
+)set mess type on
+
 -------------------------------------------------------------------
 --test:Ramanujan5
-nn: P := 10;
-mm: P := 5; s: List Z := [-1, 0]
-m: P := 5;
-spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
+nn := 10 :: P;
+mm := 5 :: P; s := [-1, 0]$List(Z)
+m := 5 :: P;
+spitzen := cuspsOfGamma0(nn)$QAuxMEQ
 
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
+mmdivs := DIVISORS mm
+shat := sigmaInfinity(mmdivs, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
-t: N := first first orbs
+t := (first first orbs)::Z
 assertEquals(t, 4)
 
-r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
+r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
 assertEquals(r, [6,0,-5,0])
 
-minroot: P := 60
-yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t);
-xiord: P := minimalRootOfUnity yf
+minroot := 60 :: P
+yf := etaQuotient(nn, r, mm, s, m, t)$YMSETAQ;
+xiord := minimalRootOfUnity(yf)::P
 assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -49,29 +59,29 @@ assertTrue zero?(mf+minusfive)
 
 -------------------------------------------------------------------
 --test:Ramanujan7
-nn: P := 14;
-mm: P := 7; s: List Z := [-1, 0];
-m: P := 7;
-spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
+nn := 14 :: P;
+mm := 7 :: P; s := [-1, 0]$List(Z);
+m := 7 :: P;
+spitzen := cuspsOfGamma0(nn)$QAuxMEQ
 
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
+mmdivs := DIVISORS mm
+shat := sigmaInfinity(mmdivs, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
-t: N := first first orbs
+t := (first first orbs) :: N
 assertEquals(t, 5)
 
-r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
+r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools --: List Z
 assertEquals(r,  [7, 1, 0, - 7])
 
-minroot: P := 168
+minroot := 168 :: P
 
---TODO:
+-- TODO:
 -- c := etaCoFactor(m, mm, nn, t, s)$QEtaKolberg
 -- vector r - (c.particular - 20*c.basis.3)(1..4) -- [0,0,1,0]
 -- vector r = (c.particular + 2*c.basis.2 - 22*c.basis.3)(1..4) -- [8,0,-7,0]
 
-yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t);
-xiord: P := minimalRootOfUnity yf
+yf := etaQuotient(nn, r, mm, s, m, t)$YMSETAQ;
+xiord := minimalRootOfUnity yf
 assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -87,62 +97,70 @@ mf := modfunx yf;
 -- The first term on the rhs of (5) turns into the eta-quotient for mm=7
 -- given by the vector [4, -4].
 
-y1: YMSETAQ := etaQuotient(nn,[3,1, 3,-7],mm,[0,0],1,0);
-y2: YMSETAQ := etaQuotient(nn,[-1,1,7,-7],mm,[0,0],1,0);
+y1 := etaQuotient(nn,[3,1, 3,-7],mm,[0,0],1,0)$YMSETAQ;
+y2 := etaQuotient(nn,[-1,1,7,-7],mm,[0,0],1,0)$YMSETAQ;
 
 rhs := 7*modfunx(y1)+49*modfunx(y2)
 assertTrue(zero?(mf - rhs))
 --endtest
 
+-- +
 -------------------------------------------------------------------
 --test:Ramanujan7_4-4
+-------------------------------------------------------------------
+-- -
+
 -- Check that the sifted computation equals modular computation as prefactor.
-nn: P := 14;
-mm: P := 7;
+
+nn := 14 :: P;
+mm := 7 :: P;
 xiord := 168
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
 
-eqx1: XHashTable(Q, LX) := table()
-eqx2: XHashTable(Q, LX) := table()
-spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
-for cusp in spitzen repeat (_
-  w: P := WIDTH(nn, denom cusp);_
-  gamma: SL2Z := cuspToMatrix(nn, cusp)$QAuxMEQ;_
-  y1: YMSETAQG := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0,gamma);_
-  y2: YMSETAQG := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0,gamma);_
-  p1: SETAQG(Q, CX) := puiseux(y1, w);_
-  p2: SETAQG(Q, CX) := puiseux(y2, w);_
-  eqx1.cusp := expansion p1;_
-  eqx2.cusp := expansion p2_
-  )
+eqx1 := table()$XHashTable(Q, LX)
+eqx2 := table()$XHashTable(Q, LX)
+spitzen := cuspsOfGamma0(nn)$QAuxMEQ
+for cusp in spitzen repeat
+  w := WIDTH(nn, denom cusp) --: P
+  gamma := cuspToMatrix(nn, cusp)$QAuxMEQ --: SL2Z
+  y1 := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0,gamma)$YMSETAQG
+  y2 := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0,gamma)$YMSETAQG
+  p1 := puiseux(y1, w)$SETAQG(Q, CX)
+  p2 := puiseux(y2, w)$SETAQG(Q, CX)
+  eqx1.cusp := expansion p1
+  eqx2.cusp := expansion p2
 
 m1 := eqx1 :: MODFUNX(CX)
 m2 := eqx2 :: MODFUNX(CX)
 assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 --endtest
 
+-- +
 -------------------------------------------------------------------
 --test:Ramanujan11
-nn: P := 22;
+-------------------------------------------------------------------
+-- -
+
+nn := 22 :: P;
 --nn: P := 11; r: List Z := [0, 1]
 --nn: P := 22; r: List Z := [-10,10,-9,10]
-mm: P := 11; s: List Z := [-1, 0]
-m: P := 11;
-spitzen: List Q := cuspsOfGamma0(nn)$QAuxMEQ
+mm := 11 :: P; s := [-1, 0]$List(Z)
+m := 11 :: P;
+spitzen := cuspsOfGamma0(nn)$QAuxMEQ
 
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
+mmdivs := DIVISORS mm
+shat := sigmaInfinity(mmdivs, s) --: Z
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
-t: N := first first orbs
+t := (first first orbs)::N
 assertEquals(t, 6)
 
-r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
+r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools --: List Z
 assertEquals(r, [10, 2, 11, -22])
 
-minroot: P := 264;
-yf: SymbolicModularSiftedEtaQuotient := etaQuotient(nn, r, mm, s, m, t)
-xiord: P := minimalRootOfUnity yf
+minroot := 264 :: P;
+yf := etaQuotient(nn, r, mm, s, m, t)$YMSETAQ;
+xiord:= minimalRootOfUnity(yf) :: P
 assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -153,22 +171,23 @@ mf := expansions(f)::MODFUNX(CX)
 -- compare result with formula (9) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
 
--- The M_1, ..., M_7 from \cite{Hemmecke:DancingSambaRamanujan:2018}.
+-- The $M_1, \ldots, M_7$ from \cite{Hemmecke:DancingSambaRamanujan:2018}.
+
 nndivs := DIVISORS nn
-rgens: List List Z := [_
+rgens := [_
   [- 1,   1, 11, - 11],_
   [- 4,   8,  4,  - 8],_
   [  7, - 3,  3,  - 7],_
   [- 2,   6,  6, - 10],_
   [  0,   4,  8, - 12],_
   [  2,   2, 10, - 14],_
-  [  4,   0, 12, - 16]]
+  [  4,   0, 12, - 16]]$List(List Z)
 
 assertEquals(rgens, etaQuotientMonoidExponentVectors nn)
 
-ygens: List YMSETAQ := [etaQuotient(nn,r,mm,[0,0],1,0)$YMSETAQ for r in rgens];
-mgens: List MSETAQ(C, CX) := [x::MSETAQ(C, CX) for x in ygens];
-M: List MODFUNX CX := [expansions(x)::MODFUNX(CX) for x in mgens];
+ygens := [etaQuotient(nn,r,mm,[0,0],1,0)$YMSETAQ for r in rgens];
+mgens := [x::MSETAQ(C, CX) for x in ygens];
+M := [expansions(x)::MODFUNX(CX) for x in mgens];
 F ==> mf
 X n ==> n * 1$MODFUNX(CX)
 
@@ -202,7 +221,7 @@ assertTrue zero? ZERO
 
 
 
---TODO: Find a "better" r-vector that makes
+-- TODO: Find a "better" r-vector that makes
 -- sum(g for cusp in spitzen | (g := qetaGrade(F,cusp))>0) is minimal.
 
 -- v = p + x1*v1 + x2*v2 + x3*v3
@@ -217,7 +236,7 @@ VZ ==> Vector Z
 
 diophantineSystem(mat, vv)$SmithNormalForm(Z, VZ, VZ, MZ)
 
-------------
+-- ----------
 
 gamma := gammas.2
 w := width(nn, gamma(2,1))
@@ -231,7 +250,7 @@ yeq := [etaQuotient(nn, nndivs, r, gamma)$YEQG for gamma in gammas]
 vr := vector r
 yeq1 := [xExponent(y)$YEQG for y in yeq]
 
--------------------------------------------------------------------
+-- -----------------------------------------------------------------
 
 yeqlg := [[(etaQuotient(mm, mmdivs, s, m, t, lambda, gamma)$YSEQLG) for lambda in 0..10] for gamma in gammas]
 yeqlg1 := [[width(nn, (gamma$YSEQLG)(y)(2,1)) * qExponent(y)$YSEQLG for y in yeql] for yeql in yeqlg]

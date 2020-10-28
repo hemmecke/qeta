@@ -1,15 +1,7 @@
+-- -*- coding: utf-8 -*-
 -- Via jupytext this file can be shown as a jupyter notebook.
--- For that one would have to move or link it to a file with
--- extension ".input".
 
-)clear complete
-assertEquals(x,y)==>(x=y)@Boolean
-assertTrue x ==> x
-
-)cd /home/hemmecke/g/qeta/tmp
-)set mess type off
-)r projectlibs )quiet
-)r etamacros.input )quiet
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
 
 -- # Problem formulation
 
@@ -47,9 +39,6 @@ assertTrue x ==> x
 --                       divisible by 11 for every natural number $n$ where
 --                       $p(n)$ denotes the number of partitions of $n$.}
 --      }
---
--- in particlular, what we here call `algebraBasis` corresponds to the
--- `samba` algorithm from the article.
 --
 -- The article is also available as <a
 -- href="http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf">RISC
@@ -92,10 +81,10 @@ zqmap(x) ==> abmap(Z, Q, x)
 
 level := 22;
 
-ETAZ ==> EtaQuotient(Z, LZ)
 PolC ==> Pol C; LC ==> A1 C
 PolZ ==> Pol Z; LZ ==> A1 Z
 PolQ ==> Pol Q; LQ ==> A1 Q
+ETAZ ==> EtaQuotient(Z, LZ)
 
 smaller11(x: PolC, y: PolC):Boolean == _
   exponent leadingCoefficient x < exponent leadingCoefficient y
@@ -130,11 +119,11 @@ rgensExpected: List List Z := [_
 assertEquals(rgens, rgensExpected)
 
 divs := divisors(level)$IntegerNumberTheoryFunctions;
-etaquotgensZ: List EtaQuotient(Z, LZ) := [etaQuotient(divs, r) for r in rgens];
+etaquotgensZ := [etaQuotient(divs, r)$ETAZ for r in rgens]
 for x in etaquotgensZ repeat assertTrue(zero? prefactor x)
 
-eqgensZ: List LZ := [expansion x for x in etaquotgensZ];
-rfeqgensZ: List Fraction PolZ := [_
+eqgensZ := [expansion x for x in etaquotgensZ];
+rfeqgensZ := [_
   (3*q^5+2*q^4+2*q^3+q^2+q+1)/q^5,_
   (12*q^5+13*q^4+8*q^3+6*q^2+4*q+1)/q^5,_
   (-21*q^5+2*q^4-14*q^3+17*q^2-7*q+1)/q^5,_
@@ -144,13 +133,13 @@ rfeqgensZ: List Fraction PolZ := [_
   (9*q^8+8*q^7-10*q^6-4*q^5-5*q^4+8*q^3+2*q^2-4*q+1)/q^9];
 assertEquals([rationalFunction(x, 0) for x in eqgensZ], rfeqgensZ)
 
-eqgens: List L := [zcmap x for x in eqgensZ];
+eqgens := [zcmap x for x in eqgensZ];
 assertEquals([qetaGrade x for x in eqgens], [5, 5, 5, 6, 7, 8, 9])
 
 msyms := indexedSymbols("M", #eqgens)
 assertEquals(msyms, [M1, M2, M3, M4, M5, M6, M7])
 
-xeqgens: List X := [toX1(C, x, s) for x in eqgens for s in msyms];
+xeqgens := [toX1(C, x, s) for x in eqgens for s in msyms]; -- List X
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
@@ -158,17 +147,17 @@ xeqgens: List X := [toX1(C, x, s) for x in eqgens for s in msyms];
 -- 19-Feb-2020: Interestingly, it does not work for the element
 -- corresponding to [- 1, 1, 11, - 11].
 -- We choose the vector corresponding to [- 4, 8, 4, - 8].
-tex: X := xeqgens.2
+tex := xeqgens.2  -- X
 abex := samba(tex, xeqgens)$QXTOPSAMBA1(C)
 
 -- Due to another critical element selection strategy, the resulting
 -- polynomial is a bit different.
 
 bas := sort(smallerGrade?, basis abex);
-abexExpectedArticle: LPol C := [1/128*M7-5/128*M6+21/128*M5_
+abexExpectedArticle := [1/128*M7-5/128*M6+21/128*M5_
   +(-1/1024*M1+11*213/1024)*M4-85/128*M3+1/1024*M1^2+505/1024*M1,_
-  1/8*M4-1/8*M1, M3, M5, M6]
-abexExpected: LPol C := [3/8*M3+M2+11*(-1/8)*M1, 1/3*M2-1/3*M1, M4, M5, M6]
+  1/8*M4-1/8*M1, M3, M5, M6] -- LPol C
+abexExpected := [3/8*M3+M2+11*(-1/8)*M1, 1/3*M2-1/3*M1, M4, M5, M6] --: LPol C
 assertEquals([second(x)::PolC for x in bas], abexExpected)
 assertEquals(# bas, 5)
 
@@ -185,18 +174,17 @@ assertEquals(# bas, 5)
 --
 -- First we define the partion series.
 
-ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
+ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
 
 -- Then we select the sub-series given by the (11n+6)-th term.
 
-r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
-r11Expected: Fraction PolZ := _
+r11 := choose((n: Z): Z +-> 11*n+6, ps, 0) --: LZ
+r11Expected := _
   1188908248*q^10+342325709*q^9+92669720*q^8+23338469*q^7+5392783*q^6_
-  +1121505*q^5+204226*q^4+31185*q^3+3718*q^2+297*q+11
+  +1121505*q^5+204226*q^4+31185*q^3+3718*q^2+297*q+11 --: Fraction PolZ
 assertEquals(rationalFunction(r11, 10), r11Expected)
 
-pfZ := expansion(q24(13)$EtaQuotient(Z, LZ) *_
-       etaQuotient(divs, [10,2,11,-22])$EtaQuotient(Z, LZ))
+pfZ := expansion(q24(13)$ETAZ * etaQuotient(divs, [10,2,11,-22])$ETAZ)
 pfZExpected: PolZ := _
   -1079*q^14+715*q^13-2465*q^12-375*q^11+1211*q^10+352*q^9+11*q^8-726*q^7_
   +177*q^6+308*q^5-176*q^4-10*q^3+33*q^2-10*q+1
@@ -204,13 +192,14 @@ assertEquals(numer rationalFunction(pfZ, 0), pfZExpected)
 assertEquals(qetaGrade pfZ, 14)
 
 fe := pfZ * r11
-feExpected: PolZ := _
+feExpected := _
   1272909*q^14+944328*q^13+689282*q^12+485254*q^11+327415*q^10+214500*q^9+_
   135608*q^8+79211*q^7+44396*q^6+22286*q^5+10164*q^4+3696*q^3+1111*q^2+187*q+11
+  --: PolZ
 assertEquals(numer rationalFunction(fe, 0), feExpected)
 assertEquals(qetaGrade fe, 14)
 
-fex: X := toX1(C, zcmap fe, F)
+fex := toX1(C, zcmap fe, F) --: X
 
 
 -- Now we can reduce this element `fex` by the respective algebra
@@ -231,12 +220,12 @@ assertTrue(zero? rex)
 
 mrex := [(inv(unitPart leadingCoefficient x)::C)*x _
          for x in monomials(second(rex)::PolC)]
-mrexExpectedArticle: LPol C := _
+mrexExpectedArticle := _
   [F, 11*M1^2, 11*M1^3, 11*M1*M3, 11*M1^2*M4, 11*M1*M5, 11^2*M1, 11^2*M3,_
-  11^2*M1*M4, 11^2*M5, 11^2*M1*M6, 11^2*M6, 11^2*M7, 11^3, 11^3*M4]
-mrexExpected: LPol C := _
+  11^2*M1*M4, 11^2*M5, 11^2*M1*M6, 11^2*M6, 11^2*M7, 11^3, 11^3*M4]$LPol(C)
+mrexExpected := _
   [F, 11*M2^2, 11*M2^3, 11*M1*M2^2, 11*M2*M3, 11*M2^2*M3, 11*M2*M4, _
-  11*M2*M5, 11^2*M2, 11^2*M1*M2, 11^3*M3, 11^3*M4, 11^3*M5, 11^4, 11^5*M1]
+  11*M2*M5, 11^2*M2, 11^2*M1*M2, 11^3*M3, 11^3*M4, 11^3*M5, 11^4, 11^5*M1]$LPol(C)
 assertEquals(sort(smaller11, mrex), mrexExpected)
 
 -- Let's normalize the leading coefficient of $F$ to 1.
@@ -246,27 +235,27 @@ cfxq := coefficient(rexq, 'F, 1)
 lcfxq := leadingCoefficient cfxq
 lcfxqArticle := -1/1360
 assertEquals(lcfxq, 1)
-ilcfxq: C := (inv lcfxq)::C
+ilcfxq := (inv lcfxq)::C
 rxq := ilcfxq * rexq
-rxqExpectedArticle: PolC := _
-  11^2*(-3068)*M7+(11^2*(-3)*M1+11^2*(-4236))*M6+(11*(-285)*M1_
+rxqExpectedArticle := _
+  (11^2*(-3068)*M7+(11^2*(-3)*M1+11^2*(-4236))*M6+(11*(-285)*M1_
   +11^2*(-5972))*M5+(11*(-1/8)*M1^2+11^2*(-4497/8)*M1+11^3*(-789/2))*M4_
   +(11*(-1867)*M1+11^2*(-2476))*M3+11*1/8*M1^3+11*1011/8*M1^2_
-  +11^2*1647/2*M1+F+11^3*1360
-rxqExpected: PolC := 11*(
+  +11^2*1647/2*M1+F+11^3*1360)$PolC
+rxqExpected := (11*(
   (M2+11^2*7)*M5_
   +(3*M2+11^2*5)*M4_
   +((-1/4)*M2^2+(-245/8)*M2+11^2*(-1/8))*M3_
   +(-1)*M2^3+(5/4*M1+3)*M2^2_
   +(11*(-49/8)*M1+11*(-13))*M2_
   +11^4*1/8*M1+11^3*(-1))_
-  +F
+  +F)$PolC
 assertEquals(rxq, rxqExpected)
 
 -- Let's plug in the original $\eta$-quotients into `rxq`.
 
 
-sers: List L := cons(first fex,eqgens)
+sers := cons(first fex,eqgens) --: List L
 -- Note that after some changes to the sorting order in the
 -- implementation, the old Mi correspond to other new Mi.
 sersArticle:=cons(first fex, [eqgens.i for i in [3,2,4,1,5,6,7]])
@@ -319,7 +308,7 @@ assertTrue(modularConditions?(22,[10,2,11,-22],11,[-1,0],11,6))
 
 -- +
 -----------------------------------------------------------------
-----test:Klein
+--NONWORKING test:Klein
 -----------------------------------------------------------------
 -- -
 
@@ -375,11 +364,13 @@ assertTrue(modularConditions?(22,[10,2,11,-22],11,[-1,0],11,6))
 -- series into the localized coefficient domain and eventually creates
 -- an object that attaches the indeterminate $J$ to the series.
 
-i: L := kleinJInvariant()$QFunctions(C, L);
-j: X := toX1(C, i, J); first j, second j
+i := kleinJInvariant()$QFunctions(C, L) --: L
+j := toX1(C, i, J); --: X
+first j, second j
 
-ip: L := multiplyExponents(i, 11);
-jp: X := embed(ip, Jp); first jp, second jp
+ip := multiplyExponents(i, 11)$L;
+jp := embed(ip, Jp)$X;
+first jp, second jp
 
 -- ### The series $t$
 
@@ -387,18 +378,19 @@ jp: X := embed(ip, Jp); first jp, second jp
 -- \left(\frac{\eta(\tau)}{\eta(11\tau)}\right)^{12}$$ in terms of $q
 -- = \exp(2\pi i \tau)$.
 
-tz: LZ := expansion(etaQuotient([1,11],[12,-12])$ETAZ);
-tt: L := zcmap tz;
-t: X := toX1(C, tt, T); first t, second t
+tz := expansion(etaQuotient([1,11],[12,-12])$ETAZ); --: LZ
+tt := zcmap tz; --: L
+t := toX1(C, tt, T); --: X
+first t, second t
 
--- ## Construct elements suitable for the algebraBasis algorithm
+-- ## Construct elements suitable for the samba algorithm
 
-m1: X := t;
+m1 := t; --: X
 
 -- We need some auxiliary values $m_2$ and $m_3$.
 
-m2: X := j*t^3;
-m3: X := jp*t;
+m2 := j*t^3; --: X
+m3 := jp*t;  --: X
 
 -- We want yet another value to end up in an algebra basis of orders
 -- -2 and -3.
@@ -410,7 +402,7 @@ m3: X := jp*t;
 m := jp; mp := j;
 while (d := qetaGrade(m)$X) > 0 repeat (_
     c := qetaLeadingCoefficient(m)$X;_
-    e:N := d::N;_
+    e := d::N;_
     m := m-c*j^e;_
     mp := mp-c*jp^e)
 
@@ -450,7 +442,7 @@ assertEquals(# basis ab, 12)
 -- terms of J, Jp, T) of the algebra basis elements.
 
 pows := [[exponent(x) for x in coefficients second ab.n] for n in 2..#ab]
-powsExpected: List List N := [_
+powsExpected := [_
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,_
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0,_
    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,_
@@ -477,16 +469,16 @@ powsExpected: List List N := [_
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 2, 1, 0, 1, 0,_
    1, 1, 0, 0, 1, 1],_
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],_
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]$List(List N)
 assertEquals(pows, powsExpected)
 
 -- The (absolute value of the) order and the power of 11 in the
 -- leading coefficient of the elements in the algebra basis.
 
 gl := [[qetaGrade i, unitCanonical qetaLeadingCoefficient i] for i in basis ab]
-glExpected: List List C := [[7, 11^18], [8, 11^8], [9, 11^4], [11, 11^3],_
+glExpected := [[7, 11^18], [8, 11^8], [9, 11^4], [11, 11^3],_
   [12, 11^3], [13, 11^3], [14, 1], [16, 1], [17, 11^2], [18, 11],_
-  [11*2, 1], [23, 1]]
+  [11*2, 1], [23, 1]]$List(List C)
 assertEquals(gl, glExpected)
 
 -- We define
@@ -496,20 +488,20 @@ assertEquals(gl, glExpected)
 --
 -- Let's do this step by step. We take the partition series.
 
-ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
+ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
 
 -- We also take the sub-series given by the (11n+6)-th term of ps as
 -- defined earlier. The coefficients of the series `r11` we want to
 -- check for divisibility by 11.
 
-r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
+r11 := choose((n: Z): Z +-> 11*n+6, ps, 0) --: LZ
 
 -- Putting all together (except the factor $t^v$) gives the following expression.
 
 
-q: LZ := 'q :: LZ
-fz: LZ := q*eulerFunction(11)$QFunctions(Z, LZ)*r11;
-f: X := embed(zcmap fz, F)
+q := 'q :: LZ
+fz := q*eulerFunction(11)$QFunctions(Z, LZ)*r11; --: LZ
+f := embed(zcmap fz, F)$X
 
 
 -- Now let's check what the smallest $v>0$ is such that $U(v)=t^v f$
@@ -531,7 +523,7 @@ assertEquals(qreds, qredsExpected)
 -- coefficients are non-rational, but rather lie in
 -- $\mathbb{Z}_{(11)}$.
 
-assertFalse(zero? reduce(t^3*f, t, ab)$$QEtaTopReduction(C, X))
+assertFalse(zero? reduce(t^3*f, t, ab)$QTOPRED1(C))
 
 assertEquals(_
   [zero? reduce(t^v * f, t, ab)$QEtaTopReduction(C, X) for v in 1..10],_
@@ -695,29 +687,30 @@ assertTrue(zero? zq)
 
 LQ ==> A1 Q
 XQ ==> X1 Q
-i: LQ := kleinJInvariant()$QFunctions(Q, LQ);
-ip: LQ := multiplyExponents(i, 11);
-jq:  XQ := toX1(Q, i,  J);
-jpq: XQ := toX1(Q, ip, Jp);
-tz: LZ := expansion(etaQuotient([1,11],[12,-12])$ETAZ);
-tq:  XQ := toX1(Q, zqmap tz,  T);
-mqgens: List XQ := [tq, jq*tq^3, jpq*tq];
+i := kleinJInvariant()$QFunctions(Q, LQ); --: LQ
+ip := multiplyExponents(i, 11); --: LQ
+jq := toX1(Q, i,  J); --: XQ
+jpq := toX1(Q, ip, Jp); --: XQ
+tz := expansion(etaQuotient([1,11],[12,-12])$ETAZ); --: LZ
+tq := toX1(Q, zqmap tz,  T); --: XQ
+mqgens := [tq, jq*tq^3, jpq*tq]; --: List XQ
 abq := samba(tq, mqgens)$QXTOPSAMBA1(Q);
 assertEquals(# basis abq, 4)
 
 bas := sort(smallerGrade?, basis abq);
 degs := [[qetaGrade i, unitCanonical qetaLeadingCoefficient i] for i in bas]
-degsExpected: List List Q := [[7, 1], [8, 1], [9, 1], [11, 1]]
+degsExpected := [[7, 1], [8, 1], [9, 1], [11, 1]]$List(List Q)
 assertEquals(degs, degsExpected)
 
 
-ps: LQ := partitionSeries(1)$QFunctions(Q, LQ)
-r11: LQ := choose((n: Z): Z +-> 11*n+6, ps, 0)
-q: LQ := 'q :: LQ
-fq: XQ := embed(q*eulerFunction(11)$QFunctions(Q, LQ)*r11, F)
+ps := partitionSeries(1)$QFunctions(Q, LQ) --: LQ
+r11 := choose((n: Z): Z +-> 11*n+6, ps, 0) --: LQ
+q := 'q :: LQ
+fq := embed(q*eulerFunction(11)$QFunctions(Q, LQ)*r11, F)$XQ
 
 -- As we have seen above, $U(3)$ lies in the $\mathbb{Q}[t]$-module
 -- generated by 1 and the elements of the algebra basis.
+
 qreds := [zero? reduce(tq^v * fq, abq)$QXTOPRED1(Q) for v in 1..7]
 qredsExpected := [false, false, true, true, true, true, true]
 assertEquals(qreds, qredsExpected)
@@ -740,7 +733,7 @@ rq := inv(lcfq)*resq;
 denoms := [unitCanonical(denom(x)::C) for x in monomials rq]
 terms := [((inv(leadingCoefficient(x)))*x)::PolQ for x in monomials rq]
 monoms := [d*t for d in denoms for t in terms]
-monomsExpected: List PolC := [_
+monomsExpected := [_
   11^40*J^2*T^17, 11^40*J*T^17, 11^40*T^17, 11^40*J^2*T^16, 11^40*J*T^16,_
   11^40*T^16, 11^40*J*Jp*T^15, 11^40*Jp*T^15, 11^40*J^2*T^15, 11^40*J*T^15,_
   11^40*T^15, 11^40*J*Jp*T^14, 11^40*Jp*T^14, 11^40*J^2*T^14, 11^39*J*T^14,_
@@ -757,7 +750,7 @@ monomsExpected: List PolC := [_
   11^18*Jp*T^6, 11^19*J^2*T^6, 11^19*J*T^6, 11^18*T^6, 11^13*Jp^2*T^5,_
   11^13*J*Jp*T^5, 11^12*Jp*T^5, 11^13*J*T^5, 11^12*T^5, 11^7*Jp^2*T^4,_
   11^6*J*Jp*T^4, 11^7*Jp*T^4, 11^7*J*T^4, 11^7*T^4, 11*Jp^2*T^3,_
-  11*Jp*T^3, F*T^3, 11*T^3, Jp^2*T^2, Jp*T^2, T^2]
+  11*Jp*T^3, F*T^3, 11*T^3, Jp^2*T^2, Jp*T^2, T^2]$List(PolC)
 assertEquals(monoms, monomsExpected)
 
 -- +
@@ -780,22 +773,22 @@ assertEquals(monoms, monomsExpected)
 LZ ==> A1 Z
 XZ ==> X1 Z
 divs := divisors(level)$IntegerNumberTheoryFunctions;
-QEQMEV ==> QEtaQuotientExponentVectors4ti2
-eqmev ==> etaQuotientMonoidExponentVectors $ QEQMEV
+QEQEV ==> QEtaQuotientExponentVectors4ti2
+eqmev ==> etaQuotientMonoidExponentVectors $ QEQEV
 rgens := eqmev level;
-etaquotgensZ: List ETAZ := [etaQuotient(divs, r) for r in rgens];
-eqgensZ: List LZ := [expansion x for x in etaquotgensZ];
+etaquotgensZ := [etaQuotient(divs, r)$ETAZ for r in rgens]; --: List ETAZ
+eqgensZ := [expansion x for x in etaquotgensZ]; --: List LZ
 msyms := indexedSymbols("M", #rgens)
-xeqgensZ: List XZ := [toX1(Z, x, s) for x in eqgensZ for s in msyms]
+xeqgensZ := [toX1(Z, x, s) for x in eqgensZ for s in msyms] --: List XZ
 tez := xeqgensZ.3
 abez := samba(tez, xeqgensZ)$QXTOPSAMBA1(Z)
 assertEquals(# basis abez, 5)
 
 pfZ := expansion(q24(13)$ETAZ * etaQuotient(divs, [10,2,11,-22])$ETAZ);
-ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
-r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
+ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
+r11 := choose((n: Z): Z +-> 11*n+6, ps, 0) --: LZ
 fe := pfZ * r11
-fez: XZ := toX1(Z, fe, F)
+fez := toX1(Z, fe, F) --: XZ
 
 -- Interestingly, we have to multiply by 4, because otherwise the
 -- reduction would not return 0.
@@ -804,14 +797,14 @@ rez := reduce(4*fez, abez)$QXTOPRED1(Z)
 assertTrue(zero? rez)
 
 rz := (second rez)::PolZ;
-rzExpected: PolZ := 11*(_
+rzExpected := (11*(_
   ((-1800)*M3+11^2*(-14336))*M5_
   + ((-4696)*M3+11^2*53760)*M4_
   + (-4)*M3^3_
   + ((-12)*M2+16*M1+11*(-1139))*M3^2_
   + ((-74080)*M2+11*4603*M1+11*(-135680))*M3_
   + 11^2*84992*M2+11^3*(-28224)*M1+11^3*(-35840))_
-  + 4*F
+  + 4*F)$PolZ
 assertEquals(rz, rzExpected)
 
 lcrez := [leadingCoefficient x for x in monomials(rz-4*F)];
@@ -838,17 +831,17 @@ assertTrue(zero? ez)
 
 LZ ==> A1 Z
 X ==> X1 C
-ps: LZ := partitionSeries(1)$QFunctions(Z, LZ)
+ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
 r11: LZ := choose((n: Z): Z +-> 11*n+6, ps, 0)
-q: LZ := 'q :: LZ
-fz: LZ := q*eulerFunction(11)$QFunctions(Z, LZ)*r11;
-tz: LZ := expansion(etaQuotient([1,11],[12,-12])$ETAZ);
-fep: X := toX1(C, zcmap(tz*fz), Y)
-t: X := toX1(C, zcmap tz, T);
+q := 'q :: LZ
+fz := q*eulerFunction(11)$QFunctions(Z, LZ)*r11;--: LZ
+tz := expansion(etaQuotient([1,11],[12,-12])$ETAZ); --: LZ
+fep := toX1(C, zcmap(tz*fz), Y) --: X
+t := toX1(C, zcmap tz, T); --: X
 abp := samba(t, [fep])$QXTOPSAMBA1(C);
 assertEquals(# basis abp, 4)
 pols := sort((x,y)+->degree x < degree y, [(second x)::PolC for x in basis abp])
-polsExpected: List PolC := [Y, Y^2, Y^3, Y^4]
+polsExpected := [Y, Y^2, Y^3, Y^4]$List(PolC)
 assertEquals(pols, polsExpected)
 
 rep := reduce((fep)^5, abp)$QXTOPRED1(C)
@@ -856,12 +849,12 @@ assertTrue(zero? rep)
 
 
 pol := - (second rep)::PolC::PolQ::PolZ
-polExpected: PolZ := -Y^5_
+polExpected := (-Y^5_
   + 5*11^4*Y^4_
   + 11^4*(251*T-2*5*11^4)*Y^3_
   + 11^3*(4093*T^2+2*3*5*11^5*31*T+2*5*11^9)*Y^2_
   + 11^4*(3*41*T^3-2^2*3*11^3*1289*T^2+2*5*11^8*17*T-5*11^12)*Y_
-  + 11^5*(T+11^4)*(T^3+11^2*1321*T^2-3*7*11^7*T+11^11)
+  + 11^5*(T+11^4)*(T^3+11^2*1321*T^2-3*7*11^7*T+11^11))$PolZ
 
 assertEquals(pol, polExpected)
 
@@ -871,11 +864,11 @@ assertEquals(pol, polExpected)
 -- (Gainesville, March 17-21, 2016).
 -- Compare with formula (8) in \cite{Hemmecke::DancingSambaRamanujan:2018}.
 
+
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
-
 -- -
 
 -- # With $\mathbb{Z}_{(11)}$ and division by 11
@@ -890,12 +883,12 @@ assertEquals(pol, polExpected)
 -- Introduce vectors in the second component so that we can track
 -- whether the just reduced element is divisible by 11.
 
-nn: P := 22; -- level
-m: P := 11; mm: P := m; s: List Z := [-1, 0];
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
+nn := 22; -- level
+m := 11::P; mm := m; s := [-1, 0]$List(Z);
+mmdivs := DIVISORS(mm) --: List P
+shat := sigmaInfinity(mmdivs, s) --: Z
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
-t: N := first first orbs
+t := first(first orbs) :: N
 
 -- Let's compute the expansion (at $\infty$) of
 -- $$
@@ -943,10 +936,9 @@ xf := toX1(C, ff, F)
 -- of $R^\infty(22)$.
 
 nndivs := DIVISORS(nn);
-etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
 QEQEV ==> QEtaQuotientExponentVectors4ti2
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
-eqgens := [etaQ r for r in rgens];
+eqgens := [expansion etaQuotient(nndivs, r)$ETAZ for r in rgens]
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
