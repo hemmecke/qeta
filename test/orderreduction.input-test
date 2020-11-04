@@ -1,48 +1,63 @@
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+
 -- This is a testfile for methods of the article
 -- \cite{Paule+Radu:ProofWeierstrassGapTheorem:2019}.
 
--- Via jupytext this file can be shown as a jupyter notebook.
--- For that one would have to move or link it to a file with
--- extension ".input".
-
-)clear complete
-assertEquals(x,y)==>(x=y)@Boolean
-assertTrue x ==> x
-
-)cd /home/hemmecke/g/spadunit/build
-)library SPADZERO
-)library SPADUNIT
-
-)read loadlibs.input
-)cd /home/hemmecke/g/spadunit/build
-
-)set mess type off
-)r /home/hemmecke/g/qeta/tmp/etamacros.input )quiet
-
 --setup
-C ==> Q
-CX ==> DynamicAlgebraicAlgebraicNumber
-LZ  ==> LS Z
-LX ==> LS CX
+C ==> DynamicAlgebraicNumber
+CX ==> C
+LZ  ==> L1 Z
+LX ==> L1 CX
+TX ==> TruncatedUnivariateLaurentSeries(CX, 'q, 0)
 FX ==> FunctionalLaurentInverse(CX, 'q, 0)
 
 U(m, f) ==> choose((n: Z): Z +-> m*n, f, ceiling(order(f)/m))$QFunctionTools(CX, LX)
 U2 f ==> U(2, f)
-equot(n, l) ==> (retract etaQuotient(divisors n, l)$ETA(CX))::LX
+YEQ1C(r) ==> etaQuotient(level, r)$ETA(C)
+EQA1C(r) ==> expansion YEQ1C r -- expansion at infinity (element of A1(C)
+EQL1C(r) ==> EQA1C(r)::LX
+
+-- determinantTruncationOrder(mat) computes the highest order of an
+-- entry of mat for the correct computation of the principal part of
+-- the determinant of mat.
+-- This function is needed since for choosing the pivot in the Gaussian
+-- algorithm that underlies the determinant computation.
+truncationOrder(mat: Matrix LX): Z ==
+  truncOrdRow := truncOrdCol := 0
+  for i in 1..grdt-1 repeat
+    tOrdRow := tOrdCol := 0
+    for j in 1..grdt-1 repeat
+      tOrdRow := min(tOrdRow, order mat(i,j))
+      tOrdCol := min(tOrdCol, order mat(j,i))
+    truncOrdRow := truncOrdRow + tOrdRow
+    truncOrdCol := truncOrdCol + tOrdCol
+    print([truncOrdRow, truncOrdCol])
+  return -max(truncOrdRow, truncOrdCol)
+
+
+
 --endsetup
+
+)set message type on
+)set output algebra on
+)set output formatted off
 
 -------------------------------------------------------------------
 --test:ordpoly-z11
 -- See \cite{Paule+Radu:ProofWeierstrassGapTheorem:2019}.
+-- Example 5.4 and 5.5
 ell: Z := 11
-nn: P := 2*ell;
+level: P := 2*ell;
 expo: Z := 24 exquo gcd(ell-1, 12)
-t := equot(ell, [expo, -expo]) -- = 1/z_{11}
+t := EQL1C [expo, 0, -expo, 0] -- = 1/z_{11}
 grdt := - order t
-f2 := equot(nn, [1, 3, -3, -1]) -- in M_{\setZ}(22) \cite[p.~4]{...}
-f3 := equot(nn, [3, 1, -1, -3]) -- in M_{\setZ}(22) \cite[p.~4]{...}
+f2 := EQL1C [1, 3, -3, -1] -- in M_{\setZ}(22) \cite[p.~4]{...}
+f3 := EQL1C [3, 1, -1, -3] -- in M_{\setZ}(22) \cite[p.~4]{...}
 
--- See \cite[p.~5]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+-- See \cite[p.~967]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
 
 F2 := f2 - U2 f3
 F3 := f3 - 4*U2 f2
@@ -63,13 +78,22 @@ vecs := [vector [f(w(zeta^i*q)) for f in F] - vec for i in 1..grdt-1];
 mat := matrix [members v for v in vecs];
 nrows mat, ncols mat
 
-dt := determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX)
-ordser := U(grdt, dt^2)
-cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)];
+--dt := determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX)
+--ordser := U(grdt, dt^2)
+
+o := 2*truncationOrder(mat)
+omat := matrix [[order(mat(i,j),   o) for j in 1..grdt-1] for i in 1..grdt-1]
+tmat := matrix [[truncate(mat(i,j),o)@TX for j in 1..grdt-1] for i in 1..grdt-1]
+dtt := determinant(tmat)
+dtt2 := laurentRep(dtt^2)
+tordser := U(grdt, truncate(dtt2, 10))
+coefficients taylorRep tordser
+
+cs := [coefficient(tordser, -i) for i in 0 .. -order(tordser,0)];
 mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
 pol := reduce(_+, mons)
 
--- See \cite[p.~13]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+-- See \cite[p.~975, Example 5.4]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
 
 x := monomial(1,1)$UP('x, Q)
 polPaper := x^4 * (5^5*11^6 - 2*3^2*439081*x + 5^5*x^2)
@@ -77,33 +101,36 @@ assertEquals(pol, polPaper)
 
 
 F := [F2, F4^2, F4, F6];
-vec := vector [f(w) for f in F]
+vec2 := vector [f(w) for f in F]
 vecs := [vector [f(w(zeta^i*q)) for f in F] - vec2 for i in 1..grdt-1];
 mat := matrix [members v for v in vecs];
 nrows mat, ncols mat
 
-dt := determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX)
+-- dt := determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX)
+dt := determinant(mat)
 ordser := U(grdt, dt^2)
 cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)];
 mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
 pol2 := reduce(_+, mons)
 
--- See \cite[p.~13]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
+-- See \cite[p.~975, Example 5.5]{Paule+Radu:ProofWeierstrassGapTheorem:2019}
 
 assertEquals(pol2, (11^3 + x)^2 * pol)
 
---endtest
+-- endtest
 
--------------------------------------------------------------------
+-- -----------------------------------------------------------------
+
 --test:ordpoly-etaquot22
+
 -- The generators of the $\eta$-quotients of level 22 are given by
 -- these exponents for the $\eta$ functions (with arguments being the
 -- divisors of 22). The variable `rgens` corresponds to the generators
 -- of $R^\infty(22)$.
 
-nn := 22
-sgens := etaQuotientMonoidExponentVectors nn
-egens := [equot(nn, s) for s in sgens];
+level := 22
+sgens := etaQuotientMonoidExponentVectors level
+egens := [EQA1C s for s in sgens];
 msyms := indexedSymbols("M", #egens)
 xgens := [toX1(CX, x, s) for x in egens for s in msyms];
 tex := xgens.1
@@ -112,40 +139,56 @@ bas := sort(smallerGrade?, basis abex);
 assertEquals([qetaGrade x for x in bas], [3, 4, 6, 7])
 
 grdt := qetaGrade tex
-t := (first tex)::F1(CX)::LX
+t := (first tex)::A1(CX)::LX
 w := functionalInverse(t)
 zeta := primitiveNthRootOfUnity(grdt)
 q := monomial(1,1)$LX
-F := [(first x)::F1(CX)::LX for x in bas]
+F := [(first x)::A1(CX)::LX for x in bas]
 vec := vector [f(w) for f in F];
 vecs := [vector [f(w(zeta^i*q)) for f in F] - vec for i in 1..grdt-1];
 mat := matrix [members v for v in vecs];
 nrows mat, ncols mat
-dt := (determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX))
-ordser := U(grdt, dt^2);
-cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)]
+
+
+o := 2*truncationOrder(mat)
+omat := matrix [[order(mat(i,j),   o) for j in 1..grdt-1] for i in 1..grdt-1]
+tmat := matrix [[truncate(mat(i,j),o)@TX for j in 1..grdt-1] for i in 1..grdt-1]
+dtt := determinant(tmat)
+--dt := determinant(mat)
+--dt := (determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX))
+dtt2 := laurentRep(dtt^2)
+tordser := U(grdt, truncate(dtt2, 10))
+coefficients taylorRep tordser
+
+
+
+--ordser := U(grdt, dt^2);
+cs := reverse! [coefficient(tordser, i) for i in order(tordser,0) .. 0]
 mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
 pol := reduce(_+, mons)
 factor pol
 px := pol::UP('x, CX)
 factor px
 
+-- This polynomial cannot be compared to the polynomial (5.4) in
+-- \cite[p.~975, Example 5.4]{Paule+Radu:ProofWeierstrassGapTheorem:2019}.
+
 x := monomial(1,1)$UP('x, CX)
 polPaper := x^4 * (5^5*11^6 - 2*3^2*439081*x + 5^5*x^2)
+pol
 
 --endtest
 
--------------------------------------------------------------------
---test:ordpoly-etaquot121
+-- -----------------------------------------------------------------
+-- test:ordpoly-etaquot121
 -- The generators of the $\eta$-quotients of level 22 are given by
 -- these exponents for the $\eta$ functions (with arguments being the
 -- divisors of 22). The variable `rgens` corresponds to the generators
 -- of $R^\infty(22)$.
 
-nn := 121
-sgens := etaQuotientMonoidExponentVectors nn
-egens := [equot(nn, s) for s in sgens];
-msyms := indexedSymbols("M", #egens)
+level := 121
+sgens := etaQuotientMonoidExponentVectors level
+egens := [EQA1C s for s in sgens];
 xgens := [toX1(CX, x, s) for x in egens for s in msyms];
 tex := xgens.1
 abex := samba(tex, xgens)$QXTOPSAMBA1(CX)
@@ -153,16 +196,26 @@ bas := sort(smallerGrade?, basis abex);
 assertEquals([qetaGrade x for x in bas], [49, 98, 147, 196])
 
 grdt := qetaGrade tex
-t := (first tex)::F1(CX)::LX
+t := (first tex)::A1(CX)::LX
 w := functionalInverse(t)
 zeta := primitiveNthRootOfUnity(grdt)
 q := monomial(1,1)$LX
-F := [(first x)::F1(CX)::LX for x in bas]
+F := [(first x)::A1(CX)::LX for x in bas]
 vec := vector [f(w) for f in F];
 vecs := [vector [f(w(zeta^i*q)) for f in F] - vec for i in 1..grdt-1];
 mat := matrix [members v for v in vecs];
 nrows mat, ncols mat
-dt := (determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX))
+
+o := 2*truncationOrder(mat)
+omat := matrix [[order(mat(i,j),   o) for j in 1..grdt-1] for i in 1..grdt-1]
+tmat := matrix [[truncate(mat(i,j),o)@TX for j in 1..grdt-1] for i in 1..grdt-1]
+dtt := determinant(tmat)
+--dt := determinant(mat)
+--dt := (determinantLeibniz(mat)$DeterminantByLeibnizFormula(LX))
+dtt2 := laurentRep(dtt^2)
+tordser := U(grdt, truncate(dtt2, 10))
+coefficients taylorRep tordser
+
 ordser := U(grdt, dt^2);
 cs := [coefficient(ordser, -i) for i in 0 .. -order(ordser,0)]
 mons := [monomial(retract(c)@Q, i)$UP('x,Q) for c in cs for i in 0..100];
@@ -174,4 +227,4 @@ factor px
 x := monomial(1,1)$UP('x, CX)
 polPaper := x^4 * (5^5*11^6 - 2*3^2*439081*x + 5^5*x^2)
 
---endtest
+-- endtest
