@@ -52,19 +52,60 @@ xdbgPrint(x,y) ==> rhx:="42"
 We try to find all missing parts to find a Ramanujan-Kolberg relation
 as defined in \cite[p.~227]{Radu:RamanujanKolberg:2015}.
 
-Assume that we are given a series
+Let $M$ be a positive integer and $s=(s_\delta)_{\delta|M}$ be a sequence of integers indexed by the positive divisors of $M$. Define a sequence $a(n)$ by
 \begin{gather*}
   \sum_{n=0}^\infty a(n) q^n
   =
-  \prod_{\delta|M}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+  \prod_{\delta|M} \prod_{n=1}^\infty (1-q^{\delta n})^{s_\delta}
+  =
+  \prod_{\delta|M} (q^\delta; q^\delta)_\infty^{s_\delta}
 \end{gather*}
-and want to express $\sum_{n=0}^\infty a(mn+t) q^n$ where $m$ and $M$
-are a positive integers with $m|M$, $r\in R(M)$, and
-$t\in\Set{0,\ldots,m-1}$ as a $\setQ$-linear combination of
-eta-quotients and (maybe) an appropriate power of
-$q^{1/24}=\unityPower{\frac{\tau}{24}}$.
+where
+\begin{gather*}
+(u; q)_\infty = \prod_{n=0}^\infty (1-uq^n)
+\end{gather*}
+is the $q$-Pochhammer symbol.
+
+Given $N$, $m$, and $t \in \{0,\ldots,m-1\}$, we wabt to compute a
+sequence $r=(r_\delta)_{\delta|N}$ of integers, a set
+$\mathcal{O}_{r,m,t}\subseteq\{0,\ldots,m=1\}$, $\eta$-quotients
+$b_i \in M^\infty(N)$, and numbers $c_i\in \mathbb{Q}$ uch that
+\begin{gather*}
+q^\alpha \prod_{\delta|N} \prod_{n=1}^\infty (1-q^{\delta n})^{r_\delta}
+\times
+\prod_{t'\in \mathcal{O}(r,m,t)} \sum_{n=0}^\infty a(mn+t')q^n
+=
+\sum_{i=1}^k c_i b_i
+\end{gather*}
+where
+\begin{gather*}
+\alpha = \sum_{\delta|N} \frac{\delta r_\delta}{24}
+         +
+         \sum_{t'\in \mathcal{O}(r,m,t)}
+             \frac{24 t' + \sum_{\delta|N} \delta s_\delta}{24m}
+\end{gather*}
+and $M^\infty(N)$ is the set of modular functions on $\Gamma_0(N)$
+with a pole at most at infinity.
+
+Each of the $\eta$-quotients is given through a sequence
+$r^{(i)}=\left(r^{(i)}_\delta\right)_{\delta|N}$ of integers in its
+$q$-expansion at infinity.
+\begin{gather*}
+  b_i
+  = q^{\beta_i} \prod_{\delta|N}
+                      \prod_{n=1}^\infty (1-q^{\delta n})^{r^{(i)}_\delta}
+  =
+  q^{\beta_i} \prod_{\delta|N} (q^\delta, q^\delta)_\infty^{r^{(i)}_\delta}.
+\end{gather*}
+with
+\begin{gather*}
+  \beta_i = \sum_{\delta|N} \frac{\delta r^{(i)}_\delta}{24}
+\end{gather*}
+
 
 For mathematical background see \PathName{qetafun.spad}.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -161,6 +202,93 @@ provied another domain that computes with the respective extension of
 the coefficient domain.
 
 )endif
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Package QEtaRamanujanKolberg}
+\label{sec:QEtaRamanujanKolberg}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+)endif
+
+)abbrev package QETARK QEtaRamanujanKolberg
+QEtaRamanujanKolberg(C): Exports == Implementation where
+  C: Join(Algebra Q, EuclideanDomain) -- basic coefficient domain
+  Exports ==> with
+    findIdentity: (P, P, List Z, P, N) -> RELTYPE
+      ++ findIdentity(nn, mm, s, m, t) returns all date for a
+      ++ Ramanujan-Kolberg identity.
+    findRelation: YMSETAQG -> RELTYPE
+  Implementation ==> add
+    findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): RELTYPE ==
+        import from QEtaModularFunctionTools
+        r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)
+
+        cusp: Q := 1/nn -- cusp corresponding to infinity
+        -- the matrix corresponding to cusp
+        gamma := cuspToMatrix(nn, cusp)$QAuxiliaryModularEtaQuotientPackage
+        y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
+        -- The variable y contains all the data we need.
+        -- The orbit of t is:
+        orb: List N := orbit orbitProduct y
+        alpha: Z := 0 --TODO
+
+
+
+        to compute
+        -- the expansion of the modular function
+
+
+        xiord: P := minimalRootOfUnity y
+        xiord = 2 => findRelation y
+
+        minrootpol: SUP C := MINROOTPOL(C, xiord)
+        dbgPrint("xiord", xiord)
+        dbgPrint("minrootpol", minrootpol)
+        CX ==> SimpleAlgebraicExtension(C, SUP C, minrootpol)
+        findRelation(y, xiord, generator()$CX)$QEtaRamanujanKolbergAux(C, CX)
+
+    findRelation(y: YMSETAQG): RELTYPE ==
+        xiord: P := 2
+        xi: C := -1
+        cofac: SymbolicSiftedEtaQuotientGamma := cofactor y
+        nn: P := level cofac
+        w: P := WIDTH(nn, nn) -- the width of the cusp infinity
+        p := puiseux(y, w)$SiftedEtaQuotientGamma(C, xiord, C, xi, A1 C)
+        f := expansion(p)$SiftedEtaQuotientGamma(C, xiord, C, xi, A1 C)
+        xf: X1(C) := toX1(C, f, "F"::Symbol::Pol(C))
+
+        rgens: List List Z := etaQuotientMonoidExponentVectors(nn)$QEQEV
+        nndivs: List Z := [delta::Z for delta in divisors cofac]
+        eqgens: List ETA(C) := [etaQuotient(nndivs, r)$ETA(C) for r in rgens]
+        egens: List A1(C) := [expansion e for e in eqgens]
+        msyms: List Symbol := indexedSymbols("M", #rgens)$QAuxiliaryTools
+        mxgens: List X1 C := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];
+        xgens: List X1 C := cons(toX1(C, egens.1, "T"::Symbol::Pol(C)), rest mxgens);
+        import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
+        xab: QXAB1(C) := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
+
+        xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
+        not zero? xz => error "no relation found"
+
+        [y, rgens, second(xz)::Pol(C)]
+
+
+
+-------------------------------------------------------------------
+)fin
+-- The stuff below compiles, but does not work, see
+-- https://groups.google.com/d/msg/fricas-devel/xlHMEC_j_OY/teirAAbmBAAJ
+-- for why the code is postponed.
+-------------------------------------------------------------------
 
 
 )abbrev package QETARKA QEtaRamanujanKolbergAux
