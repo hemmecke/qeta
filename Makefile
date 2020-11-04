@@ -92,7 +92,9 @@ SPADFILES=4ti2 qfunct cachedpow \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
   qetapowersamba qetakolberg qetafun \
-  ivar iffts ffalgclos algclos newtonpuiseux
+  ivar iffts ffalgclos algclos newtonpuiseux \
+  qetark
+
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
 PREREQS_SAGE=etagb.sage
