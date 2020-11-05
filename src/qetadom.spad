@@ -126,12 +126,6 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
       ++ eta(n) returns q^(n/24)*\prod_{k=1}^\infty (1-q^{kn}).
     q24: Z -> %
       ++ q24(n) returns q^(n/24).
-    coerce: C -> %
-      ++ coerce(c) returns an element of this domain corresponding to c.
-    _*: (C, %) -> %
-      ++ This domain behaves like the multiplicative part of a module.
-    _*: (%, C) -> %
-      ++ This domain behaves like the multiplicative part of a module.
     prefactor: % -> N
       ++ prefactor(x) returns the exponent times 24 of the fractional q
       ++ power of x where q is the variable of L. The returned value is
@@ -185,7 +179,6 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
     prefactor(x: %): N == rep(x).fractExpo
     seriesPart(x: %): L == rep(x).ser
     1: % == new(0, 1$L)
-    coerce(c: C): % == new(0, c::L)
     expansion(x: %): L ==
         e: Z := prefactor x
         not zero? e => error "eta-quotient has fractional expansion"
@@ -197,8 +190,6 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         e > 0 => expt(eta n, qcoerce(e)@PositiveInteger)
         inv(expt(eta n, qcoerce(-e)@PositiveInteger))
     q24(n: Z): % == new(n, 1$L)
-    ((c: C) * (x: %)):% == new(prefactor x, c * seriesPart x)
-    ((x: %) * (c: C)):% == c * x
     ((x: %) * (y: %)): % ==
         new(prefactor x + prefactor y, seriesPart x * seriesPart y)
     inv(x: %): % == new(- prefactor x, recip(seriesPart x)::L)
@@ -228,6 +219,11 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
     idx(x: Symbol): P ==
         s: String := delete(string x, 1)
         qcoerce(integer(parse(s)@InputForm)$InputForm)@P
+
+    -- toEtaMonomial and polynomialToEta are only service functions
+    -- and should actually live somewhere else, because they break the
+    -- assumption that the series part is a Taylor series with constant
+    -- coefficient 1.
     toEtaMonomial(m: Polynomial C): % ==
         --assert(not zero? m)
         --assert(zero? reductum m)
@@ -241,7 +237,7 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         new(prefactor x, seriesPart x + seriesPart y)
     polynomialToEta(p: Polynomial C): % ==
         --assert(all variables are of the form En where n is some integer)
-        zero? p => (0$C)::%
+        zero? p => new(0, 0$L)
         -- To get the correct prefactor we cannot start with r:=0.
         r: % := toEtaMonomial leadingMonomial p
         while not zero?(p := reductum p) repeat
