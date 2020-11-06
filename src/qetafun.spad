@@ -35,6 +35,11 @@ xdbgPrint(x,y) ==> rhx:="42"
 \newcommand{\divisorsum}[2][\delta]{\sum_{\divides{#1}{#2}}}
 \newcommand{\divisorprod}[2][\delta]{\prod_{\divides{#1}{#2}}}
 
+% The q-Pochhammer symbol
+% https://en.wikipedia.org/wiki/Q-Pochhammer_symbol (for n=\infty)
+\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}
+\newcommand{\eulerFunction}[1]{\qPochhammer{q^{#1}}{q^{#1}}}
+
 \newcommand{\setS}{\mathbb{S}}
 \newcommand{\modularOrbit}[1]{\mathcal{O}_{#1}}
 \DeclareMathOperator{\trace}{tr}
@@ -110,11 +115,18 @@ the complex upper half-plane.
 Let
 \begin{gather}\label{eq:eta-expansion}
   \defineNotation[eta]{\eta}: \setH \to \setC, \quad
-  \tau \mapsto \unityPower{\frac{\tau}{24}}
-  \prod_{n=1}^{\infty}(1-q^n)
+  \tau \mapsto \unityPower{\frac{\tau}{24}} \prod_{n=1}^{\infty}(1-q^n)
+  =
+  \unityPower{\frac{\tau}{24}} \eulerFunction{}
 \end{gather}
 with $\defineNotation[q]{q} = \unityPower{\tau}$
 denote the Dedekind eta function.
+
+Note that $\qPochhammer{a}{q} = \prod_{n=0}^{\infty}(1-aq^n)$ denotes
+the $q$-Pochhammer symbol. Thus, we have
+\begin{gather*}
+  \eta(\tau) = \unityPower{\frac{\tau}{24}} \eulerFunction{}
+\end{gather*}
 
 In the following $\defineNotation[N]{N}$ denotes a positive integer
 and $1=\delta_1<\delta_2\dots<\delta_{\defineNotation[n]{n}}=N$ the
@@ -143,9 +155,19 @@ For $r\in R(N)$ let
 \begin{align}
   \defineNotation[g-r-tau]{g_r(\tau)}
   &:=
-  \divisorprod{N} \eta(\delta\tau)^{r_\delta}.
+    \divisorprod{N} \eta(\delta\tau)^{r_\delta}
+    =
+    q^{{\sumdelta{r}}/{24}}
+      \divisorprod{N} \eulerFunction{\delta}^{r_\delta}
   \label{eq:g_r(tau)}
 \end{align}
+where we have abbreviated
+\begin{gather}
+  \sumdelta{r} := \divisorsum{M} \delta r_\delta.
+\end{gather}
+
+
+
 
 By $\defineNotation[R*N]{R^*(N)}$ we denote the subset of all tuples
 $r=(r_\delta)_{\delta\in\Delta}$ of $R(N)$ that fulfil the following
@@ -513,6 +535,9 @@ $\defineNotation[kappa-delta]{\kappa_\delta} \in \Set{0,\ldots,23}$ is
 defined by
 $\unityPower{\frac{\kappa_\delta}{24}} := \upsilon(\gamma_\delta)$.
 
+Note that for
+$\gamma=\left(\begin{smallmatrix}1&0\\0&1\end{smallmatrix}\right)$ we
+have $\kappa_\delta=0$ for any $\delta$.
 
 
 For the following definition see \cite[Lemma~2.37]{Radu:PhD:2010} and
@@ -530,6 +555,11 @@ For the following definition see \cite[Lemma~2.37]{Radu:PhD:2010} and
   is called the \emph{width of $\gamma$ with respect to $\Gamma_0(N)$}.
 \end{Definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Note that for
+$\gamma=\left(\begin{smallmatrix}1&0\\0&1\end{smallmatrix}\right)$ we
+have $w_\gamma=1$.
+
 
 For
 $\gamma =
@@ -567,7 +597,10 @@ for
   \frac{\delta b d_\delta-d b_\delta}{\delta/h_\delta}.
   \label{eq:uv_delta}
 \end{gather}
-In particular, if $c=0$, then $a=d=1$, $w_\gamma=1$,
+Note that for
+$\gamma=\left(\begin{smallmatrix}1&0\\0&1\end{smallmatrix}\right)$,
+i.e., if $c=0$, then $a=d=1$ and
+$w_\gamma=1$,
 $h_\delta=\delta$, $u_\delta=e_\delta=\delta$, $v_\delta=0$.
 
 %
@@ -720,7 +753,12 @@ From \eqref{eq:eta_delta(gamma*tau)-expansion} follows
     \divisorprod{N} \prod_{n=1}^{\infty}(1-q_\delta^n)^{r_\delta}.
   \label{eq:g_r(gamma*tau)}
 \end{align}
-%
+
+Note that for
+$\gamma=\left(\begin{smallmatrix}1&0\\0&1\end{smallmatrix}\right)$ the
+first three products are equal to 1.
+
+
 If $r\in R^*(N)$, then $g_r$ is a modular function on $\Gamma_0(N)$.
 Because of \eqref{eq:sum=0}, $q^{u_\delta}=x^{e_\delta}$,
 $e_\delta=a_N(c, \delta)$, and \eqref{eq:order-r}, we can write
@@ -896,7 +934,9 @@ Let
   =
   \sum_{n=0}^\infty a(n) q^n
   =
-  \divisorprod{M}\prod_{n=0}^\infty(1-q^{\delta n})^{s_\delta}
+  \divisorprod{M}\prod_{n=1}^\infty(1-q^{\delta n})^{s_\delta}
+  =
+  \divisorprod{M}\eulerFunction{\delta}^{s_\delta}
   =
   \unityPower{-\frac{\tau \, \sumdelta{s}}{24}} g_s(\tau)
 \end{gather*}
@@ -947,8 +987,7 @@ then
   \\
   &=
     \sum_{n=0}^\infty
-    \sum_{l=0}^{m-1}
-  a(mn+l)\,
+    \sum_{l=0}^{m-1} a(mn+l)\,
   \unityPower{\frac{(mn+l-t)\tau}{m}}
   \frac{1}{m}
   \sum_{\lambda=0}^{m-1}\unityPower{\frac{(mn+l-t)\lambda}{m}}\\
@@ -1360,12 +1399,65 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
   define
   \begin{align}
     P_{s, m, t}(\tau)
-    &:= \prod_{t' \in \modularOrbit{s,m,t}} g_{s,m,t'}(\tau)\\
+    &:= \prod_{k \in \modularOrbit{s,m,t}} g_{s,m,k}(\tau)\\
     %
     F_{r, s, m, t}(\tau)
     &:= \divisorprod{N} \eta(\delta\tau)^{r_\delta} \cdot P_{s, m, t}(\tau)
   \end{align}
 \end{Definition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+By \eqref{eq:g_s-m-t(tau)} we can write the following.
+abcdefghijklmnopqrstuvwxuz
+\begin{align}
+  P_{s, m, t}(\tau)
+  &:= \prod_{k \in \modularOrbit{s,m,t}}
+    \unityPower{\frac{\tau (24k+\sumdelta{s})}{24m}} (U_mf_{k})(\tau)\\
+  &:= \prod_{k \in \modularOrbit{s,m,t}}
+    \left[\unityPower{\frac{\tau (24k+\sumdelta{s})}{24m}}
+    \cdot \sum_{n=0}^\infty a(mn+) q^n\right]
+  \\
+  &:= \unityPower{\tau\sum_{k\in\modularOrbit{s,m,t}}\frac{24k+\sumdelta{s}}{24m}}
+    \prod_{k \in \modularOrbit{s,m,t}} \left[\sum_{n=0}^\infty a(mn+k) q^n\right]
+  \\
+  %
+  F_{r, s, m, t}(\tau)
+  &:= \divisorprod{N} \eta(\delta\tau)^{r_\delta} \cdot P_{s,m,t}(\tau)
+  \\
+  &= \divisorprod{N} \eulerFunction{\delta}^{r_\delta}
+    \cdot
+    \unityPower{\tau\frac{\sumdelta{r}}{24}}
+    \cdot
+    \unityPower{\tau\sum_{k\in\modularOrbit{s,m,t}}\frac{24k+\sumdelta{s}}{24m}}
+    \cdot
+    \prod_{k \in \modularOrbit{s,m,t}} \left(\sum_{n=0}^\infty a(mn+k) q^n\right)
+  \\
+  &= \divisorprod{N} \eulerFunction{\delta}^{r_\delta}
+    \cdot
+    % \unityPower{\tau
+    q^{
+    \left(
+    \frac{\sumdelta{r}}{24}
+    +
+    \sum_{k\in\modularOrbit{s,m,t}}\frac{24k+\sumdelta{s}}{24m}
+    \right)
+    }
+    \cdot
+    \prod_{k \in \modularOrbit{s,m,t}} \left(\sum_{n=0}^\infty a(mn+k) q^n\right)
+  \\
+  &= \divisorprod{N} \eulerFunction{\delta}^{r_\delta}
+    \cdot
+    % \unityPower{\tau
+    q^\alpha
+    \cdot
+    \prod_{k \in \modularOrbit{s,m,t}} \left(\sum_{n=0}^\infty a(mn+k) q^n\right)
+  \\
+  \alpha
+  &=
+    \frac{\sumdelta{r}}{24}
+    +
+    \sum_{k\in\modularOrbit{s,m,t}}\frac{24k+\sumdelta{s}}{24m}
+\end{align}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $P_{s,m,t}$ under $SL_2(\setZ)$}
@@ -1486,27 +1578,43 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
 
 
 
+
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{The formulas in short and their relations to the
   implementation}
 \label{sec:formulas-in-short}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+$t \in \Set{0,1,\ldots,m-1}$
 
 \begin{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   f(\tau)
   &=
   \sum_{n=0}^\infty a(n) q^n
   =
-    \unityPower{-\frac{\tau \, \sumdelta{s}}{24}} g_s(\tau)
+  \divisorprod{M}\prod_{n=1}^\infty(1-q^{\delta n})^{s_\delta}
+  =
+  \divisorprod{M}\eulerFunction{\delta}^{s_\delta}
+  =
+  \unityPower{-\frac{\sumdelta{s} \tau}{24}} g_s(\tau)
   \\
-%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   f_t(\tau)
   &:=
-    \unityPower{-t\tau}f(\tau)
-    =
-    \unityPower{-\frac{\tau (24t+\sumdelta{s})}{24}} g_s(\tau)
+  \sum_{n=0}^\infty a(n) q^{n-t}
+  =
+  \sum_{n=-t}^\infty a(n+t) q^{n}
+  =
+  \unityPower{-t\tau}f(\tau)
+  =
+  \unityPower{-\frac{(24t+\sumdelta{s}) \tau}{24}} g_s(\tau)
   \\
-%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   (U_mf_t)(\tau)
   &=
     \sum_{n=0}^\infty a(mn+t) q^n
@@ -1519,64 +1627,98 @@ $c\tau+d$ is zero, \ie, this factor vanishes.
   \divisorprod{M}
     \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
   \\
+  &=
+  \frac{1}{m}
+  \unityPower{-\frac{\tau (24t+\sumdelta{s})}{24m}}
+    \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\tau)
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientLambdaGamma}}
+(Section~\ref{sec:SymbolicSiftedEtaQuotientLambdaGamma})
+
+\begin{align*}
   g_{s,m,t,\lambda}(\tau)
-  &= \text{\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientLambdaGamma}}
-     (Section~\ref{sec:SymbolicSiftedEtaQuotientLambdaGamma})}
-  \\
   &=
   \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{s})}
     \divisorprod{M}
     \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
   \\
-%
-  g_{s,m,t}(\tau)
-  &= \text{\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientGamma}}
-     (Section~\ref{sec:SymbolicSiftedEtaQuotientGamma})}
+  e &= \mathtt{etaQuotient}(M, \Delta, s, m, t, \lambda , \gamma)
   \\
+  \mathtt{rationalPrefactor}(e)
+  &=
+    \divisorprod{M} \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}
+  \\
+  \mathtt{unityPower}(e)
+  &=
+    -\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr) +
+    \divisorsum{M} \frac{s_\delta(v_{\delta,m,\lambda} +
+                         \kappa_{\delta,m,\lambda})}{24}
+  \\
+  \mathtt{qExponent}(e)
+  &=
+  \divisorsum{M} s_\delta u_{\delta,m,\lambda}.
+\end{align*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientGamma}}
+(Section~\ref{sec:SymbolicSiftedEtaQuotientGamma})
+
+\begin{align*}
+  g_{s,m,t}(\tau)
   &=
     \unityPower{\frac{\tau (24t+\sumdelta{s})}{24m} } (U_mf_t)(\tau)
     =
     \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,t,\lambda}(\tau)
-  \\
-%
-  g_{s,m,-,\lambda}(\tau)
-  &= \text{\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientLambdaGamma}}
-     (Section~\ref{sec:SymbolicSiftedEtaQuotientLambdaGamma})}
-  \\
-  &=
-    \divisorprod{M}
-    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
-  \\
-%
-  g_{s,m}(\tau)
-  &= \text{\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientGamma}}
-     (Section~\ref{sec:SymbolicSiftedEtaQuotientGamma})}
-  \\
-  &=
-    (U_m g_s)(\tau)
     =
-    \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,-,\lambda}(\tau)
-  \\
-%
+    \unityPower{\frac{\tau (24t+\sumdelta{s})}{24m}} \sum_{n=0}^\infty a(mn+t) q^n
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientOrbitProductGamma}}
+(Section~\ref{sec:SymbolicSiftedEtaQuotientOrbitProductGamma})
+
+\begin{align*}
   P_{s, m, t}(\tau)
-  &= \text{\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientOrbitProductGamma}}
-     (Section~\ref{sec:SymbolicSiftedEtaQuotientOrbitProductGamma})}
-  \\
   &:=
     \frac{1}{m^\mu}
     \prod_{t' \in \modularOrbit{s,m,t}}
     \left(
     \sum_{\lambda=0}^{m-1} g_{s,m,t'}(\tau)
     \right)
-  \\
-%
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textcolor{blue}{\texttt{SymbolicModularSiftedEtaQuotientGamma}}
+(Section~\ref{sec:SymbolicSiftedEtaQuotientOrbitProductGamma})
+
+\begin{align*}
   F_{r, s, m, t}(\tau)
-  &= \text{\textcolor{blue}{\texttt{SymbolicModularSiftedEtaQuotientGamma}}
-     (Section~\ref{sec:SymbolicSiftedEtaQuotientOrbitProductGamma})}
-  \\
   &:=
     \divisorprod{N} \eta(\delta \tau)^{r_\delta} \cdot P_{s, m, t}(\tau)
 \end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientLambdaGamma}}
+(Section~\ref{sec:SymbolicSiftedEtaQuotientLambdaGamma})
+(actually unused)
+
+\begin{align*}
+  g_{s,m,-,\lambda}(\tau)
+  &=
+    \divisorprod{M}
+    \eta\left(\frac{\delta(\tau+\lambda)}{m}\right)^{s_\delta}
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textcolor{blue}{\texttt{SymbolicSiftedEtaQuotientGamma}}
+(Section~\ref{sec:SymbolicSiftedEtaQuotientGamma})
+(actually unused)
+
+\begin{align*}
+  g_{s,m}(\tau)
+  &=
+    (U_m g_s)(\tau)
+    =
+    \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{s,m,-,\lambda}(\tau)
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -2392,7 +2534,7 @@ have the following correspondence:
 \code{e.delta} $= y_\delta$,
 %
 \code{rationalPrefactor(e)}
-$= \divisorprod{N} \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}$,
+$= \divisorprod{M} \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}$,
 %
 \code{unityPower(e)}
 $= -\frac{\lambda}{24m}\Bigl(24t+\sumdelta{s}\Bigr) +
@@ -3232,13 +3374,20 @@ expansion of various eta quotients.
 ++ quotient expansion of $g_{s,m,t,\lambda}(\gamma \tau)$,
 ++ $g_{s,m,t}(\gamma \tau)$, $F_{r,s,m,t}(\gamma \tau)$.
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
-SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
+++ This Domain behaves partly like univariate Puiseux series.
+SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   -- We need Algebra(Q) for multiplication with (1/m)
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
+  TX: UnivariateTaylorSeriesCategory CX with multisect : (Z, Z, %) -> %
+  LX: UnivariateLaurentSeriesCategory CX with
+       removeZeroes: % -> %
+       taylorRep: % -> TX
+       laurent: (Z, TX) -> %
+
+  -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
     puiseux: (SymbolicSiftedEtaQuotientLambdaGamma, P) -> %
       ++ puiseux(y, w) represents the
@@ -3253,21 +3402,32 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
     puiseux: (SymbolicModularSiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $F_{r,s,m,t}(\gamma \tau)$ at $\tau=i \infity$.
-
     rationalPowerDenominator: % -> P
-      ++ rationalPowerDenominator(x) returns d such that x is a Laurent series
-      ++ in q^d.
-    expansion: % -> LX
-      ++ expansion(x) returns the Laurent series representation of x
-      ++ without the prefactor corresponding to $(c \tau + d)$ in z=q^(1/d)
-      ++ where d=rationalPowerDenominator(x).
+      ++ If k=order(x) and f=taylorRep(x) then,
+      ++ rationalPowerDenominator(x) returns w such that
+      ++ x(q)=z^(k)*f(z) with z=q^(1/w).
+    taylorRep: % -> TX
+      ++ taylorRep(x) returns the Taylor series representation f of x
+      ++ without the prefactor corresponding to $(c \tau + d)$
+      ++ If w=rationalPowerDenominator(x) and k=order(x) then
+      ++ x(q)=z^(k)*f(z) with z=q^(1/w).
+    order: % -> Q
+      ++ If w=rationalPowerDenominator(x) and f=taylorRep(x) then
+      ++ order(x) returns k such that x(q)=z^(k)*f(z) with z=q^(1/w).
+      ++ order(x) returns the order o
+    laurent: % -> LX
+      ++ If order(x) is an integer, then laurent(x) returns the
+      ++ Laurent series f of x without the prefactor corresponding to
+      ++ $(c \tau + d)$ such that x(q) = f(z) for z=q^(1/w) where
+      ++ w=rationalPowerDenominator(x). It is an error if order(x) is
+      ++ not an integer.
   Implementation ==> add
-    Rep ==> Record(den: P, ser: LX)
+    -- If x: % and s = rep(x).ser, d = rep(x).den, then x represents
+    -- the series s(q^(1/d)).
+    Rep ==> Record(den: P, ord: Q, ser: TX)
     xx ==> rep x
-     -- We maintain a cache of expansions of powers of the Euler function.
 
     import from EtaQuotientGamma(C, mx, CX, xi, LX)
-    QFT ==> QFunctionTools(CX, LX)
 
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.
@@ -3275,13 +3435,17 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
         ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
-    divideBy(m: Z): CX -> CX == (c: CX): CX +-> (1/m)$Q::C::CX * c
-
 -------------------------------------------------------------------
 -- exported functions
 -------------------------------------------------------------------
     rationalPowerDenominator(x: %): P == xx.den
-    expansion(x: %): LX == xx.ser
+    order(x: %): Q == xx.ord
+    taylorRep(x: %): TX == xx.ser
+    laurent(x: %): LX ==
+        ord: Q := order x
+        not one? denom ord =>
+            error "SETAQG: Laurent series with fractional exponent"
+        laurent(numer ord, taylorRep x)
     coerce(x: %): OutputForm == xx::OutputForm
 
 )if LiterateDoc
@@ -3327,7 +3491,8 @@ $\divides{\delta}{M}$ with $s_\delta\ne0$, \ie, the series from
         p: Q := d/24 * qExponent y -- the "/24" is missing from qExponent(y)
         not one? denom p =>
             error "SiftedEtaQuotientGamma: denominator for q does not vanish"
-        per [d, monomial(cx, numer p)$LX * s]
+        tx: TX := cx * taylorRep s
+        per [d, p, tx]
 
 )if LiterateDoc
 %$
@@ -3346,30 +3511,41 @@ without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
 
     puiseux(y: SymbolicSiftedEtaQuotientGamma, w: P): % ==
         m: P := multiplier y
-        l: LX := 0
+        lx: LX := 0
         m1: P := qcoerce(m::Z - 1)@P
-        for lambda in 0..m1 repeat l := l + expansion puiseux(y.lambda, w)
-        -- A transformation of an eta-quotient is a non-zero function.
-        -- Thus, it is safe to ask for the order of the series expansion.
-        ord: Z := order l
+        for lambda in 0..m1 repeat lx := lx + laurent puiseux(y.lambda, w)
+        -- A sifted version of an eta-quotient is a non-zero function.
+        -- Thus, we can safely remove initial zeroes.
+        lx: LX := removeZeroes(lx)$LX
+        -- And, it is safe to ask for the order of the series expansion.
+        ord: Z := order lx
         -- After summation only the coefficients with exponents divisible
         -- by m should be non-zero. We make a sanity check.
+        tx: TX := taylorRep lx
+        stx: Stream CX := coefficients tx
         for i in 1..m1 repeat
-            if not zero? coefficient(l, ord+i) then
-                dbgPrint("expansion", l)
+            stx := rest stx
+            if not zero? first stx then
+                dbgPrint("YSEQG c", first stx)
+                dbgPrint("Laurent expansion", lx)
                 error "SiftedEtaQuotientGamma: m-lambda sum"
-        ord := (ord exquo m) :: Z -- order of resulting series
-        per [24 * w, chooseAndMap(divideBy m, (n: Z): Z +-> m*n, l, ord)$QFT]
+        tx := (1/m)$Q::C::CX * multisect(m, 0, tx)
+        per [24 * w, ord/m, tx]
 
     puiseux(y: SymbolicSiftedEtaQuotientOrbitProductGamma, w: P): % ==
         orb := orbit y
         t: N := first orb;
-        orb := rest orb
         px: % := puiseux(y.t, w)
         d: P := rationalPowerDenominator px
-        l: LX := expansion px
-        for tt in orb repeat l := l * expansion puiseux(y.tt, w)
-        per [d, l]
+        tx: TX := taylorRep px
+        ord: Q := order px
+        for k in rest orb repeat
+            px: % := puiseux(y.k, w)
+            tx := tx * taylorRep px
+            ord := ord + order px
+        not one? denom ord =>
+            error "SiftedEtaQuotientGamma: orbit product: denominator for q does not vanish"
+        per [d, ord, tx]
 
     puiseux(y: SymbolicModularSiftedEtaQuotientGamma, w: P): % ==
         yc: SymbolicSiftedEtaQuotientGamma := cofactor y
@@ -3382,10 +3558,12 @@ without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
             error "SiftedEtaQuotientGamma: Puiseux expansion in wrong variable"
         rationalPowerDenominator pc ~= rationalPowerDenominator po =>
             error "SiftedEtaQuotientGamma: expansion in different variables"
-        l: LX := expansion pc * expansion po
-        --assert(not zero? l)
-        ord: Z := (order(l) exquo 24) :: Z -- It's a modular function.
-        per [w, choose((n: Z): Z +-> 24*n, l, ord)$QFT]
+        tx: TX := multisect(24, 0, taylorRep pc * taylorRep po)
+        ord: Q := order pc + order po
+        ord := ord * (1$Z/24)-- It's a modular function.
+        not one? denom ord =>
+            error "SiftedEtaQuotientGamma: modular: denominator for q does not vanish"
+        per [w, ord, tx]
 
 )if LiterateDoc
 %$
@@ -3405,12 +3583,17 @@ series expansion of various eta quotients.
 ++ of F_{r, s, m, t}(\tau) at all cusps of $\Gamma_0(N)$.
 ++ See \eqref{eq:F_r-s-m-t(gamma*tau)}.
 ++ The domain serves as the representation of the underlying q-series.
-ModularSiftedEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
+ModularSiftedEtaQuotient(C, mx, CX, xi, TX, LX): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  LX: UnivariateLaurentSeriesCategory CX -- building block for series expansions
+  TX: UnivariateTaylorSeriesCategory CX with multisect : (Z, Z, %) -> %
+  LX: UnivariateLaurentSeriesCategory CX with
+       removeZeroes: % -> % -- building block for series expansions
+       taylorRep: % -> TX
+       laurent: (Z, TX) -> %
+
   Exports ==> SetCategory with
     coerce: SymbolicModularSiftedEtaQuotient -> %
       ++ coerce(y) represents the q-expansion of
@@ -3431,12 +3614,13 @@ ModularSiftedEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
     xx ==> rep x
 
     coerce(y: SymbolicModularSiftedEtaQuotient): % ==
-        import from SiftedEtaQuotientGamma(C, mx, CX, xi, LX)
+        PX ==> SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX)
+        import from PX
         nn: P := level y
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
             w: P := qcoerce(width(nn, denom cusp)$QAuxMEQ)@P -- width of cusp
-            hser.cusp := expansion puiseux(y.cusp, w)
+            hser.cusp := laurent puiseux(y.cusp, w)
         per [y, hser]
     level(x: %): P == level(xx.meta)
     metadata(x: %): SymbolicModularSiftedEtaQuotient == xx.meta
@@ -3493,9 +3677,10 @@ QEtaModularFunctionTools: Exports == Implementation where
     lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
     SUPC ==> SparseUnivariatePolynomial C
     CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
+    TX ==> UnivariateTaylorSeries(CX, xsym, 0)
     LX ==> UnivariateLaurentSeries(CX, xsym, 0)
     YMSETAQ ==> SymbolicModularSiftedEtaQuotient
-    MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi, LX)
+    MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi, TX, LX)
     a ==> aLigozat $ QAuxMEQ
 
     -- order of eta^r at cusp a/c.
@@ -3512,7 +3697,8 @@ QEtaModularFunctionTools: Exports == Implementation where
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
-        e: XHashTable(Q, LX) := expansions(y::MSETAQ)
+        msetaq := y::MSETAQ
+        e: XHashTable(Q, LX) := expansions(msetaq)
         ht: XHashTable(Q, Z) := empty()
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
@@ -3525,12 +3711,12 @@ QEtaModularFunctionTools: Exports == Implementation where
         ecfs: ECFS := etaCoFactorSpace(nn, mm, s, m, t)$QEtaKolberg
         nndivs: LP := DIVISORS nn
         n: N := #nndivs
-        -- excclude infinity cusp
-        cusps: LQ := [cusp for cusp in cuspsOfGamma0(nn)$QAuxMEQ | cusp~=1/nn]
         rinitial: VZ := ((ecfs.particular)::VZ)(1..n)
         b: LVZ := [x(1..n) for x in ecfs.basis]
         -- The rinitial vector might have very big numbers in it. We
         -- make them smaller by applying LLL to the system.
+        -- Note that the elements of b correspond to exponent vectors that
+        -- yield eta-quotients that are modular functions.
         mat: MZ := matrix cons(members rinitial, [members v for v in b])
         el: Record(lll: MZ, trf: MZ) := extendedLLL(mat)$LLLReduction
         -- Now look for 1 or -1 in the first entry of the transformation
@@ -3544,6 +3730,7 @@ QEtaModularFunctionTools: Exports == Implementation where
         -- Compute the poleorders/grades for the particular solution rinitial.
         g: XHashTable(Q, Z) := qetaGrades(nn, members rinitial, mm, s, m, t);
         -- Exclude order at cusp at infinity.
+        cusps: LQ := [cusp for cusp in cuspsOfGamma0(nn)$QAuxMEQ | cusp~=1/nn]
         rhs: LZ := [g.cusp for cusp in cusps]
 
         -- For the vectors in the basis, we don't need to compute the
