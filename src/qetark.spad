@@ -173,8 +173,8 @@ RELTYPE ==> Record(ymsetaqg: YMSETAQG, rgens: List List Z, rel: Pol C)
 IDENTITYTYPE ==> Record(_
     falpha: Z,_
     fr: List Z,_
-    forb: List Z,_
-    frel: List ETARELPART)
+    forb: List N,_
+    frel: Pol C)
 
 
 -- Note that in the following correspondence between programming variables
@@ -224,7 +224,7 @@ the coefficient domain.
 QEtaRamanujanKolberg(C): Exports == Implementation where
   C: Join(Algebra Q, EuclideanDomain) -- basic coefficient domain
   Exports ==> with
-    findIdentity: (P, P, List Z, P, N) -> RELTYPE
+    findIdentity: (P, P, List Z, P, N) -> IDENTITYTYPE
       ++ findIdentity(nn, mm, s, m, t) returns all date for a
       ++ Ramanujan-Kolberg identity.
     findRelation: YMSETAQG -> RELTYPE
@@ -234,14 +234,15 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         divs: List Z := divisors(nn)$IntegerNumberTheoryFunctions
         reduce(_+, [d*rd for d in divs for rd in r], 0)$List(Z)
 
-    findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): RELTYPE ==
+    findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): IDENTITYTYPE ==
         import from QEtaModularFunctionTools
         r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)
         rhat: Z := sigmaInfinity(nn, r)
         shat: Z := sigmaInfinity(mm, s)
         orb: List N := orbit(shat, m, t)$QEtaKolberg
-        alpha: Q := rhat/24 + reduce(_+, [24*k+shat for k in orb], 0)/(24*m)
-        not one? denom alpha => error "alpha not an integer"
+        alphaQ: Q := rhat/24 + reduce(_+, [24*k+shat for k in orb], 0)/(24*m)
+        not one? denom alphaQ => error "alpha not an integer"
+        alpha: Z := numer alphaQ
         cofact: ETA(C) := etaQuotient(nn, r)$ETA(C)
         etaquo: ETA(C) := etaQuotient(mm, s)$ETA(C)
         expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn)
@@ -251,8 +252,21 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         p: T1 C := multisect(m-tt, tt, eulerquo)
         -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
         for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
-        f: T1 C := p * taylorRep eulerQuotient cofact
-        laurent(numer alpha, f)
+        tf: T1 C := p * taylorRep eulerQuotient cofact
+        f: A1 C := laurent(alpha, tf)$A1(C)
+        xf: X1 C := toX1(C, f, "F"::Symbol::Pol(C))
+
+        rgens: List List Z := etaQuotientMonoidExponentVectors(nn)$QEQEV
+        eqgens: List ETA(C) := [etaQuotient(nn, rv)$ETA(C) for rv in rgens]
+        egens: List A1(C) := [expansion e for e in eqgens]
+        msyms: List Symbol := indexedSymbols("M", #rgens)$QAuxiliaryTools
+        mxgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms]
+        xgens := cons(toX1(C, egens.1, "T"::Symbol::Pol(C)), rest mxgens)
+        import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
+        xab: QXAB1(C) := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
+        xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
+        not zero? xz => error "no relation found"
+        [alpha, r, orb, second(xz)::Pol(C)]$IDENTITYTYPE
 
 -------------------------------------------------------------------
 )fin
