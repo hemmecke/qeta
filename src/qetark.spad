@@ -20,8 +20,8 @@
 
 OF==>OutputForm
 dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
---dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF)::Formatter(Format1D))
-xdbgPrint(x,y) ==> rhx:="42"
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
 
 )if LiterateDoc
 \documentclass{article}
@@ -145,6 +145,7 @@ Pol C  ==> Polynomial C
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
 WIDTH(nn, c) ==> qcoerce(width(nn, c)$QAuxMEQ)@P
 
+T1 C  ==> UnivariateTaylorSeries(C, 'q, 0);
 L1 C  ==> UnivariateLaurentSeries(C, 'q, 0);
 A1 C ==> Finite0Series(C, 'q, 0)
 ETA C ==> EtaQuotient(C, A1 C)
@@ -219,7 +220,7 @@ the coefficient domain.
 
 )endif
 
-)abbrev package QETARK QEtaRamanujanKolberg
+)abbrev package QETARX QEtaRamanujanKolberg
 QEtaRamanujanKolberg(C): Exports == Implementation where
   C: Join(Algebra Q, EuclideanDomain) -- basic coefficient domain
   Exports ==> with
@@ -228,60 +229,35 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
       ++ Ramanujan-Kolberg identity.
     findRelation: YMSETAQG -> RELTYPE
   Implementation ==> add
+    -- auxiliary functions
+    sigmaInfinity(nn: P, r: List Z): Z ==
+        divs: List Z := divisors(nn)$IntegerNumberTheoryFunctions
+        reduce(_+, [d*rd for d in divs for rd in r], 0)$List(Z)
+
     findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): RELTYPE ==
         import from QEtaModularFunctionTools
         r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)
+        rhat: Z := sigmaInfinity(nn, r)
+        shat: Z := sigmaInfinity(mm, s)
+        orb: List N := orbit(shat, m, t)$QEtaKolberg
+        alpha: Q := rhat/24 + reduce(_+, [24*k+shat for k in orb], 0)/(24*m)
+        not one? denom alpha => error "alpha not an integer"
+        cofact: ETA(C) := etaQuotient(nn, r)$ETA(C)
+        etaquo: ETA(C) := etaQuotient(mm, s)$ETA(C)
+        expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn)
+        dbgPrint("expectedGrade", expectedGrade)
+        eulerquo: T1 C := taylorRep eulerQuotient etaquo
+        tt := first orb
+        p: T1 C := multisect(m-tt, tt, eulerquo)
+        -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
+        for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
+        f: A1 C := p * eulerQuotient cofact
+        dbgPrint("f", f)
+        ff: T1 C := pp * taylorRep eulerQuotient cofact
+        fff: A1 C := laurent(numer alpha, ff)
+        dbgPrint("fff", fff)
 
-        cusp: Q := 1/nn -- cusp corresponding to infinity
-        -- the matrix corresponding to cusp
-        gamma := cuspToMatrix(nn, cusp)$QAuxiliaryModularEtaQuotientPackage
-        y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
-        -- The variable y contains all the data we need.
-        -- The orbit of t is:
-        orb: List N := orbit orbitProduct y
-        alpha: Z := 0 --TODO
-
-
-
-        to compute
-        -- the expansion of the modular function
-
-
-        xiord: P := minimalRootOfUnity y
-        xiord = 2 => findRelation y
-
-        minrootpol: SUP C := MINROOTPOL(C, xiord)
-        dbgPrint("xiord", xiord)
-        dbgPrint("minrootpol", minrootpol)
-        CX ==> SimpleAlgebraicExtension(C, SUP C, minrootpol)
-        findRelation(y, xiord, generator()$CX)$QEtaRamanujanKolbergAux(C, CX)
-
-    findRelation(y: YMSETAQG): RELTYPE ==
-        xiord: P := 2
-        xi: C := -1
-        cofac: SymbolicSiftedEtaQuotientGamma := cofactor y
-        nn: P := level cofac
-        w: P := WIDTH(nn, nn) -- the width of the cusp infinity
-        p := puiseux(y, w)$SiftedEtaQuotientGamma(C, xiord, C, xi, A1 C)
-        f := expansion(p)$SiftedEtaQuotientGamma(C, xiord, C, xi, A1 C)
-        xf: X1(C) := toX1(C, f, "F"::Symbol::Pol(C))
-
-        rgens: List List Z := etaQuotientMonoidExponentVectors(nn)$QEQEV
-        nndivs: List Z := [delta::Z for delta in divisors cofac]
-        eqgens: List ETA(C) := [etaQuotient(nndivs, r)$ETA(C) for r in rgens]
-        egens: List A1(C) := [expansion e for e in eqgens]
-        msyms: List Symbol := indexedSymbols("M", #rgens)$QAuxiliaryTools
-        mxgens: List X1 C := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];
-        xgens: List X1 C := cons(toX1(C, egens.1, "T"::Symbol::Pol(C)), rest mxgens);
-        import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
-        xab: QXAB1(C) := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
-
-        xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
-        not zero? xz => error "no relation found"
-
-        [y, rgens, second(xz)::Pol(C)]
-
-
+        error "rhx: findIdentity error"
 
 -------------------------------------------------------------------
 )fin
@@ -294,11 +270,12 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
 )abbrev package QETARKA QEtaRamanujanKolbergAux
 QEtaRamanujanKolbergAux(C, CX): Exports == Implementation where
   C: Join(Algebra Q, EuclideanDomain)
-  CX: Join(Algebra C, RetractableTo C) -- C extended by a needed root of unity
+  CX: Join(Algebra C, CommutativeRing, RetractableTo C) -- C extended by a needed root of unity
   Exports ==> with
     findRelation: (YMSETAQG, P, CX) -> RELTYPE
       ++ findRelation(y) returns all date for a Ramanujan-Kolberg
       ++ identity.
+  SETAQG(C, CX) ==> SiftedEtaQuotientGamma(C, xiord, CX, xi, T1 CX, L1 CX)
   Implementation ==> add
     findRelation(y: YMSETAQG, xiord: P, xi: CX): RELTYPE ==
         cofac: SymbolicSiftedEtaQuotientGamma := cofactor y
@@ -306,10 +283,10 @@ QEtaRamanujanKolbergAux(C, CX): Exports == Implementation where
         nn: P := level cofac
         w: P := WIDTH(nn, nn) -- the width of the cusp infinity
         dbgPrint("fr w0", w)
-        p := puiseux(y, w)$SiftedEtaQuotientGamma(C, xiord, CX, xi, L1 CX)
+        p := puiseux(y, w)$SETAQG(C, CX)
         dbgPrint("fr w", w)
         dbgPrint("p", p)
-        fx  := rhxfun(p)$SiftedEtaQuotientGamma(C, xiord, CX, xi, L1 CX)
+        fx  := laurent(p)$SETAQG(C, CX)
         d := rationalPowerDenominator p
         dbgPrint("d", d)
         dbgPrint("fx", fx)
@@ -353,8 +330,8 @@ QEtaRamanujanKolbergAux(C, CX): Exports == Implementation where
 
 
 )endif
-)abbrev package QETARK QEtaRamanujanKolberg
-QEtaRamanujanKolberg(C): Exports == Implementation where
+)abbrev package QETARKX QEtaRamanujanKolbergX
+QEtaRamanujanKolbergX(C): Exports == Implementation where
   C: Join(Algebra Q, EuclideanDomain) -- basic coefficient domain
   Exports ==> with
     findIdentity: (P, P, List Z, P, N) -> RELTYPE
@@ -362,6 +339,11 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
       ++ Ramanujan-Kolberg identity.
     findRelation: YMSETAQG -> RELTYPE
   Implementation ==> add
+
+    fr(y: YMSETAQG, xiord: P, minrootpol: SUP C): RELTYPE ==
+        CX ==> SimpleAlgebraicExtension(C, SUP C, minrootpol)
+        findRelation(y, xiord, generator()$CX)$QEtaRamanujanKolbergAux(C, CX)
+
     findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): RELTYPE ==
         r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionTools
         cusp: Q := 1/nn -- cusp corresponding to infinity
@@ -370,11 +352,11 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         xiord: P := minimalRootOfUnity y
         xiord = 2 => findRelation y
 
-        minrootpol: SUP C := MINROOTPOL(C, xiord)
+        minrootpol ==> MINROOTPOL(C, xiord)
         dbgPrint("xiord", xiord)
         dbgPrint("minrootpol", minrootpol)
-        CX ==> SimpleAlgebraicExtension(C, SUP C, minrootpol)
-        findRelation(y, xiord, generator()$CX)$QEtaRamanujanKolbergAux(C, CX)
+        fr(y, xiord,  minrootpol)
+
 
     findRelation(y: YMSETAQG): RELTYPE ==
         xiord: P := 2
