@@ -174,6 +174,7 @@ IDENTITYTYPE ==> Record(_
     falpha: Z,_
     fr: List Z,_
     forb: List N,_
+    frgens: List List Z,_
     frel: Pol C)
 
 
@@ -224,6 +225,7 @@ the coefficient domain.
 QEtaRamanujanKolberg(C): Exports == Implementation where
   C: Join(Algebra Q, EuclideanDomain) -- basic coefficient domain
   Exports ==> with
+    findIdentity: (P, List Z, P, List Z, P, N) -> IDENTITYTYPE
     findIdentity: (P, P, List Z, P, N) -> IDENTITYTYPE
       ++ findIdentity(nn, mm, s, m, t) returns all date for a
       ++ Ramanujan-Kolberg identity.
@@ -234,9 +236,8 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         divs: List Z := divisors(nn)$IntegerNumberTheoryFunctions
         reduce(_+, [d*rd for d in divs for rd in r], 0)$List(Z)
 
-    findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): IDENTITYTYPE ==
+    findIdentity(nn: P, r: List Z, mm: P, s: List Z, m: P, t: N): IDENTITYTYPE ==
         import from QEtaModularFunctionTools
-        r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)
         rhat: Z := sigmaInfinity(nn, r)
         shat: Z := sigmaInfinity(mm, s)
         orb: List N := orbit(shat, m, t)$QEtaKolberg
@@ -266,7 +267,12 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         xab: QXAB1(C) := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
         xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
         not zero? xz => error "no relation found"
-        [alpha, r, orb, second(xz)::Pol(C)]$IDENTITYTYPE
+        [alpha, r, orb, rgens, second(xz)::Pol(C)]$IDENTITYTYPE
+
+    findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): IDENTITYTYPE ==
+        import from QEtaModularFunctionTools
+        r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)
+        findIdentity(nn, r, mm, s, m, t)
 
 -------------------------------------------------------------------
 )fin
