@@ -310,6 +310,12 @@ Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
       ++ No check is made.
     coerce: % -> ULS
       ++ coerce(x) returns the element x as a Laurent series.
+    choose: (P, N, %, Z) -> %
+      ++ choose(m, t, x, ord) returns the Laurent series z whose n-th
+      ++ coefficient of the underlying Taylor series is the (m*n+t)-th
+      ++ coefficient of the underlying Taylor series of x, 0<=t<m. The
+      ++ function assumes that x has at least one non-zero
+      ++ coefficient.
   Impl ==> ULS add
     Rep ==> ULS
     Rec ==> Record(expon: Z, ps: UTS) -- hack!!!
@@ -334,6 +340,10 @@ Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
     qetaLeadingCoefficient(x: %): C ==
         zero? x => 0 -- destructively set x
         leadingCoefficient x
+    choose(m: P, t: N, x: %, ord: Z): % ==
+        zero? x => 0
+        x := removeZeroes x
+        laurent(ord, multisect(m-t, t, uts x))
     laurent(n: Z, s: Stream C): % == laurent(n, series(s)$UTS)
 
 )if LiterateDoc
