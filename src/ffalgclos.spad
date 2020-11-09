@@ -134,6 +134,7 @@ DynamicAlgebraicClosureFiniteField(K): Exports == Implementation where
     FL ==> List FREC
 
     rootOf(poly: SUP %, sy: Symbol): % ==
+        dbgPrint("DACFF rootOf poly", poly)
         -- We currently ignore the second parameter.
         -- Call rootOf$Rep first.
         -- Otherwise a partial factorization, i.e, getting just ONE
@@ -160,10 +161,54 @@ DynamicAlgebraicClosureFiniteField(K): Exports == Implementation where
         rootOf f
 
     factorPolynomial(poly: SUP %): Factored(SUP %) ==
+        dbgPrint("FFDAC factorPolynomial poly", poly)
         roots: List % := rootsOf(poly)
         factor(poly pretend SUP(Rep)) pretend Factored(SUP %)
 
 )if LiterateDoc
 \bibliography{qeta}
 \end{document}
+
+
+Implementation of:
+  rootsOf: SUP % -> % in algfunc.spad
+  -----------------------------------
+    rootsOf(p : SUP)           == rootsOf(p, new())
+    rootsOf(p : SUP, y : Symbol) == allroots(p, y, rootOf)
+    allroots(p, y, fn) ==
+      zero? p => error "allroots: polynomial must be nonzero"
+      zero? coefficient(p, 0) =>
+         concat(0, allroots(p quo monomial(1, 1), y, fn))
+      zero?(p1 := reductum p) => []$List(%)
+      zero? reductum p1 => binomialRoots(p, y, fn)
+      decompList := completeDecompose(p)
+      # decompList > 1 =>
+          h := last decompList
+          g := leftFactorIfCan(p, h) :: SUP
+          groots := allroots(g, y, fn)
+          "append"/[allroots(h-r::SUP, y, fn) for r in groots]
+      ans := []$List(%)
+      while not ground? p repeat
+        alpha := assign(x := new(y)$Symbol, fn(p, x))
+        q     := monomial(1, 1)$SUP - alpha::SUP
+        if not zero?(p alpha) then
+          p   := p quo q
+          ans := concat(alpha, ans)
+        else while zero?(p alpha) repeat
+          p   := (p exquo q)::SUP
+          ans := concat(alpha, ans)
+      reverse! ans
+
+ffalgclos: DACFF  factorPolynomial: SUP % -> Factored SUP %
+poly:      SUP    factor: SUP(IFFTS K) -> Factored(SUP IFFTS K)
+ddfact:    DDFACT factor: SUP(IFFTS K) -> Factored(SUP IFFTS K)
+ddfact:    DDFACT distdfact:
+ddfact:    DDFACT notSqFr
+ddfact:    DDFACT ddffact
+ddfact:    DDFACT ddffact1
+ddfact:    DDFACT separateFactors
+ddfact:    DDFACT tracePowMod
+ddfact:    DDFACT exptMod
+
+
 )endif

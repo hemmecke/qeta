@@ -183,7 +183,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         -- vars: internally used vars, sorted decreasingly r4,r3,r2,r1
         -- lvlsz: corresponds to the number of elements of the field
         --   after each extension. It is [s4, s3, s2, s1, s0] where
-        --   s0 = size()$$, and s{i+1} = si^di where
+        --   s0 = size()$K, and s{i+1} = si^di where
         --   di = degree(getRelation(i)) and the i-th polynomial of
         --   the triangular set is considered as a univariate polynomial
         --   in its highest variable.
@@ -445,6 +445,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
     --assert(zero? state.rnk or (state.rnk = #(stete.vars)))
     --assert(zero? state.rnk or (state.rnk = lookup first state.vars))
     extendBy!(f: SUP %): % ==
+        dbgPrint("IFFTS extendBy! f", f)
         -- The statement "v: V := new()" is wrong since it is possible
         -- that somebody else also used V to create a new variable, so
         -- we must say which variable we want.
@@ -465,6 +466,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         state.vars := cons(v, state.vars)$List(V)
         ls := state.lvlsz
         state.lvlsz := cons(first(ls)^d, ls)
+        dbgPrint("IFFTS lvlsz", state.lvlsz)
         state.ts := cons(minpoly, state.ts)
         state.powers := cons(arr, state.powers)
         state.rnk := state.rnk + 1
@@ -478,8 +480,11 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         -- complicated enough to trigger a recomputation of the cache in
         -- ModMonic.
         n: N := if d = 2 and characteristic() = 2 then 3 else 2
+        dbgPrint("IFFTS n", n)
         factor(monomial(1$%, n)$SUP(%) - 1$SUP(%)) -- create n-th root of unity
+        dbgPrint("IFFTS n", -n)
         factor(monomial(1$%, n)$SUP(%) + 1$SUP(%)) -- nth-root of (-1)
+        dbgPrint("IFFTS n", 0)
         multivar(monomial(1, 1$N)$SUP(R), v)
 
 
