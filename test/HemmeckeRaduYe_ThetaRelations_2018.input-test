@@ -8,6 +8,7 @@
 -- an article of Hemmecke, Radu, and Ye:
 -- "The Generators of all Polynomial Relations among Jacobi Theta Functions"
 -- https://www3.risc.jku.at/publications/download/risc_5719/thetarelations.pdf
+)clear prop T1
 N ==> NonNegativeInteger; Q ==> Fraction Integer
 D ==> HomogeneousDistributedMultivariatePolynomial([t2,t4], Q)
 F ==> Fraction D; R ==> UnivariatePolynomial('t3, F)
@@ -16,11 +17,12 @@ K := SimpleAlgebraicExtension(F, R, r)
 t2: K := 't2; t3: K := 't3; t4: K := 't4::K
 c3 := (t3/t2)^2; c4 := (t4/t2)^2;
 
-vars := [S1, S2, S3, S4, T1, T2, T3, T4];
+vars := [S1, S2, S3, S4, 'T1, T2, T3, T4];
 E ==> SplitHomogeneousDirectProduct(8, 4, N)
 P ==> GeneralDistributedMultivariatePolynomial(vars, K, E)
 
 U: List P := [S1*T1-1, S2*T2-1, S3*T3-1, S4*T4-1]
+
 h1: P := (S1*T3)^2 - c3*(S1*T2)^2 - c4
 h2: P := (S1^3*T2*T3*T4)^2 - (c4*S1^2*T2^2+c3)*S1^4*T2^2*T3^2
 B := groebner(concat(U, [h1, h2]))
@@ -42,5 +44,3 @@ assertTrue(zero?(z.poly))
 
 assertEquals(z.mult * p,  (z.poly + z.repr.1 * G.1 + z.repr.2 * G.2))
 --endtest
-
-

@@ -148,41 +148,6 @@ QAuxiliaryTools(): with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Auxiliary package to create a series from another series by picking a
-subsequence of coefficients.
-
-With the \code{choose} function, the $U_m$ operator is implemented,
-i.e., $(f|U_m$)(z) = \code{choose(x+->m*x, f, 0)}.
-
-
-)endif
-
-)abbrev package QFUNTOOL QFunctionTools
-++ QFunctionTools allows to create a series from another series.
-QFunctionTools(C: Ring, L: UnivariateLaurentSeriesCategory C): with
-    choose: (Z -> Z, L, Z) -> L
-      ++ choose(f, x, n0) returns the power series z whose
-      ++ n-th coefficient is the f(n)-th coefficient of x, i.e.,
-      ++ coefficient(z, n) = coefficient(x, f n) for all n>=n0.
-      ++ Start with n=n0, i.e., the order of the result will be n0.
-      ++ choose(f, x, n0) = chooseAndMap(c+->c, f, x, n0)
-    chooseAndMap: (C -> C, Z -> Z, L, Z) -> L
-      ++ chooseAndMap(g, f, x, n0) returns the power series z whose
-      ++ n-th coefficient is the f(n)-th coefficient of x after application
-      ++ of g, i.e.,
-      ++ coefficient(z, n) = g(coefficient(x, f n)) for all n>=n0.
-      ++ Start with n=n0, i.e., the order of the result will be n0.
-  == add
-    streamAux(f: Z -> Z, x: L, n: Z): Stream C == delay
-        cons(coefficient(x, f n), streamAux(f, x, n+1))
-    streamMapAux(g: C -> C, f: Z -> Z, x: L, n: Z): Stream C == delay
-        cons(g coefficient(x, f n), streamMapAux(g, f, x, n+1))
-    choose(f: Z -> Z, x: L, n0: Z): L == laurent(n0, streamAux(f, x, n0))
-    chooseAndMap(g: C -> C, f: Z -> Z, x: L, n0: Z): L ==
-        laurent(n0, streamMapAux(g, f, x, n0))
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Auxiliary package to create a series from another series.
 )endif
 
