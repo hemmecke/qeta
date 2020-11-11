@@ -176,6 +176,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 --  ETARELELT ==> Record(fci: SUP C, fqei: Z, fri: Vector Z)
 --  ETAREL ==> List ETARELELT
   L ==> List
+  EX ==> Expression Integer
   Exports ==> CoercibleTo OutputForm with
     identity: (P, List Z, P, L Z, P, N, C, L SUP C, L L Z) -> %
       ++ identity(nn, mm, s, m, t, c, rel, rgens) returns a structure
@@ -194,7 +195,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     definitionLevel: % -> P
       ++ definitionLevel(x) returns mm. This is the level of the
       ++ eta-quotient from which the sifted version is taken.
-
+    orbitProduct: % -> OutputForm
+    orbitProductX: % -> EX
   Implementation ==> add
     Rep ==> Record(fnn: P,_
                    fr: List Z,_
@@ -222,7 +224,41 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
+    sum(a: OF, n: OF, m: P, t: N): OF ==
+        out: OF := m::OF * n
+        if not zero? t then out := out + t::OF
+        out := prefix(a, [out])  -- builds a(m*n+t)
+        sum(out, n=0::OF, "infinity"::Symbol::OF)
 
+    orbitProduct(x: %): OF ==
+        n: OF := "n"::Symbol::OF
+        a: OF := "a"::Symbol::OF
+        orb: List N := sort orbit x
+        t := first orb
+        out: OF := sum(a, n, xx.fmultiplier, t)
+        if not empty?(orb := rest orb) then
+            out := paren out
+        for k in orb repeat out := out * paren sum(a, n, xx.fmultiplier, k)
+        out
+
+    sumX(a: BasicOperator, n: Symbol, m: P, t: N): EX ==
+        ex: EX := m * (n::EX)
+        if not zero? t then ex := ex + t::EX
+        ex := a(ex) -- builds a(m*n+t)
+        infty: EX := "%Infinity"::Symbol::EX
+        summation(ex, equation(n, segment(0, infty)))$EX
+
+    orbitProductX(x: %): EX ==
+        n: Symbol := "n"::Symbol
+        a: BasicOperator := operator("a"::Symbol)
+
+        orb: List N := sort orbit x
+        t := first orb
+        ex := sumX(a, n, xx.fmultiplier, t)
+        if not empty?(orb := rest orb) then
+            ex := paren ex
+        for k in orb repeat ex := ex * paren sumX(a, n, xx.fmultiplier, k)
+        ex
 
 
 )if LiterateDoc
