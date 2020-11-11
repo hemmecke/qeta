@@ -148,6 +148,16 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
       ++ coefficient 1 that results from just considering the product of
       ++ Euler function powers (q-Pochhammer symbols) connected to the
       ++ creation via etaQuotient(divs, r).
+    eulerQuotient: (List Z, List Z) -> L
+      ++ eulerQuotient(divs, r) returns the product over all elements
+      ++ d of divs of eulerFunction(d)^{rd} where rd is the respective
+      ++ entry of r corresponding to d and eulerFunction is defined in
+      ++ QFunctions in the file qfunct.spad. See also
+      ++ https://en.wikipedia.org/wiki/Euler_function .
+      ++ eulerQuotient(divs, r) == eulerQuotient etaQuotient(divs, r).
+    eulerQuotient: (P, List Z) -> L
+      ++ eulerQuotient(m, r) returns eulerQuotient(divisors m, r)
+      ++ which is also the same as eulerQuotient(etaQuotient(m, r)).
     eulerExponent: % -> Z
       ++ If x = etaQuotient(divs, r) then eulerExponent(x) is equal to
       ++ reduce(_+, [d*rd for d in divs for rd in r], 0). Dividing
@@ -235,6 +245,13 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
     etaQuotient(level: P, r: List Z): % ==
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
         etaQuotient(divs, r)
+
+    eulerQuotient(divs: List Z, r: List Z): L ==
+        eulerQuotient etaQuotient(divs, r)
+
+    eulerQuotient(level: P, r: List Z): L ==
+        eulerQuotient etaQuotient(level, r)
+
     hashUpdate!(h: HashState, x: %): HashState ==
         hashUpdate!(hashUpdate!(h, prefactor x), seriesPart x)
     coerce(x: %): OutputForm ==
