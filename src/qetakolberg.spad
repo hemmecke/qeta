@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018, 2020  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -135,6 +135,14 @@ QEtaKolberg: Exports == Implementation where
       ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015} and
       ++ \cite[Lemma 4.35]{Radu:PhD:2010}.
       ++ We assume $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
+    orbit: (P, List Z, P, N) -> List N
+      ++ orbit(mm, s, m, t) computes the elements of
+      ++ $\modularOrbit{s,m,t)$ as defined in qetafun.spad,
+      ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015} and
+      ++ \cite[Lemma 4.35]{Radu:PhD:2010}.
+      ++ orbit(s, m, t) returns the same as
+      ++ orbit(sigmaInfinity(mm, s), m, t).
+      ++ We assume $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
     chiExponent: (Z, P, List N) -> Z
       ++ chiExponent(sigmaInfty, m, orb) computes e such that
       ++ $\exp(2\pi i e / 24) = \chi_{s,m,t)$.
@@ -148,6 +156,20 @@ QEtaKolberg: Exports == Implementation where
       ++ r = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
+    sigmaInfinity: (P, List Z) -> Z
+      ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
+      ++ it is assumed that the entries of r correspond to the divisors
+      ++ of mm.
+      ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
+    alphaInfinity: (P, LZ, P, LZ, P, N) -> Z
+      ++ If modularConditions?(nn, r, mm, s, m, t) then
+      ++ alphaInfinity(nn, r, mm, s, m, t) computes the order of the
+      ++ q-expansion of $F_{r, s, m, t}$ as defined in qetafun.spad,
+      ++ see~\eqref{eq:alphaInfinity}. It is the same as the \alpha as
+      ++ defined in the abstract of \cite{Radu:RamanujanKolberg:2015},
+      ++ DOI=10.1016/j.jsc.2017.02.001,
+      ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf.
+
 )if TODO
     splitMatrix: (MZ, Z, Z, N) -> Rec
       ++ splitMatrix(gamma, delta, m, lambda) returns a record rec that
@@ -162,15 +184,11 @@ QEtaKolberg: Exports == Implementation where
     lambdaGamma: (P, SL2Z, N) -> N
       ++ lambdaGamma(m, gamma, lambda) returns the transformed lambda
       ++ according to gamma. See eq:lambda_gamma in qetafun.spad.
-    sigmaInfinity: (N, List Z) -> Z
-      ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
-      ++ it is assumed that the entries of r correspond to the divisors
-      ++ of mm.
-      ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
     sigmaZero: (N, List Z) -> Z
       ++ sigmaZero(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
       ++ of mm.
+
 )endif
 
   Implementation ==> add
@@ -239,6 +257,13 @@ QEtaKolberg: Exports == Implementation where
             e := odotBar(positiveRemainder(y^2, m24), sigmaInfty, m, t)
             if not member?(e, result) then result := cons(e, result)
         result
+
+    sigmaInfinity(nn: P, r: List Z): Z ==
+        divs: List Z := divisors(nn)$IntegerNumberTheoryFunctions
+        reduce(_+, [d*rd for d in divs for rd in r], 0)$List(Z)
+
+    orbit(mm: P, s: List Z, m: P, t: N): List N ==
+        orbit(sigmaInfinity(mm, s), m, t)
 
     orbitRadu(sigmaInfty: Z, m: P, t: N): List N ==
         g := gcd(kappa(m)*(24*t + sigmaInfty), 24*m)
@@ -462,6 +487,18 @@ QEtaKolberg: Exports == Implementation where
 
     modularConditions?(nn: P, r: LZ): Boolean ==
         modularConditions?(nn, r, 1, [0], 1, 0)
+
+    alphaInfinity(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): Z ==
+        Q ==> Fraction Z
+        not modularConditions?(nn, r, mm, s, m, t) =>
+            error "input does not correspond to a modular function"
+        rhat: Z := sigmaInfinity(nn, r)$QEtaKolberg
+        shat: Z := sigmaInfinity(mm, s)$QEtaKolberg
+        orb: List N := orbit(shat, m, t)$QEtaKolberg
+        alpha: Q := rhat/24 + reduce(_+, [24*k+shat for k in orb], 0)/(24*m)
+        not one? denom alpha => error "alpha not an integer"
+        return numer alpha
+
 
 )if TODO
      splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==
