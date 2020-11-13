@@ -186,15 +186,34 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ question.
     alphaInfinity: % -> Z
     orbit: % -> List N
+      ++ orbit(x) returns the orbit of the sifted series.
     level: % -> P
       ++ level(x) returns nn if x represents a modular function for
       ++ Gamma_0(nn).
     definitionLevel: % -> P
       ++ definitionLevel(x) returns mm. This is the level of the
       ++ eta-quotient from which the sifted version is taken.
-    monomial: (List Symbol, List Z) -> OF
-    monomialQuotient: (List Symbol, List Z) -> OF
-    etaProduct: (P, List Z, String) -> OF
+    multiplier: % -> P
+    coefficient: % -> P
+      ++ coefficient(x) is the coefficient that results from a
+      ++ reduction process in case it cannot be inverted. For a
+      ++ coefficient field, it will give 1.
+    moduleCoefficients: % -> List SUP C
+      ++ moduleCoefficients(x) gives the list of coefficients that
+      ++ correspond to the eta-quotients given by
+      ++ etaQuotientMonoidExponentVectors(x). And form the relation
+      ++ that that was computed. note that the first entry of
+      ++ etaQuotientMonoidExponentVectors(x) must be replaced by 0 in
+      ++ order to make this relation a true relation.
+    etaQuotientMonoidExponentVectors: % -> List List Z
+      ++ etaQuotientMonoidExponentVectors(%) returns the exponent
+      ++ vectors of the eta-quotients that generate the monoid of all
+      ++ eta-quotients.
+
+
+    monomial: (List Symbol, List Z) -> OutputForm
+    monomialQuotient: (List Symbol, List Z) -> OutputForm
+    etaProduct: (P, List Z, String) -> OutputForm
     orbitProduct: % -> OutputForm
     cofactor: % -> OutputForm
     qcofactor: % -> OutputForm
@@ -204,10 +223,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     qRelationMonomial: (P, SUP C, List Z) -> OutputForm
     etaRelation: (P, List SUP C, List List Z) -> OutputForm
     qRelation: (P, List SUP C, List List Z) -> OutputForm
-    pretty: % -> OF
-    qpretty: % -> OF
-    nice: % -> OF
-    qnice: % -> OF
+    pretty: % -> OutputForm
+    qpretty: % -> OutputForm
+    nice: % -> OutputForm
+    qnice: % -> OutputForm
   Implementation ==> add
     Rep ==> Record(fnn: P,_
                    fr: List Z,_
@@ -232,6 +251,13 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     orbit(x: %): List N ==
         orbit(xx.fmm, xx.fs, xx.fmultiplier, xx.foffset)$QEtaKolberg
+
+    level(x: %): P == xx.nn
+    definitionLevel(x: %): P == xx.mm
+    multiplier(x: %): P == xx.fmultiplier
+    coefficient(x: %): C == xx.fcf
+    moduleCoefficients(x: %): List SUP C == xx.frel
+    etaQuotientMonoidExponentVectors(x: %): List List Z == xx.frgens
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
