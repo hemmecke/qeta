@@ -29,23 +29,20 @@ by Ralf Hemmecke.
 
 In addition it implements the algorithm from the article
 `Construction of all Polynomial Relations among Dedekind Eta Functions
-  of Level N
-<https://doi.org/10.1016/j.jsc.2018.10.001>`_
-by Hemmecke and Radu
-to compute all polynomial relations of Dedekind eta-functions of a
-certain level.
-The computations for the article Construction of Modular Function Bases for
-:math:`Gamma_0(121)` related to :math:`p(11n+6)`
-by Hemmecke, Paule, and Radu
-were done with the **QEta** package. See also the related
-`website <https://www.risc.jku.at/people/hemmecke/papers/integralbasis/>`_.
+of Level N <https://doi.org/10.1016/j.jsc.2018.10.001>`_
+by Hemmecke and Radu to compute all polynomial relations of Dedekind
+eta-functions of a certain level. The computations for the article
+Construction of Modular Function Bases for :math:`\Gamma_0(121)`
+related to :math:`p(11n+6)` by Hemmecke, Paule, and Radu were done
+with the **QEta** package. See also the related `website
+<https://www.risc.jku.at/people/hemmecke/papers/integralbasis/>`_.
 
 The underlying theory of the programs is described in the above
 articles which are also available as RISC_ reports
 `15-14 <http://www.risc.jku.at/publications/download/risc_5069/zzz3.pdf>`_,
 `16-06 <http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf>`_,
 `18-03 <http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf>`_.
-`19-10 https://www.risc.jku.at/publications/download/risc_5983/integralbasis.pdf>`_
+`19-10 <https://www.risc.jku.at/publications/download/risc_5983/integralbasis.pdf>`_.
 
 Further material is in the |git repository|.
 
