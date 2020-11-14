@@ -174,6 +174,7 @@ for easier manipulation.
 QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
   C: EntireRing -- basic coefficient domain
   L ==> List
+  EX ==> Expression Z
   Exports ==> CoercibleTo OutputForm with
     identity: (P, List Z, P, L Z, P, N, L L Z, Pol C) -> %
       ++ identity(nn, mm, s, m, t, c, rel, rgens) returns a
@@ -235,6 +236,17 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     qpretty: % -> OutputForm
     nice: % -> OutputForm
     qnice: % -> OutputForm
+
+-------------------------------------------------------------------
+
+    sumX: (BasicOperator, Symbol, P, N) -> EX
+    orbitProductX: % -> EX
+    monomialX: (List Symbol, List Z) -> Pol C
+    monomialQuotientX: (List Symbol, List Z) -> Fraction Pol C
+    etaQuotientX: (P, List Z, String) -> Fraction Pol C
+    cofactorX: % -> Fraction Pol C
+    qcofactorX:% -> Fraction Pol C
+
   Implementation ==> add
     Rep ==> Record(fnn: P,_
                    fr: List Z,_
@@ -413,6 +425,49 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         one? cf => (equation(orbitProduct x, rel)$Equation(OF))::OF
         (equation((cf::OF) * orbitProduct x, rel)$Equation(OF))::OF
 
+-------------------------------------------------------------------
+
+    sumX(a: BasicOperator, n: Symbol, m: P, t: N): EX ==
+        ex: EX := m * (n::EX)
+        if not zero? t then ex := ex + t::EX
+        ex := a(ex) -- builds a(m*n+t)
+        infty: EX := "%Infinity"::Symbol::EX
+        summation(ex, equation(n, segment(0, infty)))$EX
+
+    orbitProductX(x: %): EX ==
+        n: Symbol := "n"::Symbol
+        a: BasicOperator := operator("a"::Symbol)
+        orb: List N := sort orbit x
+        t := first orb
+        ex: EX := sumX(a, n, xx.fmultiplier, t)
+        if not empty?(orb := rest orb) then ex := paren ex
+        for k in orb repeat ex := ex * paren sumX(a, n, xx.fmultiplier, k)
+        ex
+
+    monomialX(vars: List Symbol, r: List Z): Pol C ==
+        l: List Pol C := [(v::Pol(C))^(rd::N) for v in vars for rd in r]
+        reduce(_*, l, 1)
+
+    monomialQuotientX(vars: List Symbol, r: List Z): Fraction Pol C ==
+        num: Pol C := monomialX(vars, [max(0,  rd) for rd in r])
+        neg: List Z := [max(0, -rd) for rd in r]
+        den: Pol C := monomialX(vars, neg)
+        num / den
+
+    etaQuotientX(n: P, r: List Z, var: String): Fraction Pol C ==
+        divs: List Z := divisors(n)$IntegerNumberTheoryFunctions
+        vsyms: List Symbol := indexedSymbols(var, divs)$QAuxiliaryTools
+        monomialQuotientX(vsyms, r)
+
+    cofactorX(x: %): Fraction Pol C == etaQuotientX(xx.fnn, xx.fr, "E")
+    qcofactorX(x: %): Fraction Pol C ==
+        eq: Fraction Pol C := etaQuotientX(xx.fnn, xx.fr, "u")
+        alpha: Z := alphaInfinity x
+        zero? alpha => eq
+        q: Fraction Pol(C) := "q"::Symbol::Pol(C)::Fraction(Pol C)
+        q^alpha * eq
+
+
 
 )if LiterateDoc
 %$
@@ -444,7 +499,6 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
   Implementation ==> add
     findIdentity(nn: P, r: List Z, mm: P, s: List Z, m: P, t: N,_
                  rgens: List List Z): IDENTITY ==
---        import from QEtaModularFunctionTools
 
         -- First compute the expansion of the orbit product.
         eulerquo: T1 C := taylorRep(eulerQuotient(mm, s)$ETA(C))
