@@ -219,23 +219,35 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ correspond to eta-quotients given by
       ++ etaQuotientMonoidExponentVectors(x).
 
-    monomial: (List Symbol, List Z) -> OutputForm
-    monomialQuotient: (List Symbol, List Z) -> OutputForm
-    etaProduct: (P, List Z, String) -> OutputForm
-    etaQuotient: (P, List Z, String) -> OutputForm
     orbitProduct: % -> OutputForm
-    cofactor: % -> OutputForm
-    qcofactor: % -> OutputForm
-    f: % -> OutputForm
-    qf: % -> OutputForm
-    etaRelationMonomial: (P, SUP C, List Z) -> OutputForm
-    qRelationMonomial: (P, SUP C, List Z) -> OutputForm
-    etaRelation: (P, List SUP C, List List Z) -> OutputForm
-    qRelation: (P, List SUP C, List List Z) -> OutputForm
-    pretty: % -> OutputForm
-    qpretty: % -> OutputForm
-    nice: % -> OutputForm
-    qnice: % -> OutputForm
+
+-------------------------------------------------------------------
+
+    var: Symbol -> Z -> OutputForm
+    varsub: Symbol -> Z -> OutputForm
+    varEta: Z -> OutputForm
+    varPochhammer: Z -> OutputForm
+
+    varPower: (Z, Z, Z -> OutputForm) -> OutputForm
+    monomial: (List Z, List Z, Z -> OutputForm) -> OutputForm
+    monomialQuotient: (List Z, List Z, Z -> OutputForm) -> OutputForm
+
+    etaQuotient: (P, List Z, Z -> OutputForm) -> OutputForm
+    qQuotient: (P, List Z, Z -> OutputForm, Z) -> OutputForm
+
+    cofactor: (%, Z -> OutputForm) -> OutputForm
+    qcofactor: (%, Z -> OutputForm) -> OutputForm
+    f:  (%, Z -> OutputForm) -> OutputForm
+    qf:  (%, Z -> OutputForm) -> OutputForm
+
+    etaRelationMonomial: (P, SUP C, List Z, Z -> OutputForm) -> OutputForm
+    qRelationMonomial: (P, SUP C, List Z, Z -> OutputForm) -> OutputForm
+    etaRelation: (P, List SUP C, List List Z, Z -> OutputForm) -> OutputForm
+    qRelation: (P, List SUP C, List List Z, Z -> OutputForm) -> OutputForm
+    pretty: (%, Z -> OutputForm) -> OutputForm
+    qpretty: (%, Z -> OutputForm) -> OutputForm
+    nice: (%, Z -> OutputForm) -> OutputForm
+    qnice: (%, Z -> OutputForm) -> OutputForm
 
 -------------------------------------------------------------------
 
@@ -322,84 +334,103 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         for k in orb repeat out := out * paren sum(a, n, xx.fmultiplier, k)
         out
 
-    monomial(vars: List Symbol, r: List Z): OF ==
-        dim := # vars
-        DZ ==> HomogeneousDirectProduct(dim, Z);
-        MZ ==> Monomials(dim, Z, DZ, vars)
-        (directProduct(vector r)$MZ) :: OF
+-------------------------------------------------------------------
 
-    monomialQuotient(vars: List Symbol, r: List Z): OF ==
-        num: OF := monomial(vars, [max(0,  rd) for rd in r])
+    var(sy: Symbol): Z -> OF == (d: Z): OF +->
+        concat(string sy, convert(d)@String)::Symbol::OF
+
+    varsub(sy: Symbol): Z -> OF == (d: Z): OF +-> sub(sy::OF, d::OF)$OF
+
+    varEta(d: Z): OF ==
+        tau := "τ"::Symbol::OF
+        eta := "η"::Symbol::OF
+        one? d => prefix(eta, [tau])$OF
+        prefix(eta, [(d::OF)*tau])$OF
+
+    varPochhammer(d: Z): OF ==
+        q := "q"::Symbol::OF
+        l: List OF := if one? d then
+                          [q, q]$List(OF)
+                      else
+                          e: OF := d::OF
+                          [q^e, q^e]$List(OF)
+        sub(paren l, "%Infinity"::Symbol::OF)
+
+    varPower(d: Z, rd: Z, v: Z -> OF): OF ==
+        zero? rd => v(d)
+        v(d)^(rd::OF)
+
+    monomial(divs: List Z, r: List Z, v: Z -> OF): OF ==
+        zero?(vector(r)$Vector(Z)) => (1$Z)::OF
+        l := [varPower(d,rd,v) for d in divs for rd in r|not zero? rd]$List(OF)
+        reduce(_*, l)$List(OF)
+
+    monomialQuotient(divs: List Z, r: List Z, v: Z -> OF): OF ==
+        num: OF := monomial(divs, [max(0,  rd) for rd in r], v)
         neg: List Z := [max(0, -rd) for rd in r]
-        den: OF := monomial(vars, neg)
         zero?(vector(neg)$Vector(Z)) => num
-        num / den
+        num / monomial(divs, neg, v)
 
-    etaProduct(n: P, r: List Z, var: String): OF ==
+    etaQuotient(n: P, r: List Z, v: Z -> OF): OF ==
         divs: List Z := divisors(n)$IntegerNumberTheoryFunctions
-        vsyms: List Symbol := indexedSymbols(var, divs)$QAuxiliaryTools
-        monomial(vsyms, r)
+        monomialQuotient(divs, r, v)
 
-    etaQuotient(n: P, r: List Z, var: String): OF ==
-        divs: List Z := divisors(n)$IntegerNumberTheoryFunctions
-        vsyms: List Symbol := indexedSymbols(var, divs)$QAuxiliaryTools
-        monomialQuotient(vsyms, r)
+    qQuotient(n: P, r: List Z, v: Z -> OF, e: Z): OF ==
+        eq := etaQuotient(n, r, v)
+        zero? e => eq
+        ("q"::Symbol::OF)^(e::OF) * eq
 
-    cofactor(x: %): OF == etaQuotient(xx.fnn, xx.fr, "E")
-    qcofactor(x: %): OF ==
-        eq := etaQuotient(xx.fnn, xx.fr, "u")
-        alpha: Z := alphaInfinity x
-        zero? alpha => eq
-        monomial(["q"::Symbol], [alpha]) * eq
+    cofactor(x: %, v: Z -> OF): OF == etaQuotient(xx.fnn, xx.fr, v)
+    qcofactor(x: %, v: Z -> OF): OF ==
+        qQuotient(xx.fnn, xx.fr, v, alphaInfinity x)
 
-    f(x: %): OF ==
-        out: OF := cofactor x * orbitProduct x
+    f(x: %, v: Z -> OF): OF ==
+        out: OF := cofactor(x, v) * orbitProduct x
         one? xx.fcf => out
         one?(-xx.fcf) => - out
         (xx.fcf)::OF * out
 
-    qf(x: %): OF == qcofactor x * orbitProduct x
+    qf(x: %, v: Z -> OF): OF == qcofactor(x, v) * orbitProduct x
 
-    etaRelationMonomial(nn: P, c: SUP C, r: List Z): OF ==
-        --assert(not zero?(vector(r)$Vector(Z)))
+-------------------------------------------------------------------
+
+    etaRelationMonomial(nn: P, c: SUP C, r: List Z, v: Z -> OF): OF ==
         pol: OF := outputForm(c, "t"::Symbol::OF)
-        eq: OF := etaQuotient(nn, r, "E")
+        eq: OF := etaQuotient(nn, r, v)
         one? c => eq
         zero?(vector(r)$Vector(Z)) => pol
         paren(pol) * eq
 
-    qRelationMonomial(nn: P, c: SUP C, r: List Z): OF ==
-        --assert(not zero?(vector(r)$Vector(Z)))
+    qRelationMonomial(nn: P, c: SUP C, r: List Z, v: Z -> OF): OF ==
         pol: OF := outputForm(c, "t"::Symbol::OF)
-        eq: OF := etaQuotient(nn, r, "u")
-        rhat: Z := sigmaInfinity(nn, r)$QEtaKolberg
-        if not zero? rhat then eq := monomial(["q"::Symbol], [rhat]) * eq
+        eq: OF := qQuotient(nn, r, v, sigmaInfinity(nn, r)$QEtaKolberg)
         one? c => eq
         zero?(vector(r)$Vector(Z)) => pol
         paren(pol) * eq
 
-    etaRelation(nn: P, cis: List SUP C, rgens: List List Z): OF ==
-       l: List OF := [etaRelationMonomial(nn, c, r)
+    etaRelation(nn: P, cis: List SUP C, rgens: List List Z, v: Z -> OF): OF ==
+       l: List OF := [etaRelationMonomial(nn, c, r, v)
                       for c in cis for r in rgens | not zero? c]
        reduce(_+, l)
 
-    qRelation(nn: P, cis: List SUP C, rgens: List List Z): OF ==
-       l: List OF := [qRelationMonomial(nn, c, r)
+    qRelation(nn: P, cis: List SUP C, rgens: List List Z, v: Z -> OF): OF ==
+       l: List OF := [qRelationMonomial(nn, c, r, v)
                       for c in cis for r in rgens | not zero? c]
        reduce(_+, l)
 
-    pretty(x: %): OF ==
+    pretty(x: %, v: Z -> OF): OF ==
         rgens := xx.frgens
         bas: List List Z := cons([0 for rd in first rgens], rest rgens)
-        (equation(f x, etaRelation(xx.fnn, xx.frel, bas))$Equation(OF))::OF
+        er: OF := etaRelation(xx.fnn, xx.frel, bas, v)
+        (equation(f(x, v), er)$Equation(OF))::OF
 
-    qpretty(x: %): OF ==
+    qpretty(x: %, v: Z -> OF): OF ==
         rgens := xx.frgens
         bas: List List Z := cons([0 for rd in first rgens], rest rgens)
-        (equation(qf x, qRelation(xx.fnn, xx.frel, bas))$Equation(OF))::OF
+        qr: OF := qRelation(xx.fnn, xx.frel, bas, v)
+        (equation(qf(x, v), qr)$Equation(OF))::OF
 
-
-    nice(x: %): OF ==
+    nice(x: %, v: Z -> OF): OF ==
         invcf: Union(C, "failed") := 1$C exquo xx.fcf
         c: C := if invcf case "failed" then 1$C else invcf::C
         cis: List SUP C := [c*p for p in xx.frel]
@@ -407,12 +438,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         rgens: List List Z := xx.frgens
         bas: List List Z := cons([0 for rd in first rgens], rest rgens)
         bas := [members(vr + vector b) for b in bas]
-        rel: OF := etaRelation(xx.fnn, cis, bas)
+        rel: OF := etaRelation(xx.fnn, cis, bas, v)
         cf: C := c * xx.fcf
         one? cf => (equation(orbitProduct x, rel)$Equation(OF))::OF
         (equation((cf::OF) * orbitProduct x, rel)$Equation(OF))::OF
 
-    qnice(x: %): OF ==
+    qnice(x: %, v: Z -> OF): OF ==
         invcf: Union(C, "failed") := 1$C exquo xx.fcf
         c: C := if invcf case "failed" then 1$C else invcf::C
         cis: List SUP C := [c*p for p in xx.frel]
@@ -420,7 +451,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         rgens: List List Z := xx.frgens
         bas: List List Z := cons([0 for rd in first rgens], rest rgens)
         bas := [members(vr + vector b) for b in bas]
-        rel: OF := qRelation(xx.fnn, cis, bas)
+        rel: OF := qRelation(xx.fnn, cis, bas, v)
         cf: C := c * xx.fcf
         one? cf => (equation(orbitProduct x, rel)$Equation(OF))::OF
         (equation((cf::OF) * orbitProduct x, rel)$Equation(OF))::OF
