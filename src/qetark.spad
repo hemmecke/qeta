@@ -38,7 +38,7 @@ vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbo
 \date{29-Oct-2020}
 \maketitle
 \begin{abstract}
-  The package \code{QEtaRamanujanKolberg} implements functions to help7
+  The package \code{QEtaRamanujanKolberg} implements functions to help
   finding Ramanujan-Kolberg identities.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,7 +52,9 @@ vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbo
 We try to find all missing parts to find a Ramanujan-Kolberg relation
 as defined in \cite[p.~227]{Radu:RamanujanKolberg:2015}.
 
-Let $M$ be a positive integer and $s=(s_\delta)_{\delta|M}$ be a sequence of integers indexed by the positive divisors of $M$. Define a sequence $a(n)$ by
+Let $M$ be a positive integer and $s=(s_\delta)_{\delta|M}$ be a
+sequence of integers indexed by the positive divisors of $M$. Define a
+sequence $a(n)$ by
 \begin{gather*}
   \sum_{n=0}^\infty a(n) q^n
   =
@@ -66,7 +68,7 @@ where
 \end{gather*}
 is the $q$-Pochhammer symbol.
 
-Given $N$, $m$, and $t \in \{0,\ldots,m-1\}$, we wabt to compute a
+Given $N$, $m$, and $t \in \{0,\ldots,m-1\}$, we want to compute a
 sequence $r=(r_\delta)_{\delta|N}$ of integers, a set
 $\mathcal{O}_{r,m,t}\subseteq\{0,\ldots,m=1\}$, $\eta$-quotients
 $b_i \in M^\infty(N)$, and numbers $c_i\in \mathbb{Q}$ uch that
@@ -194,11 +196,24 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     definitionLevel: % -> P
       ++ definitionLevel(x) returns mm. This is the level of the
       ++ eta-quotient from which the sifted version is taken.
+    definitionExponents: % -> List Z
+      ++ definitionExponents(x) returns the exponents
+      ++ $s=(s_\delta)_{\delta|M}$ (where $M$ is the definition level)
+      ++ for the defining series of the coefficients a(n), i.e.,
+      ++ \sum_{n=0}^\infty a(n)q^n = \prod_{\delta|M} (q^{\delta},
+      ++ q^{\delta})_\infty^{s_\delta}$.
     multiplier: % -> P
+      ++ multiplier(x) returns factor m to select a certain
+      ++ subsequence a(m*n+k) of the defining series (where k is one
+      ++ number out of orbit(x).
     coefficient: % -> C
       ++ coefficient(x) is the coefficient that results from a
       ++ reduction process in case it cannot be inverted. For a
       ++ coefficient field, it will give 1.
+    coExponet: % -> List Z
+      ++ coExponent(x) returns the exponent vector r of an eta
+      ++ quotient that must be muliplied to the orbit product in order
+      ++ to obtain a modular function.
     moduleCoefficients: % -> List SUP C
       ++ moduleCoefficients(x) gives the list of coefficients that
       ++ correspond to the eta-quotients given by
@@ -218,11 +233,13 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ turn this orbit product into a modular function and the Mi
       ++ correspond to eta-quotients given by
       ++ etaQuotientMonoidExponentVectors(x).
-
     orbitProduct: % -> OutputForm
+      ++ orbitProduct(x) returns the orbit product as an OutputForm.
 
 -------------------------------------------------------------------
 
+    -- The var-functions are helper functions for printing etaQuotients.
+    -- They print the i-th variable.
     var: Symbol -> Z -> OutputForm
     varsub: Symbol -> Z -> OutputForm
     varEta: Z -> OutputForm
@@ -558,15 +575,29 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 )endif
 
 )abbrev package QETARK QEtaRamanujanKolberg
+++ QEtaRamanujanKolberg provides functions to compute
+++ Ramanujan-Kolberg identities by an algorithm that was developed by
+++ Radu in \cite{Radu:RamanujanKolberg:2015}
+++ (`DOI=10.1016/j.jsc.2014.09.018
+++ <https://doi.org/10.1016/j.jsc.2014.09.018>`_), see `RISC Report
+++ <https://www.risc.jku.at/publications/download/risc_5069/zzz3.pdf>`_.
+++ See also at the top of the qetark.spad file where this package is
+++ implemented.
 QEtaRamanujanKolberg(C): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain
   IDENTITY ==> QEtaRamanujanKolbergIdentity C
   Exports ==> with
     findIdentity: (P, List Z, P, List Z, P, N, List List Z) -> IDENTITY
+      ++ findIdentity(nn, r, mm, s, m, k, rgens) returns all data for a
+      ++ Ramanujan-Kolberg identity.
     findIdentity: (P, List Z, P, List Z, P, N) -> IDENTITY
+      ++ findIdentity(nn, r, mm, s, m, k) returns all data for a
+      ++ Ramanujan-Kolberg identity.
     findIdentity: (P, P, List Z, P, N, List List Z) -> IDENTITY
+      ++ findIdentity(nn, mm, s, m, k, rgens) returns all data for a
+      ++ Ramanujan-Kolberg identity.
     findIdentity: (P, P, List Z, P, N) -> IDENTITY
-      ++ findIdentity(nn, mm, s, m, t) returns all date for a
+      ++ findIdentity(nn, mm, s, m, k) returns all data for a
       ++ Ramanujan-Kolberg identity.
   Implementation ==> add
     findIdentity(nn: P, r: List Z, mm: P, s: List Z, m: P, t: N,_
