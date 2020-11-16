@@ -353,13 +353,28 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     level(x: %): P == xx.fnn
     definitionLevel(x: %): P == xx.fmm
+    definitionExponents(x: %): List Z == xx.fs
+    coExponents(x: %): List Z == xx.fr
     multiplier(x: %): P == xx.fmultiplier
     coefficient(x: %): C == xx.fcf
     moduleCoefficients(x: %): List SUP C == xx.frel
     etaQuotientMonoidExponentVectors(x: %): List List Z == xx.frgens
     identityPolynomial(x: %): Pol C == xx.fpol
 
-    coerce(x: %): OutputForm == rep(x)::OutputForm
+    oeq(x, y) ==> equation((concat(x,"(x)")$String)::Symbol::OF,y::OF)::Equation(OF)::OF
+    coerce(x: %): OutputForm ==
+        lvl: OF := oeq("level", level x)
+        deflvl: OF := oeq("definitionLevel", definitionLevel x)
+        defex: OF := oeq("definitionExponents", definitionExponents x)
+        coex: OF := oeq("coExponents", coExponents x)
+        m: OF := oeq("multiplier", multiplier x)
+        orb: OF := oeq("orbit", orbit x)
+        cf: OF := oeq("coefficient", coefficient x)
+        alpha: OF := oeq("alphaInfinity", alphaInfinity x)
+        rgens: OF :=  oeq("etaQuotientMonoidExponentVectors",
+                          etaQuotientMonoidExponentVectors x)
+        idpol: OF := oeq("identityPolynomial", identityPolynomial x)
+        vconcat [lvl, coex, deflvl, defex, m, orb, cf, alpha, rgens, idpol]
 
     sum(a: OF, n: OF, m: P, t: N): OF ==
         out: OF := m::OF * n
