@@ -115,6 +115,11 @@ QEtaKolberg: Exports == Implementation where
       ++ the conditions for the parameters are fulfilled.
       ++ This checks whether (nn, mm, s, m, t) is in \Delta^* as
       ++ defined in Definition~\ref{def:modular-input-conditions}.
+    minimalModularInputLevel: (P, LZ, P, N) -> P
+      ++ minimalModularInputLevel(mm, s, m, t) returns the smallest nn
+      ++ such that modularInputConditions?(nn, mm, s, m, t) is true,
+      ++ i.e. that (nn, mm, s, m, t) is an element of \Delta^* as
+      ++ defined in Definition~\ref{def:modular-input-conditions}.
     modularConditions?: (P, LZ, P, LZ, P, N) -> Boolean
       ++ modularConditions?(nn, r, mm, s, m, t) returns true iff all
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
@@ -421,6 +426,12 @@ QEtaKolberg: Exports == Implementation where
             dbgPrint("eq:even-m e", e)
             dbgPrint("eq:even-m e", u)
         return (b1 or b2)
+
+    minimalModularInputLevel(mm: P, s: LZ, m: P, t: N): P ==
+        nn: P := 1
+        while not modularInputConditions?(nn, mm, s, m, t) repeat
+            nn := nn + 1
+        return nn
 
     modularConditions?(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): Boolean ==
         not modularInputConditions?(nn, mm, s, m, t) => false
