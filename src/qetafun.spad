@@ -3709,12 +3709,17 @@ QEtaModularFunctionTools: Exports == Implementation where
         y: YMSETAQ := etaQuotient(nn, r, mm, s, m, t);
         qetaGrades y
 
-    etaCoFactorInfinity(nn: P, mm: P, s: LZ, m: P, t: N): LZ ==
-        ecfs: ECFS := etaCoFactorSpace(nn, mm, s, m, t)$QEtaKolberg
-        nndivs: LP := DIVISORS nn
-        n: N := #nndivs
-        rinitial: VZ := ((ecfs.particular)::VZ)(1..n)
-        b: LVZ := [x(1..n) for x in ecfs.basis]
+    -- local function
+    -- It might happen that the particular solution of etaCoFactorSpace
+    -- has entries that are very big. That would lead to a very heavy
+    -- computation when we determine the grades of the respective
+    -- eta-quotient at all cusps. We therefore try to "reduce" the vector
+    -- by elements of the basis such that the length of the vector becomes
+    -- small.
+    -- Here we do it by applying the LLL algorithm and trying to reconstruct
+    -- a relavtively small vector s such that s = r + dot(c, bas) for some
+    -- integer vector c.
+    minimizeVector(rinitial: VZ, b: LVZ): VZ ==
         -- The rinitial vector might have very big numbers in it. We
         -- make them smaller by applying LLL to the system.
         -- Note that the elements of b correspond to exponent vectors that
@@ -3726,12 +3731,45 @@ QEtaModularFunctionTools: Exports == Implementation where
         tmat: MZ := el.trf
         z: Z := 0
         i: N := 1
-        while i <= nrows(tmat) and not one? abs(z := tmat(i, 1)) repeat i := i+1
-        if not zero? z then rinitial := z*row(tmat, i)*mat
+        n: N := nrows(tmat)
+        while i <= n and not one? abs(z := tmat(i, 1)) repeat i := i+1
+        one? abs z => z*row(tmat, i)*mat
 
-        -- Compute the poleorders/grades for the particular solution rinitial.
+        -- Here we were unlucky. No 1 or -1 in the first component found.
+        -- Thus we try to construct a 1 by successive gcd computation.
+        i := 1
+        while i <= n and zero?(z := tmat(i, 1)) repeat i := i + 1
+        i > n => rinitial
+        -- We know that there is no 1 or -1 in the first position, so
+        -- abs(tmat(i, 1)) is not equal to one. If i=n then we have no
+        -- chance to change that into a 1.
+        i = n => rinitial
+
+        v: VZ := row(tmat, i)
+        i := i + 1
+        CCG ==> Record(coef1: Z, coef2: Z, generator: Z)
+        while i <= n and not one? z repeat
+            ccg: CCG := extendedEuclidean(z, tmat(i, 1))
+            v := ccg(coef1) * v + ccg(coef2) * row(tmat, i)
+            z := ccg.generator
+            i := i + 1
+        one? z => v*mat
+        rinitial
+
+
+    -- local function
+    -- What actually counts is that the grade of eta-quotient corresponding
+    -- to rinitial is small.
+    -- The initial minimizeVector is only here, because the computation of
+    -- qetaGrades involves the actual computation of the Laurent series
+    -- expansion of the respective eta-quotient at all cusps. So we
+    -- shouldn't have too high exponents.
+    minimizeGrades(nn: P, mm: P, s: LZ, m: P, t: N, rinitial: VZ, b: LVZ): LZ ==
+        rinitial := minimizeVector(rinitial, b)
+        -- Compute the poleorders/grades (at all cusps)for the
+        -- particular solution rinitial.
         g: XHashTable(Q, Z) := qetaGrades(nn, members rinitial, mm, s, m, t);
-        -- Exclude order at cusp at infinity.
+        -- Exclude order at the cusp infinity.
         cusps: LQ := [cusp for cusp in cuspsOfGamma0(nn)$QAuxMEQ | cusp~=1/nn]
         rhs: LZ := [g.cusp for cusp in cusps]
 
@@ -3739,12 +3777,20 @@ QEtaModularFunctionTools: Exports == Implementation where
         -- series explicitly, since these vectors correspond to
         -- modular eta quotients and thus we can use the matrix of
         -- Ligozat to compute the order vectors.
+        nndivs: List P := DIVISORS nn
         bas: List LZ := [grades(nn, nndivs, cusps, members r) for r in b]
         mat: MZ := transpose matrix bas
         rels: VZ := vector [1 for x in 1..#cusps]
         zresult: ZRESULT := zsolve(mat, rels, vector rhs)$X4ti2
         adjustment := members first zresult.zinhom
         members(rinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
+
+    etaCoFactorInfinity(nn: P, mm: P, s: LZ, m: P, t: N): LZ ==
+        ecfs: ECFS := etaCoFactorSpace(nn, mm, s, m, t)$QEtaKolberg
+        n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
+        rinitial: VZ := ((ecfs.particular)::VZ)(1..n)
+        b: LVZ := [x(1..n) for x in ecfs.basis]
+        members minimizeGrades(nn, mm, s, m, t, rinitial, b)
 
 )if LiterateDoc
 %$
