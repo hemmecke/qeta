@@ -87,6 +87,10 @@ Now some abbreviations for common domains.
 P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+
 VZ ==> Vector Z
 MZ ==> Matrix Z
 Rec ==> Record(red: SL2Z, lg: N)
@@ -96,7 +100,7 @@ LZ ==> List Z
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
 INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetafun.spad.
@@ -212,7 +216,7 @@ QEtaKolberg: Exports == Implementation where
         --assert(one? positiveRemainder(a2, 24))
         -- \cite[Def.~41]{Radu:RamanujanKolberg:2015}
         z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
-        qcoerce(z)@N
+        asN z
 
     -- Return true iff \eqref{eq:Radu-productsquare} holds.
     checkSquare?(nn: P, mm: P, r: LZ, s: LZ, m: P, orbitSize: Z): Boolean ==
@@ -222,7 +226,7 @@ QEtaKolberg: Exports == Implementation where
         -- By \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}, it is
         -- enough to consider all prime divisors of N.
         for fe in fl repeat -- do for all primes dividing nn
-            p: P := qcoerce(fe.factor)@P -- extract prime factor
+            p: P := asP(fe.factor) -- extract prime factor
             -- Determine whether an even power of p divides
             -- \prod_{\delta|N}\delta^rdelta.
             e1: Z := 0
@@ -249,7 +253,7 @@ QEtaKolberg: Exports == Implementation where
     orbit(sigmaInfty: Z, m: P, t: N): List N ==
         m24: Z := 24*m
         g := gcd(kappa(m)*(24*t + sigmaInfty), m24)
-        w: P := qcoerce((m24 exquo g)::Z)@P
+        w: P := asP((m24 exquo g)::Z)
         result: List N := empty()
         for a in 0..w-1 | one? gcd(a, w) repeat
             y := a
@@ -273,7 +277,7 @@ QEtaKolberg: Exports == Implementation where
     orbitRadu(sigmaInfty: Z, m: P, t: N): List N ==
         g := gcd(kappa(m)*(24*t + sigmaInfty), 24*m)
         dbgPrint("g", g)
-        w: P := qcoerce((24*m exquo g)::Z)@P
+        w: P := asP((24*m exquo g)::Z)
         dbgPrint("w", w)
         sw: List Z := empty()
         for a in 0..w-1 | one? gcd(a, w) repeat
@@ -330,13 +334,13 @@ QEtaKolberg: Exports == Implementation where
             for i in 1..#fl for fe in fl repeat qsetelt!(v, i+3, 0)
         else
             for i in 1..#fl for fe in fl repeat
-                p: P := qcoerce(fe.factor)@P -- extract prime factor
+                p: P := asP(fe.factor) -- extract prime factor
                 em: N := primePower(m, p)$QAuxMEQ
                 -- for all divisors of mm > 1
                 e: Z := if odd? first s then em else 0 -- case: delta=1
                 for j in 2..n for sdelta in rest s | odd? sdelta repeat
                     -- Mod 2 only odd sdelta is relevant.
-                    e := e + em + primePower(qcoerce(d.j)@P, p)$QAuxMEQ
+                    e := e + em + primePower(asP(d.j), p)$QAuxMEQ
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
@@ -416,7 +420,7 @@ QEtaKolberg: Exports == Implementation where
         odd? m => true
         u: Z := 1
         for delta in mmdivs for sdelta in s | not zero? sdelta repeat
-            adelta: P := qcoerce(abs(sdelta))@P
+            adelta: P := asP abs(sdelta)
             u := u * delta^adelta
         e: Z := 0
         while even? u repeat
@@ -582,7 +586,7 @@ QEtaKolberg: Exports == Implementation where
         -- \cite[Def.~34]{Radu:RamanujanKolberg:2015} must be fulfilled.
         p := orbit(level, sigmainfty, m, t, r)
         orbitSize := #p
-        divs: List P := [qcoerce(d)@P for d in divisors(level)]
+        divs: List P := [asP d for d in divisors(level)]
         k: P := kappa m
         c1 := orbitSize * reduce(_+, r)
         c2 := chiExponent(m, r, orb)
