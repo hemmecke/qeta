@@ -51,6 +51,12 @@ This package requires a version of FriCAS_ that is compiled from at
 least SVN revision 2328, i.e. where Gröbner basis computations do no
 longer require variable names.
 
+Links
+^^^^^
+
+* https://www3.risc.jku.at/people/hemmecke/qeta
+* https://www3.risc.jku.at/people/hemmecke/qeta/eta
+
 TODO: MUST FIX
 
 The scripts usually use::
