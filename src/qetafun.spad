@@ -3709,6 +3709,45 @@ QEtaModularFunctionTools: Exports == Implementation where
         y: YMSETAQ := etaQuotient(nn, r, mm, s, m, t);
         qetaGrades y
 
+
+    -- local function
+    -- By adding interger multiples of elements of b we try to
+    -- make the length of rinitial as small as possible in a cheap way.
+    -- It is not completely necessary to find the minimal vector, since
+    -- there is a second optimization step in minimalGrades that makes
+    -- the order at the cusps relatively small.
+    -- We try to achieve small length by a simple algorithm.
+    --
+    -- Let b be a vector of bas. Compute v1:=v+b, v2:=v-b. If v1 is
+    -- strictly shorter than v, then set v to v1 and iterate. Similar
+    -- if v2 is strictly shorter. If neither v1 nor v2 are not
+    -- strictly shorter than v continue with the next vector from bas.
+    minimizeVector(v: VZ, basis: LVZ): VZ ==
+        empty? basis => v
+        reduced?: Boolean := true -- to start the loop
+        lv := dot(v, v)
+        while reduced? repeat
+            bas := basis
+            reduced? := false
+            while not empty? bas and not reduced? repeat
+                b := first bas
+                bas := rest bas
+                u := v + b
+                while (lu := dot(u, u)) < lv repeat
+                    lv := lu
+                    v := u
+                    u := v + b
+                    reduced? := true
+                reduced? => break
+                u := v - b
+                while (lu := dot(u, u)) < lv repeat
+                    lv := lu
+                    v := u
+                    u := v - b
+                    reduced? := true
+        v
+
+
     -- local function
     -- It might happen that the particular solution of etaCoFactorSpace
     -- has entries that are very big. That would lead to a very heavy
@@ -3719,7 +3758,7 @@ QEtaModularFunctionTools: Exports == Implementation where
     -- Here we do it by applying the LLL algorithm and trying to reconstruct
     -- a relavtively small vector s such that s = r + dot(c, bas) for some
     -- integer vector c.
-    minimizeVector(rinitial: VZ, b: LVZ): VZ ==
+    minimizeVectorLLL(rinitial: VZ, b: LVZ): VZ ==
         -- The rinitial vector might have very big numbers in it. We
         -- make them smaller by applying LLL to the system.
         -- Note that the elements of b correspond to exponent vectors that
