@@ -271,40 +271,45 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ qEtauotient(n, r, v) returns qQuotient(n, r, v, e) with
       ++ e=(sigmaInfinity(n, r)$QEtaKolberg)/24.
 
-    coFactor: (%, Z -> OutputForm) -> OutputForm
-    qcoFactor: (%, Z -> OutputForm) -> OutputForm
-    f:  (%, Z -> OutputForm) -> OutputForm
-    qf:  (%, Z -> OutputForm) -> OutputForm
+    f:  (%, Z -> OutputForm, Z, C, Q, List Z) -> OutputForm
 
-    etaRelationMonomial: (P, SUP C, L Z, Z -> OutputForm, Q) -> OutputForm
-      ++ etaRelationMonomial(n, ci, ri, v, e) return an eta-quoatient
-      ++ of level n with exponent vector ri and coefficient ci which
-      ++ is multiplied by q^e.
-    qRelationMonomial: (P, SUP C, L Z, Z -> OutputForm, Q) -> OutputForm
-      ++ qRelationMonomial(n, ci, ri, v, c, e, r) return an
-      ++ q-quoatient of level n with exponent vector ri and coefficient
-      ++ ci which is multiplied by q^e.
+    etaRelationMonomial: (P, SUP C, L Z, Z -> OutputForm, Z, Q) -> OutputForm
+      ++ etaRelationMonomial(n, ci, ri, v, style, e) return an
+      ++ eta-quoatient of level n with exponent vector ri and
+      ++ coefficient ci which is multiplied by q^e with variables
+      ++ given through v and in a form given by style.
 
-    etaRelation: (P, List SUP C, List List Z, Z -> OutputForm, C, Q, List Z)
+    etaRelation: (P, List SUP C, List List Z, Z -> OutputForm, Z, C, Q, List Z)
         -> OutputForm
-      ++ etaRelation(n, cis, bas, v, c, e, r) returns the eta-relation part
-      ++ multiplied by c*q^e*etaQuotient(n,r).
-    qRelation: (P, List SUP C, List List Z, Z -> OutputForm, C, Q, List Z)
-        -> OutputForm
-      ++ qRelation(n, lc, bas, v, c, e, r) like etaRelation(n, cis,
-      ++ bas, v, c, e, r) but also prints the additional respective
-      ++ q-powers coming from the r-vectors in the relation.
+      ++ etaRelation(n, cis, bas, v, style, c, e, r) returns the
+      ++ eta-relation part multiplied by c*q^e*etaQuotient(n,r).
+
+    pretty: (%, Z -> OutputForm, Z, C, Q, List Z) -> OutputForm
+      ++ pretty(x, v, style, c, e, r) outputs x as computed in
+      ++ eta-quotients, but multiplied by c*q^e*etaQuotient(n,r).
+
+    pretty: (%, Z -> OutputForm, Z) -> OutputForm
+      ++ pretty(x, v, style) outputs x as computed with respect to a
+      ++ style given by the style parameter. If the lowest bit is set
+      ++ in style then, the q factor is shown. If the first bit is
+      ++ set, then the t parameter is replaces by the respective
+      ++ eta-quotient, so that the coefficients will just be elements
+      ++ of the coefficient domain.
 
     pretty: (%, Z -> OutputForm) -> OutputForm
-      ++ pretty(x, v) outputs x as computed in eta-quotients
-    qpretty: (%, Z -> OutputForm) -> OutputForm
-      ++ qpretty(x, v) outputs x as computed in q notation.
+      ++ pretty(x, v) returns pretty(x, v, 0)
+
+    nice: (%, Z -> OutputForm, Z) -> OutputForm
+      ++ nice(x, v, style) outputs x as computed with respect to a
+      ++ style given by the style parameter, but with the eta-quotient
+      ++ and the coefficient divided through. If the lowest bit is set
+      ++ in style then, the q factor is shown. If the first bit is
+      ++ set, then the t parameter is replaces by the respective
+      ++ eta-quotient, so that the coefficients will just be elements
+      ++ of the coefficient domain.
+
     nice: (%, Z -> OutputForm) -> OutputForm
-      ++ nice(x, v) outputs x by leaving only the orbit product on the
-      ++ left-hand side in eta-notation.
-    qnice: (%, Z -> OutputForm) -> OutputForm
-      ++ qnice(x, v) outputs x by leaving only the orbit product on the
-      ++ left-hand side in q-notation.
+      ++ nice(x, v) returns nice(x, v, 0)
 
 -------------------------------------------------------------------
 
@@ -373,6 +378,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         s: List Z := definingExponents x
         alphaInfinity(level x, coExponents x, mm, s, m, k)$QEtaKolberg
 
+    alphaEtaInfinity(x: %): Q ==
+        rhat: Z := sigmaInfinity(level x, coExponents x)$QEtaKolberg
+        alphaInfinity(x)::Q - rhat/24
+
     orbit(x: %): List N == orbit(definingLevel x, definingExponents x,
                                  multiplier x, offset x)$QEtaKolberg
 
@@ -422,11 +431,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     varPochhammer(d: Z): OF ==
         q := "q"::Symbol::OF
-        l: List OF := if one? d then
-                          [q, q]$List(OF)
-                      else
-                          e: OF := d::OF
-                          [q^e, q^e]$List(OF)
+        one? d => sub(paren([q, q]$List(OF)), "%Infinity"::Symbol::OF)
+        l := [q^(d::OF), q^(d::OF)]$List(OF)
         sub(paren l, "%Infinity"::Symbol::OF)
 
     varPower(d: Z, rd: Z, v: Z -> OF): OF ==
@@ -452,116 +458,92 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     qQuotient(n: P, r: List Z, v: Z -> OF, e: Q): OF ==
         eq := etaQuotient(n, r, v)
         zero? e => eq
-        ("q"::Symbol::OF)^(e::OF) * eq
-
-    qEtaQuotient(n: P, r: List Z, v: Z -> OF): OF ==
-        qQuotient(n, r, v, (sigmaInfinity(n, r)$QEtaKolberg)/24)
-
-    coFactor(x: %, v: Z -> OF): OF ==
-        r: List Z := coExponents x
-        rhat: Z := sigmaInfinity(level x, r)$QEtaKolberg
-        e: Q := alphaInfinity(x)::Q - rhat/24
-        qQuotient(level x, r, v, e)
-
-    qcoFactor(x: %, v: Z -> OF): OF ==
-        qQuotient(level x, coExponents x, v, alphaInfinity(x)::Q)
-
-    f(x: %, v: Z -> OF): OF ==
-        out: OF := coFactor(x, v) * orbitProduct x
-        cf: C := coefficient x
-        one? cf => out
-        one?(-cf) => - out
-        cf::OF * out
-
-    qf(x: %, v: Z -> OF): OF ==
-        out: OF := qcoFactor(x, v) * orbitProduct x
-        cf: C := coefficient x
-        one? cf => out
-        one?(-cf) => - out
-        cf::OF * out
+        q: OF := "q"::Symbol::OF
+        one? e => q * eq
+        q^(e::OF) * eq
 
 -------------------------------------------------------------------
-
     -- local function
+    withQFactor?(style: Z): Boolean == odd? style
+    expand?(style: Z): Boolean == bit?(style, 1)
     plus(la: List Z, lb: List Z): List Z == [a + b for a in la for b in lb]
+    times(z: Z, r: List Z): List Z == [z*rd for rd in r]
 
-    etaRelationMonomial(nn: P, c: SUP C, r: List Z, v: Z -> OF, e: Q): OF ==
-        pol: OF := outputForm(c, "t"::Symbol::OF)
-        eq: OF := qQuotient(nn, r, v, e)
-        one? c => eq
-        zero?(vector(r)$Vector(Z)) => pol
-        pol * eq
+    zeroExponents(nn: P): List Z ==
+        n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
+        [0 for i in 1..n]
 
-    qRelationMonomial(nn: P, c: SUP C, r: List Z, v: Z -> OF, e: Q): OF ==
-        rhat: Q :=(sigmaInfinity(nn, r)$QEtaKolberg)/24
-        etaRelationMonomial(nn, c, r, v, e + rhat)
-
-    etaRelation(nn: P, cis: List SUP C, rgens: List List Z, v: Z -> OF,
-                c: C, e: Q, r: List Z): OF ==
-        l := [etaRelationMonomial(nn, c*ci, plus(r, rr), v, e)
-              for ci in cis for rr in rgens | not zero? ci]
-        empty? l => (0$Z)::OF
-        reduce(_+, l)
-
-    qRelation(nn: P, cis: List SUP C, rgens: List List Z, v: Z -> OF,
-                c: C, e: Q, r: List Z): OF ==
-        l := [qRelationMonomial(nn, c*ci, plus(r, rr), v, e)
-              for ci in cis for rr in rgens | not zero? ci]
-        empty? l => (0$Z)::OF
-        reduce(_+, l)
-
-    -- local function
     -- replace first exponent vector by 0 (basis of the module)
     basis(x: %): List List Z ==
         rgens: List List Z := etaQuotientMonoidExponentVectors x
         cons([0 for rd in first rgens], rest rgens)
 
-    pretty(x: %, v: Z -> OF): OF ==
-        bas: List List Z := basis x
+-------------------------------------------------------------------
+
+    f(x: %, v: Z -> OF, style: Z, c: C, e: Q, r: List Z): OF ==
+        e := e + alphaEtaInfinity x
+        r := plus(r, coExponents x)
+        if withQFactor? style then
+            e: Q := e + (sigmaInfinity(level x, r)$QEtaKolberg)/24
+        cofact: OF := qQuotient(level x, r, v, e)
+        out: OF := orbitProduct x
+        if not(zero? e and every?(zero?, r)) then out := cofact * out
+        cf: C := c * coefficient x
+        one? cf => out
+        one?(-cf) => - out
+        cf::OF * out
+
+-------------------------------------------------------------------
+
+    etaRelationMonomial(nn: P, c: SUP C, r: List Z,
+                        v: Z -> OF, style: Z, e: Q): OF ==
+        pol: OF := outputForm(c, "t"::Symbol::OF)
+        if withQFactor? style then
+            e := e + (sigmaInfinity(nn, r)$QEtaKolberg)/24
+        eq: OF := qQuotient(nn, r, v, e)
+        one? c => eq
+        zero?(vector(r)$Vector(Z)) => pol
+        pol * eq
+
+    etaRelation(nn: P, cis: List SUP C, rgens: List List Z, v: Z -> OF,
+                style: Z, c: C, e: Q, r: List Z): OF ==
+        l := [etaRelationMonomial(nn, c*ci, plus(r, rr), v, style, e)
+              for ci in cis for rr in rgens | not zero? ci]
+        empty? l => (0$Z)::OF
+        reduce(_+, l)
+
+-------------------------------------------------------------------
+
+    pretty(x: %, v: Z -> OF, style: Z, c: C, e: Q, r: List Z): OF ==
         cis: List SUP C := moduleCoefficients x
-        er: OF := etaRelation(level x, cis, bas, v, 1, 0, first bas)
-        (f(x, v) = er)$OF
-
-    qpretty(x: %, v: Z -> OF): OF ==
         bas: List List Z := basis x
-        cis: List SUP C := moduleCoefficients x
-        qr: OF := qRelation(level x, cis, bas, v, 1, 0, first bas)
-        (qf(x, v) = qr)$OF
+        if expand? style then
+            t: List Z := first etaQuotientMonoidExponentVectors x
+            lots: List List Record(k: N, c: C) := [listOfTerms ci for ci in cis]
+            --assert(#bas=#cis)
+            --assert(#bas=#lots)
+            cis := concat [[(rec.c)::SUP(C) for rec in lot] for lot in lots]
+            bas := concat [[plus(times(rec.k, t), b) for rec in lot]
+                           for lot in lots for b in bas]
+        er: OF := etaRelation(level x, cis, bas, v, style, c, e, r)
+        (f(x, v, style, c, e, r) = er)$OF
 
-    xpretty(x: %, v: Z -> OF): OF ==
-        bas: List List Z := basis x
-        cis: List SUP C := moduleCoefficients x
-        er: OF := etaRelation(level x, cis, bas, v, 1, 0, first bas)
-        (f(x, v) = er)$OF
+    pretty(x: %, v: Z -> OF, style: Z): OF ==
+        pretty(x, v, style, 1, 0, zeroExponents level x)
 
-    qxpretty(x: %, v: Z -> OF): OF ==
-        bas: List List Z := basis x
-        cis: List SUP C := moduleCoefficients x
-        qr: OF := qRelation(level x, cis, bas, v, 1, 0, first bas)
-        (qf(x, v) = qr)$OF
+    pretty(x: %, v: Z -> OF): OF == pretty(x, v, 0)
 
-
-    -- local function
-    niceaux(x: %, v: Z -> OF, q?: Boolean): OF ==
+    nice(x: %, v: Z -> OF, style: Z): OF ==
         cf: C := coefficient x
         invcf: Union(C, "failed") := 1$C exquo cf
         icf: C := if invcf case "failed" then 1$C else invcf::C
-        rhat: Z := sigmaInfinity(level x, coExponents x)$QEtaKolberg
-        e: Q := rhat/24 - alphaInfinity(x)::Q
         r: List Z := [- rd for rd in coExponents x]
-        cis: List SUP C := moduleCoefficients x
-        nn: P := level x
-        rel: OF :=
-            q? => qRelation(nn, cis, basis x, v, icf, e, r)
-            etaRelation(nn, cis, basis x, v, icf, e, r)
-        cf: C := cf * icf -- is not 1 if C is not invertible
-        one? cf => (orbitProduct x = rel)$OF
-        ((cf::OF) * orbitProduct x = rel)$OF
+        pretty(x, v, style, icf, - alphaEtaInfinity x, r)
 
-    nice(x: %, v: Z -> OF): OF == niceaux(x, v, false)
-    qnice(x: %, v: Z -> OF): OF == niceaux(x, v, true)
+    nice(x: %, v: Z -> OF): OF == nice(x, v, 0)
 
 -------------------------------------------------------------------
+-- Return parts as expressions, polynomial, or rational functions.
 
     sumX(a: BasicOperator, n: Symbol, m: P, t: N): EX ==
         ex: EX := m * (n::EX)
@@ -596,8 +578,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     coFactorX(x: %): Fraction Pol C ==
         nn: P := level x
         eq: Fraction Pol C := etaQuotientX(nn, coExponents x, "E")
-        rhat: Z := sigmaInfinity(nn, coExponents x)$QEtaKolberg
-        e: Z := 24*alphaInfinity(x) - rhat
+        e: Z := numer(24*alphaEtaInfinity(x))
         zero? e => eq
         xvar: Fraction Pol(C) := "x"::Symbol::Pol(C)::Fraction(Pol C)
         xvar^e * eq
@@ -608,6 +589,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         zero? alpha => eq
         q: Fraction Pol(C) := "q"::Symbol::Pol(C)::Fraction(Pol C)
         q^alpha * eq
+
+    -- unused
+    qEtaQuotient(n: P, r: List Z, v: Z -> OF): OF ==
+        qQuotient(n, r, v, (sigmaInfinity(n, r)$QEtaKolberg)/24)
 
 
 
