@@ -271,8 +271,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ qEtauotient(n, r, v) returns qQuotient(n, r, v, e) with
       ++ e=(sigmaInfinity(n, r)$QEtaKolberg)/24.
 
-    cofactor: (%, Z -> OutputForm) -> OutputForm
-    qcofactor: (%, Z -> OutputForm) -> OutputForm
+    coFactor: (%, Z -> OutputForm) -> OutputForm
+    qcoFactor: (%, Z -> OutputForm) -> OutputForm
     f:  (%, Z -> OutputForm) -> OutputForm
     qf:  (%, Z -> OutputForm) -> OutputForm
 
@@ -313,8 +313,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     monomialX: (List Symbol, List Z) -> Pol C
     monomialQuotientX: (List Symbol, List Z) -> Fraction Pol C
     etaQuotientX: (P, List Z, String) -> Fraction Pol C
-    cofactorX: % -> Fraction Pol C
-    qcofactorX:% -> Fraction Pol C
+    coFactorX: % -> Fraction Pol C
+    qcoFactorX:% -> Fraction Pol C
 
   Implementation ==> add
     Rep ==> Record(fnn: P,_
@@ -457,24 +457,24 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     qEtaQuotient(n: P, r: List Z, v: Z -> OF): OF ==
         qQuotient(n, r, v, (sigmaInfinity(n, r)$QEtaKolberg)/24)
 
-    cofactor(x: %, v: Z -> OF): OF ==
+    coFactor(x: %, v: Z -> OF): OF ==
         r: List Z := coExponents x
         rhat: Z := sigmaInfinity(level x, r)$QEtaKolberg
         e: Q := alphaInfinity(x)::Q - rhat/24
         qQuotient(level x, r, v, e)
 
-    qcofactor(x: %, v: Z -> OF): OF ==
+    qcoFactor(x: %, v: Z -> OF): OF ==
         qQuotient(level x, coExponents x, v, alphaInfinity(x)::Q)
 
     f(x: %, v: Z -> OF): OF ==
-        out: OF := cofactor(x, v) * orbitProduct x
+        out: OF := coFactor(x, v) * orbitProduct x
         cf: C := coefficient x
         one? cf => out
         one?(-cf) => - out
         cf::OF * out
 
     qf(x: %, v: Z -> OF): OF ==
-        out: OF := qcofactor(x, v) * orbitProduct x
+        out: OF := qcoFactor(x, v) * orbitProduct x
         cf: C := coefficient x
         one? cf => out
         one?(-cf) => - out
@@ -593,7 +593,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         vsyms: List Symbol := indexedSymbols(var, divs)$QAuxiliaryTools
         monomialQuotientX(vsyms, r)
 
-    cofactorX(x: %): Fraction Pol C ==
+    coFactorX(x: %): Fraction Pol C ==
         nn: P := level x
         eq: Fraction Pol C := etaQuotientX(nn, coExponents x, "E")
         rhat: Z := sigmaInfinity(nn, coExponents x)$QEtaKolberg
@@ -602,7 +602,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         xvar: Fraction Pol(C) := "x"::Symbol::Pol(C)::Fraction(Pol C)
         xvar^e * eq
 
-    qcofactorX(x: %): Fraction Pol C ==
+    qcoFactorX(x: %): Fraction Pol C ==
         eq: Fraction Pol C := etaQuotientX(level x, coExponents x, "u")
         alpha: Z := alphaInfinity x
         zero? alpha => eq
@@ -666,7 +666,7 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
         for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
 
-        -- The expansion of the cofactor is here.
+        -- The expansion of the coFactor is here.
         -- We take care of the right q-order through alphaInfinity.
         cofact: T1 C := taylorRep(eulerQuotient(nn, r)$ETA(C))
 
