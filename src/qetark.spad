@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2020  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -188,17 +188,21 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ corresponds to the modular function $F_{r,s,m,t}$ in
       ++ question.
     alphaInfinity: % -> Z
+      ++ alphaInfinity(x) returns the q exponent that corresponds to
+      ++ the orbit product and the respective co-exponent in order to
+      ++ make the whole produce a modular function. It is defined
+      ++ already in the abstract of \cite{Radu:RamanujanKolberg:2015}.
     orbit: % -> List N
       ++ orbit(x) returns the orbit of the sifted series.
     level: % -> P
       ++ level(x) returns nn if x represents a modular function for
       ++ Gamma_0(nn).
-    definitionLevel: % -> P
-      ++ definitionLevel(x) returns mm. This is the level of the
+    definingLevel: % -> P
+      ++ definingLevel(x) returns mm. This is the level of the
       ++ eta-quotient from which the sifted version is taken.
-    definitionExponents: % -> List Z
-      ++ definitionExponents(x) returns the exponents
-      ++ $s=(s_\delta)_{\delta|M}$ (where $M$ is the definition level)
+    definingExponents: % -> List Z
+      ++ definingExponents(x) returns the exponents
+      ++ $s=(s_\delta)_{\delta|M}$ (where $M$ is the defining level)
       ++ for the defining series of the coefficients a(n), i.e.,
       ++ \sum_{n=0}^\infty a(n)q^n = \prod_{\delta|M} (q^{\delta},
       ++ q^{\delta})_\infty^{s_\delta}$.
@@ -206,6 +210,11 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ multiplier(x) returns factor m to select a certain
       ++ subsequence a(m*n+k) of the defining series (where k is one
       ++ number out of orbit(x).
+    offset: % -> N
+      ++ offset(x) returns the offset k to select a certain
+      ++ subsequence a(m*n+k) of the defining series (where k was the
+      ++ value used during creation of x via a call to the identity
+      ++ function, i.e., offset(x) is a member of orbit(x).
     coefficient: % -> C
       ++ coefficient(x) is the coefficient that results from a
       ++ reduction process in case it cannot be inverted. For a
@@ -317,7 +326,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
                    frgens: List List Z,_
                    fpol: Pol C,_
                    fcf: C,_
-                   frel: List SUP C)
+                   fcis: List SUP C)
 
     xx ==> rep x
 
@@ -346,29 +355,32 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
         per [nn, r, mm, s, m, t, rgens, pol, cf, rel]
 
-    alphaInfinity(x: %): Z ==
-        m: P := xx.fmultiplier
-        t: N := xx.foffset
-        alphaInfinity(xx.fnn, xx.fr, xx.fmm, xx.fs, m, t)$QEtaKolberg
-
-    orbit(x: %): List N ==
-        orbit(xx.fmm, xx.fs, xx.fmultiplier, xx.foffset)$QEtaKolberg
-
     level(x: %): P == xx.fnn
-    definitionLevel(x: %): P == xx.fmm
-    definitionExponents(x: %): List Z == xx.fs
+    definingLevel(x: %): P == xx.fmm
+    definingExponents(x: %): List Z == xx.fs
     coExponents(x: %): List Z == xx.fr
     multiplier(x: %): P == xx.fmultiplier
+    offset(x: %): N == xx.foffset
     coefficient(x: %): C == xx.fcf
-    moduleCoefficients(x: %): List SUP C == xx.frel
+    moduleCoefficients(x: %): List SUP C == xx.fcis
     etaQuotientMonoidExponentVectors(x: %): List List Z == xx.frgens
     identityPolynomial(x: %): Pol C == xx.fpol
 
-    oeq(x, y) ==> equation((concat(x,"(x)")$String)::Symbol::OF,y::OF)::Equation(OF)::OF
+    alphaInfinity(x: %): Z ==
+        m: P := multiplier x
+        k: N := offset x
+        mm: P := definingLevel x
+        s: List Z := definingExponents x
+        alphaInfinity(level x, coExponents x, mm, s, m, k)$QEtaKolberg
+
+    orbit(x: %): List N == orbit(definingLevel x, definingExponents x,
+                                 multiplier x, offset x)$QEtaKolberg
+
+    oeq(x, y) ==> ((concat(x,"(x)")$String)::Symbol::OF) = (y::OF)
     coerce(x: %): OutputForm ==
         lvl: OF := oeq("level", level x)
-        deflvl: OF := oeq("definitionLevel", definitionLevel x)
-        defex: OF := oeq("definitionExponents", definitionExponents x)
+        deflvl: OF := oeq("definingLevel", definingLevel x)
+        defex: OF := oeq("definingExponents", definingExponents x)
         coex: OF := oeq("coExponents", coExponents x)
         m: OF := oeq("multiplier", multiplier x)
         orb: OF := oeq("orbit", orbit x)
@@ -391,10 +403,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         a: OF := "a"::Symbol::OF
         orb: List N := sort orbit x
         t := first orb
-        out: OF := sum(a, n, xx.fmultiplier, t)
-        if not empty?(orb := rest orb) then
-            out := paren out
-        for k in orb repeat out := out * paren sum(a, n, xx.fmultiplier, k)
+        out: OF := sum(a, n, multiplier x, t)
+        for k in rest orb repeat out := out * sum(a, n, multiplier x, k)
         out
 
 -------------------------------------------------------------------
@@ -448,24 +458,27 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         qQuotient(n, r, v, (sigmaInfinity(n, r)$QEtaKolberg)/24)
 
     cofactor(x: %, v: Z -> OF): OF ==
-        rhat: Z := sigmaInfinity(xx.fnn, xx.fr)$QEtaKolberg
+        r: List Z := coExponents x
+        rhat: Z := sigmaInfinity(level x, r)$QEtaKolberg
         e: Q := alphaInfinity(x)::Q - rhat/24
-        qQuotient(xx.fnn, xx.fr, v, e)
+        qQuotient(level x, r, v, e)
 
     qcofactor(x: %, v: Z -> OF): OF ==
-        qQuotient(xx.fnn, xx.fr, v, alphaInfinity(x)::Q)
+        qQuotient(level x, coExponents x, v, alphaInfinity(x)::Q)
 
     f(x: %, v: Z -> OF): OF ==
         out: OF := cofactor(x, v) * orbitProduct x
-        one? xx.fcf => out
-        one?(-xx.fcf) => - out
-        (xx.fcf)::OF * out
+        cf: C := coefficient x
+        one? cf => out
+        one?(-cf) => - out
+        cf::OF * out
 
     qf(x: %, v: Z -> OF): OF ==
         out: OF := qcofactor(x, v) * orbitProduct x
-        one? xx.fcf => out
-        one?(-xx.fcf) => - out
-        (xx.fcf)::OF * out
+        cf: C := coefficient x
+        one? cf => out
+        one?(-cf) => - out
+        cf::OF * out
 
 -------------------------------------------------------------------
 
@@ -500,32 +513,50 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- local function
     -- replace first exponent vector by 0 (basis of the module)
     basis(x: %): List List Z ==
-        rgens: List List Z := xx.frgens
+        rgens: List List Z := etaQuotientMonoidExponentVectors x
         cons([0 for rd in first rgens], rest rgens)
 
     pretty(x: %, v: Z -> OF): OF ==
         bas: List List Z := basis x
-        er: OF := etaRelation(xx.fnn, xx.frel, bas, v, 1, 0, first bas)
-        (equation(f(x, v), er)$Equation(OF))::OF
+        cis: List SUP C := moduleCoefficients x
+        er: OF := etaRelation(level x, cis, bas, v, 1, 0, first bas)
+        (f(x, v) = er)$OF
 
     qpretty(x: %, v: Z -> OF): OF ==
         bas: List List Z := basis x
-        qr: OF := qRelation(xx.fnn, xx.frel, bas, v, 1, 0, first bas)
-        (equation(qf(x, v), qr)$Equation(OF))::OF
+        cis: List SUP C := moduleCoefficients x
+        qr: OF := qRelation(level x, cis, bas, v, 1, 0, first bas)
+        (qf(x, v) = qr)$OF
+
+    xpretty(x: %, v: Z -> OF): OF ==
+        bas: List List Z := basis x
+        cis: List SUP C := moduleCoefficients x
+        er: OF := etaRelation(level x, cis, bas, v, 1, 0, first bas)
+        (f(x, v) = er)$OF
+
+    qxpretty(x: %, v: Z -> OF): OF ==
+        bas: List List Z := basis x
+        cis: List SUP C := moduleCoefficients x
+        qr: OF := qRelation(level x, cis, bas, v, 1, 0, first bas)
+        (qf(x, v) = qr)$OF
+
 
     -- local function
     niceaux(x: %, v: Z -> OF, q?: Boolean): OF ==
-        invcf: Union(C, "failed") := 1$C exquo xx.fcf
-        c: C := if invcf case "failed" then 1$C else invcf::C
-        rhat: Z := sigmaInfinity(xx.fnn, xx.fr)$QEtaKolberg
+        cf: C := coefficient x
+        invcf: Union(C, "failed") := 1$C exquo cf
+        icf: C := if invcf case "failed" then 1$C else invcf::C
+        rhat: Z := sigmaInfinity(level x, coExponents x)$QEtaKolberg
         e: Q := rhat/24 - alphaInfinity(x)::Q
-        r: List Z := [- rd for rd in xx.fr]
+        r: List Z := [- rd for rd in coExponents x]
+        cis: List SUP C := moduleCoefficients x
+        nn: P := level x
         rel: OF :=
-            q? => qRelation(xx.fnn, xx.frel, basis x, v, c, e, r)
-            etaRelation(xx.fnn, xx.frel, basis x, v, c, e, r)
-        cf: C := c * xx.fcf
-        one? cf => (equation(orbitProduct x, rel)$Equation(OF))::OF
-        (equation((cf::OF) * orbitProduct x, rel)$Equation(OF))::OF
+            q? => qRelation(nn, cis, basis x, v, icf, e, r)
+            etaRelation(nn, cis, basis x, v, icf, e, r)
+        cf: C := cf * icf -- is not 1 if C is not invertible
+        one? cf => (orbitProduct x = rel)$OF
+        ((cf::OF) * orbitProduct x = rel)$OF
 
     nice(x: %, v: Z -> OF): OF == niceaux(x, v, false)
     qnice(x: %, v: Z -> OF): OF == niceaux(x, v, true)
@@ -543,10 +574,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         n: Symbol := "n"::Symbol
         a: BasicOperator := operator("a"::Symbol)
         orb: List N := sort orbit x
-        t := first orb
-        ex: EX := sumX(a, n, xx.fmultiplier, t)
-        if not empty?(orb := rest orb) then ex := paren ex
-        for k in orb repeat ex := ex * paren sumX(a, n, xx.fmultiplier, k)
+        ex: EX := sumX(a, n, multiplier x, first orb)
+        for k in rest orb repeat ex := ex * sumX(a, n, multiplier x, k)
         ex
 
     monomialX(vars: List Symbol, r: List Z): Pol C ==
@@ -565,15 +594,16 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         monomialQuotientX(vsyms, r)
 
     cofactorX(x: %): Fraction Pol C ==
-        eq: Fraction Pol C := etaQuotientX(xx.fnn, xx.fr, "E")
-        rhat: Z := sigmaInfinity(xx.fnn, xx.fr)$QEtaKolberg
+        nn: P := level x
+        eq: Fraction Pol C := etaQuotientX(nn, coExponents x, "E")
+        rhat: Z := sigmaInfinity(nn, coExponents x)$QEtaKolberg
         e: Z := 24*alphaInfinity(x) - rhat
         zero? e => eq
         xvar: Fraction Pol(C) := "x"::Symbol::Pol(C)::Fraction(Pol C)
         xvar^e * eq
 
     qcofactorX(x: %): Fraction Pol C ==
-        eq: Fraction Pol C := etaQuotientX(xx.fnn, xx.fr, "u")
+        eq: Fraction Pol C := etaQuotientX(level x, coExponents x, "u")
         alpha: Z := alphaInfinity x
         zero? alpha => eq
         q: Fraction Pol(C) := "q"::Symbol::Pol(C)::Fraction(Pol C)
