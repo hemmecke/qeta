@@ -114,16 +114,65 @@ DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 )abbrev package QETAKOL QEtaKolberg
 QEtaKolberg: Exports == Implementation where
   Exports ==> with
-    modularInputConditions?: (P, P, LZ, P, N) -> Boolean
-      ++ modularInputConditions?(nn, mm, s, m, t) returns true iff all
-      ++ the conditions for the parameters are fulfilled.
+    conditionPrimeDivisors?: (P, P) -> Boolean
+      ++ conditionExponentSum?(nn, m) returns true if every prime
+      ++ divisor of m is also a divisor of nn. This corresponds to
+      ++ (28) in \cite{Radu:RamanujanKolberg:2015} and to
+      ++ \eqref{eq:p|m=>p|N} in qetafun.spad.
+
+    conditionMmN?: (P, P, LZ, P) -> Boolean
+      ++ conditionMmN(nn, mm, s, m) returns true if every divisor d of
+      ++ mm (for which s_d is non-zero) is also a devisor of m*N. This
+      ++ corresponds to condition (4.7) in \cite{Radu:PhD:2010} and in
+      ++ equation \eqref{eq:delta|M=>delta|mN} in qetafun.spad.
+
+    conditionSigma0?: (P, P, LZ, P) -> Boolean
+      ++ conditionSigma0?(nn, mm, s, m) returns true if
+      ++ (kappa(m)*m*nn^2/mm)*sigma0(nn, r) = 0 mod 24. This
+      ++ corresponds to \eqref{eq:sv24} in qetafun.spad and to the
+      ++ first condition on page~241 of
+      ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
+
+    conditionSumExponents?: (P, P, LZ, P) -> Boolean
+      ++ conditionSumExponents?(nn, mm, s, m) returns true if
+      ++ the sum of the entries of s multiplied by kappa(m)*nn is
+      ++ divisible by 8.
+      ++ This corresponds to \eqref{eq:sum-s} in qetafun.spad
+      ++ second condition on page~241 of
+      ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
+
+    conditionSigmaInfinity?: (P, P, LZ, P, N) -> Boolean
+      ++ conditionSigmaInfinity?(nn, mm, s, m, t) returns true if the
+      ++ expression
+      ++ (24*m)/gcd(kappa(m)*(-24*t-sigmaInfinity(mm,s)),24*m) is a
+      ++ divisor of nn. This corresponds to \eqref{eq:w|N} in
+      ++ qetafun.spad third condition on page~241 of
+      ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
+
+    conditionEvenMultiplier?: (P, P, LZ, P) -> Boolean
+      ++ conditionSigmaInfinity?(nn, mm, s, m) returns true if
+      ++ various divisibility conditions are fulfilled.
+      ++ This corresponds to \eqref{eq:even-m} in
+      ++ qetafun.spad fourth condition on page~241 of
+      ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
+
+    conditionModularCoEtaQuotient?: (P, P, LZ, P, N) -> Boolean
+      ++ conditionModularCoEtaQuotient(nn, mm, s, m, t) returns
+      ++ true iff all the conditions for the parameters are fulfilled.
       ++ This checks whether (nn, mm, s, m, t) is in \Delta^* as
-      ++ defined in Definition~\ref{def:modular-input-conditions}.
-    minimalModularInputLevel: (P, LZ, P, N) -> P
-      ++ minimalModularInputLevel(mm, s, m, t) returns the smallest nn
-      ++ such that modularInputConditions?(nn, mm, s, m, t) is true,
-      ++ i.e. that (nn, mm, s, m, t) is an element of \Delta^* as
-      ++ defined in Definition~\ref{def:modular-input-conditions}.
+      ++ defined in
+      ++ Definition~\ref{def:condition-modular-co-eta-quotient} in
+      ++ qetafun.spad and in Definition 35 of
+      ++ \cite{Radu:RamanujanKolberg:2015}
+
+    minimalModularCoEtaQuotientLevel: (P, LZ, P, N) -> P
+      ++ minimalModularCoEtaQuotientLevel(mm, s, m, t) returns the
+      ++ smallest nn such that minimalModularCoEtaQuotientLevel(nn,
+      ++ mm, s, m, t) is true, i.e. that
+      ++ conditionModularCoEtaQuotient?(nn, mm, s, m, t) is an element
+      ++ of \Delta^* as defined in
+      ++ Definition~\ref{def:condition-modular-co-eta-quotient}.
+
     modularConditions?: (P, LZ, P, LZ, P, N) -> Boolean
       ++ modularConditions?(nn, r, mm, s, m, t) returns true iff all
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
@@ -431,14 +480,14 @@ QEtaKolberg: Exports == Implementation where
             dbgPrint("eq:even-m e", u)
         return (b1 or b2)
 
-    minimalModularInputLevel(mm: P, s: LZ, m: P, t: N): P ==
+    minimalModularCoEtaQuotientLevel(mm: P, s: LZ, m: P, t: N): P ==
         nn: P := 1
-        while not modularInputConditions?(nn, mm, s, m, t) repeat
+        while not conditionModularCoEtaQuotient?(nn, mm, s, m, t) repeat
             nn := nn + 1
         return nn
 
     modularConditions?(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): Boolean ==
-        not modularInputConditions?(nn, mm, s, m, t) => false
+        not conditionModularCoEtaQuotient?(nn, mm, s, m, t) => false
 
         nndivs: LP := DIVISORS nn
         #nndivs ~= #r =>
