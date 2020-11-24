@@ -271,45 +271,39 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ qEtauotient(n, r, v) returns qQuotient(n, r, v, e) with
       ++ e=(sigmaInfinity(n, r)$QEtaKolberg)/24.
 
-    f:  (%, Z -> OutputForm, Z, C, Q, List Z) -> OutputForm
+    f:  (%, Z, Z -> OutputForm, C, Q, List Z) -> OutputForm
 
-    etaRelationMonomial: (P, SUP C, L Z, Z -> OutputForm, Z, Q) -> OutputForm
-      ++ etaRelationMonomial(n, ci, ri, v, style, e) return an
+    etaRelationMonomial: (P, SUP C, L Z, Z, Z -> OutputForm, Q) -> OutputForm
+      ++ etaRelationMonomial(n, ci, ri, fmt, v, e) return an
       ++ eta-quoatient of level n with exponent vector ri and
       ++ coefficient ci which is multiplied by q^e with variables
-      ++ given through v and in a form given by style.
+      ++ given through v and in a form given by fmt.
 
-    etaRelation: (P, List SUP C, List List Z, Z -> OutputForm, Z, C, Q, List Z)
+    etaRelation: (P, List SUP C, List List Z, Z, Z -> OutputForm, C, Q, List Z)
         -> OutputForm
-      ++ etaRelation(n, cis, bas, v, style, c, e, r) returns the
+      ++ etaRelation(n, cis, bas, fmt, v, c, e, r) returns the
       ++ eta-relation part multiplied by c*q^e*etaQuotient(n,r).
 
-    pretty: (%, Z -> OutputForm, Z, C, Q, List Z) -> OutputForm
-      ++ pretty(x, v, style, c, e, r) outputs x as computed in
+    pretty: (%, Z, Z -> OutputForm, C, Q, List Z) -> OutputForm
+      ++ pretty(x, fmt, v, c, e, r) outputs x as computed in
       ++ eta-quotients, but multiplied by c*q^e*etaQuotient(n,r).
 
-    pretty: (%, Z -> OutputForm, Z) -> OutputForm
-      ++ pretty(x, v, style) outputs x as computed with respect to a
-      ++ style given by the style parameter. If the lowest bit is set
-      ++ in style then, the q factor is shown. If the first bit is
+    pretty: (%, Z, Z -> OutputForm) -> OutputForm
+      ++ pretty(x, fmt, v) outputs x as computed with respect to a
+      ++ style given by the fmt parameter. If the lowest bit is set
+      ++ in fmt then, the q factor is shown. If the first bit is
       ++ set, then the t parameter is replaces by the respective
       ++ eta-quotient, so that the coefficients will just be elements
       ++ of the coefficient domain.
 
-    pretty: (%, Z -> OutputForm) -> OutputForm
-      ++ pretty(x, v) returns pretty(x, v, 0)
-
-    nice: (%, Z -> OutputForm, Z) -> OutputForm
-      ++ nice(x, v, style) outputs x as computed with respect to a
-      ++ style given by the style parameter, but with the eta-quotient
-      ++ and the coefficient divided through. If the lowest bit is set
-      ++ in style then, the q factor is shown. If the first bit is
-      ++ set, then the t parameter is replaces by the respective
-      ++ eta-quotient, so that the coefficients will just be elements
-      ++ of the coefficient domain.
-
-    nice: (%, Z -> OutputForm) -> OutputForm
-      ++ nice(x, v) returns nice(x, v, 0)
+    pretty: (%, Z) -> OutputForm
+      ++ pretty(x, fmt) returns pretty(x, fmt, v) where v is a
+      ++ variable indexing function chosen by bit 3 and 4 of fmt
+      ++ according to the rules. If bit3=0, then variables are used.
+      ++ If bit0=0, then the variable is "E" otherwise it is "u". If
+      ++ bit4=0, then no subscripts are uses, bit4=1 means subscripts.
+      ++ If bit3=1, then expressions are used. If bit0=0, then
+      ++ v=varEta. If bit0=1, then v=varPochhammer.
 
 -------------------------------------------------------------------
 
@@ -464,8 +458,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
 -------------------------------------------------------------------
     -- local function
-    withQFactor?(style: Z): Boolean == odd? style
-    expand?(style: Z): Boolean == bit?(style, 1)
+    withQFactor?(fmt: Z): Boolean == odd? fmt
+    expand?(fmt: Z): Boolean == bit?(fmt, 1)
+    modularFunctionIdentity?(fmt: Z): Boolean == not bit?(fmt, 2)
+    asExpression?(fmt: Z): Boolean == bit?(fmt, 3)
+    varsubscript?(fmt: Z): Boolean == bit?(fmt, 4)
+
     plus(la: List Z, lb: List Z): List Z == [a + b for a in la for b in lb]
     times(z: Z, r: List Z): List Z == [z*rd for rd in r]
 
@@ -480,10 +478,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
 -------------------------------------------------------------------
 
-    f(x: %, v: Z -> OF, style: Z, c: C, e: Q, r: List Z): OF ==
+    f(x: %, fmt: Z, v: Z -> OF, c: C, e: Q, r: List Z): OF ==
         e := e + alphaEtaInfinity x
         r := plus(r, coExponents x)
-        if withQFactor? style then
+        if withQFactor? fmt then
             e: Q := e + (sigmaInfinity(level x, r)$QEtaKolberg)/24
         cofact: OF := qQuotient(level x, r, v, e)
         out: OF := orbitProduct x
@@ -496,28 +494,31 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 -------------------------------------------------------------------
 
     etaRelationMonomial(nn: P, c: SUP C, r: List Z,
-                        v: Z -> OF, style: Z, e: Q): OF ==
+                        fmt: Z, v: Z -> OF, e: Q): OF ==
         pol: OF := outputForm(c, "t"::Symbol::OF)
-        if withQFactor? style then
+        if withQFactor? fmt then
             e := e + (sigmaInfinity(nn, r)$QEtaKolberg)/24
         eq: OF := qQuotient(nn, r, v, e)
         one? c => eq
         zero?(vector(r)$Vector(Z)) => pol
         pol * eq
 
-    etaRelation(nn: P, cis: List SUP C, rgens: List List Z, v: Z -> OF,
-                style: Z, c: C, e: Q, r: List Z): OF ==
-        l := [etaRelationMonomial(nn, c*ci, plus(r, rr), v, style, e)
+    etaRelation(nn: P, cis: List SUP C, rgens: List List Z,
+                fmt: Z, v: Z -> OF, c: C, e: Q, r: List Z): OF ==
+        l := [etaRelationMonomial(nn, c*ci, plus(r, rr), fmt, v, e)
               for ci in cis for rr in rgens | not zero? ci]
         empty? l => (0$Z)::OF
         reduce(_+, l)
 
 -------------------------------------------------------------------
 
-    pretty(x: %, v: Z -> OF, style: Z, c: C, e: Q, r: List Z): OF ==
+    -- fmt is divided in several bits
+    -- bit 0: 0 = eta format,  1 = q format
+    -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
+    pretty(x: %, fmt: Z, v: Z -> OF, cf: C, e: Q, r: List Z): OF ==
         cis: List SUP C := moduleCoefficients x
         bas: List List Z := basis x
-        if expand? style then
+        if expand? fmt then
             t: List Z := first etaQuotientMonoidExponentVectors x
             lots: List List Record(k: N, c: C) := [listOfTerms ci for ci in cis]
             --assert(#bas=#cis)
@@ -525,22 +526,37 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             cis := concat [[(rec.c)::SUP(C) for rec in lot] for lot in lots]
             bas := concat [[plus(times(rec.k, t), b) for rec in lot]
                            for lot in lots for b in bas]
-        er: OF := etaRelation(level x, cis, bas, v, style, c, e, r)
-        (f(x, v, style, c, e, r) = er)$OF
+        er: OF := etaRelation(level x, cis, bas, fmt, v, cf, e, r)
+        (f(x, fmt, v, cf, e, r) = er)$OF
 
-    pretty(x: %, v: Z -> OF, style: Z): OF ==
-        pretty(x, v, style, 1, 0, zeroExponents level x)
-
-    pretty(x: %, v: Z -> OF): OF == pretty(x, v, 0)
-
-    nice(x: %, v: Z -> OF, style: Z): OF ==
-        cf: C := coefficient x
-        invcf: Union(C, "failed") := 1$C exquo cf
+    -- format is divided in several bits
+    -- bit 0: 0 = eta format,  1 = q format
+    -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
+    -- bit 2: 0 = modular function identity, 1 = only orbit product on LHS
+    pretty(x: %, fmt: Z, v: Z -> OF): OF ==
+        modularFunctionIdentity? fmt =>
+            pretty(x, fmt, v, 1, 0, zeroExponents level x)
+        invcf: Union(C, "failed") := 1$C exquo coefficient(x)
         icf: C := if invcf case "failed" then 1$C else invcf::C
         r: List Z := [- rd for rd in coExponents x]
-        pretty(x, v, style, icf, - alphaEtaInfinity x, r)
+        pretty(x, fmt, v, icf, - alphaEtaInfinity x, r)
 
-    nice(x: %, v: Z -> OF): OF == nice(x, v, 0)
+    -- format is divided in several bits
+    -- bit 0: 0 = eta format,  1 = q format
+    -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
+    -- bit 2: 0 = modular function identity, 1 = only orbit product on LHS
+    -- bit 3: 0 = variables, 1 = expression
+    -- bit 4: 0 = normal indexed variables, 1 = subscripted variables
+    pretty(x: %, fmt: Z): OF ==
+        v: Z -> OF :=
+            withQFactor? fmt =>
+                asExpression? fmt => varPochhammer@(Z->OF)
+                varsubscript? fmt => varsub("u"::Symbol)
+                var("u"::Symbol)
+            asExpression? fmt => varEta@(Z->OF)
+            varsubscript? fmt => varsub("E"::Symbol)
+            var("E"::Symbol)
+        pretty(x, fmt, v)
 
 -------------------------------------------------------------------
 -- Return parts as expressions, polynomial, or rational functions.
@@ -589,11 +605,6 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         zero? alpha => eq
         q: Fraction Pol(C) := "q"::Symbol::Pol(C)::Fraction(Pol C)
         q^alpha * eq
-
-    -- unused
-    qEtaQuotient(n: P, r: List Z, v: Z -> OF): OF ==
-        qQuotient(n, r, v, (sigmaInfinity(n, r)$QEtaKolberg)/24)
-
 
 
 )if LiterateDoc
