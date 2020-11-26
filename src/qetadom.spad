@@ -143,26 +143,26 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
     seriesPart: % -> L
       ++ seriesPart(x) returns the Laurent series part of x.
       ++ x = q24(prefactor x)*seriesPart(x)
-    eulerQuotient: % -> L
-      ++ eulerQuotient(x) returns the power series (with constant
+    eulerExpansion: % -> L
+      ++ eulerExpansion(x) returns the power series (with constant
       ++ coefficient 1 that results from just considering the product of
       ++ Euler function powers (q-Pochhammer symbols) connected to the
       ++ creation via etaQuotient(divs, r).
-    eulerQuotient: (List Z, List Z) -> L
-      ++ eulerQuotient(divs, r) returns the product over all elements
+    eulerExpansion: (List Z, List Z) -> L
+      ++ eulerExpansion(divs, r) returns the product over all elements
       ++ d of divs of eulerFunction(d)^{rd} where rd is the respective
       ++ entry of r corresponding to d and eulerFunction is defined in
       ++ QFunctions in the file qfunct.spad. See also
       ++ https://en.wikipedia.org/wiki/Euler_function .
-      ++ eulerQuotient(divs, r) == eulerQuotient etaQuotient(divs, r).
-    eulerQuotient: (P, List Z) -> L
-      ++ eulerQuotient(m, r) returns eulerQuotient(divisors m, r)
-      ++ which is also the same as eulerQuotient(etaQuotient(m, r)).
+      ++ eulerExpansion(divs, r) == eulerExpansion etaQuotient(divs, r).
+    eulerExpansion: (P, List Z) -> L
+      ++ eulerExpansion(m, r) returns eulerExpansion(divisors m, r)
+      ++ which is also the same as eulerExpansion(etaQuotient(m, r)).
     eulerExponent: % -> Z
       ++ If x = etaQuotient(divs, r) then eulerExponent(x) is equal to
       ++ reduce(_+, [d*rd for d in divs for rd in r], 0). Dividing
       ++ eulerExponent(x) by 24 gives the q-exponent that must be
-      ++ multiplied to the eulerQuotient, to turn the whole object
+      ++ multiplied to the eulerExpansion, to turn the whole object
       ++ into an eta-quotient.
     expansion: % -> L
       ++ expansion(x) aborts with error if prefactor is not divisible
@@ -217,14 +217,14 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
 
     new(n: Z, s: L): % == per [n, s]
     eulerExponent(x: %): Z == rep(x).eulerexpo
-    eulerQuotient(x: %): L == rep(x).eulerquot
+    eulerExpansion(x: %): L == rep(x).eulerquot
 
     prefactor(x: %): N == qcoerce(positiveRemainder(eulerExponent x, 24))@N
     seriesPart(x: %): L ==
         n: Z := eulerExponent x
         r: Z := positiveRemainder(n, 24)
         q: Z := ((n-r) exquo 24)::Z
-        return monomial(1, q) * eulerQuotient(x)
+        return monomial(1, q) * eulerExpansion(x)
 
     1: % == new(0, 1$L)
     expansion(x: %): L ==
@@ -236,9 +236,9 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
     q24(n: Z): % == new(n, 1$L)
 
     ((x: %) * (y: %)): % == new(eulerExponent x + eulerExponent y,
-                                eulerQuotient x * eulerQuotient y)
+                                eulerExpansion x * eulerExpansion y)
 
-    inv(x: %): % == new(- eulerExponent x, recip(eulerQuotient x)::L)
+    inv(x: %): % == new(- eulerExponent x, recip(eulerExpansion x)::L)
     etaQuotient(divs: List Z, r: List Z): % ==
         import from List %
         reduce(_*, [etaPower(d::P, e) for d in divs for e in r], 1)
@@ -246,20 +246,20 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
         etaQuotient(divs, r)
 
-    eulerQuotient(divs: List Z, r: List Z): L ==
-        eulerQuotient etaQuotient(divs, r)
+    eulerExpansion(divs: List Z, r: List Z): L ==
+        eulerExpansion etaQuotient(divs, r)
 
-    eulerQuotient(level: P, r: List Z): L ==
-        eulerQuotient etaQuotient(level, r)
+    eulerExpansion(level: P, r: List Z): L ==
+        eulerExpansion etaQuotient(level, r)
 
     hashUpdate!(h: HashState, x: %): HashState ==
         hashUpdate!(hashUpdate!(h, prefactor x), seriesPart x)
     coerce(x: %): OutputForm ==
         q: OutputForm := (variable(0$L)$L)::OutputForm
         r: Q := eulerExponent(x)/24
-        zero? r => (eulerQuotient x)::OutputForm
+        zero? r => (eulerExpansion x)::OutputForm
         e: OutputForm := r::OutputForm
-        q^e * (eulerQuotient x)::OutputForm
+        q^e * (eulerExpansion x)::OutputForm
 
     -- The following functions are convenience functions and not really used.
     --:TODO: Move the functions below into a separate package.
