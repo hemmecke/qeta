@@ -39,15 +39,6 @@
   infinity in terms of $q$-series. These $\eta$-quotients generate an
   algebra over some ring $C$ (\code{QEtaGradedAlgebra(C)}).
 
-  Modular function that are $\eta$-quotients and have a pole (if any)
-  only at infinity, can be represented by univariate Laurent series
-  that have the property that they are zero if their order is
-  positive. This domain is implemented via \code{Finite0Series}. In
-  other words, in contrast to \spadtype{UnivariateLaurentSeries}, it
-  can be checked in finite time whether an element of
-  \code{Finite0Series} is zero or not. \code{Finite0Series(C, q, 0)}
-  form a \code{QEtaGradedAlgebra(C)}.
-
   An auxiliary domain \code{Monomials} is introduced that adds
   variable names so that an element of a \code{DirectProduct} can be
   shown as a product of variables raised to some power.
@@ -296,72 +287,6 @@ EtaQuotient(C: IntegralDomain, L: UnivariateLaurentSeriesCategory C): _
         while not zero?(p := reductum p) repeat
             r := r + toEtaMonomial leadingMonomial p
         return r
-
-)if LiterateDoc
-In \cite{Radu:RamanujanKolberg:2015}, the computations are done in
-a subclass of Laurent series, namely those that are identically zero
-if their order is greater than zero.
-
-)endif
-
-)abbrev domain FIN0SER Finite0Series
-++ Finite0Series represents Laurent series such that if
-++ x is such a series and order(x)>0 then x=0.
-++ Quotients of Dedekind eta functions that are modular functions
-++ that only have a pole (if any) at infinity,
-++ can be represented as such series.
--- We need the center parameter, because SPAD cannot yet pass
--- non-integer constants to constructors.
--- https://www.mail-archive.com/fricas-devel@googlegroups.com/msg08670.html
-Finite0Series(C: CommutativeRing, var: Symbol, cen: C): Exports == Impl where
-  UTS ==> UnivariateTaylorSeries(C, var, cen)
-  ULS ==> UnivariateLaurentSeries(C, var, cen)
-  Exports ==> Join(UnivariateLaurentSeriesConstructorCategory(C, UTS),
-                   QEtaGradedAlgebra C) with
-    coerce: Variable(var) -> %
-      ++ \spad{coerce(var)} converts the series variable \spad{var} into a
-      ++ Laurent series.
-    coerce: ULS -> %
-      ++ coerce(x) assumes that the Laurent series x belongs to the
-      ++ subalgebra of series with the properties of this damain.
-      ++ No check is made.
-    coerce: % -> ULS
-      ++ coerce(x) returns the element x as a Laurent series.
-    choose: (P, N, %, Z) -> %
-      ++ choose(m, t, x, ord) returns the Laurent series z whose n-th
-      ++ coefficient of the underlying Taylor series is the (m*n+t)-th
-      ++ coefficient of the underlying Taylor series of x, 0<=t<m. The
-      ++ function assumes that x has at least one non-zero
-      ++ coefficient.
-  Impl ==> ULS add
-    Rep ==> ULS
-    Rec ==> Record(expon: Z, ps: UTS) -- hack!!!
-    uts x ==> (x pretend Rec).ps
-    coerce(v : Variable(var)): % == monomial(1, 1)
-    coerce(s: ULS): % == per s
-    coerce(x: %): ULS == rep x
-    zero?(x: %): Boolean ==
-        d: Z := degree x -- (x pretend Rec).expon
-        d > 0 => true
-        not zero? coefficient(uts x, 0) => false -- get out early
-        -- remove zeroes until order becomes positive
-        rec: Rec := (removeZeroes(1-d, x)) pretend Rec
-        xrec := x pretend Rec
-        xrec.expon := rec.expon
-        xrec.ps    := rec.ps
-        xrec.expon > 0 or empty? coefficients(xrec.ps)
-    qetaGrade(x: %): Z ==
-        zero? x => -1 -- destructively set x
-        -order(x, 0)
-    qetaCoefficient(x: %, k: Z): C == coefficient(x, -k)
-    qetaLeadingCoefficient(x: %): C ==
-        zero? x => 0 -- destructively set x
-        leadingCoefficient x
-    choose(m: P, t: N, x: %, ord: Z): % ==
-        zero? x => 0
-        x := removeZeroes x
-        laurent(ord, multisect(m-t, t, uts x))
-    laurent(n: Z, s: Stream C): % == laurent(n, series(s)$UTS)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -88,7 +88,7 @@ all: compile-spad
 # They are not used or maintained anymore.
 SPADFILES_OLD = qetaradu qeta3hdp qetair qetais
 SPADFILES=4ti2 qfunct cachedpow \
-  qetaalg qetasqrt qetaauxmeq qetaqmev qetadom qetatool \
+  qetaalg qetasqrt qetaauxmeq qetaqmev  qetaser qetadom qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
   qetapowersamba qetakolberg qetafun \

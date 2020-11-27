@@ -45,6 +45,15 @@ dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::O
   The code in this file provides formal Taylor, Laurent, and Puiseux
   series in the variable $q$ suited for computation in the QEta
   package.
+
+  Modular function that are $\eta$-quotients and have a pole (if any)
+  only at infinity, can be represented by univariate Laurent series
+  that have the property that they are zero if their order is
+  positive. This domain is implemented via \code{Finite0Series}. In
+  other words, in contrast to \spadtype{UnivariateLaurentSeries}, it
+  can be checked in finite time whether an element of
+  \code{Finite0Series} is zero or not. \code{Finite0Series(C, q, 0)}
+  form a \code{QEtaGradedAlgebra(C)}.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -72,6 +81,8 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 
+asZ x ==> x pretend Z
+
 UTS(C) ==> UnivariateTaylorSeries(C, 'q, 0$C)
 ULS(C) ==> UnivariateLaurentSeries(C, 'q, 0$C)
 UPS(C) ==> UnivariatePuiseuxSeries(C, 'q, 0$C)
@@ -89,21 +100,127 @@ However, most computations are actually done with Laurent series.
 
 )endif
 
+)abbrev category QETATSC QEtaTaylorSeriesCategory
+QEtaTaylorSeriesCategory(C: Ring): Category ==
+  UnivariateTaylorSeriesCategory C with
+    coerce: UTS C -> %
+      ++ coerce(x) interpret a univariate Taylor series in q with a
+      ++ center at 0 as an element of this domain. No check is made.
+    coerce: % -> UTS C
+      ++ coerce(x) interprets x as a univariate Taylor series in the
+      ++ variable q about the center 0.
+    multisect : (Z, Z, %) -> %
+      ++ multisect(a, b, x} selects the coefficients of q^((a+b)*n+a)
+      ++ and changes this monomial to q^n.
+
 )abbrev domain QETATS QEtaTaylorSeries
-QEtaTaylorSeries(C: IntegralDomain): Exports == Implementation where
-  Exports ==> UnivariateTaylorSeriesCategory C
+QEtaTaylorSeries(C: Ring): Exports == Implementation where
+  Exports ==> QEtaTaylorSeriesCategory C
   Implementation ==> UTS C
 
+)abbrev category QETALSC QEtaLaurentSeriesCategory
+QEtaLaurentSeriesCategory(C: Ring): Category ==
+  UnivariateLaurentSeriesCategory C with
+    coerce: ULS C -> %
+      ++ coerce(x) assumes that the Laurent series x belongs to the
+      ++ subalgebra of series with the properties of this damain.
+      ++ No check is made.
+    coerce: % -> ULS C
+      ++ coerce(x) returns the element x as a Laurent series.
+    choose: (P, N, %, Z) -> %
+      ++ choose(m, t, x, ord) returns the Laurent series z whose n-th
+      ++ coefficient of the underlying Taylor series is the (m*n+t)-th
+      ++ coefficient of the underlying Taylor series of x, 0<=t<m. The
+      ++ function assumes that x has at least one non-zero
+      ++ coefficient.
+    laurent: (Z, QTS C) -> %
+      ++ laurent(n, s) creates a Laurent series by multiplying the
+      ++ given Taylor series by q^n.
+    removeZeroes: (Z, %) -> %
+    removeZeroes: % -> %
+
 )abbrev domain QETALS QEtaLaurentSeries
-QEtaLaurentSeries(C: IntegralDomain): Exports == Implementation where
-  Exports ==> UnivariateLaurentSeriesCategory C
-  Implementation ==> ULS C
+QEtaLaurentSeries(C: Ring): Exports == Implementation where
+  Exports ==> QEtaLaurentSeriesCategory C
+  Implementation ==> ULS C add
+    Rep ==> ULS C
+    Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
+    qts x ==> (x pretend Rec).ps
+    coerce(s: ULS C): % == per s
+    coerce(x: %): ULS C == rep x
+    choose(m: P, t: N, x: %, ord: Z): % ==
+        --assert(not zero? x)
+        x := removeZeroes x
+        laurent(ord, multisect(m-t, t, qts x)$QTS(C))
+    laurent(n: Z, s: QTS C): % == per laurent(n, s pretend UTS(C))
+    laurent(n: Z, s: Stream C): % == laurent(n, series(s)$QTS(C))
+    removeZeroes(n: Z, x: %): % == per removeZeroes(n, rep x)
+    removeZeroes(x: %): % == per removeZeroes rep x
+
+
+
+
+
+)if LiterateDoc
+
+In \cite{Radu:RamanujanKolberg:2015}, the computations are done in
+a subclass of Laurent series, namely those that are identically zero
+if their order is greater than zero.
+
+)endif
+
+)abbrev domain FIN0SER Finite0Series
+++ Finite0Series represents Laurent series such that if
+++ x is such a series and order(x)>0 then x=0.
+++ Quotients of Dedekind eta functions that are modular functions
+++ that only have a pole (if any) at infinity,
+++ can be represented as such series.
+-- We need the center parameter, because SPAD cannot yet pass
+-- non-integer constants to constructors.
+-- https://www.mail-archive.com/fricas-devel@googlegroups.com/msg08670.html
+Finite0Series(C: CommutativeRing): Exports == Implementation where
+  Exports ==> Join(QEtaLaurentSeriesCategory C, QEtaGradedAlgebra C)
+  Implementation ==> QLS C add
+    Rep ==> QLS C
+    Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
+    qts x ==> (x pretend Rec).ps
+    zero?(x: %): Boolean ==
+        d: Z := degree x -- (x pretend Rec).expon
+        d > 0 => true
+        not zero? coefficient(qts x, 0) => false -- get out early
+        -- remove zeroes until order becomes positive
+        rec: Rec := (removeZeroes(1-d, x)) pretend Rec
+        xrec := x pretend Rec
+        xrec.expon := rec.expon
+        xrec.ps    := rec.ps
+        xrec.expon > 0 or empty? coefficients(xrec.ps)
+    qetaGrade(x: %): Z ==
+        zero? x => -1 -- destructively set x
+        -order(x, 0)
+    qetaCoefficient(x: %, k: Z): C == coefficient(x, -k)
+    qetaLeadingCoefficient(x: %): C ==
+        zero? x => 0 -- destructively set x
+        leadingCoefficient x
+    choose(m: P, t: N, x: %, ord: Z): % ==
+        zero? x => 0
+        per choose(m, t, rep x, ord)
+
+
+
+
+
+
+
+
+
+
+
 
 
 )if false
 
 )abbrev domain QETAPS QEtaPuiseuSeries
-QEtaPuiseuxSeries(C: IntegralDomain): Exports == Implementation where
+QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
   Exports ==> UnivariatePuiseuxSeriesCategory C
   Implementation ==> UPS C
 
