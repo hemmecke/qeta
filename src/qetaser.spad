@@ -1,0 +1,118 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2020  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+OF==>OutputForm
+--dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
+dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF)::Formatter(Format1D))
+--xdbgPrint(x,y) ==> rhx:="42"
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\usepackage{showlabels}
+
+\usepackage{makeidx}
+\makeindex
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Expanding (sifted) or generalized Dedekind Eta Functions into
+  $q$-series at various cusps}
+
+\author{Ralf Hemmecke}
+\date{26-Nov-2018}
+\maketitle
+\begin{abstract}
+  The code in this file provides formal Taylor, Laurent, and Puiseux
+  series in the variable $q$ suited for computation in the QEta
+  package.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+
+UTS(C) ==> UnivariateTaylorSeries(C, 'q, 0$C)
+ULS(C) ==> UnivariateLaurentSeries(C, 'q, 0$C)
+UPS(C) ==> UnivariatePuiseuxSeries(C, 'q, 0$C)
+QTS ==> QEtaTaylorSeries
+QLS ==> QEtaLaurentSeries
+QPS ==> QEtaPuiseuxSeries
+
+
+)if LiterateDoc
+
+Expansions of eta-quotients or generalized eta-quotients are Puiseux
+series in $q=\exp(2\pi i \tau)$.
+%
+However, most computations are actually done with Laurent series.
+
+)endif
+
+)abbrev domain QETATS QEtaTaylorSeries
+QEtaTaylorSeries(C: IntegralDomain): Exports == Implementation where
+  Exports ==> UnivariateTaylorSeriesCategory C
+  Implementation ==> UTS C
+
+)abbrev domain QETALS QEtaLaurentSeries
+QEtaLaurentSeries(C: IntegralDomain): Exports == Implementation where
+  Exports ==> UnivariateLaurentSeriesCategory C
+  Implementation ==> ULS C
+
+
+)if false
+
+)abbrev domain QETAPS QEtaPuiseuSeries
+QEtaPuiseuxSeries(C: IntegralDomain): Exports == Implementation where
+  Exports ==> UnivariatePuiseuxSeriesCategory C
+  Implementation ==> UPS C
+
+)endif
+
+)if LiterateDoc
+
+\bibliography{qeta}
+\printindex
+\end{document}
+
+)endif
