@@ -60,7 +60,7 @@ PZ ==> SparseUnivariatePolynomial Z;
 PQ ==> SparseUnivariatePolynomial Q;
 PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ);
 CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
-LX ==> UnivariateLaurentSeries(CX, xsym, 0);
+LX ==> QEtaLaurentSeries CX;
 MZ ==> Matrix Z -- consider only 2x2 matricies
 SL2Z ==> MZ -- matrices with determinant = 1
 

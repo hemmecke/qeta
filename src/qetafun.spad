@@ -3166,7 +3166,7 @@ EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
+  LX: QEtaLaurentSeriesCategory CX -- domain for the series expansions
   RecC ==> Record(k: Z, c: C)
   RecX ==> Record(k: Z, c: CX)
   Exports ==> SetCategory with
@@ -3299,7 +3299,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  LX: UnivariateLaurentSeriesCategory CX -- domain for the series expansions
+  LX: QEtaLaurentSeriesCategory CX -- domain for the series expansions
   YETAQ ==> SymbolicEtaQuotient
   Exports ==> SetCategory with
     --assert(one? xi^mx)
@@ -3381,11 +3381,8 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX): Exports == Implementation where
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  TX: UnivariateTaylorSeriesCategory CX with multisect : (Z, Z, %) -> %
-  LX: UnivariateLaurentSeriesCategory CX with
-       removeZeroes: % -> %
-       taylorRep: % -> TX
-       laurent: (Z, TX) -> %
+  TX: QEtaTaylorSeriesCategory CX
+  LX: QEtaLaurentSeriesCategory CX
 
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
@@ -3588,11 +3585,8 @@ ModularSiftedEtaQuotient(C, mx, CX, xi, TX, LX): Exports == Implementation where
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  TX: UnivariateTaylorSeriesCategory CX with multisect : (Z, Z, %) -> %
-  LX: UnivariateLaurentSeriesCategory CX with
-       removeZeroes: % -> % -- building block for series expansions
-       taylorRep: % -> TX
-       laurent: (Z, TX) -> %
+  TX: QEtaTaylorSeriesCategory CX
+  LX: QEtaLaurentSeriesCategory CX
 
   Exports ==> SetCategory with
     coerce: SymbolicModularSiftedEtaQuotient -> %
@@ -3677,8 +3671,8 @@ QEtaModularFunctionTools: Exports == Implementation where
     lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
     SUPC ==> SparseUnivariatePolynomial C
     CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
-    TX ==> UnivariateTaylorSeries(CX, xsym, 0)
-    LX ==> UnivariateLaurentSeries(CX, xsym, 0)
+    TX ==> QEtaTaylorSeries CX
+    LX ==> QEtaLaurentSeries CX
     YMSETAQ ==> SymbolicModularSiftedEtaQuotient
     MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi, TX, LX)
     a ==> aLigozat $ QAuxMEQ
@@ -3862,7 +3856,7 @@ $n$ where $n$ is the number of cusps of the given cusps.
 ModularFunctionExpansionsAtCusps(C, L, cusps): Exports == Implementation
  where
   C: IntegralDomain
-  L: UnivariateLaurentSeriesCategory C
+  L: QEtaLaurentSeriesCategory C
   cusps: LQ
   Exports ==> XEtaGradedAlgebra C with
     coerce: XHashTable(Q, L) -> %
@@ -3953,7 +3947,7 @@ $n$ where $n$ is the number of cusps of $\Gamma_0(N)$.
 ++ eta quotients that are modular functions for Gamma_0(m).
 ModularFunctionExpansions(C, L, m): Exports == Implementation where
   C: IntegralDomain
-  L: UnivariateLaurentSeriesCategory C
+  L: QEtaLaurentSeriesCategory C
   m: P -- level
   Exports ==> XEtaGradedAlgebra C with
     coerce: XHashTable(Q, L) -> %

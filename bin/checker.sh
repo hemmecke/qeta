@@ -33,7 +33,7 @@ Rec ==> Record(root: P, elem: PZ)
 SEQUO ==> SymbolicEtaQuotient
 PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ)
 CX ==> SimpleAlgebraicExtension(Q, PQ, pq)
-LX ==> UnivariateLaurentSeries(CX, xsym, 0)
+LX ==> QEtaLaurentSeries CX
 EQX ==> EtaQuotientX(Q, mx, CX, xi, LX)
 EQXA ==> EtaQuotientExpansionAlgebra(CX, LX, level)
 

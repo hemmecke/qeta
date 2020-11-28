@@ -547,14 +547,12 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
 ++ all v in a close neighborhood of v_0.
 ++ Algorithm follows \cite{Paule+Radu:ProofWeierstrassGapTheorem:2019}
 ++ Section 6.
-FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
+FunctionalLaurentInverse(K): Exports == Implementation where
   Z ==> Integer
   Q ==> Fraction Z
   K: Join(Algebra Q, PolynomialFactorizationExplicit)
-  var: Symbol
-  cen: K
-  LX ==> UnivariateLaurentSeries(K, var, cen)
-  TX ==> UnivariateTaylorSeries(K, var, cen)
+  LX ==> QEtaLaurentSeries K
+  TX ==> QEtaTaylorSeries K
   Exports ==> with
     functionalInverse: LX -> LX
       ++ functionalInverse(t) where t is non-zero and d = order(t) ~=
@@ -600,36 +598,34 @@ FunctionalLaurentInverse(K, var, cen): Exports == Implementation where
 ++ (precision). Such a series is a considered to be zero if all
 ++ "valid" coefficients are zero. Two series are equal if they are
 ++ equal up to the minimum of their respective validity index.
-TruncatedUnivariateLaurentSeries(R, var, cen) : Exports == Implementation where
+TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
   R: Ring
-  var: Symbol
-  cen: R
-  ULS ==> UnivariateLaurentSeries(R, var, cen)
-  UTS ==> UnivariateTaylorSeries(R, var, cen)
+  QLS ==> QEtaLaurentSeries
+  QTS ==> QEtaTaylorSeries
   Exports ==> Field with
-    truncate: (ULS, Z) -> %
+    truncate: (QLS R, Z) -> %
       ++ truncate(l, n) yields a truncated Laurent series at order n.
     precision: % -> Z
       ++ precision(x) returns the number of valid coefficient in
       ++ coefficients(x).
-    truncatedSeries: % -> ULS
+    truncatedSeries: % -> QLS R
       ++ truncatedSeries(x) returns the series truncated at the order
       ++ given by the precision.
-    laurentRep: % -> ULS
+    laurentRep: % -> QLS R
       ++ laurentRep(X) returns the internally used Laurent series
       ++ representation of the x. That need not necessarily be a
       ++ finite series.
   Implementation ==> add
-    Rep ==> Record(ser: ULS, pr: Z) -- (series, precision)
+    Rep ==> Record(ser: QLS R, pr: Z) -- (series, precision)
 
     pZERO ==> -1
     pNONZEROCONSTANT ==> -2
 
-    truncate(l: ULS, n: Z): % == per [l, max(0, n - order(l, 0))]
+    truncate(l: QLS R, n: Z): % == per [l, max(0, n - order(l, 0))]
     precision(x: %): Z == rep(x).pr
-    laurentRep(x: %): ULS == rep(x).ser
-    truncatedSeries(x: %): ULS ==
-        l: ULS := laurentRep x
+    laurentRep(x: %): QLS R == rep(x).ser
+    truncatedSeries(x: %): QLS R ==
+        l: QLS R := laurentRep x
         d: Z := degree l
         truncate(l, precision x - d)
 
@@ -637,8 +633,8 @@ TruncatedUnivariateLaurentSeries(R, var, cen) : Exports == Implementation where
     hashUpdate!(s: HashState, x: %): HashState == error "unimplemented"
     coerce(x: %): OutputForm == truncatedSeries(x)::OutputForm
     -- We treat 0 and 1 in a special way.
-    0: % == truncate(0$ULS, pZERO)
-    1: % == truncate(1$ULS, pNONZEROCONSTANT)
+    0: % == truncate(0$QLS(R), pZERO)
+    1: % == truncate(1$QLS(R), pNONZEROCONSTANT)
 
     zero?(x: %): Boolean ==
         precision x = pZERO => true  -- x=0
@@ -677,8 +673,8 @@ TruncatedUnivariateLaurentSeries(R, var, cen) : Exports == Implementation where
     PLUSMINUS(x, y, op, zeroxres) ==>
         (px: Z := precision x) = pZERO => zeroxres
         (py: Z := precision y) = pZERO => x
-        lx: ULS := laurentRep x
-        ly: ULS := laurentRep y
+        lx: QLS(R) := laurentRep x
+        ly: QLS(R) := laurentRep y
         dx: Z := degree lx
         dy: Z := degree ly
         px = pNONZEROCONSTANT =>
@@ -714,8 +710,8 @@ TruncatedUnivariateLaurentSeries(R, var, cen) : Exports == Implementation where
 
     ((x: %) * (y: %)): % ==
         (px: Z := precision x) = pZERO or (py: Z := precision y) = pZERO => 0
-        lx: ULS := laurentRep x
-        ly: ULS := laurentRep y
+        lx: QLS R := laurentRep x
+        ly: QLS R := laurentRep y
         lz := lx * ly
         px = pNONZEROCONSTANT =>
             py = pNONZEROCONSTANT =>
