@@ -563,7 +563,10 @@ FunctionalLaurentInverse(K): Exports == Implementation where
     functionalInverse(l: LX): LX ==
         r: LX := nthRoot(l, order l) -- This gives a series of order =1.
         not one? order r => error "functionalInverse: order should be 1"
-        laurent(0, revert taylor r)
+        q: TX := monomial(1, 1)$TX
+        t: TX := q * qetaTaylorRep r
+        t := revert(t)$TX
+        laurent(0, t)$LX
 
 )if oldCode
         --assert(not zero? l)
@@ -587,6 +590,8 @@ FunctionalLaurentInverse(K): Exports == Implementation where
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
+
+)if UNUSED
 
 )abbrev package TULS TruncatedUnivariateLaurentSeries
 ++ Author: Ralf Hemmecke
@@ -731,7 +736,7 @@ TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
             (p := precision x) = pZERO => error "zero is not invertible"
             per [inv laurentRep x, precision x]
 
-
+)endif
 
 
 )if LiterateDoc
@@ -740,6 +745,8 @@ TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
+
+)if UNUSED
 
 )abbrev package LEIBDET DeterminantByLeibnizFormula
 ++ Author: Ralf Hemmecke
@@ -783,6 +790,8 @@ DeterminantByLeibnizFormula(R): Exports == Implementation where
         ci: List Z := [i for i in 1..ndim] -- column indices
         ri: List Z := [i for i in 1..ndim] -- row indices
         det(m, ndim, ri, ci)
+
+)endif
 
 )if LiterateDoc
 \bibliography{qeta}

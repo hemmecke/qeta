@@ -3161,12 +3161,12 @@ $x=\unityPower{\frac{\tau}{w_\gamma}}$ where $w_\gamma$ is given by
 ++ of eta-quotient expansions at gamma.
 ++ The eta quotient need not be a modular function, but the (c*tau+d)
 ++ factor is always ignored.
-EtaQuotientGamma(C, mx, CX, xi, LX): Exports == Implementation where
+EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  LX: QEtaLaurentSeriesCategory CX -- domain for the series expansions
+  LX ==> QEtaLaurentSeries CX -- domain for the series expansions
   RecC ==> Record(k: Z, c: C)
   RecX ==> Record(k: Z, c: CX)
   Exports ==> SetCategory with
@@ -3294,12 +3294,12 @@ for each cusp $\frac{a}{c}$ of $\Gamma_0(N)$.
 ++ of eta-quotients that are modular functions for Gamma_0(N).
 ++ In fact, this domain is meant to do computation for a specific N,
 ++ but is actually implementing the union over all N.
-ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
+ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  LX: QEtaLaurentSeriesCategory CX -- domain for the series expansions
+  LX ==> QEtaLaurentSeries CX -- domain for the series expansions
   YETAQ ==> SymbolicEtaQuotient
   Exports ==> SetCategory with
     --assert(one? xi^mx)
@@ -3342,7 +3342,7 @@ ModularEtaQuotient(C, mx, CX, xi, LX): Exports == Implementation where
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
             ye: SymbolicEtaQuotientGamma := y.cusp
-            e := ye :: EtaQuotientGamma(C, mx, CX, xi, LX)
+            e := ye :: EtaQuotientGamma(C, mx, CX, xi)
             hser.cusp := expansion e
         per [y, hser]
     etaQuotient(m: P, r: LZ, cusps: LQ): % ==
@@ -3375,14 +3375,14 @@ expansion of various eta quotients.
 ++ $g_{s,m,t}(\gamma \tau)$, $F_{r,s,m,t}(\gamma \tau)$.
 ++ See \eqref{eq:g_s-m-t-lambda(gamma*tau)}.}
 ++ This Domain behaves partly like univariate Puiseux series.
-SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX): Exports == Implementation where
+SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   -- We need Algebra(Q) for multiplication with (1/m)
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  TX: QEtaTaylorSeriesCategory CX
-  LX: QEtaLaurentSeriesCategory CX
+  TX ==> QEtaTaylorSeries CX
+  LX ==> QEtaLaurentSeries CX
 
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
@@ -3400,16 +3400,16 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX): Exports == Implementation where
       ++ puiseux(y, w) represents the q-expansion of
       ++ $F_{r,s,m,t}(\gamma \tau)$ at $\tau=i \infity$.
     rationalPowerDenominator: % -> P
-      ++ If k=order(x) and f=taylorRep(x) then,
+      ++ If k=order(x) and f=qetaTaylorRep(x) then,
       ++ rationalPowerDenominator(x) returns w such that
       ++ x(q)=z^(k)*f(z) with z=q^(1/w).
-    taylorRep: % -> TX
-      ++ taylorRep(x) returns the Taylor series representation f of x
+    qetaTaylorRep: % -> TX
+      ++ qetaTaylorRep(x) returns the Taylor series representation f of x
       ++ without the prefactor corresponding to $(c \tau + d)$
       ++ If w=rationalPowerDenominator(x) and k=order(x) then
       ++ x(q)=z^(k)*f(z) with z=q^(1/w).
     order: % -> Q
-      ++ If w=rationalPowerDenominator(x) and f=taylorRep(x) then
+      ++ If w=rationalPowerDenominator(x) and f=qetaTaylorRep(x) then
       ++ order(x) returns k such that x(q)=z^(k)*f(z) with z=q^(1/w).
       ++ order(x) returns the order o
     laurent: % -> LX
@@ -3424,7 +3424,7 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX): Exports == Implementation where
     Rep ==> Record(den: P, ord: Q, ser: TX)
     xx ==> rep x
 
-    import from EtaQuotientGamma(C, mx, CX, xi, LX)
+    import from EtaQuotientGamma(C, mx, CX, xi)
 
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.
@@ -3437,12 +3437,12 @@ SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX): Exports == Implementation where
 -------------------------------------------------------------------
     rationalPowerDenominator(x: %): P == xx.den
     order(x: %): Q == xx.ord
-    taylorRep(x: %): TX == xx.ser
+    qetaTaylorRep(x: %): TX == xx.ser
     laurent(x: %): LX ==
         ord: Q := order x
         not one? denom ord =>
             error "SETAQG: Laurent series with fractional exponent"
-        laurent(numer ord, taylorRep x)
+        laurent(numer ord, qetaTaylorRep x)$LX
     coerce(x: %): OutputForm == xx::OutputForm
 
 )if LiterateDoc
@@ -3488,7 +3488,7 @@ $\divides{\delta}{M}$ with $s_\delta\ne0$, \ie, the series from
         p: Q := d/24 * qExponent y -- the "/24" is missing from qExponent(y)
         not one? denom p =>
             error "SiftedEtaQuotientGamma: denominator for q does not vanish"
-        tx: TX := cx * taylorRep s
+        tx: TX := cx * qetaTaylorRep s
         per [d, p, tx]
 
 )if LiterateDoc
@@ -3518,7 +3518,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
         ord: Z := order lx
         -- After summation only the coefficients with exponents divisible
         -- by m should be non-zero. We make a sanity check.
-        tx: TX := taylorRep lx
+        tx: TX := qetaTaylorRep lx
         stx: Stream CX := coefficients tx
         for i in 1..m1 repeat
             stx := rest stx
@@ -3534,11 +3534,11 @@ without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
         t: N := first orb;
         px: % := puiseux(y.t, w)
         d: P := rationalPowerDenominator px
-        tx: TX := taylorRep px
+        tx: TX := qetaTaylorRep px
         ord: Q := order px
         for k in rest orb repeat
             px: % := puiseux(y.k, w)
-            tx := tx * taylorRep px
+            tx := tx * qetaTaylorRep px
             ord := ord + order px
         not one? denom ord =>
             error "SiftedEtaQuotientGamma: orbit product: denominator for q does not vanish"
@@ -3555,7 +3555,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
             error "SiftedEtaQuotientGamma: Puiseux expansion in wrong variable"
         rationalPowerDenominator pc ~= rationalPowerDenominator po =>
             error "SiftedEtaQuotientGamma: expansion in different variables"
-        tx: TX := multisect(24, 0, taylorRep pc * taylorRep po)
+        tx: TX := multisect(24, 0, qetaTaylorRep pc * qetaTaylorRep po)
         ord: Q := order pc + order po
         ord := ord * (1$Z/24)-- It's a modular function.
         not one? denom ord =>
@@ -3580,13 +3580,13 @@ series expansion of various eta quotients.
 ++ of F_{r, s, m, t}(\tau) at all cusps of $\Gamma_0(N)$.
 ++ See \eqref{eq:F_r-s-m-t(gamma*tau)}.
 ++ The domain serves as the representation of the underlying q-series.
-ModularSiftedEtaQuotient(C, mx, CX, xi, TX, LX): Exports == Implementation where
+ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
-  TX: QEtaTaylorSeriesCategory CX
-  LX: QEtaLaurentSeriesCategory CX
+  TX ==> QEtaTaylorSeries CX
+  LX ==> QEtaLaurentSeries CX
 
   Exports ==> SetCategory with
     coerce: SymbolicModularSiftedEtaQuotient -> %
@@ -3608,7 +3608,7 @@ ModularSiftedEtaQuotient(C, mx, CX, xi, TX, LX): Exports == Implementation where
     xx ==> rep x
 
     coerce(y: SymbolicModularSiftedEtaQuotient): % ==
-        PX ==> SiftedEtaQuotientGamma(C, mx, CX, xi, TX, LX)
+        PX ==> SiftedEtaQuotientGamma(C, mx, CX, xi)
         import from PX
         nn: P := level y
         hser: XHashTable(Q, LX) := empty()
@@ -3674,7 +3674,7 @@ QEtaModularFunctionTools: Exports == Implementation where
     TX ==> QEtaTaylorSeries CX
     LX ==> QEtaLaurentSeries CX
     YMSETAQ ==> SymbolicModularSiftedEtaQuotient
-    MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi, TX, LX)
+    MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi)
     a ==> aLigozat $ QAuxMEQ
 
     -- order of eta^r at cusp a/c.
