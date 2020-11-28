@@ -133,6 +133,7 @@ QEtaLaurentSeriesCategory(C: Ring): Category ==
       ++ coefficient of the underlying Taylor series of x, 0<=t<m. The
       ++ function assumes that x has at least one non-zero
       ++ coefficient.
+    qetaTaylorRep: % -> QTS C
     laurent: (Z, QTS C) -> %
       ++ laurent(n, s) creates a Laurent series by multiplying the
       ++ given Taylor series by q^n.
@@ -145,13 +146,13 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
   Implementation ==> ULS C add
     Rep ==> ULS C
     Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
-    qts x ==> (x pretend Rec).ps
+    qetaTaylorRep(x: %): QTS C == (x pretend Rec).ps
     coerce(s: ULS C): % == per s
     coerce(x: %): ULS C == rep x
     choose(m: P, t: N, x: %, ord: Z): % ==
         --assert(not zero? x)
         x := removeZeroes x
-        laurent(ord, multisect(m-t, t, qts x)$QTS(C))
+        laurent(ord, multisect(m-t, t, qetaTaylorRep x)$QTS(C))
     laurent(n: Z, s: QTS C): % == per laurent(n, s pretend UTS(C))
     laurent(n: Z, s: Stream C): % == laurent(n, series(s)$QTS(C))
     removeZeroes(n: Z, x: %): % == per removeZeroes(n, rep x)
@@ -183,11 +184,10 @@ Finite0Series(C: CommutativeRing): Exports == Implementation where
   Implementation ==> QLS C add
     Rep ==> QLS C
     Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
-    qts x ==> (x pretend Rec).ps
     zero?(x: %): Boolean ==
         d: Z := degree x -- (x pretend Rec).expon
         d > 0 => true
-        not zero? coefficient(qts x, 0) => false -- get out early
+        not zero? coefficient(qetaTaylorRep x, 0) => false -- get out early
         -- remove zeroes until order becomes positive
         rec: Rec := (removeZeroes(1-d, x)) pretend Rec
         xrec := x pretend Rec

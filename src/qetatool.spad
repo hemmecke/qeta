@@ -61,7 +61,7 @@
     and $v$ is a positive integer.
 
   \item \code{Finite0SeriesFunctions2} helps to embed elements of
-    \code{Finite0Series(C1, 'q, 0)} into \code{Finite0Series(C2, 'q, 0)}.
+    \code{Finite0Series(C1)} into \code{Finite0Series(C2)}.
 
   \item \code{PolynomialConversion} converts a polynomial from the
     generic \spadtype{Polynomial}\code{(C)} to a more specific
@@ -194,23 +194,20 @@ Convert convert power series by mapping coefficients.
 
 )abbrev package FIN0SER2 Finite0SeriesFunctions2
 ++ Finite0SeriesFunctions2 maps coefficients of the series.
-Finite0SeriesFunctions2(C1, C2, sym1, sym2, cen1, cen2): Exports == Impl where
+Finite0SeriesFunctions2(C1, C2): Exports == Implementation where
   C1: CommutativeRing
   C2: CommutativeRing
-  sym1: Symbol
-  sym2: Symbol
-  cen1: C1
-  cen2: C2
-  L1 ==> UnivariateLaurentSeries(C1, sym1, cen1)
-  F1 ==> Finite0Series(C1, sym1, cen1)
-  F2 ==> Finite0Series(C2, sym2, cen2)
-  ULSF2 ==> UnivariateLaurentSeriesFunctions2(C1, C2, sym1, sym2, cen1, cen2)
+  F1 ==> Finite0Series C1
+  F2 ==> Finite0Series C2
   Exports ==> with
     map: (C1 -> C2, F1) -> F2
         ++ \spad{map(f, g(x))} applies the map f to the coefficients of
         ++ the series \spad{g(x)}.
-  Impl ==> add
-    map(f: C1 -> C2, s: F1): F2 == (map(f, s::L1)$ULSF2) :: F2
+  Implementation ==> add
+    map(f: C1 -> C2, s: F1): F2 ==
+        cs: Stream C1 := coefficients qetaTaylorRep s
+        s2: QEtaTaylorSeries C2 := series(map(f, cs)$StreamFunctions2(C1, C2))
+        laurent(order s, s2)$F2
 
 )if LiterateDoc
 %$
