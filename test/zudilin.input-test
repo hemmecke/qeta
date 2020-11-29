@@ -83,6 +83,7 @@ tex: X1 C := xeqgens.1
 abex := samba(tex, xeqgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
 
 assertEquals(genusOfGamma0(level), 9)
+
 assertEquals(numOfGaps(abex), 9)
 
 -- Due to another critical element selection strategy, the resulting
@@ -91,11 +92,12 @@ assertEquals(numOfGaps(abex), 9)
 bas := sort(smallerGrade?, basis abex);
 t := multiplier abex
 grdt := qetaGrade t
+
 assertEquals(# bas, grdt-1)
 
 -- From a paper of Zudilin below the table called
 -- "Hypergeometric motives for rigid Calabi–Yau manifolds"
--- f_128
+-- $f_{128}$
 
 q := monomial(1,1)$A1(C)
 f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
@@ -133,6 +135,8 @@ rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV;
 
 rcofactor := rwgens.1
 assertEquals(rcofactor,[0, 0, 0, 0, 0, 0, 8, - 16])
+
+
 fcofactor := EQA1C rcofactor
 fcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in fcofactors], [64])
@@ -141,6 +145,7 @@ assertEquals([qetaGrade x for x in fcofactors], [64])
 f := f128 * fcofactor
 xf := toX1(C, f, 'F)
 xfr := reduce(xf, abex)$QXTOPRED1(C)
+
 assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
 
 ixfr := 1024*xfr
@@ -164,7 +169,7 @@ rgens0 := members(- vector rcofactor)
 vals := cons(monRZ rgens0, [monRZ x for x in rgens])
 vars := cons(M0, msyms)
 
--- The following gives f_45 in terms of eta-quotients
+-- The following gives $f_{128}$ in terms of eta-quotients
 
 -- Let's first check whether the expansion for the modular function f is
 -- correctly expressed in eta-quotients.
@@ -183,8 +188,9 @@ assertTrue(zero? z)
 
 assertEquals(order(z, 300), 237)
 
--- Show nicely
--- find common denominator
+-- Show nicely.
+-- Find common denominator
+
 minEntries(x: DZ, y: DZ): DZ == (_
     directProduct vector [min(x.i, y.i) for i in 1..#x]);
 
@@ -203,12 +209,14 @@ fpol0RZ := EVALRZ(vars, vals, pol0)
 dzs0 := [degree mon for mon in monomials fpol0RZ]
 den0RZ := monomial(1, - reduce(minEntries, dzs0, 0$DZ)$List(DZ))$RZ
 z0 := rzToA1C fpol0RZ - f128
+
 assertEquals(order(z0, 301), 301)
 
 -- We must check 300 coeffients (see the given f128 in order to see
 -- that our computation expands to the same coefficients.
 
 assertEquals(removeDuplicates [qetaCoefficient(z0, -i) for i in 0..300], [0])
+
 assertEquals(#monomials(rez fpol0RZ), 25)
 
 -- Show nicely
@@ -216,8 +224,11 @@ assertEquals(#monomials(rez fpol0RZ), 25)
 num0 := rez (fpol0RZ * den0RZ)
 den0 := rez(den0RZ)
 
--- -----------------------------------------------------------------
--- Mail Zudillin 17-Feb-2020:
+-- +
+-----------------------------------------------------------------
+-- -
+
+-- ## Mail from Zudillin 17-Feb-2020:
 
 brunaultterms := [_
   [   1, 2, 1,3, 3,-1,0,0,0],_
@@ -244,12 +255,15 @@ z := f128brunault - f128
 assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 
 -- -----------------------------------------------------------------
--- Finding other symmetry group for f_128.
+
+-- ## Finding other symmetry group for f_128.
+
 -- -----------------------------------------------------------------
 
 spitzen := cuspsOfGamma0 level
 o := reduce(_+, [width(level, denom cusp) for cusp in spitzen])
 assertEquals(o, indexOfGamma0 level)
+
 reps := rightCosetRepresentatives level;
 assertEquals(# reps, o)
 
@@ -285,8 +299,13 @@ result := findSimilarExpansions(f3sers);
 
 -- +
 -------------------------------------------------------------------
--- Find the expansion of f_128 at the cusp 0.
+-- -
+
+-- ### Find the expansion of f_128 at the cusp 0.
+
+-- +
 -------------------------------------------------------------------
+-- -
 
 creps := [TOMAT(cusp) for cusp in spitzen]
 hmat := matrix [[1,1],[0,1]]
@@ -306,8 +325,13 @@ idxPermutation := [first findEquivalentMatrix(reps.i, xreps) for i in 1..#reps]
 
 -- +
 -------------------------------------------------------------------
--- Don't consider f^3, but f itself.
+-- -
+
+-- ### Don't consider f^3, but f itself.
+
+-- +
 -------------------------------------------------------------------
+-- -
 
 fser := rzToAnCX fpolRZ
 fserreps  := [rzToL1CX(fpolRZ, gamma) for gamma in reps];
@@ -330,9 +354,14 @@ for i in 1..#xreps repeat (_
 
 -- +
 -------------------------------------------------------------------
--- Adjust f to other cofactor. Then g := f*fadjust is a modular function,
+-- -
+
+-- Adjust f to other cofactor. Then `g := f*fadjust` is a modular function,
 -- but with poles not only at infinity.
+
+-- +
 -------------------------------------------------------------------
+-- -
 
 divs := DIVISORS level
 idivs := empty()$List(Z)
@@ -342,7 +371,7 @@ zzi := (z.zinhom.1)(1..#divs)
 rcofactor2 := members(zzi - vector rcofactor)
 
 -- Safety check whether this factor is a modular eta quotient for
--- Gamma_0(128).
+-- $\Gamma_0(128)$.
 
 modular?(YEQn.rcofactor2.1)
 
@@ -350,29 +379,32 @@ fcofactor2 := EQAnCX rcofactor2
 
 fser2 := fser * fcofactor2
 
--- fser2 has series expansion of the form q*series(q^2) at every cusp.
+-- `fser2` has series expansion of the form `q*series(q^2)` at every cusp.
 
 qetaGrades fser2
 
 -- +
 -------------------------------------------------------------------
+-- -
 
 -- Try to find another cofactor fcofactor3 such that the respective
 -- series fser3 is, in fact a modular function for Gamma_0(64). So
 -- let's multiply with another nice eta-quotient that brings it to
--- M^\infty(64).
+-- $M^\infty(64)$.
 
+-- +
 -------------------------------------------------------------------
+-- -
 
-idivs := [1,2,3,4,5,6]
+idivs := [1,2,3,4,5,6];
 
 -- Note that we look for an approprivate eta-quotient that does not
--- involve eta(128*tau), i.e., the first argument is 64.
+-- involve $\eta(128\tau)$, i.e., the first argument is 64.
 
 z:=zsolve4ti2(64, idivs, concat([0 for i in idivs], [-2*wght,0,12]))$QEQEV
 
 -- We consider the resulting vectors as eta-quotient expinent vectors
--- where the entry for eta_128 is equal to zero.
+-- where the entry for $\eta_{128}$ is equal to zero.
 
 liftTo128(vs: List Vector Z): List List Z == (_
     n := # DIVISORS 128;_
@@ -401,21 +433,24 @@ assertEquals(zzh, [_
 zzf := liftTo128 z.zfree
 assertEquals(zzf, [])
 
+-- +
 --assertEquals(rcofactor3, [0, 0, 0, 1, 0, -3, 6, -4])
 --assertEquals(rcofactor3, [0, -2, 5, 0, 0, 8, -29, 18])
 
 --rcofactor3 := members(vector(zzi.1) - vector rcofactor)
 --assertEquals(rcofactor3, [0, 0, 0, 2, -1, 10, -29, 18])
+-- -
 
 rcofactor3 := members(vector(zzi.1) - vector(zzh.12) - vector rcofactor)
 assertEquals(rcofactor3, [0, 0, 0, 3, - 4, 11, - 26, 16])
+
 fcofactor3 := EQAnCX rcofactor3
 
 fser3 := fser * fcofactor3
 
 -- According to the orders of the expansions at all cusps,
--- fser3 corresponds to a modular function in M(128) that only has
--- poles at the cusps 1/64 and 1/128.
+-- fser3 corresponds to a modular function in $M(128)$ that only has
+-- poles at the cusps $1/64$ and $1/128$.
 
 qetaGrades fser3
 
@@ -426,21 +461,21 @@ for cusp in spitzen for i in 1..#spitzen repeat (_
     print series(fser3, i));
 
 -- That is, if the quotient of the widths is 2, then the series is a
--- series in q^2.
--- In particular the series expansions for the cusp 1/64 agrees with
--- the series expansion of the cusp 1/128 (=infinity).
+-- series in $q^2$.
+-- In particular the series expansions for the cusp $1/64$ agrees with
+-- the series expansion of the cusp $1/128$ ($=\infty$).
 
 [spitzen.15, spitzen.16]
 ser := series(fser3, 15) - series(fser3, 16)
 assertEquals(order(ser, 100), 100)
 
--- Let us consider the expansion of g := series(fser3, 16) and try to
--- reduce it by the samba series of eta-quotients in M^\infty(64).
+-- Let us consider the expansion of `g := series(fser3, 16)` and try to
+-- reduce it by the samba series of eta-quotients in $M^\infty(64)$.
 
-gx := series(fser3, 16)::A1(CX)
-g := abfmap(CX, C, retract, gx)
+gx := series(fser3, 16)
+g := abfmap(CX, C, retract, gx)::A1(C)
 
--- Now we want to compute in level 64, i.e. modular function for Gamma_0(64).
+-- Now we want to compute in level 64, i.e. modular function for $\Gamma_0(64)$.
 
 level := 64
 rgens64 := etaQuotientMonoidExponentVectors(level)$QEQEV;
@@ -466,9 +501,11 @@ abx64 := samba(tx64, xgens64)$QXTOPSAMBA1(C)
 
 xg := toX1(C, g, 'G)
 xgr := reduce(xg, abx64)$QXTOPRED1(C)
-zero? xgr
+assertTrue(zero? xgr)
+
 gpol := 8192 * second(xgr)::PolC + G
 assertEquals(# monomials gpol, 23)
+
 assertEquals(gpol,_
   (U1^10-20*U1^8-24*U1^6-128*U1^4-512*U1^2+2048)*U5_
  +(-2*U1^8-36*U1^6+208*U1^4-224*U1^2+1024)*U11_
@@ -487,7 +524,7 @@ vals64 := cons(monRZ rgens640, [monRZ concat(x, 0) for x in rgens64])
 gpolRZ := EVALRZ(cons('U0, usyms64), vals64, gpol)
 rez gpolRZ
 
-zero?(g - rzToA1C gpolRZ)
+assertTrue(zero?(g - rzToA1C gpolRZ))
 
 gpol0 := U0 * gpol
 gpol0RZ := EVALRZ(cons('U0, usyms64), vals64, gpol0)
@@ -495,7 +532,6 @@ rez gpol0RZ
 
 series(fser3, 16)
 EQA1C rgens640
-
 
 dzs0 := [degree mon for mon in monomials gpol0RZ]
 den0RZ := monomial(1, - reduce(minEntries, dzs0, 0$DZ)$List(DZ))$RZ
@@ -511,9 +547,14 @@ den0 := rez(den0RZ)
 
 -- +
 -------------------------------------------------------------------
+-- -
+
 -- Manual reduction of fser3 by means of elemens created by rgens64x
+
+-- +
 -------------------------------------------------------------------
 
+-- +
 )if false
 abx64t := samba(tx64, [xgens64.i for i in [6,5,4,3,2,1,7,8,9,10,11,12]])$QXTOPSAMBA1(C)
 xgrt := reduce(xg, abx64t)$QXTOPRED1(C)
@@ -528,7 +569,9 @@ assertEquals(# monomials gpolt, 17)
 [(pp := second(reduce(x, abx64)$QXTOPRED1(C))::PolC; if zero? pp then 0else 1/coefficient(pp,degree pp)*pp) for x in xgens64]
 )endif
 
+-- +
 -------------------------------------------------------------------
+-- -
 
 egens64x := [EQAnCX r for r in rgens64x];
 xgens64x := [toXn(CX, x, s) for x in egens64x for s in usyms64];
@@ -536,6 +579,7 @@ u:=egens64x;
 for x in u for i in 1.. repeat print [i, qetaGrades x]
 qetaGrades fser3
 
+-- +
 LCi(x, idxs) ==> [leadingCoefficient(series(x, i)) for i in idxs]
 LMi(x, idxs) ==> [leadingMonomial(series(x, i)) for i in idxs]
 LC(x) ==> LCi(x, ixs)
@@ -544,14 +588,19 @@ LM(x) ==> LMi(x, ixs)
 ixs := [9,10,11,12, 16]
 lmu := [LM x for x in u];
 for x in lmu for i in 1.. repeat print([i, x])
-
+-- -
 
 ser := fser3/(u.4*u.1^2*u.3) - u.4*u.7*u.12^3/(u.4*u.1^2*u.3)  + 16*u.8^3*u.2/u.3 + 172*u.12^2
-sx := series(ser, 16)::A1(CX)
-s := abfmap(CX,C, retract, sx)
+
+sx := series(ser, 16)
+
+s := abfmap(CX,C, retract, sx)::A1(C)
+
 xs := toX1(C, s, 'S)
+
 xsr := reduce(xs, abx64)$QXTOPRED1(C)
 assertTrue(zero? xsr)
+
 spol := 12288*second(reduce(xs, abx64)$QXTOPRED1(C))::PolC + S
 assertEquals(# monomials spol, 9)
 
@@ -567,9 +616,9 @@ fpol := spol*U1^2*U3*U4_
 
 ser := fser3
 
-
 fpolRZ := EVALRZ(cons('U0, usyms64), vals64, fpol)
 rez fpolRZ
+
 g
 rzToA1C fpolRZ
 assertTrue(zero?(g - rzToA1C fpolRZ))
@@ -590,8 +639,13 @@ den0 := rez(den0RZ)
 
 -- +
 -------------------------------------------------------------------
+-- -
+
 -- Is every eta-quotient in the sum holonomic?
+
+-- +
 -------------------------------------------------------------------
+-- -
 
 vexponents := [vector members degree m for m in monomials fpol0RZ]
 ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
@@ -601,17 +655,24 @@ assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o 
 
 -- +
 -------------------------------------------------------------------
+-- -
+
 -- Find a basis for all eta-quotients of weight 4 that are modular forms
+
+-- +
 -------------------------------------------------------------------
 -- -
 
 level := 64
 divs := DIVISORS level
 idivs := [i for i in 1..#divs]
+
 spitzen := cuspsOfGamma0 level
 rhs := concat([0 for i in idivs], 2*wght)
+
 zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV; -- takes about 3min40sec
 vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
+
 zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
 assertEquals(#zmodformzi, 8757)
 
@@ -627,8 +688,6 @@ rmat * vector rmodformgens.1
 
 
 [order EQA1C r for r in rmodformgens]
-)set out algebra on
-)set out linear off
 (matrix [qetaGrades YEQn x for x in rmodformgens])(1..20, 1..#spitzen)
 
 emodformgens := [EQA1C r for r in rmodformgens];
@@ -636,8 +695,12 @@ emodformgens := [EQA1C r for r in rmodformgens];
 
 -- +
 -------------------------------------------------------------------
+-- -
+
 -- Check whether there is a Q-linear combinationn of holomorphic
 -- eta-quotients of level 42 that is equal to f21.
+
+-- +
 -------------------------------------------------------------------
 -- -
 
@@ -647,15 +710,18 @@ emodformgens := [EQA1C r for r in rmodformgens];
 dimM := 30
 ncoefs := 32
 nmodformgens := # rmodformgens
+
 cmodformgens := [[coefficient(x, i) for i in 0..ncoefs] for x in emodformgens];
 assertEquals(rank matrix cmodformgens, dimM)
 
 matmodforms := transpose matrix cmodformgens;
 cf128 := [coefficient(f128, i) for i in 0..ncoefs]
+
 rels: VZ := new(nrows matmodforms, 0);
 zmodforms := zsolve(matmodforms, rels, vector cf128)$X4ti2;
 zmodformszi := zmodforms.zinhom;
 assertTrue(empty? zmodformszi)
+
 zmodformszf := zmodforms.zfree;
 
 sol := solve(matmodforms, vector cf128);
@@ -678,8 +744,8 @@ ser2 := fser3 - u.4*u.7*u.12^3
 ser3 := ser2/(u.4*u.1^2)
 ser := ser3
 
-sx := series(ser, 16)::A1(CX)
-s := abfmap(CX, C. retract, sx)
+sx := series(ser, 16)
+s := abfmap(CX, C. retract, sx)::A1(C)
 xs := toX1(C, s, 'S3)
 xsr := reduce(xs, abx64)$QXTOPRED1(C)
 assertTrue(zero? xsr)
@@ -691,8 +757,8 @@ lmu := [LM x for x in u];
 for x in lmu for i in 1.. repeat print([i, x])
 
 ser4 := (ser3 + 16*u.8^3*u.2)/u.3
-sx := series(ser, 16)::A1(CX)
-s := abfmap(CX, C, retract, sx)
+sx := series(ser, 16)
+s := abfmap(CX, C, retract, sx)::A1(C)
 xs := toX1(C, s, 'S4)
 xsr := reduce(xs, abx64)$QXTOPRED1(C)
 assertTrue(zero? xsr)
@@ -700,8 +766,8 @@ spol := 1280*second(reduce(xs, abx64)$QXTOPRED1(C))::PolC + S4
 assertEquals(# monomials spol, 11)
 
 ser5 := ser4 + 172*u.12^2
-sx := series(ser5, 16)::A1(CX)
-s := abfmap(CX, C, retract, sx)
+sx := series(ser5, 16)
+s := abfmap(CX, C, retract, sx)::A1(C)
 xs := toX1(C, s, 'S5)
 xsr := reduce(xs, abx64)$QXTOPRED1(C)
 assertTrue(zero? xsr)
@@ -716,6 +782,8 @@ assertEquals(# monomials spol, 9)
 -- Groebner basis reduction
 -------------------------------------------------------------------
 
+
+-- +
 assertTrue(false) -- stop here
 
 -- Now we want to reduce this relation with respect to a Gröbner basis
@@ -815,14 +883,15 @@ assertEquals(# bas, grdt-1)
 
 -- From a paper of Zudilin below the table called
 -- "Hypergeometric motives for rigid Calabi–Yau manifolds"
--- f_45
+-- $f_{45}$
 
 q := monomial(1,1)$A1(C)
 
 -- Zudilin (Mail Silviu "Date: Thu, 6 Feb 2020 14:16:19 +0100")
--- f_45(\tau) = eta^(1,1,1,0,1,0) + eta^(0,1,0,1,1,1) + 2*eta^(0,1,0,0,3,0) -
+--
+-- $f_{45}(\tau) = eta^(1,1,1,0,1,0) + eta^(0,1,0,1,1,1) + 2*eta^(0,1,0,0,3,0) -
 --              4*eta^(0,1,0,0,1,2)*q^(7/2)*
---              geneta(45, [3,9,12,-18,-27,33,36,42])
+--              geneta(45, [3,9,12,-18,-27,33,36,42])$
 
 f45silviu := 1*q+1*q^2-1*q^4-1*q^5-3*q^8-1*q^10+4*q^11-2*q^13-1*q^16-2*q^17 _
   +4*q^19+1*q^20+4*q^22+1*q^25-2*q^26+2*q^29+5*q^32-2*q^34-10*q^37 _
@@ -859,6 +928,7 @@ rwgens := etaQuotientExponentVectors(level, idivs, -4)$QEQEV;
 
 rcofactor := rwgens.1
 assertEquals(rcofactor, [0, - 1, 0, 3, 3, - 9])
+
 fcofactor := EQA1C rcofactor
 fcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in fcofactors], _
@@ -894,7 +964,8 @@ vars := cons(M0, msyms)
 -- Let's first check whether the expansion for the modular function f is
 -- correctly expressed in eta-quotients.
 
- -- The Laurent polynomial (in Ei variables) that belongs to f.
+-- The Laurent polynomial (in Ei variables) that belongs to $f$. 
+
 fpolRZ := EVALRZ(vars, vals, pol);
 
 z := rzToA1C fpolRZ - f
@@ -983,6 +1054,7 @@ assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 spitzen := cuspsOfGamma0 level
 o := reduce(_+, [width(level, denom cusp) for cusp in spitzen])
 assertEquals(o, indexOfGamma0 level)
+
 reps := rightCosetRepresentatives level;
 assertEquals(# reps, o)
 
@@ -1086,11 +1158,13 @@ fserx := fser * EQAnCX rcofactorx
 qetaGrades fserx
 
 # spitzen
-sx := series(fserx, #spitzen) -- A1(CX)
-s := abfmap(CX, C, retract, sx)
+sx := series(fserx, #spitzen) -- L1(CX)
+s := abfmap(CX, C, retract, sx)::A1(C)
 xs := toX1(C, s, 'S)
+
 xsr := reduce(xs, abex)$QXTOPRED1(C)
 assertTrue(zero? xsr)
+
 spol := -2*second(reduce(xs, abex)$QXTOPRED1(C))::PolC + S
 assertEquals(# monomials spol, 4)
 
@@ -1100,6 +1174,7 @@ valsx := cons(monRZ members(- vector rcofactorx), vals)
 fpol := spol*MC
 fpolRZ := EVALRZ(varsx, valsx, fpol)
 rez fpolRZ
+
 rzToA1C fpolRZ
 assertTrue(zero?(f - rzToA1C fpolRZ))
 
@@ -1131,7 +1206,7 @@ vexponents := [vector rest x for x in brunaultterms]
 ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
 assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true], [true,false]])
 
--- Hewever, it is also not the case for the representation of Brunault.
+-- However, it is also not the case for the representation of Brunault.
 
 -- +
 -------------------------------------------------------------------

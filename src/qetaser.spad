@@ -185,10 +185,18 @@ if their order is greater than zero.
 -- non-integer constants to constructors.
 -- https://www.mail-archive.com/fricas-devel@googlegroups.com/msg08670.html
 Finite0Series(C: CommutativeRing): Exports == Implementation where
-  Exports ==> Join(QEtaLaurentSeriesCategory C, QEtaGradedAlgebra C)
+  Exports ==> Join(QEtaLaurentSeriesCategory C, QEtaGradedAlgebra C) with
+    coerce: QLS C -> %
+      ++ coerce(x) assumes that the QEta Laurent series x belongs to
+      ++ the subalgebra of series with the properties of this damain.
+      ++ No check is made.
+    coerce: % -> QLS C
+      ++ coerce(x) returns the element x as a QEta Laurent series.
   Implementation ==> QLS C add
     Rep ==> QLS C
     Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
+    coerce(s: QLS C): % == per s
+    coerce(x: %): QLS C == rep x
     zero?(x: %): Boolean ==
         d: Z := degree x -- (x pretend Rec).expon
         d > 0 => true
