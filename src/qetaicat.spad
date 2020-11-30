@@ -123,15 +123,15 @@ Dedekind $\eta$-functions}
 )endif
 
 )abbrev category QETAIDC QEtaIdealCategory
-++ QEtaIdealCategory(C, L) is a category that implements a number of
+++ QEtaIdealCategory(C) is a category that implements a number of
 ++ functions connected to relations among Dedekind eta-functions. It
 ++ allows for differend implementation of the function
 ++ relationsIdealGenerator, which does the main job of computing the
 ++ generators of the ideal of relations of modular eta-quotients
 ++ having a pole at most at infinity.
-QEtaIdealCategory(C, L): Category == Exports where
+QEtaIdealCategory(C): Category == Exports where
   C: EuclideanDomain
-  L: Join(QEtaLaurentSeriesCategory C, QEtaAlgebra C)
+  L ==> Finite0Series C --: Join(QEtaLaurentSeriesCategory C, QEtaAlgebra C)
   Pol ==> Polynomial C
   LPol ==> List Pol
   Exports ==> with
@@ -229,13 +229,12 @@ QEtaIdealCategory(C, L): Category == Exports where
     -- exported functions
     etaQuotientIdealGenerators(level: P, rgens: List List Z): LPol ==
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        etaquotgens: List EtaQuotient(C, L) := _
-            [etaQuotient(divs, r) for r in rgens]
+        etaquotgens: List EtaQuotient C := [etaQuotient(divs, r) for r in rgens]
         -- Build in some safety check.
         for x in etaquotgens repeat
             if not zero? prefactor x then error "nonzero prefactor"
         -- We know that 'expansion' will not fail, so we get Laurent series.
-        eqgens: List L := [expansion x for x in etaquotgens]
+        eqgens: List L := [expansion(x)::L for x in etaquotgens]
         relationsIdealGenerators eqgens
 
     etaQuotientIdealGenerators(level: P): LPol ==

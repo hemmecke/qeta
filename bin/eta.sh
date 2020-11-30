@@ -53,7 +53,7 @@ function QuotientIdealGenerators {
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
-QEtaIdeal ==> QEtaIdeal$VARIANT(C, A1 C)
+QEtaIdeal ==> QEtaIdeal$VARIANT(C)
 $DEP: List(List Z) := [];
 )read $2/$3/$DEP.input )quiet
 dim: N := # $DEP
@@ -89,7 +89,7 @@ function LaurentIdealGenerators {
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
-QEtaIdeal ==> QEtaIdeal$VARIANT(C, A1 C)
+QEtaIdeal ==> QEtaIdeal$VARIANT(C)
 $DEPQMEV: List(List Z) := [];
 )read $2/$3/$DEPQMEV.input )quiet
 $DEPQIG: LPol :=[];
@@ -129,7 +129,7 @@ function Relations {
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
-QEtaIdeal ==> QEtaIdeal$VARIANT(C, A1 C)
+QEtaIdeal ==> QEtaIdeal$VARIANT(C)
 $DEP: LPol := [];
 )read $2/$3/$DEP.input )quiet
 divs: List Z := divisors($1)\$IntegerNumberTheoryFunctions
