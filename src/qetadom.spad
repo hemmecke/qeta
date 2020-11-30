@@ -39,9 +39,6 @@
   infinity in terms of $q$-series. These $\eta$-quotients generate an
   algebra over some ring $C$ (\code{QEtaGradedAlgebra(C)}).
 
-  An auxiliary domain \code{Monomials} is introduced that adds
-  variable names so that an element of a \code{DirectProduct} can be
-  shown as a product of variables raised to some power.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -287,48 +284,6 @@ EtaQuotient(C: IntegralDomain, L: QEtaLaurentSeriesCategory C): _
         while not zero?(p := reductum p) repeat
             r := r + toEtaMonomial leadingMonomial p
         return r
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{An exponent domain that comes with variable names}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Turn various kinds of direct products into something that prints as
-powerproducts with exponent vectors being the entries of the direct
-product element.
-)endif
-
-)abbrev domain MONOMS Monomials
-++ Monomials(dim, D, vl) behaves exactly like D, i.e. is an
-++ AbelianMonoid, but prints its elements in a multiplicative form.
-++ For example, if dim = 2, vl = [A,B] and x::Vector(NNI) = [2,3],
-++ then the element x (coerced to OutputForm) looks like A^2*B^3.
-Monomials(_
-  dim: N,_
-  R: OrderedAbelianMonoid,
-  D: DirectProductCategory(dim, R),_
-  vl: LSym_
- ): DirectProductCategory(dim, R) == D add
-    --assert(dim = # vl)
-    noOneTest? := not (R has one?: R -> Boolean)
-    notOne? x ==> noOneTest? or not one? x
-    coerce(x: %): OutputForm ==
-        vs: LSym := vl
-        zero? x => (1$Integer)::OutputForm
-        fst: Boolean := true
-        k: N := 1
-        while zero?(x.k) repeat
-            vs := rest vs
-            k := k + 1
-        --assert(k<=dim)
-        o: OutputForm := (first vs)::OutputForm
-        if notOne? x.k then o := o ^ ((x.k)::OutputForm)
-        for i in k+1..dim for v in rest vs | not zero?(x.i) repeat
-            oo: OutputForm := v::OutputForm
-            if notOne? x.i then oo := oo ^ ((x.i)::OutputForm)
-            o := o * oo
-        return o
-
 
 )if LiterateDoc
 \bibliography{qeta}
