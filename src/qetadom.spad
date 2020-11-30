@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2015-2019  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2015-2020  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -27,17 +27,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
-\title{Computing with Dedekind Eta Functions as $q$-series}
+\title{Computing with (generalized) Dedekind Eta Functions as $q$-series}
 \author{Ralf Hemmecke}
 \date{10-Dec-2015}
 \maketitle
 \begin{abstract}
   We implement functionality to compute with Dedekind
-  $\eta$-functions.
+  $\eta$-functions and generalized Dedekind $\eta$-functions.
 
   The code below deals with a expansions of $\eta$-quotients at
-  infinity in terms of $q$-series. These $\eta$-quotients generate an
-  algebra over some ring $C$ (\code{QEtaGradedAlgebra(C)}).
+  infinity in terms of $q$-series. These (generalized)
+  $\eta$-quotients generate an algebra over some ring $C$
+  (\code{QEtaGradedAlgebra(C)}).
 
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,6 +64,9 @@ These two technical macros are necessary to distinguish between Rep
 and \%.
 )endif
 
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
+
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
@@ -79,6 +83,7 @@ OF ==> OutputForm
 
 asN x ==> x pretend N
 asP x ==> x pretend P
+asZ x ==> x pretend Z
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,19 +156,22 @@ EtaQuotient(C): Exports == Implementation where
     eulerExpansion: (P, List Z) -> L
       ++ eulerExpansion(m, r) returns eulerExpansion(divisors m, r)
       ++ which is also the same as eulerExpansion(etaQuotient(m, r)).
-    eulerExponent: % -> Z
-      ++ If x = etaQuotient(divs, r) then eulerExponent(x) is equal to
+    sigmaInfinity: % -> Z
+      ++ If x = etaQuotient(divs, r) then sigmaInfinity(x) is equal to
       ++ reduce(_+, [d*rd for d in divs for rd in r], 0). Dividing
-      ++ eulerExponent(x) by 24 gives the q-exponent that must be
+      ++ sigmaInfinity(x) by 24 gives the q-exponent that must be
       ++ multiplied to the eulerExpansion, to turn the whole object
       ++ into an eta-quotient.
     expansion: % -> L
-      ++ expansion(x) aborts with error if prefactor is not divisible
-      ++ by 24. Otherwise it returns q^r*seriesPart(x) where
-      ++ r=prefactor(x)/24 and q is the variable of L.
-      ++ It is the same as q^e*eulerExponent(x) where e=eulerExponent(x)/24.
+      ++ expansion(x) aborts with error if eulerExponent(x) is not am
+      ++ integer. Otherwise it returns q^r*seriesPart(x) where
+      ++ r=prefactor(x)/24 and q is the variable of L. It is the same
+      ++ as q^e*eulerExpansion(x) where e=eulerExponent(x).
     etaPower: (P, Z) -> %
       ++ etaPower(d, e) returns eta(d)^e.
+
+    new: (Q, L) -> %
+      ++ Only for internal use.
 
     -- This function (toEta) is for checking and actually does not
     -- necessarily yield an element of %.
@@ -190,7 +198,22 @@ EtaQuotient(C): Exports == Implementation where
     -- fact, it is a product/quotient of Euler functions. The
     -- eulerexpo must be divided by 24 to get the correct fractional
     -- exponent of q.
-    Rep ==> Record(eulerexpo: Z, eulerquot: L)
+    Rep ==> Record(eulerexpo: Q, eulerquot: L)
+
+    new(e: Q, s: L): % == per [e, s]
+    eulerExponent(x: %): Q == rep(x).eulerexpo
+    eulerExpansion(x: %): L == rep(x).eulerquot
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        hashUpdate!(hashUpdate!(h, eulerExponent x), eulerExpansion x)
+    coerce(x: %): OutputForm ==
+        q: OutputForm := (variable(0$L)$L)::OutputForm
+        r: Q := eulerExponent x
+        zero? r => (eulerExpansion x)::OutputForm
+        e: OutputForm := r::OutputForm
+        q^e * (eulerExpansion x)::OutputForm
+
+    sigmaInfinity(x: %): Z == numer(24*eulerExponent(x))
 
     -- We maintain a cache of expansions of powers of the Euler function.
     ef: L := eulerFunction(1)$QFunctions(C, L)
@@ -208,25 +231,27 @@ EtaQuotient(C): Exports == Implementation where
         rd < 0 => multiplyExponents(power!(psc, -rd)$CachedPower(L), d)
         multiplyExponents(power!(efc, rd)$CachedPower(L), d)
 
-    new(n: Z, s: L): % == per [n, s]
-    eulerExponent(x: %): Z == rep(x).eulerexpo
-    eulerExpansion(x: %): L == rep(x).eulerquot
-
-    prefactor(x: %): N == asN(positiveRemainder(eulerExponent x, 24))
+    prefactor(x: %): N ==
+        e: Q := eulerExponent x
+        n: Z := 24 * numer e -- for eta-quotients 24 is the biggest denominator
+        asN(positiveRemainder(n, 24))
     seriesPart(x: %): L ==
-        n: Z := eulerExponent x
-        r: Z := positiveRemainder(n, 24)
-        q: Z := ((n-r) exquo 24)::Z
+        e: Q := eulerExponent x
+        n: Z := numer e
+        d: Z := denom e
+        r: Z := positiveRemainder(n, d)
+        q: Z := ((n-r) exquo d)::Z
         return monomial(1, q) * eulerExpansion(x)
 
     1: % == new(0, 1$L)
     expansion(x: %): L ==
-        e: Z := prefactor x
-        not zero? e => error "eta-quotient has fractional expansion"
-        return seriesPart x
-    eta(n: P): % == new(n, eulerFunctionPower(n, 1))
-    etaPower(n: P, e: Z): % == new(n*e, eulerFunctionPower(n, e))
-    q24(n: Z): % == new(n, 1$L)
+        e: Q := eulerExponent x
+        not one? denom e =>  error "eta-quotient has fractional expansion"
+        return monomial(1, numer e) * eulerExpansion x
+
+    eta(n: P): % == new(n/24, eulerFunctionPower(n, 1))
+    etaPower(n: P, e: Z): % == new(n*e/24, eulerFunctionPower(n, e))
+    q24(n: Z): % == new(n/24, 1$L)
 
     ((x: %) * (y: %)): % == new(eulerExponent x + eulerExponent y,
                                 eulerExpansion x * eulerExpansion y)
@@ -244,15 +269,6 @@ EtaQuotient(C): Exports == Implementation where
 
     eulerExpansion(level: P, r: List Z): L ==
         eulerExpansion etaQuotient(level, r)
-
-    hashUpdate!(h: HashState, x: %): HashState ==
-        hashUpdate!(hashUpdate!(h, prefactor x), seriesPart x)
-    coerce(x: %): OutputForm ==
-        q: OutputForm := (variable(0$L)$L)::OutputForm
-        r: Q := eulerExponent(x)/24
-        zero? r => (eulerExpansion x)::OutputForm
-        e: OutputForm := r::OutputForm
-        q^e * (eulerExpansion x)::OutputForm
 
     -- The following functions are convenience functions and not really used.
     --:TODO: Move the functions below into a separate package.
@@ -277,10 +293,10 @@ EtaQuotient(C): Exports == Implementation where
         l: List N := degree(m, syms)
         e: % := 1
         for s in syms for x in l repeat e := e*etaPower(idx s, x)
-        new(prefactor e, leadingCoefficient(m) * seriesPart(e))
+        new(prefactor(e)/24, leadingCoefficient(m) * seriesPart(e))
     ((x: %) + (y: %)): % == -- This is a partial function!!!
         prefactor x ~= prefactor y => error "Cannot add. Unequal prefactor."
-        new(prefactor x, seriesPart x + seriesPart y)
+        new(prefactor(x)/24, seriesPart x + seriesPart y)
     polynomialToEta(p: Polynomial C): % ==
         --assert(all variables are of the form En where n is some integer)
         zero? p => new(0, 0$L)
@@ -289,6 +305,164 @@ EtaQuotient(C): Exports == Implementation where
         while not zero?(p := reductum p) repeat
             r := r + toEtaMonomial leadingMonomial p
         return r
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Generalized eta quotient expansions at infity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $\delta$ be a positive natural number and $g$ be a residue class
+(mod $\delta$).
+%
+We consider the generalized eta-quotient which is given by
+\begin{gather}
+  \label{eq:generalized-eta-quotient}
+  \eta_{\delta,g}(\tau) = q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+  %
+  \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+  \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+\end{gather}
+where $q = e^{2\pi i \tau}$ and
+\begin{gather}
+  P_2(t) = \{t\}^2 - \{t\} + \frac{1}{6}
+\end{gather}
+is the second Bernoulli function and $\{t\}$ denotes the fractional
+part of $t$, see
+\cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Generalized eta quotient expansions at infity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The domain \texttt{GeneralizeEtaQuotient} implements a representation
+for generalized $\eta$ functions (in terms of $q$) and products and
+quotients of generalized $\eta$ functions.
+
+)endif
+
+)abbrev domain GETAQUOT GeneralizedEtaQuotient
+++ GeneralizedEtaQuotient implements the (multiplicative) group of
+++ generalized eta-functions in their expansion at infinity. Elements
+++ can be represented as Laurent series in q with a prefactor of
+++ q^e where e is a rational number.
+++ This domain is a generalization of EtaQuotient(C, L)
+GeneralizedEtaQuotient(C: IntegralDomain): Exports == Implementation where
+  T ==> QEtaTaylorSeries C
+  L ==> QEtaLaurentSeries C
+  Exports ==> Join(Group, CoercibleTo OutputForm) with
+    -- Note that a generalized eta-quotient has integer coefficients
+    -- and that the inverse of this series has integer coefficients,
+    -- as well. Therefore, it is not a lie that we assert "Group".
+    generalizedEtaQuotient: (P, P, Z) -> %
+      ++ generalizedEtaQuotient(delta,g,rdg) returns the generalized
+      ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
+      ++ formula (1.11) in
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+      ++ raised to the power rdg.
+      ++ Condition: 0 < g < \delta/2.
+--      ++ Since $\eta_{\delta,0}(\tau)=\eta(\delta\tau)^2$ and
+--      ++ $\eta_{\delta,\delta/2}(\tau) =
+--      ++ \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2}$ are
+--      ++ squares, we define
+--      ++ generalizedEtaQuotient(delta,0,e):=$\eta(\delta\tau)^e$ and
+--      ++ generalizedEtaQuotient(delta,g,e):=
+--      ++ $\frac{\eta(g\tau)^e}{\eta(2g\tau)^e}}$ if $g=\delta/2$.
+
+    generalizedEtaQuotient: (P, P, Z) -> %
+      ++ generalizedEtaQuotient(delta, g, rdg) returns the generalized
+      ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
+      ++ formula (1.11) in
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+      ++ raised to the power rdg.
+
+    generalizedEtaQuotient: (P, List P, List Z) -> %
+      ++ generalizedEtaQuotient(delta, gs, rd) returns the product of
+      ++ generalized eta-quotients for each g in gs and rdg in rd.
+
+    generalizedEtaQuotient: (List P, List List P, List List Z) -> %
+      ++ generalizedEtaQuotient(delta, gs, rd) returns the product of
+      ++ generalized eta-quotients for each g in gs and rdg in rd.
+
+    eulerExpansion: % -> L
+      ++ eulerExpansion(x) returns the power series (with constant
+      ++ coefficient 1 that results from just considering the product of
+      ++ Euler function powers (q-Pochhammer symbols) connected to the
+      ++ creation via etaQuotient(divs, r).
+    eulerExponent: % -> Q
+      ++ If x is a generalized eta-quotient, then eulerExponent(x) is
+      ++ the fractional exponent e of q such that q^e*eulerExpansion(x) is
+      ++ equal to the Puiseux series expansion of x.
+    expansion: % -> L
+      ++ expansion(x) aborts with error if eulerExponent(x) is not an
+      ++ integer. Otherwise it returns q^e where e=eulerExponent(x)
+      ++ and q is the variable of L.
+
+  Implementation ==> EtaQuotient C add
+    -- The series part is always a power series with constant 1, in
+    -- fact, it is a product/quotient of (generalized) Euler
+    -- functions.
+    Rep ==> EtaQuotient C
+    Rec ==> Record(eulerexpo: Q, eulerquot: L)
+
+    -- We maintain a cache of expansions of powers of the generalized
+    -- Euler functions. One cache for each delta and each 0<g<delta/2.
+    gef: XHashTable(P, XHashTable(P, CachedPower T)) := empty()
+
+    -- local function
+    generalizedEulerFunction(delta: P, g: P): T ==
+        STSO ==> StreamTaylorSeriesOperations C
+        gProduct ==> general_Lambert_product $ STSO
+        s: Stream C := [[1, -1]]$Stream(C) -- corresponds to f(q)=(1-q)
+        s1: Stream C := gProduct(s, asZ g, asZ delta) -- \prod (1-q^(g+i*delta))
+        s2: Stream C := gProduct(s, asZ(delta-g), asZ delta)
+        series(s1 *$STSO s2)$T
+
+    -- eulerFunctionPower(u, rd) returns eulerFunction(u)^rd. Internally,
+    -- it is, however implemented via CachedPower(L) using only
+    -- expansions of eulerFunction(1) and partitionSeries(1).
+    generalizedEulerFunctionPower(d: P, g: P, rd: Z): T ==
+        zero? rd => 1$T
+        2*g = d =>
+            vPrint("d", d)
+            vPrint("g", g)
+            error "generalizedEtaQuotient: use etaQuotient([g,d],[2*rd,2*rd])"
+        if 2*g > d then g := asP(d-g)
+        -- First make sure that the initial entry gef.d.g exists.
+        gefd := elt(gef, d, empty()$XHashTable(P, CachedPower T))
+        if not key?(g, gefd) then
+            t: T := generalizedEulerFunction(d, g)
+            gefd.g := t::CachedPower(T)
+        cachedPower := gefd.g
+        t: T := power!(cachedPower, abs rd)$CachedPower(T)
+        if rd > 0 then t else recip(t)::T
+
+    generalizedEtaQuotient(d: P, g: P, rd: Z): % ==
+        zero? rd => 1
+        t: T := generalizedEulerFunctionPower(d, g, rd)
+        -- Since 0<g<delte, g/d is already the fractional part.
+        q: Q := g/d
+        e: Q := g^2/(2*d) - g/2 + d/12 --=d/2*((g/d)^2-g/d+1/6)
+        per new(rd*e, laurent(0, t)$L)
+
 
 )if LiterateDoc
 \bibliography{qeta}
