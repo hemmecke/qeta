@@ -55,11 +55,6 @@
     series
     $\sum_{k=0}^\infty p(5n+4)q^n$.
 
-  \item \code{QFunctionTools2} allows to create a Laurent series from
-    another Laurent series. In particular it can be used to replace
-    $q$ by $cq^v$ where $c$ is an element of the coefficient domain
-    and $v$ is a positive integer.
-
   \item \code{Finite0SeriesFunctions2} helps to embed elements of
     \code{Finite0Series(C1)} into \code{Finite0Series(C2)}.
 
@@ -149,47 +144,6 @@ QAuxiliaryTools(): with
         mon(x) ==> monomial(numer(c*leadingCoefficient x), degree x)$Polynomial(Z)
         lm: List Polynomial Z := [mon(x) for x in monomials p]
         reduce(_+, lm)
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Auxiliary package to create a series from another series.
-)endif
-
-)abbrev package QFUN2 QFunctionTools2
-++ QFunctionTools2 allows to create a series from another series.
-QFunctionTools2(C, L, CX, LX): Exports == Implementation where
-  C: Ring
-  L: QEtaLaurentSeriesCategory C
-  CX: Ring
-  LX: QEtaLaurentSeriesCategory CX
-  S ==> Stream C
-  SX ==> Stream CX
-  RecC ==> Record(k: Z, c: C)
-  RecX ==> Record(k: Z, c: CX)
-  Exports ==> with
-    map: (RecC -> RecX, L) -> LX
-      ++ If x = \sum_{n=m}^\infty c(n)*q^n, then map(h, x) returns
-      ++ a series \sum{n=m}^\infty g(c(n), n)*q^{f(n}}
-      ++ where h([k,c]) is assumed to be equal to [f(k), g(c, k)].
-      ++ f is assumed to be strictly increasing.
-      ++ x is assumed to be non-zero.
-    map: ((C, Z) -> CX, Z -> Z, L) -> LX
-      ++ If x = \sum_{n=m}^\infty c(n)*q^n, then map(g, f, x) returns
-      ++ a series \sum{n=m}^\infty g(c(n), n)*q^{f(n}}.
-      ++ f is assumed to be strictly increasing.
-      ++ x is assumed to be non-zero.
-  Implementation ==> add
-    SFCX ==> StreamFunctions2(RecC, RecX)
-
-    map(f: RecC -> RecX, x: L): LX ==
-        stc: Stream RecC := terms x
-        stx: Stream RecX := map(f, stc)$SFCX
-        series(stx)$LX
-
-    gxf(g: (C, Z) -> CX, f: Z -> Z): RecC -> RecX == (x: RecC): RecX +->
-        [f(x.k), g(x.c, x.k)]
-
-    map(g: (C, Z) -> CX, f: Z -> Z, x: L): LX == map(gxf(g, f), x)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
