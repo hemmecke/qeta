@@ -88,12 +88,11 @@ all: compile-spad
 # They are not used or maintained anymore.
 SPADFILES_OLD = qetaradu qeta3hdp qetair qetais
 SPADFILES=4ti2 qfunct cachedpow \
-  qetaalg qetasqrt qetaauxmeq qetaqmev  qetaser qetadom qetatool \
+  qetaalg qetasqrt qetaauxmeq qetaqmev qetaser qetadom qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
-  qetapowersamba qetakolberg qetafun \
+  qetapowersamba qetakolberg qetafun qetark \
   ivar iffts ffalgclos algclos newtonpuiseux \
-  qetark
 
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
