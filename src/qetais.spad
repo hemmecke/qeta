@@ -90,6 +90,8 @@ N ==> NonNegativeInteger
 Z ==> Integer
 LSym ==> List Symbol
 
+asP x ==> x pretend P
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Variant Samba}
@@ -143,7 +145,7 @@ QEtaIdealSamba(C, L): Exports == Implementation where
         xmzgens: List X := concat entries basisElements ab
         zsyms: LSym := indexedSymbols("Z", #xmzgens)
         syms: LSym := concat(zsyms, msyms)
-        dim: P := qcoerce(#syms)@P -- for later: number of variables
+        dim: P := asP(#syms) -- for later: number of variables
         vPrint("xmgens", xmgens)
         xzgens: List X := [xembed(x, m) for x in xmzgens for m in zsyms]
         vPrint("xzgens", xzgens)
@@ -215,12 +217,12 @@ QEtaIdealSamba(C, L): Exports == Implementation where
         import from QAuxiliaryTools
         r := polynomialRelationsGenerators mgens
         relgens: LPol := r.gens
-        dim1: P := qcoerce(r.zlen)@P
+        dim1: P := asP(r.zlen)
         msyms: LSym := indexedSymbols("M", #mgens)
-        zsyms: LSym := indexedSymbols("Z", qcoerce(dim1)@N)
+        zsyms: LSym := indexedSymbols("Z", asP dim1)
         tsym: Symbol := "T"::Symbol
         syms: LSym := concat(zsyms, cons(tsym, msyms))
-        dim: P := qcoerce(#syms)@P -- for later: number of variables
+        dim: P := asP(#syms) -- for later: number of variables
         ztmrels: LPol := eliminate(dim, dim1, syms, relgens)
         vPrint("ztmrels", ztmrels)
         mrels: LPol := xPolynomials(ztmrels, char "M")$PolynomialTool(C)

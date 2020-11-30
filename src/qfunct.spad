@@ -141,6 +141,7 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
   Z ==> Integer
   Rec ==> Record(k: Z, c: R)
   S ==> Stream Rec
+  asN x ==> x pretend N
   C ==> with
     qPochhammer: () -> L
         ++ qPochhammer() = qPochhammer(1, 1, 1)
@@ -262,7 +263,7 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         zero? r =>
             cc: R := 1-c
             zero? cc => 0$L
-            cc * qPochhammer(c, s, s, qcoerce(n-1)@N)
+            cc * qPochhammer(c, s, s, asN(n-1))
         zero? s => (1 + monomial(-c, r))^n -- s=0 is supposed to be a rare case
         s < 0 =>
             r > 0 => qPochhammer(c, r+s*(n-1), -s, n)
@@ -278,10 +279,10 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
             cc: R := 1-c
             zero? cc => 0$L
             ln: L := qPochhammerNeg(c, r, s, j)
-            lp: L := qPochhammerPos(c, r+s*(j+1), s, qcoerce(n-1-j)@N)
+            lp: L := qPochhammerPos(c, r+s*(j+1), s, asN(n-1-j))
             cc * ln * lp
         ln: L := qPochhammerNeg(c, r, s, j+1)
-        lp: L := qPochhammerPos(c, r+s*(j+1), s, qcoerce(n-1-j)@N)
+        lp: L := qPochhammerPos(c, r+s*(j+1), s, asN(n-1-j))
         ln * lp
 
     -- Computes g_i from description above or rather g(r,s).
@@ -300,7 +301,7 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         a := -a
         p: RX := 1
         while r < 0 repeat
-              p := p + monomial(a, qcoerce(-r)@N)$RX * p
+              p := p + monomial(a, asN(-r))$RX * p
               r := r + s
         l: L := 1 + laurent(r, qPochhammerAux(a, r, s))
         one? p => l

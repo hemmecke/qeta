@@ -42,7 +42,7 @@ level := $LEVEL
 )r ../etafiles/Hemmecke/etaRelations$LEVEL
 erels := etaRelations$N
 
-divs: List P := [qcoerce(d)@P for d in divisors level]
+divs: List P := DIVISORS level
 esyms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
 allmons := [monomials erel for erel in erels]
 alldegs := [[vector(degree(mon, esyms)::List(Z)) for mon in mons] for mons in allmons]

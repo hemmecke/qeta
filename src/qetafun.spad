@@ -1933,6 +1933,7 @@ VZ ==> Vector Z
 OF ==> OutputForm
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
+asN x ==> x pretend N
 asP x ==> x pretend P
 
 INTF ==> IntegerNumberTheoryFunctions
@@ -2042,7 +2043,7 @@ SymbolicEtaDeltaGamma: SetCategory with
         b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
         a2: Z := gamma2(1, 1); wgamma: Z := width(m, c)
         udelta: Q := gcd(c,delta)^2 / delta
-        edelta: P := qcoerce(numer(wgamma*udelta))@P
+        edelta: P := asP numer(wgamma*udelta)
         if not one?(denom(wgamma*udelta)) then
             error "edelta is not integer"
         --assert(edelta = ((a2*wgamma exquo d2) :: Z))
@@ -3252,12 +3253,12 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
         for delta in divs for rd in exponents e | not zero? rd repeat
             etadelta: SymbolicEtaDeltaGamma := e.delta
             u: P := edelta(etadelta)
-            v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
+            v: N := asN numer(mx * vdelta(etadelta))
             s := s * eulerFunctionPower(u, v, rd)
         q: Q := mx * unityPower e
         if not one? denom q then
             error "EtaQuotientGamma: denominator does not vanish"
-        n: N := qcoerce(positiveRemainder(numer q, mx))@N
+        n: N := asN positiveRemainder(numer q, mx)
         cx: CX := xi^n * squareRoot rationalPrefactor e -- leading coefficient
         per [e, cx, s]
 
@@ -3476,13 +3477,13 @@ $\divides{\delta}{M}$ with $s_\delta\ne0$, \ie, the series from
                 dbgPrint("delta, d", [delta, d]$List(P))
                 dbgPrint("udelta", [udelta etadelta, u]$List(Q))
                 error "SiftedEtaQuotientGamma: denominator does not vanish"
-            v: N := qcoerce(numer(mx * vdelta(etadelta)))@N
-            s := s * eulerFunctionPower(qcoerce(numer u)@P, v, sd)
+            v: N := asN numer(mx * vdelta(etadelta))
+            s := s * eulerFunctionPower(asP numer u, v, sd)
         q: Q := mx * unityPower y
         not one? denom q =>
             dbgPrint("mx * unityPower y", q)
             error "SiftedEtaQuotientGamma: denominator for xi does not vanish"
-        n: N := qcoerce(positiveRemainder(numer q, mx))@N
+        n: N := asN positiveRemainder(numer q, mx)
         cx: CX := xi^n * squareRoot rationalPrefactor y -- leading coefficient
         p: Q := d/24 * qExponent y -- the "/24" is missing from qExponent(y)
         not one? denom p =>
@@ -3508,7 +3509,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_s-m-t(gamma*tau)}.
     puiseux(y: SymbolicSiftedEtaQuotientGamma, w: P): % ==
         m: P := multiplier y
         lx: LX := 0
-        m1: P := qcoerce(m::Z - 1)@P
+        m1: P := asP(m::Z - 1)
         for lambda in 0..m1 repeat lx := lx + laurent puiseux(y.lambda, w)
         -- A sifted version of an eta-quotient is a non-zero function.
         -- Thus, we can safely remove initial zeroes.
@@ -3612,7 +3613,7 @@ ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
         nn: P := level y
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
-            w: P := qcoerce(width(nn, denom cusp)$QAuxMEQ)@P -- width of cusp
+            w: P := asP(width(nn, denom cusp)$QAuxMEQ) -- width of cusp
             hser.cusp := laurent puiseux(y.cusp, w)
         per [y, hser]
     level(x: %): P == level(xx.meta)
@@ -3866,7 +3867,7 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
       ++ series(x, n) returns the series corresponding to the n-th index.
       ++ Indices can run from 1 to maxIndex().
   Implementation ==> add
-    ncusps: P := qcoerce(#cusps)@P
+    ncusps: P := asP(#cusps)
     Rep ==> DirectProduct(ncusps, L)
     xx ==> rep x
     yy ==> rep y
@@ -3882,7 +3883,7 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
     1: % == per(1$Rep)
     zero?(x: %): Boolean ==
         for kn in 1..ncusps repeat
-            k: P := qcoerce(kn)@P
+            k: P := asP kn
             qetaGrade(x, k, 0) > 0 => return false
             not zero? xx.k.0 => return false
         return true
@@ -3899,7 +3900,7 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
         maxGrade: Z := -1 -- dummy value
         idx: N := 0
         for kn in 1 .. ncusps repeat
-            k: P := qcoerce(kn)@P
+            k: P := asP kn
             if (mx := qetaGrade(x, k)) > maxGrade then
                 maxGrade := mx
                 idx: P := k
@@ -3910,7 +3911,7 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
     series(x: %, k: P): L == xx.k
     qetaGrades(x: %): LZ ==
         zero? x => [-1 for k in 1..ncusps]
-        [qetaGrade(x, qcoerce(k)@P) for k in 1..ncusps]
+        [qetaGrade(x, asP k) for k in 1..ncusps]
     if C has Field then
         ((x: %) / (y: %)): % ==
             v: Vector L := new(ncusps, 0) -- new vector

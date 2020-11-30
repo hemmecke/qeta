@@ -124,6 +124,9 @@ VQ ==> Vector Q
 LVZ ==> List VZ
 ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
 
+asP x ==> x pretend P
+asN x ==> x pretend N
+
 QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 
 )if LiterateDoc
@@ -310,7 +313,7 @@ QEtaQuotientMonoidExponentVectors: with
         --assert(divs1=delete!(divisors(m)$IntegerNumberTheoryFunctions, 1)
         --assert(n+1 = #divs)
         --assert(n = #r)
-        n1: P := qcoerce(n + 1)@P
+        n1: P := asP(n + 1)
         r0: Z := 0
         for i in 1..n repeat
             if not one? denom(rtilde.i) then return false
@@ -324,7 +327,7 @@ QEtaQuotientMonoidExponentVectors: with
             d := vdivs(i+1)
             a := a + ri * d           -- sigma_\infty
             b := b + ri * vdivs(n1-i) -- sigma_0
-            c := c * factor(d)^(qcoerce(abs(ri))@N)
+            c := c * factor(d)^asN(abs(ri))
         -- Check conditions 2, 3, 4.
         not zero? positiveRemainder(a, 24) => false
         not zero? positiveRemainder(b, 24) => false

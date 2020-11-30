@@ -100,6 +100,8 @@ N ==> NonNegativeInteger
 Z ==> Integer
 LSym ==> List Symbol
 
+asP x ==> x pretend P
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Variant Radu}
@@ -156,7 +158,7 @@ QEtaIdealRadu(C, L): Exports == Implementation where
         zsyms: LSym := indexedSymbols("Z", #zgens)
         tsym: Symbol := "T"::Symbol
         syms: LSym := concat(zsyms, cons(tsym, msyms))
-        dim: P := qcoerce(#syms)@P -- for later: number of variables
+        dim: P := asP(#syms) -- for later: number of variables
 
         pgens: LPol := empty() -- generators of the product relations
         czsyms: LSym := copy zsyms -- don't modify zsyms
@@ -215,12 +217,12 @@ QEtaIdealRadu(C, L): Exports == Implementation where
         import from QAuxiliaryTools
         r := polynomialRelationsGenerators mgens
         relgens: LPol := r.gens
-        dim1: P := qcoerce(r.zlen)@P
+        dim1: P := asP(r.zlen)
         msyms: LSym := indexedSymbols("M", #mgens)
-        zsyms: LSym := indexedSymbols("Z", qcoerce(dim1)@N)
+        zsyms: LSym := indexedSymbols("Z", asP dim1)
         tsym: Symbol := "T"::Symbol
         syms: LSym := concat(zsyms, cons(tsym, msyms))
-        dim: P := qcoerce(#syms)@P -- for later: number of variables
+        dim: P := asP(#syms) -- for later: number of variables
         ztmrels: LPol := eliminate(dim, dim1, syms, relgens)
         vPrint("ztmrels", ztmrels)
         mrels: LPol := xPolynomials(ztmrels, char "M")$PolynomialTool(C)

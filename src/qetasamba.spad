@@ -78,6 +78,8 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 
+asN x ==> x pretend N
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Category for Data structure for \algoSamba}
@@ -485,7 +487,7 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
             grdu: Z := grade u
             v: F := r :: F
             j: Z := ((grdu - grade v) exquo grdt) :: Z
-            v := v*t^(qcoerce(j)@N)
+            v := v*t^asN(j)
             -- cc: Record(quotient: C, remainder: C)
             cc := divide(leadingCoefficient u, leadingCoefficient v)
             u := u - (cc.quotient)*v
@@ -509,7 +511,7 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
             while not ((r := tailReducer(u, n, ab)) case "failed") repeat
                 v := r :: F
                 j: Z := ((n - grade v) exquo grdt) :: Z
-                v := v*t^(qcoerce(j)@N)
+                v := v*t^asN(j)
                 trLoop v
                 -- cc: Record(quotient: C, remainder: C)
                 cc := divide(qetaCoefficient(u, n), leadingCoefficient v)
@@ -716,7 +718,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
         l: List Z := [qetaGrade x for x in m]
         tooBig := 1 + g + reduce(_+, l, 0)
         -- make initial entries too big
-        v: Vector Z := new(qcoerce(grdt-1)@N, grdt * tooBig)
+        v: Vector Z := new(asN(grdt-1), grdt * tooBig)
         y: Y := initialize cons(t, m)
         while continue?(grdt, g, v, y) repeat y := oneStep! y
         return algebraBasis y
@@ -823,7 +825,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         g := grade b2
         j: Z := ((g - grade b1) exquo grade t) :: Z
         zero? j => products -- b2 anyway enters into cbe!!!
-        tj: F := t^(qcoerce(j)@N)
+        tj: F := t^asN(j)
         products.g := cons([tj, b1], elt(products, g, empty()))
         products
 

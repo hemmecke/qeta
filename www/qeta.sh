@@ -71,9 +71,6 @@ EQG ==> EtaQuotientGamma(Q, mx, CX, xi);
 METAQ ==> ModularEtaQuotient(Q, mx, CX, xi);
 MODFUNX ==> ModularFunctionExpansions(CX, level);
 
-INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
-
 unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
   divs: List P := DIVISORS m;_
   l: List List P := empty(); _

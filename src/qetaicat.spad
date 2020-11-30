@@ -113,6 +113,8 @@ N ==> NonNegativeInteger
 Z ==> Integer
 LSym ==> List Symbol
 
+asN x ==> x pretend N
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Package category for the computation of relations among
@@ -208,8 +210,8 @@ QEtaIdealCategory(C, L): Category == Exports where
     etaQuotientMonomial(esyms: LSym, ysyms:LSym, r: List Z): Pol ==
         p: Pol := 1
         for e in esyms for y in ysyms for expo in r repeat
-            expo > 0 => p := p * monomial(1$Pol, e, qcoerce(expo)@N)
-            expo < 0 => p := p * monomial(1$Pol, y, qcoerce(abs expo)@N)
+            expo > 0 => p := p * monomial(1$Pol, e, asN expo)
+            expo < 0 => p := p * monomial(1$Pol, y, asN abs expo)
         return p
 
     laurentRelations(esyms: LSym, ysyms: LSym): LPol ==

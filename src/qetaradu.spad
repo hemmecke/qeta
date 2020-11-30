@@ -57,6 +57,8 @@ N ==> NonNegativeInteger
 Z ==> Integer
 LSym ==> List Symbol
 
+asN x ==> x pretend N
+
 )abbrev package QETARADU QEtaRaduAlgorithms
 ++ QEtaRaduAlgorithms implements algorithms from an article of Siliu Radu.
 ++ "An Algorithmic Approach to Ramanujan-Kolberg Identities" (Journal of
@@ -123,7 +125,7 @@ QEtaRaduAlgorithms(C: EuclideanDomain, F: QEtaGradedAlgebra C): with
           -- note that in our case the grade(t) is positive
           if j < 0 then return false
           j := (j exquo grdt) :: Z
-          v: F := zi*t^(qcoerce(j)@N)
+          v: F := zi*t^asN(j))
           l := lcmCoef(leadingCoefficient u, leadingCoefficient v)
           u := (l.coeff1)*u - (l.coeff2)*v
           uca := unitNormal leadingCoefficient u
@@ -161,7 +163,7 @@ QEtaRaduAlgorithms(C: EuclideanDomain, F: QEtaGradedAlgebra C): with
           -- note that in our case the grade(t) is positive
           if j < 0 then return [0, 0] -- no membership
           j := (j exquo grdt) :: Z
-          v: F := zi*t^(qcoerce(j)@N)
+          v: F := zi*t^asN(j)
           l := lcmCoef(leadingCoefficient u, leadingCoefficient v)
           c1: C := l.coeff1
           c2: C := l.coeff2
@@ -177,7 +179,7 @@ QEtaRaduAlgorithms(C: EuclideanDomain, F: QEtaGradedAlgebra C): with
           if not one? c1 then
               for k in keys ph repeat ph.k := c1 * ph.k
           -- Now add the new monomial to the relations part.
-          ph.i := ph.i + monomial(c2::Pol, tsym, qcoerce(j)@N)$Pol
+          ph.i := ph.i + monomial(c2::Pol, tsym, asN j)$Pol
 
       -- put everything together
       p: Pol := ph.0 -- corresponds to z0
@@ -196,7 +198,7 @@ QEtaRaduAlgorithms(C: EuclideanDomain, F: QEtaGradedAlgebra C): with
         m: Z := grade(v.1)
         for i in 2..n repeat m := max(m, grade(v.i))
         m := m + 1
-        k: N := qcoerce(m)@N
+        k: N := asN m
         --assert(n <= k), i.e we have got at most as many rows as columns.
         t: Matrix C := qnew(n, n+k)
         -- We attach an (n,n)-unit matrix to the (n, k)-matrix of
@@ -230,7 +232,7 @@ QEtaRaduAlgorithms(C: EuclideanDomain, F: QEtaGradedAlgebra C): with
                 r: Z := positiveRemainder(k, grdt)
                 if zero? r then
                     k := (k exquo grdt) :: Z -- k > 0
-                    e: N := qcoerce(k)@N
+                    e: N := asN k
                     zz: F := zj*t^e
                     l := lcmCoef(lci, leadingCoefficient zz)
                     zi := (l.coeff1)*zi - (l.coeff2)*zz

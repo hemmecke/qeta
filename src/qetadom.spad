@@ -77,6 +77,9 @@ Q ==> Fraction Z
 LSym ==> List Symbol
 OF ==> OutputForm
 
+asN x ==> x pretend N
+asP x ==> x pretend P
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Eta quotient expansions at infity}
@@ -207,7 +210,7 @@ EtaQuotient(C: IntegralDomain, L: QEtaLaurentSeriesCategory C): _
     eulerExponent(x: %): Z == rep(x).eulerexpo
     eulerExpansion(x: %): L == rep(x).eulerquot
 
-    prefactor(x: %): N == qcoerce(positiveRemainder(eulerExponent x, 24))@N
+    prefactor(x: %): N == asN(positiveRemainder(eulerExponent x, 24))
     seriesPart(x: %): L ==
         n: Z := eulerExponent x
         r: Z := positiveRemainder(n, 24)
@@ -259,7 +262,7 @@ EtaQuotient(C: IntegralDomain, L: QEtaLaurentSeriesCategory C): _
     -- as a positive integer.
     idx(x: Symbol): P ==
         s: String := delete(string x, 1)
-        qcoerce(integer(parse(s)@InputForm)$InputForm)@P
+        asP(integer(parse(s)@InputForm)$InputForm)
 
     -- toEtaMonomial. polynomialToEta amd addition are only service
     -- functions and should actually live somewhere else, because they

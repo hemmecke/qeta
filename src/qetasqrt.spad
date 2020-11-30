@@ -99,6 +99,9 @@ EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 Rec ==> Record(red: MZ, triang: MZ)
 Pol ==> SparseUnivariatePolynomial Z
 
+asN x ==> x pretend N
+asP x ==> x pretend P
+
 )abbrev package GAUSSRT GaussRoot
 ++ GaussRoot(R, r, n) provides functions to express a square root
 ++ of a positive radical integer in terms of r (a n-th root of unity).
@@ -122,7 +125,7 @@ GaussRoot(R: Ring, r: R, n: P): with
     -- We can achieve G(a, b) by calling gaussSum(g^a, b).
     gaussSum(g: R, b: P): R ==
         z: R := 1
-        for k in 1 .. qcoerce(b-1)@N repeat z := z + g^(k^2)
+        for k in 1 .. asN(b-1) repeat z := z + g^(k^2)
         return z
 
     squareRoot(x: P): R ==
@@ -132,7 +135,7 @@ GaussRoot(R: Ring, r: R, n: P): with
         -- need a b-th primitive root of unity for sqrt(x)
         s: Union(Z, "failed") := n exquo b
         s case "failed" => 0$R -- no b-th root of unity available
-        k: P := qcoerce(s::Z)@P
+        k: P := asP(s::Z)
         g: R := r^k -- g is a primitive b-th root of unity
         x = 2 => return g-g^3 -- g is a primitive 8-th root of unity
         m: Z := positiveRemainder(x, 4)
@@ -140,7 +143,7 @@ GaussRoot(R: Ring, r: R, n: P): with
         m=3 => return - g^x * gaussSum(g^4, x) -- G(4, x)/i = -i*G(4, x)
         --assert(even? x)
         --assert(b = 4*x)
-        y: P := qcoerce(shift(x, -1))@P -- y := x/2
+        y: P := asP(shift(x, -1)) -- y := x/2
         -- now we compute sqrt(y) and multiply with sqrt(2).
         return squareRoot(y) * squareRoot(2)
 
