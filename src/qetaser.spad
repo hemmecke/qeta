@@ -230,14 +230,17 @@ Finite0Series(C: CommutativeRing): Exports == Implementation where
 
 
 
-)if false
-
-)abbrev domain QETAPS QEtaPuiseuSeries
+)abbrev domain QETAPS QEtaPuiseuxSeries
 QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
-  Exports ==> UnivariatePuiseuxSeriesCategory C
-  Implementation ==> UPS C
-
-)endif
+  Exports ==> UnivariatePuiseuxSeriesCategory C with
+    qetaLaurentRep: % -> QLS C
+    puiseux: (Q, QLS C) -> %
+  Implementation ==> UPS C add
+    Rec ==> Record(expon: Q, lSeries: QLS C)
+    qetaLaurentRep(x: %): QLS C == (x pretend Rec).lSeries
+    puiseux(q: Q, qls: QLS C): % ==
+        rec: Rec := [q, qls]$Rec
+        rec pretend %
 
 )if LiterateDoc
 

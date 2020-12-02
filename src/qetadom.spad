@@ -153,6 +153,10 @@ EtaQuotient(C): Exports == Implementation where
       ++ QFunctions in the file qfunct.spad. See also
       ++ https://en.wikipedia.org/wiki/Euler_function .
       ++ eulerExpansion(divs, r) == eulerExpansion etaQuotient(divs, r).
+    eulerExponent: % -> Q
+      ++ If x is a (generalized) eta-quotient, then eulerExponent(x) is
+      ++ the fractional exponent e of q such that q^e*eulerExpansion(x) is
+      ++ equal to the Puiseux series expansion of x.
     eulerExpansion: (P, List Z) -> L
       ++ eulerExpansion(m, r) returns eulerExpansion(divisors m, r)
       ++ which is also the same as eulerExpansion(etaQuotient(m, r)).
@@ -428,13 +432,10 @@ GeneralizedEtaQuotient(C: IntegralDomain): Exports == Implementation where
     gef: XHashTable(P, XHashTable(P, CachedPower T)) := empty()
 
     -- local function
-    generalizedEulerFunction(delta: P, g: P): T ==
-        STSO ==> StreamTaylorSeriesOperations C
-        gProduct ==> general_Lambert_product $ STSO
-        s: Stream C := [[1, -1]]$Stream(C) -- corresponds to f(q)=(1-q)
-        s1: Stream C := gProduct(s, asZ g, asZ delta) -- \prod (1-q^(g+i*delta))
-        s2: Stream C := gProduct(s, asZ(delta-g), asZ delta)
-        series(s1 *$STSO s2)$T
+    generalizedEulerFunction(d: P, g: P): L ==
+        import from QFunctions(C, L)
+        qPochhammer(1, g, d) * qPochhammer(1, d-g, d)
+        -- $(q^g, q^d)_\infty (q^{(d-g)}, q^d)_\infty$
 
     -- eulerFunctionPower(u, rd) returns eulerFunction(u)^rd. Internally,
     -- it is, however implemented via CachedPower(L) using only
@@ -449,7 +450,7 @@ GeneralizedEtaQuotient(C: IntegralDomain): Exports == Implementation where
         -- First make sure that the initial entry gef.d.g exists.
         gefd := elt(gef, d, empty()$XHashTable(P, CachedPower T))
         if not key?(g, gefd) then
-            t: T := generalizedEulerFunction(d, g)
+            t: T := qetaTaylorRep generalizedEulerFunction(d, g)
             gefd.g := t::CachedPower(T)
         cachedPower := gefd.g
         t: T := power!(cachedPower, abs rd)$CachedPower(T)
@@ -462,6 +463,14 @@ GeneralizedEtaQuotient(C: IntegralDomain): Exports == Implementation where
         q: Q := g/d
         e: Q := g^2/(2*d) - g/2 + d/12 --=d/2*((g/d)^2-g/d+1/6)
         per new(rd*e, laurent(0, t)$L)
+
+    generalizedEtaQuotient(d: P, gs: List P, r: List Z): % ==
+        --assert(#gs=#rgens)
+        empty? gs => 1
+        z: % := generalizedEtaQuotient(d, first gs, first r)
+        for g in rest gs for rd in rest r repeat
+            z := z * generalizedEtaQuotient(d, g, rd)
+        z
 
 
 )if LiterateDoc
