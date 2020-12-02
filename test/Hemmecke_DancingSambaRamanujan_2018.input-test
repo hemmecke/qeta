@@ -124,7 +124,7 @@ assertEquals(rgens, rgensExpected)
 
 divs := divisors(level)$IntegerNumberTheoryFunctions;
 etaquotgensZ := [etaQuotient(divs, r)$ETAZ for r in rgens]
-for x in etaquotgensZ repeat assertTrue(zero? prefactor x)
+for x in etaquotgensZ repeat assertTrue(one? denom eulerExponent x)
 
 eqgensZ := [expansion x for x in etaquotgensZ];
 rfeqgensZ := [_
@@ -188,7 +188,7 @@ r11Expected := _
   +1121505*q^5+204226*q^4+31185*q^3+3718*q^2+297*q+11 --: Fraction PolZ
 assertEquals(rationalFunction(r11, 10), r11Expected)
 
-pfZ := expansion(q24(13)$ETAZ * etaQuotient(divs, [10,2,11,-22])$ETAZ)
+pfZ := (monomial(1,13)$QLS(Z)*expansion(etaQuotient(divs, [10,2,11,-22])$ETAZ))::LZ
 pfZExpected: PolZ := _
   -1079*q^14+715*q^13-2465*q^12-375*q^11+1211*q^10+352*q^9+11*q^8-726*q^7_
   +177*q^6+308*q^5-176*q^4-10*q^3+33*q^2-10*q+1
@@ -788,7 +788,7 @@ tez := xeqgensZ.3
 abez := samba(tez, xeqgensZ)$QXTOPSAMBA1(Z)
 assertEquals(# basis abez, 5)
 
-pfZ := expansion(q24(13)$ETAZ * etaQuotient(divs, [10,2,11,-22])$ETAZ);
+pfZ := (monomial(1,13)$QLS(Z) * expansion(etaQuotient(divs, [10,2,11,-22])$ETAZ))::LZ;
 ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
 r11 := choose(11, 6, ps, 0) --: LZ
 fe := pfZ * r11
@@ -922,9 +922,7 @@ modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 Z == (_
     error "not a single element orbit";_
   expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn);_
   cofact := etaQuotient(DIVISORS nn, r)$ETA(Z);_
-  e := ((qetaGrade seriesPart cofact)-expectedGrade)*24 - prefactor cofact;_
-  vPrint("-- fractional exponent", e);_
-  fcf := expansion(q24(e)$ETA(Z) * cofact);_
+  fcf := monomial(1,-expectedGrade)$QLS(C)*eulerExpansion cofact;_
   fzf := fcf*siftedPartitionSeries(m, t));
 
 -- ## Create modular series for p(11n+6)
