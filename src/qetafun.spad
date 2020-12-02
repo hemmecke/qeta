@@ -2870,7 +2870,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
     orbit: % -> List N
       ++ orbit(x) returns $\modularOrbit{s, m, t}$ where
       ++ s=exponents(x), m=multiplier(x), t=offset(x).
-      ++ See definition of orbit in qetakolberg.spad
+      ++ See definition of orbit in qetacofactor.spad
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in orbit(shat,m,t)]
@@ -2899,7 +2899,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
     etaQuotient(mm: P, divs: LP, s: LZ, m: P, t: N, gamma: SL2Z): % ==
         shat: Z := 0 -- sigmaInfty
         for delta in divs for sdelta in s repeat shat := shat + delta * sdelta
-        orb: List N := orbit(shat, m, t)$QEtaKolberg
+        orb: List N := orbit(shat, m, t)$QEtaCoFactor
         h: HT := empty()
         minroot: P := 1
         for tt in orb repeat
@@ -2993,7 +2993,7 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
     yy ==> rep y
 
     etaQuotient(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N, gamma: SL2Z): % ==
-        not modularConditions?(nn, r, mm, s, m, t)$QEtaKolberg =>
+        not modularConditions?(nn, r, mm, s, m, t)$QEtaCoFactor =>
             error "modular conditions are not fulfilled"
         nndivs: LP := DIVISORS nn
         mmdivs: LP := DIVISORS mm
@@ -3658,7 +3658,7 @@ QEtaModularFunctionTools: Exports == Implementation where
       ++ y=etaQuotient(nn, r, mm, s, m, t)$SymbolicModularSiftedEtaQuotient.
     etaCoFactorInfinity: (P, P, LZ, P, N) -> LZ
       ++ etaCoFactorInfinity(nn, mm, s, m, t) returns a vector r such that
-      ++ modularConditions?(nn, members r, mm, s, m, t)$QEtaKolberg and
+      ++ modularConditions?(nn, members r, mm, s, m, t)$QEtaCoFactor and
       ++ etaQuotient(nn, r, mm, s, m,t)$SymbolicModularSiftedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity and
       ++ with smallest pole order.
@@ -3817,7 +3817,7 @@ QEtaModularFunctionTools: Exports == Implementation where
         members(rinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
 
     etaCoFactorInfinity(nn: P, mm: P, s: LZ, m: P, t: N): LZ ==
-        ecfs: ECFS := etaCoFactorSpace(nn, mm, s, m, t)$QEtaKolberg
+        ecfs: ECFS := etaCoFactorSpace(nn, mm, s, m, t)$QEtaCoFactor
         n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
         rinitial: VZ := ((ecfs.particular)::VZ)(1..n)
         b: LVZ := [x(1..n) for x in ecfs.basis]

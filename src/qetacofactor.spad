@@ -38,7 +38,7 @@ xdbgPrint(x,y) ==> rhx:="42"
 \date{26-Jan-2018}
 \maketitle
 \begin{abstract}
-  The package \code{QEtaKolberg} implements functions to help turning
+  The package \code{QEtaCoFactor} implements functions to help turning
   a sifted eta quotient into a modular function by finding an
   appropriate cofactor.
 \end{abstract}
@@ -111,8 +111,8 @@ DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 -- sigmaInfty      \sumdelta{r}
 -- kappa(m)        \kappa
 
-)abbrev package QETAKOL QEtaKolberg
-QEtaKolberg: Exports == Implementation where
+)abbrev package QETACOF QEtaCoFactor
+QEtaCoFactor: Exports == Implementation where
   Exports ==> with
     conditionPrimeDivisors?: (P, P) -> Boolean
       ++ conditionExponentSum?(nn, m) returns true if every prime
@@ -177,9 +177,7 @@ QEtaKolberg: Exports == Implementation where
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
       ++ fulfilled.
       ++ Compare with rStarConditions from QAuxiliaryModularEtaQuotientPackage.
-    orbitRadu: (Z, P, N) -> List N
-      ++ Do not use this function! It is just another implementation
-      ++ of orbit.
+
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
       ++ $\modularOrbit{s,m,t)$ as defined in qetafun.spad,
@@ -226,26 +224,6 @@ QEtaKolberg: Exports == Implementation where
       ++ DOI=10.1016/j.jsc.2017.02.001,
       ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf.
 
-)if TODO
-    splitMatrix: (MZ, Z, Z, N) -> Rec
-      ++ splitMatrix(gamma, delta, m, lambda) returns a record rec that
-      ++ contains two matrices rec.red=m1 and rec.triang=m2 and a value lg
-      ++ such that for gamma = matrix [[a, b], [c, d]] and
-      ++ W=matrix [[delta(a+ct), delta(b+dt)],[cm, dm]] it holds
-      ++ W=m1*m2 according to \cite[Lemma~4.8]{Radu:PhD:2010}, but
-      ++ in a variation as described in qetafun.spad, i.e., such that
-      ++ m1 is given by eq:W'_delta-m-lambda, m2 by eq:W''_delta-m-lambda
-      ++ and lg by eq:lambda_gamma.
-      ++ Furthermore, 0<=lg<m and m2(1,2)=delta*lg
-    lambdaGamma: (P, SL2Z, N) -> N
-      ++ lambdaGamma(m, gamma, lambda) returns the transformed lambda
-      ++ according to gamma. See eq:lambda_gamma in qetafun.spad.
-    sigmaZero: (N, List Z) -> Z
-      ++ sigmaZero(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
-      ++ it is assumed that the entries of r correspond to the divisors
-      ++ of mm.
-
-)endif
 
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
@@ -326,30 +304,6 @@ QEtaKolberg: Exports == Implementation where
 
     orbit(mm: P, s: List Z, m: P, t: N): List N ==
         orbit(sigmaInfinity(mm, s), m, t)
-
-    orbitRadu(sigmaInfty: Z, m: P, t: N): List N ==
-        g := gcd(kappa(m)*(24*t + sigmaInfty), 24*m)
-        dbgPrint("g", g)
-        w: P := asP((24*m exquo g)::Z)
-        dbgPrint("w", w)
-        sw: List Z := empty()
-        for a in 0..w-1 | one? gcd(a, w) repeat
-            a2 := positiveRemainder(a^2, w)
-            dbgPrint("a", a)
-            dbgPrint("a2", a2)
-            if not member?(a2, sw) then sw := cons(a2, sw)
-        dbgPrint("sw", sw)
-        s: List Z := empty()
-        -- There exists k \in \setN such that a^2+k*w = 1 mod 24
-        --choose a representative (mod w) that is divisible by 24
-        for a2 in sw repeat
-            u: Z := a2
-            dbgPrint("u00000", u)
-            while not one? positiveRemainder(u, 24) repeat
-                u := u + w
-                dbgPrint("u", u)
-            s := cons(u, s)
-        sort [odotBar(a2, sigmaInfty, m, t) for a2 in s]
 
     chiExponent(sigmaInfty: Z, m: P, orb: List N): Z ==
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
@@ -565,73 +519,7 @@ QEtaKolberg: Exports == Implementation where
         return numer alpha
 
 
-)if TODO
-     splitMatrix(gamma: MZ, delta: Z, m: Z, t: Z): Rec ==
-        LLZ ==> List List Z
-        --assert(delta>0)
-        --assert(m>0)
-        --assert(one? determinat(gamma))
-        --assert(zero? positiveRemainder(c*m, delta))
-
-        a: Z := gamma(1,1);   b: Z := gamma(1,2)
-        c: Z := gamma(2,1);   d: Z := gamma(2,2)
-
-        act: Z := a + c*t;    bdt := b + d*t
-
-        -- matrix W
-        A: Z := delta * act;  B: Z := delta * bdt
-        C: Z := c*m;          D: Z := d*m
-
-        exgcd: EXGCD := extendedEuclidean(act, C)
-        g: Z := exgcd.generator
-        --assert(one? g) -- sanity check
-        if not one? g then error "splitMatrix: gcd is not 1"
-
-        a1: Z := act
-        c1: Z := (C exquo delta) :: Z -- cm/delta
-
-        d1i: Z    :=  exgcd.coef1 -- initial value for d1
-        bstari: Z := -exgcd.coef2 -- initial value for bstar
-
-        -- Now try to find s such that 0 <= bdt*d1 - D*b1 - s*d2 < d2.
-        tgammai: Z := bdt*d1i - D*bstari -- initial value
-        tgamma: Z := positiveRemainder(tgammai, m) -- = t_\gamma
-        s: Z := ((tgammai - tgamma) exquo m) :: Z
-        b1: Z := delta * (bstari + act * s)
-        d1: Z := d1i + delta * s * c1
-
-        m1: MZ := matrix([[a1, b1], [c1, d1]]$LLZ)
-        m2: MZ := matrix([[delta, delta * tgamma], [0, m]]$LLZ)
-        [m1, m2, tgamma]$Rec
-
-    lambdaGamma(m: P, gamma: SL2Z, lambda: N): N == 1
-)endif
-
 )if LiterateDoc
 \bibliography{qeta}
 \end{document}
-)endif
-
-)if false
-
-
-    relationRamanujanKolberg(level: P, m: P, t: N, r: RVector):
---        Record(s: RVector, t: List(N), rhs: MonoidRing(C, MRVector))
-        List N
-      ==
-        empty()
-
-    -- See \cite[Thm.~45]{Radu:RamanujanKolberg:2015}.
-    -- m = m, t=t, M=ilevel, N=level
-    coFactorConditions(level: P, ilevel: P, m: P, t: Z, r: List Z): MZ ==
-        --assert(#r=#divisors(ilevel))
-        --assert(zero? postiveRemainder(level, ilevel))
-        -- DeltaStar-Conditions
-        -- \cite[Def.~34]{Radu:RamanujanKolberg:2015} must be fulfilled.
-        p := orbit(level, sigmainfty, m, t, r)
-        orbitSize := #p
-        divs: List P := [asP d for d in divisors(level)]
-        k: P := kappa m
-        c1 := orbitSize * reduce(_+, r)
-        c2 := chiExponent(m, r, orb)
 )endif

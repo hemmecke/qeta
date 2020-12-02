@@ -88,7 +88,7 @@ SPADFILES=4ti2 qfunct cachedpow \
   qetaalg qetasqrt qetaauxmeq qetaqmev qetaser qetadom qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
-  qetapowersamba qetakolberg qetafun qetark \
+  qetapowersamba qetacofactor qetafun qetark \
   ivar iffts ffalgclos algclos newtonpuiseux \
 
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
