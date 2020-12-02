@@ -178,6 +178,9 @@ EtaQuotient(C): Exports == Implementation where
       ++ as q^e*eulerExpansion(x) where e=eulerExponent(x).
     eta: P -> %
       ++ eta(n) returns q^(n/24)*\prod_{k=1}^\infty (1-q^{kn}).
+    eulerFunctionPower: (P, Z) -> L
+      ++ eulerFunctionPower(n, e) computes
+      ++ (\prod_{k=1}^\infty(1-q^{kn}))^e.
     etaPower: (P, Z) -> %
       ++ etaPower(d, e) returns eta(d)^e.
     etaQuotient: (List Z, List Z) -> %
@@ -189,12 +192,18 @@ EtaQuotient(C): Exports == Implementation where
       ++ product(eta(divs.i)^(r.i),i=1..#divs) where divs=divisors(m).
       ++ It returns etaQuotient(divisors m, r).
       ++ It is assumed that #r = #divisors(m).
-    generalizedEtaQuotient: (P, P, Z) -> %
-      ++ generalizedEtaQuotient(delta,g,e) returns the generalized
+    generalizedEtaQuotient: (P, P, Q) -> %
+      ++ generalizedEtaQuotient(d,g,e) returns the generalized
       ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
       ++ formula (1.11) in
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
       ++ raised to the power e.
+      ++ generalizedEtaQuotient(d,g,e) returns
+      ++ etaQuotient(d, numer(2*e)), if g=0;
+      ++ etaQuotient([g, d],[numer(2*e),-numer(2*e)]), if g=d/2; and returns
+      ++ generalizedEtaQuotient(d, g, numer e) in all other cases.
+      ++ Note that only for g=0 and g=d/2 the exponent e can be a
+      ++ half-integer. Otherwise, it must come with denominator =1.
 --      ++ Since $\eta_{\delta,0}(\tau)=\eta(\delta\tau)^2$ and
 --      ++ $\eta_{\delta,\delta/2}(\tau) =
 --      ++ \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2}$ are
@@ -202,16 +211,6 @@ EtaQuotient(C): Exports == Implementation where
 --      ++ generalizedEtaQuotient(delta,0,e):=$\eta(\delta\tau)^e$ and
 --      ++ generalizedEtaQuotient(delta,g,e):=
 --      ++ $\frac{\eta(g\tau)^e}{\eta(2g\tau)^e}}$ if $g=\delta/2$.
-    generalizedEtaQuotient: (P, P, Q) -> %
-      ++ generalizedEtaQuotient(d,g,e) returns
-      ++ etaQuotient([d],[2*e]), if g=0;
-      ++ etaQuotient([g, d],[2*e,-2*e]), if g=d/2; and returns
-      ++ generalizedEtaQuotient(d, g, numer e) in all other cases.
-      ++ Note that only for g=0 and g=d/2 the exponent e can be a
-      ++ half-integer. Otherwise, it must come with denominator =1.
-    generalizedEtaQuotient: (P, List P, List Z) -> %
-      ++ generalizedEtaQuotient(d, gs, es) returns the product of
-      ++ generalized eta-quotients for each g in gs and e in es.
     generalizedEtaQuotient: (P, List P, List Q) -> %
       ++ generalizedEtaQuotient(d, gs, es) returns the product of
       ++ generalized eta-quotients for each g in gs and e in es.
@@ -282,7 +281,7 @@ EtaQuotient(C): Exports == Implementation where
         e: Q := eulerExponent x
         e - floor(e)::Q
     seriesPart(x: %): L ==
-        laurent(floor eulerExponent x, qetaTaylor eulerExpansion x)
+        laurent(floor eulerExponent x, qetaTaylorRep eulerExpansion x)
 
     -- eulerFunctionPower(u, rd) returns eulerFunction(u)^rd. Internally,
     -- it is, however implemented via CachedPower(L) using only
@@ -295,7 +294,7 @@ EtaQuotient(C): Exports == Implementation where
     expansion(x: %): L ==
         e: Q := eulerExponent x
         not one? denom e =>  error "eta-quotient has fractional expansion"
-        laurent(numer eulerExponent x, qetaTaylor eulerExpansion x)
+        laurent(numer eulerExponent x, qetaTaylorRep eulerExpansion x)
 
     eta(n: P): % == new(n/24, eulerFunctionPower(n, 1))
     etaPower(n: P, e: Z): % == new(n*e/24, eulerFunctionPower(n, e))
@@ -313,13 +312,13 @@ EtaQuotient(C): Exports == Implementation where
         eulerExpansion etaQuotient(level, r)
 
 -------------------------------------------------------------------
-    -- eulerFunctionPower(u, rd) returns eulerFunction(u)^rd. Internally,
-    -- it is, however implemented via CachedPower(L) using only
-    -- expansions of eulerFunction(1) and partitionSeries(1).
+    -- local function
     generalizedEulerFunctionPower(d: P, g: P, e: Z): T ==
-        zero? e => 1$T
-        zero? g => etaQuotient([d],[2*e])
-        2*g = d => etaQuotient([g, d], [2*e, 2*e])
+        --assert(not zero? e)
+        --assert(not zero? g)
+        -- => qetaTaylorRep eulerFunctionPower(d, 2*e)
+        --assert(2*g ~= d)
+        -- => qetaTaylorRep eulerExpansion etaQuotient([g, d], [2*e, 2*e])
         if 2*g > d then g := asP(d-g)
         -- First make sure that the initial entry gef.d.g exists.
         gefd := elt(gef, d, empty()$XHashTable(P, CachedPower T))
@@ -333,21 +332,50 @@ EtaQuotient(C): Exports == Implementation where
         t: T := power!(cachedPower, abs e)$CachedPower(T)
         if e > 0 then t else recip(t)::T
 
-    generalizedEtaQuotient(d: P, g: P, e: Z): % ==
+    generalizedEtaQuotient(d: P, g: P, e: Q): % ==
         zero? e => 1
-        t: T := generalizedEulerFunctionPower(d, g, e)
-        -- Since 0<g<delte, g/d is already the fractional part.
-        q: Q := g/d
-        e: Q := g^2/(2*d) - g/2 + d/12 --=d/2*((g/d)^2-g/d+1/6)
-        per new(rd*e, laurent(0, t)$L)
+        zero? g =>
+            e := 2*e
+            one? denom e => etaPower(d, numer e)
+            error "generalizedEtaQuotient: only accepting half-integer powers"
 
-    generalizedEtaQuotient(d: P, gs: List P, r: List Z): % ==
-        --assert(#gs=#rgens)
+        2*g = d =>
+            e := 2*e
+            one? denom e => etaQuotient([g, d], [numer e, - numer e])
+            error "generalizedEtaQuotient: only accepting half-integer powers"
+
+        not one? denom e =>
+            error "generalizedEtaQuotient: only accepting integer powers"
+
+        t: T := generalizedEulerFunctionPower(d, g, numer e)
+        -- Since 0<g<d, g/d is already the fractional part.
+        q: Q := g^2/(2*d) - g/2 + d/12 --=d/2*((g/d)^2-g/d+1/6)
+        new(e*q, laurent(0, t)$L)
+
+    generalizedEtaQuotient(d: P, gs: List P, r: List Q): % ==
+        --assert(#gs=#r)
         empty? gs => 1
-        z: % := generalizedEtaQuotient(d, first gs, first r)
-        for g in rest gs for rd in rest r repeat
-            z := z * generalizedEtaQuotient(d, g, rd)
-        z
+        -- We want to avoid multiple recip computations, so we compute
+        -- numerator and denominator separately and invert at the end.
+        -- Exceptions are if g=0 or g=d/2.
+        num?: Boolean := den? := false
+        num: % := den := 1
+        for g in gs for rd in r repeat
+            zero? g or 2*g = d =>
+                z: % := generalizedEtaQuotient(d, g, rd)
+                if num? then num := num * z else num := z
+            rd > 0 =>
+                z: % := generalizedEtaQuotient(d, g, rd)
+                if num? then num := num * z else (num := z; num? := true)
+            rd < 0 =>
+                z: % := generalizedEtaQuotient(d, g, - rd)
+                if den? then den := den * z else (den := z; den? := true)
+        -- If the denominator is set, we must invert it.
+        den? =>
+            num? => num * inv den
+            inv den
+        num -- There is no denominator and if not num? then num=1 anyway.
+
 -------------------------------------------------------------------
     -- The following functions are convenience functions and not really used.
     --:TODO: Move the functions below into a separate package.
