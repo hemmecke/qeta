@@ -86,7 +86,7 @@ TPROJECT=${TMP}/${PROJECT}
 all: compile-spad
 # The files in SPADFILES_OLD are here only for historical reasons.
 # They are not used or maintained anymore.
-SPADFILES_OLD = qetaradu qeta3hdp qetair qetais
+SPADFILES_OLD = qetaradualgo qeta3hdp qetair qetais
 SPADFILES=4ti2 qfunct cachedpow \
   qetaalg qetasqrt qetaauxmeq qetaqmev qetaser qetadom qetatool \
   qetasamba \
