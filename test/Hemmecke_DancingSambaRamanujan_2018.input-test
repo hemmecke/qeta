@@ -188,12 +188,15 @@ r11Expected := _
   +1121505*q^5+204226*q^4+31185*q^3+3718*q^2+297*q+11 --: Fraction PolZ
 assertEquals(rationalFunction(r11, 10), r11Expected)
 
-pfZ := (monomial(1,13)$QLS(Z)*expansion(etaQuotient(divs, [10,2,11,-22])$ETAZ))::LZ
+eulerExpansion(etaQuotient(divs, [10,2,11,-22])$ETAZ)
+
+eqfZ:=etaQuotient(divs, [10,2,11,-22])$ETAZ
+assertEquals(eulerExponent(eqfZ)+13/24, -14)
+pfZ := monomial(1,-14)$LZ * eulerExpansion(eqfZ)::LZ
 pfZExpected: PolZ := _
   -1079*q^14+715*q^13-2465*q^12-375*q^11+1211*q^10+352*q^9+11*q^8-726*q^7_
   +177*q^6+308*q^5-176*q^4-10*q^3+33*q^2-10*q+1
 assertEquals(numer rationalFunction(pfZ, 0), pfZExpected)
-assertEquals(qetaGrade pfZ, 14)
 
 fe := pfZ * r11
 feExpected := _
@@ -788,7 +791,8 @@ tez := xeqgensZ.3
 abez := samba(tez, xeqgensZ)$QXTOPSAMBA1(Z)
 assertEquals(# basis abez, 5)
 
-pfZ := (monomial(1,13)$QLS(Z) * expansion(etaQuotient(divs, [10,2,11,-22])$ETAZ))::LZ;
+eqfZ := etaQuotient(divs, [10,2,11,-22])$ETAZ
+pfZ := monomial(1,-14)$LZ * (eulerExpansion(eqfZ)::LZ);
 ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
 r11 := choose(11, 6, ps, 0) --: LZ
 fe := pfZ * r11
@@ -922,7 +926,7 @@ modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 Z == (_
     error "not a single element orbit";_
   expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn);_
   cofact := etaQuotient(DIVISORS nn, r)$ETA(Z);_
-  fcf := monomial(1,-expectedGrade)$QLS(C)*eulerExpansion cofact;_
+  fcf := monomial(1,-expectedGrade)$LZ*eulerExpansion(cofact);_
   fzf := fcf*siftedPartitionSeries(m, t));
 
 -- ## Create modular series for p(11n+6)
@@ -939,7 +943,7 @@ xf := toX1(C, ff, F)
 nndivs := DIVISORS(nn);
 QEQEV ==> QEtaQuotientExponentVectors4ti2
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
-eqgens := [expansion etaQuotient(nndivs, r)$ETAZ for r in rgens]
+eqgens := [expansion(etaQuotient(nndivs, r)$ETA(C))::LC for r in rgens]
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
@@ -973,3 +977,6 @@ p := second(x3)::Pol(C);
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+
