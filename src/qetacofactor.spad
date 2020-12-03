@@ -165,12 +165,27 @@ QEtaCoFactor: Exports == Implementation where
       ++ qetafun.spad and in Definition 35 of
       ++ \cite{Radu:RamanujanKolberg:2015}
 
+    conditionCoEtaQuotientGamma1?: (P, P, LZ, P, N) -> Boolean
+      ++ conditionCoEtaQuotientGamma1?(nn, mm, s, m, t) returns true
+      ++ iff the conditions of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+      ++ just before Theorem 2.1 are fulfilled. These are slight
+      ++ modifications of conditions appearing in Definition 35 of
+      ++ \cite{Radu:RamanujanKolberg:2015}.
+
     minimalLevelCoEtaQuotientGamma0: (P, LZ, P, N) -> P
       ++ minimalLevelCoEtaQuotientGamma0(mm, s, m, t) returns the
       ++ smallest nn such that conditionCoEtaQuotientGamma0?(nn, mm,
       ++ s, m, t) is true, i.e. that (nn, mm, s, m, t) is an element
       ++ of \Delta^* as defined in
       ++ Definition~\ref{def:condition-co-eta-quotient-gamma0}.
+
+    minimalLevelCoEtaQuotientGamma1: (P, LZ, P, N) -> P
+      ++ minimalLevelCoEtaQuotientGamma1(mm, s, m, t) returns the
+      ++ smallest nn such that conditionCoEtaQuotientGamma1?(nn, mm,
+      ++ s, m, t) is true, i.e. that (nn, mm, s, m, t) fulfills the 7
+      ++ conditions as defined in Section 2 of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
 
     modularConditions?: (P, LZ, P, LZ, P, N) -> Boolean
       ++ modularConditions?(nn, r, mm, s, m, t) returns true iff all
@@ -228,7 +243,7 @@ QEtaCoFactor: Exports == Implementation where
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
     FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
-    DIVISIBLEBY?(k, z) ==> zero? positiveRemainder(z, k)
+    DIVISIBLEBY?(k, z) ==> zero?(z rem k)
 
     -- auxiliary (local) functions
 
@@ -429,6 +444,17 @@ QEtaCoFactor: Exports == Implementation where
 --            dbgPrint("eq:even-m e", u)
         return (b1 or b2)
 
+    -- See condition 7 in section "2. Finding Modular Functions for
+    -- $\Gamma_1(N)$.
+    conditionOrbitLenght?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
+        n: P := 24*m*mm
+        shat := sigmaInfinity(mm, s)
+        for i in 0.. (n quo nn) repeat
+            j := nn*i+1 -- (j = 1 (mod nn))
+            one? gcd(j, n) => -- then 24|(j^2-1)
+               not zero?((((j^2 - 1) quo 24)*(shat+24*t)) rem m) => return false
+        return true
+
     conditionCoEtaQuotientGamma0?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
         t < m -- stupidity check
          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
@@ -438,9 +464,25 @@ QEtaCoFactor: Exports == Implementation where
              and conditionSigmaInfinity?(nn, mm, s, m, t) --\eqref{eq:w|N}
               and conditionEvenMultiplier?(nn, mm, s, m) --\eqref{eq:even-m}
 
+    conditionCoEtaQuotientGamma1?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
+        t < m -- stupidity check
+         and zero?(nn rem mm) -- M|N
+          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
+           and conditionSumExponents?(nn, mm, s, m) --\eqref{eq:sum-s}
+            and conditionSigma0?(nn, mm, s, m) --\eqref{eq:sv24}
+             and conditionSigmaInfinity?(nn, mm, s, m, t) --\eqref{eq:w|N}
+              and conditionEvenMultiplier?(nn, mm, s, m) --\eqref{eq:even-m}
+               and conditionOrbitLength?(nn, mm, s, m, t) -- CDZ condition 7.
+
     minimalLevelCoEtaQuotientGamma0(mm: P, s: LZ, m: P, t: N): P ==
         nn: P := 1
         while not conditionCoEtaQuotientGamma0?(nn, mm, s, m, t) repeat
+            nn := nn + 1
+        return nn
+
+    minimalLevelCoEtaQuotientGamma1(mm: P, s: LZ, m: P, t: N): P ==
+        nn: P := 1
+        while not conditionCoEtaQuotientGamma1?(nn, mm, s, m, t) repeat
             nn := nn + 1
         return nn
 
