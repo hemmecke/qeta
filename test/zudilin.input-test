@@ -82,7 +82,7 @@ xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 tex: X1 C := xeqgens.1
 abex := samba(tex, xeqgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
 
-assertEquals(genusOfGamma0(level), 9)
+assertEquals(genus(level)$GAMMA0, 9)
 
 assertEquals(numOfGaps(abex), 9)
 
@@ -260,9 +260,9 @@ assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 
 -- -----------------------------------------------------------------
 
-spitzen := cuspsOfGamma0 level
-o := reduce(_+, [width(level, denom cusp) for cusp in spitzen])
-assertEquals(o, indexOfGamma0 level)
+spitzen := cusps(level)$GAMMA0
+o := reduce(_+, [WIDTH0(level, denom cusp) for cusp in spitzen])
+assertEquals(o, index(level)$GAMMA0)
 
 reps := rightCosetRepresentatives level;
 assertEquals(# reps, o)
@@ -307,10 +307,10 @@ result := findSimilarExpansions(f3sers);
 -------------------------------------------------------------------
 -- -
 
-creps := [TOMAT(cusp) for cusp in spitzen]
+creps := [TOMAT0(cusp) for cusp in spitzen]
 hmat := matrix [[1,1],[0,1]]
-[WIDTH(level, denom cusp) for cusp in spitzen]
-xreps := concat [(gamma:=TOMAT(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH(level, denom cusp)-1]) for cusp in spitzen];
+[WIDTH0(level, denom cusp) for cusp in spitzen]
+xreps := concat [(gamma:=TOMAT0(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH0(level, denom cusp)-1]) for cusp in spitzen];
 
 findEquivalentMatrix(mat: MZ, mats: List MZ): List Z == (_
     res: List Z := empty();_
@@ -457,7 +457,7 @@ qetaGrades fser3
 -- fser3 has expansions at the cusps of 128 that have the following form.
 
 for cusp in spitzen for i in 1..#spitzen repeat (_
-    print([[cusp, WIDTH(128, denom cusp)/WIDTH(64, denom cusp)]]);_
+    print([[cusp, WIDTH0(128, denom cusp)/WIDTH(64, denom cusp)]]);_
     print series(fser3, i));
 
 -- That is, if the quotient of the widths is 2, then the series is a
@@ -667,7 +667,7 @@ level := 64
 divs := DIVISORS level
 idivs := [i for i in 1..#divs]
 
-spitzen := cuspsOfGamma0 level
+spitzen := cusps(level)$GAMMA0
 rhs := concat([0 for i in idivs], 2*wght)
 
 zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV; -- takes about 3min40sec
@@ -873,7 +873,7 @@ xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 tex: X1 C := xeqgens.1
 abex := samba(tex, xeqgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
 
-assertEquals(genusOfGamma0(level), 3)
+assertEquals(genus(level)$GAMMA0, 3)
 assertEquals(numOfGaps(abex), 3)
 
 bas := sort(smallerGrade?, basis abex);
@@ -964,7 +964,7 @@ vars := cons(M0, msyms)
 -- Let's first check whether the expansion for the modular function f is
 -- correctly expressed in eta-quotients.
 
--- The Laurent polynomial (in Ei variables) that belongs to $f$. 
+-- The Laurent polynomial (in Ei variables) that belongs to $f$.
 
 fpolRZ := EVALRZ(vars, vals, pol);
 
@@ -1051,9 +1051,9 @@ assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 -- Finding other symmetry group for f_45.
 -- -----------------------------------------------------------------
 
-spitzen := cuspsOfGamma0 level
-o := reduce(_+, [width(level, denom cusp) for cusp in spitzen])
-assertEquals(o, indexOfGamma0 level)
+spitzen := cusps(level)$GAMMA0
+o := reduce(_+, [WIDTH0(level, denom cusp) for cusp in spitzen])
+assertEquals(o, index(level)$GAMMA0)
 
 reps := rightCosetRepresentatives level;
 assertEquals(# reps, o)
@@ -1084,10 +1084,10 @@ findSimilarExpansions(qseries: List L1 CX): List List Z == (_
     result);
 
 
-creps := [TOMAT(cusp) for cusp in spitzen]
+creps := [TOMAT0(cusp) for cusp in spitzen]
 hmat := matrix [[1,1],[0,1]]
-[WIDTH(level, denom cusp) for cusp in spitzen]
-xreps := concat [(gamma:=TOMAT(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH(level, denom cusp)-1]) for cusp in spitzen];
+[WIDTH0(level, denom cusp) for cusp in spitzen]
+xreps := concat [(gamma:=TOMAT0(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH0(level, denom cusp)-1]) for cusp in spitzen];
 
 -- -----------------------------------------------------------------
 -- Consider f. We see no similar expansions.
@@ -1392,7 +1392,7 @@ xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 tex: X1 C := xeqgens.1
 abex := samba(tex, xeqgens, 5, oneVerboseStep!(1,1,0,2))$QXTOPSAMBA1(C)
 
-assertEquals(genusOfGamma0(level), 5)
+assertEquals(genus(level)$GAMMA0, 5)
 assertEquals(numOfGaps(abex), 5)
 
 -- From a paper of Zudilin below the table called
@@ -1411,7 +1411,7 @@ rwgens := zzi;
 
 )set output linear off
 )set output alg on
-spitzen := cuspsOfGamma0 level
+spitzen := cusps(level)$GAMMA0
 xiord := 24*level
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 

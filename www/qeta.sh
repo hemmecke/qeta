@@ -90,9 +90,9 @@ expansionAtAllCusps? := empty? "$gamma";
 gammas: List SL2Z := empty();
 -- Expand at all cusps if no gamma was given.
 if (expansionAtAllCusps?) then (_
-  cusps: List Q := cuspsOfGamma0(m)\$QAuxMETAQ;_
+  cusps: List Q := cusps(m)\$GAMMA0;_
   for cusp in cusps repeat (_
-    g: SL2Z := cuspToMatrix(m, cusp)\$QAuxMETAQ;_
+    g: SL2Z := cuspToMatrix(m, cusp)\$GAMMA0;_
     gammas := cons(g, gammas));_
   gammas := reverse! gammas_
 ) else (_
@@ -141,14 +141,14 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   tPrint("where x=q^(1/w).");_
   lle := [[[exponents(se),_
             (g := gamma(se)),_
-            width(level, g(2, 1)),_
+            WIDTH0(level, g(2, 1)),_
             leadingCoefficient(e := etaQuotient(se)\$EQG),_
             xExponent(se)/24,_
             eulerExpansion e]\$Rec_
            for se in lse] for lse in llse]_
 ) else (_
   vPrint("Expansion at cusps", cusps);_
-  vPrint("Expansion at CUSPS", [cuspToMatrix(m, cusp)\$QAuxMEQ for cusp in cuspsOfGamma0 m]);_
+  vPrint("Expansion at CUSPS", [cuspToMatrix(m, cusp)\$GAMMA0 for cusp in cusps(m)$GAMMA0]);_
   le := [etaQuotient(m, r)\$METAQ for r in rs];_
   ees := [expansions(e)::METAQX for e in le];_
   [[rr, ex] for rr in rs for ex in ees])

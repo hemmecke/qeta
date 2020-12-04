@@ -30,7 +30,7 @@ LX ==> L1 CX
 nn := 10 :: P;
 mm := 5 :: P; s := [-1, 0]$List(Z)
 m := 5 :: P;
-spitzen := cuspsOfGamma0(nn)$QAuxMEQ
+spitzen := cusps(nn)$GAMMA0
 
 mmdivs := DIVISORS mm
 shat := sigmaInfinity(mmdivs, s)
@@ -62,7 +62,7 @@ assertTrue zero?(mf+minusfive)
 nn := 14 :: P;
 mm := 7 :: P; s := [-1, 0]$List(Z);
 m := 7 :: P;
-spitzen := cuspsOfGamma0(nn)$QAuxMEQ
+spitzen := cusps(nn)$GAMMA0
 
 mmdivs := DIVISORS mm
 shat := sigmaInfinity(mmdivs, s)
@@ -120,10 +120,10 @@ xi := generator()$CX
 
 eqx1 := table()$XHashTable(Q, LX)
 eqx2 := table()$XHashTable(Q, LX)
-spitzen := cuspsOfGamma0(nn)$QAuxMEQ
+spitzen := cusps(nn)$GAMMA0
 for cusp in spitzen repeat
-  w := WIDTH(nn, denom cusp) --: P
-  gamma := cuspToMatrix(nn, cusp)$QAuxMEQ --: SL2Z
+  w := WIDTH0(nn, denom cusp) --: P
+  gamma := cuspToMatrix(nn, cusp)$GAMMA0 --: SL2Z
   y1 := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0,gamma)$YMSETAQG
   y2 := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0,gamma)$YMSETAQG
   p1 := puiseux(y1, w)$SETAQG(Q, CX)
@@ -147,7 +147,7 @@ nn := 22 :: P;
 --nn: P := 22; r: List Z := [-10,10,-9,10]
 mm := 11 :: P; s := [-1, 0]$List(Z)
 m := 11 :: P;
-spitzen := cuspsOfGamma0(nn)$QAuxMEQ
+spitzen := cusps(nn)$GAMMA0
 
 mmdivs := DIVISORS mm
 shat := sigmaInfinity(mmdivs, s) --: Z
@@ -239,13 +239,13 @@ diophantineSystem(mat, vv)$SmithNormalForm(Z, VZ, VZ, MZ)
 -- ----------
 
 gamma := gammas.2
-w := width(nn, gamma(2,1))
+w := WIDTH0(nn, gamma(2,1))
 eq1 := etaQuotientOrbitProduct(mm, mmdivs, s, m, t, gamma, w)$SEQG
 eq2 := coEtaQuotient(nn, nndivs, r, gamma, w)$SEQG
 expansion eq1 * expansion eq2
 
 -- Consider the order of the the cofactor (without the (c\tau+d) factor)
--- at each cusp in terms of q^(1/w) where w=width(nn,gamma(2,1)).
+-- at each cusp in terms of q^(1/w) where w=WIDTH0(nn,gamma(2,1)).
 yeq := [etaQuotient(nn, nndivs, r, gamma)$YEQG for gamma in gammas]
 vr := vector r
 yeq1 := [xExponent(y)$YEQG for y in yeq]
@@ -253,7 +253,7 @@ yeq1 := [xExponent(y)$YEQG for y in yeq]
 -- -----------------------------------------------------------------
 
 yeqlg := [[(etaQuotient(mm, mmdivs, s, m, t, lambda, gamma)$YSEQLG) for lambda in 0..10] for gamma in gammas]
-yeqlg1 := [[width(nn, (gamma$YSEQLG)(y)(2,1)) * qExponent(y)$YSEQLG for y in yeql] for yeql in yeqlg]
+yeqlg1 := [[WIDTH0(nn, (gamma$YSEQLG)(y)(2,1)) * qExponent(y)$YSEQLG for y in yeql] for yeql in yeqlg]
 
 
 mats := [matrix [[1, lambda],[0,m]] * gamma for lambda in 0..10]
