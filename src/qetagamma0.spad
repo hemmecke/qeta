@@ -191,6 +191,10 @@ CongruenceSubgroupGamma0: with
       ++ $\Gamma_0(nn) \backslash \Gamma_0(1) / SL_2(\setZ)_\infty$
       ++ where $SL_2(\setZ)_\infty$ are matrices of the form [[1,h],[0,1]]
       ++ with h being an integer.
+    member?: (P, SL2Z) -> Boolean
+      ++ member?(n, mat) returns true if mat is an element of
+      ++ $\Gamma_0(n)$, i.e. if entry (2,1) is a multiple of n.
+      ++ Here it is assumed that determinant(mat)=1.
 
   == add
     width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
@@ -372,7 +376,7 @@ $a\in X_c$.
     doubleCosetRepresentatives(nn: P): List SL2Z ==
         [cuspToMatrix(nn, cusp) for cusp in cusps(nn)]
 
-
+    member?(nn: P, mat: SL2Z): Boolean == zero?(mat(2,1) rem nn)
 
 )if LiterateDoc
 %$
