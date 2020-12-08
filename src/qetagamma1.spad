@@ -1,0 +1,434 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2020  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Auxiliary functions for the congruence subgroup $\Gamma_1(N)$}
+\author{Ralf Hemmecke}
+\date{05-Dec-2020}
+\maketitle
+\begin{abstract}
+  The packages \code{CongruenceSubgroupGamma0} contain helper
+  functions like genus, number of cusps, index of $\Gamma_1(N)$ in
+  $\SL2Z$, etc.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Indroduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $N$ be a positive natural number and define a $\Gamma_1(N)$ as a
+subgroup of the special linear group $SL_2(\setZ)$ as follows.
+\begin{gather*}
+\Gamma_1(N) := \SetDef{  \begin{pmatrix}
+    a & b\\
+    c & d
+  \end{pmatrix} \in \SL2Z}{c\equiv0 \pmod{N}, a\equiv d\equiv1 \pmod{N}}
+\end{gather*}
+
+See, for example,
+\url{https://en.wikipedia.org/wiki/Congruence_subgroup} or
+\url{https://www.wstein.org/books/modform/modform/dimension_formulas.html}.
+for the computation of the genus of $X_1(N)$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The width of a cusp}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The width of a cusp is defined to be the minimal positive integer $h$
+such that for any
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)\in\SL2Z$
+\begin{gather}
+  \gamma
+  \begin{pmatrix}
+    a & b\\
+    c & d
+  \end{pmatrix}
+  \gamma^{-1}
+  =
+  \begin{pmatrix}
+    1 -ach & a h ^2\\
+    -c^2h  & 1 + ach
+  \end{pmatrix}
+  \in \Gamma_1(N).
+\end{gather}
+So we must look for an $h$ that simultaneously fulfills the following
+congruences:
+\begin{gather}
+  c^2h\equiv0\pmod{N},\\
+  ach\equiv0\pmod{N}.
+\end{gather}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us start with a few common macros.
+
+First of all for debugging.
+)endif
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
+dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
+
+)if LiterateDoc
+%$
+These two technical macros are necessary to distinguish between Rep
+and \%.
+
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+MZ ==> Matrix Z -- will be a square matrix
+SL2Z ==> MZ -- represents SL_2(Z)
+Z24 ==> IntegerMod 24
+EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
+Rec ==> Record(red: SL2Z, triang: MZ)
+Pol ==> SparseUnivariatePolynomial Z
+
+INTF ==> IntegerNumberTheoryFunctions
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Auxiliary package for $\Gamma_1(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev package GAMMA1 CongruenceSubgroupGamma1
+++ CongruenceSubgroupGamma1 implements functions connected to the
+++ congruence subgroup $\Gamma_1(N)$.
+++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+CongruenceSubgroupGamma1: with
+    width: (P, Z) -> Z
+      ++ width(m, c) returns the width of the cusp a/c for Gamma_1(m)
+      ++ and some a. The width is independent of a and given by
+      ++ m/gcd(c,m).
+    cuspWidth: (P, Z, Z) -> Z
+      ++ cuspWidth(m, a, c) returns the width of the cusp a/c of
+      ++ Gamma_1(m)
+    index: P -> P
+      ++ index(n) computes the index of Gamma_1(n) in SL2Z.
+    projectiveIndex: P -> P
+      ++ projectivIndex(n) computes the index of the image of
+      ++ Gamma_1(n) in PSL2Z. It holds: if odd?(n), then
+      ++ projectiveIndex(n)=index(n), otherwise
+      ++ projectiveIndex(n)=index(n)/2.
+    cusps: P -> List Q
+      ++ According to
+      ++ \cite[Lemma~2.45]{Radu:PhD:2010},
+      ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
+      ++ $\Gamma_1(N)$ that correspond to a divisor $c$ of $N$.
+      ++ cusps(m) returns all the cusps for Gamma_1(m) sorted first by
+      ++ denominator and then (among the cusps with the same denominator)
+      ++ by the numerator of the cusp.
+    nu2: P -> Z
+      ++ nu2(n) returns the number of $\Gamma_1(n)$ inequivalent
+      ++ elliptic points of order 2. This is \mu_{1,2}(n) of
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+      ++ and known to be zero if n > 2.
+    nu3: P -> Z
+      ++ nu3(n) returns the number of $\Gamma_1(n)$ inequivalent
+      ++ elliptic points of order 3. This is \mu_{1,3}(n) of
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+      ++ and known to be zero if n > 3.
+    numberOfCusps: P -> P
+      ++ numberOfCusps(m) returns the number of cusps of $\Gamma_1(m)$.
+      ++ \cite[p.~25]{Shimura:ArithmeticTheory:1994} and Proposition
+      ++ 1.40.
+    genus: P -> N
+      ++ genus(level) returns the genus of the congruence subgroup
+      ++ Gamma_1(level). We use formulae given at
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+      ++ See Section "Modular Formas for $\Gamma_1(N)$" in
+      ++ \cite{Stein:ModularForms:2007}.
+    dimensionOfCuspForms: (P, Z) -> N
+      ++ dimensionOfCuspForms(m, w) computes the dimension of
+      ++ S_w(\Gamma_1(m)). See
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+    dimensionOfEisensteinSubspace: (P, Z) -> N
+      ++ dimensionOfEisensteinSubspace(m, w) computes the
+      ++ dimension of E_w(\Gamma_1(m)), the Eisenstein subspace of
+      ++ modular forms See
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+    dimensionOfModularForms: (P, Z) -> N
+      ++ dimensionOfModularForms(m, w) computes the dimension of
+      ++ M_w(\Gamma_1(m)). See
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
+    rightCosetRepresentatives: (P, P) -> List SL2Z
+      ++ rightCosetRepresentatives(nn, mm) returns a list of right
+      ++ coset representatives of
+      ++ $\Gamma_1(mm*nn) \backslash \Gamma_1(mm)$.
+    rightCosetRepresentatives: (P) -> List SL2Z
+      ++ rightCosetRepresentatives(nn) returns
+      ++ rightCosetRepresentatives(nn, 1). It is a list of right coset
+      ++ representatives of $\Gamma_1(nn) \backslash \Gamma_1(1)$.
+    cuspToMatrix: (P, Q) -> SL2Z
+      ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]]
+      ++ corresponding to the cusp a/c of Gamma1(m).
+    doubleCosetRepresentatives: P -> List SL2Z
+      ++ doubleCosetRepresentatives(nn) returns a list of double
+      ++ coset representatives of
+      ++ $\Gamma_1(nn) \backslash \Gamma_1(1) / SL_2(\setZ)_\infty$
+      ++ where $SL_2(\setZ)_\infty$ are matrices of the form [[1,h],[0,1]]
+      ++ with h being an integer.
+    member?: (P, SL2Z) -> Boolean
+      ++ member?(n, mat) returns true if mat is an element of
+      ++ $\Gamma_0(n)$, i.e. if entry (2,1) is a multiple of n and
+      ++ entries (1,1) and (2,2) are congruent 1 (mod n).
+      ++ Here it is assumed that determinant(mat)=1.
+
+  == add
+     -- Equation (2.49) in
+     -- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+     -- which is in Corollary 4 (2) of
+     -- \cite{Cho+Koo+Park:ArithmeticRamanujanGoellnitzGordon:2009}
+    width(m: P, c: Z): Z ==
+        m=4 and gcd(c,m)=2 => 1
+        (m exquo gcd(c, m)) :: Z
+
+    cuspWidth(nn: P, a: Z, c: Z): Z ==
+        g: SL2Z := cuspToMatrix(nn, a/c)$CongruenceSubgroupGamma0
+        ig: SL2Z := matrix [[g(2,2), -g(1,2)],[-g(2,1), g(1,1)]]
+        for d in 1..index nn repeat
+            member?(nn, g * matrix [[ 1,d],[0, 1]] * ig) => return d
+            member?(nn, g * matrix [[-1,d],[0,-1]] * ig) => return d
+        error "width(Gamma1): we should not come here"
+
+    index(m: P): P ==
+        m = 1 => 1
+        m = 2 => 3
+        r: Q := 1
+        for f in factorList factor m repeat
+            r := r * (1 - 1/(f.factor)^2)
+        asP numer(m^2*r)
+
+    projectiveIndex(m: P): P ==
+        m < 3 => index m
+        asP shift(index m, -1)
+
+    smallerCusp(x: Q, y: Q): Boolean ==
+        denom x < denom y => true
+        denom x > denom y => false
+        numer x < numer y
+
+    -- local function
+    coprimeRemainder(a: Z, c: Z, d: Z): Z ==
+        a := positiveRemainder(a, d)
+        while not one? gcd(a, c) and a < c repeat a := a + d
+        a
+
+    normalize(level: P, a: Z, c: Z): Q ==
+        c: Z := positiveRemainder(c, level)
+        zero? c =>
+            a := positiveRemainder(a, level)
+            min(a, level - a)/level
+
+        a: Z := positiveRemainder(a, c)
+        d: Z := gcd(c, level)
+
+        c2: Z := level - c
+        one? d =>
+            one? c or one? c2 => 1
+            1/min(c, c2)
+
+        c < c2 => coprimeRemainder( a, c , d)/c
+        c > c2 => coprimeRemainder(-c, c2, d)/c2
+        min(coprimeRemainder(a, c, d), coprimeRemainder(-a, c, d))/c -- c=c2
+
+    cusps(level: P): List Q ==
+        level = 1 => [1/1]
+        level = 2 => [1/1, 1/2]
+        level = 3 => [1/1, 1/3]
+        level = 4 => [1/1, 1/2, 1/4]
+        h: XHashTable(Q, Q) := table()
+        for c in 1..level repeat
+            g: Z := gcd(c, level)
+            if one? g then g := 2
+            for x in 1..g-1 | one? gcd(x, g) repeat
+                a: Z := x
+                while not one? gcd(a, c) repeat a := a + g
+                cusp := normalize(level, a, c)
+                h.cusp := cusp -- might override existing cusp
+        sort!(smallerCusp, keys h)
+
+    numberOfCusps(level: P): P ==
+        --assert(one? first divisors level)
+        level < 3 => level
+        level < 5 => asP(level - 1)
+        n: Z := 0
+        phidivs := [eulerPhi d for d in divisors(level)$INTF]
+        for c in phidivs for d in reverse phidivs repeat n := n + c*d
+        odd? n => error "something is rotten"
+        asP(shift(n, -1)) -- divide by 2
+
+    -- Two helper function mu2 and mu3
+    nu2(m: P): Z == -- number of elliptic points of order 2
+        m > 2 => 0
+        1
+
+    nu3(m: P): Z == -- number of elliptic points of order 3
+        m >= 4 or m = 2 => 0
+        1
+
+    genus(m: P): N ==
+        -- general formula is
+        -- g = 1 + mu/12 - nu2/4 - nu3/3 - nuinfinity/2
+        -- where mu is the index of Gamma1(m) in PSL2Z,
+        q: Q := projectiveIndex(m)/12 - nu2(m)/4 - nu3(m)/3 - numberOfCusps(m)/2
+        not one? denom q =>
+            vPrint("[level,index,nu2,nu3,cusps]",[m,index(m),nu2(m),nu3(m),numberOfCusps(m)]$List(Z))
+            vPrint("q,",q)
+            error "genus(Gamma1): non-vanishing denominator"
+        asN(1 + numer(q))
+
+    TODOdimensionOfCuspForms(m: P, w: Z): N ==
+        -- https://www.wstein.org/books/modform/modform/dimension_formulas.html
+        w < 0 or odd? 2 => 0
+        w = 2 => genus m
+        wz: Z := w::Z
+        w2: Z := shift(wz, -1) -- division by 2
+        d: Z :=   (wz-1) * (genus(m)-1)_
+                + (w2-1) * numberOfCusps(m)_
+                + nu2(m) * floor(wz/4)$Q_
+                + nu3(m) * floor(wz/3)$Q
+        return d::N
+
+    TODOdimensionOfEisensteinSubspace(m: P, w: Z): N ==
+        -- https://www.wstein.org/books/modform/modform/dimension_formulas.html
+        w < 0 or odd? w => 0
+        zero? w => 1
+        c: N := numberOfCusps m
+        if w = 2 then asN(c - 1) else c
+
+    TODOdimensionOfModularForms(m: P, w: Z): N ==
+        dimensionOfCuspForms(m, w) +  dimensionOfEisensteinSubspace(m, w)
+
+-------------------------------------------------------------------
+-- auxiliary function
+-------------------------------------------------------------------
+
+    coprimePart(n: Z, c: Z): Z ==
+       u := n
+       while (g := gcd(u, c)) > 1 repeat u := (u exquo g)::Z
+       u
+
+    -- This function corresponds to $\rho_{m,n}(\lambda)$ in
+    -- \cite[Definition~2.42]{Radu:PhD:2010}.
+    -- The loop terminates because of \cite[Lemma~2.41]{Radu:PhD:2010}.
+    rho(lambda: Z, m: Z, n: Z): Z ==
+        --assert(lambda>=0)
+        --assert(m*n>0)
+        --assert(one? gcd [lambda, m, n])
+        r := lambda
+        while not one? gcd(r, n) repeat r := r + m
+        return r
+
+    -- This function corresponds to S_{N,\delta} in
+    -- \cite[Definition~2.44]{Radu:PhD:2010}.
+    lambdas(delta: Z, nn: Z): List Z ==
+        --assert(delta*nn>0)
+        --assert((nn exquo delta) case Z)
+        m: Z := (nn exquo delta)::Z
+        g: Z := gcd(m, delta)
+        [rho(lambda, m, delta) for lambda in 0..m-1 | one? gcd(g, lambda)]
+
+    -- This function corresponds to just one matrix from R_{N,\delta}
+    -- for a concrete \lambda.
+    cosetRep(lambda: Z, delta: Z, qm: Z): SL2Z ==
+        --assert(lambda>=0)
+        --assert(delta*qm>0)
+        --assert(one? gcd(delta, qm))
+        c := lambda * qm
+        REC ==> Record(coef1: Z, coef2: Z, generator: Z)
+        rec: REC := extendedEuclidean(delta, lambda*qm)
+        return matrix [[rec.coef1, -rec.coef2], [c, delta]]
+
+    -- This function corresponds to R_{N,\delta} in
+    -- \cite[Lemma~2.44]{Radu:PhD:2010}.
+    rightCosetReps(delta: Z, nn: Z, mm: Z): List SL2Z ==
+        --assert(delta * mm * nn > 0)
+        [cosetRep(lambda, delta, mm) for lambda in lambdas(delta, nn)]
+
+-------------------------------------------------------------------
+-- exported function
+-------------------------------------------------------------------
+    cuspToMatrix(m: P, cusp: Q): MZ ==
+        a: Z := numer cusp
+        c: Z := denom cusp
+        exgcd: EXGCD := extendedEuclidean(a, c)
+        g: Z := exgcd.generator
+        b: Z := exgcd.coef2
+        d: Z := exgcd.coef1
+        matrix [[a, b], [c, d]]
+
+    TODOrightCosetRepresentatives(nn: P, mm: P): List SL2Z ==
+        concat [rightCosetReps(delta, nn, mm) for delta in divisors(nn)$INTF]
+
+    rightCosetRepresentatives(nn: P): List SL2Z ==
+        reps: List SL2Z := []
+        minf: SL2Z := matrix [[1, 1], [0,1]]
+        for cusp in cusps nn repeat
+            mat := cuspToMatrix(nn, cusp)
+            reps := cons(mat, reps)
+            for h in 1..width(nn, denom cusp)-1 repeat
+                reps := cons(mat*minf, reps)
+        reverse! reps
+
+    doubleCosetRepresentatives(nn: P): List SL2Z ==
+        [cuspToMatrix(nn, cusp) for cusp in cusps(nn)]
+
+    member?(nn: P, mat: SL2Z): Boolean ==
+        zero?(mat(2,1) rem nn) _
+           and zero?((mat(1,1)-1) rem nn) _
+           and zero?((mat(2,2)-1) rem nn)
+
+
+)if LiterateDoc
+%$
+\bibliography{qeta}
+\end{document}
+)endif
