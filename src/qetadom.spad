@@ -192,14 +192,14 @@ EtaQuotient(C): Exports == Implementation where
       ++ product(eta(divs.i)^(r.i),i=1..#divs) where divs=divisors(m).
       ++ It returns etaQuotient(divisors m, r).
       ++ It is assumed that #r = #divisors(m).
-    generalizedEtaQuotient: (P, P, Q) -> %
-      ++ generalizedEtaQuotient(d,g,e) returns the generalized
+    generalizedEtaPower: (P, P, Q) -> %
+      ++ generalizedEtaPower(d,g,e) returns the generalized
       ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
       ++ formula (1.11) in
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
       ++ raised to the power e.
-      ++ generalizedEtaQuotient(d,g,e) returns
-      ++ etaQuotient(d, numer(2*e)), if g=0;
+      ++ generalizedEtaPower(d,g,e) returns
+      ++ etaPower(d, numer(2*e)), if g=0;
       ++ etaQuotient([g, d],[numer(2*e),-numer(2*e)]), if g=d/2; and returns
       ++ generalizedEtaQuotient(d, g, numer e) in all other cases.
       ++ Note that only for g=0 and g=d/2 the exponent e can be a
@@ -215,6 +215,16 @@ EtaQuotient(C): Exports == Implementation where
       ++ generalizedEtaQuotient(d, gs, es) returns the product of
       ++ generalized eta-quotients for each g in gs and e in es.
       ++ Half-integer values are allowed for g=0 and g=d/2.
+    generalizedEtaPower: List Z -> %
+      ++ generalizedEtaQuotient(l) returns a (generalized) eta-power.
+      ++ If l is either a list [d,e] then it returns etaPower(d, e),
+      ++ if l=[d,g,e], then it returns generalizedEtaQuotient(d,g,e).
+      ++ A one-element list l=[d] is equivalent to [d,1]. The empty
+      ++ list returns 1. All other cases are errors. It is also an
+      ++ error if the conditions 0<d and 0<g<d/2 do not hold.
+    generalizedEtaQuotient: List List Z -> %
+      ++ generalizedEtaQuotient(ll) returns the product (generalized)
+      ++ eta-powers for each list l in ll.
 
 --    new: (Q, L) -> %
       ++ Only for internal use.
@@ -332,7 +342,7 @@ EtaQuotient(C): Exports == Implementation where
         t: T := power!(cachedPower, abs e)$CachedPower(T)
         if e > 0 then t else recip(t)::T
 
-    generalizedEtaQuotient(d: P, g: P, e: Q): % ==
+    generalizedEtaPower(d: P, g: P, e: Q): % ==
         zero? e => 1
         zero? g =>
             e := 2*e
@@ -362,13 +372,53 @@ EtaQuotient(C): Exports == Implementation where
         num: % := den := 1
         for g in gs for rd in r repeat
             zero? g or 2*g = d =>
-                z: % := generalizedEtaQuotient(d, g, rd)
-                if num? then num := num * z else num := z
+                z: % := generalizedEtaPower(d, g, rd)
+                if num? then num := num * z else (num := z; num? := true)
             rd > 0 =>
-                z: % := generalizedEtaQuotient(d, g, rd)
+                z: % := generalizedEtaPower(d, g, rd)
                 if num? then num := num * z else (num := z; num? := true)
             rd < 0 =>
-                z: % := generalizedEtaQuotient(d, g, - rd)
+                z: % := generalizedEtaPower(d, g, - rd)
+                if den? then den := den * z else (den := z; den? := true)
+        -- If the denominator is set, we must invert it.
+        den? =>
+            num? => num * inv den
+            inv den
+        num -- There is no denominator and if not num? then num=1 anyway.
+
+    generalizedEtaPower(l: List Z): % ==
+        dbgPrint("geq l0", l)
+        empty? l => 1
+        d: Z := first l; l := rest l
+        dbgPrint("geq l1", l)
+        d <= 0 => error "generalizedEtaPower: only positive divisors allowed"
+        empty? l => eta asP d
+        e: Z := first l; l := rest l
+        dbgPrint("geq l2", l)
+        empty? l => etaPower(asP d, e)
+        g: Z := e
+        g <= 0 or 2*g > d =>
+            error "generalizedEtaPower: condition on offset violated"
+        dbgPrint("geq l3", l)
+        e := first l
+        not empty? rest l =>
+            error "generalizedEtaPower: only lists of lenght <= 3 allowed"
+        generalizedEtaPower(asP d, asP g, e::Q)
+
+    generalizedEtaQuotient(ll: List List Z): % ==
+        empty? ll => 1
+        -- We want to avoid multiple recip computations, so we compute
+        -- numerator and denominator separately and invert at the end.
+        -- Exceptions are if an list element describes an etaPower,
+        -- because then no inversion is needed.
+        num?: Boolean := den? := false
+        num: % := den := 1
+        for l in ll repeat
+            #l < 3 or l.3 > 0 =>
+                z: % := generalizedEtaPower l
+                if num? then num := num * z else (num := z; num? := true)
+            l.3 < 0 =>
+                z: % := generalizedEtaPower([l.1, l.2, - l.3])
                 if den? then den := den * z else (den := z; den? := true)
         -- If the denominator is set, we must invert it.
         den? =>
