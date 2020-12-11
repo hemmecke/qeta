@@ -52,15 +52,15 @@ vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbo
 We try to find all missing parts to find a Ramanujan-Kolberg relation
 as defined in \cite[p.~227]{Radu:RamanujanKolberg:2015}.
 
-Let $M$ be a positive integer and $s=(s_\delta)_{\delta|M}$ be a
+Let $M$ be a positive integer and $r=(r_\delta)_{\delta|M}$ be a
 sequence of integers indexed by the positive divisors of $M$. Define a
 sequence $a(n)$ by
 \begin{gather*}
   \sum_{n=0}^\infty a(n) q^n
   =
-  \prod_{\delta|M} \prod_{n=1}^\infty (1-q^{\delta n})^{s_\delta}
+  \prod_{\delta|M} \prod_{n=1}^\infty (1-q^{\delta n})^{r_\delta}
   =
-  \prod_{\delta|M} (q^\delta; q^\delta)_\infty^{s_\delta}
+  \prod_{\delta|M} (q^\delta; q^\delta)_\infty^{r_\delta}
 \end{gather*}
 where
 \begin{gather*}
@@ -69,11 +69,11 @@ where
 is the $q$-Pochhammer symbol.
 
 Given $N$, $m$, and $t \in \{0,\ldots,m-1\}$, we want to compute a
-sequence $r=(r_\delta)_{\delta|N}$ of integers, a set
+sequence $s=(s_\delta)_{\delta|N}$ of integers, a set
 $\mathcal{O}_{r,m,t}\subseteq\{0,\ldots,m=1\}$, $\eta$-quotients
 $b_i \in M^\infty(N)$, and numbers $c_i\in \mathbb{Q}$ uch that
 \begin{gather*}
-q^\alpha \prod_{\delta|N} \prod_{n=1}^\infty (1-q^{\delta n})^{r_\delta}
+q^\alpha \prod_{\delta|N} \prod_{n=1}^\infty (1-q^{\delta n})^{s_\delta}
 \times
 \prod_{t'\in \mathcal{O}(r,m,t)} \sum_{n=0}^\infty a(mn+t')q^n
 =
@@ -81,10 +81,10 @@ q^\alpha \prod_{\delta|N} \prod_{n=1}^\infty (1-q^{\delta n})^{r_\delta}
 \end{gather*}
 where
 \begin{gather*}
-\alpha = \sum_{\delta|N} \frac{\delta r_\delta}{24}
+\alpha = \sum_{\delta|N} \frac{\delta s_\delta}{24}
          +
          \sum_{t'\in \mathcal{O}(r,m,t)}
-             \frac{24 t' + \sum_{\delta|N} \delta s_\delta}{24m}
+             \frac{24 t' + \sum_{\delta|M} \delta r_\delta}{24m}
 \end{gather*}
 and $M^\infty(N)$ is the set of modular functions on $\Gamma_0(N)$
 with a pole at most at infinity.
@@ -113,6 +113,9 @@ For mathematical background see \PathName{qetafun.spad}.
 \section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let us start with a few common macros.
 
 These two technical macros are necessary to distinguish between Rep
@@ -160,12 +163,12 @@ QEQEV ==> QEtaQuotientExponentVectors4ti2
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Package QEtaRamanujanKolbergIdentity}
+\subsection{Domain QEtaRamanujanKolbergIdentity}
 \label{sec:QEtaRamanujanKolbergIdentity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We provide here a domain that prints nicely as an identity and has
-enough acces functions to extract various components of the identity
+enough access functions to extract various components of the identity
 for easier manipulation.
 
 
@@ -179,13 +182,13 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
   EX ==> Expression Z
   Exports ==> CoercibleTo OutputForm with
     identity: (P, List Z, P, L Z, P, N, L L Z, Pol C) -> %
-      ++ identity(nn, mm, s, m, t, c, rel, rgens) returns a
+      ++ identity(nn, mm, r, m, t, c, rel, rgens) returns a
       ++ structure that represents all information about the (the q)
-      ++ expansion of $F_{r,s,m,t}$ at infinity, see Definition of
-      ++ $F_{r,s,m,t}$ in qetafun.spad,
-      ++ Equation~\eqref{eq:F_r-s-m-t(tau)}. The relations is then
+      ++ expansion of $F_{s,r,m,t}$ at infinity, see Definition of
+      ++ $F_{s,r,m,t}$ in qetafun.spad,
+      ++ Equation~\eqref{eq:F_s-r-m-t(tau)}. The relations is then
       ++ c*F=sum_{i}(rel(i)*etaQuotient(nn,rgens(i))) where F
-      ++ corresponds to the modular function $F_{r,s,m,t}$ in
+      ++ corresponds to the modular function $F_{s,r,m,t}$ in
       ++ question.
     alphaInfinity: % -> Z
       ++ alphaInfinity(x) returns the q exponent that corresponds to
@@ -202,17 +205,17 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ eta-quotient from which the sifted version is taken.
     definingExponents: % -> List Z
       ++ definingExponents(x) returns the exponents
-      ++ $s=(s_\delta)_{\delta|M}$ (where $M$ is the defining level)
+      ++ $r=(r_\delta)_{\delta|M}$ (where $M$ is the defining level)
       ++ for the defining series of the coefficients a(n), i.e.,
       ++ \sum_{n=0}^\infty a(n)q^n = \prod_{\delta|M} (q^{\delta},
-      ++ q^{\delta})_\infty^{s_\delta}$.
+      ++ q^{\delta})_\infty^{r_\delta}$.
     multiplier: % -> P
       ++ multiplier(x) returns factor m to select a certain
       ++ subsequence a(m*n+k) of the defining series (where k is one
       ++ number out of orbit(x).
     offset: % -> N
-      ++ offset(x) returns the offset k to select a certain
-      ++ subsequence a(m*n+k) of the defining series (where k was the
+      ++ offset(x) returns the offset t to select a certain
+      ++ subsequence a(m*n+t) of the defining series (where t was the
       ++ value used during creation of x via a call to the identity
       ++ function, i.e., offset(x) is a member of orbit(x).
     coefficient: % -> C
@@ -291,7 +294,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     pretty: (%, Z, Z -> OutputForm) -> OutputForm
       ++ pretty(x, fmt, v) outputs x as computed with respect to a
       ++ style given by the fmt parameter. If the lowest bit is set
-      ++ in fmt then, the q factor is shown. If the first bit is
+      ++ in fmt then, the q factor is shown. If the bit 1 is
       ++ set, then the t parameter is replaces by the respective
       ++ eta-quotient, so that the coefficients will just be elements
       ++ of the coefficient domain.
@@ -307,6 +310,9 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
 -------------------------------------------------------------------
 
+    -- Functions with X at their end give expressions or polynomial
+    -- representations of the data.
+
     sumX: (BasicOperator, Symbol, P, N) -> EX
     orbitProductX: % -> EX
     monomialX: (List Symbol, List Z) -> Pol C
@@ -317,9 +323,9 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
   Implementation ==> add
     Rep ==> Record(fnn: P,_
-                   fr: List Z,_
-                   fmm: P,_
                    fs: List Z,_
+                   fmm: P,_
+                   fr: List Z,_
                    fmultiplier: P,_
                    foffset: N,_
                    frgens: List List Z,_
@@ -336,7 +342,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             z := mon + z
         z
 
-    identity(nn: P, r: List Z, mm: P, s: List Z, m: P, t: N, _
+    identity(nn: P, s: List Z, mm: P, r: List Z, m: P, t: N, _
              rgens: List List Z, pol: Pol C): % ==
 
         fsym: Symbol := "F"::Symbol
@@ -352,12 +358,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         tsym: Symbol := first msyms
         rel: List SUP C := [pol2sup(c, tsym) for c in cis]
 
-        per [nn, r, mm, s, m, t, rgens, pol, cf, rel]
+        per [nn, s, mm, r, m, t, rgens, pol, cf, rel]
 
     level(x: %): P == xx.fnn
     definingLevel(x: %): P == xx.fmm
-    definingExponents(x: %): List Z == xx.fs
-    coExponents(x: %): List Z == xx.fr
+    definingExponents(x: %): List Z == xx.fr
+    coExponents(x: %): List Z == xx.fs
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
     coefficient(x: %): C == xx.fcf
@@ -638,25 +644,25 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
   IDENTITY ==> QEtaRamanujanKolbergIdentity C
   Exports ==> with
     findIdentity: (P, List Z, P, List Z, P, N, List List Z) -> IDENTITY
-      ++ findIdentity(nn, r, mm, s, m, k, rgens) returns all data for a
+      ++ findIdentity(nn, s, mm, r, m, k, rgens) returns all data for a
       ++ Ramanujan-Kolberg identity.
     findIdentity: (P, List Z, P, List Z, P, N) -> IDENTITY
-      ++ findIdentity(nn, r, mm, s, m, k) returns all data for a
+      ++ findIdentity(nn, s, mm, r, m, k) returns all data for a
       ++ Ramanujan-Kolberg identity.
     findIdentity: (P, P, List Z, P, N, List List Z) -> IDENTITY
-      ++ findIdentity(nn, mm, s, m, k, rgens) returns all data for a
+      ++ findIdentity(nn, mm, r, m, k, rgens) returns all data for a
       ++ Ramanujan-Kolberg identity.
     findIdentity: (P, P, List Z, P, N) -> IDENTITY
-      ++ findIdentity(nn, mm, s, m, k) returns all data for a
+      ++ findIdentity(nn, mm, r, m, k) returns all data for a
       ++ Ramanujan-Kolberg identity.
   Implementation ==> add
-    findIdentity(nn: P, r: List Z, mm: P, s: List Z, m: P, t: N,_
+    findIdentity(nn: P, s: List Z, mm: P, r: List Z, m: P, t: N,_
                  rgens: List List Z): IDENTITY ==
 
         -- First compute the expansion of the orbit product.
-        eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, s)$ETA(C))
+        eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, r)$ETA(C))
 
-        orb: List N := orbit(mm, s, m, t)$QEtaCoFactor
+        orb: List N := orbit(mm, r, m, t)$QEtaCoFactor
         tt := first orb
         p: T1 C := multisect(m-tt, tt, eulerquo)
         -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
@@ -664,7 +670,7 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
 
         -- The expansion of the coFactor is here.
         -- We take care of the right q-order through alphaInfinity.
-        cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, r)$ETA(C))
+        cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, s)$ETA(C))
 
         -- We multiply both things together to get (nearly) a modular
         -- function.
@@ -672,7 +678,7 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
 
         -- We have to multiply by some q-power to get the expansion of
         -- a modular function f.
-        alpha: Z := alphaInfinity(nn, r, mm, s, m, t)$QEtaCoFactor
+        alpha: Z := alphaInfinity(nn, s, mm, r, m, t)$QEtaCoFactor
         f: A1 C := laurent(alpha, tf)$A1(C)
 
         -- For the following computation we attach a marker to the
@@ -698,27 +704,27 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
 
         -- If xz is non-zero, then no relation has been found.
-        not zero? xz => identity(nn, r, mm, s, m, t, rgens, 0$Pol(C))
+        not zero? xz => identity(nn, s, mm, r, m, t, rgens, 0$Pol(C))
 
         pol := second(xz)::Pol(C)
 
-        identity(nn, r, mm, s, m, t, rgens, pol)
+        identity(nn, s, mm, r, m, t, rgens, pol)
 
-    findIdentity(nn: P, r: List Z, mm: P, s: List Z, m: P, t: N): IDENTITY ==
+    findIdentity(nn: P, s: List Z, mm: P, r: List Z, m: P, t: N): IDENTITY ==
         -- We compute the basis for the modular eta-quotients of level nn.
         rgens: List List Z := etaQuotientMonoidExponentVectors(nn)$QEQEV
-        findIdentity(nn, r, mm, s, m, t, rgens)
+        findIdentity(nn, s, mm, r, m, t, rgens)
 
-    findIdentity(nn: P, mm: P, s: List Z, m: P, t: N,
+    findIdentity(nn: P, mm: P, r: List Z, m: P, t: N,
                  rgens: List List Z): IDENTITY ==
         import from QEtaModularFunctionTools
-        r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)
-        findIdentity(nn, r, mm, s, m, t, rgens)
+        s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)
+        findIdentity(nn, s, mm, r, m, t, rgens)
 
-    findIdentity(nn: P, mm: P, s: List Z, m: P, t: N): IDENTITY ==
+    findIdentity(nn: P, mm: P, r: List Z, m: P, t: N): IDENTITY ==
         import from QEtaModularFunctionTools
-        r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)
-        findIdentity(nn, r, mm, s, m, t)
+        s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)
+        findIdentity(nn, s, mm, r, m, t)
 
 
 

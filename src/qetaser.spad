@@ -23,6 +23,8 @@ dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::O
 --xdbgPrint(x,y) ==> rhx:="42"
 
 )if LiterateDoc
+%$
+
 \documentclass{article}
 \usepackage{qeta}
 \usepackage{showlabels}
@@ -52,8 +54,8 @@ dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::O
   positive. This domain is implemented via \code{Finite0Series}. In
   other words, in contrast to \spadtype{UnivariateLaurentSeries}, it
   can be checked in finite time whether an element of
-  \code{Finite0Series} is zero or not. \code{Finite0Series(C, q, 0)}
-  form a \code{QEtaGradedAlgebra(C)}.
+  \code{Finite0Series} is zero or not. \code{Finite0Series(C)} is of
+  type \code{QEtaGradedAlgebra(C)}.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -62,6 +64,9 @@ dbgPrint(x,y) ==> display(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::O
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let us start with a few common macros.
 
@@ -92,7 +97,11 @@ QPS ==> QEtaPuiseuxSeries
 
 
 )if LiterateDoc
+%$
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Category QEtaTaylorSeriesCategory}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Expansions of eta-quotients or generalized eta-quotients are Puiseux
 series in $q=\exp(2\pi i \tau)$.
 %
@@ -101,6 +110,9 @@ However, most computations are actually done with Laurent series.
 )endif
 
 )abbrev category QETATSC QEtaTaylorSeriesCategory
+++ QEtaTaylorSeriesCategory is a UnivariateTaylorSeriesCategory
+++ extended by a few functions that we need in the computation of our
+++ package.
 QEtaTaylorSeriesCategory(C: Ring): Category ==
   UnivariateTaylorSeriesCategory C with
     coerce: UTS C -> %
@@ -118,12 +130,34 @@ QEtaTaylorSeriesCategory(C: Ring): Category ==
       ++ and invertible 1st order coefficient.
       -- needed for functionalInverse.
 
+)if LiterateDoc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Domain QEtaTaylorSeries}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
 )abbrev domain QETATS QEtaTaylorSeries
+++ QEtaTaylorSeries(C) is in fact identical with
+++ UnivariateTaylorSeries(C, 'q, 0). We just fix the variable to the
+++ symbol q and the center to zero.
 QEtaTaylorSeries(C: Ring): Exports == Implementation where
   Exports ==> QEtaTaylorSeriesCategory C
   Implementation ==> UTS C
 
+)if LiterateDoc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Category QEtaTaylorSeriesCategory}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
 )abbrev category QETALSC QEtaLaurentSeriesCategory
+++ QEtaLaurentSeriesCategory is a UnivariateLaurentSeriesCategory
+++ extended by a few functions that we need in the computation of our
+++ package.
 QEtaLaurentSeriesCategory(C: Ring): Category ==
   UnivariateLaurentSeriesCategory C with
     coerce: ULS C -> %
@@ -135,17 +169,38 @@ QEtaLaurentSeriesCategory(C: Ring): Category ==
     choose: (P, N, %, Z) -> %
       ++ choose(m, t, x, ord) returns the Laurent series z whose n-th
       ++ coefficient of the underlying Taylor series is the (m*n+t)-th
-      ++ coefficient of the underlying Taylor series of x, 0<=t<m. The
-      ++ function assumes that x has at least one non-zero
-      ++ coefficient.
+      ++ coefficient of the underlying Taylor series of x (after
+      ++ removing initial zeros), 0<=t<m. The function assumes that x
+      ++ has at least one non-zero coefficient.
     qetaTaylorRep: % -> QTS C
+      ++ qetaTaylorRep(x) returns the underlying taylor representation
+      ++ of the laurent serirs. This might return a taylor series that
+      ++ has 0 as its constant coefficient.
     laurent: (Z, QTS C) -> %
       ++ laurent(n, s) creates a Laurent series by multiplying the
       ++ given Taylor series by q^n.
     removeZeroes: (Z, %) -> %
+      ++ removeZeroes(n, x) removes at most n leading zeros from the
+      ++ series x and stops as soon as it has found a non-zero leading
+      ++ coefficient.
     removeZeroes: % -> %
+      ++ removeZeroes(x) is like removeZeroes(n, x) without a bound on
+      ++ the number of possible zeroes that will be removed. It might
+      ++ never stop if the input is the (infinite) series that has
+      ++ only zero coefficients.
+
+)if LiterateDoc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Domain QEtaLaurentSeries}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
 
 )abbrev domain QETALS QEtaLaurentSeries
+++ QEtaLaurentSeries(C) is in fact identical with
+++ UnivariateLaurentSeries(C, 'q, 0). We just fix the variable to the
+++ symbol q and the center to zero.
 QEtaLaurentSeries(C: Ring): Exports == Implementation where
   Exports ==> QEtaLaurentSeriesCategory C
   Implementation ==> ULS C add
@@ -168,6 +223,10 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
 
 
 )if LiterateDoc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Domain Finite0Series}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In \cite{Radu:RamanujanKolberg:2015}, the computations are done in
 a subclass of Laurent series, namely those that are identically zero
@@ -225,10 +284,15 @@ Finite0Series(C: CommutativeRing): Exports == Implementation where
 
 
 
+)if LiterateDoc
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Unused Domain QEtaPuiseuxSeries}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+)endif
 
-
+)if UNUSED
 
 )abbrev domain QETAPS QEtaPuiseuxSeries
 QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
@@ -242,7 +306,10 @@ QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
         rec: Rec := [q, qls]$Rec
         rec pretend %
 
+)endif
+
 )if LiterateDoc
+%$
 
 \bibliography{qeta}
 \printindex

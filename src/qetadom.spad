@@ -22,6 +22,11 @@
 \documentclass{article}
 \usepackage{qeta}
 
+% The q-Pochhammer symbol
+% https://en.wikipedia.org/wiki/Q-Pochhammer_symbol (for n=\infty)
+\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}
+\newcommand{\eulerFunction}[1]{\qPochhammer{q^{#1}}{q^{#1}}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,14 +54,19 @@
 \section{Overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This code is based on the article \cite{Radu:RamanujanKolberg:2015} by
-Silviu Radu.
+This code was initially based on the article
+\cite{Radu:RamanujanKolberg:2015} by Silviu Radu, but was extended in
+2020 to the generalization from
+\cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
 It implements prerequisite domains for the computation of relations
 among $\eta$-functions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let us start with a few common macros.
 
@@ -78,7 +88,6 @@ P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
-LSym ==> List Symbol
 OF ==> OutputForm
 
 asN x ==> x pretend N
@@ -86,24 +95,25 @@ asP x ==> x pretend P
 asZ x ==> x pretend Z
 
 )if LiterateDoc
+%$
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Eta quotient expansions at infity}
+\subsection{Domain EtaQuotient: Eta quotient expansions at infity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The domain \texttt{EtaQuotient} implements a representation for $\eta$
-functions (in terms of $q$) and products and quotients of $\eta$
-functions.
+The domain \texttt{EtaQuotient} implements a representation for
+(generalized) $\eta$ functions (in terms of $q$) and products and
+quotients of $\eta$ functions.
 
-\begin{Hemmecke}
-Since in general $\eta$ functions can be expressed as Laurent series in
-$q^{\frac1{24}}$, they also can be added.
-However, for efficiency reasons (and since it is enough for our purpose),
-we express an $\eta$-quotient as a Laurent series in $q$ with a prefactor
-that is a power of $q^{\frac1{24}}$, we only can add $\eta$-quotient
-that have the same prefactor. So, we implement only a partial addition.
-This partial addition is completely sufficient in our context, since we
-know in advance that summands have the same prefactor.
-\end{Hemmecke}
+Let
+\begin{gather}\label{eq:eta-expansion}
+  \defineNotation[eta]{\eta}: \setH \to \setC, \quad
+  \tau \mapsto \unityPower{\frac{\tau}{24}} \prod_{n=1}^{\infty}(1-q^n)
+  =
+  \unityPower{\frac{\tau}{24}} \eulerFunction{}
+\end{gather}
+with $\defineNotation[q]{q} = \unityPower{\tau} := \exp(2\pi i \tau)$
+denote the Dedekind eta function.
 
 Let $\delta$ be a positive natural number and $g$ be a residue class
 (mod $\delta$).
@@ -111,7 +121,8 @@ Let $\delta$ be a positive natural number and $g$ be a residue class
 We consider the generalized eta-quotient which is given by
 \begin{gather}
   \label{eq:generalized-eta-quotient}
-  \eta_{\delta,g}(\tau) = q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+  \defineNotation[etag]{\eta_{\delta,g}}(\tau)
+  = q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
   %
   \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
   \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n)
@@ -387,19 +398,15 @@ EtaQuotient(C): Exports == Implementation where
         num -- There is no denominator and if not num? then num=1 anyway.
 
     generalizedEtaPower(l: List Z): % ==
-        dbgPrint("geq l0", l)
         empty? l => 1
         d: Z := first l; l := rest l
-        dbgPrint("geq l1", l)
         d <= 0 => error "generalizedEtaPower: only positive divisors allowed"
         empty? l => eta asP d
         e: Z := first l; l := rest l
-        dbgPrint("geq l2", l)
         empty? l => etaPower(asP d, e)
         g: Z := e
         g <= 0 or 2*g > d =>
             error "generalizedEtaPower: condition on offset violated"
-        dbgPrint("geq l3", l)
         e := first l
         not empty? rest l =>
             error "generalizedEtaPower: only lists of lenght <= 3 allowed"
@@ -426,6 +433,21 @@ EtaQuotient(C): Exports == Implementation where
             inv den
         num -- There is no denominator and if not num? then num=1 anyway.
 
+)if LiterateDoc
+
+\begin{Hemmecke}
+Since in general $\eta$ functions can be expressed as Laurent series in
+$q^{\frac1{24}}$, they also can be added.
+However, for efficiency reasons (and since it is enough for our purpose),
+we express an $\eta$-quotient as a Laurent series in $q$ with a prefactor
+that is a power of $q^{\frac1{24}}$, we only can add $\eta$-quotient
+that have the same prefactor. So, we implement only a partial addition.
+This partial addition is completely sufficient in our context, since we
+know in advance that summands have the same prefactor.
+\end{Hemmecke}
+
+)endif
+
 -------------------------------------------------------------------
     -- The following functions are convenience functions and not really used.
     --:TODO: Move the functions below into a separate package.
@@ -446,7 +468,7 @@ EtaQuotient(C): Exports == Implementation where
     toEtaMonomial(m: Polynomial C): % ==
         --assert(not zero? m)
         --assert(zero? reductum m)
-        syms: LSym := variables m
+        syms: List Symbol := variables m
         l: List N := degree(m, syms)
         e: % := 1
         for s in syms for x in l repeat e := e*etaPower(idx s, x)

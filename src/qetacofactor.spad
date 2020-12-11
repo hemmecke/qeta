@@ -33,7 +33,7 @@ xdbgPrint(x,y) ==> rhx:="42"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
-\title{Expanding Dedekind Eta Functions into $q$-series}
+\title{Finding co-factors for sifted (generalized) Eta Functions}
 \author{Ralf Hemmecke}
 \date{26-Jan-2018}
 \maketitle
@@ -70,6 +70,9 @@ For mathematical background see \PathName{qetafun.spad}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Let us start with a few common macros.
 
@@ -94,7 +97,6 @@ asP x ==> x pretend P
 
 VZ ==> Vector Z
 MZ ==> Matrix Z
-Rec ==> Record(red: SL2Z, lg: N)
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 LP ==> List P
 LZ ==> List Z
@@ -113,6 +115,15 @@ DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 -- sigmaInfty      \sumdelta{r}
 -- kappa(m)        \kappa
 
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaCoFactor}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
 )abbrev package QETACOF QEtaCoFactor
 QEtaCoFactor: Exports == Implementation where
   Exports ==> with
@@ -123,79 +134,79 @@ QEtaCoFactor: Exports == Implementation where
       ++ \eqref{eq:p|m=>p|N} in qetafun.spad.
 
     conditionMmN?: (P, P, LZ, P) -> Boolean
-      ++ conditionMmN(nn, mm, s, m) returns true if every divisor d of
-      ++ mm (for which s_d is non-zero) is also a devisor of m*N. This
+      ++ conditionMmN(nn, mm, r, m) returns true if every divisor d of
+      ++ mm (for which r_d is non-zero) is also a devisor of m*N. This
       ++ corresponds to condition (4.7) in \cite{Radu:PhD:2010} and in
       ++ equation \eqref{eq:delta|M=>delta|mN} in qetafun.spad.
 
     conditionSigma0?: (P, P, LZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, s, m) returns true if
+      ++ conditionSigma0?(nn, mm, r, m) returns true if
       ++ (kappa(m)*m*nn^2/mm)*sigma0(nn, r) = 0 mod 24. This
       ++ corresponds to \eqref{eq:sv24} in qetafun.spad and to the
       ++ first condition on page~241 of
       ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
 
     conditionGSigma0?: (P, P, LLZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, gs, m) returns true if
-      ++ (kappa(m)*m*nn^2)*sum(g*e/d for [d,g,e] in gs) = 0 mod 2.
+      ++ conditionSigma0?(nn, mm, gr, m) returns true if
+      ++ (kappa(m)*m*nn^2)*sum(g*e/d for [d,g,e] in gr) = 0 mod 2.
       ++ This corresponds to condition 3 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionSigma0?: (P, P, LLZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, gs, m) returns true if
-      ++ (kappa(m)*m*nn^2)*sum(e/d for [d,g,e] in gs) = 0 mod 12.
+      ++ conditionSigma0?(nn, mm, gr, m) returns true if
+      ++ (kappa(m)*m*nn^2)*sum(e/d for [d,g,e] in gr) = 0 mod 12.
       ++ This corresponds to condition 5 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionSumExponents?: (P, LZ, P) -> Boolean
-      ++ conditionSumExponents?(nn, s, m) returns true if the sum of
+      ++ conditionSumExponents?(nn, r, m) returns true if the sum of
       ++ the entries of s multiplied by kappa(m)*nn is divisible by 8.
-      ++ This corresponds to \eqref{eq:sum-s} in qetafun.spad second
+      ++ This corresponds to \eqref{eq:sum-r} in qetafun.spad second
       ++ condition on page~241 of \cite{Radu:RamanujanKolberg:2015}
       ++ (Definition 35).
 
     conditionSumExponents?: (P, LLZ, P) -> Boolean
-      ++ conditionSumExponents?(nn, gs, m) returns true if the sum of
-      ++ the entries (corresponding to the exponents) of gs multiplied
+      ++ conditionSumExponents?(nn, gr, m) returns true if the sum of
+      ++ the entries (corresponding to the exponents) of gr multiplied
       ++ by kappa(m)*nn is divisible by 4.
       ++ This corresponds to condition 4 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionNDivisor?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionNDivisor?(nn, mm, s, m, t) returns true if the
+      ++ conditionNDivisor?(nn, mm, r, m, t) returns true if the
       ++ expression
-      ++ (24*m)/gcd(kappa(m)*(-24*t-sigmaInfinity(mm,s)),24*m) is a
+      ++ (24*m)/gcd(kappa(m)*(-24*t-sigmaInfinity(mm,r)),24*m) is a
       ++ divisor of nn. This corresponds to \eqref{eq:w|N} in
       ++ qetafun.spad third condition on page~241 of
       ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
 
     conditionNDivisor?: (P, P, LZ, LLZ, P, N) -> Boolean
-      ++ conditionNDivisor?(nn, mm, s, gs, m, t) returns true if the
+      ++ conditionNDivisor?(nn, mm, r, gr, m, t) returns true if the
       ++ expression (24*m*mm)/gcd(mm*kappa(m)*alpha, 24*m*mm) is a
       ++ divisor of nn where
-      ++ alpha=-mm(sigmaInfinity(mm,s)+12*sum(d*fractionalBernoulli2(g/d)*e
-      ++ for [d,g,e] in gs)+24*mm*t).
+      ++ alpha=-mm(sigmaInfinity(mm,r)+12*sum(d*fractionalBernoulli2(g/d)*e
+      ++ for [d,g,e] in gr)+24*mm*t).
       ++ This corresponds to condition 7 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionEvenMultiplier?: (P, P, LZ, P) -> Boolean
-      ++ conditionEvenMultiplier?(nn, mm, s, m) returns true if
+      ++ conditionEvenMultiplier?(nn, mm, r, m) returns true if
       ++ various divisibility conditions are fulfilled.
       ++ This corresponds to \eqref{eq:even-m} in
       ++ qetafun.spad fourth condition on page~241 of
       ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
 
     conditionCoEtaQuotientGamma0?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma0?(nn, mm, s, m, t) returns
+      ++ conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) returns
       ++ true iff all the conditions for the parameters are fulfilled.
-      ++ This checks whether (nn, mm, s, m, t) is in \Delta^* as
+      ++ This checks whether (nn, mm, r, m, t) is in \Delta^* as
       ++ defined in
       ++ Definition~\ref{def:condition-co-eta-quotient-gamma0} in
       ++ qetafun.spad and in Definition 35 of
       ++ \cite{Radu:RamanujanKolberg:2015}
 
     conditionCoEtaQuotientGamma1?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma1?(nn, mm, s, m, t) returns true
+      ++ conditionCoEtaQuotientGamma1?(nn, mm, r, m, t) returns true
       ++ iff the conditions of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
       ++ just before Theorem 2.1 are fulfilled. These are slight
@@ -214,73 +225,73 @@ QEtaCoFactor: Exports == Implementation where
       ++ generalizedEtaQuotient(ll).
 
     conditionOrbitLength?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionOrbitLength?(nn, mm, s, m, t) returns true if the
+      ++ conditionOrbitLength?(nn, mm, r, m, t) returns true if the
       ++ conditions for an orbit of length 1 are satisfied.
       ++ This corresponds to condition 7 on page 6 of Chapter 2 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionOrbitLength?: (P, P, LZ, LLZ, P, N) -> Boolean
-      ++ conditionOrbitLength?(nn, mm, s, gs, m, t) returns true if
+      ++ conditionOrbitLength?(nn, mm, r, gr, m, t) returns true if
       ++ the conditions for an orbit of length 1 are satisfied. This
       ++ corresponds to condition 10 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-      ++ The parameter s and gs specify the defining eta-quotient and
+      ++ The parameters r and gr specify the defining eta-quotient and
       ++ generalized eta-quotient part.
 
     minimalLevelCoEtaQuotientGamma0: (P, LZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma0(mm, s, m, t) returns the
+      ++ minimalLevelCoEtaQuotientGamma0(mm, r, m, t) returns the
       ++ smallest nn such that conditionCoEtaQuotientGamma0?(nn, mm,
-      ++ s, m, t) is true, i.e. that (nn, mm, s, m, t) is an element
+      ++ r, m, t) is true, i.e. that (nn, mm, r, m, t) is an element
       ++ of \Delta^* as defined in
       ++ Definition~\ref{def:condition-co-eta-quotient-gamma0}.
 
     minimalLevelCoEtaQuotientGamma1: (P, LZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma1(mm, s, m, t) returns the
+      ++ minimalLevelCoEtaQuotientGamma1(mm, r, m, t) returns the
       ++ smallest nn such that conditionCoEtaQuotientGamma1?(nn, mm,
-      ++ s, m, t) is true, i.e. that (nn, mm, s, m, t) fulfills the 7
+      ++ r, m, t) is true, i.e. that (nn, mm, r, m, t) fulfills the 7
       ++ conditions as defined in Section 2 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     minimalLevelCoEtaQuotientGamma1: (P, LLZ, P, N) -> P
       ++ minimalLevelCoEtaQuotientGamma1(mm, ll, m, t) returns the
       ++ smallest nn such that conditionCoEtaQuotientGamma1?(nn, mm,
-      ++ ll, m, t) is true, i.e. that (nn, mm, s, m, t) fulfills the
+      ++ ll, m, t) is true, i.e. that (nn, mm, ll, m, t) fulfills the
       ++ 10 conditions as defined in Section 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
       ++ The parameter ll specifies the generalized eta-quotient via
       ++ generalizedEtaQuotient(ll).
 
     modularConditions?: (P, LZ, P, LZ, P, N) -> Boolean
-      ++ modularConditions?(nn, r, mm, s, m, t) returns true iff all
+      ++ modularConditions?(nn, s, mm, r, m, t) returns true iff all
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
       ++ fulfilled.
       ++ Compare with rStarConditions from QAuxiliaryModularEtaQuotientPackage.
 
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
-      ++ $\modularOrbit{s,m,t)$ as defined in qetafun.spad,
+      ++ $\modularOrbit{r,m,t)$ as defined in qetafun.spad,
       ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015} and
       ++ \cite[Lemma 4.35]{Radu:PhD:2010}.
-      ++ We assume $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
+      ++ We assume $sigmaInfty = \sum_{\delta|M} \delta r_\delta$.
     orbit: (P, List Z, P, N) -> List N
-      ++ orbit(mm, s, m, t) computes the elements of
-      ++ $\modularOrbit{s,m,t)$ as defined in qetafun.spad,
+      ++ orbit(mm, r, m, t) computes the elements of
+      ++ $\modularOrbit{r,m,t)$ as defined in qetafun.spad,
       ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015} and
       ++ \cite[Lemma 4.35]{Radu:PhD:2010}.
-      ++ orbit(s, m, t) returns the same as
-      ++ orbit(sigmaInfinity(mm, s), m, t).
-      ++ We assume $sigmaInfty = \sum_{\delta|M} \delta s_\delta$.
+      ++ orbit(r, m, t) returns the same as
+      ++ orbit(sigmaInfinity(mm, r), m, t).
+      ++ We assume $sigmaInfty = \sum_{\delta|M} \delta r_\delta$.
     chiExponent: (Z, P, List N) -> Z
       ++ chiExponent(sigmaInfty, m, orb) computes e such that
-      ++ $\exp(2\pi i e / 24) = \chi_{s,m,t)$.
-      ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta s_\delta$.
+      ++ $\exp(2\pi i e / 24) = \chi_{r,m,t)$.
+      ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta r_\delta$.
       ++ See Lemma \ref{thm:chi-exponent}.
       ++ Furthermore, we assume that orb = orbit(sigmaInfty, m, t).
     etaCoFactorSpace: (P, P, List Z, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ) -- List Z
-      ++ etaCoFactorSpace(nn, mm, s, m, t) returns a vector v and the
+      ++ etaCoFactorSpace(nn, mm, r, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
-      ++ modularConditions?(nn, members r, mm, s, m, t) is true for any
-      ++ r = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
+      ++ modularConditions?(nn, members s, mm, r, m, t) is true for any
+      ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
     sigmaInfinity: (P, List Z) -> Z
@@ -294,9 +305,9 @@ QEtaCoFactor: Exports == Implementation where
       ++ of mm.
       ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
     alphaInfinity: (P, LZ, P, LZ, P, N) -> Z
-      ++ If modularConditions?(nn, r, mm, s, m, t) then
-      ++ alphaInfinity(nn, r, mm, s, m, t) computes the order of the
-      ++ q-expansion of $F_{r, s, m, t}$ as defined in qetafun.spad,
+      ++ If modularConditions?(nn, s, mm, r, m, t) then
+      ++ alphaInfinity(nn, s, mm, r, m, t) computes the order of the
+      ++ q-expansion of $F_{s, r, m, t}$ as defined in qetafun.spad,
       ++ see~\eqref{eq:alphaInfinity}. It is the same as the \alpha as
       ++ defined in the abstract of \cite{Radu:RamanujanKolberg:2015},
       ++ DOI=10.1016/j.jsc.2017.02.001,
@@ -325,7 +336,7 @@ QEtaCoFactor: Exports == Implementation where
         asN z
 
     -- Return true iff \eqref{eq:Radu-productsquare} holds.
-    checkSquare?(nn: P, mm: P, r: LZ, s: LZ, m: P, orbitSize: Z): Boolean ==
+    checkSquare?(nn: P, s: LZ, mm: P, r: LZ, m: P, orbitSize: Z): Boolean ==
         nndivs: LP := DIVISORS nn
         mmdivs: LP := DIVISORS mm
         fl: FL := factorList factor nn
@@ -336,32 +347,32 @@ QEtaCoFactor: Exports == Implementation where
             -- Determine whether an even power of p divides
             -- \prod_{\delta|N}\delta^rdelta.
             e1: Z := 0
-            for delta in rest nndivs for rdelta in rest r|odd? rdelta repeat
+            for delta in rest nndivs for sdelta in rest s|odd? sdelta repeat
                 e1 := e1 + primePower(delta, p)$QAuxMEQ
             e2: Z := 0
             if odd? orbitSize then
                 -- check 2nd prod in eq:Radu-productsquare
                 em: N := primePower(m, p)
                 -- for all divisors of mm > 1
-                if odd? first s then e2 := em -- case: delta=1
-                for d in rest mmdivs for sdelta in rest s | odd? sdelta repeat
+                if odd? first r then e2 := em -- case: delta=1
+                for d in rest mmdivs for rdelta in rest r | odd? rdelta repeat
                     -- mod 2, only odd sdelta is relevant.
                     e2 := e2 + em + primePower(d, p)
             if odd?(e1 + e2) then return false
         return true
 
     -- local function
-    alphaAux(mm: P, s: LZ, gs: LLZ, t: N): Q ==
-        shat: Z := sigmaInfinity(mm, s)
-        gshat: Q := 0
-        for l in gs repeat
+    alphaAux(mm: P, r: LZ, gr: LLZ, t: N): Q ==
+        rhat: Z := sigmaInfinity(mm, r)
+        grhat: Q := 0
+        for l in gr repeat
             d: Z := l.1; g: Z := l.2; e: Z := l.3
-            gshat := gshat + (d*e)*fractionalBernoulli2(g/d)
-        (24*t + shat)::Q + 12*gshat
+            grhat := grhat + (d*e)*fractionalBernoulli2(g/d)
+        (24*t + rhat)::Q + 12*grhat
 
     -- exported functions
 
-    -- The following function computes \modularOrbit{s, m, t} with the
+    -- The following function computes \modularOrbit{r, m, t} with the
     -- optimization given by Radu in \cite[Lemma 4.35]{Radu:PhD:2010},
     -- i.e., we do not need to check all entries of \setS_{24m}, but
     -- only those that are not equivalent mod w.
@@ -391,14 +402,14 @@ QEtaCoFactor: Exports == Implementation where
     sigmaInfinity(nn: P, r: List Z): Z == sigmaAux(DIVISORS nn, r)
     sigma0(nn: P, r: List Z): Z == sigmaAux(reverse! DIVISORS nn, r)
 
-    orbit(mm: P, s: List Z, m: P, t: N): List N ==
-        orbit(sigmaInfinity(mm, s), m, t)
+    orbit(mm: P, r: List Z, m: P, t: N): List N ==
+        orbit(sigmaInfinity(mm, r), m, t)
 
     chiExponent(sigmaInfty: Z, m: P, orb: List N): Z ==
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
         positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
 
-    etaCoFactorSpace(nn: P, mm: P, s: List Z, m: P, t: N): _
+    etaCoFactorSpace(nn: P, mm: P, r: List Z, m: P, t: N): _
       Record(particular: Union(VZ, "failed"), basis: List VZ) ==
         -- Setup matrix. Then solve inhomogeneous system.
         mat: MZ := rStarConditionMatrix(nn)$QAuxMEQ
@@ -409,11 +420,11 @@ QEtaCoFactor: Exports == Implementation where
         w: Z := 0
         sigmaInfty: Z := 0
         sigma0: Z := 0
-        for j in 1..n for sdelta in s repeat
-            w := w + sdelta
-            sigmaInfty := sigmaInfty + d.j * sdelta
-            sigma0 := sigma0 + d(n+1-j) * sdelta
-        -- Compute \modularOrbit{s, m,t}.
+        for j in 1..n for rdelta in r repeat
+            w := w + rdelta
+            sigmaInfty := sigmaInfty + d.j * rdelta
+            sigma0 := sigma0 + d(n+1-j) * rdelta
+        -- Compute \modularOrbit{r, m,t}.
         orb: List N := orbit(sigmaInfty, m, t)
         orbitSize: Z := # orb
         nu: Z := chiExponent(sigmaInfty, m, orb)
@@ -433,9 +444,9 @@ QEtaCoFactor: Exports == Implementation where
                 p: P := asP(fe.factor) -- extract prime factor
                 em: N := primePower(m, p)$QAuxMEQ
                 -- for all divisors of mm > 1
-                e: Z := if odd? first s then em else 0 -- case: delta=1
-                for j in 2..n for sdelta in rest s | odd? sdelta repeat
-                    -- Mod 2 only odd sdelta is relevant.
+                e: Z := if odd? first r then em else 0 -- case: delta=1
+                for j in 2..n for rdelta in rest r | odd? rdelta repeat
+                    -- Mod 2 only odd rdelta is relevant.
                     e := e + em + primePower(asP(d.j), p)$QAuxMEQ
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         -- Now we have a matrix mat and a right-hand side v and need to
@@ -450,37 +461,37 @@ QEtaCoFactor: Exports == Implementation where
             not member?(f.factor, nnprimes) => return false
         return true
 
-    conditionMmN?(nn: P, mm: P, s: LZ, m: P): Boolean ==
+    conditionMmN?(nn: P, mm: P, r: LZ, m: P): Boolean ==
         mmdivs: LP := DIVISORS mm
-        #mmdivs ~= #s =>  false
+        #mmdivs ~= #r =>  false
 
         divs: LP := DIVISORS(m*nn)
-        for delta in mmdivs for sdelta in s | not zero? sdelta repeat
+        for delta in mmdivs for rdelta in r | not zero? rdelta repeat
             not member?(delta, divs) => return false
         return true
 
-    conditionSigma0?(nn: P, mm: P, s: LZ, m: P): Boolean ==
-        sv: Z := sigma0(mm, s)
+    conditionSigma0?(nn: P, mm: P, r: LZ, m: P): Boolean ==
+        sv: Z := sigma0(mm, r)
         x: Z := kappa(m)*m*nn*nn*sv
         DIVISIBLEBY?(24, (x exquo mm) :: Z)
 
-    conditionSumExponents?(nn: P, s: LZ, m: P): Boolean ==
+    conditionSumExponents?(nn: P, r: LZ, m: P): Boolean ==
         ssum: Z := 0
-        for sdelta in s repeat ssum := ssum + sdelta
+        for rdelta in r repeat ssum := ssum + rdelta
         DIVISIBLEBY?(8, kappa(m)*nn*ssum)
 
-    conditionNDivisor?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
-        a: Z := kappa(m)*(24*t + sigmaInfinity(mm, s))
-        --assert(a = kappa(m)*numer(alphaAux(mm, s, [], t)))
+    conditionNDivisor?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
+        a: Z := kappa(m)*(24*t + sigmaInfinity(mm, r))
+        --assert(a = kappa(m)*numer(alphaAux(mm, r, [], t)))
         n: Z := 24*m
         w: Z := (n exquo gcd(a, n)) :: Z
         DIVISIBLEBY?(w, nn)
 
-    conditionEvenMultiplier?(nn: P, mm: P, s: LZ, m: P): Boolean ==
+    conditionEvenMultiplier?(nn: P, mm: P, r: LZ, m: P): Boolean ==
         odd? m => true
         u: Z := 1
-        for delta in DIVISORS mm for sdelta in s | not zero? sdelta repeat
-            adelta: P := asP abs(sdelta)
+        for delta in DIVISORS mm for rdelta in r | not zero? rdelta repeat
+            adelta: P := asP abs(rdelta)
             u := u * delta^adelta
         e: Z := 0
         while even? u repeat
@@ -493,57 +504,57 @@ QEtaCoFactor: Exports == Implementation where
 
     -- See condition 7 in section "2. Finding Modular Functions for
     -- $\Gamma_1(N)$.
-    conditionOrbitLength?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
+    conditionOrbitLength?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
         n: P := 24*m*mm
-        shat := sigmaInfinity(mm, s)
+        rhat := sigmaInfinity(mm, r)
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn))
             one? gcd(j, n) => -- then 24|(j^2-1)
-               not zero?((((j^2 - 1) quo 24)*(shat+24*t)) rem m) => return false
+               not zero?((((j^2 - 1) quo 24)*(rhat+24*t)) rem m) => return false
         return true
 
-    conditionCoEtaQuotientGamma0?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
+    conditionCoEtaQuotientGamma0?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
         conditionPrimeDivisors?(nn, m) -- \eqref{eq:p|m=>p|N}
-         and conditionMmN?(nn, mm, s, m) -- \eqref{eq:delta|M=>delta|mN}
-          and conditionSigma0?(nn, mm, s, m) -- \eqref{eq:sv24}
-           and conditionSumExponents?(nn, s, m) --\eqref{eq:sum-s}
-            and conditionNDivisor?(nn, mm, s, m, t) -- \eqref{eq:w|N}
-             and conditionEvenMultiplier?(nn, mm, s, m) -- \eqref{eq:even-m}
+         and conditionMmN?(nn, mm, r, m) -- \eqref{eq:delta|M=>delta|mN}
+          and conditionSigma0?(nn, mm, r, m) -- \eqref{eq:sv24}
+           and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
+            and conditionNDivisor?(nn, mm, r, m, t) -- \eqref{eq:w|N}
+             and conditionEvenMultiplier?(nn, mm, r, m) -- \eqref{eq:even-m}
 
-    conditionCoEtaQuotientGamma1?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
+    conditionCoEtaQuotientGamma1?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
         zero?(nn rem mm) -- M|N
          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
-          and conditionSumExponents?(nn, s, m) --\eqref{eq:sum-s}
-           and conditionSigma0?(nn, mm, s, m) --\eqref{eq:sv24}
-            and conditionNDivisor?(nn, mm, s, m, t) --\eqref{eq:w|N}
-             and conditionEvenMultiplier?(nn, mm, s, m) --\eqref{eq:even-m}
-              and conditionOrbitLength?(nn, mm, s, m, t) -- CDZ condition 7.
+          and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
+           and conditionSigma0?(nn, mm, r, m) --\eqref{eq:sv24}
+            and conditionNDivisor?(nn, mm, r, m, t) --\eqref{eq:w|N}
+             and conditionEvenMultiplier?(nn, mm, r, m) --\eqref{eq:even-m}
+              and conditionOrbitLength?(nn, mm, r, m, t) -- CDZ condition 7.
 
 -------------------------------------------------------------------
 -- generalized eta quotients allowed in input
 -------------------------------------------------------------------
 
     -- CDZ condition 3 (p. 37)
-    conditionGSigma0?(nn: P, mm: P, gs: LLZ, m: P): Boolean ==
-        sv: Q := 0
-        for l in gs repeat sv := sv + l.2*l.3/l.1
-        x: Q := kappa(m)*nn*sv
+    conditionGSigma0?(nn: P, mm: P, gr: LLZ, m: P): Boolean ==
+        rv: Q := 0
+        for l in gr repeat rv := rv + l.2*l.3/l.1
+        x: Q := kappa(m)*nn*rv
         one? denom x and even? numer x
 
     -- CDZ condition 4 (p. 37)
-    conditionSumExponents?(nn: P, gs: LLZ, m: P): Boolean ==
-        ssum: Z := 0
-        for l in gs repeat ssum := ssum + l.3
-        x: Z := kappa(m)*nn*ssum
+    conditionSumExponents?(nn: P, gr: LLZ, m: P): Boolean ==
+        rsum: Z := 0
+        for l in gr repeat rsum := rsum + l.3
+        x: Z := kappa(m)*nn*rsum
         DIVISIBLEBY?(4, x)
 
     -- CDZ condition 5 (p. 37)
-    conditionSigma0?(nn: P, mm: P, gs: LLZ, m: P): Boolean ==
-        sv: Q := 0
-        for l in gs repeat sv := sv + l.3/l.1
-        x: Q := kappa(m)*nn*nn*sv
+    conditionSigma0?(nn: P, mm: P, gr: LLZ, m: P): Boolean ==
+        rv: Q := 0
+        for l in gr repeat rv := rv + l.3/l.1
+        x: Q := kappa(m)*nn*nn*rv
         one? denom x and DIVISIBLEBY?(12, numer x)
 
     -- local function
@@ -552,15 +563,15 @@ QEtaCoFactor: Exports == Implementation where
         t^2 - t + 1/6
 
     -- CDZ condition 8 (p. 37)
-    conditionNDivisor?(nn: P, mm: P, s: LZ, gs: LLZ, m: P,t: N): Boolean ==
-        a: Z := kappa(m)*numer(mm*alphaAux(mm, s, gs, t))
+    conditionNDivisor?(nn: P, mm: P, r: LZ, gr: LLZ, m: P,t: N): Boolean ==
+        a: Z := kappa(m)*numer(mm*alphaAux(mm, r, gr, t))
         n: Z := 24*m*mm
         w: Z := (n exquo gcd(a, n)) :: Z
         DIVISIBLEBY?(w, nn)
 
     -- CDZ condition 10 (p. 38)
-    conditionOrbitLength?(nn: P, mm: P, s: LZ, gs: LLZ, m: P, t: N): Boolean ==
-        a: Q := alphaAux(mm, s, gs, t)
+    conditionOrbitLength?(nn: P, mm: P, r: LZ, gr: LLZ, m: P, t: N): Boolean ==
+        a: Q := alphaAux(mm, r, gr, t)
         n: P := 24*m*mm
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn)) (j^2-1 is in S_{n})
@@ -573,42 +584,43 @@ QEtaCoFactor: Exports == Implementation where
     -- condition for the disection of mixed-generalized eta-quotients
     conditionCoEtaQuotientGamma1?(nn: P, mm: P, ll: LLZ, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
-     -- separate the true eta-quotient part from the generalized part
-        hs: XHashTable(Z, Z) := table() -- to compute s
-        gs: LLZ := empty() -- specify all generalized eta-quotients
+        -- separate the true eta-quotient part from the generalized part
+        -- i.e. extract an r-vector and a gr list.
+        hr: XHashTable(Z, Z) := table() -- to compute r
+        gr: LLZ := empty() -- specify all generalized eta-quotients
         for l in ll | not empty? l repeat
             d: Z := first l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
-            #l = 1 => hs.d := 1
-            #l = 2 => hs.d := l.2
-            #l = 3 => gs := cons(l, gs)
+            #l = 1 => hr.d := 1
+            #l = 2 => hr.d := l.2
+            #l = 3 => gr := cons(l, gr)
             error "conditionCoEtaQuotientGamma1?: list length > 3"
         mmdivs: LP := DIVISORS mm
-        s: LZ := [elt(hs, d, 0) for d in mmdivs]
+        r: LZ := [elt(hr, d, 0) for d in mmdivs]
 
         zero?(nn rem mm) -- M|N
          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
-          and conditionGSigma0?(nn, mm, gs, m) -- CDZ condition 3 (p. 37)
-           and conditionSumExponents?(nn, gs, m) -- CDZ condition 4 (p. 37)
-            and conditionSigma0?(nn, mm, gs, m) -- CDZ condition 5 (p. 37)
-             and conditionSumExponents?(nn, s, m) --\eqref{eq:sum-s}
-              and conditionSigma0?(nn, mm, s, m) -- \eqref{eq:sv24}
-               and conditionNDivisor?(nn, mm, s, gs, m, t) -- CDZ 8 (p.37)
-                and conditionEvenMultiplier?(nn, mm, s, m) --\eqref{eq:even-m}
-                 and conditionOrbitLength?(nn, mm, s, gs, m, t) -- CDZ cond. 10
+          and conditionGSigma0?(nn, mm, gr, m) -- CDZ condition 3 (p. 37)
+           and conditionSumExponents?(nn, gr, m) -- CDZ condition 4 (p. 37)
+            and conditionSigma0?(nn, mm, gr, m) -- CDZ condition 5 (p. 37)
+             and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
+              and conditionSigma0?(nn, mm, r, m) -- \eqref{eq:sv24}
+               and conditionNDivisor?(nn, mm, r, gr, m, t) -- CDZ 8 (p.37)
+                and conditionEvenMultiplier?(nn, mm, r, m) --\eqref{eq:even-m}
+                 and conditionOrbitLength?(nn, mm, r, gr, m, t) -- CDZ cond. 10
 
 -------------------------------------------------------------------
 -- use of conditions from above
 -------------------------------------------------------------------
 
-    minimalLevelCoEtaQuotientGamma0(mm: P, s: LZ, m: P, t: N): P ==
+    minimalLevelCoEtaQuotientGamma0(mm: P, r: LZ, m: P, t: N): P ==
         for nn in 1..24*m*mm repeat
-            conditionCoEtaQuotientGamma0?(asP nn, mm, s, m, t) => return asP nn
+            conditionCoEtaQuotientGamma0?(asP nn, mm, r, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
-    minimalLevelCoEtaQuotientGamma1(mm: P, s: LZ, m: P, t: N): P ==
+    minimalLevelCoEtaQuotientGamma1(mm: P, r: LZ, m: P, t: N): P ==
         for nn in 1..24*m*mm repeat
-            conditionCoEtaQuotientGamma1?(asP nn, mm, s, m, t) => return asP nn
+            conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
     minimalLevelCoEtaQuotientGamma1(mm: P, ll: LLZ, m: P, t: N): P ==
@@ -616,76 +628,76 @@ QEtaCoFactor: Exports == Implementation where
             conditionCoEtaQuotientGamma1?(asP nn, mm, ll, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
-    modularConditions?(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): Boolean ==
-        not conditionCoEtaQuotientGamma0?(nn, mm, s, m, t) => false
+    modularConditions?(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Boolean ==
+        not conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) => false
 
         nndivs: LP := DIVISORS nn
-        #nndivs ~= #r =>
-            dbgPrint("size of r: nndivs", nndivs)
-            dbgPrint("size of r: r", r)
+        #nndivs ~= #s =>
+            dbgPrint("size of s: nndivs", nndivs)
+            dbgPrint("size of s: s", s)
             false
 
         mmdivs: LP := DIVISORS mm
-        shat: Z := 0 -- sigmaInfty
-        for delta in mmdivs for sdelta in s repeat shat := shat + delta * sdelta
-        orb: List N := orbit(shat, m, t)
+        rhat: Z := 0 -- sigmaInfty
+        for delta in mmdivs for rdelta in r repeat rhat := rhat + delta * rdelta
+        orb: List N := orbit(rhat, m, t)
         orbitSize: Z := # orb
 
         --\eqref{eq:Radu-sum=0}
-        not zero?(reduce(_+, r, 0) + orbitSize * reduce(_+, s, 0)) =>
-            dbgPrint("eq:Radu-sum=0 r", r)
+        not zero?(reduce(_+, s, 0) + orbitSize * reduce(_+, r, 0)) =>
             dbgPrint("eq:Radu-sum=0 s", s)
+            dbgPrint("eq:Radu-sum=0 r", r)
             dbgPrint("eq:Radu-sum=0 orbitSize", orbitSize)
             false
 
         --\eqref{eq:Radu-sigmainfinity}
-        rhat: Z := 0
-        for delta in nndivs for rdelta in r repeat rhat := rhat + delta * rdelta
-        nu: Z := chiExponent(shat, m, orb)
-        z: Z := rhat + orbitSize * m * shat + nu
+        shat: Z := 0
+        for delta in nndivs for sdelta in s repeat shat := shat + delta * sdelta
+        nu: Z := chiExponent(rhat, m, orb)
+        z: Z := shat + orbitSize * m * rhat + nu
         not DIVISIBLEBY?(24, z) =>
             dbgPrint("eq:Radu-sigmainfinity nndivs", nndivs)
-            dbgPrint("eq:Radu-sigmainfinity r", r)
-            dbgPrint("eq:Radu-sigmainfinity mmdivs", mmdivs)
             dbgPrint("eq:Radu-sigmainfinity s", s)
+            dbgPrint("eq:Radu-sigmainfinity mmdivs", mmdivs)
+            dbgPrint("eq:Radu-sigmainfinity r", r)
             dbgPrint("eq:Radu-sigmainfinity orbitSize", orbitSize)
             dbgPrint("eq:Radu-sigmainfinity nu", nu)
             false
 
         --\eqref{eq:Radu-sigma0}
-        rv: Z := 0
-        for delta in reverse nndivs for rdelta in r repeat
-            rv := rv + delta * rdelta
         sv: Z := 0
-        for delta in reverse mmdivs for sdelta in s repeat
+        for delta in reverse nndivs for sdelta in s repeat
             sv := sv + delta * sdelta
+        rv: Z := 0
+        for delta in reverse mmdivs for rdelta in r repeat
+            rv := rv + delta * rdelta
         f: Z := ((m * nn) exquo mm)::Z -- modularInputConditions \implies f \in Z
-        not DIVISIBLEBY?(24, rv + orbitSize * f * sv) =>
+        not DIVISIBLEBY?(24, sv + orbitSize * f * rv) =>
             dbgPrint("eq:Radu-sigma0 nndivs", nndivs)
-            dbgPrint("eq:Radu-sigma0 r", r)
-            dbgPrint("eq:Radu-sigma0 mmdivs", mmdivs)
             dbgPrint("eq:Radu-sigma0 s", s)
+            dbgPrint("eq:Radu-sigma0 mmdivs", mmdivs)
+            dbgPrint("eq:Radu-sigma0 r", r)
             dbgPrint("eq:Radu-sigma0 orbitSize", orbitSize)
             false
 
         --\eqref{eq:Radu-productsquare}
-        not checkSquare?(nn, mm, r, s, m, orbitSize) =>
+        not checkSquare?(nn, s, mm, r, m, orbitSize) =>
             dbgPrint("eq:Radu-productsquare nn", nn)
+            dbgPrint("eq:Radu-productsquare s", s)
             dbgPrint("eq:Radu-productsquare mm", mm)
             dbgPrint("eq:Radu-productsquare r", r)
-            dbgPrint("eq:Radu-productsquare s", s)
             dbgPrint("eq:Radu-productsquare orbitSize", orbitSize)
             false
 
         true
 
-    alphaInfinity(nn: P, r: LZ, mm: P, s: LZ, m: P, t: N): Z ==
-        not modularConditions?(nn, r, mm, s, m, t) =>
+    alphaInfinity(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Z ==
+        not modularConditions?(nn, s, mm, r, m, t) =>
             error "input does not correspond to a modular function"
-        rhat: Z := sigmaInfinity(nn, r)
-        shat: Z := sigmaInfinity(mm, s)
-        orb: List N := orbit(shat, m, t)
-        alpha: Q := rhat/24 + reduce(_+, [24*k+shat for k in orb], 0)/(24*m)
+        shat: Z := sigmaInfinity(nn, s)
+        rhat: Z := sigmaInfinity(mm, r)
+        orb: List N := orbit(rhat, m, t)
+        alpha: Q := shat/24 + reduce(_+, [24*k+rhat for k in orb], 0)/(24*m)
         not one? denom alpha => error "alpha not an integer"
         return numer alpha
 
