@@ -350,6 +350,15 @@ QEtaCoFactor: Exports == Implementation where
             if odd?(e1 + e2) then return false
         return true
 
+    -- local function
+    alphaAux(mm: P, s: LZ, gs: LLZ, t: N): Q ==
+        shat: Z := sigmaInfinity(mm, s)
+        gshat: Q := 0
+        for l in gs repeat
+            d: Z := l.1; g: Z := l.2; e: Z := l.3
+            gshat := gshat + (d*e)*fractionalBernoulli2(g/d)
+        (24*t + shat)::Q + 12*gshat
+
     -- exported functions
 
     -- The following function computes \modularOrbit{s, m, t} with the
@@ -438,54 +447,33 @@ QEtaCoFactor: Exports == Implementation where
         mfl: FL := factorList fm
         nnprimes := [f.factor for f in factorList factor nn]
         for f in mfl repeat
---            dbgPrint("eq:p|m=>p|N mfl", mfl)
---            dbgPrint("eq:p|m=>p|N nnprimes", nnprimes)
             not member?(f.factor, nnprimes) => return false
         return true
 
     conditionMmN?(nn: P, mm: P, s: LZ, m: P): Boolean ==
         mmdivs: LP := DIVISORS mm
---        dbgPrint("size of s: mmdivs", mmdivs)
---        dbgPrint("size of s: s", s)
         #mmdivs ~= #s =>  false
 
         divs: LP := DIVISORS(m*nn)
         for delta in mmdivs for sdelta in s | not zero? sdelta repeat
---            dbgPrint("eq:delta|M=>delta|mN", mmdivs)
---            dbgPrint("eq:delta|M=>delta|mN", divs)
             not member?(delta, divs) => return false
         return true
 
     conditionSigma0?(nn: P, mm: P, s: LZ, m: P): Boolean ==
         sv: Z := sigma0(mm, s)
         x: Z := kappa(m)*m*nn*nn*sv
---        dbgPrint("eq:sv24 s", s)
---        dbgPrint("eq:sv24 mmdivs", mmdivs)
---        dbgPrint("eq:sv24 sv", sv)
---        dbgPrint("eq:sv24 kappa", kappam)
---        dbgPrint("eq:sv24 x", x exquo mm)
         DIVISIBLEBY?(24, (x exquo mm) :: Z)
 
     conditionSumExponents?(nn: P, s: LZ, m: P): Boolean ==
         ssum: Z := 0
         for sdelta in s repeat ssum := ssum + sdelta
---        dbgPrint("eq:sum-s ssum", ssum)
---        dbgPrint("eq:sum-s kappa", kappam)
---        dbgPrint("eq:sum-s nn", nn)
         DIVISIBLEBY?(8, kappa(m)*nn*ssum)
 
     conditionNDivisor?(nn: P, mm: P, s: LZ, m: P, t: N): Boolean ==
-        shat: Z := sigmaInfinity(mm, s)
-        w: Z := ((24*m) exquo gcd(kappa(m)*(24*t + shat), 24*m)) :: Z
---        dbgPrint("eq:w|N nn", nn)
---        dbgPrint("eq:w|N mm", mm)
---        dbgPrint("eq:w|N mmdivs", mmdivs)
---        dbgPrint("eq:w|N s", s)
---        dbgPrint("eq:w|N shat", shat)
---        dbgPrint("eq:w|N m", m)
---        dbgPrint("eq:w|N t", t)
---        dbgPrint("eq:w|N kappam", kappam)
---        dbgPrint("eq:w|N w", w)
+        a: Z := kappa(m)*(24*t + sigmaInfinity(mm, s))
+        --assert(a = kappa(m)*numer(alphaAux(mm, s, [], t)))
+        n: Z := 24*m
+        w: Z := (n exquo gcd(a, n)) :: Z
         DIVISIBLEBY?(w, nn)
 
     conditionEvenMultiplier?(nn: P, mm: P, s: LZ, m: P): Boolean ==
@@ -501,12 +489,6 @@ QEtaCoFactor: Exports == Implementation where
 
         b1: Boolean := DIVISIBLEBY?(4, kappa(m)*nn) and DIVISIBLEBY?(8, nn*e)
         b2: Boolean := even? e and DIVISIBLEBY?(8, nn*(u-1))
---        if not (b1 or b2) then
---            dbgPrint("eq:even-m m", m)
---            dbgPrint("eq:even-m kappa", kappam)
---            dbgPrint("eq:even-m nn", nn)
---            dbgPrint("eq:even-m e", e)
---            dbgPrint("eq:even-m e", u)
         return (b1 or b2)
 
     -- See condition 7 in section "2. Finding Modular Functions for
@@ -569,25 +551,16 @@ QEtaCoFactor: Exports == Implementation where
         t: Q := x - floor(x)::Q
         t^2 - t + 1/6
 
-    -- local function
-    alpha(mm: P, s: LZ, gs: LLZ, t: N): Q ==
-        shat: Z := sigmaInfinity(mm, s)
-        gshat: Q := 0
-        for l in gs repeat
-            d: Z := l.1; g: Z := l.2; e: Z := l.3
-            gshat := gshat + (d*e)*fractionalBernoulli2(g/d)
-        (24*t + shat)::Q + 12*gshat
-
     -- CDZ condition 8 (p. 37)
     conditionNDivisor?(nn: P, mm: P, s: LZ, gs: LLZ, m: P,t: N): Boolean ==
-        a: Z := kappa(m)*numer(mm*alpha(mm, s, gs, t))
+        a: Z := kappa(m)*numer(mm*alphaAux(mm, s, gs, t))
         n: Z := 24*m*mm
         w: Z := (n exquo gcd(a, n)) :: Z
         DIVISIBLEBY?(w, nn)
 
     -- CDZ condition 10 (p. 38)
     conditionOrbitLength?(nn: P, mm: P, s: LZ, gs: LLZ, m: P, t: N): Boolean ==
-        a: Q := alpha(mm, s, gs, t)
+        a: Q := alphaAux(mm, s, gs, t)
         n: P := 24*m*mm
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn)) (j^2-1 is in S_{n})
