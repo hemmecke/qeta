@@ -58,39 +58,14 @@ See, for example,
 \url{https://www.wstein.org/books/modform/modform/dimension_formulas.html}.
 for the computation of the genus of $X_1(N)$.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The width of a cusp}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-The width of a cusp is defined to be the minimal positive integer $h$
-such that for any
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)\in\SL2Z$
-\begin{gather}
-  \gamma
-  \begin{pmatrix}
-    a & b\\
-    c & d
-  \end{pmatrix}
-  \gamma^{-1}
-  =
-  \begin{pmatrix}
-    1 -ach & a h ^2\\
-    -c^2h  & 1 + ach
-  \end{pmatrix}
-  \in \Gamma_1(N).
-\end{gather}
-So we must look for an $h$ that simultaneously fulfills the following
-congruences:
-\begin{gather}
-  c^2h\equiv0\pmod{N},\\
-  ach\equiv0\pmod{N}.
-\end{gather}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let us start with a few common macros.
 
 First of all for debugging.
@@ -99,16 +74,6 @@ OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
 vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
 dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
-
-)if LiterateDoc
-%$
-These two technical macros are necessary to distinguish between Rep
-and \%.
-
-)endif
-
-rep x ==> (x@%) pretend Rep
-per x ==> (x@Rep) pretend %
 
 )if LiterateDoc
 Now some abbreviations for common domains.
@@ -122,8 +87,8 @@ MZ ==> Matrix Z -- will be a square matrix
 SL2Z ==> MZ -- represents SL_2(Z)
 Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
-Rec ==> Record(red: SL2Z, triang: MZ)
-Pol ==> SparseUnivariatePolynomial Z
+
+GAMMA0 ==> CongruenceSubgroupGamma0;
 
 INTF ==> IntegerNumberTheoryFunctions
 
@@ -133,7 +98,7 @@ asP x ==> x pretend P
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Auxiliary package for $\Gamma_1(N)$}
+\subsection{Congruence subgroup $\Gamma_1(N)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
@@ -176,9 +141,9 @@ CongruenceSubgroupGamma1: with
       ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
       ++ and known to be zero if n > 3.
     numberOfCusps: P -> P
-      ++ numberOfCusps(m) returns the number of cusps of $\Gamma_1(m)$.
-      ++ \cite[p.~25]{Shimura:ArithmeticTheory:1994} and Proposition
-      ++ 1.40.
+      ++ numberOfCusps(m) returns the number of cusps of
+      ++ $\Gamma_1(m)$. See
+      ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
     genus: P -> N
       ++ genus(level) returns the genus of the congruence subgroup
       ++ Gamma_1(level). We use formulae given at
@@ -408,7 +373,7 @@ CongruenceSubgroupGamma1: with
     TODOrightCosetRepresentatives(nn: P, mm: P): List SL2Z ==
         concat [rightCosetReps(delta, nn, mm) for delta in divisors(nn)$INTF]
 
-    rightCosetRepresentatives(nn: P): List SL2Z ==
+    TODOrightCosetRepresentatives(nn: P): List SL2Z ==
         reps: List SL2Z := []
         minf: SL2Z := matrix [[1, 1], [0,1]]
         for cusp in cusps nn repeat

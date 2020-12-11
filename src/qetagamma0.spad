@@ -32,9 +32,9 @@
 \date{04-Dec-2020}
 \maketitle
 \begin{abstract}
-  The packages \code{CongruenceSubgroupGamma0} contain helper
+  The packages \code{CongruenceSubgroupGamma1} contain helper
   functions like genus, number of cusps, index of $\Gamma_0(N)$ in
-  $SL_2(\setZ)$, etc.
+  $\SL2Z$, etc.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -45,12 +45,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Let $N$ be a positive natural number and define a $\Gamma_0(N)$ as a
-subgroup of the special linear group $SL_2(\setZ)$ as follows.
+subgroup of the special linear group $\SL2Z$ as follows.
 \begin{gather*}
 \Gamma_0(N) := \SetDef{  \begin{pmatrix}
     a & b\\
     c & d
-  \end{pmatrix} \in SL_2(\setZ)}{N|c}
+  \end{pmatrix} \in \SL2Z}{c \equiv 0 \pmod{N}}
 \end{gather*}
 
 The width of a cusp is implemented according to
@@ -64,6 +64,9 @@ For the computation of the genus of $X_0(N)$ we use
 \section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let us start with a few common macros.
 
 First of all for debugging.
@@ -74,15 +77,6 @@ vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbo
 
 )if LiterateDoc
 %$
-These two technical macros are necessary to distinguish between Rep
-and \%.
-
-)endif
-
-rep x ==> (x@%) pretend Rep
-per x ==> (x@Rep) pretend %
-
-)if LiterateDoc
 Now some abbreviations for common domains.
 )endif
 
@@ -92,10 +86,7 @@ Z ==> Integer
 Q ==> Fraction Z
 MZ ==> Matrix Z -- will be a square matrix
 SL2Z ==> MZ -- represents SL_2(Z)
-Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
-Rec ==> Record(red: SL2Z, triang: MZ)
-Pol ==> SparseUnivariatePolynomial Z
 
 INTF ==> IntegerNumberTheoryFunctions
 
@@ -105,7 +96,7 @@ asP x ==> x pretend P
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Auxiliary package for $\Gamma_0(N)$}
+\subsection{Congruence subgroup $\Gamma_0(N)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The width of a cusp is implemented according to
@@ -246,7 +237,6 @@ $a\in X_c$.
             n := n + eulerPhi(gcd(c, (level exquo c)::Z))
         asP n
 
-    -- Two helper function mu2 and mu3
     nu2(m: P): Z ==
         s: Z := 1
         for f in factorList factor m repeat
@@ -354,9 +344,15 @@ $a\in X_c$.
     cuspToMatrix(m: P, cusp: Q): MZ ==
         a: Z := numer cusp
         c: Z := denom cusp
+        --assert(one? gcd(a,c))
+        --assert(zero?(m rem c)) -- holds for canonical cusps of Gamma0
         exgcd: EXGCD := extendedEuclidean(a, c)
         g: Z := exgcd.generator
         dprime: Z :=  exgcd.coef1
+        -- The extended Euclidean algorithm leave some freedom in the choice
+        -- of cofactors. We improve in the following in such a way to make
+        -- d as small as possible, since that corresponds to a d-th root
+        -- of unity in the coefficients of the transformed series.
         -- bprime: Z := -exgcd.coef2 -- ((not needed ))
         mc: Z := (m exquo c) :: Z
         u: Z := coprimePart(mc, c)
