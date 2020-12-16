@@ -265,7 +265,8 @@ QEtaCoFactor: Exports == Implementation where
       ++ modularConditions?(nn, s, mm, r, m, t) returns true iff all
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
       ++ fulfilled.
-      ++ Compare with rStarConditions from QAuxiliaryModularEtaQuotientPackage.
+      ++ Compare with modularEtaQuotient? from
+      ++ QAuxiliaryModularEtaQuotientPackage.
 
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
@@ -633,13 +634,10 @@ QEtaCoFactor: Exports == Implementation where
 
         nndivs: LP := DIVISORS nn
         #nndivs ~= #s =>
-            dbgPrint("size of s: nndivs", nndivs)
             dbgPrint("size of s: s", s)
             false
 
-        mmdivs: LP := DIVISORS mm
-        rhat: Z := 0 -- sigmaInfty
-        for delta in mmdivs for rdelta in r repeat rhat := rhat + delta * rdelta
+        rhat: Z := sigmaInfinity(mm, r)
         orb: List N := orbit(rhat, m, t)
         orbitSize: Z := # orb
 
@@ -651,31 +649,25 @@ QEtaCoFactor: Exports == Implementation where
             false
 
         --\eqref{eq:Radu-sigmainfinity}
-        shat: Z := 0
-        for delta in nndivs for sdelta in s repeat shat := shat + delta * sdelta
+        shat: Z := sigmaInfinity(nn, s)
         nu: Z := chiExponent(rhat, m, orb)
         z: Z := shat + orbitSize * m * rhat + nu
         not DIVISIBLEBY?(24, z) =>
-            dbgPrint("eq:Radu-sigmainfinity nndivs", nndivs)
             dbgPrint("eq:Radu-sigmainfinity s", s)
-            dbgPrint("eq:Radu-sigmainfinity mmdivs", mmdivs)
             dbgPrint("eq:Radu-sigmainfinity r", r)
             dbgPrint("eq:Radu-sigmainfinity orbitSize", orbitSize)
             dbgPrint("eq:Radu-sigmainfinity nu", nu)
             false
 
         --\eqref{eq:Radu-sigma0}
-        sv: Z := 0
-        for delta in reverse nndivs for sdelta in s repeat
-            sv := sv + delta * sdelta
-        rv: Z := 0
-        for delta in reverse mmdivs for rdelta in r repeat
-            rv := rv + delta * rdelta
-        f: Z := ((m * nn) exquo mm)::Z -- modularInputConditions \implies f \in Z
+        sv: Z := sigma0(nn, s)
+        rv: Z := sigma0(mm, r)
+        -- conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) \implies f \in Z
+        -- See conditionMmN?(nn, mm, r, m).
+        f: Z := ((m * nn) exquo mm)::Z
+
         not DIVISIBLEBY?(24, sv + orbitSize * f * rv) =>
-            dbgPrint("eq:Radu-sigma0 nndivs", nndivs)
             dbgPrint("eq:Radu-sigma0 s", s)
-            dbgPrint("eq:Radu-sigma0 mmdivs", mmdivs)
             dbgPrint("eq:Radu-sigma0 r", r)
             dbgPrint("eq:Radu-sigma0 orbitSize", orbitSize)
             false
