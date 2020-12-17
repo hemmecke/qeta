@@ -106,6 +106,9 @@ QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
+SIGMAINFINITY ==> sigmaInfinity $ QAuxMEQ
+SIGMA0 ==> sigma0 $ QAuxMEQ
+
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetafun.spad.
 -- Variable   <--> mathematical notation
@@ -294,16 +297,6 @@ QEtaCoFactor: Exports == Implementation where
       ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
-    sigmaInfinity: (P, List Z) -> Z
-      ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
-      ++ it is assumed that the entries of r correspond to the divisors
-      ++ of mm.
-      ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
-    sigma0: (P, List Z) -> Z
-      ++ sigma0(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
-      ++ it is assumed that the entries of r correspond to the divisors
-      ++ of mm.
-      ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
     alphaInfinity: (P, LZ, P, LZ, P, N) -> Z
       ++ If modularGamma0?(nn, s, mm, r, m, t) then
       ++ alphaInfinity(nn, s, mm, r, m, t) computes the order of the
@@ -363,7 +356,7 @@ QEtaCoFactor: Exports == Implementation where
 
     -- local function
     alphaAux(mm: P, r: LZ, gr: LLZ, t: N): Q ==
-        rhat: Z := sigmaInfinity(mm, r)
+        rhat: Z := SIGMAINFINITY(mm, r)
         grhat: Q := 0
         for l in gr repeat
             d: Z := l.1; g: Z := l.2; e: Z := l.3
@@ -393,17 +386,8 @@ QEtaCoFactor: Exports == Implementation where
             if not member?(e, result) then result := cons(e, result)
         result
 
-    -- local function
-    sigmaAux(divs: List P, r: List Z): Z ==
-        z: Z := 0
-        for d in divs for rd in r repeat z := z + d*rd
-        return z
-
-    sigmaInfinity(nn: P, r: List Z): Z == sigmaAux(DIVISORS nn, r)
-    sigma0(nn: P, r: List Z): Z == sigmaAux(reverse! DIVISORS nn, r)
-
     orbit(mm: P, r: List Z, m: P, t: N): List N ==
-        orbit(sigmaInfinity(mm, r), m, t)
+        orbit(SIGMAINFINITY(mm, r), m, t)
 
     chiExponent(sigmaInfty: Z, m: P, orb: List N): Z ==
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
@@ -471,7 +455,7 @@ QEtaCoFactor: Exports == Implementation where
         return true
 
     conditionSigma0?(nn: P, mm: P, r: LZ, m: P): Boolean ==
-        sv: Z := sigma0(mm, r)
+        sv: Z := SIGMA0(mm, r)
         x: Z := kappa(m)*m*nn*nn*sv
         DIVISIBLEBY?(24, (x exquo mm) :: Z)
 
@@ -481,7 +465,7 @@ QEtaCoFactor: Exports == Implementation where
         DIVISIBLEBY?(8, kappa(m)*nn*ssum)
 
     conditionNDivisor?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
-        a: Z := kappa(m)*(24*t + sigmaInfinity(mm, r))
+        a: Z := kappa(m)*(24*t + SIGMAINFINITY(mm, r))
         --assert(a = kappa(m)*numer(alphaAux(mm, r, [], t)))
         n: Z := 24*m
         w: Z := (n exquo gcd(a, n)) :: Z
@@ -506,7 +490,7 @@ QEtaCoFactor: Exports == Implementation where
     -- $\Gamma_1(N)$.
     conditionOrbitLength?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
         n: P := 24*m*mm
-        rhat := sigmaInfinity(mm, r)
+        rhat := SIGMAINFINITY(mm, r)
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn))
             one? gcd(j, n) => -- then 24|(j^2-1)
@@ -636,7 +620,7 @@ QEtaCoFactor: Exports == Implementation where
             dbgPrint("size of s: s", s)
             false
 
-        rhat: Z := sigmaInfinity(mm, r)
+        rhat: Z := SIGMAINFINITY(mm, r)
         orb: List N := orbit(rhat, m, t)
         orbitSize: Z := # orb
 
@@ -648,7 +632,7 @@ QEtaCoFactor: Exports == Implementation where
             false
 
         --\eqref{eq:Radu-sigmainfinity}
-        shat: Z := sigmaInfinity(nn, s)
+        shat: Z := SIGMAINFINITY(nn, s)
         nu: Z := chiExponent(rhat, m, orb)
         z: Z := shat + orbitSize * m * rhat + nu
         not DIVISIBLEBY?(24, z) =>
@@ -659,8 +643,8 @@ QEtaCoFactor: Exports == Implementation where
             false
 
         --\eqref{eq:Radu-sigma0}
-        sv: Z := sigma0(nn, s)
-        rv: Z := sigma0(mm, r)
+        sv: Z := SIGMA0(nn, s)
+        rv: Z := SIGMA0(mm, r)
         -- conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) \implies f \in Z
         -- See conditionMmN?(nn, mm, r, m).
         f: Z := ((m * nn) exquo mm)::Z
@@ -685,8 +669,8 @@ QEtaCoFactor: Exports == Implementation where
     alphaInfinity(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Z ==
         not modularGamma0?(nn, s, mm, r, m, t) =>
             error "input does not correspond to a modular function"
-        shat: Z := sigmaInfinity(nn, s)
-        rhat: Z := sigmaInfinity(mm, r)
+        shat: Z := SIGMAINFINITY(nn, s)
+        rhat: Z := SIGMAINFINITY(mm, r)
         orb: List N := orbit(rhat, m, t)
         alpha: Q := shat/24 + reduce(_+, [24*k+rhat for k in orb], 0)/(24*m)
         not one? denom alpha => error "alpha not an integer"
