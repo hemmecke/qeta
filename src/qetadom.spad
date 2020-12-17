@@ -234,8 +234,8 @@ EtaQuotient(C): Exports == Implementation where
       ++ list returns 1. All other cases are errors. It is also an
       ++ error if the conditions 0<d and 0<g<d/2 do not hold.
     generalizedEtaQuotient: List List Z -> %
-      ++ generalizedEtaQuotient(ll) returns the product (generalized)
-      ++ eta-powers for each list l in ll.
+      ++ generalizedEtaQuotient(rr) returns the product (generalized)
+      ++ eta-powers for each list l in rr.
 
 --    new: (Q, L) -> %
       ++ Only for internal use.
@@ -412,15 +412,15 @@ EtaQuotient(C): Exports == Implementation where
             error "generalizedEtaPower: only lists of lenght <= 3 allowed"
         generalizedEtaPower(asP d, asP g, e::Q)
 
-    generalizedEtaQuotient(ll: List List Z): % ==
-        empty? ll => 1
+    generalizedEtaQuotient(rr: List List Z): % ==
+        empty? rr => 1
         -- We want to avoid multiple recip computations, so we compute
         -- numerator and denominator separately and invert at the end.
         -- Exceptions are if an list element describes an etaPower,
         -- because then no inversion is needed.
         num?: Boolean := den? := false
         num: % := den := 1
-        for l in ll repeat
+        for l in rr repeat
             #l < 3 or l.3 > 0 =>
                 z: % := generalizedEtaPower l
                 if num? then num := num * z else (num := z; num? := true)

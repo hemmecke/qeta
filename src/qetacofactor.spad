@@ -217,15 +217,15 @@ QEtaCoFactor: Exports == Implementation where
       ++ \cite{Radu:RamanujanKolberg:2015}.
 
     conditionCoEtaQuotientGamma1?: (P, P, LLZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma01?(nn, mm, ll, m, t) returns true
+      ++ conditionCoEtaQuotientGamma01?(nn, mm, rr, m, t) returns true
       ++ iff the conditions in Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
       ++ just before Theorem 10.1 are fulfilled. These are conditions
       ++ for the existence of a product of eta- and generalized
       ++ eta-quotient to exist as a cofactor for a disection of such a
       ++ quotient.
-      ++ The parameter ll specifies the generalized eta-quotient via
-      ++ generalizedEtaQuotient(ll).
+      ++ The parameter rr specifies the generalized eta-quotient via
+      ++ generalizedEtaQuotient(rr).
 
     conditionOrbitLength?: (P, P, LZ, P, N) -> Boolean
       ++ conditionOrbitLength?(nn, mm, r, m, t) returns true if the
@@ -256,13 +256,14 @@ QEtaCoFactor: Exports == Implementation where
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     minimalLevelCoEtaQuotientGamma1: (P, LLZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma1(mm, ll, m, t) returns the
-      ++ smallest nn such that conditionCoEtaQuotientGamma1?(nn, mm,
-      ++ ll, m, t) is true, i.e. that (nn, mm, ll, m, t) fulfills the
-      ++ 10 conditions as defined in Section 10 of
+      ++ minimalLevelCoEtaQuotientGamma1(mm, rr, m, t) returns the
+      ++ smallest nn such that
+      ++ conditionCoEtaQuotientGamma1?(nn,mm,rr,m,t) is true, i.e.
+      ++ that (nn,mm,rr m,t) fulfills the 10 conditions as defined in
+      ++ Section 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-      ++ The parameter ll specifies the generalized eta-quotient via
-      ++ generalizedEtaQuotient(ll).
+      ++ The parameter rr specifies the generalized eta-quotient via
+      ++ generalizedEtaQuotient(rr).
 
     modularGamma0?: (P, LZ, P, LZ, P, N) -> Boolean
       ++ modularGamma0?(nn, s, mm, r, m, t) returns true iff all
@@ -290,7 +291,7 @@ QEtaCoFactor: Exports == Implementation where
       ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta r_\delta$.
       ++ See Lemma \ref{thm:chi-exponent}.
       ++ Furthermore, we assume that orb = orbit(sigmaInfty, m, t).
-    etaCoFactorSpace: (P, P, List Z, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ) -- List Z
+    etaCoFactorSpace: (P, P, List Z, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ)
       ++ etaCoFactorSpace(nn, mm, r, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
       ++ modularGamma0?(nn, members s, mm, r, m, t) is true for any
@@ -566,13 +567,13 @@ QEtaCoFactor: Exports == Implementation where
         return true
 
     -- condition for the disection of mixed-generalized eta-quotients
-    conditionCoEtaQuotientGamma1?(nn: P, mm: P, ll: LLZ, m: P, t: N): Boolean ==
+    conditionCoEtaQuotientGamma1?(nn: P, mm: P, rr: LLZ, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
         -- separate the true eta-quotient part from the generalized part
         -- i.e. extract an r-vector and a gr list.
         hr: XHashTable(Z, Z) := table() -- to compute r
         gr: LLZ := empty() -- specify all generalized eta-quotients
-        for l in ll | not empty? l repeat
+        for l in rr | not empty? l repeat
             d: Z := first l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
             #l = 1 => hr.d := 1
@@ -607,9 +608,9 @@ QEtaCoFactor: Exports == Implementation where
             conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
-    minimalLevelCoEtaQuotientGamma1(mm: P, ll: LLZ, m: P, t: N): P ==
+    minimalLevelCoEtaQuotientGamma1(mm: P, rr: LLZ, m: P, t: N): P ==
         for nn in 1..24*m*mm repeat
-            conditionCoEtaQuotientGamma1?(asP nn, mm, ll, m, t) => return asP nn
+            conditionCoEtaQuotientGamma1?(asP nn, mm, rr, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
     modularGamma0?(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Boolean ==
