@@ -261,8 +261,8 @@ QEtaCoFactor: Exports == Implementation where
       ++ The parameter ll specifies the generalized eta-quotient via
       ++ generalizedEtaQuotient(ll).
 
-    modularConditions?: (P, LZ, P, LZ, P, N) -> Boolean
-      ++ modularConditions?(nn, s, mm, r, m, t) returns true iff all
+    modularGamma0?: (P, LZ, P, LZ, P, N) -> Boolean
+      ++ modularGamma0?(nn, s, mm, r, m, t) returns true iff all
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
       ++ fulfilled.
       ++ Compare with modularGamma0? from QAuxiliaryModularEtaQuotientPackage.
@@ -290,7 +290,7 @@ QEtaCoFactor: Exports == Implementation where
     etaCoFactorSpace: (P, P, List Z, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ) -- List Z
       ++ etaCoFactorSpace(nn, mm, r, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
-      ++ modularConditions?(nn, members s, mm, r, m, t) is true for any
+      ++ modularGamma0?(nn, members s, mm, r, m, t) is true for any
       ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
@@ -305,7 +305,7 @@ QEtaCoFactor: Exports == Implementation where
       ++ of mm.
       ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
     alphaInfinity: (P, LZ, P, LZ, P, N) -> Z
-      ++ If modularConditions?(nn, s, mm, r, m, t) then
+      ++ If modularGamma0?(nn, s, mm, r, m, t) then
       ++ alphaInfinity(nn, s, mm, r, m, t) computes the order of the
       ++ q-expansion of $F_{s, r, m, t}$ as defined in qetafun.spad,
       ++ see~\eqref{eq:alphaInfinity}. It is the same as the \alpha as
@@ -628,7 +628,7 @@ QEtaCoFactor: Exports == Implementation where
             conditionCoEtaQuotientGamma1?(asP nn, mm, ll, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
-    modularConditions?(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Boolean ==
+    modularGamma0?(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Boolean ==
         not conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) => false
 
         nndivs: LP := DIVISORS nn
@@ -683,7 +683,7 @@ QEtaCoFactor: Exports == Implementation where
         true
 
     alphaInfinity(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Z ==
-        not modularConditions?(nn, s, mm, r, m, t) =>
+        not modularGamma0?(nn, s, mm, r, m, t) =>
             error "input does not correspond to a modular function"
         shat: Z := sigmaInfinity(nn, s)
         rhat: Z := sigmaInfinity(mm, r)
