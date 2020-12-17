@@ -128,7 +128,7 @@ ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
 asP x ==> x pretend P
 asN x ==> x pretend N
 
-QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
+QETAAUX ==> QEtaAuxiliaryPackage
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -152,7 +152,7 @@ QEtaQuotientExponentVectorsAux: with
       ++ rs := sortByComponentGrade(m, gens) sorts gens such that if
       ++ ri:=vector(rs.i), rj:=vector(rs.j), and i<j then
       ++ smallerGrade?(toG(ri, t).sgi, toG(rj, t).sgi) holds where
-      ++ t:=transpose(matrixLigozat(m)$QAuxMEQ) and toG computes
+      ++ t:=transpose(matrixLigozat(m)$QETAAUX) and toG computes
       ++ the respective sorted grades.
       ++ Informally, since the gens correspond to exponent vectors of
       ++ eta-quotients and t to the transpose of the Ligozat matrix,
@@ -182,7 +182,7 @@ QEtaQuotientExponentVectorsAux: with
 
     sortByComponentGrade(m: P, gens: List VZ): List List Z ==
         empty? gens => empty()
-        t: MZ := transpose(matrixLigozat(m)$QAuxMEQ)
+        t: MZ := transpose(matrixLigozat(m)$QETAAUX)
         ggens: List G := [toG(v, t) for v in gens]
         z := [members(g.rvec) for g in sort!(smallerGradeG?, ggens)]
 
@@ -305,7 +305,7 @@ QEtaQuotientMonoidExponentVectors: with
     -- Furthermore, if an r with non-integer entries is given, it
     -- automatically means that the conditions are not fulfilled.
     -- This implementation is a specialized form of
-    -- rStarConditions $ QAuxiliaryModularEtaQuotientPackage.
+    -- rStarConditions $ QEtaAuxiliaryPackage.
     -- We keep it as it was programmed first and is probably faster
     -- for the purpose it is used for. Furthermore, since
     -- etaQuotientMonoidExponentVectors$QEtaQuotientExponentVectors4ti2
@@ -503,7 +503,7 @@ QEtaQuotientExponentVectors4ti2: with
       ++ n is the number of divisors of n.
     etaQuotientMonoidExponentVectors: (P, List Z) -> List List Z
       ++ etaQuotientMonoidExponentVectors(m, idivs) computes the
-      ++ matrixLigozatRStar(m, idivs)$QAuxiliaryModularEtaQuotientPackage
+      ++ matrixLigozatRStar(m, idivs)$QEtaAuxiliaryPackage
       ++ and finds a basis of the solution space.
       ++ It computes the same as etaQuotientExponentVectors(m, idivs, 0).
     etaQuotientExponentVectors: (P, List Z, Z) -> List List Z
@@ -518,7 +518,7 @@ QEtaQuotientExponentVectors4ti2: with
       ++ are also taken into account.
     zsolve4ti2: (P, List Z, List Z) -> ZRESULT
       ++ zsolve4ti2(m, idivs, rhs) computes n:=#idivs,
-      ++ mat:=matrixLigozatRStar(m,idivs)$QAuxiliaryModularEtaQuotientPackage
+      ++ mat:=matrixLigozatRStar(m,idivs)$QEtaAuxiliaryPackage
       ++ and the column vector b whose first entries are given by rhs.
       ++ Note that the (n+1)-th entry corresponds to the weight.
       ++ See in the specification of matrixLigozatRStar about the meaning
@@ -530,7 +530,7 @@ QEtaQuotientExponentVectors4ti2: with
     -- \cite{Hemmecke+Radu:EtaRelations:2018}, the variable idivs
     -- should be [i for i in 1..n-1].
     zsolve4ti2(m: P, idivs: List Z, rhs: List Z): ZRESULT ==
-        mat: MZ := matrixLigozatRStar(m, idivs)$QAuxMEQ
+        mat: MZ := matrixLigozatRStar(m, idivs)$QETAAUX
         rows := nrows mat
         nidivs: N := #idivs
         --assert(#rhs=nidivs)
@@ -636,7 +636,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
-        rStar: MZ := rStarConditionMatrix(m)$QAuxMEQ
+        rStar: MZ := rStarConditionMatrix(m)$QETAAUX
         gens: List VZ := integerNullSpace rStar
         mat: MZ := matrix [entries v for v in gens]
         lat: MZ := LLL(mat)$LLLReduction
@@ -646,10 +646,10 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
-        rStar: MZ := rStarConditionMatrix(m)$QAuxMEQ
+        rStar: MZ := rStarConditionMatrix(m)$QETAAUX
         gens: List VZ := integerNullSpace rStar
         mat: MZ := matrix [[x for x in entries v for d in divs] for v in gens]
-        ligozat: MZ := matrixLigozat(m)$QAuxMEQ
+        ligozat: MZ := matrixLigozat(m)$QETAAUX
         ligozat := transpose ligozat
         ords := mat * ligozat
         rec: Record(lll: MZ, trf: MZ) := extendedLLL(ords)$LLLReduction

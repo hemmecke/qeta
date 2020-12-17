@@ -101,13 +101,13 @@ EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
-QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
+QETAAUX ==> QEtaAuxiliaryPackage
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
-SIGMAINFINITY ==> sigmaInfinity $ QAuxMEQ
-SIGMA0 ==> sigma0 $ QAuxMEQ
+SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
+SIGMA0 ==> sigma0 $ QETAAUX
 
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetafun.spad.
@@ -268,7 +268,7 @@ QEtaCoFactor: Exports == Implementation where
       ++ modularGamma0?(nn, s, mm, r, m, t) returns true iff all
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
       ++ fulfilled.
-      ++ Compare with modularGamma0? from QAuxiliaryModularEtaQuotientPackage.
+      ++ Compare with modularGamma0? from QEtaAuxiliaryPackage.
 
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
@@ -341,7 +341,7 @@ QEtaCoFactor: Exports == Implementation where
             -- \prod_{\delta|N}\delta^rdelta.
             e1: Z := 0
             for delta in rest nndivs for sdelta in rest s|odd? sdelta repeat
-                e1 := e1 + primePower(delta, p)$QAuxMEQ
+                e1 := e1 + primePower(delta, p)$QETAAUX
             e2: Z := 0
             if odd? orbitSize then
                 -- check 2nd prod in eq:Radu-productsquare
@@ -396,7 +396,7 @@ QEtaCoFactor: Exports == Implementation where
     etaCoFactorSpace(nn: P, mm: P, r: List Z, m: P, t: N): _
       Record(particular: Union(VZ, "failed"), basis: List VZ) ==
         -- Setup matrix. Then solve inhomogeneous system.
-        mat: MZ := rStarConditionMatrix(nn)$QAuxMEQ
+        mat: MZ := rStarConditionMatrix(nn)$QETAAUX
         nr: N := nrows mat
         divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
         d: VZ := vector divs
@@ -426,12 +426,12 @@ QEtaCoFactor: Exports == Implementation where
         else
             for i in 1..#fl for fe in fl repeat
                 p: P := asP(fe.factor) -- extract prime factor
-                em: N := primePower(m, p)$QAuxMEQ
+                em: N := primePower(m, p)$QETAAUX
                 -- for all divisors of mm > 1
                 e: Z := if odd? first r then em else 0 -- case: delta=1
                 for j in 2..n for rdelta in rest r | odd? rdelta repeat
                     -- Mod 2 only odd rdelta is relevant.
-                    e := e + em + primePower(asP(d.j), p)$QAuxMEQ
+                    e := e + em + primePower(asP(d.j), p)$QETAAUX
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.

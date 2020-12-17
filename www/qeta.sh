@@ -64,7 +64,7 @@ LX ==> QEtaLaurentSeries CX;
 MZ ==> Matrix Z -- consider only 2x2 matricies
 SL2Z ==> MZ -- matrices with determinant = 1
 
-QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage;
+QETAAUX ==> QEtaAuxiliaryPackage;
 SEDG ==> SymbolicEtaDeltaGamma;
 YEQG ==> SymbolicEtaQuotientGamma;
 EQG ==> EtaQuotientGamma(Q, mx, CX, xi);
@@ -127,7 +127,7 @@ vPrint("exponent vectors (list of r-vectors) rs", rs)
 vPrint("maximal root of unity", mx)
 if mx > 2 then _
   vPrint("The symbol ? corresponds to the n-th root of unity where n", mx)
-lerr := [r for r in rs | not modularGamma0?(m, r)\$QAuxMEQ];
+lerr := [r for r in rs | not modularGamma0?(m, r)\$QETAAUX];
 
 Rec ==> Record(r: List Z, trf: SL2Z, w: Z, lc: CX, xpower: Q, ser: LX)
 if not empty? lerr or not expansionAtAllCusps? then (_

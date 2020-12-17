@@ -1933,7 +1933,7 @@ LSL2Z ==> List SL2Z
 VZ ==> Vector Z
 OF ==> OutputForm
 GAMMA0 ==> CongruenceSubgroupGamma0
-QAuxMEQ ==> QAuxiliaryModularEtaQuotientPackage
+QETAAUX ==> QEtaAuxiliaryPackage
 
 asN x ==> x pretend N
 asP x ==> x pretend P
@@ -2040,7 +2040,7 @@ SymbolicEtaDeltaGamma: SetCategory with
         --assert(c>0)
         hdelta: Z := gcd(c, delta)
         rat: Q := hdelta/delta
-        rec: Rec := splitMatrix(gamma, delta)$QAuxMEQ
+        rec: Rec := splitMatrix(gamma, delta)$QETAAUX
         gamma1: SL2Z := rec.red
         gamma2: MZ := rec.triang
         b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
@@ -2053,7 +2053,7 @@ SymbolicEtaDeltaGamma: SetCategory with
         if udelta ~= a2/d2 then
             error "edelta does not match"
         vdelta: Q := b2/d2
-        kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
+        kappa: Z24 := upsilonExponent(gamma1)$QETAAUX
         per [m, delta, gamma, rat, kappa, edelta, udelta, vdelta]
 
     level(x: %): P == xx.flevel
@@ -2170,7 +2170,7 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ modularGamma0?(x) returns true if the eta quotient is a modular
       ++ function for Gamma0(level x), i.e, it returns
       ++ modularGamma0?(level x, exponents x) from
-      ++ QAuxiliaryModularEtaQuotientPackage.
+      ++ QEtaAuxiliaryPackage.
  == add
     HT ==> XHashTable(P, SymbolicEtaDeltaGamma) -- mapping delta to \eta_\delta
     Rep ==> Record(
@@ -2213,9 +2213,9 @@ SymbolicEtaQuotientGamma: SetCategory with
         -- and from the unityPower.
         -- Additionally, we have to consider the root of unity factor in
         -- q_\delta, i.e., the denominator of the v_\delta.
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QAuxMEQ
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
         p: P := rr.rootOf
-        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QAuxMEQ)
+        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QETAAUX)
         minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
         per [m, divs, r, gamma, eta, rat, upower, xexponent, qexponent, minroot]
 
@@ -2241,7 +2241,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
     modularGamma0?(x: %): Boolean ==
-        modularGamma0?(level x, exponents x)$QAuxMEQ
+        modularGamma0?(level x, exponents x)$QETAAUX
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
@@ -2465,14 +2465,14 @@ SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
 
     eta(mm: P, delta: P, m: P, lambda: N, gamma: SL2Z): % ==
         --assert(gamma(2, 1)>0)
-        rec: Rec := splitMatrix(gamma, delta, m, lambda)$QAuxMEQ
+        rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
         gamma1: SL2Z := rec.red
         gamma2: MZ := rec.triang
         a2: Z := gamma2(1, 1); b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
         rat: Q := a2/delta -- = hdelta/delta
         udelta: Q := a2/d2 -- = hdelta^2/delta/m
         vdelta: Q := b2/d2
-        kappa: Z24 := upsilonExponent(gamma1)$QAuxMEQ
+        kappa: Z24 := upsilonExponent(gamma1)$QETAAUX
         per [mm, delta, m, lambda, gamma, rat, kappa, udelta, vdelta]
 
     level(x: %): P == xx.flevel
@@ -2687,9 +2687,9 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
         -- and from the unityPower.
         -- Additionally, we have to consider the root of unity factor in
         -- q_\delta, i.e., the denominator of the v_\delta.
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QAuxMEQ
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
         p: P := rr.rootOf
-        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QAuxMEQ)
+        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QETAAUX)
         minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
         per [mm, divs, r, m, t, lambda, gamma, eta, rat, upower, qexponent, minroot]
 
@@ -3244,7 +3244,7 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
         substitute(power!(efc, rd)$CachedPower(LX), u, v)
 
     squareRoot(fq: Q): CX ==
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QETAAUX
         ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
     coerce(e: SymbolicEtaQuotientGamma): % ==
@@ -3339,7 +3339,7 @@ ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
         m: P := level y
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
-        if not modularGamma0?(m, exponents y)$QAuxMEQ then
+        if not modularGamma0?(m, exponents y)$QETAAUX then
             dbgPrint("METAQ coerce: not a modular function", exponents y)
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
@@ -3431,7 +3431,7 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.
     squareRoot(fq: Q): CX ==
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QAuxMEQ
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QETAAUX
         ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
 -------------------------------------------------------------------
@@ -3679,7 +3679,7 @@ QEtaModularFunctionGamma0: Exports == Implementation where
     LX ==> QEtaLaurentSeries CX
     YMSETAQ ==> SymbolicModularSiftedEtaQuotient
     MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi)
-    a ==> aLigozat $ QAuxMEQ
+    a ==> aLigozat $ QETAAUX
 
     -- order of eta^r at cusp a/c.
     grade(nn: P, divs: LP, c: Z, r: LZ): Z ==
