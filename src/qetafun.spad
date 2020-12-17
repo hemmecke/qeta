@@ -2166,10 +2166,10 @@ SymbolicEtaQuotientGamma: SetCategory with
     elt: (%, P) -> SymbolicEtaDeltaGamma
       ++ elt(x, delta) returns the data corresponding to the respective
       ++ delta.
-    modular?: % -> Boolean
-      ++ modular?(x) returns true if the eta quotient is a modular
+    modularGamma0?: % -> Boolean
+      ++ modularGamma0?(x) returns true if the eta quotient is a modular
       ++ function for Gamma0(level x), i.e, it returns
-      ++ modularEtaQuotient?(level x, exponents x) from
+      ++ modularGamma0?(level x, exponents x) from
       ++ QAuxiliaryModularEtaQuotientPackage.
  == add
     HT ==> XHashTable(P, SymbolicEtaDeltaGamma) -- mapping delta to \eta_\delta
@@ -2240,7 +2240,8 @@ SymbolicEtaQuotientGamma: SetCategory with
     xExponent(x: %): Z == xx.fxExponent
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
-    modular?(x: %): Boolean == modularEtaQuotient?(level x, exponents x)$QAuxMEQ
+    modularGamma0?(x: %): Boolean ==
+        modularGamma0?(level x, exponents x)$QAuxMEQ
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
@@ -3197,7 +3198,7 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
       ++ p = (xExponent y) / 24,
       ++ s = eulerExpansion e.
     expansion: % -> LX
-      ++ expansion(e) should only be called if modular?(e) holds,
+      ++ expansion(e) should only be called if modularGamma0?(e) holds,
       ++ otherwise it might return an error.
       ++ expansion(e) returns the series expansion of e in terms of
       ++ x = \exp(2 \pi i \tau/w) where w=width(m, c),
@@ -3205,9 +3206,10 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
     leadingCoefficient: % -> CX
       ++ leadingCoefficient(x) returns the coefficient corresponding
       ++ to the smallest q-power with non-zero coefficient.
-    modular?: % -> Boolean
-      ++ modular?(x) returns true if the eta quotient is a modular function
-      ++ for Gamma0(nn) where nn=level(symbolicEtaQuotient x).
+    modularGamma0?: % -> Boolean
+      ++ modularGamma0?(x) returns true if the eta quotient is a
+      ++ modular function for Gamma0(nn) where
+      ++ nn=level(symbolicEtaQuotient x).
   Implementation ==> add
     Rep ==> Record(fsymetaquo: SymbolicEtaQuotientGamma, lc: CX, ser: LX)
     -- The true series expansion of e is given by c * x^p * s where
@@ -3270,7 +3272,7 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
         ord: Z := (xExponent(y) exquo 24)::Z -- order of series
         monomial(lc, ord)$LX * eulerExpansion x
 
-    modular?(x: %): Boolean == modular? symbolicEtaQuotient x
+    modularGamma0?(x: %): Boolean == modularGamma0? symbolicEtaQuotient x
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     ((x: %) = (y: %)): Boolean == symbolicEtaQuotient x = symbolicEtaQuotient y
@@ -3337,7 +3339,7 @@ ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
         m: P := level y
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
-        if not modularEtaQuotient?(m, exponents y)$QAuxMEQ then
+        if not modularGamma0?(m, exponents y)$QAuxMEQ then
             dbgPrint("METAQ coerce: not a modular function", exponents y)
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
