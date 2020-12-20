@@ -271,6 +271,13 @@ QEtaCoFactor: Exports == Implementation where
       ++ fulfilled.
       ++ Compare with modularGamma0? from QEtaAuxiliaryPackage.
 
+    modularGamma1?: (P, LLZ, P, LLZ, P, N) -> Boolean
+      ++ modularGamma0?(nn, ss, mm, rr, m, t) returns true iff all the
+      ++ conditions of Theorem~10.1 of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+      ++ are fulfilled. Here the parameter ss stands for the exponents
+      ++ a_\delta and a_{\delta,g}.
+
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
       ++ $\modularOrbit{r,m,t)$ as defined in qetafun.spad,
@@ -298,6 +305,13 @@ QEtaCoFactor: Exports == Implementation where
       ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
+    etaCoFactorSpace: (P, P, LLZ, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ)
+      ++ etaCoFactorSpace(nn, mm, rr, m, t) returns a vector v and the
+      ++ basis of a space such that #v=#divisors(nn) and
+      ++ modularGamma1?(nn, ss, mm, r, m, t) is true for any
+      ++ ss = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
+      ++ and any sufficiently long list z of integers.
+      ++ The function fails, if there is no such solution.
     alphaInfinity: (P, LZ, P, LZ, P, N) -> Z
       ++ If modularGamma0?(nn, s, mm, r, m, t) then
       ++ alphaInfinity(nn, s, mm, r, m, t) computes the order of the
@@ -306,9 +320,6 @@ QEtaCoFactor: Exports == Implementation where
       ++ defined in the abstract of \cite{Radu:RamanujanKolberg:2015},
       ++ DOI=10.1016/j.jsc.2017.02.001,
       ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf.
-    fractionalBernoulli2: Q -> Q
-      ++ fractionalBernoulli2(x) computes t^2 - t + 1/6 where t is the
-      ++ fractional part of x, i.e., t = x - floor(x)
 
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
@@ -328,6 +339,20 @@ QEtaCoFactor: Exports == Implementation where
         -- \cite[Def.~41]{Radu:RamanujanKolberg:2015}
         z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
         asN z
+
+    splitEtaQuotientSpecification(mm: P, rr: LLZ):
+      Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) ==
+        hr: XHashTable(Z, Z) := table() -- to compute r
+        gr: LLZ := empty() -- specify all generalized eta-quotients
+        for l in rr | not empty? l repeat
+            d: Z := first l
+            d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
+            #l = 1 => hr.d := 1
+            #l = 2 => hr.d := l.2
+            #l = 3 => gr := cons(l, gr)
+            error "splitEtaQuotientSpecification: list length > 3"
+        r: LZ := [elt(hr, d, 0) for d in divisors(mm)$INTF]
+        [r, gr]
 
     -- Return true iff \eqref{eq:Radu-productsquare} holds.
     checkSquare?(nn: P, s: LZ, mm: P, r: LZ, m: P, orbitSize: Z): Boolean ==
@@ -356,13 +381,37 @@ QEtaCoFactor: Exports == Implementation where
         return true
 
     -- local function
+    -- return true if for some a in
+    -- \cite[Thm~10.1(4)]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+    -- the condition is true.
+    checkSquare1?(nn: P, s: LZ, gs: LLZ, mm: P, r: LZ, gr: LLZ, m: P,
+                 a: Z): Boolean ==
+        --assert(one? gcd(a, d)) for every divisor of nn (and of mm).
+        z: Z := 1
+        nndivs: List P := DIVISORS nn
+        mmdivs: List P := DIVISORS mm
+        for d in nndivs for sd in s repeat if odd? sd then z := z * jacobi(d, a)
+        for d in mmdivs for rd in r repeat
+            if odd? rd then z := z * jacobi(m*d, a)
+        zero? z => error "checkSquare1?: zero jacobi symbol"
+
+        expo: Q := 0
+        for l in gr repeat --assert(#l=3) -- l=[d,g,e]
+            not DIVISIBLEBY?(l.1, mm) =>
+                error "checkSquare1?: delta is not a divisor"
+            expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
+        for l in gs repeat --assert(#l=3) -- l=[d,g,e]
+            not DIVISIBLEBY?(l.1, nn) =>
+                error "checkSquare1?: delta is not a divisor"
+            expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
+        expo := (a-1) * expo -- this should give an integer
+        not one? denom expo => error "checkSquare1?: expo not integral"
+
+        (z > 0 and even? numer expo) or (z < 0 and odd? numer expo)
+
+    -- local function
     alphaAux(mm: P, r: LZ, gr: LLZ, t: N): Q ==
-        rhat: Z := SIGMAINFINITY(mm, r)
-        grhat: Q := 0
-        for l in gr repeat
-            d: Z := l.1; g: Z := l.2; e: Z := l.3
-            grhat := grhat + (d*e)*fractionalBernoulli2(g/d)
-        (24*t + rhat)::Q + 12*grhat
+        (24*t)::Q + SIGMAINFINITY(mm, r, gr)
 
     -- exported functions
 
@@ -396,10 +445,13 @@ QEtaCoFactor: Exports == Implementation where
 
     etaCoFactorSpace(nn: P, mm: P, r: List Z, m: P, t: N): _
       Record(particular: Union(VZ, "failed"), basis: List VZ) ==
+        not conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) =>
+            error "conditionCoEtaQuotientGamma0 not met"
+
         -- Setup matrix. Then solve inhomogeneous system.
         mat: MZ := rStarConditionMatrix(nn)$QETAAUX
         nr: N := nrows mat
-        divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
+        divs: List Z := divisors(mm)$INTF
         d: VZ := vector divs
         n: N := # divs
         w: Z := 0
@@ -436,6 +488,107 @@ QEtaCoFactor: Exports == Implementation where
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
+        diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+
+    etaCoFactorSpace(nn: P, mm: P, rr: List List Z, m: P, t: N): _
+      Record(particular: Union(VZ, "failed"), basis: List VZ) ==
+        -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+
+        not conditionCoEtaQuotientGamma1?(nn, mm, rr, m, t) =>
+            error "conditionCoEtaQuotientGamma1 not met"
+
+        nndivs: List P := DIVISORS nn
+        numOfVars: N := 0 -- number of the s_d and s_{d,g} variables
+        for d in nndivs repeat numOfVars := numOfVars + asN ceiling(d/2)
+
+        -- rows/cols for condition (4)
+        k: N := 0 -- need k more rows and k slack variable
+        for i in 1..11 repeat if one? gcd(i*nn+1, 6) then k := k + 1
+
+        cols: N := numOfVars+k+2 -- the 2 is for mod 24 slack variables
+        rows: N := k+3 -- for conditions (4) + conditions (1), (2), (3)
+        -- The matrix columns correspond to the following variables
+        -- (in this order).
+        -- [a(d) for d in nndivs]
+        -- [[a(d,g) for g in 1..ceiling(d/2)-1] for d in nndivs]
+        mat: MZ := new(rows, cols, 0)
+        v: VZ := new(rows, 0)
+
+        rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+            splitEtaQuotientSpecification(mm, rr)
+        r: LZ := rrec.etaQuotientExponents
+        gr: LLZ := rrec.generalizedParameters
+        n: Z := # nndivs
+
+        -- Condition (1)
+        for d in nndivs for j in 1..n repeat qsetelt!(mat, 1, j, 1)
+        v.1 := - reduce(_+, r, 0) -- fill right-hand side
+
+        -- Condition (2) and slack variable for mod 24
+        jj: Z := 0
+        for d in reverse nndivs for j in 1..n repeat
+            -- Note that we reverse nndivs!
+            qsetelt!(mat, 2, j, d)
+            for g in 1..ceiling(d/2)-1 repeat
+                jj := jj + 1
+                qsetelt!(mat, 2, n + jj, 2*d)
+        qsetelt!(mat, 2, numOfVars+1, 24) -- slack variable for (mod 24)
+        v.2 := - m * SIGMA0(mm, r, gr) -- fill right-hand side
+
+        -- Condition (3) and slack variable for mod 24
+        -- We multiply the entries and the rhs by nn to remove denominators.
+        jj := 0
+        for d in nndivs for j in 1..n repeat
+            qsetelt!(mat, 3, j, nn*d)
+            for g in 1..ceiling(d/2)-1 repeat
+                jj := jj + 1
+                x: Z := 12*numer(nn*d*fractionalBernoulli2(g/d)$QETAAUX)
+                qsetelt!(mat, 3, n + jj, x)
+        qsetelt!(mat, 3, numOfVars+2, 24*nn) -- slack variable for (mod 24)
+
+        -- fill right-hand side
+        --assert(DIVISIBLEBY?(mm, nn))
+        nnrrhat: Z := numer(nn*SIGMAINFINITY(mm, r, gr)) -- is integral
+        nnalpha: Z := nnrrhat + 24*t*nn -- nn*alphaAux(mm, r, gr, t)
+        q: Q := nnalpha*(m^2-1)/m -- intermediate
+        -- Security check. Should never fail because of Condition 8 on page 37
+        -- of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+        not one? denom q => error "etaCoFactorSpace: nnalpha not divisible by m"
+        v.3 := - (m*nnrrhat - numer q)
+
+        -- Condition (4) and slack variable for mod 2 for all a
+        ii: Z := 3
+        mmdivs: List P := DIVISORS mm
+        for i in 1..11 repeat
+            a: Z := nn*i+1
+            one? gcd(a,6) =>
+                ii := ii+1
+                -- setEntries!(mat, v, n, ii, ...)
+                expo: Q := 0
+                for l in gr repeat --assert(#l=3) -- l=[d,g,e]
+                    not DIVISIBLEBY?(l.1, mm) =>
+                        error "etaCoFactorSpace: delta is not a divisor"
+                    expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
+                expo := (a-1)*expo
+                not one? denom expo =>
+                    error "etaCoFactorSpace: exponent not integral"
+                isOdd?: Boolean := odd? numer expo
+                for d in mmdivs for rd in r | odd? rd repeat
+                    if jacobi(m*d, a) < 0 then isOdd? := not isOdd?
+                if isOdd? then v.ii := 1 -- fill right-hand side
+
+                qsetelt!(mat, ii, n+ii-1, 2) -- slack variable for (mod 2)
+                jj := 0
+                for d in nndivs for j in 1..n repeat
+                    if jacobi(d, a) < 0 then qsetelt!(mat, ii, j, 1)
+                    for g in 1..ceiling(d/2)-1 repeat
+                        jj := jj + 1
+                        q := (a-1)*(g/d-1/2)
+                        not one? denom q =>
+                            error "etaCoFactorSpace: e exponent not integral"
+                        if odd? numer q then qsetelt!(mat, ii, n + jj, 1)
+
+        -- We have to solve mat*z=v for some integer vector z.
         diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
     conditionPrimeDivisors?(nn: P, m: P): Boolean ==
@@ -509,7 +662,7 @@ QEtaCoFactor: Exports == Implementation where
 
     conditionCoEtaQuotientGamma1?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
-        zero?(nn rem mm) -- M|N
+        DIVISIBLEBY?(mm, nn) -- M|N
          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
           and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
            and conditionSigma0?(nn, mm, r, m) --\eqref{eq:sv24}
@@ -542,11 +695,6 @@ QEtaCoFactor: Exports == Implementation where
         x: Q := kappa(m)*nn*nn*rv
         one? denom x and DIVISIBLEBY?(12, numer x)
 
-    -- local function
-    fractionalBeroulli2(x: Q): Q ==
-        t: Q := x - floor(x)::Q
-        t^2 - t + 1/6
-
     -- CDZ condition 8 (p. 37)
     conditionNDivisor?(nn: P, mm: P, r: LZ, gr: LLZ, m: P,t: N): Boolean ==
         a: Z := kappa(m)*numer(mm*alphaAux(mm, r, gr, t))
@@ -571,17 +719,10 @@ QEtaCoFactor: Exports == Implementation where
         t >= m => error "0<=t<m is a necessary condition"
         -- separate the true eta-quotient part from the generalized part
         -- i.e. extract an r-vector and a gr list.
-        hr: XHashTable(Z, Z) := table() -- to compute r
-        gr: LLZ := empty() -- specify all generalized eta-quotients
-        for l in rr | not empty? l repeat
-            d: Z := first l
-            d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
-            #l = 1 => hr.d := 1
-            #l = 2 => hr.d := l.2
-            #l = 3 => gr := cons(l, gr)
-            error "conditionCoEtaQuotientGamma1?: list length > 3"
-        mmdivs: LP := DIVISORS mm
-        r: LZ := [elt(hr, d, 0) for d in mmdivs]
+        rec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+            splitEtaQuotientSpecification(mm, rr)
+        r: LZ := rec.etaQuotientExponents
+        gr: LLZ := rec.generalizedParameters
 
         zero?(nn rem mm) -- M|N
          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
@@ -664,6 +805,66 @@ QEtaCoFactor: Exports == Implementation where
             dbgPrint("eq:Radu-productsquare r", r)
             dbgPrint("eq:Radu-productsquare orbitSize", orbitSize)
             false
+
+        true
+
+    modularGamma1?(nn: P, ss: LLZ, mm: P, rr: LLZ, m: P, t: N): Boolean ==
+        not conditionCoEtaQuotientGamma1?(nn, mm, rr, m, t) => false
+
+        -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+        rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+            splitEtaQuotientSpecification(mm, rr)
+        r: LZ := rrec.etaQuotientExponents
+        gr: LLZ := rrec.generalizedParameters
+
+        srec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+            splitEtaQuotientSpecification(nn, ss)
+        s: LZ := srec.etaQuotientExponents
+        gs: LLZ := srec.generalizedParameters
+
+        -- Condition (1)
+        not zero?(reduce(_+, s, 0) + reduce(_+, r, 0)) =>
+            dbgPrint("Chen: Theorem 10.1(1) nn", nn)
+            dbgPrint("Chen: Theorem 10.1(1) ss", ss)
+            dbgPrint("Chen: Theorem 10.1(1) mm", mm)
+            dbgPrint("Chen: Theorem 10.1(1) rr", rr)
+            false
+
+        -- Condition (2)
+        rrv: Z := SIGMA0(mm, r, gr)
+        ssv: Z := SIGMA0(nn, s, gs)
+        z: Z := ssv + m*rrv
+        not DIVISIBLEBY?(24, z) =>
+            dbgPrint("Chen: Theorem 10.1(2) nn", nn)
+            dbgPrint("Chen: Theorem 10.1(2) ss", ss)
+            dbgPrint("Chen: Theorem 10.1(2) mm", mm)
+            dbgPrint("Chen: Theorem 10.1(2) rr", rr)
+            dbgPrint("Chen: Theorem 10.1(2) z", z)
+            false
+
+        -- Condition (3)
+        rrhat: Q := SIGMAINFINITY(mm, r, gr)
+        sshat: Q := SIGMAINFINITY(nn, s, gs)
+        alpha: Q := rrhat + (24*t)::Q -- alphaAux(mm, r, gr, t)
+        q: Q := sshat + m*rrhat - ((m^2-1)/m)*alpha
+        not one? denom q or not DIVISIBLEBY?(24, z) => --shouldn't happen
+            dbgPrint("Chen: Theorem 10.1(3) nn", nn)
+            dbgPrint("Chen: Theorem 10.1(3) ss", ss)
+            dbgPrint("Chen: Theorem 10.1(3) mm", mm)
+            dbgPrint("Chen: Theorem 10.1(3) rr", rr)
+            dbgPrint("Chen: Theorem 10.1(3) q", q)
+            false
+
+        -- Condition (4)
+        for i in 1..11 repeat
+            a: Z := nn*i+1
+            one? gcd(a,6) and not checkSquare1?(nn,s,gs,mm,r,gr,m,a) =>
+                dbgPrint("Chen: Theorem 10.1(4) nn", nn)
+                dbgPrint("Chen: Theorem 10.1(4) ss", ss)
+                dbgPrint("Chen: Theorem 10.1(4) mm", mm)
+                dbgPrint("Chen: Theorem 10.1(4) rr", rr)
+                dbgPrint("Chen: Theorem 10.1(4) a", a)
+                return false
 
         true
 

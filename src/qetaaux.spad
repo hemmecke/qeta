@@ -132,11 +132,33 @@ QEtaAuxiliaryPackage: with
       ++ it is assumed that the entries of r correspond to the divisors
       ++ of mm.
       ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
+    sigmaInfinity: (P, List List Z) -> Q
+      ++ sigmaInfinity(mm, gr) returns
+      ++ \sum_{delta|mm,0<g<delta/2}
+      ++      delta*fractionalBernoulli2(g/delta)*r_{delta,g}
+      ++ or rather
+      ++ \sum_{l \in gr}(d*fractionalBernoulli2(g/d)*e | (d,g,e)=l).
+      ++ We assume here that everly element of gr is of the form
+      ++ [d,g,e] and describes the generalized eta-power \eta_{d,g}^e
+    sigmaInfinity: (P, List Z, List List Z) -> Q
+      ++ sigmaInfinity(mm, r, gr) returns
+      ++ sigmaInfinity(mm, r) + 12*sigmaInfinity(mm, gr).
     sigma0: (P, List Z) -> Z
       ++ sigma0(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
       ++ of mm.
       ++ It corresponds to \eqref{eq:sumdelta} in qetafun.spad.
+    sigma0: (P, List List Z) -> Z
+      ++ sigma0(mm, gr) returns
+      ++ \sum_{delta|mm, 0<g<delta/2} (mm/delta)*r_{delta,g}
+      ++ or rather \sum_{l \in gr}((mm/d)*e | (d,g,e)=l).
+      ++ We assume here that everly element of gr is of the form
+      ++ [d,g,e] and describes the generalized eta-power \eta_{d,g}^e
+    sigma0: (P, List Z, List List Z) -> Z
+      ++ sigma0(mm, r, gr) returns sigma0(mm, r) + 2*sigma0(mm, gr).
+    fractionalBernoulli2: Q -> Q
+      ++ fractionalBernoulli2(x) computes t^2 - t + 1/6 where t is the
+      ++ fractional part of x, i.e., t = x - floor(x)
     aLigozat: (P, Z, Z) -> Z
       ++ aLigozat(m, c, delta) computes an entry of the matrix of
       ++ Ligozat corresponding to the index (c, delta) counted in
@@ -243,15 +265,39 @@ QEtaAuxiliaryPackage: with
   == add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
     FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
+    DIVISIBLEBY?(k, z) ==> zero?(z rem k)
 
     -- local function
+    fractionalBernoulli2(x: Q): Q ==
+        t: Q := x - floor(x)::Q
+        t^2 - t + 1/6
+
     sigmaAux(divs: List P, r: List Z): Z ==
         z: Z := 0
         for d in divs for rd in r repeat z := z + d*rd
         return z
 
-    sigmaInfinity(nn: P, r: List Z): Z == sigmaAux(DIVISORS nn, r)
-    sigma0(nn: P, r: List Z): Z == sigmaAux(reverse! DIVISORS nn, r)
+    sigmaInfinity(mm: P, r: List Z): Z == sigmaAux(DIVISORS mm, r)
+    sigmaInfinity(mm: P, gr: List List Z): Q ==
+        res: Q := 0
+        for l in gr repeat --assert(#l=3)
+            not DIVISIBLEBY?(l.1, mm) =>
+                error "sigmaInfinity: delta is not a divisor"
+            res := res + l.1 * l.3 * fractionalBernoulli2(l.2/l.1)
+        res
+
+    sigmaInfinity(mm: P, r: List Z, gr: List List Z): Q ==
+        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, gr)
+
+    sigma0(mm: P, r: List Z): Z == sigmaAux(reverse! DIVISORS mm, r)
+    sigma0(mm: P, gr: List List Z): Z ==
+        z: Z := 0
+        for l in gr repeat --assert(#l=3)
+            z := z + l.3 * ((mm exquo l.1)::Z)
+        z
+
+    sigma0(mm: P, r: List Z, gr: List List Z): Z ==
+        sigma0(mm, r) + 2*sigma0(mm, gr)
 
     -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
     -- aLigozat(m, di, dj) here corresponds to a_m(di, dj) in
