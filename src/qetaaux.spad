@@ -93,6 +93,7 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 MZ ==> Matrix Z -- will be a square matrix
+MQ ==> Matrix Q -- matrixEtaOrder
 SL2Z ==> MZ -- represents SL_2(Z)
 Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
@@ -248,6 +249,27 @@ QEtaAuxiliaryPackage: with
       ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
       ++ highest power e such that p^e is a factor of d.
 
+    matrixEtaOrder: (P, Q, P, Z) -> Q
+      ++ matrixEtaOrder(nn, cusp, delta, g) for g=-1 returns the order
+      ++ of \eta(delta*tau) at the respective cusp of Gamma1(nn). For g
+      ++ in the range 0..delta, it returns the order of
+      ++ \eta_{delta,g}(tau) at the respective cusp of Gamma1(nn). See
+      ++ \cite[Thm.~4.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+      ++ and \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994}.
+
+    matrixEtaOrder: P -> MQ
+      ++ matrixEtaOrder(nn) returns a matrix that is similar to
+      ++ matrixLigozat(nn). It allows the compution of the order of
+      ++ generalized eta-quotients at all cusps of Gamma1(nn). The
+      ++ rows of the matrix are sorted according to
+      ++ cusps(nn)$CongruenceSubgroupGamma1, i.e., sorted first by
+      ++ denominator and then (among the cusps with the same
+      ++ denominator) by the numerator of the cusp.
+      ++ The matrix columns correspond to the following generalized
+      ++ eta-functions (in this order).
+      ++ [eta(d\tau) for d in divsors(nn)]
+      ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)].
+
 -------------------------------------------------------------------
 -- Temporarily exported
 -------------------------------------------------------------------
@@ -267,6 +289,13 @@ QEtaAuxiliaryPackage: with
     FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
     DIVISIBLEBY?(k, z) ==> zero?(z rem k)
 
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Local functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
     -- local function
     fractionalBernoulli2(x: Q): Q ==
         t: Q := x - floor(x)::Q
@@ -278,26 +307,14 @@ QEtaAuxiliaryPackage: with
         return z
 
     sigmaInfinity(mm: P, r: List Z): Z == sigmaAux(DIVISORS mm, r)
-    sigmaInfinity(mm: P, gr: List List Z): Q ==
-        res: Q := 0
-        for l in gr repeat --assert(#l=3)
-            not DIVISIBLEBY?(l.1, mm) =>
-                error "sigmaInfinity: delta is not a divisor"
-            res := res + l.1 * l.3 * fractionalBernoulli2(l.2/l.1)
-        res
-
-    sigmaInfinity(mm: P, r: List Z, gr: List List Z): Q ==
-        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, gr)
-
     sigma0(mm: P, r: List Z): Z == sigmaAux(reverse! DIVISORS mm, r)
-    sigma0(mm: P, gr: List List Z): Z ==
-        z: Z := 0
-        for l in gr repeat --assert(#l=3)
-            z := z + l.3 * ((mm exquo l.1)::Z)
-        z
 
-    sigma0(mm: P, r: List Z, gr: List List Z): Z ==
-        sigma0(mm, r) + 2*sigma0(mm, gr)
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Related to Eta Quotients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
 
     -- Compute B_N and V_N as in \cite{Hemmecke+Radu:EtaRelations:2018}.
     -- aLigozat(m, di, dj) here corresponds to a_m(di, dj) in
@@ -391,6 +408,13 @@ QEtaAuxiliaryPackage: with
             qsetelt!(mat, n+i, j, qelt(matRStar, i, j))
         return mat
 
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Related to Transformations of Eta Quotients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
     jacobiLowerStar(c: Z, d: Z): Z == -- result either 1 or -1
         --assert(one? gcd(c,d))
         --aaawer(odd? d)
@@ -471,6 +495,7 @@ QEtaAuxiliaryPackage: with
         [m1, m2]$Rec
 
 )if LiterateDoc
+% $
 
 We use \cite[Lemma~2.45]{Radu:PhD:2010} to compute the cusps of
 $\Gamma_0(N)$ as the set of all $\frac{a}{c}$ such that $c|N$ and
@@ -504,8 +529,6 @@ $a\in X_c$.
         pol: Pol := cyclotomic(x.root)$CyclotomicPolynomialPackage
         C ==> SimpleAlgebraicExtension(Z, Pol, pol)
         z: C := convert(x.elem)@C
---        dbgPrint("elem", z)
---        dbgPrint("square", z*z)
         convert(z*z)@Vector(Z)
 
     minimalSquareRootOfUnity(x: P): P ==
@@ -520,6 +543,147 @@ $a\in X_c$.
         x: Z := d
         while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
         return e
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Related to Generalized Eta Quotients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A generalized eta-quotient $\phi(\tau)$ is given by
+\begin{gather*}
+  \prod_{\substack{\divides{\delta}{N}\\0\le g \le
+      \lfloor\delta/2\rfloor}} \eta_{\delta,g}(\tau)^{r_{\delta,g}}
+\end{gather*}
+where
+\begin{gather}
+  r_{\delta,g}\in
+  \begin{cases}
+    \frac{1}{2}\setZ & \text{if $g=0$ or $g=\frac{\delta}{2}$},\\
+    \setZ & \text{otherwise}.
+  \end{cases}
+\end{gather}
+Since
+\begin{align*}
+    \eta_{\delta,0}(\tau)
+    &= \eta(\delta\tau)^2
+    &
+    \eta_{\delta,\frac{\delta}{2}}(\tau)
+    &=
+    \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2}
+\end{align*}
+if $\frac{\delta}{2}\in\setN$ we represent a generalized eta quotient as
+\begin{gather*}
+  \phi(\tau)=
+  \prod_{\delta|N} \eta(\delta\tau)^{r_{\delta}}
+  \prod_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \eta_{\delta,g}(\tau)^{r_{\delta,g}}
+\end{gather*}
+where $r_\delta, r_{\delta,g} \in\setZ$ for every
+$\divides{\delta}{N}$ and $0 < g< \frac{\delta}{2}$.
+
+Let $\delta_1<\delta_2< \ldots < \delta_n$ be the positive divisors
+of $N$.
+
+We sort the variables by their indices like this.
+\begin{gather}
+  \delta_1, \delta_2, \ldots, \delta_n,
+  (\delta_2,1),\ldots, \Bigl(\delta_2,
+  \Bigl\lceil\frac{\delta_2}{2} \Bigr\rceil-1\Bigr),
+  \ldots,
+  (\delta_n,1),
+  \ldots,
+  \Bigl(\delta_n,\Bigl\lceil\frac{\delta_n}{2}\Bigr\rceil-1\Bigr)
+  \label{eq:sorted-indices}
+\end{gather}
+Note that $\delta_1=1$ and $\delta_n=N$. Therefore, $(\delta_1,1)$ is
+missing from the above list, since 1 is not smaller than $\delta_1=1$.
+
+)endif
+
+    sigmaInfinity(mm: P, gr: List List Z): Q ==
+        res: Q := 0
+        for l in gr repeat --assert(#l=3)
+            not DIVISIBLEBY?(l.1, mm) =>
+                error "sigmaInfinity: delta is not a divisor"
+            res := res + l.1 * l.3 * fractionalBernoulli2(l.2/l.1)
+        res
+
+    sigmaInfinity(mm: P, r: List Z, gr: List List Z): Q ==
+        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, gr)
+
+    sigma0(mm: P, gr: List List Z): Z ==
+        z: Z := 0
+        for l in gr repeat --assert(#l=3)
+            z := z + l.3 * ((mm exquo l.1)::Z)
+        z
+
+    sigma0(mm: P, r: List Z, gr: List List Z): Z ==
+        sigma0(mm, r) + 2*sigma0(mm, gr)
+
+
+)if LiterateDoc
+%$
+
+Similar to the matrix by Ligozat, we can build a matrix to determine
+the order of a (modular for $\Gamma_1(N)$) generallized eta quotient
+at all cusps of $\Gamma_1(N$)$.
+
+)endif
+
+    -- matrixEtaOrder(nn, cusp, delta, g) returns the coefficient of
+    -- r_{delta.g} in
+    -- \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994}.
+    matrixEtaOrder(nn: P, cusp: Q, delta: P, g: Z): Q ==
+        --assert(cusp>0) -- comes from cusps(nn)$CongruenceSubgroupGamma1
+        g > delta => error "matrixEtaOrder: no such g allowed"
+        entryFactor: Q := 1
+        if g < 0 then entryFactor := 1/2 -- for proper eta-functions
+        -- If cusp=a/c=lambda/(mu*epsilon), then we must have the
+        -- condition: gcd(lambda,nn)=gcd(lambda,mu)=gcd(mu,nn)=1. So
+        -- we try to find an equivalent cusp with this property.
+        -- See function normalize in CongruenceSubgroupGamma1.
+        c: Z := denom cusp
+        l: Z := numer cusp
+        e: Z := gcd(c, nn) -- divisor of nn (will not change)
+        -- Find a coprime (to nn) cofactor m such that m*e = c (mod nn).
+        m: Z := (c exquo e)::Z
+        n: Z := (nn exquo e)::Z
+        while not one? gcd(m, nn) repeat m := m + n
+        -- Find a coprime numerator l such that l/(m*e) is Gamma1(nn)
+        -- equivalent to a/c.
+        while not one? gcd(l, m) or not one? gcd(nn, l) repeat
+            l := l + e
+            if l >= nn then -- safety check -- should actually not happen
+               vPrint("[nn, numer cusp, denom cusp, c, m, e]",
+                       [nn, numer cusp, denom cusp, c, m, e]$List(Z))
+               error "matrixEtaOrder: lambda too big"
+
+        h: Z := gcd(delta, e)
+        entryFactor * (nn*h^2/(2*delta*e)) * fractionalBernoulli2(l*g/h)
+
+    matrixEtaOrder(nn: P): MQ ==
+        spitzen: List Q := cusps(nn)$CongruenceSubgroupGamma1
+        nndivs: List P := DIVISORS nn
+        n: Z := # nndivs
+        numOfVars: N := 0 -- number of the r_d and r_{d,g} variables
+        for d in nndivs repeat numOfVars := numOfVars + asN ceiling(d/2)
+        numrows: N := # spitzen
+        mat: MQ := new(numrows, numOfVars, 0)
+        for cusp in spitzen for i in 1..numrows repeat
+            jj := 0
+            for d in nndivs for j in 1..n repeat
+                a0: Q := aLigozat(nn, denom cusp, d)::Q
+                a1: Q := matrixEtaOrder(nn, cusp, d, -1)
+                a0 ~= a1 =>
+                    vPrint("[(cusp, d),a0,a1]", [cusp, d::Q, a0::Q, a1::Q])
+                    error "No agreement with matrixLigozat"
+                qsetelt!(mat, i, j, a1)
+                for g in 1..ceiling(d/2)-1 repeat
+                    jj := jj + 1
+                    qsetelt!(mat, i, n + jj, matrixEtaOrder(nn, cusp, d, g))
+        return mat
 
 
 )if LiterateDoc
