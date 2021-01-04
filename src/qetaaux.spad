@@ -74,6 +74,7 @@ First of all for debugging.
 OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
 vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
+dbgPrint(x,y) ==> print(([":> "::Symbol::OF, x::Symbol::OF, y::OF]$List(OF)::OF))
 
 )if LiterateDoc
 %$
@@ -639,7 +640,9 @@ at all cusps of $\Gamma_1(N$)$.
         --assert(cusp>0) -- comes from cusps(nn)$CongruenceSubgroupGamma1
         g > delta => error "matrixEtaOrder: no such g allowed"
         entryFactor: Q := 1
-        if g < 0 then entryFactor := 1/2 -- for proper eta-functions
+        if g < 0 then
+            entryFactor := 1/2 -- for proper eta-functions
+            g := 0
         -- If cusp=a/c=lambda/(mu*epsilon), then we must have the
         -- condition: gcd(lambda,nn)=gcd(lambda,mu)=gcd(mu,nn)=1. So
         -- we try to find an equivalent cusp with this property.
@@ -674,12 +677,7 @@ at all cusps of $\Gamma_1(N$)$.
         for cusp in spitzen for i in 1..numrows repeat
             jj := 0
             for d in nndivs for j in 1..n repeat
-                a0: Q := aLigozat(nn, denom cusp, d)::Q
-                a1: Q := matrixEtaOrder(nn, cusp, d, -1)
-                a0 ~= a1 =>
-                    vPrint("[(cusp, d),a0,a1]", [cusp, d::Q, a0::Q, a1::Q])
-                    error "No agreement with matrixLigozat"
-                qsetelt!(mat, i, j, a1)
+                qsetelt!(mat, i, j, matrixEtaOrder(nn, cusp, d, -1))
                 for g in 1..ceiling(d/2)-1 repeat
                     jj := jj + 1
                     qsetelt!(mat, i, n + jj, matrixEtaOrder(nn, cusp, d, g))
