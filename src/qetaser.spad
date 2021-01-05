@@ -166,12 +166,10 @@ QEtaLaurentSeriesCategory(C: Ring): Category ==
       ++ No check is made.
     coerce: % -> ULS C
       ++ coerce(x) returns the element x as a Laurent series.
-    choose: (P, N, %, Z) -> %
-      ++ choose(m, t, x, ord) returns the Laurent series z whose n-th
-      ++ coefficient of the underlying Taylor series is the (m*n+t)-th
-      ++ coefficient of the underlying Taylor series of x (after
-      ++ removing initial zeros), 0<=t<m. The function assumes that x
-      ++ has at least one non-zero coefficient.
+    choose: (P, N, %) -> %
+      ++ choose(m, t, x) returns the Laurent series z whose n-th
+      ++ coefficient is the (m*n+t)-th coefficient of x, 0<=t<m.
+      ++ It is an extension of multisect to Laurent series.
     qetaTaylorRep: % -> QTS C
       ++ qetaTaylorRep(x) returns the underlying taylor representation
       ++ of the laurent serirs. This might return a taylor series that
@@ -209,10 +207,16 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
     qetaTaylorRep(x: %): QTS C == (x pretend Rec).ps
     coerce(s: ULS C): % == per s
     coerce(x: %): ULS C == rep x
-    choose(m: P, t: N, x: %, ord: Z): % ==
-        --assert(not zero? x)
-        x := removeZeroes x
-        laurent(ord, multisect(m-t, t, qetaTaylorRep x)$QTS(C))
+    choose(m: P, t: N, x: %): % ==
+        -- if possible, get rid of some initial zeros
+        d: Z := degree x
+        x := removeZeroes(order(x, max(d, 0)) - d, x)
+        -- start with the actual selection of coefficients
+        ord: Z := order(x, max(0, degree x))
+        ord ~= degree x => error "choose$QEtaLaurentSeries: deg=ord expected"
+        nord: Z := ceiling((ord-t)/m)$Q
+        n: Z := nord*m + t - ord -- 0 <= n < m -- avoid calling "reductum"
+        laurent(nord, multisect(m-n, n, qetaTaylorRep x)$QTS(C))
     laurent(n: Z, s: QTS C): % == per laurent(n, s pretend UTS(C))
     laurent(n: Z, s: Stream C): % == laurent(n, series(s)$QTS(C))
     removeZeroes(n: Z, x: %): % == per removeZeroes(n, rep x)
@@ -273,9 +277,9 @@ Finite0Series(C: CommutativeRing): Exports == Implementation where
     qetaLeadingCoefficient(x: %): C ==
         zero? x => 0 -- destructively set x
         leadingCoefficient x
-    choose(m: P, t: N, x: %, ord: Z): % ==
+    choose(m: P, t: N, x: %): % ==
         zero? x => 0
-        per choose(m, t, rep x, ord)
+        per choose(m, t, rep x)
 
 
 
