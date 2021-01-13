@@ -77,10 +77,11 @@ xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
--- for $C[M_1,\ldots,M_28]$.
+-- for $C[M_1,\ldots,M_{28}]$.
 
 tex: X1 C := xeqgens.1
-abex := samba(tex, xeqgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
+genus(128)$GAMMA0
+abex := samba(tex, xeqgens, 9)$QXTOPSAMBA1(C)
 
 assertEquals(genus(level)$GAMMA0, 9)
 
@@ -131,7 +132,7 @@ f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
 divs := DIVISORS level
 idivs := [i for i in 1.. #divs-1]
 wght := 4
-rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV;
+rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV
 
 rcofactor := rwgens.1
 assertEquals(rcofactor,[0, 0, 0, 0, 0, 0, 8, - 16])
@@ -144,11 +145,12 @@ assertEquals([qetaGrade x for x in fcofactors], [64])
 
 f := f128 * fcofactor
 xf := toX1(C, f, 'F)
-xfr := reduce(xf, abex)$QXTOPRED1(C)
+xfr := reduce(xf, abex)$QXTOPRED1(C);
+zero? xfr
 
 assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
 
-ixfr := 1024*xfr
+ixfr := 1024*xfr;
 pol := second(ixfr)::PolC + F  -- This corresponds to the mod func f.
 
 assertEquals(pol, (_
@@ -457,7 +459,7 @@ qetaGrades fser3
 -- fser3 has expansions at the cusps of 128 that have the following form.
 
 for cusp in spitzen for i in 1..#spitzen repeat (_
-    print([[cusp, WIDTH0(128, denom cusp)/WIDTH(64, denom cusp)]]);_
+    print([[cusp, WIDTH0(128, denom cusp)/WIDTH0(64, denom cusp)]]);_
     print series(fser3, i));
 
 -- That is, if the quotient of the widths is 2, then the series is a
