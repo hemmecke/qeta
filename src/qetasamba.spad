@@ -91,7 +91,7 @@ asN x ==> x pretend N
 
 )endif
 
-)abbrev domain QABC QEtaAlgebraBasisCategory
+)abbrev category QABC QEtaAlgebraBasisCategory
 ++ QEtaAlgebraBasisCategory(C, F) is a category for a data
 ++ structure that can be used for reduction modulo an algebra basis
 ++ (samba basis).
@@ -105,6 +105,21 @@ QEtaAlgebraBasisCategory(C, F): Category == Exports where
       ++ basis(x) returns all basis elements.
     basis: (%, Z) -> List F
       ++ basis(x, d) returns the basis elements of grade d.
+    numberOfGaps: % -> N
+      ++ numberOfGaps(x) computes
+      ++ reduce(+, [floor(x/n) for x in bas], 0)
+      ++ where t=multiplier(x), n=qetaGrade(t) and bas=basis(x).
+      ++ If #(basis(x,i)=1 for all i from 1 to n-1 then
+      ++ numberOfGaps(x) is equal to the number of gaps
+      ++ (see Weierstrass Gap Theorem) of the module generated
+      ++ by bas over C[t].
+   add -- default implementation
+     numberOfGaps(x: %): N ==
+         t: F := multiplier x
+         n: P := qetaGrade(t)::P
+         grades: List P := [qetaGrade(first basis(x, i))::P for i in 1..n-1]
+         numberOfGaps(n, grades)$QEtaAuxiliaryPackage
+
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
