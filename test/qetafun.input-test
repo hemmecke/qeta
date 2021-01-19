@@ -38,7 +38,7 @@ orbs := [orb for tt in 0..m-1 | (orb := ORBIT(shat,m,tt); one? # orb)]
 t := (first first orbs)::Z
 assertEquals(t, 4)
 
-r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionGamma0
+r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
 assertEquals(r, [6,0,-5,0])
 
 minroot := 60 :: P
@@ -70,7 +70,7 @@ orbs := [orb for tt in 0..m-1 | (orb := ORBIT(shat,m,tt); one? # orb)]
 t := (first first orbs) :: N
 assertEquals(t, 5)
 
-r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionGamma0 --: List Z
+r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0 --: List Z
 assertEquals(r,  [7, 1, 0, - 7])
 
 minroot := 168 :: P
@@ -155,7 +155,7 @@ orbs := [orb for tt in 0..m-1 | (orb := ORBIT(shat,m,tt); one? # orb)]
 t := (first first orbs)::N
 assertEquals(t, 6)
 
-r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularFunctionGamma0 --: List Z
+r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0 --: List Z
 assertEquals(r, [10, 2, 11, -22])
 
 minroot := 264 :: P;
@@ -204,57 +204,23 @@ ZERO := F - repr;
 assertTrue zero? ZERO
 --endtest
 
-)fin
+-- +
+-------------------------------------------------------------------
+--test:RamanujanInfinity5
+-------------------------------------------------------------------
+-- -
 
+nn := 10 :: P; mm := 1 :: P; r := [-1]$List(Z); m := 5 :: P; t: N := 4;
+s := etaCoFactorInfinity(nn, mm, r, m, t)$QEtaModularGamma0
+yf := etaQuotient(nn, s, mm, r, m, t)$YMSETAQ;
+xiord := minimalRootOfUnity(yf)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+fn := (expansions(yf::MSETAQ(C, CX))(1/nn))::A1(CX)
+f1 := modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t)$QETAMG0I(CX)
+assertTrue(zero?(f1 - fn))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- TODO: Find a "better" r-vector that makes
--- sum(g for cusp in spitzen | (g := qetaGrade(F,cusp))>0) is minimal.
-
--- v = p + x1*v1 + x2*v2 + x3*v3
-
-res := etaCoFactor(m, mm, nn, t, s)
-res.particular + 10 * res.basis.1 - 5* (res.basis.2 -res.basis.3)
-
-pp := (res.particular).(1..4)
-vv := pp - vector r
-mat := transpose matrix [x(1..4) for x in res.basis]
-VZ ==> Vector Z
-
-diophantineSystem(mat, vv)$SmithNormalForm(Z, VZ, VZ, MZ)
-
--- ----------
-
-gamma := gammas.2
-w := WIDTH0(nn, gamma(2,1))
-eq1 := etaQuotientOrbitProduct(mm, mmdivs, s, m, t, gamma, w)$SEQG
-eq2 := coEtaQuotient(nn, nndivs, r, gamma, w)$SEQG
-expansion eq1 * expansion eq2
-
--- Consider the order of the the cofactor (without the (c\tau+d) factor)
--- at each cusp in terms of q^(1/w) where w=WIDTH0(nn,gamma(2,1)).
-yeq := [etaQuotient(nn, nndivs, r, gamma)$YEQG for gamma in gammas]
-vr := vector r
-yeq1 := [xExponent(y)$YEQG for y in yeq]
-
--- -----------------------------------------------------------------
-
-yeqlg := [[(etaQuotient(mm, mmdivs, s, m, t, lambda, gamma)$YSEQLG) for lambda in 0..10] for gamma in gammas]
-yeqlg1 := [[WIDTH0(nn, (gamma$YSEQLG)(y)(2,1)) * qExponent(y)$YSEQLG for y in yeql] for yeql in yeqlg]
-
-
-mats := [matrix [[1, lambda],[0,m]] * gamma for lambda in 0..10]
-smats := [splitMatrix(mat, 1) for mat in mats]
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -

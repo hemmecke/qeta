@@ -3647,8 +3647,8 @@ ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{P QEtaModularFunctionGamma0}
-\label{sec:QEtaModularFunctionGamma0}
+\subsection{P QEtaModularGamma0}
+\label{sec:QEtaModularGamma0}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Compute a vector that must be multiplied to the (sifted) eta quotient
 in order to make it a modular function having a pole only at infinity
@@ -3657,8 +3657,8 @@ small in total sum.
 
 )endif
 
-)abbrev package QETAMFG0 QEtaModularFunctionGamma0
-QEtaModularFunctionGamma0: Exports == Implementation where
+)abbrev package QETAMG0 QEtaModularGamma0
+QEtaModularGamma0: Exports == Implementation where
   Exports ==> with
     qetaGrades: SymbolicModularSiftedEtaQuotient -> XHashTable(Q, Z)
       ++ qetaGrades(y) returns the qetaGrades of the modular
@@ -3833,6 +3833,79 @@ QEtaModularFunctionGamma0: Exports == Implementation where
         sinitial: VZ := ((ecfs.particular)::VZ)(1..n)
         b: LVZ := [x(1..n) for x in ecfs.basis]
         members minimizeGrades(nn, mm, r, m, t, sinitial, b)
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaModularGamma0}
+\label{sec:QEtaModularGamma0}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Compute a vector that must be multiplied to the (sifted) eta quotient
+in order to make it a modular function having a pole only at infinity
+or to make the (positive) orders at all cusps (\code{qetaGrades})
+small in total sum.
+
+)endif
+
+)abbrev package QETAMG0I QEtaModularGamma0Infinity
+QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
+  T1 C  ==> QEtaTaylorSeries C
+  L1 C  ==> QEtaLaurentSeries C
+  A1 C ==> Finite0Series C
+  ETA C  ==> EtaQuotient C
+  Exports ==> with
+    modularSiftedEtaQuotientInfinity: (P, LZ, P, LZ, P, N) -> A1 C
+      ++ modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t) returns
+      ++ the series expansion of
+      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularSiftedEtaQuotient
+      ++ at the cusp infinity.
+    modularSiftedEtaQuotientInfinity: (P, P, LZ, P, N) -> A1 C
+      ++ modularSiftedEtaQuotientInfinity(nn, mm, r, m, t) returns
+      ++ modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t) for s
+      ++ equal to etaCoFactorInfinity(nn, mm, r, m, t).
+  Implementation ==> add
+    -- generating series for a(m*n+t) with cofactor eta quotient and
+    -- the fractional q power where \sum_{k=0}^\infty a(k)q^k is
+    -- defined by an eta-quotient with exponent vector r.
+
+    modularSiftedEtaQuotientInfinity(nn:P, s:LZ, mm:P, r:LZ, m:P, t:N): A1 C ==
+        -- First compute the expansion of the orbit product.
+        eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, r)$ETA(C))
+
+        orb: List N := orbit(mm, r, m, t)$QEtaCoFactor
+        tt := first orb
+        p: T1 C := multisect(m-tt, tt, eulerquo)
+        -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
+        for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
+
+        -- The expansion of the coFactor is here.
+        -- We take care of the right q-order through alphaInfinity.
+        cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, s)$ETA(C))
+
+        -- We multiply both things together to get (nearly) a modular
+        -- function.
+        tf: T1 C := cofact * p
+
+        -- We have to multiply by some q-power to get the expansion of
+        -- a modular function f.
+        alpha: Z := alphaInfinity(nn, s, mm, r, m, t)$QEtaCoFactor
+        laurent(alpha, tf)$A1(C)
+
+    modularSiftedEtaQuotientInfinity(nn: P, mm: P, r: LZ, m: P, t: N): A1 C ==
+        orb: List N := orbit(mm, r, m, t)$QEtaCoFactor
+        vPrint("orbit", sort orb)
+        s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)$QEtaModularGamma0
+        vPrint("cofactor", r)
+        modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t)
+
 
 )if LiterateDoc
 %$

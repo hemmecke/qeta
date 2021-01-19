@@ -2,23 +2,6 @@
 -- for the macros in etamacros.input and convenience.input have been set.
 -- In particular C, xiord, and CX.
 
--- generating series for p(m*n+t) with cofactor eta quotient and
--- the fractional q power.
-modularSiftedPartitionSeries(nn: P, m: P, t: N): A1 C ==
-  mmdivs: List P := DIVISORS m
-  s: List Z := cons(-1, rest [0 for i in mmdivs]);
-  r: List Z := etaCoFactorInfinity(nn, m, s, m, t)$QEtaModularFunctionGamma0
-  vPrint("-- cofactor", r)
-  shat: Z := sigmaInfinity(mmdivs, s)
-  orbs := [orb for tt in 0..m-1 | (orb := orbit(shat, m, tt::N); one? # orb)]
-  if not(one? # orbs and one? # first orbs and t = first first orbs) then
-    error "not a single element orbit"
-  -- The following also checks whether we get a modular function.
-  expectedGrade := qetaGrades(nn, r, m, s, m, t).(1/nn) -- grade at cusp
-  cofact := etaQuotient(DIVISORS nn, r)$ETA(C); --cofactor for rm
-  fcf := monomial(1, -expectedGrade)$L1(C)*eulerExpansion(cofact)
-  fzf := fcf*siftedPartitionSeries(m, t)
-
 -- expansion of j(n*tau) at cusp gamma(1,1)/gamma(2,1).
 kleinJ(n: P, gamma: SL2Z, w: P): L1 CX ==
   t := splitMatrix(gamma, n).triang

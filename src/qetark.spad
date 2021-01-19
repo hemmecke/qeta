@@ -663,28 +663,8 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
   Implementation ==> add
     findIdentity(nn: P, s: List Z, mm: P, r: List Z, m: P, t: N,_
                  rgens: List List Z): IDENTITY ==
-
-        -- First compute the expansion of the orbit product.
-        eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, r)$ETA(C))
-
-        orb: List N := orbit(mm, r, m, t)$QEtaCoFactor
-        tt := first orb
-        p: T1 C := multisect(m-tt, tt, eulerquo)
-        -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
-        for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
-
-        -- The expansion of the coFactor is here.
-        -- We take care of the right q-order through alphaInfinity.
-        cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, s)$ETA(C))
-
-        -- We multiply both things together to get (nearly) a modular
-        -- function.
-        tf: T1 C := cofact * p
-
-        -- We have to multiply by some q-power to get the expansion of
-        -- a modular function f.
-        alpha: Z := alphaInfinity(nn, s, mm, r, m, t)$QEtaCoFactor
-        f: A1 C := laurent(alpha, tf)$A1(C)
+        import from QEtaModularGamma0Infinity(C)
+        f: A1 C := modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t)
 
         -- For the following computation we attach a marker to the
         -- series.
@@ -722,12 +702,12 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
 
     findIdentity(nn: P, mm: P, r: List Z, m: P, t: N,
                  rgens: List List Z): IDENTITY ==
-        import from QEtaModularFunctionGamma0
+        import from QEtaModularGamma0
         s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)
         findIdentity(nn, s, mm, r, m, t, rgens)
 
     findIdentity(nn: P, mm: P, r: List Z, m: P, t: N): IDENTITY ==
-        import from QEtaModularFunctionGamma0
+        import from QEtaModularGamma0
         s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)
         findIdentity(nn, s, mm, r, m, t)
 
