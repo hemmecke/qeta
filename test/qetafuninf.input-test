@@ -1,0 +1,68 @@
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+
+-- This is a testfile for `src/qetadom.spad` and `src/qetafun.spad`.
+-- It tests whether the series expansion at infinity for
+-- the series $\sum_{k=0}^\infty a(m*k+t)*q^k$ (made modular for
+-- $\Gamma_0(N)$) agrees in direct computation via
+-- modularSiftedEtaQuotientInfinity and via coercion of
+-- SymbolicModularSiftedEtaQuotient into series expansion at all cusps.
+
+--setup
+C ==> Q
+tst(nn0, mm0, r0, m0, t0) ==> (_
+  nn := nn0 :: P; mm := mm0 :: P; r := r0$List(Z);_
+  m := m0 :: P; t := t0 :: N;_
+  s := etaCoFactorInfinity(nn, mm, r, m, t)$QEtaModularGamma0;_
+  yf := etaQuotient(nn, s, mm, r, m, t)$YMSETAQ;_
+  xiord := minimalRootOfUnity(yf)::P;_
+  EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);_
+  fn := (expansions(yf::MSETAQ(C, CX))(1/nn))::A1(CX);_
+  f1 := modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t)$QETAMG0I(CX);_
+  assertTrue(zero?(f1 - fn)))
+--endsetup
+
+)set mess type on
+
+
+-- +
+-------------------------------------------------------------------
+--test:RamanujanInfinity5
+-------------------------------------------------------------------
+-- -
+tst(10, 1, [-1], 5, 0) -- orbit [0,3]
+tst(10, 1, [-1], 5, 1) -- orbit [1,2]
+tst(10, 1, [-1], 5, 4) -- orbit [4]
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:RamanujanInfinity7
+-------------------------------------------------------------------
+-- -
+tst(14, 1, [-1], 7, 0) -- orbit [0,2,6]
+tst(14, 1, [-1], 7, 5) -- orbit [1,3,4]
+tst(14, 1, [-1], 7, 5) -- orbit [5]
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:RamanujanInfinity11
+-------------------------------------------------------------------
+-- -
+tst(22, 1, [-1], 11, 0) -- orbit [0, 4, 7, 9, 10]
+tst(22, 1, [-1], 11, 1) -- orbit [1, 2, 3, 5, 8]
+tst(22, 1, [-1], 11, 6) -- orbit [6]
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
