@@ -101,13 +101,13 @@ rgensExpected: List List Z := [_
     [- 4, 10, - 4, 0, 0, 0, 2, - 4], [4, - 2, 0, 0, 0, 0, 2, - 4]];
 assertEquals(rgens, rgensExpected)
 
-eqgens := [EQA1C r for r in rgens];
-assertEquals([qetaGrade x for x in eqgens],_
+egens := [EQA1C r for r in rgens];
+assertEquals([qetaGrade x for x in egens],_
   [6, 8, 8, 8, 8, 8, 11, 12, 12, 12, 12, 15, 15, 15, 15, 15, _
   16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16])
 
-msyms := indexedSymbols("M", #eqgens)
-xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
+msyms := indexedSymbols("M", #egens)
+xgens: List X1 C := [toX1(C, x, s) for x in egens for s in msyms];
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
@@ -115,11 +115,11 @@ xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 
 genus(level)$GAMMA0
 
-tex: X1 C := xeqgens.1
-abex := samba(tex, xeqgens, 9)$QXTOPSAMBA1(C)
+tx: X1 C := xgens.1
+abx := samba(tx, xgens, 9)$QXTOPSAMBA1(C)
 
 assertEquals(genus(level)$GAMMA0, 9)
-assertEquals(numberOfGaps(abex), 9)
+assertEquals(numberOfGaps(abx), 9)
 
 -- We compute a cofactor such that the product with $f_{128}$
 -- will be a modular function in $M^\infty(128)$.
@@ -128,9 +128,9 @@ divs := DIVISORS level;
 idivs := [i for i in 1.. #divs-1];
 wght := 4
 rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV;
-rcofactor := rwgens.1;
-assertEquals(rcofactor,[0, 0, 0, 0, 0, 0, 8, - 16])
-fcofactor := EQA1C rcofactor
+rfcofactor := rwgens.1;
+assertEquals(rfcofactor,[0, 0, 0, 0, 0, 0, 8, - 16])
+fcofactor := EQA1C rfcofactor
 
 fcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in fcofactors], [64])
@@ -140,7 +140,7 @@ assertEquals([qetaGrade x for x in fcofactors], [64])
 
 f := f128 * fcofactor;
 xf := toX1(C, f, 'F)
-xfr := reduce(xf, abex)$QXTOPRED1(C);
+xfr := reduce(xf, abx)$QXTOPRED1(C);
 assertTrue(zero? xfr)
 
 assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
@@ -161,11 +161,10 @@ assertEquals(# monomials f128mpol, 25)
 -- the Ei variables.
 
 esyms := indexedSymbols("E", divs)
-dim: N := #esyms
+dim: N := #esyms   -- needed for RZ
 
-nrcofactor := NEGATE rcofactor;
-vals := cons(monRZ nrcofactor, [monRZ x for x in rgens]);
-vars := cons(M0, msyms);
+m0symsRZ := cons(monRZ NEGATE rfcofactor, [monRZ x for x in rgens]);
+m0syms := cons('M0, msyms);
 
 -- The following gives $f_{128}$ in terms of eta-quotients
 
@@ -174,7 +173,7 @@ vars := cons(M0, msyms);
 
 -- The Laurent polynomial (in Ei variables) that belongs to f.
 
-fpolRZ := EVALRZ(vars, vals, fmpol);
+fpolRZ := EVALRZ(m0syms, m0symsRZ, fmpol);
 z := rzToA1C fpolRZ - f
 
 -- The function z is a modular function, so we only need to check the
@@ -182,7 +181,7 @@ z := rzToA1C fpolRZ - f
 
 assertTrue(zero? z)
 
--- But we kill all the given coefficients for f128.
+-- But we kill all the given coefficients for $f_{128}$.
 
 assertEquals(order(z, 300), 237)
 
@@ -203,7 +202,7 @@ rez(fpolRZ * fdenRZ)
 
 -- Now we do the same thing for the modular form f128 itself.
 
-f128polRZ := EVALRZ(vars, vals, f128mpol);
+f128polRZ := EVALRZ(m0syms, m0symsRZ, f128mpol);
 f128monsDZ := [degree mon for mon in monomials f128polRZ];
 f128denRZ := monomial(1, - reduce(minEntries, f128monsDZ, 0$DZ)$List(DZ))$RZ;
 z0 := rzToA1C f128polRZ - f128
@@ -283,7 +282,9 @@ EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 
 )set stream calc 2
 
-fser := rzToAnCX fpolRZ
+-- Here we see the expansion of $f \in M^\infty(128)$ at all cusps.
+
+fA128 := rzToAnCX fpolRZ
 
 -- Adjust $f$ to other cofactor so that the product is a modular function
 -- with poles at posssibly any cusp (**not** only at infinity).
@@ -291,20 +292,20 @@ fser := rzToAnCX fpolRZ
 divs := DIVISORS level;
 idivs := empty()$List(Z);
 z := zsolve4ti2(level, idivs, concat([0 for i in idivs], -2*wght))$QEQEV;
-rcofactor2 := members((z.zinhom.1)(1..#divs));
-assertEquals(rcofactor2, [0,-16,8,0,0,0,0,0])
+rgcofactor := members((z.zinhom.1)(1..#divs));
+assertEquals(rgcofactor, [0,-16,8,0,0,0,0,0])
 
-gpolRZ := f128polRZ * monRZ(rcofactor2);
-gser := rzToAnCX gpolRZ
+gpolRZ := f128polRZ * monRZ(rgcofactor);
+gA128 := rzToAnCX gpolRZ
 
--- `gser` has series expansion of the form `q*series(q^2)` at every cusp.
+-- $g$ has series expansion of the form `q*series(q^2)` at every cusp.
 
-assertEquals(qetaGrades gser, [31,31,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1])
+assertEquals(qetaGrades gA128, [31,31,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1])
 
 -- # Find cofactor to bring $f_{128}$ into $M^\infty(64)$
 
--- Try to find another cofactor `fcofactor3` such that the respective
--- series `fser3` is, in fact a modular function for $\Gamma_0(64)$. So
+-- Try to find another cofactor `rcofactor3` such that the respective
+-- series `hser` is, in fact a modular function for $\Gamma_0(64)$. So
 -- let's multiply with another nice eta-quotient that brings it to
 -- $M^\infty(64)$.
 
@@ -348,24 +349,25 @@ assertEquals(zzf, [])
 -- We adjust the first inhomogeneous solution with a
 -- homogeneous solution in order to get a new cofactor.
 
-rcofactor3 := liftTo128([z.zinhom.1 - z.zhom.12]).1
-assertEquals(rcofactor3, [0, 0, 0, 3, - 4, 11, - 18, 0])
+rhcofactor := liftTo128([z.zinhom.1 - z.zhom.12]).1
+assertEquals(rhcofactor, [0, 0, 0, 3, - 4, 11, - 18, 0])
 
-hpolRZ := f128polRZ * monRZ(rcofactor3)
+hpolRZ := f128polRZ * monRZ(rhcofactor)
 #monomials hpolRZ
-hser := rzToAnCX hpolRZ
+assertEquals(level, 128)
+hA128 := rzToAnCX hpolRZ
 
 -- According to the orders of the expansions at all cusps,
 -- hser corresponds to a modular function in $M(128)$ that only has
 -- poles at the cusps $1/64$ and $1/128$.
 
-assertEquals(qetaGrades hser, _
+assertEquals(qetaGrades hA128, _
   [-2, -2, -2, -2, -2, -2, -2, -2, 0, 0, 0, 0, -2, -2, 34, 34])
 
--- `hser` has expansions at the cusps of 128 that have the following form.
+-- $h$ has expansions at the cusps of 128 that have the following form.
 
 for cusp in spitzen for i in 1..#spitzen repeat _
-    print([cusp, WIDTH0(128, denom cusp)/WIDTH0(64, denom cusp), series(hser, i)]);
+    print([cusp, WIDTH0(128, denom cusp)/WIDTH0(64, denom cusp), series(hA128, i)]);
 
 -- That is, if the quotient of the widths is 2, then the series is a
 -- series in $q^2$.
@@ -373,17 +375,17 @@ for cusp in spitzen for i in 1..#spitzen repeat _
 -- the series expansion of the cusp $1/128$ ($=\infty$).
 
 [spitzen.15, spitzen.16]
-ser := series(hser, 15) - series(hser, 16)
-assertEquals(order(ser, 100), 100)
+z := series(hA128, 15) - series(hA128, 16)
+assertEquals(order(z, 100), 100)
 
--- # Reduction of expansion of `hser` in $M(64)$
+-- # Reduction of expansion of $h$ in $M(64)$
 
--- ## Reduction of `hser` by algebra basis of $M^\infty(64)$
+-- ## Reduction of $h$ by algebra basis of $M^\infty(64)$
 
--- Let us consider the expansion of `h := series(hser, 16)` and try to
+-- Let us consider the expansion of `h := series(hA128, 16)` and try to
 -- reduce it by the algebra basis of eta-quotients in $M^\infty(64)$.
 
-hx := series(hser, 16);
+hx := series(hA128, 16);
 h := abfmap(CX, C, retract, hx)::A1(C)
 
 -- Now we want to compute in $M^\infty(64)$, i.e. modular function for $\Gamma_0(64)$.
@@ -440,16 +442,16 @@ assertEquals(haupol,_
 -- The following is the exponent vector that was multiplied
 -- to $f_{128}$ to bring it into $M^\infty(64)$.
 
-nrcofactor3 := NEGATE rcofactor3
+rhcofactor
 
 -- We must append a zero to the rgens64 vectors, because we do evaluation
 -- into a domain that contains an entry for E128.
 
-level := 128;
 rgens64x := [concat(x, 0) for x in rgens64];
-vals64 := cons(monRZ nrcofactor3, [monRZ x for x in rgens64x]);
+u0syms64 := cons('U0, usyms64)
+u0syms64RZ := cons(monRZ NEGATE rhcofactor, [monRZ x for x in rgens64x]);
 
-hapolRZ := EVALRZ(cons('U0, usyms64), vals64, haupol);
+hapolRZ := EVALRZ(u0syms64, u0syms64RZ, haupol);
 rez hapolRZ
 
 assertTrue(zero?(h - rzToA1C hapolRZ))
@@ -458,7 +460,7 @@ assertTrue(zero?(h - rzToA1C hapolRZ))
 -- of eta-quotients.
 
 ha128upol := U0 * haupol;
-ha128polRZ := EVALRZ(cons('U0, usyms64), vals64, ha128upol);
+ha128polRZ := EVALRZ(u0syms64, u0syms64RZ, ha128upol);
 rez ha128polRZ
 
 -- Indeed, if we replace the $E_i$ by the respective
@@ -485,36 +487,44 @@ den0 := rez(ha128denRZ)
 
 hapolRZ
 
--- We introduce now `haser` as the expansions of an element of
+-- We introduce now `haA64` as the expansions of an element of
 -- $M^\infty(64)$ given by `hapolRZ`.
 
 level := 64; spitzen := cusps(level)$GAMMA0;
 egens64n := [EQAnCX r for r in rgens64];
 xgens64n := [toXn(CX, x, s) for x in egens64n for s in usyms64];
 u := egens64n;
-haser := rzToAnCX hapolRZ;
-qetaGrades(haser)
+assertEquals(level, 64)
+haA64 := rzToAnCX hapolRZ;
+qetaGrades(haA64)
 
--- Let us look at the pole orders of `gser3` and all the
+-- Let us look at the pole orders of $h_a$ and all the
 -- generators of the monoid of eta-quotient of $M^\infty(64)$.
 
 l := [qetaGrades x for x in u];
-hal := cons(qetaGrades haser, l);
+hal := cons(qetaGrades haA64, l);
 matrix hal
 
 -- Obviously, our choice for the cofactor was not optimal.
 -- It is now quite easy to bring the pole order down to 26
 -- without doing any reduction of the series.
 
-ser0 := haser/(u.4*u.3);
-qetaGrades(ser0)
+k0A64 := haA64/(u.4*u.3);
+qetaGrades(k0A64)
 
 -- But we can do a little better.
 -- Unfortunately, we introduce poles at other cusps.
 
 qetaGrades(u.4*u.3*u.1^2)
-ser0 := haser/(u.4*u.3*u.1^2);
-qetaGrades(ser0)
+kA64 := haA64/(u.4*u.3*u.1^2);
+qetaGrades(kA64)
+
+-- Let us keep track of the cofactor to $f_{128}$ so that
+-- $k\in M(64)$ (with poles at any cusp).
+
+v := vgens64x := [vector r for r in rgens64x];
+rkcofactor := members(vector rhcofactor - v.4 - v.3 - 2*v.1);
+assertEquals(rkcofactor, [0,0,0,1,-6,7,-10,0])
 
 -- Let us take a closer look at the expansion at the
 -- cusps that correspond to poles.
@@ -530,7 +540,7 @@ lmu := [LM x for x in u];
 for x in lmu for i in 1.. repeat print([i, x])
 -- -
 
-LM ser0
+LM kA64
 
 -- Fortunately, we can find an eta-quotient, that equals
 -- the leading monomials of the 3 series that correspond
@@ -545,10 +555,10 @@ LM mon1
 -- poles over all cusps by 2.
 -- However, we now have poles at other cusps.
 
-ser1 := ser0 - mon1;
-qetaGrades(ser1)
+k1A64 := kA64 - mon1;
+qetaGrades(k1A64)
 ixs := [4,5,6,7,12]
-LM ser1
+LM k1A64
 
 -- However, we are lucky again, since we can find another
 -- eta-quotient that simultaneously has the same leading
@@ -561,111 +571,115 @@ mon2 := -16*u.8^3*u.2/u.3;
 umon2 := -16*U8^3* U2* V3;
 qetaGrades(mon2)
 LM mon2
-ser2 := ser1 - mon2;
-qetaGrades ser2
+k2A64 := k1A64 - mon2;
+qetaGrades k2A64
 )set stream calc 2
-series(ser2,12)
+series(k2A64,12)
 
 mon3 := -172*u.2^4;
 umon3 := -172*U2^4;
 qetaGrades(mon3)
-ser3 := ser2 - mon3;
-qetaGrades ser3
-series(ser3,12)
+k3A64 := k2A64 - mon3;
+qetaGrades k3A64
+series(k3A64,12)
 
-s := series(ser3,12)::A1(C)
-xs := toX1(C, s, 'S)
-xsr := reduce(xs, abx64)$QXTOPRED1(C)
-assertTrue(zero? xsr)
-cxsr := [qetaCoefficient(first(xsr)::A1(C), -i) for i in -5..100];
-assertEquals(removeDuplicates cxsr, [0])
+k3 := series(k3A64,12)::A1(C)
+xk3 := toX1(C, k3, 'K3)
+xk3r := reduce(xk3, abx64)$QXTOPRED1(C)
+assertTrue(zero? xk3r)
+cxk3r := [qetaCoefficient(first(xk3r)::A1(C), -i) for i in -5..100];
+assertEquals(removeDuplicates cxk3r, [0])
 
-hsupol := -1472*second(reduce(xs, abx64)$QXTOPRED1(C))::PolC + S
-assertEquals(# monomials hsupol, 9)
+k3upol := -1472*second(reduce(xk3, abx64)$QXTOPRED1(C))::PolC + 'K3
+assertEquals(# monomials k3upol, 9)
 
 vsyms64 := indexedSymbols("V", #rgens64);
-nvals64 := [monRZ NEGATE x for x in rgens64x];
+vsyms64RZ := [monRZ NEGATE x for x in rgens64x];
+EV64RZ x ==> EVALRZ(concat[u0syms64,   vsyms64],_
+                    concat(u0syms64RZ, vsyms64RZ), x)
 
-hspolRZ := EVALRZ(concat[['U0], usyms64, vsyms64],_
-                  concat(vals64, nvals64),_
-                  hsupol + umon1 + umon2 + umon3)
+kpolRZ := EV64RZ(k3upol + umon1 + umon2 + umon3)
+# monomials kpolRZ
 
-z0 := rzToA1C hspolRZ - series(ser0,12)
+z0 := rzToA1C kpolRZ - series(kA64,12)
 assertEquals(order(z0, 301), 301)
-rez hspolRZ
-# monomials hspolRZ
+rez kpolRZ
+# monomials kpolRZ
 
-z0 := rzToAnCX hspolRZ - ser0
+z0 := rzToAnCX kpolRZ - kA64
 zero? z0
 
 -- We have found a sum of 9+3=12 eta-quotients for $f_{128}$.
 
--- ## Manual reduction of `hser` by eta-quotients from $M^\infty(64)$
+-- ## Manual reduction of `kA64` by eta-quotients from $M^\infty(64)$
 
 -- We can do even better, if we do not reduce by the
 -- algebra basis, but rather select appropriate
 -- eta-quotients for the reduction ourselves.
 --
--- Up to `ser3` we do the same as in the previous section.
+-- Up to $k_3$ we do the same as in the previous section.
 
 mon4 := -112*u.2^2*u.8;
 umon4 := -112*U2^2*U8;
 qetaGrades(mon4)
-ser4 := ser3 - mon4;
-qetaGrades ser4
-series(ser4,12)
+k4A64 := k3A64 - mon4;
+qetaGrades k4A64
+series(k4A64,12)
 
 mon5 := -592*u.2^3;
 umon5 := -592*U2^3;
 series(mon5,12)
 qetaGrades(mon5)
-ser5 := ser4 - mon5;
-qetaGrades ser5
-series(ser5,12)
+k5A64 := k4A64 - mon5;
+qetaGrades k5A64
+series(k5A64,12)
 
 mon6 := -544*u.2*u.7;
 umon6 := -544*U2*U7;
 qetaGrades(mon6)
-ser6 := ser5 - mon6;
-qetaGrades ser6
-[coefficient(series(ser6,12), i) for i in -8..8]
+k6A64 := k5A64 - mon6;
+qetaGrades k6A64
+[coefficient(series(k6A64,12), i) for i in -8..8]
 
 mon7 := 320*u.2^2;
 umon7 := 320*U2^2;
 qetaGrades(mon7)
-ser7 := ser6 - mon7;
-qetaGrades ser7
-[coefficient(series(ser7,12), i) for i in -6..6]
-LM ser7
+k7A64 := k6A64 - mon7;
+qetaGrades k7A64
+[coefficient(series(k7A64,12), i) for i in -6..6]
+LM k7A64
 
 mon8 := -128*u.7;
 umon8 := -128*U7;
 qetaGrades(mon8)
-ser8 := ser7 - mon8;
-qetaGrades ser8
-[coefficient(series(ser8,12), i) for i in -4..6]
-LM ser8
+k8A64 := k7A64 - mon8;
+qetaGrades k8A64
+[coefficient(series(k8A64,12), i) for i in -4..6]
+LM k8A64
 
 mon9 := -448*u.2;
 umon9 := -448*U2;
 qetaGrades(mon9)
-ser9 := ser8 - mon9;
-qetaGrades ser9
-[coefficient(series(ser9,12), i) for i in -4..30]
-ser9
+k9A64 := k8A64 - mon9;
+qetaGrades k9A64
+[coefficient(series(k9A64,12), i) for i in -4..30]
+k9A64
+
+-- In a more compact form here is what we have just
+-- computed.
 
 -- +
-ser := haser/(u.4*u.3*u.1^2)_
-        - u.7*u.12^3/(u.3*u.1^2)_
-        + 16*u.8^3*u.2/u.3_
-        + 172*u.2^4_
-        + 112*u.2^2*u.8_
-        + 592*u.2^3_
-        + 544*u.2*u.7_
-        - 320*u.2^2_
-        + 128*u.7_
-        + 448*u.2_
-        + 64 * 1$An(CX)
+z := kA64 _
+     - u.7*u.12^3/(u.3*u.1^2)_
+     + 16*u.8^3*u.2/u.3_
+     + 172*u.2^4_
+     + 112*u.2^2*u.8_
+     + 592*u.2^3_
+     + 544*u.2*u.7_
+     - 320*u.2^2_
+     + 128*u.7_
+     + 448*u.2_
+     + 64 * 1$An(CX)
 
 zero?(ser)
 qetaGrades(ser)
@@ -674,57 +688,89 @@ qetaGrades(ser)
 -- Clearly, this is a sum for $f_{128}$ consisting of
 -- only 10 eta-quotients.
 --
--- The variable `haser` was given by the polynomial `hapolRZ`.
+-- The variable `kA64` was given by the polynomial `kpolRZ`.
 --
--- The `u.i` were given by the `rgens64` variable, i.e., 
+-- The `u.i` were given by the `rgens64` variable, i.e.,
 -- the exponents for the generators of the monoid of
 -- eta-quotients. For technical reasons we must append a 0 to
 -- these vectors.
 -- These are the vectors given by `rgens64x`.
+--
+-- Thus, we find a new polynomial with 10 instead of 12 terms.
 
-v := [vector r for r in rgens64x];
-rcofactor4 := members(vector rcofactor3 - v.4 - v.3 - 2*v.1);
-assertEquals(rcofactor4, [0,0,0,1,-6,7,-10,0])
-nrcofactor4 := NEGATE rcofactor4;
+kaupol := umon1 + umon2 + umon3 + umon4 + umon5_
+        + umon6 + umon7 + umon8 + umon9 - 64
+kapolRZ := EV64RZ kaupol
+# monomials kapolRZ
 
-kupol := umon1 + umon2 + umon3 + umon4 + umon5_
-       + umon6 + umon7 + umon8 + umon9 - 64
-kpolRZ := EVALRZ(concat[['U0], usyms64, vsyms64],_
-                 concat(vals64, nvals64),_
-                 kupol)
+kaA64 := rzToAnCX kapolRZ
+qetaGrades(kaA64)
 
-kser := rzToAnCX kpolRZ
-qetaGrades(kser)
+z0 := kaA64 - kA64
+assertTrue(zero? z0)
+[order(series(z0,i),100) for i in 1..12]
 
-z := kser-ser0
-assertTrue(zero? z)
-[order(series(z,i),100) for i in 1..12]
+ka128polRZ := kapolRZ * monRZ(NEGATE rkcofactor)
+assertEquals(# monomials ka128polRZ, 10)
+rez ka128polRZ
 
-k128polRZ := kpolRZ * monRZ(nrcofactor4);
-assertEquals(# monomials k128polRZ, 10)
-rez k128polRZ
-
-z := f128 - rzToA1C k128polRZ
-
-cs := [coefficient(z, i) for i in 1..300];
+z0 := f128 - rzToA1C ka128polRZ
+cs := [coefficient(z0, i) for i in 1..300];
 assertEquals(removeDuplicates cs, [0])
 
--- ## Is every eta-quotient in the sum holonomic?
+-- Check that `kaA64` (or rather the expansion of
+-- the modular function corresponding to
+-- `kapolRZ` at every cusp of $\Gamma_0(128)$)
+-- agrees with `fA128` (after multiplication
+-- with the respective eta-quotient).
 
-level := 64; spitzen := cusps(level)$GAMMA0
+level:=128; spitzen:=cusps(level)$GAMMA0;
+rkfadjust := members(vector rfcofactor - vector rkcofactor);
+assertEquals(rkfadjust, [0,0,0,-1,6,-7,18,-16])
+z0 := fA128 - rzToAnCX(kapolRZ * monRZ rkfadjust);
+ords := [order(series(z0, i), 50) for i in 1 .. maxIndex()$An(CX)];
+assertEquals(removeDuplicates ords, [50])
 
-vexponents := [vector(members degree m)(1..7) for m in monomials k128polRZ]
-ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
+-- ## Reduction with other algebra basis
 
-monRZ(nrcofactor4)
+level:=128; spitzen:=cusps(level)$GAMMA0;
+)set stream calc 10
+xgens64
 
-EV64RZ x ==> EVALRZ(concat[['U0], usyms64, vsyms64],_
-                 concat(vals64, nvals64), x)
+abxx64 := samba(xgens64.2, [xgens64.1, xgens64.7])$QXTOPSAMBA1(C)
+
+kb2 := series(k2A64,12)::A1(C)
+xkb2 := toX1(C, kb2, 'KB2)
+
+xkb2r := reduce(xkb2, abxx64)$QXTOPRED1(C)
+assertTrue(zero? xkb2r)
+cxkb2r := [qetaCoefficient(first(xkb2r)::A1(C), -i) for i in -5..100];
+assertEquals(removeDuplicates cxkb2r, [0])
+
+second(xkb2r)::Pol(C)
+kbupol := (64 * second(xkb2r)::Pol(C)) + 'KB2::Pol(C) + umon1 + umon2
+# monomials kbupol
+kbpolRZ := EV64RZ kbupol;
+rez kbpolRZ
+rzToAnCX(kapolRZ - kbpolRZ)
+rez(1/112*(kapolRZ - spolRZ))
+
+-- ## TODO: Is every eta-quotient in the sum holomorphic?
+
+level := 128; spitzen := cusps(level)$GAMMA0
+
+)set mess typ on
 monsRZ := [EV64RZ x for x in _
    [umon1, umon2, umon3, umon4, umon5,_
     umon6, umon7, umon8, umon9]]
-vexponents := [(vector(members degree m)-vector(rcofactor4))(1..7) for m in monsRZ]
-ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
+vexponents := [vector members degree m for m in monsRZ]
+
+ords := [(1/24*matrixLigozat(level)*v) for v in vexponents]
+
+monsA128 := [rzToAnCX x for x in monsRZ];
+[qetaGrades x for x in monsA128]
+
+
 
 )set stream calc 3
 monsRZ.1,monsRZ.2
@@ -733,22 +779,88 @@ qetaGrades z
 
 assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true, false], [true]])
 
--- ## Reduction with other algebra basis
+divs
+idivs := [1,2,3,4,5,6];
+z := zsolve4ti2(64, idivs, concat([0 for i in idivs], [-2*wght,0,12]))$QEQEV;
+z.zinhom
 
-)set stream calc 10
-xgens64
+-- # Experiment: $M^\infty(32)$
 
-abxx64 := samba(xgens64.2, [xgens64.1, xgens64.7])$QXTOPSAMBA1(C)
+level:=128; spitzen:=cusps(level)$GAMMA0;
+rfkadjust := members(vector rkcofactor - vector rfcofactor);
+assertEquals(rfkadjust, [0,0,0,1,-6,7,-18,16])
+fkmonRZ := monRZ rfkadjust;
+z1 := rzToAnCX(fpolRZ * fkmonRZ);
+z2 := rzToAnCX kapolRZ;
+z := z1 - z2
+ords := [order(series(z, i), 100) for i in 1 .. maxIndex()$An(CX)];
+assertEquals(removeDuplicates ords, [100])
 
-s := series(ser2,12)::A1(C)
-xs := toX1(C, s, 'S)
-xsr := reduce(xs, abxx64)$QXTOPRED1(C)
-assertTrue(zero? xsr)
-cxsr := [qetaCoefficient(first(xsr)::A1(C), -i) for i in -5..100];
-assertEquals(removeDuplicates cxsr, [0])
+level := 2;
+rgens2 := etaQuotientMonoidExponentVectors(level)$QEQEV;
+egens2 := [EQA1C r for r in rgens2];
+msyms2 := indexedSymbols("M", #egens2)
 
-second(xsr)::Pol(C)
-- 64 * second(xsr)::Pol(C) + 'S + umon1 + umon2
+xgens2: List X1 C := [toX1(C, x, s) for x in egens2 for s in msyms];
+gen := genus(level)$GAMMA0
+tex2: X1 C := xgens2.1
+abex2 := samba(tex2, xgens2, gen)$QXTOPSAMBA1(C)
+
+divs := DIVISORS level
+idivs := [i for i in 1.. #divs-1];
+wght := 4
+rwgens2 := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV;
+rcofactorx2 := rwgens2.1
+
+matLR := matrixLigozatRStar(128,[1,2,3,4,5,6,7])$QEtaAuxiliaryPackage;
+rcofactorx := concat(rcofactorx2, [0 for i in 1..8-#divs])
+radjustx := members(vector rcofactorx - vector rcofactor3)
+
+level:=128; spitzen:=cusps(level)$GAMMA0;
+modularGamma0?(level, radjustx)
+monadjustx := monRZ radjustx
+
+)set stream calc 1
+fadjustx := rzToA1C monadjustx
+
+qetaGrades(fadjustx)
+
+fcofactor := EQA1C rcofactor
+f := f128 * fcofactor;
+
+xf := toX1(C, f, 'F)
+xfr := reduce(xf, abex)$QXTOPRED1(C)
+assertTrue(zero? xfr)
+
+level
+kpolRZ
+
+
+
+
+
+
+
+
+
+
+
+
+
+z := zsolve4ti2(32, [1,2,3,4,5], [0,0,0,0,0, -2*wght,0,12])$QEQEV
+
+z := zsolve4ti2(16, [1,2,3,4], [0,0,0,0, -2*wght,0,12])$QEQEV
+
+z := zsolve4ti2(2, [1], [0,-2*wght])$QEQEV
+
+
+
+matLR := matrixLigozatRStar(128,[1,2,3,4,5,6,7])$QEtaAuxiliaryPackage;
+r2 := members(matLR * vector [8,-16,0,0,0,0,0,0,0,0,0])
+
+[positiveRemainder(x,24) for x in r2]
+
+
 
 -- ## Try to reduce in $M^\infty(64)$
 
@@ -773,7 +885,7 @@ second(xsr)::Pol(C)
 -- $M^\infty(64)$.
 
 )set mess typ on
-ru := rule 
+ru := rule
         U1*V1==1
         U3*V3==1
 
@@ -819,7 +931,7 @@ z := SER(iser_
         + 448 * u.1^2 * u.2   * u.3_
         + 64  * u.1^2         * u.3_
   )
-  
+
 assertEquals(removeDuplicates [coefficient(z,i) for i in -10..300], [0])
 assertTrue(zero?(z::A1(C)))
 -- -
