@@ -358,8 +358,8 @@ assertEquals(level, 128)
 hA128 := rzToAnCX hpolRZ
 
 -- According to the orders of the expansions at all cusps,
--- hser corresponds to a modular function in $M(128)$ that only has
--- poles at the cusps $1/64$ and $1/128$.
+-- `hA128` corresponds to a modular function in $M(128)$ that
+-- only has poles at the cusps $1/64$ and $1/128$.
 
 assertEquals(qetaGrades hA128, _
   [-2, -2, -2, -2, -2, -2, -2, -2, 0, 0, 0, 0, -2, -2, 34, 34])
@@ -492,7 +492,7 @@ hapolRZ
 
 level := 64; spitzen := cusps(level)$GAMMA0;
 egens64n := [EQAnCX r for r in rgens64];
-xgens64n := [toXn(CX, x, s) for x in egens64n for s in usyms64];
+xgens64n := [toXn(CX, x, sy) for x in egens64n for sy in usyms64];
 u := egens64n;
 assertEquals(level, 64)
 haA64 := rzToAnCX hapolRZ;
@@ -681,8 +681,8 @@ z := kA64 _
      + 448*u.2_
      + 64 * 1$An(CX)
 
-zero?(ser)
-qetaGrades(ser)
+zero?(z)
+qetaGrades(z)
 -- -
 
 -- Clearly, this is a sum for $f_{128}$ consisting of
@@ -733,56 +733,240 @@ assertEquals(removeDuplicates ords, [50])
 
 -- ## Reduction with other algebra basis
 
-level:=128; spitzen:=cusps(level)$GAMMA0;
+-- Interestingly, the algebra basis is so simple that we can try
+-- another $t$. This time with pole order 4 instead of 3.
+-- Choosing also the input elements carefully, leads to a
+-- algebra basis (in fact an integral basis for $M^\infty(64)$)
+-- that are all Laurent series in $q^2$.
+
 )set stream calc 10
 xgens64
 
 abxx64 := samba(xgens64.2, [xgens64.1, xgens64.7])$QXTOPSAMBA1(C)
+numberOfGaps(abxx64) = genus(64)$GAMMA0
 
-kb2 := series(k2A64,12)::A1(C)
+-- So we only need to do the first two reductions
+-- manually and can then emply `samba` to do the rest.
+
+kb2 := series(k2A64,12)::A1(C);
 xkb2 := toX1(C, kb2, 'KB2)
 
-xkb2r := reduce(xkb2, abxx64)$QXTOPRED1(C)
+-- Reduction of the series `xkb2` then ends in zero
+-- as expected.
+
+xkb2r := reduce(xkb2, abxx64)$QXTOPRED1(C);
 assertTrue(zero? xkb2r)
 cxkb2r := [qetaCoefficient(first(xkb2r)::A1(C), -i) for i in -5..100];
 assertEquals(removeDuplicates cxkb2r, [0])
 
+-- It also yields a polynomial for the representation of
+-- $f_{128}$ that also has only 10 terms.
+
 second(xkb2r)::Pol(C)
 kbupol := (64 * second(xkb2r)::Pol(C)) + 'KB2::Pol(C) + umon1 + umon2
-# monomials kbupol
+assertEquals(kbupol,
+             (U12^3*U7*V1^2-16*U2*U8^3)*V3_
+            +(-112*U2^2-544*U2-128)*U7_
+            -172*U2^4-144*U2^3+320*U2^2-448*U2-64)
+assertEquals(# monomials kbupol, 10)
 kbpolRZ := EV64RZ kbupol;
 rez kbpolRZ
+
+-- It differs only by a zero expression, i.e.,
+-- a relation among eta-quotients.
+
+level:=128; spitzen:=cusps(level)$GAMMA0;
 rzToAnCX(kapolRZ - kbpolRZ)
-rez(1/112*(kapolRZ - spolRZ))
+rez(1/112*(kapolRZ - kbpolRZ))
 
--- ## TODO: Is every eta-quotient in the sum holomorphic?
+level:=64; spitzen:=cusps(level)$GAMMA0;
+kbA64 := rzToAnCX kbpolRZ;
+kaA64-kbA64
 
-level := 128; spitzen := cusps(level)$GAMMA0
+-- # Try to reduce in $M^\infty(64)$
+
+-- By working in $M(64)$,
+-- we have derived a sum of 10 eta-quotients of
+-- a modular (for $\Gamma_0(64)$) function
+-- `kaA64` corresponding to $f_{128}$.
+--
+-- Note that `kaA64 * u.1^2` was still in
+-- $M^\infty(64)$.
+--
+-- The reduction involved a subtraction by `mon1`
+-- and `mon2` that are not in $M^\infty(64)$.
+
+qetaGrades(kA64*u.1^2)
+
+[qetaGrades(mon1), umon1]
+[qetaGrades(mon2), umon2]
+
+-- By multiplication of the whole relation by `U1^2*U3`
+-- (note that `Vi` corresponds to the inverse of `Ui`),
+-- we can give a relation that lives completely in
+-- $M^\infty(64)$.
 
 )set mess typ on
-monsRZ := [EV64RZ x for x in _
-   [umon1, umon2, umon3, umon4, umon5,_
-    umon6, umon7, umon8, umon9]]
-vexponents := [vector members degree m for m in monsRZ]
+ru := rule
+        U1*V1==1
+        U3*V3==1
 
-ords := [(1/24*matrixLigozat(level)*v) for v in vexponents]
+EXZ ==> Expression Z
+kcupol := eval((U1^2*U3*kaupol)::EXZ, [V1::EXZ=(1/U1)::EXZ, V3::EXZ=(1/U3)::EXZ])::Pol(Z);
+monomials kcupol
 
-monsA128 := [rzToAnCX x for x in monsRZ];
-[qetaGrades x for x in monsA128]
+rgend64x
+
+v := [vector r for r in rgens64x];
+ricofactor := members(vector rkcofactor + 2*v.1 + v.3)
+
+)set stream calc 2
+ipolRZ := ka128polRZ * monRZ(ricofactor);
+iA64 := rzToAnCX ipolRZ;
+assertEquals(qetaGrades iA64,  [0,0,0,0,-1,-1,-1,-1,0,0,-2,30])
+
+z0 := iA64_
+      -                             u.7       * u.12^3_
+      + 16  * u.1^2 * u.2 * u.8^3_
+      + 172 * u.1^2 * u.2^4 * u.3_
+      + 112 * u.1^2 * u.2^2 * u.3       * u.8_
+      + 592 * u.1^2 * u.2^3 * u.3_
+      + 544 * u.1^2 * u.2   * u.3 * u.7_
+      - 320 * u.1^2 * u.2^2 * u.3_
+      + 128 * u.1^2 * u.3         * u.7_
+      + 448 * u.1^2 * u.2   * u.3_
+      + 64  * u.1^2         * u.3
+assertTrue(zero?(z0))
+
+-- +
+)set stream calc 15
+SER x ==> series(x,12)
+SER iA64
+z := SER(iA64_
+        -                             u.7       * u.12^3_
+        + 16  * u.1^2 * u.2 * u.8^3_
+        + 172 * u.1^2 * u.2^4 * u.3_
+        + 112 * u.1^2 * u.2^2 * u.3       * u.8_
+        + 592 * u.1^2 * u.2^3 * u.3_
+        + 544 * u.1^2 * u.2   * u.3 * u.7_
+        - 320 * u.1^2 * u.2^2 * u.3_
+        + 128 * u.1^2 * u.3         * u.7_
+        + 448 * u.1^2 * u.2   * u.3_
+        + 64  * u.1^2         * u.3_
+  )
+
+assertEquals(removeDuplicates [coefficient(z,i) for i in -10..300], [0])
+assertTrue(zero?(z::A1(C)))
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # THIS IS THE END
+
+-- # Try to solve holomorphic matrix
+
+level:=64; spitzen:=cusps(level)$GAMMA0;
+divs := DIVISORS level
+idivs := [i for i in 1..#divs]
+wght
+
+zmodform := zsolve4ti2(level, idivs, concat([0 for i in idivs], 2*wght))$QEQEV;
+
+vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
+zmodformzi := [members x(1..ndivs) for x in zmodform.zinhom]
+assertEquals(#zmodformzi, 40)
+wght
 
 
 
-)set stream calc 3
-monsRZ.1,monsRZ.2
-z := rzToAnCX(monsRZ.1+monsRZ.2);
+
+
+
+
+-- # Experiment with $M(32)$
+
+-- Looking more closely at the expression `kapolRZ`,
+-- we realize that it does no involve $\eta(\tau)$.
+-- This suggests that there might be a relation for $f_{128}$
+-- involving only
+-- $\eta(\delta\tau)$ for $\delta\in\{1,2,4,8,16,32\}$.
+
+--setFormats!([Format1D,FormatMathJax])$JFriCASSupport
+setFormats!([FormatMathJax])$JFriCASSupport
+
+level:=32; spitzen:=cusps(level)$GAMMA0;
+rgens32 := etaQuotientMonoidExponentVectors(level)$QEQEV;
+egens32 := [EQA1C r for r in rgens32];
+rsyms32 := indexedSymbols("R", #egens32)
+
+xgens32: List X1 C := [toX1(C, x, sy) for x in egens32 for sy in rsyms32]
+gen := genus(level)$GAMMA0
+tx32: X1 C := xgens32.1
+abex2 := samba(tx32, xgens32, gen)$QXTOPSAMBA1(C)
+
+kahalfpolRZ := reduce(_+, [leadingCoefficient x * monRZ concat(rest members degree x,0) for x in monomials kapolRZ]);
+
+level:=32; spitzen:=cusps(level)$GAMMA0;
+egens32n := [EQAnCX r for r in rgens32];
+xgens32n := [toXn(CX, x, sy) for x in egens32n for sy in rsyms32];
+u := egens32n;
+
+)set stream calc 2
+
+kahalfA32 := rzToAnCX kahalfpolRZ;
+qetaGrades(kahalfA32)
+cusps(level)$GAMMA0
+
+kahalfA32
+
+l := [qetaGrades x for x in u];
+kahalfl := cons(qetaGrades kahalfA32, l);
+matrix kahalfl
+
+z := kahalfA32 * u.4 / u.1;
+z := u.5*u.6*u.8/u.2
 qetaGrades z
+LM z
 
-assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true, false], [true]])
+LM kahalfA32
 
-divs
-idivs := [1,2,3,4,5,6];
-z := zsolve4ti2(64, idivs, concat([0 for i in idivs], [-2*wght,0,12]))$QEQEV;
-z.zinhom
+ixs := [5,6,7,8]
+lmu := [LM x for x in u];
+for x in lmu for i in 1.. repeat print([i, x])
+
+z1 := EV64RZ(umon1)
+z1 := reduce(_+, [leadingCoefficient x * monRZ concat(rest members degree x,0) for x in monomials z1])
+z2 := rzToAnCX z1
+LM z2
+LM kahalfA32
+
+--
+
+
+
+
+
+
+
+for cusp in spitzen for i in 1..#spitzen repeat _
+    print([cusp, WIDTH0(64, denom cusp)/WIDTH0(32, denom cusp), series(kaA64, i)]);
+
+for cusp in spitzen for i in 1..#spitzen repeat _
+    print([cusp, WIDTH0(64, denom cusp)/WIDTH0(32, denom cusp), series(kbA64, i)]);
+
+-- That is, if the quotient of the widths is 2, then the series is a
+-- series in $q^2$.
+-- In particular the series expansions for the cusp $1/64$ agrees with
+-- the series expansion of the cusp $1/128$ ($=\infty$).
+
+
+
+
+
+
 
 -- # Experiment: $M^\infty(32)$
 
@@ -862,81 +1046,34 @@ r2 := members(matLR * vector [8,-16,0,0,0,0,0,0,0,0,0])
 
 
 
--- ## Try to reduce in $M^\infty(64)$
+-- # TODO: Is every eta-quotient in the sum holomorphic?
 
--- By working in $M(64)$,
--- we have derived a sum of 10 eta-quotients of
--- a modular (for $\Gamma_0(64)$) function
--- `haser/(u.4*u.3*u.1^2)`
--- corresponding to $f_{128}$.
---
--- Note that `haser/(u.4*u.3)` was still in
--- $M^\infty(64)$.
---
--- The reduction involved a subtraction by `mon1`
--- and `mon2` that are not in $M^\infty(64)$.
-
-[qetaGrades(mon1), umon1]
-[qetaGrades(mon2), umon2]
-
--- By multiplication of the whole relation by `U1^2*U3`
--- (note that `Vi` corresponds to the inverse of `Ui`),
--- we can give a relation that lives completely in
--- $M^\infty(64)$.
+level := 128; spitzen := cusps(level)$GAMMA0
 
 )set mess typ on
-ru := rule
-        U1*V1==1
-        U3*V3==1
+monsRZ := [EV64RZ x for x in _
+   [umon1, umon2, umon3, umon4, umon5,_
+    umon6, umon7, umon8, umon9]]
+vexponents := [vector members degree m for m in monsRZ]
 
-EZ ==> Expression Z
-kaupol := eval((U1^2*U3*kupol)::EZ, [V1::EZ=(1/U1)::EZ, V3::EZ=(1/U3)::EZ])::Pol(Z);
-monomials kaupol
+ords := [(1/24*matrixLigozat(level)*v) for v in vexponents]
 
-v := [vector r for r in rgens64x];
-rcofactor5 := members(vector rcofactor3 - v.4)
-nrcofactor5 := NEGATE rcofactor5;
+monsA128 := [rzToAnCX x for x in monsRZ];
+[qetaGrades x for x in monsA128]
 
-)set stream calc 2
-ipolRZ := ha128polRZ * monRZ(rcofactor5);
-iser := rzToAnCX ipolRZ;
-qetaGrades iser
 
-ser := iser_
-        -                             u.7       * u.12^3_
-        + 16  * u.1^2 * u.2 * u.8^3_
-        + 172 * u.1^2 * u.2^4 * u.3_
-        + 112 * u.1^2 * u.2^2 * u.3       * u.8_
-        + 592 * u.1^2 * u.2^3 * u.3_
-        + 544 * u.1^2 * u.2   * u.3 * u.7_
-        - 320 * u.1^2 * u.2^2 * u.3_
-        + 128 * u.1^2 * u.3         * u.7_
-        + 448 * u.1^2 * u.2   * u.3_
-        + 64  * u.1^2         * u.3
-zero?(ser)
 
--- +
-)set stream calc 15
-SER x ==> series(x,12)
-SER iser
-z := SER(iser_
-        -                             u.7       * u.12^3_
-        + 16  * u.1^2 * u.2 * u.8^3_
-        + 172 * u.1^2 * u.2^4 * u.3_
-        + 112 * u.1^2 * u.2^2 * u.3       * u.8_
-        + 592 * u.1^2 * u.2^3 * u.3_
-        + 544 * u.1^2 * u.2   * u.3 * u.7_
-        - 320 * u.1^2 * u.2^2 * u.3_
-        + 128 * u.1^2 * u.3         * u.7_
-        + 448 * u.1^2 * u.2   * u.3_
-        + 64  * u.1^2         * u.3_
-  )
+)set stream calc 3
+monsRZ.1,monsRZ.2
+z := rzToAnCX(monsRZ.1+monsRZ.2);
+qetaGrades z
 
-assertEquals(removeDuplicates [coefficient(z,i) for i in -10..300], [0])
-assertTrue(zero?(z::A1(C)))
--- -
+assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true, false], [true]])
 
--- # THIS IS THE END
+divs
+idivs := [1,2,3,4,5,6];
+z := zsolve4ti2(64, idivs, concat([0 for i in idivs], [-2*wght,0,12]))$QEQEV;
+z.zinhom
 
 -- # Original derivation from Feb-2020
 
@@ -1205,9 +1342,3 @@ num0RE2 := NF(num0RE1x, etaRelations64RE);
 --TODO: Consider GB wrt degrevlex(E1, E64, E2, E32, E4, E16,  E8)
 
 [removeDuplicates sort [reduce(_+, members degree x) for x in monomials er] for er in etaRelations64RE]
-
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
