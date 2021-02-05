@@ -103,8 +103,8 @@ if (expansionAtAllCusps?) then (_
 rs := $rvectors;
 if not one?(det:=determinant first gammas) then (_
    tPrint("OUTPUT STARTS HERE");_
-   vPrint("gamma", first gammas);_
-   vPrint("Error: Determinant of gamma is not 1. det(gamma)", det);_
+   cPrint("gamma", first gammas);_
+   cPrint("Error: Determinant of gamma is not 1. det(gamma)", det);_
    systemCommand("quit"))
 
 minroots := unityroots(m, rs, gammas)

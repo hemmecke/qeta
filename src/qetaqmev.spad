@@ -101,7 +101,7 @@ OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
-vPrint(x,y) ==> display77(hconcat([yof "-- ", yof x, yof ":=", y::OF]$List(OF)))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 )if LiterateDoc
 These two technical macros are necessary to distinguish between Rep
@@ -677,8 +677,8 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     basisReduction(basis: List VZ, ix: VZ): List VZ ==
         for b in basis repeat if not good?(b, ix) then
-            vPrint("b", b)
-            vPrint("ix", ix)
+            tracePrint("b", b)
+            tracePrint("ix", ix)
             error "basis does not fulfil input condition"
         red? := true
         n: Z := #ix
@@ -689,7 +689,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
             for i in 1..#bas repeat
                 b := bas.i
                 lb := length2(b, ix)
-                vPrint("i,lb,b", [vector [i, lb], b]@List VZ)
+                tracePrint("i,lb,b", [vector [i, lb], b]@List VZ)
                 for k in 1..#bas | k ~= i repeat
                     v := bas.k
                     while greater?(b, v, ix) and

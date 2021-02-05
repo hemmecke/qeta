@@ -65,7 +65,10 @@ and \%.
 
 OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
-vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+
 
 
 rep x ==> (x@%) pretend Rep
@@ -428,20 +431,20 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
 
     traceEnter(verbosity: N): (F, AB) -> Void == (f: F, ab: AB): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("-------------------------------red u", traceout(verbosity)(f))
+        tracePrint("-----------------------------red u", traceout(verbosity)(f))
         if verbosity > 1 and AB has QEtaAlgebraBasisCategory(C, F) then
             n: Z := qetaGrade multiplier ab - 1
             l: List List F := [basis(ab, i) for i in 1..n]
             gs: List List Z := [[qetaGrade x for x in bs] for bs in l]
-            vPrint("red gs", gs)
+            tracePrint("red gs", gs)
 
     traceLoop(verbosity: N): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("red loop", traceout(verbosity)(f))
+        tracePrint("red loop", traceout(verbosity)(f))
 
     traceReturn(verbosity: N): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("redx", traceout(verbosity)(f))
+        tracePrint("redx", traceout(verbosity)(f))
 
 
 
@@ -733,7 +736,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
             if grdb < v.k then v.k := grdb
         numOfGaps: Z := 0
         for j in 1..grdt-1 repeat numOfGaps := numOfGaps + floor(v.j /$Q grdt)
-        vPrint("numOfGaps", numOfGaps)
+        tracePrint("numOfGaps", numOfGaps)
         numOfGaps <= g => false
         criticalElements? y
 
@@ -983,9 +986,9 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
 
     trace(n: N): % -> Void == (x: %): Void +->
         zero? n => void() -- abort early
-        vPrint("==================================step(#cbe,#pairs)",_
+        tracePrint("==================================step(#cbe,#pairs)",_
             [#(xx.cbe), #(xx.pairs)]$List(Z))
-        if n > 1 then vPrint("+++ grades(cbe, pairs)",_
+        if n > 1 then tracePrint("+++ grades(cbe, pairs)",_
             [[qetaGrade b for b in xx.cbe], sort keys xx.pairs]$List(List Z))
 
     oneVerboseStep!(ny: N, n0: N, nl: N, nr: N): % -> % ==

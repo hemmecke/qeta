@@ -22,7 +22,7 @@ OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
-vPrint(x,y) ==> display77(hconcat([yof "-- ", yof x, yof ":=", y::OF]$List(OF)))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 
 
@@ -655,28 +655,28 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
 
     traceEnter(verbosity: N): (F, AB) -> Void == (f: F, ab: AB): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("-------------------------------red u", traceout(verbosity)(f))
+        tracePrint("-----------------------------red u", traceout(verbosity)(f))
         not (AB has XEtaAlgebraBasisCategory(C, F)) => void()
         if verbosity > 1 then
             idx := indexPermutation ab
-            vPrint("red idx", idx)
+            tracePrint("red idx", idx)
         if verbosity > 2 then
             mults: MUL := multipliers ab
-            vPrint("red mults", [qetaGrades m for m in entries mults])
+            tracePrint("red mults", [qetaGrades m for m in entries mults])
         if verbosity > 3 then
             be: V := basisElements ab
             n: P := maxIndex()$F
             v: Vector List List List Z :=
                 l := [[[qetaGrades b for b in lb] for lb in entries be.k] for k in 1..n]
-            vPrint("red be", v)
+            tracePrint("red be", v)
 
     traceLoop(verbosity: N): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("red loop", traceout(verbosity)(f))
+        tracePrint("red loop", traceout(verbosity)(f))
 
     traceReturn(verbosity: N): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("redx", traceout(verbosity)(f))
+        tracePrint("redx", traceout(verbosity)(f))
 
 
 )if LiterateDoc
@@ -1028,12 +1028,12 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
 
     trace(verbosity: N): % -> Void == (x: %): Void +->
         zero? verbosity => void() -- abort early
-        vPrint("==================================step(#cbe,#pairs)",_
+        tracePrint("==================================step(#cbe,#pairs)",_
             [#(xx.cbe), #(xx.pairs)]$List(Z))
         one? verbosity => void()
-        vPrint("+++ keys(pairs)", [sort keys xx.pairs]$List(Z))
+        tracePrint("+++ keys(pairs)", [sort keys xx.pairs]$List(Z))
         verbosity = 2 => void()
-        vPrint("+++ grades(cbe)", [b.sgi for b in xx.cbe]$List(List List Z))
+        tracePrint("+++ grades(cbe)", [b.sgi for b in xx.cbe]$List(List List Z))
 
     oneVerboseStep!(ny: N, n0: N, nl: N, nr: N): % -> % ==
         oneTracedStep!(trace ny, traceEnter(n0)$R,

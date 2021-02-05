@@ -40,6 +40,7 @@ function fricas_program {
     LEVEL=$1
     cat <<EOF
 )read etacompute
+tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_
 level := $LEVEL
 )read $SOMOS/somos$LEVEL.input
 f: XHashTable(Symbol, Pol) := table();
@@ -63,20 +64,14 @@ skeys: List String := sort xkeys;
 fkeys: LSym := [x(position(char ".", x)\$String+1..#x)::Symbol for x in skeys];
 for k in fkeys repeat f(k) := toEta(level, h k)
 
-)set output linear on
-)set output algebra off
-)set message type off
 divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
 syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
 toR ==> coerce\$PC
-OF==>OutputForm
-display77(x) ==> display((x::OF)::Formatter(Format1D))
-vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
-print("-- Somos eta relations --"::Symbol::OF);
+tPrint("-- Somos eta relations --");
 for k in fkeys repeat vPrint(k, toR(f.k));
-print("-- Somos eta generators --"::Symbol::OF);
+tPrint("-- Somos eta generators --");
 vPrint("somosEtaGenerators$LEVEL", fkeys);
 EOF
 }

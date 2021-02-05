@@ -75,7 +75,7 @@ OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
-vPrint(x,y) ==> display77(hconcat([yof "-- ", yof x, yof ":=", y::OF]$List(OF)))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 )if LiterateDoc
 %$
@@ -392,7 +392,6 @@ QEtaAuxiliaryPackage: with
             for j in 2..n repeat -- for all divisors > 1
                 qsetelt!(mat, i+3, j, primePower(asP(d.j), p))
             qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
-        --vPrint("rstarConditionMatrix", mat)
         return mat
 
     matrixLigozatRStar(m: P, idivs: List Z): MZ ==
@@ -660,8 +659,8 @@ at all cusps of $\Gamma_1(N$)$.
         while not one? gcd(l, m) or not one? gcd(nn, l) repeat
             l := l + e
             if l >= nn then -- safety check -- should actually not happen
-               vPrint("[nn, numer cusp, denom cusp, c, m, e]",
-                       [nn, numer cusp, denom cusp, c, m, e]$List(Z))
+               tracePrint("[nn, numer cusp, denom cusp, c, m, e]",
+                           [nn, numer cusp, denom cusp, c, m, e]$List(Z))
                error "matrixEtaOrder: lambda too big"
 
         h: Z := gcd(delta, e)
@@ -728,18 +727,13 @@ QAuxiliaryModularPackage(L): Exports == Implementation where
         o: Z := min ords
         nmons: N := # mons      -- number of variables
         for neqs in nmons..1 by -1 repeat
-            --vPrint("neqs", neqs)
             mat: MZ := new(neqs, nmons, 0)
-            --vPrint("nmons, neqs, o", concat([nmons, neqs, o], ords))
             v: VZ := new(neqs, 0)
             for i in 1..neqs repeat -- number of equations
                 v.i := - coefficient(ll, o+i-1)
                 for j in 1..nmons for l in ls repeat -- number of coefficients
                     mat(i, j) := p*coefficient(l, o+i-1)
             sol := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
-            --vPrint("mat",mat)
-            --vPrint("v",v)
-            --vPrint("sol", sol)
             if sol.particular case VZ then
                 s := (sol.particular) :: VZ
                 adjust := [p*c*term(x) for c in members s for x in mons]
@@ -755,14 +749,14 @@ QAuxiliaryModularPackage(L): Exports == Implementation where
                     while zero? positiveRemainder(c, x) repeat
                         c := (c exquo x)::Z
                 return (z exquo c)::ZX
-        vPrint("annihilateLeadingCoefficients", "nothing annihilated"::Symbol)
+        tracePrint("annihilateLeadingCoefficients", "nothing annihilated"::Symbol)
         return primitivePart pol
 
     annihilateLeadingCoefficients(p: P, ev: ZX -> L): ZX -> ZX ==
       (pol: ZX): ZX +->
         --assert(not zero? pol)
         mons: List ZX := monomials pol
-        vPrint("mons", [term(x) for x in mons])
+        tracePrint("mons", [term(x) for x in mons])
         annihilateCoefficients(p, mons, ev)(pol)
 
 )endif

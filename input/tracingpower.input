@@ -2,14 +2,15 @@
 -- Tracing functions for powersamba
 -------------------------------------------------------------------
 rEntern(u: Xn CX, ab: QXABn CX): Void == (_
-    vPrint("-- -----------------------------------------------red u", qetaGrades u);_
-    vPrint("-- ---------------------------red lc u", [qetaLeadingCoefficient(u, k) for k in 1..maxIndex()$Xn(CX)])_
-    );
+    tracePrint("-----------------------------------------red u", qetaGrades u);_
+    tracePrint("--------------------------red lc u", _
+               [qetaLeadingCoefficient(u, k) for k in 1..maxIndex()$Xn(CX)])_
+);
 -------------------------------------------------------------------
 rLoopn(u: Xn CX): Void == (_
-    vPrint("-- red loop", qetaGrades u));
+    tracePrint("red loop", qetaGrades u));
 -------------------------------------------------------------------
-rReturnn(u: Xn CX): Void == vPrint("-- redx", first u);
+rReturnn(u: Xn CX): Void == tracePrint("redx", first u);
 -------------------------------------------------------------------
 Yn ==> QXCOMPn CX;
 SXn ==> Record(sgi: List List Z, elem: Xn CX);
@@ -19,10 +20,8 @@ YnRep ==> Record(ab: QXABn CX, cbe: List SXn, pairs: Products);
 yyn ==> y pretend YnRep;
 -------------------------------------------------------------------
 ytracen(y: Yn): Void == (_
-    vPrint("-- ==================================step(#cbe,#pairs)",_
+    tracePrint("==================================step(#cbe,#pairs)",_
            [#(yyn.cbe), #(yyn.pairs)]$List(Z))_
-    )
--- noTrace(x: Yn): Void == void()
--------------------------------------------------------------------
--- onetnStep!(y: Yn): Yn == (oneTracedStep!$Yn)(noTrace, rEntern, rLoopn, rReturnn)(y)
+);
+
 onetnStep!(y: Yn): Yn == (oneTracedStep!$Yn)(ytracen, rEntern, rLoopn, rReturnn)(y)

@@ -72,9 +72,6 @@ skeys: List String := sort [x for x in xkeys | not empty? x];
 fkeys: LSym := [x(position(char ".", x)\$String+1..#x)::Symbol for x in skeys];
 for k in fkeys repeat f(k) := toEta(level, h k)
 
-)set output linear on
-)set output algebra off
-)set message type off
 divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
 syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
@@ -85,9 +82,7 @@ PC ==> PolynomialConversion(C, E, syms)
 xnf ==> extendedNormalForm\$QEtaGroebner(C, E);
 gsyms: LSym := indexedSymbols("g", #g)\$QAuxiliaryTools
 toR ==> coerce\$PC
-OF==>OutputForm
-display77(x) ==> display((x::OF)::Formatter(Format1D))
-vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
+tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_
 printPol(k: Symbol, lsyms: LSym, ldim: N, p: PolC): Void == (_
     DX := DirectProduct(ldim, N); _
     EX := Monomials(ldim, N, DX, lsyms); _
@@ -104,13 +99,13 @@ printPol(k: Symbol, lsyms: LSym, ldim: N, p: PolC): Void == (_
     if not zero? z then (print(k); print(z); error "NONZERO RELATION"); _
     display77(r::OutputForm));
 
-print("-- eta relations --"::Symbol::OF)
+tPrint("-- eta relations --")
 for i in 1..#g for p in g repeat vPrint(concat("g", string i), toR p);
 
-print("-- Somos eta relations --"::Symbol::OF);
+tPrint("-- Somos eta relations --");
 for k in fkeys repeat vPrint(k, toR(f.k));
 
-print("-- Relation relations --"::Symbol::OF)
+tPrint("-- Relation relations --")
 for k in fkeys repeat (_
     p: PolC := xnf(f.k, g, syms, k, "g"); _
     lsyms: LSym := cons(k, gsyms); _

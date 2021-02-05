@@ -41,11 +41,8 @@ function fricas_program {
         COMMENT="";
     fi
     cat <<EOF
-)set output linear on
-)set output algebra off
-)set message type off
 )set message prompt none
-)read etacompute
+)read etacompute )quiet
 level := $LEVEL
 )read $FILE1
 )read $FILE2
@@ -57,9 +54,6 @@ D ==> HomogeneousDirectProduct(dim, N);
 V ==> Vector R
 X ==> Record(poly: R, repr: V, mult: C)
 toR ==> coerce\$PolynomialConversion(C, E, syms)
-OF==>OutputForm
-display77(x) ==> display((x::OF)::Formatter(Format1D))
-vPrint(x,y) ==> display77(hconcat([x::Symbol::OF, " := "::Symbol::OF, y::OF]))
 
 f: List R := [toR p for p in $F]
 g: List R := [toR p for p in $G]

@@ -74,8 +74,11 @@ These two technical macros are necessary to distinguish between Rep
 and \%.
 )endif
 
+OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
-vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, ":="::Symbol::OF, y::OF]$List(OF)))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %

@@ -79,8 +79,9 @@ Let us start with a few common macros.
 )endif
 OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
-vPrint(x,y) ==> display77(hconcat(["-- "::Symbol::OF, x::Symbol::OF, _
-                                   ":="::Symbol::OF, y::OF]$List(OF)))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 )if LiterateDoc
 %$
@@ -145,13 +146,13 @@ QEtaIdealHemmeckeCached(C): Exports == Implementation where
         -- Now we have the algebra basis together with how it relates to the
         -- originally given elements.
         xzgens: List X := concat entries basisElements ab
-        vPrint("xzgens", xzgens)
+        tracePrint("xzgens", xzgens)
         -- Each of the original given elements must be representable in
         -- the algebra basis.
         xmpols: List X := [xreduce(xx, ab) for xx in xmgens]
         -- So this reduction should result in 0 in the first component
         -- and a relation among the initially given elements.
-        vPrint("xmpols", xmpols)
+        tracePrint("xmpols", xmpols)
         -- Safety check
         for x in xmpols | not zero? x repeat
             error "polynomialRelations: non-zero-reduction"
@@ -175,7 +176,7 @@ QEtaIdealHemmeckeCached(C): Exports == Implementation where
                 xpgens := cons(p, xpgens)
             l := rest l
 
-        vPrint("xpgens", xpgens)
+        tracePrint("xpgens", xpgens)
 
         mpgens: LPol := lpol concat(xmpols, xpgens)
         -- Now we already have all the relations.
@@ -184,23 +185,23 @@ QEtaIdealHemmeckeCached(C): Exports == Implementation where
         -- Groebner basis, but rather in a set of generators of the
         -- respective ideal, it is enough to return these generators.
 
-        vPrint("mpgens", mpgens)
+        tracePrint("mpgens", mpgens)
 
         -- We build in a safety check, ie., plug in the respective series
         -- and check whether the result is zero.
         fc(c: C): L == c::L
         PE ==> PolynomialEvaluation(C, L)
-        vPrint("mysyms", msyms)
+        tracePrint("mysyms", msyms)
         evalmpgens: List L := [eval(x, fc, msyms, mgens)$PE for x in mpgens]
-        vPrint("evalmpgens", evalmpgens)
-        vPrint("zerompgens", [zero? x for x in evalmpgens])
+        tracePrint("evalmpgens", evalmpgens)
+        tracePrint("zerompgens", [zero? x for x in evalmpgens])
         dim: P := asP(#mgens)
         -- There is no need to compute a Groebner basis.
         -- mrels: LPol := groebner(dim, msyms, mpgens)
         mrels: LPol := [x for x in mpgens | not zero? x]
-        vPrint("mrels", mrels)
-        vPrint("lenmrels", #mrels)
-        vPrint("totaldegmrels", [totalDegree x for x in mrels])
+        tracePrint("mrels", mrels)
+        tracePrint("lenmrels", #mrels)
+        tracePrint("totaldegmrels", [totalDegree x for x in mrels])
         return mrels
 
 )if LiterateDoc
