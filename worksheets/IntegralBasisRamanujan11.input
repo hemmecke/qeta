@@ -95,8 +95,14 @@ r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
 
 )set output linear on
 )set output algebra off
+xiord: P := 2; -- order of the root of unity
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+)read ../input/convenience )quiet
+spitzen := cusps(121)$GAMMA0;
+)read ../input/modfuns.input
+)r ../input/modfuns.input
 
-ff := zcmap modularSiftedPartitionSeries(11, m, t);
+ff := modularSiftedPartitionSeries(11, m, t);
 xf := toX1(C, ff, F)
 
 -- The generating series does not reduce to zero modulo the
@@ -111,44 +117,44 @@ xfrb := reduce(xf, xabb)$QXTOPRED1(C)
 -- # xfab=samba($t$, $\{dt\}$)
 
 q := monomial(1,1)$A1(C) -- d/d(tau) q(tau) = 2*pi*i*exp(2*pi*i*tau) = 2*pi*i*q
-dt := q*D(eqgens.1)/polyToA1(E1^2*E11^2)
+dt := q*D(eqgens.1)/polyToA1C(E1^2*E11^2)
 xdt := toX1(C, dt, 'T1)
 xdgens := [xt, xdt]
 xdab := samba(xt, xdgens, 1, onet1Step!)$QXTOPSAMBA1(C);
 
-d2t := q*D(dt)/polyToA1a(E1^2*E11^2)
+d2t := q*D(dt)/polyToA1C(E1^2*E11^2)
 xd2t := toX1(C, d2t, 'T2)
 xd2ab := samba(xt, [xt, xdt, xd2t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
-d3t := q*D(d2t)/polyToA1(E1^2*E11^2)
+d3t := q*D(d2t)/polyToA1C(E1^2*E11^2)
 xd3t := toX1(C, d3t, 'T3)
 xd3ab := samba(xt, [xt, xdt, xd2t, xd3t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
-d4t := q*D(d3t)/polyToA1((E1^2*E11^2))
+d4t := q*D(d3t)/polyToA1C((E1^2*E11^2))
 xd4t := toX1(C, d4t, 'T4)
 xd4ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t], 1, onet1Step!)$QXTOPSAMBA1(C);
 
 xr := reduce(xf, xd4ab)$QXTOPRED1(C);
 xr
 
-d5t := q*D(d4t)/polyToA1(E1^2*E11^2)
+d5t := q*D(d4t)/polyToA1C(E1^2*E11^2)
 xd5t := toX1(C, d5t, 'T5)
 xd5ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
 -- The following stuff gives nonsense, because it is no longer in M^\infty(11).
 
-d6t := q*D(d5t)/polyToA1(E1^2*E11^2)
+d6t := q*D(d5t)/polyToA1C(E1^2*E11^2)
 xd6t := toX1(C, d6t, 'T6)
 xd6ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
-d7t := q*D(d5t)/polyToA1(E1^2*E11^2)
+d7t := q*D(d5t)/polyToA1C(E1^2*E11^2)
 xd7t := toX1(C, d7t, 'T7)
 xd7ab := samba(xt, [xt, xdt, xd2t, xd3t, xd4t, xd5t, xd6t, xd7t], 0, onet1Step!)$QXTOPSAMBA1(C);
 
 
 cft := first xt
 cfdgens := [first x for x in xdgens]
-cfab := samba(first xt, cfdgens, 1, cfonet1Step!)$QTOPSAMBA1(C);
+cfab := samba(first xt, cfdgens)$QTOPSAMBA1(C);
 
 
 xdfgens := [xt, xdt, xf]
