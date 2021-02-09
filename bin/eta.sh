@@ -1,4 +1,10 @@
 #!/bin/bash
+###################################################################
+#
+# Eta relations
+# Copyright 2015-2021,  Ralf Hemmecke <ralf@hemmecke.org>
+#
+###################################################################
 # This script should be started from the directory where it is located.
 # Best, use the respective Makefile in the same directory.
 
@@ -92,7 +98,7 @@ C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C)
 $DEPQMEV: List(List Z) := [];
 )read $2/$3/$DEPQMEV.input )quiet
-$DEPQIG: LPol :=[];
+$DEPQIG: LPol C :=[];
 )read $2/$3/$DEPQIG.input )quiet
 divs: List Z := DIVISORS($1)
 esyms: LSym := indexedSymbols("E", divs) \$ QAuxiliaryTools
@@ -130,7 +136,7 @@ function Relations {
 )read etacompute.input )quiet
 C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C)
-$DEP: LPol := [];
+$DEP: LPol C := [];
 )read $2/$3/$DEP.input )quiet
 divs: List Z := divisors($1)\$IntegerNumberTheoryFunctions
 syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
@@ -194,9 +200,12 @@ if [ $CMD = "Relations" ]; then
     GENS=etaLaurentIdealGenerators$N
     INFILE=$DIR/$VARIANT/$GENS
     sed -e 's/^--/#--/;s/:=/=/;s/;$//' $INFILE.input > $INFILE.sage
-    sage etagb.sage $N "$INFILE.sage" $GENS "etaRelations$N" 2>&1 | sed 's/ //g;s/,/, /g' | tee $FILE.tmp
+    sage $ROOT/sagemath/etagb.sage $N "$INFILE.sage" $GENS "etaRelations$N" 2>&1 \
+        | sed 's/ //g;s/,/, /g;s/Time:/ Time: /;s/sec$/ sec/' \
+        | tee $FILE.tmp
 else
-    $CMD $N $DIR $VARIANT | FRICAS_INITFILE='' fricas -nosman 2>&1 | tee $FILE.tmp
+    $CMD $N $DIR $VARIANT | FRICAS_INITFILE='' fricas -nosman 2>&1 \
+        | tee $FILE.tmp
 fi
 
 echo [F=$FILE]

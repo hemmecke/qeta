@@ -1,4 +1,10 @@
 #!/usr/bin/env sage
+###################################################################
+#
+# Eta relations
+# Copyright 2015-2021,  Ralf Hemmecke <ralf@hemmecke.org>
+#
+###################################################################
 
 import sys
 from sage.all import *
@@ -48,7 +54,11 @@ else:
     generators = invrelations + [g for g in gensred if g != 0]
 
 I = Ideal(generators)
-time G = I.groebner_basis('libsingular:slimgb')
+
+from sage.misc.misc import cputime as CPUtime
+starttime = CPUtime()
+G = I.groebner_basis('libsingular:slimgb')
+print("Time: %.2f sec" % (CPUtime(starttime)))
 sys.stdout.write(outvar + ' := ')
 
 if laurent < 0:
