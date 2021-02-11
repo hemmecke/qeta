@@ -3,7 +3,31 @@
 
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input
 
+--
 -- # Init
+
+-- In this file we deal with the computation of a relation for $f_45$ that is printed in Section 6.3 (page 81) of \cite{Brunault+Zudilin:ManyVariationsMahlerMeasures:2020}.
+--
+-- We find the 3 term relation:
+--
+-- $$
+-- f_{45} =
+--   \frac{\eta_{15}}{\eta_5^3 \eta_{45}^3}
+-- - \frac{\eta_1 \eta_9 \eta_{15}^6}{\eta_5^2 \eta_{45}^2}
+-- - \frac{\eta_3^2  \eta_5^2 \eta_{45}^2}
+--        {\eta_1 \eta_9}
+-- $$
+--
+--
+--
+--     @Book{Brunault+Zudilin:ManyVariationsMahlerMeasures:2020,
+--       author =       {Fran{\c}ois Brunault and Wadim Zudilin},
+--       title =        {Many Variations of Mahler Measures},
+--       publisher =    {Cambridge University Press,
+--       year =         2020,
+--       ISBN =         {9781108794459},
+--       URL =          {https://www.cambridge.org/at/academic/subjects/mathematics/number-theory/many-variations-mahler-measures-lasting-symphony?format=PB&isbn=9781108794459}
+--     }
 
 -- +
 -------------------------------------------------------------------
@@ -14,6 +38,7 @@
 C ==> Q
 VZ ==> Vector Z
 MZ ==> Matrix Z
+NEGATE x ==> members(- vector x) -- negate all entries in a list
 )set mess type off
 )set mess time off
 )read /home/hemmecke/g/qeta/input/convenience.input )quiet
@@ -24,7 +49,6 @@ MZ ==> Matrix Z
 -------------------------------------------------------------------
 --endsetup
 -------------------------------------------------------------------
--- -
 
 
 -- +
@@ -34,13 +58,72 @@ MZ ==> Matrix Z
 -- -
 
 
+-- From a paper of Zudilin below the table called
+-- "Hypergeometric motives for rigid Calabi–Yau manifolds"
+-- $f_{45}$
+
+q := monomial(1,1)$L1(C)
+
+-- See the forwarded mail
+--
+--     From: Cristian-Silviu Radu <sradu@risc.jku.at>
+--     Date: Thu, 6 Feb 2020 14:16:19 +0100
+--
+--       Date: Mon, 3 Feb 2020 16:33:17 +0100
+--       From: Wadim Zudilin <wzudilin@gmail.com>
+--
+--
+-- $$
+-- f_{45} =
+--    \eta_1 \eta_3 \eta_5 \eta_{15}
+--  + \eta_3 \eta_9 \eta_{15} \eta_{45}
+--  + 2 \eta_3 \eta_{15}^3
+--  - 4 \eta_3 \eta_{15} \eta_{45}^2
+--      \frac{\eta_{45,3} \eta_{45,9} \eta_{45,12}}
+--           {\eta_{45, 18}}
+-- $$
+-- where with $q = e^{2\pi i \tau}$ the generalized eta-quotient is defined as
+-- $$
+-- \eta_{\delta,g}(\tau)
+-- =
+-- q^{\frac{\delta}{2}P_2\left(\frac{g}{\delta}\right)}
+--   \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}}
+--        (1-q^n)
+--   \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}}
+--        (1-q^n)
+-- $$
+-- and
+-- $$
+-- P_2(t) = \{t\}^2 - \{t\} + \frac{1}{6}
+-- $$
+-- is the second Bernoulli function and $\{t\}$ denotes the fractional
+-- part of $t$, see
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+--
+
+f45silviu := 1*q+1*q^2-1*q^4-1*q^5-3*q^8-1*q^10+4*q^11-2*q^13-1*q^16-2*q^17 _
+  +4*q^19+1*q^20+4*q^22+1*q^25-2*q^26+2*q^29+5*q^32-2*q^34-10*q^37 _
+  +4*q^38+3*q^40-10*q^41+4*q^43-4*q^44-8*q^47-7*q^49+1*q^50+2*q^52 _
+  +10*q^53-4*q^55+2*q^58+4*q^59-2*q^61+7*q^64+2*q^65+12*q^67+2*q^68 _
+  +8*q^71+10*q^73-10*q^74-4*q^76+1*q^80-10*q^82-12*q^83+2*q^85+4*q^86 _
+  -12*q^88+6*q^89-8*q^94-4*q^95+2*q^97-7*q^98
+
+xgeq rr ==> expansion(generalizedEtaQuotient(rr)$ETA(C))
+f45 := _
+  xgeq [[1],[3],[5],[15]] _
+  + xgeq [[3],[9],[15],[45]]_
+  + 2*xgeq [[3],[15,3]]_
+  - 4*xgeq [[3],[15],[45,2],_
+       [45,3,1], [45,9,1], [45,12,1], [45, 18,-1]]
+
+assertEquals(order(f45silviu - f45, 100), 100)
+
 -- The generators of the $\eta$-quotients of level 45 are given by
 -- these exponents for the $\eta$ functions (with arguments being the
 -- divisors of 45). The variable `rgens` corresponds to the generators
 -- of $R^\infty(45)$.
 
 level := 45;
-
 rgens := etaQuotientMonoidExponentVectors(level)$QEQEV;
 rgensExpected: List List Z := [_
     [0, -1, 0, 3, 1, -3], [0, -1, 0, 1, 5, -5], [1, -1, 1, 2, 1, -4],_
@@ -67,90 +150,52 @@ assertEquals([qetaGrade x for x in eqgens],_
     16, 16, 16, 16, 17, 18])
 
 msyms := indexedSymbols("M", #eqgens)
-xeqgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
+xgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
--- for $C[M_1,\ldots,M_28]$.
+-- for $C[M_1,\ldots,M_{43}]$.
 
-tex: X1 C := xeqgens.1
-abex := samba(tex, xeqgens, 0, oneVerboseStep!(1,1,1,2))$QXTOPSAMBA1(C)
-
+tx: X1 C := xgens.1;
 assertEquals(genus(level)$GAMMA0, 3)
-assertEquals(numberOfGaps(abex), 3)
+abx := samba(tx, xgens, 3)$QXTOPSAMBA1(C);
 
-bas := sort(smallerGrade?, basis abex);
-t := multiplier abex
-grdt := qetaGrade t
+assertEquals(numberOfGaps(abx), 3)
+
+bas := basis abx
+t := multiplier abx
+grdt := qetaGrade t;
+assertEquals(grdt, 4)
 assertEquals(# bas, grdt-1)
 
--- From a paper of Zudilin below the table called
--- "Hypergeometric motives for rigid Calabi–Yau manifolds"
--- $f_{45}$
-
-q := monomial(1,1)$A1(C)
-
--- Zudilin (Mail Silviu "Date: Thu, 6 Feb 2020 14:16:19 +0100")
---
--- $f_{45}(\tau) = eta^(1,1,1,0,1,0) + eta^(0,1,0,1,1,1) + 2*eta^(0,1,0,0,3,0) -
---              4*eta^(0,1,0,0,1,2)*q^(7/2)*
---              geneta(45, [3,9,12,-18,-27,33,36,42])$
-
-f45silviu := 1*q+1*q^2-1*q^4-1*q^5-3*q^8-1*q^10+4*q^11-2*q^13-1*q^16-2*q^17 _
-  +4*q^19+1*q^20+4*q^22+1*q^25-2*q^26+2*q^29+5*q^32-2*q^34-10*q^37 _
-  +4*q^38+3*q^40-10*q^41+4*q^43-4*q^44-8*q^47-7*q^49+1*q^50+2*q^52 _
-  +10*q^53-4*q^55+2*q^58+4*q^59-2*q^61+7*q^64+2*q^65+12*q^67+2*q^68 _
-  +8*q^71+10*q^73-10*q^74-4*q^76+1*q^80-10*q^82-12*q^83+2*q^85+4*q^86 _
-  -12*q^88+6*q^89-8*q^94-4*q^95+2*q^97-7*q^98
-
--- generalized eta-quotient
--- From: Cristian-Silviu Radu <sradu@risc.jku.at>
--- Date: Thu, 6 Feb 2020 14:16:19 +0100
-
-a(n,k)==(1-q^(45*n+k))
-xn(n) == reduce(_*, [a(n,k) for k in [3,9,12,33,36,42]])
-xd(n) == reduce(_*, [a(n,k) for k in [18,27]])
-s1 := reduce(_*, [xn(n)/xd(n) for n in 0..10])
-
-geqprefactor := expansion((q24(7*12)$ETA(C)) * YEQ1C[0,1,0,0,1,2])
-f45etapart := EQA1C[1,1,1,0,1,0] + EQA1C[0,1,0,1,1,1] + 2*EQA1C[0,1,0,0,3,0]
-f45trunc := f45etapart - 4 * geqprefactor * s1
-
-s2 := generalizedEulerProduct(45, [3,9,12,33,36,42])$QFunctions(C, A1 C)_
-      /_
-      generalizedEulerProduct(45, [18,27])$QFunctions(C, A1 C)
-
-f45 := f45etapart - 4 * geqprefactor * s2
-
-z := f45 - f45trunc
-assertTrue(zero? z)
-
-divs := DIVISORS level
-idivs := [i for i in 1.. #divs-1]
+divs := DIVISORS level;
+idivs := [i for i in 1.. #divs-1];
 rwgens := etaQuotientExponentVectors(level, idivs, -4)$QEQEV;
 
-rcofactor := rwgens.1
-assertEquals(rcofactor, [0, - 1, 0, 3, 3, - 9])
+rfcofactor := rwgens.1
+assertEquals(rfcofactor, [0, - 1, 0, 3, 3, - 9])
 
-fcofactor := EQA1C rcofactor
 fcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in fcofactors], _
   [14, 16, 18, 19, 19, 20, 20, 21, 22, 22, 23, 23, 24, 24, 26])
 
-f := f45 * fcofactor
+-- In the following, we will deal with the modular function
+-- $f \in M^\infty(45)$.
+
+f := f45 * EQA1C rfcofactor
 xf := toX1(C, f, 'F)
-xfr := reduce(xf, abex)$QXTOPRED1(C)
+xfr := reduce(xf, abx)$QXTOPRED1(C)
 assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
 
 ixfr := 5*xfr
-pol := second(ixfr)::PolC + F  -- This corresponds to the mod func f.
+fmpol := second(ixfr)::PolC + F  -- This corresponds to the mod func f.
 
--- pol corresponds to the modular function f_45 * fcofactor
+-- `fmpol` corresponds to the modular function $f$.
 
-assertEquals(pol, (-M1^2+3*M1)*M3+(M1^2-6*M1-5)*M2+4*M1^2-M1-5)
+assertEquals(fmpol, (-M1^2+3*M1)*M3+(M1^2-6*M1-5)*M2+4*M1^2-M1-5)
 
-pol0 := M0*pol -- Corresponds to the original f45.
-assertEquals(# monomials pol0, 8)
+f45mpol := M0*fmpol -- Corresponds to the original f45.
+assertEquals(# monomials f45mpol, 8)
 
 -- We convert the polynomial in the Mi into a Laurent polynomial in
 -- the Ei variables.
@@ -158,18 +203,17 @@ assertEquals(# monomials pol0, 8)
 esyms := indexedSymbols("E", divs)
 dim: N := #esyms
 
-rgens0 := members(- vector rcofactor)
-vals := cons(monRZ rgens0, [monRZ x for x in rgens])
-vars := cons(M0, msyms)
+m0symsRZ := cons(monRZ NEGATE rfcofactor, [monRZ x for x in rgens]);
+m0syms := cons('M0, msyms);
 
--- The following gives f_45 in terms of eta-quotients
+-- The following gives $f_{45}$ in terms of eta-quotients.
 
 -- Let's first check whether the expansion for the modular function f is
 -- correctly expressed in eta-quotients.
 
 -- The Laurent polynomial (in Ei variables) that belongs to $f$.
 
-fpolRZ := EVALRZ(vars, vals, pol);
+fpolRZ := EVALRZ(m0syms, m0symsRZ, fmpol);
 
 z := rzToA1C fpolRZ - f
 
@@ -184,53 +228,51 @@ assertTrue(zero? z)
 minEntries(x: DZ, y: DZ): DZ == (_
     directProduct vector [min(x.i, y.i) for i in 1..#x]);
 
-dzs := [degree mon for mon in monomials fpolRZ]
-denRZ := monomial(1, - reduce(minEntries, dzs, 0$DZ)$List(DZ))$RZ
+fmonsDZ := [degree mon for mon in monomials fpolRZ];
 
-rez denRZ
-rez(fpolRZ * denRZ)
+fdenDZ := - reduce(minEntries, fmonsDZ, 0$DZ)$List(DZ);
+assertEquals(fdenDZ::VZ, vector [0, 3, 0, 0, 0, 11])
 
--- Now we do the same thing for the modular form f45 itself.
+fdenRZ := monomial(1, fdenDZ)$RZ;
+rez(fpolRZ * fdenRZ)
+rez fdenRZ
 
-fpol0RZ := EVALRZ(vars, vals, pol0)
-dzs0 := [degree mon for mon in monomials fpol0RZ]
-den0RZ := monomial(1, - reduce(minEntries, dzs0, 0$DZ)$List(DZ))$RZ
-z0 := rzToA1C fpol0RZ - f45
+-- Now we do the same thing for the modular form $f_{45}$ itself.
+
+f45polRZ := EVALRZ(m0syms, m0symsRZ, f45mpol);
+f45monsDZ := [degree mon for mon in monomials f45polRZ];
+f45denRZ := monomial(1, - reduce(minEntries, f45monsDZ, 0$DZ)$List(DZ))$RZ;
+z0 := rzToA1C f45polRZ - f45
 assertEquals(order(z0, 301), 301)
 
--- We must check 300 coeffients (see the given f128 in order to see
--- that our computation expands to the same coefficients.
-
 assertEquals(removeDuplicates [qetaCoefficient(z0, -i) for i in 0..300], [0])
-assertEquals(#monomials(rez fpol0RZ), 8)
+assertEquals(#monomials(rez f45polRZ), 8)
 
 -- Show nicely
 
-num0 := rez (fpol0RZ * den0RZ)
-den0 := rez(den0RZ)
+num0 := rez (f45polRZ * f45denRZ)
+den0 := rez(f45denRZ)
 
--- -----------------------------------------------------------------
--- # Problem: Zudilin has a relation with only 7 terms for f_45.
--- -----------------------------------------------------------------
--- Just multiplying a "smaller" cofactor does not work, because we would
--- not work in M^\infty(45).
+-- # Problem: Zudilin has a relation with only 7 terms for $f_{45}$.
+
+-- Just multiplying a "smaller" cofactor does not work,
+-- because we would not work in $M^\infty(45)$.
 -- Zudilin suggested the following cofactor eta-quotient, because
--- he had already found a 7-term relation for f_45, namely,
--- (mail wzudilin@gmail.com "Fri, 7 Feb 2020 11:40:38 +0100")
-
-)if IGNORE
-( 3*q^4 * eta(q^9)^4 * eta(q^15)^4
--15*q^8 * eta(q^3) * eta(q^9) * eta(q^15)^3 * eta(q^45)^3
--5*q^3 * eta(q^3) * eta(q^5)^3 * eta(q^9) * eta(q^15)^3
-+4*q^3 * eta(q^3)^2 * eta(q^9)^4 * eta(q^15)^2
-+q^7 * eta(q^3)^3 * eta(q^9) * eta(q^15) * eta(q^45)^3
-+q^5 * eta(q) * eta(q^3)^3 * eta(q^5) * eta(q^15) * eta(q^45)^2
-+q^3 * eta(q)^3 * eta(q^9) * eta(q^15)^4 )
-/
-( q^4 * eta(q^3)^2 * eta(q^45)^2 )
-)endif
-
--- where eta(q) is obviously the EulerProduct.
+-- he had already found a 7-term relation for $f_{45}$. See mail:
+--
+--     From: wzudilin@gmail.com
+--     Data: Fri, 7 Feb 2020 11:40:38 +0100
+--
+-- $$
+-- f_{45}(\tau) = \frac{1}{\eta_3^2 \eta_{45}^2}
+--   (\eta_1^3 \eta_9 \eta_{15}^4
+--   - 5 \eta_3 \eta_5^3 \eta_9 \eta_{15}^3
+--   + 4 \eta_3^2 \eta_9^4 \eta_{15}^2
+--   + 3 \eta_9^4 \eta_{15}^4
+--   + \eta_1 \eta_3^3 \eta_5 \eta_{15} \eta_{45}^2
+--   + \eta_3^3 \eta_9 \eta_{15} \eta_{45}^3
+--   − 15 \eta_3 \eta_9 \eta_{15}^3 \eta_{45}^3)
+-- $$
 
 -- We store the terms as a list of [coeff, etaexponents].
 
@@ -250,78 +292,19 @@ f45brunault := rzToA1C polyRZ brunaultterms
 z := f45brunault-f45;
 assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 
--- -----------------------------------------------------------------
--- Finding other symmetry group for f_45.
--- -----------------------------------------------------------------
-
-spitzen := cusps(level)$GAMMA0
-o := reduce(_+, [WIDTH0(level, denom cusp) for cusp in spitzen])
-assertEquals(o, index(level)$GAMMA0)
-
-reps := rightCosetRepresentatives level;
-assertEquals(# reps, o)
-
-xiord := 24*level
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-
-)set stream calc 4
-
-findSimilarExpansions(qseries: List L1 CX): List List Z == (_
-    REC ==> Record(fo: Z, fi: Z, fc: L1 CX);_
-    oics := [[order x, i, x]$REC for x in qseries for i in 1..#qseries];_
-    l := oics;_
-    result := empty()$List(List Z);_
-    while not empty? l repeat (_
-        a := first l;_
-        l2 := rest l;_
-        while not empty? l2 repeat (_
-            b := first l2;_
-            if a.fo = b.fo then (_
-                ser := a.fc/b.fc;_
-                cs := [coefficient(ser, i) for i in 1..20];_
-                if removeDuplicates [zero? c for c in cs] = [true] then (_
-                    print(hconcat [[a.fi, b.fi]::OF, [ser]::OF]);_
-                    result := cons([a.fi, b.fi], result)));_
-            l2 := rest l2);_
-        l := rest l);_
-    result);
-
-
-creps := [TOMAT0(cusp) for cusp in spitzen]
-hmat := matrix [[1,1],[0,1]]
-[WIDTH0(level, denom cusp) for cusp in spitzen]
-xreps := concat [(gamma:=TOMAT0(cusp); [gamma*((hmat^i)::MZ) for i in 0..WIDTH0(level, denom cusp)-1]) for cusp in spitzen];
-
--- -----------------------------------------------------------------
--- Consider f. We see no similar expansions.
--- -----------------------------------------------------------------
-
-fser := rzToAnCX fpolRZ
-fserreps  := [rzToL1CX(fpolRZ, gamma) for gamma in reps];
-fserxreps := [rzToL1CX(fpolRZ, gamma) for gamma in xreps];
-
-)if false
-result := findSimilarExpansions(fserreps);
-assertEquals(result, [])
-)endif
-
-)set stream calc 4
-for i in 1..#xreps repeat (_
-    print("-----------------"::Symbol);_
-    print([[i]]);_
-    print(xreps.i);_
-    print(fserxreps.i))
-
--- -----------------------------------------------------------------
--- Find better cofactor by means of 4ti2.
--- -----------------------------------------------------------------
+-- ## Find better cofactor by means of 4ti2.
 
 -- The grades of an eta quotient at cusps of the form a/c (gcd(a,c)=1)
 -- agrees for all such a. We choose just a=1 (which is relevant for
 -- the Ligozat matrix.
 
-fsergrades := [qetaGrade(fser, asP position(1/c, spitzen)) for c in divs]
-assertEquals(fsergrades, [-1, -1, -1, -3, -1, 13])
+level := 45; spitzen := cusps(level)$GAMMA0;
+xiord := 24*level
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+fA45 := rzToAnCX fpolRZ
+
+fgrades := [qetaGrade(fA45, asP position(1/c, spitzen)) for c in divs]
+assertEquals(fgrades, [-1, -1, -1, -3, -1, 13])
 
 -- For the following we have to take the full Ligozat matrix.
 
@@ -329,217 +312,197 @@ ndivs := #divs
 idivs := [i for i in 1..ndivs]
 
 -- Double the full Ligozat matrix part, because we want a resulting
--- vector whose corresponding grades agree in sign with fsergrades,
+-- vector whose corresponding grades agree in sign with `fgrades`,
 -- but are in absolute value (in each component separately) at most as
--- big as the respective absolute value of fsergrades.
+-- big as the respective absolute value of `fgrades`.
 
 mat := matrixLigozatRStar(level, idivs)$QETAAUX
-mat := vertConcat(mat(1..ndivs,1..ncols mat), mat)
+mat := vertConcat(mat(1..ndivs,1..ncols mat), mat);
 
--- The 24 comes from the fact that the result after applying the
--- Ligozat matrix gives 24 times the order (not the grade) of the
--- respective series expansion.
+-- In the following, the 24 comes from the fact that the result
+-- after applying the Ligozat matrix gives 24 times the order
+-- (not the grade) of the respective series expansion.
 
 bval: VZ := new(nrows mat, 0);
 rels: VZ := new(nrows mat, 0);
-for g in fsergrades for i in 1..ndivs repeat (_
+for g in fgrades for i in 1..ndivs repeat (_
     bval.i := 24*g;_
     rels.i := - sign g;_
     rels(ndivs+i) := sign g)
 z := zsolve(mat, rels, bval)$X4ti2
 zzi := [members t for x in z.zinhom | (t:=x(1..ndivs); not zero? t)]
 
-rcofactorx := first zzi
-grdrcofactorx := qetaGrade(EQAnCX rcofactorx, #spitzen)
+rgadjust := first zzi
+grdrgadjust := qetaGrade(EQAnCX rgadjust, #spitzen)
 for r in zzi repeat (_
-    if grdrcofactorx > qetaGrade(EQAnCX r, asP #spitzen) then (_
-          rcofactorx := r;_
-          grdrcofactorx := qetaGrade(EQAnCX r, asP #spitzen)))
+    if grdrgadjust > qetaGrade(EQAnCX r, asP #spitzen) then (_
+          rgadjust := r;_
+          grdrgadjust := qetaGrade(EQAnCX r, asP #spitzen)))
 
-rcofactorx
-fserx := fser * EQAnCX rcofactorx
-qetaGrades fserx
+rgcofactor := members(vector rfcofactor + vector rgadjust)
+gA45 := fA45 * EQAnCX rgadjust;
+assertEquals(qetaGrades fA45, [-1,-1,-1,-1,-3,-1,-1,13])
+assertEquals(qetaGrades gA45, [0,0,0,0,-2,0,0,6])
 
-# spitzen
-sx := series(fserx, #spitzen) -- L1(CX)
-s := abfmap(CX, C, retract, sx)::A1(C)
-xs := toX1(C, s, 'S)
+gx := series(gA45, #spitzen); -- L1(CX)
+g := abfmap(CX, C, retract, gx)::A1(C);
+xg := toX1(C, g, 'G)
 
-xsr := reduce(xs, abex)$QXTOPRED1(C)
-assertTrue(zero? xsr)
+xgr := reduce(xg, abx)$QXTOPRED1(C)
+assertTrue(zero? xgr)
 
-spol := -2*second(reduce(xs, abex)$QXTOPRED1(C))::PolC + S
-assertEquals(# monomials spol, 4)
+-- We have found a relation with only 4 eta-quotients.
 
-varsx := cons('MC, vars)
-valsx := cons(monRZ members(- vector rcofactorx), vals)
+gmpol := -2*second(xgr)::PolC + G
+assertEquals(# monomials gmpol, 4)
 
-fpol := spol*MC
-fpolRZ := EVALRZ(varsx, valsx, fpol)
-rez fpolRZ
+g0syms := cons('G0,msyms);
+g0symsRZ := cons(monRZ NEGATE rgcofactor, [monRZ x for x in rgens]);
+gpolRZ := EVALRZ(g0syms, g0symsRZ, gmpol);
+rez gpolRZ
 
-rzToA1C fpolRZ
-assertTrue(zero?(f - rzToA1C fpolRZ))
-
-fpol0 := M0 * fpol
-fpol0RZ := EVALRZ(varsx, valsx, fpol0)
-rez fpol0RZ
-z0 := rzToA1C fpol0RZ - f45
+g45mpol := G0 * gmpol;
+g45polRZ := EVALRZ(g0syms, g0symsRZ, g45mpol);
+rez g45polRZ
+z0 := rzToA1C g45polRZ - f45;
 assertEquals(order(z0, 301), 301)
 
-dzs0 := [degree mon for mon in monomials fpol0RZ]
-den0RZ := monomial(1, - reduce(minEntries, dzs0, 0$DZ)$List(DZ))$RZ
+-- ## Find a basis for all eta-quotients of weight 2 that are modular forms
 
-num0 := rez (fpol0RZ * den0RZ)
-den0 := rez(den0RZ)
-
--- +
--------------------------------------------------------------------
--- Is every eta-quotient in the sum holomorphic
--------------------------------------------------------------------
--- -
-
-vexponents := [vector members degree m for m in monomials fpol0RZ]
-ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
-assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true, false], [true]])
-
--- No, it isn't.
-
-vexponents := [vector rest x for x in brunaultterms]
-ords :=[(1/24*matrixLigozat(level)*v) for v in vexponents]
-assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true], [true,false]])
-
--- However, it is also not the case for the representation of Brunault.
-
--- +
--------------------------------------------------------------------
--- Find a basis for all eta-quotients of weight 4 that are modular forms
--------------------------------------------------------------------
--- -
-
-idivs := [i for i in 1..#divs]
-zmodform := zsolve4ti2(level, idivs, concat([0 for i in idivs], 4))$QEQEV;
-vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
-zmodformzi := [members x(1..ndivs) for x in zmodform.zinhom]
+wght := 2
+idivs := [i for i in 1..#divs];
+zmodform := zsolve4ti2(level, idivs, concat([0 for i in idivs], 2*wght))$QEQEV;
+vdivs := vector(divs)$VZ; -- part of the Ligozat matrix that gives the order
+zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
 assertEquals(#zmodformzi, 40)
 
 -- Sort the generating exponents according to the resulting series expansion
 
-vmodformgens := [vector x for x in zmodformzi]
-vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens)
-rmodformgens := [members x for x in vmodformgenss]
-ords :=[(1/24*matrixLigozat(level)*vector(r)) for r in rmodformgens]
-
-)set out algebra on
-)set out linear off
-matrix [qetaGrades YEQn x for x in rmodformgens]
-
 -- +
--------------------------------------------------------------------
--- Check whether there is a Q-linear combinationn of holomorphic
--- eta-quotients of level 45 that is equal to f45.
--------------------------------------------------------------------
+vmodformgens := [vector x for x in zmodformzi];
+vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
+rmodformgens := [members x for x in vmodformgenss];
 -- -
 
--- $ sage: dimension_modular_forms(Gamma0(45),2)
--- : 10
+-- ##  $\mathbb{Q}$-linear combination
 
-emodformgens := [EQA1C r for r in rmodformgens]
-[order x for x in emodformgens]
+-- Check whether there is a $\mathbb{Q}$-linear combination
+-- of eta-quotients of level 45 and weight 2 that is equal to
+-- $f_{45}.
+--
+-- By calling
+--
+--     > sage: dimension_modular_forms(Gamma0(45),2)
+--     : 10
+--
+-- Sage tells us that the dimesion of modular forms
+-- for $\Gamma_0(45)$ of weight 2 is 10.
 
--- The dimension of modular forms of weight 2 for Gamma_0(45) is 10.
+emodformgens := [EQA1C r for r in rmodformgens];
+omodformgens := [order x for x in emodformgens];
+assertEquals(omodformgens, [0,0,0,0,0,0,0,0,0,0,0,0,0,_
+  1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,4,4,4,4,5,5,6,6,8,10])
 
-dimM45 := 10
-nmodformgens := # rmodformgens
-cmodformgens := [[coefficient(x, i) for i in 0..dimM45] for x in emodformgens]
-for x in cmodformgens for i in 1.. repeat print [i, x]
+dimM45 := 10;
+nmodformgens := # rmodformgens;
+cmodformgens :=_
+  [[coefficient(x, i) for i in 0..dimM45] for x in emodformgens];
 matmodforms := transpose matrix cmodformgens;
-cf45 := [coefficient(f45, i) for i in 0..dimM45]
+cf45 := [coefficient(f45, i) for i in 0..dimM45];
 rels: VZ := new(nrows matmodforms, 0);
 zmodforms := zsolve(matmodforms, rels, vector cf45)$X4ti2;
-zmodformszi := zmodforms.zinhom
-zmodformszf := zmodforms.zfree
+zmodformszi := zmodforms.zinhom;
+zmodformszh := zmodforms.zhom;
+zmodformszf := zmodforms.zfree;
+assertEquals(#zmodformszi,1)
+assertEquals(#zmodformszh,0)
+assertEquals(#zmodformszf,30)
 
--- Find the indicies where the entries are zero, i.e., those modular
--- form generators are irrelevant for the linear combination for f45.
+-- Find the indicies of the one and only inhomogeneous solution
+-- where the entries are zero, i.e., those modular
+-- form generators are irrelevant for the linear combination for $f_{45}$.
 
-nizi := [i for i in 1..#(zmodformszi.1) | not zero? zmodformszi.1.i]
-zizi := [i for i in 1..#(zmodformszi.1) | zero? zmodformszi.1.i]
+nizi := [i for i in 1..#(zmodformszi.1) | not zero? zmodformszi.1.i];
+zizi := [i for i in 1..#(zmodformszi.1) | zero? zmodformszi.1.i];
+assertEquals(nizi, [1,3,5,27,31,32,33,34,39,40])
+#nizi
 
--- The shortened (relevant) vectors
+-- Obviously, the solution gives a 10-term-sum of eta-quotients
+-- for $f_{45}$.
+--
+-- Now we try to turn more of those entries into zero by adding
+-- a linear combination of the homogeneous solutions.
+--
+-- With the indices computed above, we also split the homogeneous
+-- solution vectors into two parts.
 
-nzf := [[x.i for i in nizi] for x in zmodformszf]
-zzf := [[x.i for i in zizi] for x in zmodformszf]
-for x in zzf repeat print [position(1, x), x]
-for x in nzf for i in 1..#nzf repeat print [i, x]
+nzf := [[x.i for i in nizi] for x in zmodformszf];
+zzf := [[x.i for i in zizi] for x in zmodformszf];
+
+-- Naturally, there are non-zero entries at indices where the
+-- inhomogeneous solution vanishes.
+-- Fortunately, the non-zero entries appear quite sparsely.
+-- Thus, there is hope that we might be able to reduce the
+-- 10-term-sum to something shorter.
+
+assertEquals(# first zzf, 30)
+[# remove(0, l) for l in zzf]
+
+-- We are quite lucky.
+-- By instection, we find that one of the homegeneous
+-- solution vectors (namely the lasst one) looks pretty
+-- much like the inhomogeneous solution.
+
 nzi := [zmodformszi.1.i for i in nizi]
-for x in nzf for i in 1..#nzf repeat (_
-    l := members(vector x - vector nzi);_
-    print [i, # remove(0, l), l])
+for x in nzf for i in 1..#nzf repeat print [i, x]
 
-for x in zmodformszf for i in 1..#zmodformszf repeat (_
-    l := members(vector x - vector zmodformszi.1);_
-    print [i, # remove(0, l), l])
-
-assertEquals([[i,x] for i in 1..nmodformgens|(x:=zmodformszi.1.i;not zero? x)],_
-    [[1, 3], [3, - 1], [5, - 2], [27, 2], [31, - 57], [32, 3], [33, - 39],_
-     [34, 102], [39, 57], [40, 162]])
-
-reduce(_+,[zmodformszi.1.i * emodformgens.i for i in 1..nmodformgens], 0$A1(C)) - f45
+-- Let's subtract it from the inhomogeneous solution.
 
 relvec := zmodformszi.1 - zmodformszf.30
 assertEquals([[i, relvec.i] for i in 1..40 | not zero? relvec.i],_
     [[3, 1], [10, -1], [33, -1]])
 
-h := reduce(_+,[relvec.i * emodformgens.i for i in 1..nmodformgens], 0$A1(C))
-h45 := h - f45
-removeDuplicates [qetaCoefficient(h45, -i) for i in -10..200]
+h45 := reduce(_+,[relvec.i * emodformgens.i for i in 1..nmodformgens], 0$A1(C));
+z0 := h45 - f45;
+l := removeDuplicates [qetaCoefficient(z0, -i) for i in -10..200];
+assertEquals(l, [0])
 
 u := rmodformgens;
-h := (EQA1C u.3 - EQA1C u.10 - EQA1C u.33)
-h := fcofactor * (EQA1C u.3 - EQA1C u.10 - EQA1C u.33)
-assertTrue(zero?(h - f))
+k45 := (EQA1C u.3 - EQA1C u.10 - EQA1C u.33);
+z0 := k45 - f45;
+l := removeDuplicates [qetaCoefficient(z0, -i) for i in -10..200];
+assertEquals(l, [0])
+k := k45 * EQA1C rfcofactor;
+assertTrue(zero?(k-f))
 
-hn := (EQAnCX u.3 - EQAnCX u.10 - EQAnCX u.33)
-hn - (fser/EQAnCX rcofactor)
-hn * EQAnCX rcofactor - fser
+v := [vector rfcofactor + vector x for x in rmodformgens]
+
+kA45 := (EQAnCX v.3 - EQAnCX v.10 - EQAnCX v.33);
+z0 := kA45 - fA45;
+assertTrue(zero? z0)
 
 -- Print nicely...
 
-)set stream calc 20
-EQA1C u.3
-EQA1C u.10
-EQA1C u.33
-
-qetaGrades EQAnCX u.3
-qetaGrades EQAnCX u.10
-qetaGrades EQAnCX u.33
-
-qetaGrades YEQn u.3
-qetaGrades YEQn u.10
-qetaGrades YEQn u.33
-
-qsyms := indexedSymbols("Q", #rmodformgens)
-xmfgens: List X1 C := [toX1(C, x, s) for x in emodformgens for s in qsyms];
-
-xmf := xmfgens.3 - xmfgens.10 - xmfgens.33
-mfpol := second(xmf)::PolC
-valsmf := [monRZ x for x in rmodformgens]
-
-fmfpolRZ := EVALRZ(qsyms, valsmf, mfpol)
-z0 := rzToA1C fmfpolRZ - f45
+qsyms := indexedSymbols("Q", #rmodformgens);
+xqgens: List X1 C := [toX1(C, x, sy) for x in emodformgens for sy in qsyms];
+xk45 := xqgens.3 - xqgens.10 - xqgens.33;
+k45mpol := second(xk45)::PolC
+qsymsRZ := [monRZ x for x in rmodformgens];
+k45polRZ := EVALRZ(qsyms, qsymsRZ, k45mpol);
+z0 := rzToA1C k45polRZ - f45;
 assertEquals(order(z0, 301), 301)
 
-rez fmfpolRZ
+rez k45polRZ
 
-dzmf0 := [degree mon for mon in monomials fmfpolRZ]
-denmf0RZ := monomial(1, - reduce(minEntries, dzmf0, 0$DZ)$List(DZ))$RZ
+k45monsDZ := [degree mon for mon in monomials k45polRZ]
+k45denDZ := - reduce(minEntries, k45monsDZ, 0$DZ)$List(DZ);
+assertEquals(k45denDZ::VZ, vector [1, 0, 3, 1, 0, 3])
 
-assertEquals(#monomials(rez fmfpolRZ), 3)
+k45denRZ := monomial(1, k45denDZ)$RZ;
+rez(k45polRZ * k45denRZ)
+rez k45denRZ
 
-num0 := rez (fmfpolRZ * denmf0RZ)
-den0 := rez(denmf0RZ)
-
--- -----------------------------------------------------------------
--- endtest
--- -----------------------------------------------------------------
+-- +
+-----------------------------------------------------------------
+--endtest
+-----------------------------------------------------------------

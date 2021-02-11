@@ -197,10 +197,10 @@ fdenDZ := - reduce(minEntries, fmonsDZ, 0$DZ)$List(DZ);
 assertEquals(fdenDZ::VZ, vector [0,0,1,1,8,1,0,20])
 
 fdenRZ := monomial(1, fdenDZ)$RZ;
-rez fdenRZ
 rez(fpolRZ * fdenRZ)
+rez fdenRZ
 
--- Now we do the same thing for the modular form f128 itself.
+-- Now we do the same thing for the modular form $f_{128}$ itself.
 
 f128polRZ := EVALRZ(m0syms, m0symsRZ, f128mpol);
 f128monsDZ := [degree mon for mon in monomials f128polRZ];
@@ -815,8 +815,6 @@ EXZ ==> Expression Z
 kcupol := eval((U1^2*U3*kaupol)::EXZ, [V1::EXZ=(1/U1)::EXZ, V3::EXZ=(1/U3)::EXZ])::Pol(Z);
 monomials kcupol
 
-rgend64x
-
 v := [vector r for r in rgens64x];
 ricofactor := members(vector rkcofactor + 2*v.1 + v.3)
 
@@ -864,7 +862,32 @@ assertTrue(zero?(z::A1(C)))
 -------------------------------------------------------------------
 -- -
 
--- # THIS IS THE END
+-- # === THIS IS THE END ===
+
+-- # Express $1/\eta(64\tau)$ as sum of eta-quotients
+
+level := 64; spitzen := cusps(level)$GAMMA0;
+QEtaIdeal ==> QEtaIdealHemmeckeCached
+elig64 := etaLaurentIdealGenerators(level)$QEtaIdeal(C)
+
+e64:=E64::Pol(C);
+y64:=Y64::Pol(C);
+z64:=Z64::Pol(C);
+elig64e := eval(elig64,e64=z64);
+elig64y := eval(elig64e,y64=e64);
+elig64z := eval(elig64y,z64=y64);
+
+)set me time on
+
+er64z := etaRelations(level, elig64z)$QEtaIdeal(C);
+
+#er64z
+
+
+
+
+
+
 
 -- # Try to solve holomorphic matrix
 
