@@ -1,0 +1,1196 @@
+-- This notebook contains supplement material to the article
+--
+-- "**Construction of Bases for Modular Functions for $\Gamma_0(121)$ related to $p(11n+6)$**"
+--
+-- by
+--
+-- [Ralf Hemmecke](http://ralf.hemmecke.net),
+-- [Peter Paule](https://risc.jku.at/m/peter-paule), and
+-- [Silviu Radu](https://risc.jku.at/m/cristian-silviu-radu).
+--
+-- Since some output is rather big, consider to search for the string
+-- "`In [`" within your browser.
+
+-- This notebook shows how to compute an (order-complete)
+-- integral basis for $M^\infty(121)$ with 3 different
+-- methods.
+-- |
+-- * [Preparatory steps](#preparatory-steps)
+--   * [Monoid basis $\{t, u\}$ of $E^\infty(121)$](#monoid-E121)
+--   * [Order-complete basis for $\mathbb{Q}[t,u]$](#xab)
+--   * [The generating function $f$ for $p(11n+6)$](#generating-function-for-p11n+6)
+--
+--   * [Order-complete basis for $\mathbb{Q}[t,u, f]$](#xfab)
+--   * [Denominator polynomial $d(T)$ corresponding to $f$](#denominator-polynomial-for-f)
+--
+--   * [The generating function $f_2$ for $p(121n+116)$](#generating-function-for-p121n+116)
+--
+--   * [Show $f_2 \in \mathbb{Q}[t,u, f_2]$](#f2-in-xfab)
+--
+-- * [Method 1: integral basis by using the Klein $j$ function](#method-klein)
+--   * [Order-complete integral basis for $\mathbb{Q}\lbrack t,u, j^{\infty}_0, j^{\infty}_2\rbrack$](#xjab)
+--
+-- * [Method 2: integral basis obtained with the trace map](#method-trace)
+--   * [Monoid basis of $E^\infty(242)$](#monoid-E242)
+--   * [Functions $g$ and $h$](#functions-g-and-h)
+--   * [Integral basis for $\mathbb{Q}[t,u, f, g]$](#xfgab)
+--   * [Order-complete basis for $\mathbb{Q}[t,u, g]$](#xgab)
+--   * [integral basis for $\mathbb{Q}[t,u, g, h]$](#xghab)
+--   * [Integral basis for $\mathbb{Q}[t,u, h]$](#xhab)
+--   * [Denominator polynomial $d^*$ corresponding to $h$](#denominator-polynomial-for-h)
+--
+-- * [Method 3: integral basis by using Maple's algcurves](#method-algcurves)
+--
+
+-- <a name="preparatory-steps"></a>
+-- # Preparatory steps
+
+-- First we locate the **QEta** package and load it together
+-- with some useful macros into a
+-- [FriCAS](https://fricas.github.io) session.
+
+-- Fix the directory path to point to the compiled QEta code.
+
+)clear completely
+)set output algebra off
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)set mess time off
+
+-- The following assumes that the
+-- [QEta](https://hemmecke.github.io/qeta)
+-- package has already been compiled via
+-- `make compile-spad`.
+
+)read projectlibs )quiet
+
+)read etamacros.input )quiet
+C ==> Q;
+CF ==> CF1 C
+X ==> X1 C
+
+setFormat!(FormatMathJax)$JFriCASSupport
+
+
+-- <a name="monoid-E121"></a>
+-- ## Monoid basis for $E^\infty(121)$
+
+-- We do expansion at the cusp $\infty$ which corresponds to `1/nn` in
+-- terms of our session variables.
+
+level := nn: P := 121;
+nndivs := DIVISORS nn;
+
+-- All our expansions do not require an extension with a root of unity,
+-- i.e., we can take rational numbers as the coefficient domain.
+
+xiord: P := 2; -- order of the root of unity
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+spitzen := cusps(level)$GAMMA0
+)read ../input/convenience )quiet
+
+-- Show only a few terms of the $q$-series expansion.
+
+)set stream calculate 2
+
+-- We use [4ti2](http://www.4ti2.de) to find the monoid basis of the
+-- eta-quotients of level `nn`.
+-- We first compute the respective exponent vectors for the
+-- eta-quotients generators.
+-- The variable `rgens` corresponds to the generators of $R^\infty(121)$.
+--
+-- The generators of the eta-quotients of level 121 having a pole only
+-- at infinity $E^\infty(121)$ are given by these exponents
+-- for the eta-functions (with arguments being the divisors of 121).
+
+eqmev ==> etaQuotientMonoidExponentVectors $ QEQEV
+rgens := eqmev nn
+
+-- The corresponding series are the following.
+
+eqgens := [EQA1C r for r in rgens];
+
+-- ## Naming convention
+
+-- Our naming convention for elements of $M^\infty(121)$ corresponding
+-- to the article is as follows.
+--
+-- We prefix `cf` to the variable name of the article, if we simply
+-- consider its corresponding $q$-series.
+--
+-- We prefix the variable name with `x` to denote the corresponding
+-- $q$-series together with an indeterminate (a "polynomial part").
+-- All module operations are then done on both parts of the pair so
+-- that we can easily extract relations among the elements by simply
+-- looking at the "polynomial part".
+--
+-- Note that in [FriCAS](https://fricas.github.io) a semicolon
+-- separates two expressions and (if given at the end of a line)
+-- inhibits the output of the last computation.
+
+-- <a name="xab"></a>
+-- ## `xab`=samba($t, \{u\}$) --- Samba with t and u
+
+-- In this section, we compute a $\mathbb{C}[t]$-module
+-- basis of the space of eta-quotients
+-- $\mathbb{C}[E^\infty(121)]=\mathbb{C}[t, u]$.
+--
+
+xgens := [toX1(C, eqgens.1, 'T), toX1(C, eqgens.2, 'U)]
+
+-- We take a minimal (in terms the pole order in q) element from the
+-- generators and make it special, here `xt` of order -5.
+-- Then we compute an algebra basis for $C[t,u]$.
+
+xt: X := xgens.1; xu := xgens.2;
+
+-- The output of the algorithm `samba` is a pair
+-- consisting of a
+-- *multiplier* `mul` and
+-- *basis elements* `be`.
+-- The multiplier `mul` usually corrsponds to the series $t$.
+-- The basis elements are a table, whose entries are
+-- indexed by integers $1, \ldots, n-1$ where
+-- $n=-\mathrm{ord}_q(t)$.
+-- Thus, if $b_1, \ldots, b_{n-1}$ are given by `be`,
+-- then the result of `samba` represents the module
+-- $\langle 1, b_1, \ldots, b_{n-1}\rangle_{\mathbb{C}[t]}$.
+
+xab := samba(xt, xgens, 96)$QXTOPSAMBA1(C)
+# basis xab, [qetaGrade x for x in basis xab]
+
+-- Clearly, the element after `4 =` corresponds to the element
+-- $z=\frac{1}{11}(u-t^{10})$ from Section 4 of the article.
+--
+-- The variable `xab` represents the $\mathbb{Q}[t]$-module
+-- $\langle 1, z, z^2, z^3, z^4 \rangle_{\mathbb{Q}[t]}$.
+
+nog := numberOfGaps(xab)
+
+-- The genus of the Riemann surface $X_0(121)$ is a curve of genus 6.
+-- Its genus is equal to the genus of $\Gamma_0(121)$.
+
+genus := genus(nn)$GAMMA0
+
+-- Since 6 < 96, it proves that `xab` does not represent
+-- an integral basis for $M^\infty(121)$.
+
+-- Let's set new variables for each series in the basis.
+
+zsyms := indexedSymbols("Z", # basis xab);
+xabzbasis := [toX1(C, first x, s) for x in sort(smallerGrade?, basis xab) for s in zsyms];
+xabz := samba(xt, xabzbasis, nog)$QXTOPSAMBA1(C)
+
+xz := xabzbasis.1
+
+
+-- Note that $z^i$ from the article corresponds to the $q$ expansion
+-- labeled by `Zi`.
+
+-- With this number of gaps (96), we have not yet reached the genus of
+-- the modular curve $X_0(121)$. Thus we must find another modular
+-- function.
+
+-- <a name="generating-function-for-p11n+6"></a>
+-- ## The generating function $f$ for $p(11n+6)$
+
+-- Now we consider an additional series. Here we take the series
+-- corresponding to the $p(11n+6)$ problem.
+--
+-- We first compute a cofactor to create from
+-- $$
+-- \sum_{k=0}^{\infty}p(11k+6)q^k
+-- $$
+-- a modular function in $M^\infty(121)$.
+
+mm: P := 11; s: List Z := [-1, 0]; m: P := 11;
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
+
+-- Let's compute the expansion of
+-- $$
+-- F(\tau) = q^{\frac{13}{24}}
+--           \frac{\eta(\tau)^{11} \eta(11\tau)}{\eta(121\tau)^{11}}
+--           \sum_{k=0}^{\infty}p(11k+6)q^k \in M^\infty(121).
+-- $$
+-- This is encoded in the function `modularSiftedPartitionSeries` and
+-- includes the computation of the cofactor eta-quotient that has been
+-- made explicit above.
+
+ff := modularSiftedPartitionSeries(nn, m, t);
+xf := toX1(C, ff, F)
+
+-- The generating series does not reduce to zero modulo the
+-- algebra basis `xab`.
+
+xfr := reduce(xf, xab)$QXRED1(C);
+zero? xfr
+xfr
+
+xfrb := reduce(xf, xabz)$QXRED1(C)
+
+xfrz := xf - 11*xt * xz
+
+-- <a name="denominator-polynomial-for-f"></a>
+-- ## Denominator polynomial $d(T)$ corresponding to $f$
+
+-- We compute a polynomial $d(T)$ such that
+-- $d(t)f \in \mathbb{Q}[t, u]$.
+--
+-- We only need the coefficients of the pricipal part of
+-- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$
+-- where $h_i \in \langle 1, z_1, z_2, z_3, z_4 \rangle_{C[t]}$
+-- in order to find a relation among these $q$-series.
+--
+-- Note that $t$ corresponds to our variable `xt` and $z_1,\ldots,z_4$
+-- to our basis `xabz`.
+--
+-- Then $t^i f - h_i$ corresponds to `reduce(xt^i xf, xt, xabz)`.
+--
+-- Note that the result $r$ contains in its second component its
+-- representation in terms of the given $F$, and the $Z_i$.
+--
+-- We first compute all the reductions. That will give us $q$-series
+-- of order 191 each. (Takes about 1.5 min.)
+
+e1:=37; e2:=102;
+rs := [reduce(xt^e1*xf, xabz)$QXRED1(C)];
+for i in e1+1..e2 repeat (_
+  rs := cons(reduce(xt*first(rs), xabz)$QXRED1(C), rs))
+rs := reverse! rs;
+[qetaGrade x for x in rs]
+
+-- Extract the 192 coefficients corresponding to the orders $-191,
+-- \ldots, 0$ and compute the kernel of the corresponding matrix.
+--
+-- This takes about 20 sec.
+
+l := [[qetaCoefficient(first x, i) for i in 0..191] for x in rs];
+mat := transpose matrix l;
+ns := nullSpace mat;
+#ns
+
+-- Extract the coefficients from the vector in the nullspace.
+
+cs := members first ns
+
+-- Check that the resulting vector indeed yields a relation, i.e., we
+-- multiply the series $t^i f - h_i$ from above by the corresponding
+-- coefficient from `cs` and sum these products.
+-- The result is the zero series (as expected).
+
+lincomp := [c*rr for c in cs for rr in rs];
+lc := reduce(_+, lincomp);
+zero? lc
+
+qetaCoefficient(lc, 0)
+
+-- Indeed, we have just shown a relation for
+-- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$.
+--
+-- In the second component of this "zero" is its relation in terms of
+-- $F$, $Z_1$, $Z_2$, $Z_3$, and $Z_4$.
+-- The "denominator polynomial" is given by the coefficient of $F$.
+
+df := (second lc)::Pol C;
+variables df
+[degree(df, x) for x in variables df]
+
+-- ## Computation of the corresponding polynomials $c_0,..,c_4$
+
+-- In this section we compute a polynomial
+-- $c(T, Z) := \sum_{k=0}^4 c_k(T) Z^k \in \mathbb{Q}[T,Z]$
+-- such that $d(t)f = c(t, z)$.
+
+cf1:=coefficient(df,F,1); -- The denominator polynomial d(T).
+cf0:=coefficient(df,F,0); -- The polynomial c(T, Z), which is c(T, Z1, Z2, Z3, Z4) here.
+
+variables cf0
+varsf := rest reverse! variables cf0
+cf0s := [coefficient(cf0, x, 1) for x in varsf];
+degree(cf1, T), [degree(x, T) for x in cf0s]
+gcd cons(cf1,cf0s)
+
+-- Apart from the $T^{37}$ factor, we get other factors.
+-- Below are the factors $d_1, \ldots, d_5$, unsorted.
+
+fac := factor cf1;
+uf := unit fac    -- the constant common factor
+flf := factorList factor cf1;
+[x.exponent for x in flf]
+flffactors := [x.factor for x in flf]
+
+denf := denom uf
+
+-- Multiplying by the denominator of the constant factor of `cf1`
+-- and dividing by the common factor give the polynomial $d(T)$
+-- from the article.
+
+d := (-denf * cf1/T^37)::Pol(Z); degree(d)
+
+-- Let us compute the coefficient polynomial $c_0(t)$ corresponding
+-- to the (constant) basis elements $1$.
+
+cf00 := ((denf*coefficient(cf0, varsf, [0 for i in varsf]))/T^37)::Pol(Z);
+
+-- Here we collect all the coefficient polynomials $c_k(t)$ for
+-- $k=0,\ldots,4$ after they have been multiplied by the constant
+-- denominator.
+
+cis := cons(cf00, [(denf*(x/T^37))::Pol(Z) for x in cf0s])
+
+-- Note that we have the following correspondence
+-- $z^1, z^2, z^3, z^4$ correspond to `Z1`, `Z2`, `Z3`, `Z4`.
+
+[degree x for x in cis]
+
+[unit factor x for x in cis]
+
+-- Each of the polynomials has a constant factor that is divisible by
+-- 11. Together with the "freshman's dream" trick for
+-- $z = \frac{1}{11}(u-t^{10})$ that show that the $q$-series
+-- expansion of $z$ has integer coefficients, this establishes yet
+-- another relation that shows that $p(11n+6)$ is divisible by 11.
+
+-- ## Express $d(t)f$ in terms of $t$, $z^1, \ldots, z^4$
+
+-- Plugging into $d$ the respective series, we get a $q$-series of
+-- order $-325$.
+
+xd := eval(d, (c:Z):X +-> c*1$X, ['T], [xt])$PolynomialEvaluation(Z, X);
+first xd
+
+-- When multiplied by $f$, it can be reduced to to zero
+-- modulo our algebra basis `xabz`.
+
+xdf := xd*xf;
+first xdf
+
+xdfredz := reduce(xdf, xabz)$QXRED1(C);
+zero? xdfredz
+
+-- Of course, it is not surprising that when we clear denominators and
+-- extract the respective polynomial representation (in particular the
+-- coefficient of the variable `F`) that we get back our polynomial d.
+
+xdfredz2 := clearDenominator(second(xdfredz)::Pol(Q));
+df0int := coefficient(xdfredz2, F, 0); -- the representation
+df1int := coefficient(xdfredz2, F, 1); -- the poly d
+zero?(df1int - d)
+
+vars := variables df0int, variables df1int
+
+-- This representaion demonstrates divisibility by 11 of the
+-- coefficients of $d(t) f$.
+--
+-- Again that is only useful, if we have shown that the series
+-- of our algebra basis `xab` have integer coefficients.
+-- (Can be done by "freshman's dream" trick.)
+
+removeDuplicates sort [positiveRemainder(x, 11) for x in coefficients df0int]
+
+-- ## Express $d(t)f$ in terms of $t$ and $u$
+
+xdfred := reduce(xdf, xab)$QXRED1(C)
+
+zero? xdfred
+
+
+-- <a name="xfab"></a>
+-- ## xfab=samba($t$, $\{u, f\}$)
+
+cft := first xt;
+xfgens := [xt, xu, xf]
+cffgens := [first x for x in xfgens];
+
+-- We know already (by previous computation) that the number of gaps
+-- will be 31, so we can abort the computation when we have reached
+-- gap number 31 and avoid the remaining reductions to zero.
+
+cffab := samba(cft, cffgens, 31)$QSAMBA1(C);
+grades := [qcoerce(qetaGrade x)@P for x in basis cffab]
+nog := numOfGaps(cffab)
+
+-- The computation with "polynomial part", can be done, but yields
+-- (at least for one basis element a "representation polynomial" in
+-- $T$, $U$, and $F$ that is quite huge.
+-- (Computation of algebra basis takes about a minite.)
+
+xfab := samba(xt, xfgens, 31)$QXSAMBA1(C);
+pols := [second(x)::Pol(C) for x in basis xfab];
+[[degree(x,'T), degree(x, 'U), degree(x, 'F)] for x in pols]
+[# monomials x for x in pols]
+[max [leadingCoefficient(xx) for xx in monomials x] for x in pols]
+
+xfbas := basis xfab;
+
+[qetaGrade x for x in xfbas]
+
+xfbas.1
+
+xfbas.2
+
+xfbas.3
+
+xfbas.4
+
+-- <a name="generating-function-for-p121n+116"></a>
+-- ## The generating function $f_2$ for $p(121n+116)$
+
+mm: P := 121; s: List Z := [-1, 0, 0]; m: P := 121;
+mmdivs: List P := DIVISORS mm
+shat: Z := sigmaInfinity(mmdivs, s)
+orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+t: N := first first orbs
+r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
+
+ff2 := modularSiftedPartitionSeries(121, m, t);
+xf2 := toX1(C, ff2, F2)
+
+-- <a name="f2-in-xfab"></a>
+-- We reduce first by `xab` and only then by `xfab`.
+
+cfbas := [first x for x in basis xab]
+cfab := samba(first xt, cfbas, 96, oneVerboseStep!(1,1,1,1))$QSAMBA1(C);
+
+red121 := reduce(first xf2, cfab)$QRED1(C);
+zero? red121
+qetaGrade red121
+
+red121f := reduce(red121, cffab)$QRED1(C);
+zero? red121f
+
+red121f
+
+-- Clearly, the computation above confirms that `xf2`
+-- is in the $\mathbb{C}[t]$-module generated by $\{1, f, u\}$.
+-- In other words, it lives in the algebra $\mathbb{C}[t, u, f]$.
+
+-- <a name="method-klein"></a>
+-- # Method 1: integral basis by using the Klein $j$-function
+
+
+-- First expand $t$, $u$,
+-- $j(\tau)$, $j(11\tau)$, and $j(11^2\tau)$
+-- at every cusp of $\Gamma_0(121)$.
+
+rgens := etaQuotientMonoidExponentVectors(level)$QEQEV
+
+ys := [YEQn r for r in rgens];
+--ys := [etaQuotient(nn, r, 1, [0], 1, 0) for r in rgens];
+xiord := max [minimalRootOfUnity x for x in ys]
+
+-- As can be seen above expansion some cusps involves computation in
+-- $\mathbb{Q}[\xi]$ where $\xi$ is a primitive 44-th root of unity
+-- although the $q$-series expansion itself is eventually with
+-- rational coefficients.
+
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+spitzen := cusps(level)$GAMMA0
+
+-- The elements of ms are, in fact, the $q$-expansions
+-- (at all cusps of $\Gamma_0(121)$ of the eta-quotients
+-- corresponding to $t$ and $u$, namely
+-- $$
+-- t=\frac{\eta(\tau)}{\eta(121\tau)}
+-- $$
+-- and
+-- $$
+-- u=\frac{\eta(11\tau)^{12}}{\eta(\tau) \eta(121\tau)^{11}}.
+-- $$
+
+ms := [EQAnCX r for r in rgens];
+[qetaGrades x for x in ms]
+
+)read ../input/modfuns.input )quiet
+
+-- The pole orders computed by the function `qetaGrades`
+-- of $j(\tau)$, $j(11\tau)$, and $j(11^2\tau)$ is given below.
+
+mj0 := kleinJn(nn, 11^0); qetaGrades mj0
+mj1 := kleinJn(nn, 11^1); qetaGrades mj1
+mj2 := kleinJn(nn, 11^2); qetaGrades mj2
+
+-- We can easily figure out by which powers of $t$ and $u$
+-- we have to multiply in order to arrive at elements
+-- in $M^\infty(121)$.
+
+mmj0 := mj0*ms.1^25*ms.2;   qetaGrades mmj0
+mmj1 := mj1*ms.1^3 *ms.2^3; qetaGrades mmj1
+mmj2 := mj2*ms.1   *ms.2;   qetaGrades mmj2
+
+toA1C x ==> (map(retract, series(x, 12))$QEtaLaurentSeriesFunctions2(CX, C))::A1(C)
+
+-- Then `xj0` and `xj2` correspond to
+-- $j^\infty_0$ and $j^\infty_2$ from the article,
+-- however, we attach a representational part in
+-- terms of $j_\alpha(\tau):=j(11^\alpha\tau)$.
+
+xj0 := toX1(C, toA1C mmj0, T^25*U*J0)
+xj1 := toX1(C, toA1C mmj1, T^3*U^3*J1)
+xj2 := toX1(C, toA1C mmj2, T*U*J2)
+
+-- ## cfj01ab=samba($t$, $\{u, j^\infty_0, j^\infty_1\})$
+
+-- Unfortunately the following basis computation only leads to number
+-- of gaps = 31.
+--
+-- We do not compute with the extended basis, since then the
+-- computation takes quite some time (1440 seconds) to reduce the
+-- representation part.
+--
+-- Since we already know that the computation will end with a basis
+-- having gap number 31, we can abort the computation when we have
+-- reached a basis with gap number 31.
+
+gens := concat([xj0, xj1], xgens)
+
+cfj01ab := samba(first xt, [first x for x in gens], 31, oneVerboseStep!(1,1,1,1))$QSAMBA1(C)
+
+grades := [asP(qetaGrade x) for x in basis cfj01ab]
+numOfGaps(cfj01ab)
+
+-- <a name="xjab"></a>
+-- ## xjab=samba($t$, $\{u, j^\infty_0, j^\infty_2\})$
+
+-- Computing with $j^\infty_0$ and $j^\infty_2$ leads to an
+-- integral basis, gap number 6 of the respective module,
+-- i.e., an (order-complete) integral basis for
+-- $\mathbb{C}[t,u,j^\infty_0,j^\infty_2]=M^\infty(121)$.
+
+gens := concat([xj0, xj2], xgens)
+
+-- With aborting the computation when we have reached gap number = genus,
+-- it takes about 400 seconds to compute this basis.
+
+xjab := samba(xt, gens, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+
+grades := [asP(qetaGrade x) for x in basis xjab]
+numOfGaps(xjab)
+
+smallerMod5?(x, y) == positiveRemainder(qetaGrade x, 5)<positiveRemainder(qetaGrade y, 5)
+xjabbas := sort(smallerMod5?, basis xjab);
+[qetaGrade x for x in xjabbas]
+
+b1 := xjabbas.1; qetaGrade b1
+b2 := xjabbas.2; qetaGrade b2
+b3 := xjabbas.3; qetaGrade b3
+b4 := xjabbas.4; qetaGrade b4
+bpols := [second(x)::Pol(Q) for x in xjabbas];
+varlists := [variables x for x in bpols]
+
+-- The basis elements together with their representation in
+-- terms of the original series $t$, $u$, $j_0$, and $j_2$
+-- where $j_0=j$ is Klein's $j$-invariant and
+-- $j_2(\tau) := j(11^2\tau)$.
+
+b1
+
+b2
+
+b3
+
+b4
+
+-- Of course, we can also reduce the non-leading coefficients
+-- of the $q$-series of the basis `xjbas`. Although that leads
+-- to a basis with nicer looking $q$-expansion (smaller coefficients),
+-- it still involves huge polynomials in their representation
+-- in terms of $T$, $U$, $J0$ and $J2$.
+
+)set stream calc 17
+
+bb2 := b2 - qetaCoefficient(b2, 5)*xt + 272/121*1$X
+
+b3a := b3 - qetaCoefficient(b3, 7)*bb2;
+b3b := b3a - qetaCoefficient(b3a, 5)*xt;
+bb3 := b3b - qetaCoefficient(b3b, 0)*1$X
+
+b4a := b4 - qetaCoefficient(b4, 8)*bb3;
+b4b := b4a - qetaCoefficient(b4a, 7)*bb2;
+b4c := b4b - qetaCoefficient(b4b, 5)*xt;
+bb4 := b4c - qetaCoefficient(b4c, 0)*1$X
+
+b1a := b1 - qetaCoefficient(b1, 15)*xt^3;
+b1b := b1a - qetaCoefficient(b1a, 14)*xt*bb4;
+b1c := b1b - qetaCoefficient(b1b, 13)*xt*bb3;
+b1d := b1c - qetaCoefficient(b1c, 12)*xt*bb2;
+b1e := b1d - qetaCoefficient(b1d, 10)*xt^2;
+b1f := b1e - qetaCoefficient(b1e, 9)*bb4;
+b1g := b1f - qetaCoefficient(b1f, 8)*bb3;
+b1h := b1g - qetaCoefficient(b1g, 7)*bb2;
+b1i := b1h - qetaCoefficient(b1h, 5)*xt;
+bb1 := b1i - qetaCoefficient(b1i, 0)*1$X;
+first bb1
+
+)set stream calc 2
+
+-- <a name="method-trace"></a>
+-- # Method 2: integral basis obtained with the trace map
+
+-- We can generate a new modular function by applying the trace to
+-- a modular function from $M^\infty(242)$.
+
+xiord := 2;
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+spitzen := cusps(level)$GAMMA0
+
+-- ## Atkin-Lehner involution $W_2^{242}$
+
+-- The trace
+-- $\mathrm{tr}_{121}^{242}: M^\infty(242) \to M^\infty(121)$
+-- is given through the Atkin-Lehner involution.
+-- See, for example, \cite{Kohnen:WeierstrassPointsAtInfinity:2004}.
+--
+-- In our case we have
+-- $$f|\mathrm{tr}_{121}^{242} = f + 2 f|W_2^{242}|U_2$$
+-- where
+-- $$
+-- W_2^{242}=
+-- \begin{pmatrix}
+-- 2 & -1\\
+-- 242 & -120
+-- \end{pmatrix}
+-- $$
+-- is given below and $U_2$ is the operator described
+-- in `qetafun.spad`.
+--
+-- We can split $W_2^{242}$ into an element of $SL_2(\mathbb{Z})$
+-- and a triangular matrix.
+
+alw := matrixAtkinLehner(242, 2)$QETAAUX
+sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
+gamma := sm.red;
+
+-- The second matrix just corresponds to going from $\tau$ to $2\tau$.
+-- In other words,
+-- $$
+-- (f|\mathrm{tr}_{121}^{242})(\tau)
+-- = f(\tau) + 2 (f_{\gamma,2}|U_2)(\tau)
+-- $$
+-- where $f_{\gamma,2}(\tau) := (f|\gamma)(2\tau)$.
+
+w := WIDTH0(242, gamma(2,1))
+
+-- The width of the Atkin-Lehner involution $W_2^{242}$ is 2,
+-- so the resulting series will be in $q^{1/2}$ which together with
+-- the above $\tau\mapsto 2\tau$ neutalizes and we can simply read
+-- the resulting series as a series in $q$.
+
+-- <a name="monoid-E242"></a>
+-- ## Monoid basis for $E^\infty(242)$
+
+-- Since we can only compute with series coming from eta quotients, we
+-- temporarily switch to level 242 and take the trace of a series from
+-- there.
+
+divs242 := DIVISORS level;
+rgens242 := etaQuotientMonoidExponentVectors(242)$QEQEV;
+levelsave := level
+level := 242
+egens242 := [EQA1C r for r in rgens242];
+level := levelsave
+[qetaGrade(x::A1(C)) for x in egens242]
+
+-- For all the series we compute that we need at most a second root of
+-- unity, i.e. we continue our computation in $C=\mathbb{Q}$.
+
+divs242
+#rgens242
+gen242 := genus(242)$GAMMA0
+
+-- We have tried to compute the algebra basis for N=121 with
+-- the addition of one of the series coming from the N=242
+-- generators and found that the eta quotient corresponding to
+-- the third vector, namely $(6, -3, -1, 1, 5, -8)$ works best
+-- in the sense that it yields a basis with number of gaps equal
+-- to 6 whereas for other indices we get bases with a higher
+-- number of gaps.
+--
+-- $$1: (-1, 2, 0, 0, 1, -2) \to 8$$
+-- $$2: (0, 0, 7, -3, 3, -7) \to 31$$
+-- $$3: (6, -3, -1, 1, 5, -8) \to 6$$
+-- $$4: (0, 0, -4, 8, 4, -8) \to 31$$
+-- $$5: (7, -3, -1, 1, 4, -8) \to 6$$
+
+-- Thus, we have chosen the third vector which gives a
+-- series of order -55.
+
+-- <a name="functions-g-and-h"></a>
+-- ## Functions $g$ and $h$
+
+-- So apply the trace function from $M^\infty(242)$ to $M^\infty(121)$.
+
+xi := -1;
+CX := Q;
+
+xg: X := toX1(C, traceMap(nn, 2, rgens242.1), 'G)
+xh: X := toX1(C, traceMap(nn, 2, rgens242.3), 'H)
+
+-- <a name="xgab"></a>
+-- ## `xgab`=samba($t, \{u, g\}$)
+
+-- Now we can add this element to the algebra basis computed earlier
+-- and hope that we end with a algebra basis for all modular functions
+-- of level 121, i.e., $M^\infty(121)$.
+
+cft := first xt
+xtracebas := [xt, xu, xg]
+cftracebas := [first x for x in xtracebas];
+
+cfgab := samba(cft, cftracebas, genus, oneVerboseStep!(1,1,1,1))$QSAMBA1(C);
+cfgab
+
+xgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+xgab
+
+grades := [qcoerce(qetaGrade x)@P for x in basis xgab]
+nog := numOfGaps(cfgab)
+
+-- The gap number is 8, i.e., it does not yield an integral basis
+-- for $M^\infty(121)$.
+--
+-- And indeed our modular generating series for $p(11n+6)$ is not in
+-- the algebra $C[t,u,g]$.
+
+xr := reduce(xf, xgab)$QXRED1(C);
+cfr := reduce(first(xf)::A1(C), cfgab)$QRED1(C)
+
+first xr
+qetaGrade xr
+
+-- ## xfgab=samba($t, \{u,f,g\}$)
+-- <a name="xfgab"></a>
+
+-- By adding the generating series $f$ for $p(11n+6)$ we indeed
+-- arrive at an integral basis.
+
+xtracebas := [xt, xu, xf, xg]
+
+xfgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
+
+grades := [qcoerce(qetaGrade x)@P for x in basis xfgab]
+nog := numOfGaps(xfgab)
+
+
+fgrels := [second(x)::Pol(C) for x in basis xfgab];
+
+[variables x for x in fgrels]
+
+-- The degrees of the polynomial with respect to the
+-- variables is given below.
+
+[degree(x, 'T) for x in fgrels]
+
+[degree(x, 'U) for x in fgrels]
+
+[degree(x, 'F) for x in fgrels]
+
+[degree(x, 'G) for x in fgrels]
+
+-- Let's compute the bitlenth of the biggest coefficients
+-- of the representation polynomials.
+
+fgrelslc := [[leadingCoefficient m for m in monomials x] for x in fgrels];
+[max [length denom c for c in l] for l in fgrelslc]
+
+-- <a name="xghab"></a>
+-- ## xghab=samba($t, \{u,g,h\}$)
+
+-- We also arrive at an integral basis if we add both of the series
+-- $g$ and $h$ coming from computing the trace of functions from
+-- $M^\infty(242)$.
+
+xtracebas := [xt, xu, xg, xh]
+
+
+xghab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
+
+
+# basis xghab
+grades := [qcoerce(qetaGrade x)@P for x in basis xghab]
+numOfGaps(xghab)
+
+-- Let us express the generating series $f$ for $p(11n+6)$
+-- as a relation in terms of the original algebra basis
+-- elements (in fact, the powers of $z=\frac{1}{11}(u-t^{10})$).
+
+xtracebas := concat([xt, xg, xh], basis xabz)
+
+xghabz := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
+grades := [qcoerce(qetaGrade x)@P for x in basis xghabz]
+numOfGaps(xghabz)
+
+-- Of course the reduction yields zero.
+
+xr := reduce(xf, xghabz)$QXRED1(C);
+zero? xr
+
+-- We thus obtain a relation of $f$ in terms of
+-- $h$, $g$, $z=z_1$, and $t$.
+-- However, this relation does not show that
+-- the coefficients of $f$ are divisible by 11.
+
+xrpol := clearDenominator((second xr)::Pol(C));
+variables(xrpol)
+# monomials(xrpol)
+factor gcd(coefficient(xrpol, 'F, 1), 11)
+content coefficient(xrpol, 'F, 0)
+
+-- <a name="xhab"></a>
+-- ## xhab=samba($t, \{u,h\}$)
+
+-- It is sufficient to add only $h$ to the generators
+-- in order to get an integral basis for $M^\infty(121)$.
+
+xtracebas := [xt, xu, xh]
+
+
+xhab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+
+
+# basis xhab
+grades := [qcoerce(qetaGrade x)@P for x in basis xhab]
+numOfGaps(xhab)
+
+hrels := [second(x)::Pol(C) for x in basis xhab];
+
+[variables x for x in hrels]
+
+-- The degrees of the polynomial with respect to the
+-- variables is given below.
+
+[degree(x, 'T) for x in hrels]
+
+[degree(x, 'U) for x in hrels]
+
+[degree(x, 'H) for x in hrels]
+
+-- Let's compute the bitlenth of the biggest coefficients
+-- of the representation polynomials.
+
+hrelslc := [[leadingCoefficient m for m in monomials x] for x in hrels];
+[max [length denom c for c in l] for l in hrelslc]
+
+-- There must be a relation for $f$ in terms of $\{t,u,h\}$.
+-- Unfortunatly, it does not show divisibility by 11 of
+-- the coefficients of $f$.
+
+xr := reduce(xf, xhab)$QXRED1(C);
+
+xrpol := clearDenominator((second xr)::Pol(C));
+variables(xrpol)
+# monomials(xrpol)
+factor gcd(coefficient(xrpol, 'F, 1), 11)
+content coefficient(xrpol, 'F, 0)
+
+-- There must be a relation for $g$ in terms of $\{t,u,h\}$.
+
+xr := reduce(xg, xhab)$QXRED1(C);
+first xr
+xrpol := clearDenominator((second xr)::Pol(C));
+variables(xrpol)
+# monomials(xrpol)
+factor gcd(coefficient(xrpol, 'F, 1), 11)
+content coefficient(xrpol, 'F, 0)
+
+-- ## Denominator polynomial $d^*$ for $h$ with respect to `xab`
+
+-- We compute a polynomial $d^*(T)$ such that
+-- $d^*(t)h \in \mathbb{Q}[t, u]$.
+-- (Takes about 3 min.)
+
+e1:=29; e2:=129
+rhs := [reduce(xt^e1*xh, xab)$QXRED1(C)];
+for i in e1+1..e2 repeat (_
+  print(i);_
+  rhs := cons(reduce(xt*first(rhs), xab)$QXRED1(C), rhs))
+rhs := reverse! rhs;
+[qetaGrade x for x in rhs]
+[variables(second(x)::Pol(C)) for x in rhs]
+[coefficient(second(x)::Pol C, H, 1) for x in rhs]
+
+lh := [[qetaCoefficient(first x, i) for i in 0..191] for x in rhs];
+
+-- Extract the 192 coefficients corresponding to the orders
+-- $-191, \ldots, 0$ and compute the kernel of the corresponding
+-- matrix.
+-- (Nullspace computation takes about 100 sec.)
+
+math := transpose matrix lh;
+[nrows math, ncols math]
+nsh := nullSpace math;
+#nsh
+
+-- Extract the coefficients from the vector in the nullspace.
+
+chs := members first nsh;
+
+-- Check that the resulting vector indeed yields a relation.
+
+lincomph := [c*rr for c in chs for rr in rhs];
+lch := reduce(_+, lincomph);
+zero? lch
+qetaCoefficient(lch, 0)
+
+-- Indeed, we have just shown a relation for
+-- $t^{39}h-h_{39}, \ldots, t^{129}h-h_{129}$.
+--
+-- In the second component of this "zero" is it's relation in terms of
+-- $H$, $T$, and $U$.
+-- The "denominator polynomial" is given by the coefficient of $H$.
+
+dh := (second lch)::Pol C;
+variables dh
+[degree(dh, x) for x in variables dh]
+
+-- ## Computation of the corresponding polynomials $c_0,..,c_4$
+
+-- In order to find the respective cofactors to the $c_1$
+-- from above, we must do the whole computation with
+-- different attached values, namely $T$, and $U$
+-- for the elements in basis `xab`.
+
+ch1:=coefficient(dh,H,1);
+ch0:=coefficient(dh,H,0);
+
+variables ch0
+varsh := rest reverse! variables ch0 -- should give [U]
+ch0s := [coefficient(ch0, x, 1) for x in varsh];
+degree(ch1, T), [degree(x, T) for x in ch0s]
+gcd cons(ch1,ch0s)
+
+-- <a name="denominator-polynomial-for-h"></a>
+-- Apart from the $t^{39}$ factor, we get other factors.
+-- (Factorization takes about
+
+flh := factorList factor ch1;
+[x.exponent for x in flh]
+flhfactors := [x.factor for x in flh]
+
+-- There is one factor that is not already a factor of `cf1`.
+
+[x for x in flhfactors | not member?(x, flffactors)]
+
+-- <a name="method-algcurves"></a>
+-- # Method 3: integral basis by using Maple's algcurves
+
+xu5r := reduce(xu^5, xab)$QXRED1(C);
+
+zero? xu5r
+
+p := second(xu5r)::Pol(Q)
+variables(p)
+
+-- There is also a polynomial pz(x,y) such that pz(t, z) = 0.
+
+xzz := toX1(C, first(1/11*(xu-xt^10)), 'Z)
+xabzz := samba(xt, [xt, xzz], nog)$QXSAMBA1(C)
+xzz5r := reduce(xzz^5, xabzz)$QXRED1(C);
+zero? xzz5r
+pzz := second(xzz5r)::Pol(Q)
+variables(pzz)
+dzz := discriminant(pzz, 'Z);
+flzz := factorList factor dzz;
+[x.exponent for x in flzz]
+flzzfactors := [x.factor for x in flzz]
+
+
+
+-- The above polynomial p(T, U) is the respective
+-- relation between $t$ and $u$, i.e., $p(t, u)=0$.
+-- For the following computation with Maple it has been
+-- stored in the file
+-- [integralbasis121.maple](https://www.risc.jku.at/people/hemmecke/papers/integralbasis/integralbasis121.maple)
+-- together with the Maple commands:
+--
+--     with(algcurves);
+--     ib := integral_basis(p,T,U):
+--     lprint(ib);
+--
+-- to compute and print the resulting integral basis (not yet
+-- order-complete).
+-- Via `read("integralbasis121.maple");` this file is evaluated in
+-- [Maple](https://maplesoft.com).
+-- It gives the integral basis `[1, U, U^2, U^3, v(T, U)]`
+-- where $v$ is a rational function in $T$ and $U$ and
+-- stored in the file
+-- [integralbasis121v.input](https://www.risc.jku.at/people/hemmecke/papers/integralbasis/integralbasis121v.input).
+
+)sys curl -L https://www.risc.jku.at/people/hemmecke/papers/integralbasis/v.input > integralbasis121v.input
+)read integralbasis121v.input )quiet
+
+-- Compute the respective $q$-expansion corresponding to $v$
+-- by plugging $t$ and $u$ into the numerator and denominator
+-- of $v$.
+
+-- +
+dv := denom v;
+nv := numer v;
+PE C ==> PolynomialEvaluation(C, X)
+syms: List Symbol := ['T, 'U]
+elems: List X := [xt, xu]
+ev ==> eval((c:C):X1(C)+->c*1$X, ['T, 'U], [xt,xu])$PE(C)
+
+edv := ev dv;
+env := ev nv;
+
+fdv := (first edv)::A1(C);
+fnv := (first env)::A1(C);
+-- -
+
+-- After normalizing the leading coefficient of the series to 1,
+-- we obtain a series of order -1670.
+
+cfv0 := (fnv/fdv)::CA1(C);
+cfv := (1/qetaLeadingCoefficient(cfv0))*cfv0;
+--xv := toX1(C, cfv0, 'V)
+xv := toX1(C, cfv, 'V)
+qetaGrade cfv
+
+-- Let us first reduce this series with respect to the
+-- order-complete basis of $\mathbb{Q}[t,u]$,
+-- see [xab = samba([xt, xu])](#xab).
+-- This takes about 20 minutes.
+
+trEnter ==> traceEnter(1)$QXRED1(C)
+trLoop ==> traceLoop(1)$QXRED1(C)
+trReturn ==> traceReturn(1)$QXRED1(C)
+tReduce ==> tracedReduce(trEnter, trLoop, trReturn)$QXRED1(C);
+xw := tReduce(xv, xab);
+
+-- Since we already know that
+-- $\{1, u, u^2, u^3, v(t,u)\}$
+-- is an integral basis of $M^\infty(121)$, computing an
+-- order-complete basis (with respect to $t$) from
+-- it via the `samba` algorithm, does not require us to
+-- consider products of basis elements.
+-- We simply need to interreduce the basis elements,
+-- i.e., we choose a selection strategy that first reduces
+-- basis elements that become reducible after adding a new
+-- basis element and only then consider products of basis
+-- elements.
+-- Computation of the order-complete basis takes about 2 h.
+
+-- +
+QXCOMPDP1 C ==> QEtaComputationDelayedPairs(C, X1 C, QXAB1 C, QXRED1 C)
+QXSAMBADP1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMPDP1 C)
+
+)set mess time on
+xvab := samba(xt, [xu, xu^2, xu^3, xv], genus, oneVerboseStep!(1,1,1,1))$QXSAMBADP1(C);
+-- -
+
+-- We have not yet implemented a reduction of the non-leading
+-- terms of the $q$-series expansion, but it can easily be
+-- done manually.
+
+svbas := sort(smallerGrade?, basis xvab);
+[qetaGrade x for x in svbas]
+
+)set stream calc 16
+
+xr := svbas.1;
+xr := xr - qetaCoefficient(svbas.1, 5)*xt;
+rvb1 := xr - qetaCoefficient(xr, 0)*1$X;
+first rvb1
+
+xr := svbas.2;
+xr := xr - qetaCoefficient(svbas.2, 5)*xt;
+xr := xr - qetaCoefficient(xr, 7)*rvb1;
+rvb2 := xr - qetaCoefficient(xr, 0)*1$X;
+first rvb2
+
+xr := svbas.3;
+xr := xr - qetaCoefficient(xr, 8)*rvb2;
+xr := xr - qetaCoefficient(xr, 7)*rvb1;
+xr := xr - qetaCoefficient(xr, 5)*xt;
+rvb3 := xr - qetaCoefficient(xr, 0)*1$X;
+first rvb3
+
+-- +
+xr := svbas.4;
+xr := xr - qetaCoefficient(xr, 15)*xt^3;
+xr := xr - qetaCoefficient(xr, 14)*rvb3*xt;
+xr := xr - qetaCoefficient(xr, 13)*rvb2*xt;
+xr := xr - qetaCoefficient(xr, 12)*rvb1*xt;
+xr := xr - qetaCoefficient(xr, 10)*xt^2;
+
+xr := xr - qetaCoefficient(xr, 9)*rvb3;
+xr := xr - qetaCoefficient(xr, 8)*rvb2;
+xr := xr - qetaCoefficient(xr, 7)*rvb1;
+xr := xr - qetaCoefficient(xr, 5)*xt;
+rvb4 := xr - qetaCoefficient(xr, 0)*1$X;
+first rvb4
+-- -
+
+-- The variable `rvbas` corresponds to the set
+-- $\{b_1, b_2, b_3, b_4\}$ from Section 8 of
+-- the article.
+-- However, each element is a pair consisting of
+-- a $q$-series and its respective representation
+-- in terms of the elements $t$ and $u$.
+
+rvbas := [rvb1,rvb2,rvb3,rvb4];
+
+-- We know that
+-- $$b_i = p_1^{(i)}(t) + p_2^{(i)}(t) \, u + p_3^{(i)}(t) \, u^2 + p_4^{(i)}(t) \, u^3+ p_5^{(i)}(t) \, v(t,u).$$
+--
+-- Compute the respective matrix $A$ cited in the paper,
+-- i.e., $A=(a_{i,j})$ where
+-- $a_{i,j}=\deg_T(p^{(i)}_j(T))$.
+
+bp := [second(x)::Pol(C) for x in rvbas];
+cofactorsu(bi) == [coefficient(bi, ['U, 'V], [j, 0]) for j in 0..3];
+cofactorv(bi) == coefficient(bi, ['U, 'V], [0, 1]);
+cofactors := [concat(cofactorsu(bi), cofactorv(bi)) for bi in bp];
+[[variables(x) for x in l] for l in cofactors]
+matrix [[degree(x, 'T) for x in l] for l in cofactors]
+
+-- As an example, let us consider the polynomial
+-- $p^{(1)}_5(T)$.
+-- It is a polynomial in $T$ of degree 52.
+-- We can divide a constant to make the coefficient
+-- become smaller.
+
+pv := coefficient(bp.1, ['U, 'V], [0, 1]);
+variables pv, degree pv
+den := lcm [denom leadingCoefficient x for x in monomials pv];
+num := gcd [numer leadingCoefficient x for x in monomials (den*pv)];
+num/den
+
+-- Still, the polynomial $p^{(1)}_5(T)$ is rather big.
+-- Note that it is one of the smallest polynomials among
+-- all the $p^{(i)}_j(T)$.
+
+ipv := den/num*pv
+
+-- # Algebraic Curve setup
+
+h := etaQuotientIdealGenerators(nn, rgens)$QEtaIdealHemmecke(C;
+variables h
+#h
+gb := groebner(h);
+
+#gb
+
+-- Rename variable `M1` by `T`.
+
+dis := eval(discriminant(first gb, M2), M1=T);
+
+disfl := factorList factor dis;
+#disfl
+
+[x.exponent for x in disfl]
+[degree(x.factor, T) for x in disfl]
+disflfactors := [x.factor for x in disfl]
+
+(flffactors = [disflfactors.i for i in [1,2,3,4,7,8]])@Boolean
+
+(flhfactors = [disflfactors.i for i in [1,2,3,4,6,7,8]])@Boolean
+
+-- Additional factors in the discriminant.
+
+disflfactors.5
