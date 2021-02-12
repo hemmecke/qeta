@@ -93,7 +93,11 @@ SPADFILES=4ti2 qfunct cachedpow \
   ivar iffts ffalgclos algclos newtonpuiseux \
 
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
-PREREQS_INPUT=checksomos.input etacompute.input etamacros.input
+# We also add convenience.input and modfuns.input so that we can
+# execute .input-test files as Jupyter notebooks in the tmp directory
+# without having to take care of the directory.
+PREREQS_INPUT=checksomos.input etacompute.input etamacros.input \
+  convenience.input modfuns.input
 PREREQS_SAGE=etagb.sage
 PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQS_SAGE}}
 
