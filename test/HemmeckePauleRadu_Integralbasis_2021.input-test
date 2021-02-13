@@ -1,3 +1,14 @@
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
+
 -- This notebook contains supplement material to the article
 --
 -- # Construction of Bases for Modular Functions for $\Gamma_0(121)$ related to $p(11n+6)$
@@ -45,16 +56,28 @@
 -- <a name="preparatory-steps"></a>
 -- # Preparatory steps
 
+-- First we locate the **QEta** package and load it together
+-- with some useful macros into a
+-- [FriCAS](https://fricas.github.io) session.
+
+-- Fix the directory path to point to the compiled QEta code.
+
+)clear completely
+)set output algebra off
+)cd /home/hemmecke/g/qeta/tmp
+)set mess type off
+)set mess time off
+
 -- The following assumes that the
 -- [QEta](https://hemmecke.github.io/qeta)
 -- package has already been compiled via
 -- `make compile-spad`, i.e. all further computation
 -- is done inside `/home/hemmecke/g/qeta/tmp`.
 
-)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
 
 C ==> Q;
-)read convenience )quiet
+)read convenience.input )quiet
 
 -- <a name="monoid-E121"></a>
 -- ## Monoid basis for $E^\infty(121)$
@@ -153,7 +176,7 @@ nog := numberOfGaps(xab)
 -- The genus of the Riemann surface $X_0(121)$ is a curve of genus 6.
 -- Its genus is equal to the genus of $\Gamma_0(121)$.
 
-genus := genus(nn)$GAMMA0
+genus := genus(level)$GAMMA0
 
 -- Since 6 < 96, it proves that `xab` does not represent
 -- an integral basis for $M^\infty(121)$.
@@ -217,8 +240,22 @@ xfrb := reduce(xf, xabz)$QXRED1(C)
 
 xfrz := xf - 11*xt * xz
 
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:dc
+-------------------------------------------------------------------
+-- -
+
+
+)read init.input
+
 -- <a name="denominator-polynomial-for-f"></a>
--- ## Denominator polynomial $d(T)$ corresponding to $f$
+-- # Denominator polynomial $d(T)$ corresponding to $f$
 
 -- We compute a polynomial $d(T)$ such that
 -- $d(t)f \in \mathbb{Q}[t, u]$.
@@ -306,6 +343,20 @@ flf := factorList factor cf1;
 [x.exponent for x in flf]
 flffactors := [x.factor for x in flf]
 
+-- Now we sort by degree and the size of the second coefficient.
+
+R ==> Record(factor: Polynomial(Fraction(Integer)),exponent: NonNegativeInteger)
+dg(x) == degree(x, 'T);
+a2(x: Pol C): C == abs(coefficient(x, 'T, (dg(x) -1)::N)$Pol(C));
+smf(x: R, y: R): Boolean == (xf:=x.factor; yf:=y.factor; dx := dg xf; dy:= dg yf; dx=dy => (a2 xf < a2 yf); dx < dy);
+
+fff := sort(smf, rest factors factor cf1);
+for x in fff for i in 1.. repeat vPrint(concat("exponent",i::String), x.exponent)
+
+for x in fff for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("d",i::String), x.factor))
+
+
 denf := denom uf
 
 -- Multiplying by the denominator of the constant factor of `cf1`
@@ -337,6 +388,12 @@ cis := cons(cf00, [(denf*(x/T^37))::Pol(Z) for x in cf0s])
 -- $z = \frac{1}{11}(u-t^{10})$ that show that the $q$-series
 -- expansion of $z$ has integer coefficients, this establishes yet
 -- another relation that shows that $p(11n+6)$ is divisible by 11.
+
+C11 ==> IntegerLocalizedAtPrime 11
+P11 ==> Polynomial C11
+for x in cis for i in 0.. repeat (print(""::Symbol); _
+  vPrint(concat("c",i::String), x::P11))
+[content(x) for x in cis]
 
 -- ## Express $d(t)f$ in terms of $t$, $z^1, \ldots, z^4$
 
@@ -375,12 +432,33 @@ vars := variables df0int, variables df1int
 
 removeDuplicates sort [positiveRemainder(x, 11) for x in coefficients df0int]
 
+-- Clearly, if we plugin xt fot the T variable and just consider the
+-- series, we should get zero.
+
+cist := [eval(x, (c:Z):X +-> c*1$X, ['T], [xt])$PolynomialEvaluation(Z, X) for x in cis];
+zero?(first xdf - reduce(_+, [first(x*xz^i) for x in cist for i in 0..5]))
+
+-- +
+-- end dc.input
+--endtest
+-- -
+
 -- ## Express $d(t)f$ in terms of $t$ and $u$
 
 xdfred := reduce(xdf, xab)$QXRED1(C)
 
 zero? xdfred
 
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:bf
+-------------------------------------------------------------------
+-- -
 
 -- <a name="xfab"></a>
 -- ## xfab=samba($t$, $\{u, f\}$)
@@ -408,17 +486,36 @@ pols := [second(x)::Pol(C) for x in basis xfab];
 [# monomials x for x in pols]
 [max [leadingCoefficient(xx) for xx in monomials x] for x in pols]
 
+xfabtopbas := sort(smallerMod5?, basis xfab);
+[qetaGrade x for x in xfabtopbas]
+
+for x in xfabtopbas for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("bf",i::String), x))
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:f2
+-------------------------------------------------------------------
+-- -
+
+)read init.input
+
+-- <a name="xfab"></a>
+-- ## xfab=samba($t$, $\{u, f\}$)
+
+xfgens := [xt, xu, xf]
+
+-- The computation with "polynomial part", can be done, but yields
+-- (at least for one basis element a "representation polynomial" in
+-- $T$, $U$, and $F$ that is quite huge.
+
+xfab := samba(xt, xfgens, 31, oneVerboseStep!(1,1,0,1))$QXTOPSAMBA1(C);
 xfbas := basis xfab;
-
-[qetaGrade x for x in xfbas]
-
-xfbas.1
-
-xfbas.2
-
-xfbas.3
-
-xfbas.4
 
 -- <a name="generating-function-for-p121n+116"></a>
 -- ## The generating function $f_2$ for $p(121n+116)$
@@ -443,14 +540,27 @@ red121 := reduce(first xf2, cfab)$QRED1(C);
 zero? red121
 qetaGrade red121
 
-red121f := reduce(red121, cffab)$QRED1(C);
+red121f := reduce(red121, xfab)$QXTOPRED1(C);
 zero? red121f
 
-red121f
+vPrint("f2relation", second red121f)
 
 -- Clearly, the computation above confirms that `xf2`
 -- is in the $\mathbb{C}[t]$-module generated by $\{1, f, u\}$.
 -- In other words, it lives in the algebra $\mathbb{C}[t, u, f]$.
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:fj
+-------------------------------------------------------------------
+-- -
+
+)read init.input
 
 -- <a name="method-klein"></a>
 -- # Method 1: integral basis by using the Klein $j$-function
@@ -463,7 +573,6 @@ red121f
 rgens := etaQuotientMonoidExponentVectors(level)$QEQEV
 
 ys := [YEQn r for r in rgens];
---ys := [etaQuotient(nn, r, 1, [0], 1, 0) for r in rgens];
 xiord := max [minimalRootOfUnity x for x in ys]
 
 -- As can be seen above expansion some cusps involves computation in
@@ -570,46 +679,31 @@ varlists := [variables x for x in bpols]
 -- where $j_0=j$ is Klein's $j$-invariant and
 -- $j_2(\tau) := j(11^2\tau)$.
 
-b1
+)set stream calc 2
 
-b2
+-- We can reduce f with respect to xjab in order to find a polynomial
+-- expressing f in terms of t, u, j0, and j2.
+redfj := reduce(xf, xjab)$QXTOPRED1(C);
+zero? redfj
 
-b3
-
-b4
-
--- Of course, we can also reduce the non-leading coefficients
--- of the $q$-series of the basis `xjbas`. Although that leads
--- to a basis with nicer looking $q$-expansion (smaller coefficients),
--- it still involves huge polynomials in their representation
--- in terms of $T$, $U$, $J0$ and $J2$.
-
-)set stream calc 17
-
-bb2 := b2 - qetaCoefficient(b2, 5)*xt + 272/121*1$X
-
-b3a := b3 - qetaCoefficient(b3, 7)*bb2;
-b3b := b3a - qetaCoefficient(b3a, 5)*xt;
-bb3 := b3b - qetaCoefficient(b3b, 0)*1$X
-
-b4a := b4 - qetaCoefficient(b4, 8)*bb3;
-b4b := b4a - qetaCoefficient(b4a, 7)*bb2;
-b4c := b4b - qetaCoefficient(b4b, 5)*xt;
-bb4 := b4c - qetaCoefficient(b4c, 0)*1$X
-
-b1a := b1 - qetaCoefficient(b1, 15)*xt^3;
-b1b := b1a - qetaCoefficient(b1a, 14)*xt*bb4;
-b1c := b1b - qetaCoefficient(b1b, 13)*xt*bb3;
-b1d := b1c - qetaCoefficient(b1c, 12)*xt*bb2;
-b1e := b1d - qetaCoefficient(b1d, 10)*xt^2;
-b1f := b1e - qetaCoefficient(b1e, 9)*bb4;
-b1g := b1f - qetaCoefficient(b1f, 8)*bb3;
-b1h := b1g - qetaCoefficient(b1g, 7)*bb2;
-b1i := b1h - qetaCoefficient(b1h, 5)*xt;
-bb1 := b1i - qetaCoefficient(b1i, 0)*1$X;
-first bb1
+vPrint("fjrelation", second redfj)
 
 )set stream calc 2
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:bg
+-------------------------------------------------------------------
+-- -
+
+-- TODO:
+
+)read init.input
 
 -- <a name="method-trace"></a>
 -- # Method 2: integral basis obtained with the trace map
@@ -713,6 +807,9 @@ CX := Q;
 xg: X := toX1(C, traceMap(nn, 2, rgens242.1), 'G)
 xh: X := toX1(C, traceMap(nn, 2, rgens242.3), 'H)
 
+-- TODO: END setup Method 2
+
+
 -- <a name="xgab"></a>
 -- ## `xgab`=samba($t, \{u, g\}$)
 
@@ -725,13 +822,24 @@ xtracebas := [xt, xu, xg]
 cftracebas := [first x for x in xtracebas];
 
 cfgab := samba(cft, cftracebas, genus, oneVerboseStep!(1,1,1,1))$QSAMBA1(C);
-cfgab
-
-xgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
-xgab
-
-grades := [qcoerce(qetaGrade x)@P for x in basis xgab]
 nog := numOfGaps(cfgab)
+
+level := 121
+xgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+nog := numOfGaps(xgab)
+
+xgabbas := sort(smallerMod5?, basis xgab);
+grades := [asP qetaGrade x for x in xgabas]
+
+-- Let us tail-reduce the Laurent series up to the term of order 0.
+-- )set stream calc 17
+-- xgabbas := [tailReduce(x, xgab)$QXRED1(C) for x in xgabtopbas];
+
+for x in xgabbas for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("bg",i::String), x))
+
+)set stream calc 2
+
 
 -- The gap number is 8, i.e., it does not yield an integral basis
 -- for $M^\infty(121)$.
@@ -739,11 +847,20 @@ nog := numOfGaps(cfgab)
 -- And indeed our modular generating series for $p(11n+6)$ is not in
 -- the algebra $C[t,u,g]$.
 
-xr := reduce(xf, xgab)$QXRED1(C);
-cfr := reduce(first(xf)::A1(C), cfgab)$QRED1(C)
-
+xr := reduce(xf, xgab)$QXTOPRED1(C);
 first xr
 qetaGrade xr
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:bfg
+-------------------------------------------------------------------
+-- -
 
 -- ## xfgab=samba($t, \{u,f,g\}$)
 -- <a name="xfgab"></a>
@@ -752,11 +869,21 @@ qetaGrade xr
 -- arrive at an integral basis.
 
 xtracebas := [xt, xu, xf, xg]
-
-xfgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
-
-grades := [qcoerce(qetaGrade x)@P for x in basis xfgab]
+level := 121
+xfgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
 nog := numOfGaps(xfgab)
+
+xfgabtopbas := sort(smallerMod5?, basis xfgab);
+[qetaGrade x for x in xfgabtopbas]
+
+-- Let us tail-reduce the Laurent series up to the term of order 0.
+)set stream calc 17
+xfgabbas := [tailReduce(x, xfgab)$QXRED1(C) for x in xfgabtopbas];
+
+for x in xfgabbas for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("bfg",i::String), x))
+
+)set stream calc 2
 
 
 fgrels := [second(x)::Pol(C) for x in basis xfgab];
@@ -780,6 +907,17 @@ fgrels := [second(x)::Pol(C) for x in basis xfgab];
 fgrelslc := [[leadingCoefficient m for m in monomials x] for x in fgrels];
 [max [length denom c for c in l] for l in fgrelslc]
 
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:bgh
+-------------------------------------------------------------------
+-- -
+
 -- <a name="xghab"></a>
 -- ## xghab=samba($t, \{u,g,h\}$)
 
@@ -788,14 +926,22 @@ fgrelslc := [[leadingCoefficient m for m in monomials x] for x in fgrels];
 -- $M^\infty(242)$.
 
 xtracebas := [xt, xu, xg, xh]
+level := 121
+xghab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
+nog := numOfGaps(xghab)
+-- xghab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
 
+xghabtopbas := sort(smallerMod5?, basis xghab);
+[qetaGrade x for x in xghabtopbas]
 
-xghab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
+-- Let us tail-reduce the Laurent series up to the term of order 0.
+)set stream calc 17
+xghabbas := [tailReduce(x, xghab)$QXRED1(C) for x in xghabtopbas];
 
+for x in xghabbas for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("bgh",i::String), x))
 
-# basis xghab
-grades := [qcoerce(qetaGrade x)@P for x in basis xghab]
-numOfGaps(xghab)
+)set stream calc 2
 
 -- Let us express the generating series $f$ for $p(11n+6)$
 -- as a relation in terms of the original algebra basis
@@ -820,8 +966,20 @@ zero? xr
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
 # monomials(xrpol)
+coefficient(xrpol, 'F, 1)::IntegerLocalizedAtPrime(11)
 factor gcd(coefficient(xrpol, 'F, 1), 11)
 content coefficient(xrpol, 'F, 0)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:bh
+-------------------------------------------------------------------
+-- -
 
 -- <a name="xhab"></a>
 -- ## xhab=samba($t, \{u,h\}$)
@@ -830,9 +988,23 @@ content coefficient(xrpol, 'F, 0)
 -- in order to get an integral basis for $M^\infty(121)$.
 
 xtracebas := [xt, xu, xh]
+level := 121
+xhab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
+--xhab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+nog := numOfGaps(xhab)
 
+xhabtopbas := sort(smallerMod5?, basis xhab);
+[qetaGrade x for x in xhabtopbas]
 
-xhab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+-- Let us tail-reduce the Laurent series up to the term of order 0.
+)set stream calc 17
+xhabbas := [tailReduce(x, xhab)$QXRED1(C) for x in xhabtopbas];
+
+for x in xhabbas for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("bh",i::String), x))
+
+)set stream calc 2
+
 
 
 # basis xhab
@@ -867,6 +1039,7 @@ xr := reduce(xf, xhab)$QXRED1(C);
 xrpol := clearDenominator((second xr)::Pol(C));
 variables(xrpol)
 # monomials(xrpol)
+coefficient(xrpol, 'F, 1)::IntegerLocalizedAtPrime(11)
 factor gcd(coefficient(xrpol, 'F, 1), 11)
 content coefficient(xrpol, 'F, 0)
 
@@ -880,13 +1053,29 @@ variables(xrpol)
 factor gcd(coefficient(xrpol, 'F, 1), 11)
 content coefficient(xrpol, 'F, 0)
 
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:ds
+-------------------------------------------------------------------
+-- -
+
+-- TODO: Atkin-Lehner-Setup
+
+level := 121
+
 -- ## Denominator polynomial $d^*$ for $h$ with respect to `xab`
 
 -- We compute a polynomial $d^*(T)$ such that
 -- $d^*(t)h \in \mathbb{Q}[t, u]$.
 -- (Takes about 3 min.)
 
-e1:=29; e2:=129
+-- perhaps e1=29
+e1:=39; e2:=129
 rhs := [reduce(xt^e1*xh, xab)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
   print(i);_
@@ -948,7 +1137,6 @@ gcd cons(ch1,ch0s)
 
 -- <a name="denominator-polynomial-for-h"></a>
 -- Apart from the $t^{39}$ factor, we get other factors.
--- (Factorization takes about
 
 flh := factorList factor ch1;
 [x.exponent for x in flh]
@@ -957,6 +1145,33 @@ flhfactors := [x.factor for x in flh]
 -- There is one factor that is not already a factor of `cf1`.
 
 [x for x in flhfactors | not member?(x, flffactors)]
+
+
+-- Now we sort by degree and the size of the second coefficient.
+
+R ==> Record(factor: Polynomial(Fraction(Integer)),exponent: NonNegativeInteger)
+dg(x) == degree(x, 'T);
+a2(x: Pol C): C == abs(coefficient(x, 'T, (dg(x) -1)::N)$Pol(C));
+smf(x: R, y: R): Boolean == (xf:=x.factor; yf:=y.factor; dx := dg xf; dy:= dg yf; dx=dy => (a2 xf < a2 yf); dx < dy);
+
+ffh := sort(smf, rest factors factor ch1)
+for x in ffh for i in 1.. repeat vPrint(concat("exponent",i::String), x.exponent)
+for x in ffh for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("ds",i::String), x.factor))
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:bv
+-------------------------------------------------------------------
+-- -
+
+)read init.input
 
 -- <a name="method-algcurves"></a>
 -- # Method 3: integral basis by using Maple's algcurves
@@ -987,7 +1202,7 @@ flzzfactors := [x.factor for x in flzz]
 -- relation between $t$ and $u$, i.e., $p(t, u)=0$.
 -- For the following computation with Maple it has been
 -- stored in the file
--- [integralbasis121.maple](https://www.risc.jku.at/people/hemmecke/papers/integralbasis/integralbasis121.maple)
+-- [p.maple](https://www.risc.jku.at/people/hemmecke/papers/integralbasis/p.maple)
 -- together with the Maple commands:
 --
 --     with(algcurves);
@@ -1001,16 +1216,16 @@ flzzfactors := [x.factor for x in flzz]
 -- It gives the integral basis `[1, U, U^2, U^3, v(T, U)]`
 -- where $v$ is a rational function in $T$ and $U$ and
 -- stored in the file
--- [integralbasis121v.input](https://www.risc.jku.at/people/hemmecke/papers/integralbasis/integralbasis121v.input).
+-- [v.input](https://www.risc.jku.at/people/hemmecke/papers/integralbasis/v.input).
 
-)sys curl -L https://www.risc.jku.at/people/hemmecke/papers/integralbasis/v.input > integralbasis121v.input
-)read integralbasis121v.input )quiet
+)sys curl -L https://www.risc.jku.at/people/hemmecke/papers/integralbasis/v.input > v.input
+)read v.input )quiet
 
 -- Compute the respective $q$-expansion corresponding to $v$
 -- by plugging $t$ and $u$ into the numerator and denominator
 -- of $v$.
 
--- +
+
 dv := denom v;
 nv := numer v;
 PE C ==> PolynomialEvaluation(C, X)
@@ -1023,7 +1238,7 @@ env := ev nv;
 
 fdv := (first edv)::A1(C);
 fnv := (first env)::A1(C);
--- -
+
 
 -- After normalizing the leading coefficient of the series to 1,
 -- we obtain a series of order -1670.
@@ -1046,9 +1261,8 @@ tReduce ==> tracedReduce(trEnter, trLoop, trReturn)$QXRED1(C);
 xw := tReduce(xv, xab);
 
 -- Since we already know that
--- $\{1, u, u^2, u^3, v(t,u)\}$
--- is an integral basis of $M^\infty(121)$, computing an
--- order-complete basis (with respect to $t$) from
+-- $\langle 1, u, u^2, u^3, v(t,u)\rangle_{\mathbb{C}[t]}=M^\infty(121)$,
+-- computing an order-complete basis (with respect to $t$) from
 -- it via the `samba` algorithm, does not require us to
 -- consider products of basis elements.
 -- We simply need to interreduce the basis elements,
@@ -1056,58 +1270,29 @@ xw := tReduce(xv, xab);
 -- basis elements that become reducible after adding a new
 -- basis element and only then consider products of basis
 -- elements.
--- Computation of the order-complete basis takes about 2 h.
 
--- +
-QXCOMPDP1 C ==> QEtaComputationDelayedPairs(C, X1 C, QXAB1 C, QXRED1 C)
-QXSAMBADP1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMPDP1 C)
+-- The computation of of an order-complete basis xvab takes about
+-- 0.5 hours.
 
 )set mess time on
-xvab := samba(xt, [xu, xu^2, xu^3, xv], genus, oneVerboseStep!(1,1,1,1))$QXSAMBADP1(C);
--- -
+xvab := samba(xt, [xu, xu^2, xu^3, xv], genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBADP1(C);
 
--- We have not yet implemented a reduction of the non-leading
--- terms of the $q$-series expansion, but it can easily be
--- done manually.
+grades := [qcoerce(qetaGrade x)@P for x in basis xvab]
+numOfGaps(xvab)
 
-svbas := sort(smallerGrade?, basis xvab);
-[qetaGrade x for x in svbas]
+xvabtopbas := sort(smallerMod5?, basis xvab);
+[qetaGrade x for x in xvabtopbas]
 
-)set stream calc 16
+-- Let us tail-reduce the Laurent series up to the term of order 0.
 
-xr := svbas.1;
-xr := xr - qetaCoefficient(svbas.1, 5)*xt;
-rvb1 := xr - qetaCoefficient(xr, 0)*1$X;
-first rvb1
+xvabbas := [tailReduce(x, xvab)$QXRED1(C) for x in xvabtopbas];
 
-xr := svbas.2;
-xr := xr - qetaCoefficient(svbas.2, 5)*xt;
-xr := xr - qetaCoefficient(xr, 7)*rvb1;
-rvb2 := xr - qetaCoefficient(xr, 0)*1$X;
-first rvb2
+-- The basis elements together with their representation in
+-- terms of the original series $t$, $u$, and $v$.
 
-xr := svbas.3;
-xr := xr - qetaCoefficient(xr, 8)*rvb2;
-xr := xr - qetaCoefficient(xr, 7)*rvb1;
-xr := xr - qetaCoefficient(xr, 5)*xt;
-rvb3 := xr - qetaCoefficient(xr, 0)*1$X;
-first rvb3
+)set stream calc 17
 
--- +
-xr := svbas.4;
-xr := xr - qetaCoefficient(xr, 15)*xt^3;
-xr := xr - qetaCoefficient(xr, 14)*rvb3*xt;
-xr := xr - qetaCoefficient(xr, 13)*rvb2*xt;
-xr := xr - qetaCoefficient(xr, 12)*rvb1*xt;
-xr := xr - qetaCoefficient(xr, 10)*xt^2;
-
-xr := xr - qetaCoefficient(xr, 9)*rvb3;
-xr := xr - qetaCoefficient(xr, 8)*rvb2;
-xr := xr - qetaCoefficient(xr, 7)*rvb1;
-xr := xr - qetaCoefficient(xr, 5)*xt;
-rvb4 := xr - qetaCoefficient(xr, 0)*1$X;
-first rvb4
--- -
+for x in xvabbas for i in 1.. repeat vPrint(concat("bv", i::String), first x);
 
 -- The variable `rvbas` corresponds to the set
 -- $\{b_1, b_2, b_3, b_4\}$ from Section 8 of
@@ -1116,7 +1301,25 @@ first rvb4
 -- a $q$-series and its respective representation
 -- in terms of the elements $t$ and $u$.
 
-rvbas := [rvb1,rvb2,rvb3,rvb4];
+
+vprintp(i: Z, p: Pol(C)): Void == (_
+  print(""::Symbol); _
+  for j in 0..4 repeat (_
+    print(""::Symbol); _
+    c := coefficient(p, ['U, 'V], (j<4=>[j,0];[0,1]));_
+    vPrint(concat ["p",i::String,j::String], c)));
+
+for x in xvabbas for i in 1.. repeat vprintp(i, second(x)::Pol(C));
+
+-- Of course, we can also reduce the non-leading coefficients
+-- of the $q$-series of the basis `xjbas`. Although that leads
+-- to a basis with nicer looking $q$-expansion (smaller coefficients),
+-- it still involves huge polynomials in their representation
+-- in terms of $T$, $U$, $J0$ and $J2$.
+
+)set stream calc 2
+
+
 
 -- We know that
 -- $$b_i = p_1^{(i)}(t) + p_2^{(i)}(t) \, u + p_3^{(i)}(t) \, u^2 + p_4^{(i)}(t) \, u^3+ p_5^{(i)}(t) \, v(t,u).$$
@@ -1125,12 +1328,12 @@ rvbas := [rvb1,rvb2,rvb3,rvb4];
 -- i.e., $A=(a_{i,j})$ where
 -- $a_{i,j}=\deg_T(p^{(i)}_j(T))$.
 
-bp := [second(x)::Pol(C) for x in rvbas];
+bp := [second(x)::Pol(C) for x in xvabbas];
 cofactorsu(bi) == [coefficient(bi, ['U, 'V], [j, 0]) for j in 0..3];
 cofactorv(bi) == coefficient(bi, ['U, 'V], [0, 1]);
 cofactors := [concat(cofactorsu(bi), cofactorv(bi)) for bi in bp];
 [[variables(x) for x in l] for l in cofactors]
-matrix [[degree(x, 'T) for x in l] for l in cofactors]
+vPrint("a", matrix [[degree(x, 'T) for x in l] for l in cofactors])
 
 -- As an example, let us consider the polynomial
 -- $p^{(1)}_5(T)$.
@@ -1149,31 +1352,3 @@ num/den
 -- all the $p^{(i)}_j(T)$.
 
 ipv := den/num*pv
-
--- # Algebraic Curve setup
-
-h := etaQuotientIdealGenerators(nn, rgens)$QEtaIdealHemmecke(C;
-variables h
-#h
-gb := groebner(h);
-
-#gb
-
--- Rename variable `M1` by `T`.
-
-dis := eval(discriminant(first gb, M2), M1=T);
-
-disfl := factorList factor dis;
-#disfl
-
-[x.exponent for x in disfl]
-[degree(x.factor, T) for x in disfl]
-disflfactors := [x.factor for x in disfl]
-
-(flffactors = [disflfactors.i for i in [1,2,3,4,7,8]])@Boolean
-
-(flhfactors = [disflfactors.i for i in [1,2,3,4,6,7,8]])@Boolean
-
--- Additional factors in the discriminant.
-
-disflfactors.5
