@@ -60,24 +60,15 @@
 -- with some useful macros into a
 -- [FriCAS](https://fricas.github.io) session.
 
--- Fix the directory path to point to the compiled QEta code.
-
-)clear completely
-)set output algebra off
-)cd /home/hemmecke/g/qeta/tmp
-)set mess type off
-)set mess time off
-
 -- The following assumes that the
 -- [QEta](https://hemmecke.github.io/qeta)
 -- package has already been compiled via
 -- `make compile-spad`, i.e. all further computation
 -- is done inside `/home/hemmecke/g/qeta/tmp`.
 
-)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
-
 C ==> Q;
 )read convenience.input )quiet
+smallerMod5?(x, y) == positiveRemainder(qetaGrade x, 5)<positiveRemainder(qetaGrade y, 5)
 
 -- <a name="monoid-E121"></a>
 -- ## Monoid basis for $E^\infty(121)$
@@ -86,14 +77,8 @@ C ==> Q;
 -- terms of our session variables.
 
 level := nn: P := 121;
+spitzen := cusps(level)$GAMMA0;
 nndivs := DIVISORS nn;
-
--- All our expansions do not require an extension with a root of unity,
--- i.e., we can take rational numbers as the coefficient domain.
-
-xiord: P := 2; -- order of the root of unity
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-spitzen := cusps(level)$GAMMA0
 
 -- Show only a few terms of the $q$-series expansion.
 
@@ -110,11 +95,21 @@ spitzen := cusps(level)$GAMMA0
 -- for the eta-functions (with arguments being the divisors of 121).
 
 eqmev ==> etaQuotientMonoidExponentVectors $ QEQEV
-rgens := eqmev nn
+rgens := eqmev nn;
+assertEquals(rgens, [[1,0,-1],[-1,12,-11]])
+ys := [YEQn r for r in rgens];
+xiord := max [minimalRootOfUnity x for x in ys];
+assertEquals(xiord, 44)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+
+-- As can be seen in the above expansion, some cusps involves
+-- computation in $\mathbb{Q}[\xi]$ where $\xi$ is a primitive
+-- 44-th root of unity although the $q$-series expansion itself
+-- is eventually with rational coefficients.
 
 -- The corresponding series are the following.
 
-eqgens := [EQA1C r for r in rgens];
+egens := [EQA1C r for r in rgens]
 
 -- ## Naming convention
 
@@ -142,13 +137,15 @@ eqgens := [EQA1C r for r in rgens];
 -- $\mathbb{C}[E^\infty(121)]=\mathbb{C}[t, u]$.
 --
 
-xgens := [toX1(C, eqgens.1, 'T), toX1(C, eqgens.2, 'U)]
+xgens := [toX1(C, egens.1, 'T), toX1(C, egens.2, 'U)]
 
 -- We take a minimal (in terms the pole order in q) element from the
 -- generators and make it special, here `xt` of order -5.
 -- Then we compute an algebra basis for $C[t,u]$.
 
-xt := xgens.1; xu := xgens.2;
+xt := xgens.1;
+xu := xgens.2;
+xz := toX1(C, first(1/11 * (xu - xt^10)), 'Z);
 
 -- The output of the algorithm `samba` is a pair
 -- consisting of a
@@ -163,7 +160,9 @@ xt := xgens.1; xu := xgens.2;
 -- $\langle 1, b_1, \ldots, b_{n-1}\rangle_{\mathbb{C}[t]}$.
 
 xab := samba(xt, xgens, 96)$QXTOPSAMBA1(C)
-# basis xab, [qetaGrade x for x in basis xab]
+assertEquals(# basis xab, 4)
+xabbas := sort(smallerMod5?, basis xab);
+assertEquals([qetaGrade x for x in xabbas], [196,147,98,49])
 
 -- Clearly, the element after `4 =` corresponds to the element
 -- $z=\frac{1}{11}(u-t^{10})$ from Section 4 of the article.
@@ -171,27 +170,21 @@ xab := samba(xt, xgens, 96)$QXTOPSAMBA1(C)
 -- The variable `xab` represents the $\mathbb{Q}[t]$-module
 -- $\langle 1, z, z^2, z^3, z^4 \rangle_{\mathbb{Q}[t]}$.
 
-nog := numberOfGaps(xab)
+nog := numberOfGaps(xab);
+assertEquals(nog, 96)
 
 -- The genus of the Riemann surface $X_0(121)$ is a curve of genus 6.
 -- Its genus is equal to the genus of $\Gamma_0(121)$.
 
-genus := genus(level)$GAMMA0
+gen := genus(level)$GAMMA0;
+assertEquals(gen, 6)
 
 -- Since 6 < 96, it proves that `xab` does not represent
 -- an integral basis for $M^\infty(121)$.
 
 -- Let's set new variables for each series in the basis.
 
-zsyms := indexedSymbols("Z", # basis xab);
-xabzbasis := [toX1(C, first x, s) for x in sort(smallerGrade?, basis xab) for s in zsyms];
-xabz := samba(xt, xabzbasis, nog)$QXTOPSAMBA1(C)
-
-xz := xabzbasis.1
-
-
--- Note that $z^i$ from the article corresponds to the $q$ expansion
--- labeled by `Zi`.
+xabz := samba(xt, [xz], 96)$QXTOPSAMBA1(C);
 
 -- With this number of gaps (96), we have not yet reached the genus of
 -- the modular curve $X_0(121)$. Thus we must find another modular
@@ -200,50 +193,52 @@ xz := xabzbasis.1
 -- <a name="generating-function-for-p11n+6"></a>
 -- ## The generating function $f$ for $p(11n+6)$
 
--- Now we consider an additional series. Here we take the series
--- corresponding to the $p(11n+6)$ problem.
---
--- We first compute a cofactor to create from
+-- Let us first construct $c(q)$ such that
+-- $$f := c(q)
+--   \sum_{n=0}^\infty p(11n+6) q^n
+--   \in M^\infty(121).
 -- $$
--- \sum_{k=0}^{\infty}p(11k+6)q^k
--- $$
--- a modular function in $M^\infty(121)$.
 
-mm: P := 11; s: List Z := [-1, 0]; m: P := 11;
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
-orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
-t: N := first first orbs
-r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
-
--- Let's compute the expansion of
--- $$
--- F(\tau) = q^{\frac{13}{24}}
---           \frac{\eta(\tau)^{11} \eta(11\tau)}{\eta(121\tau)^{11}}
---           \sum_{k=0}^{\infty}p(11k+6)q^k \in M^\infty(121).
--- $$
--- This is encoded in the function `modularSiftedPartitionSeries` and
--- includes the computation of the cofactor eta-quotient that has been
--- made explicit above.
-
-ff := modularSiftedPartitionSeries(nn, m, t);
-xf := toX1(C, ff, F)
+s: List Z := etaCoFactorInfinity(121, 1, [-1], 11, 6);
+assertEquals(s, [11,1,-11])
+alpha := alphaInfinity(121, s, 1, [-1], 11, 6);
+assertEquals(alpha, -54)
+eulerquo: T1 C := qetaTaylorRep(eulerExpansion(1, [-1])$ETA(C));
+pp: T1 C := multisect(11-6, 6, eulerquo); ---- p(11n+6)
+cofact: T1 C := qetaTaylorRep(eulerExpansion(121, s)$ETA(C));
+f: A1 C := laurent(alpha, cofact * pp)$A1(C);
+xf: X1 C := toX1(C, f, 'F)
 
 -- The generating series does not reduce to zero modulo the
 -- algebra basis `xab`.
 
 xfr := reduce(xf, xab)$QXRED1(C);
-zero? xfr
+assertTrue(not zero? xfr)
 xfr
 
-xfrb := reduce(xf, xabz)$QXRED1(C)
+-- Load function definitions for Klein $j$ function and for the trace map connected to the Atkin-Lehner involution.
 
-xfrz := xf - 11*xt * xz
+)r modfuns.input )quiet
+
+-- In order to have a fixed order of the factors of the discriminat,
+-- we sort the factors by the size of the second coefficient.
+
+absSecondCoefficient(x: Pol C): C ==_
+  abs(coefficient(x, 'T, (degree(x, 'T)-1)::N)$Pol(C));
+smallerSecondCoefficient?(x, y) == (_
+  xfac := x.factor;  dx := degree(xfac, 'T);_
+  yfac := y.factor;  dy := degree(yfac, 'T);_
+  dx=dy =>_
+    (absSecondCoefficient xfac < absSecondCoefficient yfac)@Boolean;_
+  (dx < dy)@Boolean);
 
 -- +
 -------------------------------------------------------------------
 --endsetup
 -------------------------------------------------------------------
+-- -
+
+setFormat!(FormatMathJax)$JFriCASSupport
 
 -- +
 -------------------------------------------------------------------
@@ -251,8 +246,6 @@ xfrz := xf - 11*xt * xz
 -------------------------------------------------------------------
 -- -
 
-
-)read init.input
 
 -- <a name="denominator-polynomial-for-f"></a>
 -- # Denominator polynomial $d(T)$ corresponding to $f$
@@ -262,16 +255,13 @@ xfrz := xf - 11*xt * xz
 --
 -- We only need the coefficients of the pricipal part of
 -- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$
--- where $h_i \in \langle 1, z_1, z_2, z_3, z_4 \rangle_{C[t]}$
+-- where $h_i \in \langle 1, z^1, z^2, z^3, z^4 \rangle_{C[t]}$
 -- in order to find a relation among these $q$-series.
 --
--- Note that $t$ corresponds to our variable `xt` and $z_1,\ldots,z_4$
+-- Note that $t$ corresponds to our variable `xt` and $1, z^1,\ldots,z^4$
 -- to our basis `xabz`.
 --
 -- Then $t^i f - h_i$ corresponds to `reduce(xt^i xf, xt, xabz)`.
---
--- Note that the result $r$ contains in its second component its
--- representation in terms of the given $F$, and the $Z_i$.
 --
 -- We first compute all the reductions. That will give us $q$-series
 -- of order 191 each. (Takes about 1.5 min.)
@@ -291,11 +281,11 @@ rs := reverse! rs;
 l := [[qetaCoefficient(first x, i) for i in 0..191] for x in rs];
 mat := transpose matrix l;
 ns := nullSpace mat;
-#ns
+assertEquals(#ns, 1)
 
 -- Extract the coefficients from the vector in the nullspace.
 
-cs := members first ns
+cs := members first ns;
 
 -- Check that the resulting vector indeed yields a relation, i.e., we
 -- multiply the series $t^i f - h_i$ from above by the corresponding
@@ -304,20 +294,18 @@ cs := members first ns
 
 lincomp := [c*rr for c in cs for rr in rs];
 lc := reduce(_+, lincomp);
-zero? lc
+assertTrue(zero? lc)
 
-qetaCoefficient(lc, 0)
+l := [qetaCoefficient(lc, -i) for i in -5..20];
+assertEquals(removeDuplicates l, [0])
 
 -- Indeed, we have just shown a relation for
 -- $t^{37} f-h_{37}, \ldots, t^{102}f-h_{102}$.
---
--- In the second component of this "zero" is its relation in terms of
--- $F$, $Z_1$, $Z_2$, $Z_3$, and $Z_4$.
--- The "denominator polynomial" is given by the coefficient of $F$.
 
 df := (second lc)::Pol C;
-variables df
-[degree(df, x) for x in variables df]
+assertEquals(variables df, ['Z,'T,'F])
+l := [degree(df, x) for x in variables df];
+assertEquals(l, [4,112,1])
 
 -- ## Computation of the corresponding polynomials $c_0,..,c_4$
 
@@ -325,66 +313,82 @@ variables df
 -- $c(T, Z) := \sum_{k=0}^4 c_k(T) Z^k \in \mathbb{Q}[T,Z]$
 -- such that $d(t)f = c(t, z)$.
 
-cf1:=coefficient(df,F,1); -- The denominator polynomial d(T).
-cf0:=coefficient(df,F,0); -- The polynomial c(T, Z), which is c(T, Z1, Z2, Z3, Z4) here.
+cf1:=coefficient(df,'F,1); -- The denominator polynomial d(T).
+cf0:=coefficient(df,'F,0); -- The polynomial c(T, Z).
 
-variables cf0
-varsf := rest reverse! variables cf0
-cf0s := [coefficient(cf0, x, 1) for x in varsf];
-degree(cf1, T), [degree(x, T) for x in cf0s]
-gcd cons(cf1,cf0s)
+assertEquals(variables cf0, ['Z,'T])
+cf0s := [coefficient(cf0, 'Z, i) for i in 0..4];
+l := cons(degree(cf1, 'T), [degree(x, 'T) for x in cf0s]);
+assertEquals(l, [102,112,103,93,83,73])
+assertEquals(gcd cons(cf1,cf0s), T^37)
+
+-- ## Factors of $d(T)$
 
 -- Apart from the $T^{37}$ factor, we get other factors.
 -- Below are the factors $d_1, \ldots, d_5$, unsorted.
 
-fac := factor cf1;
-uf := unit fac    -- the constant common factor
-flf := factorList factor cf1;
-[x.exponent for x in flf]
-flffactors := [x.factor for x in flf]
+dfactored := factor cf1;
+ud := unit dfactored    -- the constant common factor
 
 -- Now we sort by degree and the size of the second coefficient.
 
-R ==> Record(factor: Polynomial(Fraction(Integer)),exponent: NonNegativeInteger)
-dg(x) == degree(x, 'T);
-a2(x: Pol C): C == abs(coefficient(x, 'T, (dg(x) -1)::N)$Pol(C));
-smf(x: R, y: R): Boolean == (xf:=x.factor; yf:=y.factor; dx := dg xf; dy:= dg yf; dx=dy => (a2 xf < a2 yf); dx < dy);
+dfactors := factors dfactored;
+dfactorssorted := sort(smallerSecondCoefficient?, rest dfactors);
+assertEquals([x.exponent for x in dfactorssorted], [1,2,2,1,1])
 
-fff := sort(smf, rest factors factor cf1);
-for x in fff for i in 1.. repeat vPrint(concat("exponent",i::String), x.exponent)
+for x in dfactorssorted for i in 1.. repeat_
+  vPrint(concat("exponent",i::String), x.exponent)
 
-for x in fff for i in 1.. repeat (print(""::Symbol); _
+assertEquals([x.factor for x in dfactorssorted], [_
+  T^2-11,_
+  T^2-2*T+11,_
+  T^2-3*T+11,_
+  T^25+430*T^24-31200*T^23+578905*T^22-6007240*T^21+42281581*T^20_
+    -218350660*T^19+851271410*T^18-2472691265*T^17+4848984855*T^16_
+    -3205367440*T^15-18988485230*T^14+93248895025*T^13_
+    -243431953930*T^12+416601090015*T^11-403942642466*T^10_
+    -112485265695*T^9+1267233014520*T^8-2655224484605*T^7_
+    +3433152350925*T^6-3075192506826*T^5+1978532471630*T^4_
+    -978548291765*T^3+412640845925*T^2-129687123005*T+25937424601,_
+  T^30-920*T^29-19225*T^28+1258030*T^27-19448535*T^26+75396538*T^25_
+    +2157132615*T^24-50735009930*T^23+643909614260*T^22_
+    -5980486211480*T^21+44473273280260*T^20-276140775186430*T^19_
+    +1465665176339650*T^18-6744922810982730*T^17_
+    +27144546684208910*T^16-95977332323506700*T^15_
+    +298590013526298010*T^14-816135660128910330*T^13_
+    +1950800349708074150*T^12-4042977089504521630*T^11_
+    +7162465135059153260*T^10-10594796133295720280*T^9_
+    +12547976761628658460*T^8-10875499956118688330*T^7_
+    +5086405868720041965*T^6+1955592019551431338*T^5_
+    -5548894011786504885*T^4+3948237050766319630*T^3_
+    -663699140967073475*T^2-349369846896581720*T+4177248169415651])
+
+
+for x in dfactorssorted for i in 1.. repeat (print(""::Symbol); _
   vPrint(concat("d",i::String), x.factor))
 
 
-denf := denom uf
+dend:= denom ud
 
 -- Multiplying by the denominator of the constant factor of `cf1`
 -- and dividing by the common factor give the polynomial $d(T)$
 -- from the article.
 
-d := (-denf * cf1/T^37)::Pol(Z); degree(d)
-
--- Let us compute the coefficient polynomial $c_0(t)$ corresponding
--- to the (constant) basis elements $1$.
-
-cf00 := ((denf*coefficient(cf0, varsf, [0 for i in varsf]))/T^37)::Pol(Z);
+d := (-dend * cf1/T^37)::Pol(Z); degree(d)
 
 -- Here we collect all the coefficient polynomials $c_k(t)$ for
 -- $k=0,\ldots,4$ after they have been multiplied by the constant
 -- denominator.
 
-cis := cons(cf00, [(denf*(x/T^37))::Pol(Z) for x in cf0s])
+cis := [(denom(ud)*(x/T^37))::Pol(Z) for x in cf0s];
 
--- Note that we have the following correspondence
--- $z^1, z^2, z^3, z^4$ correspond to `Z1`, `Z2`, `Z3`, `Z4`.
+l := [leadingCoefficient degree x for x in cis];
+assertEquals(l, [75,66,56,46,36])
 
-[degree x for x in cis]
+assertEquals([unit factor x for x in cis],[11,11,22,22,-22])
 
-[unit factor x for x in cis]
-
--- Each of the polynomials has a constant factor that is divisible by
--- 11. Together with the "freshman's dream" trick for
+-- Each of the polynomials has a constant factor that is divisible by 11.
+-- Together with the "freshman's dream" trick for
 -- $z = \frac{1}{11}(u-t^{10})$ that show that the $q$-series
 -- expansion of $z$ has integer coefficients, this establishes yet
 -- another relation that shows that $p(11n+6)$ is divisible by 11.
@@ -393,24 +397,26 @@ C11 ==> IntegerLocalizedAtPrime 11
 P11 ==> Polynomial C11
 for x in cis for i in 0.. repeat (print(""::Symbol); _
   vPrint(concat("c",i::String), x::P11))
-[content(x) for x in cis]
 
 -- ## Express $d(t)f$ in terms of $t$, $z^1, \ldots, z^4$
 
 -- Plugging into $d$ the respective series, we get a $q$-series of
 -- order $-325$.
 
-xd := eval(d, (c:Z):X +-> c*1$X, ['T], [xt])$PolynomialEvaluation(Z, X);
+xd := eval(d,_
+           (c:Z): X1(C) +-> c*1$X1(C),_
+           ['T],_
+           [xt])$PolynomialEvaluation(Z, X1(C));
 first xd
+assertEquals(qetaGrade first xd, 325)
 
 -- When multiplied by $f$, it can be reduced to to zero
 -- modulo our algebra basis `xabz`.
 
+)set mess time on
 xdf := xd*xf;
-first xdf
-
-xdfredz := reduce(xdf, xabz)$QXRED1(C);
-zero? xdfredz
+xdfredz := reduce(xdf, xabz)$QXTOPRED1(C);
+assertTrue(zero? xdfredz)
 
 -- Of course, it is not surprising that when we clear denominators and
 -- extract the respective polynomial representation (in particular the
@@ -419,35 +425,13 @@ zero? xdfredz
 xdfredz2 := clearDenominator(second(xdfredz)::Pol(Q));
 df0int := coefficient(xdfredz2, F, 0); -- the representation
 df1int := coefficient(xdfredz2, F, 1); -- the poly d
-zero?(df1int - d)
-
-vars := variables df0int, variables df1int
-
--- This representaion demonstrates divisibility by 11 of the
--- coefficients of $d(t) f$.
---
--- Again that is only useful, if we have shown that the series
--- of our algebra basis `xab` have integer coefficients.
--- (Can be done by "freshman's dream" trick.)
-
-removeDuplicates sort [positiveRemainder(x, 11) for x in coefficients df0int]
-
--- Clearly, if we plugin xt fot the T variable and just consider the
--- series, we should get zero.
-
-cist := [eval(x, (c:Z):X +-> c*1$X, ['T], [xt])$PolynomialEvaluation(Z, X) for x in cis];
-zero?(first xdf - reduce(_+, [first(x*xz^i) for x in cist for i in 0..5]))
-
--- +
--- end dc.input
---endtest
--- -
+assertTrue(zero?(df1int - d))
 
 -- ## Express $d(t)f$ in terms of $t$ and $u$
 
-xdfred := reduce(xdf, xab)$QXRED1(C)
+xdfred := reduce(xdf, xab)$QXRED1(C);
 
-zero? xdfred
+assertTrue(zero? xdfred)
 
 -- +
 -------------------------------------------------------------------
@@ -463,17 +447,24 @@ zero? xdfred
 -- <a name="xfab"></a>
 -- ## xfab=samba($t$, $\{u, f\}$)
 
-cft := first xt;
+-- We know that
+-- $$
+-- F(\tau) = q^{\frac{13}{24}}
+--           \frac{\eta(\tau)^{11} \eta(11\tau)}{\eta(121\tau)^{11}}
+--           \sum_{k=0}^{\infty}p(11k+6)q^k \in M^\infty(121).
+-- $$
+
+-- Let us try to add $F$ to the basis and check whether we come closer to $M^\infty(N)$.
+-- We first do a computation without the "representation" part.
+--
+-- That takes 26 seconds, but gives information whether the input elements span
+-- a module with gap number 6.
+
 xfgens := [xt, xu, xf]
-cffgens := [first x for x in xfgens];
 
 -- We know already (by previous computation) that the number of gaps
 -- will be 31, so we can abort the computation when we have reached
 -- gap number 31 and avoid the remaining reductions to zero.
-
-cffab := samba(cft, cffgens, 31)$QSAMBA1(C);
-grades := [qcoerce(qetaGrade x)@P for x in basis cffab]
-nog := numOfGaps(cffab)
 
 -- The computation with "polynomial part", can be done, but yields
 -- (at least for one basis element a "representation polynomial" in
@@ -481,13 +472,19 @@ nog := numOfGaps(cffab)
 -- (Computation of algebra basis takes about a minite.)
 
 xfab := samba(xt, xfgens, 31)$QXSAMBA1(C);
+
 pols := [second(x)::Pol(C) for x in basis xfab];
-[[degree(x,'T), degree(x, 'U), degree(x, 'F)] for x in pols]
-[# monomials x for x in pols]
-[max [leadingCoefficient(xx) for xx in monomials x] for x in pols]
+l := [[degree(x,'T), degree(x, 'U), degree(x, 'F)] for x in pols];
+assertEquals(l, [[155,8,8],[77,4,4],[42,2,2],[34,2,2]])
+l := [# monomials x for x in pols];
+assertEquals(l, [4500,750,174,126])
+l := [(z := max [leadingCoefficient(xx) for xx in monomials x];_
+ [length numer z, length denom z]) for x in pols];
+assertEquals(l, [[4033,3870],[2013,1928],[446,417],[516,461]])
 
 xfabtopbas := sort(smallerMod5?, basis xfab);
-[qetaGrade x for x in xfabtopbas]
+l := [qetaGrade x for x in xfabtopbas];
+assertEquals(l, [66, 42, 33, 24])
 
 for x in xfabtopbas for i in 1.. repeat (print(""::Symbol); _
   vPrint(concat("bf",i::String), x))
@@ -502,8 +499,6 @@ for x in xfabtopbas for i in 1.. repeat (print(""::Symbol); _
 --test:f2
 -------------------------------------------------------------------
 -- -
-
-)read init.input
 
 -- <a name="xfab"></a>
 -- ## xfab=samba($t$, $\{u, f\}$)
@@ -520,25 +515,25 @@ xfbas := basis xfab;
 -- <a name="generating-function-for-p121n+116"></a>
 -- ## The generating function $f_2$ for $p(121n+116)$
 
-mm: P := 121; s: List Z := [-1, 0, 0]; m: P := 121;
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
-orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
-t: N := first first orbs
-r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
+-- Next naive attempt:
+-- $$f_2 :=
+--   q^{-604}
+--   \frac{(q;q)_\infty^{122}}{(q^{121};q^{121})_\infty^{121}}
+--   \sum_{n=0}^\infty p(121n+116) q^n
+--   \in M^\infty(121)
+-- $$
 
-ff2 := modularSiftedPartitionSeries(121, m, t);
-xf2 := toX1(C, ff2, F2)
+ff2 := modularSiftedEtaQuotientInfinity(121, 1, [-1], 121, 116)$_
+         QEtaModularGamma0Infinity(C);
+xf2 := toX1(C, ff2, 'F2);
 
 -- <a name="f2-in-xfab"></a>
 -- We reduce first by `xab` and only then by `xfab`.
 
-cfbas := [first x for x in basis xab]
-cfab := samba(first xt, cfbas, 96, oneVerboseStep!(1,1,1,1))$QSAMBA1(C);
+red121 := reduce(xf2, xab)$QXRED1(C);
+assertTrue(not zero? red121)
 
-red121 := reduce(first xf2, cfab)$QRED1(C);
-zero? red121
-qetaGrade red121
+assertEquals(qetaGrade red121,191)
 
 red121f := reduce(red121, xfab)$QXTOPRED1(C);
 zero? red121f
@@ -560,8 +555,6 @@ vPrint("f2relation", second red121f)
 -------------------------------------------------------------------
 -- -
 
-)read init.input
-
 -- <a name="method-klein"></a>
 -- # Method 1: integral basis by using the Klein $j$-function
 
@@ -570,21 +563,8 @@ vPrint("f2relation", second red121f)
 -- $j(\tau)$, $j(11\tau)$, and $j(11^2\tau)$
 -- at every cusp of $\Gamma_0(121)$.
 
-rgens := etaQuotientMonoidExponentVectors(level)$QEQEV
-
-ys := [YEQn r for r in rgens];
-xiord := max [minimalRootOfUnity x for x in ys]
-
--- As can be seen above expansion some cusps involves computation in
--- $\mathbb{Q}[\xi]$ where $\xi$ is a primitive 44-th root of unity
--- although the $q$-series expansion itself is eventually with
--- rational coefficients.
-
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-spitzen := cusps(level)$GAMMA0
-
--- The elements of ms are, in fact, the $q$-expansions
--- (at all cusps of $\Gamma_0(121)$ of the eta-quotients
+-- The elements of `ms` are, in fact, the $q$-expansions
+-- (at all cusps of $\Gamma_0(121)$) of the eta-quotients
 -- corresponding to $t$ and $u$, namely
 -- $$
 -- t=\frac{\eta(\tau)}{\eta(121\tau)}
@@ -595,16 +575,20 @@ spitzen := cusps(level)$GAMMA0
 -- $$
 
 ms := [EQAnCX r for r in rgens];
-[qetaGrades x for x in ms]
+l := [qetaGrades x for x in ms];
+assertEquals(l, [_
+  [-5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],_
+  [ 0,-5,-5,-5,-5,-5,-5,-5,-5,-5,-5,50]])
 
-)read ../input/modfuns.input )quiet
-
--- The pole orders computed by the function `qetaGrades`
+-- The pole orders (computed by the function `qetaGrades`)
 -- of $j(\tau)$, $j(11\tau)$, and $j(11^2\tau)$ is given below.
 
-mj0 := kleinJn(nn, 11^0); qetaGrades mj0
-mj1 := kleinJn(nn, 11^1); qetaGrades mj1
-mj2 := kleinJn(nn, 11^2); qetaGrades mj2
+mj0 := kleinJn(nn, 11^0);
+mj1 := kleinJn(nn, 11^1);
+mj2 := kleinJn(nn, 11^2);
+assertEquals(qetaGrades mj0, [121, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1])
+assertEquals(qetaGrades mj1, [ 11,11,11,11,11,11,11,11,11,11,11, 11])
+assertEquals(qetaGrades mj2, [  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,121])
 
 -- We can easily figure out by which powers of $t$ and $u$
 -- we have to multiply in order to arrive at elements
@@ -614,7 +598,7 @@ mmj0 := mj0*ms.1^25*ms.2;   qetaGrades mmj0
 mmj1 := mj1*ms.1^3 *ms.2^3; qetaGrades mmj1
 mmj2 := mj2*ms.1   *ms.2;   qetaGrades mmj2
 
-toA1C x ==> (map(retract, series(x, 12))$QEtaLaurentSeriesFunctions2(CX, C))::A1(C)
+toA1C x ==> abffmap(CX, C, retract, series(x, 12))
 
 -- Then `xj0` and `xj2` correspond to
 -- $j^\infty_0$ and $j^\infty_2$ from the article,
@@ -640,10 +624,10 @@ xj2 := toX1(C, toA1C mmj2, T*U*J2)
 
 gens := concat([xj0, xj1], xgens)
 
-cfj01ab := samba(first xt, [first x for x in gens], 31, oneVerboseStep!(1,1,1,1))$QSAMBA1(C)
+cfj01ab := samba(first xt, [first x for x in gens], 31)$QSAMBA1(C)
 
 grades := [asP(qetaGrade x) for x in basis cfj01ab]
-numOfGaps(cfj01ab)
+numberOfGaps(cfj01ab)
 
 -- <a name="xjab"></a>
 -- ## xjab=samba($t$, $\{u, j^\infty_0, j^\infty_2\})$
@@ -658,62 +642,47 @@ gens := concat([xj0, xj2], xgens)
 -- With aborting the computation when we have reached gap number = genus,
 -- it takes about 400 seconds to compute this basis.
 
-xjab := samba(xt, gens, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+xjab := samba(xt, gens, 6)$QXSAMBA1(C);
 
-grades := [asP(qetaGrade x) for x in basis xjab]
-numOfGaps(xjab)
+assertEquals(numberOfGaps xjab, 6)
 
-smallerMod5?(x, y) == positiveRemainder(qetaGrade x, 5)<positiveRemainder(qetaGrade y, 5)
 xjabbas := sort(smallerMod5?, basis xjab);
-[qetaGrade x for x in xjabbas]
-
-b1 := xjabbas.1; qetaGrade b1
-b2 := xjabbas.2; qetaGrade b2
-b3 := xjabbas.3; qetaGrade b3
-b4 := xjabbas.4; qetaGrade b4
-bpols := [second(x)::Pol(Q) for x in xjabbas];
-varlists := [variables x for x in bpols]
+assertEquals([qetaGrade x for x in xjabbas], [16,7,8,9])
 
 -- The basis elements together with their representation in
 -- terms of the original series $t$, $u$, $j_0$, and $j_2$
 -- where $j_0=j$ is Klein's $j$-invariant and
 -- $j_2(\tau) := j(11^2\tau)$.
 
+bpols := [second(x)::Pol(Q) for x in xjabbas];
+
 )set stream calc 2
 
--- We can reduce f with respect to xjab in order to find a polynomial
--- expressing f in terms of t, u, j0, and j2.
+-- We can reduce $f$ with respect to `xjab` in order to find a
+-- polynomial expressing $f$ in terms of $t$, $u$, $j_0$, and $j_2$.
+
 redfj := reduce(xf, xjab)$QXTOPRED1(C);
-zero? redfj
+assertTrue(zero? redfj)
 
 vPrint("fjrelation", second redfj)
-
-)set stream calc 2
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
-
--- +
--------------------------------------------------------------------
---test:bg
--------------------------------------------------------------------
 -- -
-
--- TODO:
-
-)read init.input
 
 -- <a name="method-trace"></a>
 -- # Method 2: integral basis obtained with the trace map
 
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
+
 -- We can generate a new modular function by applying the trace to
 -- a modular function from $M^\infty(242)$.
-
-xiord := 2;
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-spitzen := cusps(level)$GAMMA0
 
 -- ## Atkin-Lehner involution $W_2^{242}$
 
@@ -764,51 +733,54 @@ w := WIDTH0(242, gamma(2,1))
 -- temporarily switch to level 242 and take the trace of a series from
 -- there.
 
-divs242 := DIVISORS level;
+divs242 := DIVISORS 242;
+gen242 := genus(242)$GAMMA0;
+assertEquals(gen242, 22)
 rgens242 := etaQuotientMonoidExponentVectors(242)$QEQEV;
-levelsave := level
-level := 242
-egens242 := [EQA1C r for r in rgens242];
-level := levelsave
-[qetaGrade(x::A1(C)) for x in egens242]
+EQA1C242(r) ==> expansion(etaQuotient(242, r)$ETA(C))::A1(C)
+assertEquals(#rgens242, 94)
+egens242 := [EQA1C242 r for r in rgens242];
+l := [qetaGrade(x) for x in egens242];
+assertEquals(l(1..17),_
+  [15,55,55,55,55,55,55,60,60,60,60,60,65,65,65,65,66])
 
 -- For all the series we compute that we need at most a second root of
 -- unity, i.e. we continue our computation in $C=\mathbb{Q}$.
 
-divs242
-#rgens242
-gen242 := genus(242)$GAMMA0
+rgens242(1..12)
 
 -- We have tried to compute the algebra basis for N=121 with
 -- the addition of one of the series coming from the N=242
--- generators and found that the eta quotient corresponding to
--- the third vector, namely $(6, -3, -1, 1, 5, -8)$ works best
--- in the sense that it yields a basis with number of gaps equal
+-- generators and found that the eta-quotient corresponding to
+-- $(6, -3, -1, 1, 5, -8)$ works best in the sense that it
+-- yields a basis with number of gaps equal
 -- to 6 whereas for other indices we get bases with a higher
 -- number of gaps.
 --
 -- $$1: (-1, 2, 0, 0, 1, -2) \to 8$$
--- $$2: (0, 0, 7, -3, 3, -7) \to 31$$
--- $$3: (6, -3, -1, 1, 5, -8) \to 6$$
--- $$4: (0, 0, -4, 8, 4, -8) \to 31$$
--- $$5: (7, -3, -1, 1, 4, -8) \to 6$$
-
--- Thus, we have chosen the third vector which gives a
--- series of order -55.
+-- $$4: (6, -3, -1, 1, 5, -8) \to 6$$
+-- $$6: (0, 0, -4, 8, 4, -8) \to 31$$
+-- $$7: (0, 0, 7, -3, 3, -7) \to 31$$
+-- $$12: (7, -3, -1, 1, 4, -8) \to 6$$
 
 -- <a name="functions-g-and-h"></a>
 -- ## Functions $g$ and $h$
 
 -- So apply the trace function from $M^\infty(242)$ to $M^\infty(121)$.
 
-xi := -1;
-CX := Q;
+xg := toX1(C, traceMap(level, 2, rgens242.1), 'G)
+xh := toX1(C, traceMap(level, 2, rgens242.4), 'H)
 
-xg: X := toX1(C, traceMap(nn, 2, rgens242.1), 'G)
-xh: X := toX1(C, traceMap(nn, 2, rgens242.3), 'H)
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
 
--- TODO: END setup Method 2
-
+-- +
+-------------------------------------------------------------------
+--test:bg
+-------------------------------------------------------------------
+-- -
 
 -- <a name="xgab"></a>
 -- ## `xgab`=samba($t, \{u, g\}$)
@@ -817,29 +789,29 @@ xh: X := toX1(C, traceMap(nn, 2, rgens242.3), 'H)
 -- and hope that we end with a algebra basis for all modular functions
 -- of level 121, i.e., $M^\infty(121)$.
 
-cft := first xt
 xtracebas := [xt, xu, xg]
-cftracebas := [first x for x in xtracebas];
 
-cfgab := samba(cft, cftracebas, genus, oneVerboseStep!(1,1,1,1))$QSAMBA1(C);
-nog := numOfGaps(cfgab)
+-- +
+-- cft := first xt
+-- cftracebas := [first x for x in xtracebas];
+-- cfgab := samba(cft, cftracebas, 6, oneVerboseStep!(1,1,1,1))$QSAMBA1(C);
+-- nog := numberOfGaps(cfgab)
+-- -
 
-level := 121
-xgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
-nog := numOfGaps(xgab)
+xgab := samba(xt, xtracebas, 6)$QXTOPSAMBA1(C);
+assertEquals(numberOfGaps(xgab), 8)
 
-xgabbas := sort(smallerMod5?, basis xgab);
-grades := [asP qetaGrade x for x in xgabas]
+xgabtopbas := sort(smallerMod5?, basis xgab);
+assertEquals([qetaGrade x for x in xgabtopbas], [16,12,13,9])
 
 -- Let us tail-reduce the Laurent series up to the term of order 0.
--- )set stream calc 17
--- xgabbas := [tailReduce(x, xgab)$QXRED1(C) for x in xgabtopbas];
-
-for x in xgabbas for i in 1.. repeat (print(""::Symbol); _
-  vPrint(concat("bg",i::String), x))
 
 )set stream calc 2
 
+xgabbas := [tailReduce(x, xgab)$QXRED1(C) for x in xgabtopbas];
+
+for x in xgabbas for i in 1.. repeat (print(""::Symbol); _
+  vPrint(concat("bg",i::String), x))
 
 -- The gap number is 8, i.e., it does not yield an integral basis
 -- for $M^\infty(121)$.
@@ -848,8 +820,7 @@ for x in xgabbas for i in 1.. repeat (print(""::Symbol); _
 -- the algebra $C[t,u,g]$.
 
 xr := reduce(xf, xgab)$QXTOPRED1(C);
-first xr
-qetaGrade xr
+assertEquals(qetaGrade xr, 8)
 
 -- +
 -------------------------------------------------------------------
@@ -868,38 +839,31 @@ qetaGrade xr
 -- By adding the generating series $f$ for $p(11n+6)$ we indeed
 -- arrive at an integral basis.
 
-xtracebas := [xt, xu, xf, xg]
-level := 121
-xfgab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
-nog := numOfGaps(xfgab)
+xtracebas := [xt, xu, xf, xg];
+xfgab := samba(xt, xtracebas, 6)$QXTOPSAMBA1(C);
+assertEquals(numberOfGaps(xfgab), 6)
 
 xfgabtopbas := sort(smallerMod5?, basis xfgab);
-[qetaGrade x for x in xfgabtopbas]
+assertEquals([qetaGrade x for x in xfgabtopbas], [16,7,8,9])
 
--- Let us tail-reduce the Laurent series up to the term of order 0.
-)set stream calc 17
 xfgabbas := [tailReduce(x, xfgab)$QXRED1(C) for x in xfgabtopbas];
 
+)set stream calc 17
 for x in xfgabbas for i in 1.. repeat (print(""::Symbol); _
   vPrint(concat("bfg",i::String), x))
 
-)set stream calc 2
+fgrels := [second(x)::Pol(C) for x in xfgabbas];
 
-
-fgrels := [second(x)::Pol(C) for x in basis xfgab];
-
-[variables x for x in fgrels]
+assertEquals(removeDuplicates [variables x for x in fgrels],_
+             [['U,'T,'G,'F]]$List(List Symbol))
 
 -- The degrees of the polynomial with respect to the
 -- variables is given below.
 
-[degree(x, 'T) for x in fgrels]
-
-[degree(x, 'U) for x in fgrels]
-
-[degree(x, 'F) for x in fgrels]
-
-[degree(x, 'G) for x in fgrels]
+assertEquals([degree(x, 'T) for x in fgrels], [29,28,28,28])
+assertEquals([degree(x, 'U) for x in fgrels], [1,1,1,1])
+assertEquals([degree(x, 'F) for x in fgrels], [1,1,1,1])
+assertEquals([degree(x, 'G) for x in fgrels], [3,3,3,3])
 
 -- Let's compute the bitlenth of the biggest coefficients
 -- of the representation polynomials.
@@ -926,49 +890,54 @@ fgrelslc := [[leadingCoefficient m for m in monomials x] for x in fgrels];
 -- $M^\infty(242)$.
 
 xtracebas := [xt, xu, xg, xh]
-level := 121
-xghab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
-nog := numOfGaps(xghab)
--- xghab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
+xghab := samba(xt, xtracebas, 6)$QXTOPSAMBA1(C);
+assertEquals(numberOfGaps(xghab), 6)
 
 xghabtopbas := sort(smallerMod5?, basis xghab);
-[qetaGrade x for x in xghabtopbas]
+assertEquals([qetaGrade x for x in xghabtopbas], [16,7,8,9])
 
 -- Let us tail-reduce the Laurent series up to the term of order 0.
-)set stream calc 17
+
 xghabbas := [tailReduce(x, xghab)$QXRED1(C) for x in xghabtopbas];
 
+)set stream calc 17
 for x in xghabbas for i in 1.. repeat (print(""::Symbol); _
   vPrint(concat("bgh",i::String), x))
-
-)set stream calc 2
 
 -- Let us express the generating series $f$ for $p(11n+6)$
 -- as a relation in terms of the original algebra basis
 -- elements (in fact, the powers of $z=\frac{1}{11}(u-t^{10})$).
 
-xtracebas := concat([xt, xg, xh], basis xabz)
+xtracebas := concat([xt, xg, xh], basis xabz);
 
-xghabz := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C)
-grades := [qcoerce(qetaGrade x)@P for x in basis xghabz]
-numOfGaps(xghabz)
+xghabz := samba(xt, xtracebas, 6)$QXTOPSAMBA1(C);
+assertEquals(numberOfGaps(xghabz), 6)
+
+xghabztopbas := sort(smallerMod5?, basis xghabz);
+assertEquals([qetaGrade x for x in xghabztopbas], [16,7,8,9])
 
 -- Of course the reduction yields zero.
 
 xr := reduce(xf, xghabz)$QXRED1(C);
-zero? xr
+assertTrue(zero? xr)
 
 -- We thus obtain a relation of $f$ in terms of
--- $h$, $g$, $z=z_1$, and $t$.
--- However, this relation does not show that
--- the coefficients of $f$ are divisible by 11.
+-- $h$, $g$, $z$, and $t$.
 
 xrpol := clearDenominator((second xr)::Pol(C));
-variables(xrpol)
-# monomials(xrpol)
-coefficient(xrpol, 'F, 1)::IntegerLocalizedAtPrime(11)
-factor gcd(coefficient(xrpol, 'F, 1), 11)
-content coefficient(xrpol, 'F, 0)
+assertEquals(variables(xrpol), ['Z,'T,'H,'G,'F])
+
+assertEquals(# monomials(xrpol),190)
+
+-- However, this relation does not show that
+-- the coefficients of $f$ are divisible by 11, because
+-- there is a factor of $11^6$ in the coefficient of $F$
+-- whereas the content of the polynomial without $F$ is 1.
+
+z := exponent(coefficient(xrpol, 'F, 1)::IntegerLocalizedAtPrime(11));
+assertEquals(z, 6)
+assertEquals(gcd(coefficient(xrpol, 'F, 1), 11),11)
+assertTrue(one? content coefficient(xrpol, 'F, 0))
 
 -- +
 -------------------------------------------------------------------
@@ -987,42 +956,33 @@ content coefficient(xrpol, 'F, 0)
 -- It is sufficient to add only $h$ to the generators
 -- in order to get an integral basis for $M^\infty(121)$.
 
-xtracebas := [xt, xu, xh]
-level := 121
-xhab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
---xhab := samba(xt, xtracebas, genus, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
-nog := numOfGaps(xhab)
+xtracebas := [xt, xu, xh];
+xhab := samba(xt, xtracebas, 6)$QXTOPSAMBA1(C);
+--xhab := samba(xt, xtracebas, 6, oneVerboseStep!(1,1,1,1))$QXSAMBA1(C);
+assertEquals(numberOfGaps(xhab), 6)
 
 xhabtopbas := sort(smallerMod5?, basis xhab);
-[qetaGrade x for x in xhabtopbas]
+assertEquals([qetaGrade x for x in xhabtopbas], [16,7,8,9])
 
 -- Let us tail-reduce the Laurent series up to the term of order 0.
-)set stream calc 17
+
 xhabbas := [tailReduce(x, xhab)$QXRED1(C) for x in xhabtopbas];
 
+)set stream calc 17
 for x in xhabbas for i in 1.. repeat (print(""::Symbol); _
   vPrint(concat("bh",i::String), x))
 
-)set stream calc 2
+hrels := [second(x)::Pol(C) for x in xhabbas];
 
-
-
-# basis xhab
-grades := [qcoerce(qetaGrade x)@P for x in basis xhab]
-numOfGaps(xhab)
-
-hrels := [second(x)::Pol(C) for x in basis xhab];
-
-[variables x for x in hrels]
+assertEquals(removeDuplicates [variables x for x in hrels],_
+             [['U,'T,'H]]$List(List Symbol))
 
 -- The degrees of the polynomial with respect to the
 -- variables is given below.
 
-[degree(x, 'T) for x in hrels]
-
-[degree(x, 'U) for x in hrels]
-
-[degree(x, 'H) for x in hrels]
+assertEquals([degree(x, 'T) for x in hrels], [74,73,73,73])
+assertEquals([degree(x, 'U) for x in hrels], [2,2,2,2])
+assertEquals([degree(x, 'H) for x in hrels], [2,2,2,2])
 
 -- Let's compute the bitlenth of the biggest coefficients
 -- of the representation polynomials.
@@ -1031,27 +991,32 @@ hrelslc := [[leadingCoefficient m for m in monomials x] for x in hrels];
 [max [length denom c for c in l] for l in hrelslc]
 
 -- There must be a relation for $f$ in terms of $\{t,u,h\}$.
--- Unfortunatly, it does not show divisibility by 11 of
--- the coefficients of $f$.
 
 xr := reduce(xf, xhab)$QXRED1(C);
+assertTrue(zero? xr)
 
 xrpol := clearDenominator((second xr)::Pol(C));
-variables(xrpol)
-# monomials(xrpol)
-coefficient(xrpol, 'F, 1)::IntegerLocalizedAtPrime(11)
-factor gcd(coefficient(xrpol, 'F, 1), 11)
-content coefficient(xrpol, 'F, 0)
+assertEquals(variables(xrpol), ['U,'T,'H,'F])
+
+assertEquals(# monomials(xrpol), 415)
+
+-- However, this relation does not show that
+-- the coefficients of $f$ are divisible by 11, because
+-- there is a factor of $11^26$ in the coefficient of $F$
+-- whereas the content of the polynomial without $F$ is 1.
+
+z := exponent(coefficient(xrpol, 'F, 1)::IntegerLocalizedAtPrime(11));
+assertEquals(z,26)
+assertEquals(gcd(coefficient(xrpol, 'F, 1), 11),11)
+assertTrue(one? content coefficient(xrpol, 'F, 0))
 
 -- There must be a relation for $g$ in terms of $\{t,u,h\}$.
 
 xr := reduce(xg, xhab)$QXRED1(C);
-first xr
-xrpol := clearDenominator((second xr)::Pol(C));
-variables(xrpol)
-# monomials(xrpol)
-factor gcd(coefficient(xrpol, 'F, 1), 11)
-content coefficient(xrpol, 'F, 0)
+assertTrue(zero? xr)
+
+xrpol := (second xr)::Pol(C);
+assertEquals(# monomials(xrpol), 367)
 
 -- +
 -------------------------------------------------------------------
@@ -1064,38 +1029,31 @@ content coefficient(xrpol, 'F, 0)
 -------------------------------------------------------------------
 -- -
 
--- TODO: Atkin-Lehner-Setup
-
-level := 121
-
 -- ## Denominator polynomial $d^*$ for $h$ with respect to `xab`
 
 -- We compute a polynomial $d^*(T)$ such that
 -- $d^*(t)h \in \mathbb{Q}[t, u]$.
 -- (Takes about 3 min.)
 
--- perhaps e1=29
 e1:=39; e2:=129
 rhs := [reduce(xt^e1*xh, xab)$QXRED1(C)];
 for i in e1+1..e2 repeat (_
-  print(i);_
   rhs := cons(reduce(xt*first(rhs), xab)$QXRED1(C), rhs))
 rhs := reverse! rhs;
-[qetaGrade x for x in rhs]
-[variables(second(x)::Pol(C)) for x in rhs]
-[coefficient(second(x)::Pol C, H, 1) for x in rhs]
+
+assertEquals(removeDuplicates [qetaGrade x for x in rhs], [191])
 
 lh := [[qetaCoefficient(first x, i) for i in 0..191] for x in rhs];
 
 -- Extract the 192 coefficients corresponding to the orders
 -- $-191, \ldots, 0$ and compute the kernel of the corresponding
 -- matrix.
--- (Nullspace computation takes about 100 sec.)
+-- (Nullspace computation takes about 50 sec.)
 
 math := transpose matrix lh;
-[nrows math, ncols math]
+assertEquals([nrows math, ncols math], [192,91])
 nsh := nullSpace math;
-#nsh
+assertEquals(#nsh,1)
 
 -- Extract the coefficients from the vector in the nullspace.
 
@@ -1105,8 +1063,8 @@ chs := members first nsh;
 
 lincomph := [c*rr for c in chs for rr in rhs];
 lch := reduce(_+, lincomph);
-zero? lch
-qetaCoefficient(lch, 0)
+assertTrue(zero? lch)
+assertTrue(zero? qetaCoefficient(lch, 0))
 
 -- Indeed, we have just shown a relation for
 -- $t^{39}h-h_{39}, \ldots, t^{129}h-h_{129}$.
@@ -1116,8 +1074,8 @@ qetaCoefficient(lch, 0)
 -- The "denominator polynomial" is given by the coefficient of $H$.
 
 dh := (second lch)::Pol C;
-variables dh
-[degree(dh, x) for x in variables dh]
+assertEquals(variables dh, ['U,'T,'H])
+assertEquals([degree(dh, x) for x in variables dh],[4,140,1])
 
 -- ## Computation of the corresponding polynomials $c_0,..,c_4$
 
@@ -1125,40 +1083,109 @@ variables dh
 -- from above, we must do the whole computation with
 -- different attached values, namely $T$, and $U$
 -- for the elements in basis `xab`.
+--
+-- In this section we compute a polynomial
+-- $c^*(T, Z) := \sum_{k=0}^4 c^*_k(T) U^k \in \mathbb{Q}[T,U]$
+-- such that $d^*(t)h = c^*(t, z)$.
+--
 
 ch1:=coefficient(dh,H,1);
 ch0:=coefficient(dh,H,0);
 
-variables ch0
-varsh := rest reverse! variables ch0 -- should give [U]
-ch0s := [coefficient(ch0, x, 1) for x in varsh];
-degree(ch1, T), [degree(x, T) for x in ch0s]
-gcd cons(ch1,ch0s)
+assertEquals(variables ch0, ['U,'T])
+ch0s := [coefficient(ch0, 'U, i) for i in 0..4];
+l := cons(degree(ch1, 'T), [degree(x, 'T) for x in ch0s]);
+assertEquals(l, [129,140,130,120,110,100])
+assertEquals(gcd cons(ch1,ch0s), T^39)
+
+-- ## Factors of $d^*(T)$
 
 -- <a name="denominator-polynomial-for-h"></a>
 -- Apart from the $t^{39}$ factor, we get other factors.
+-- Below are the factors $d^*_1, \ldots, d^*_6$, unsorted.
 
-flh := factorList factor ch1;
-[x.exponent for x in flh]
-flhfactors := [x.factor for x in flh]
-
--- There is one factor that is not already a factor of `cf1`.
-
-[x for x in flhfactors | not member?(x, flffactors)]
-
+dstarfactored := factor ch1;
+udstar := (unit dstarfactored)::Q    -- the constant common factor
 
 -- Now we sort by degree and the size of the second coefficient.
 
-R ==> Record(factor: Polynomial(Fraction(Integer)),exponent: NonNegativeInteger)
-dg(x) == degree(x, 'T);
-a2(x: Pol C): C == abs(coefficient(x, 'T, (dg(x) -1)::N)$Pol(C));
-smf(x: R, y: R): Boolean == (xf:=x.factor; yf:=y.factor; dx := dg xf; dy:= dg yf; dx=dy => (a2 xf < a2 yf); dx < dy);
+dstarfactors := factors dstarfactored;
+dstarfactorssorted := sort(smallerSecondCoefficient?, rest dstarfactors);
+assertEquals([x.exponent for x in dstarfactorssorted], [1,2,2,1,1,1])
 
-ffh := sort(smf, rest factors factor ch1)
-for x in ffh for i in 1.. repeat vPrint(concat("exponent",i::String), x.exponent)
-for x in ffh for i in 1.. repeat (print(""::Symbol); _
+for x in dstarfactorssorted for i in 1.. repeat_
+  vPrint(concat("exponent",i::String), x.exponent)
+
+
+assertEquals([x.factor for x in dstarfactorssorted], [_
+  T^2-11,_
+  T^2-2*T+11,_
+  T^2-3*T+11,_
+  T^25-55*T^24+1925*T^23-50215*T^22+1116830*T^21-19094526*T^20_
+    +234488925*T^19-1994909455*T^18+10473000120*T^17_
+    -10225933245*T^16-403942642466*T^15+4582611990165*T^14_
+    -29455266425530*T^13+124114279278275*T^12-278010412252430*T^11_
+    -516227631579440*T^10+8590272458708655*T^9_
+    -48185757511261315*T^8+182477586874892210*T^7_
+    -514859434575326060*T^6+1096675319198574181*T^5_
+    -1713935680161223640*T^4+1816851879425670505*T^3_
+    -1077108618890647200*T^2+163292428440793630*T+4177248169415651,_
+  T^25+430*T^24-31200*T^23+578905*T^22-6007240*T^21+42281581*T^20_
+    -218350660*T^19+851271410*T^18-2472691265*T^17+4848984855*T^16_
+    -3205367440*T^15-18988485230*T^14+93248895025*T^13_
+    -243431953930*T^12+416601090015*T^11-403942642466*T^10_
+    -112485265695*T^9+1267233014520*T^8-2655224484605*T^7_
+    +3433152350925*T^6-3075192506826*T^5+1978532471630*T^4_
+    -978548291765*T^3+412640845925*T^2-129687123005*T+25937424601,_
+  T^30-920*T^29-19225*T^28+1258030*T^27-19448535*T^26+75396538*T^25_
+    +2157132615*T^24-50735009930*T^23+643909614260*T^22_
+    -5980486211480*T^21+44473273280260*T^20-276140775186430*T^19_
+    +1465665176339650*T^18-6744922810982730*T^17_
+    +27144546684208910*T^16-95977332323506700*T^15_
+    +298590013526298010*T^14-816135660128910330*T^13_
+    +1950800349708074150*T^12-4042977089504521630*T^11_
+    +7162465135059153260*T^10-10594796133295720280*T^9_
+    +12547976761628658460*T^8-10875499956118688330*T^7_
+    +5086405868720041965*T^6+1955592019551431338*T^5_
+    -5548894011786504885*T^4+3948237050766319630*T^3_
+    -663699140967073475*T^2-349369846896581720*T+4177248169415651])
+
+for x in dstarfactorssorted for i in 1.. repeat (print(""::Symbol); _
   vPrint(concat("ds",i::String), x.factor))
 
+
+-- There is one factor that is not already a factor of `cf1`.
+
+-- +
+-- fdstarfactors := [x.factor for x in dstarfactors];
+-- [x for x in fdstarfactors | not member?(x, fdfactors)]
+-- -
+
+-- Now we sort by degree and the size of the second coefficient.
+
+dendstar := denom udstar
+
+-- Multiplying by the denominator of the constant factor of `ch1`
+-- and dividing by the common factor give the polynomial $d^*(T)$
+-- from the article.
+
+dstar := (-dendstar * ch1/T^39)::Pol(Z); degree(dstar)
+
+-- Here we collect all the coefficient polynomials $c^*_k(t)$ for
+-- $k=0,\ldots,4$ after they have been multiplied by the constant
+-- denominator.
+
+cstaris := [(denom(udstar)*(x/T^39)::Polynomial(Q)) for x in ch0s];
+
+-- Unfortunately, we find that not all denominators have been cleared
+-- by multiplication with the denominator of $d^*$.
+-- In fact, we would have to multiply the whole relation by
+-- 11^4 in order to turn it into a relation with integer coefficients.
+-- Thus, our relation does not exhibit that $p(11n+6)$ is divisible by
+-- 11 for all $n\in\mathbb{N}$.
+
+z := lcm [lcm [denom mon for mon in monomials x] for x in cstaris];
+assertEquals(z, 11^4)
 
 -- +
 -------------------------------------------------------------------
@@ -1171,32 +1198,153 @@ for x in ffh for i in 1.. repeat (print(""::Symbol); _
 -------------------------------------------------------------------
 -- -
 
-)read init.input
-
 -- <a name="method-algcurves"></a>
 -- # Method 3: integral basis by using Maple's algcurves
 
+-- ## Minimal polynomial and discriminant
+
+xz5r := reduce(xz^5, xabz)$QXRED1(C);
+assertTrue(zero? xz5r)
+
+p5 := second(xz5r)::Pol(C);
+c5 := coefficient(p5, 'Z, 5);
+p := 1/c5 * p5;
+
+discfactors := factors factor discriminant(p, 'Z);
+discfactorssorted := sort(smallerSecondCoefficient?, discfactors);
+assertEquals([x.exponent for x in discfactors], [4,4,4,2,1,2,2,2])
+
+-- All the factors of our $d$ polynomial are also factors of the discriminant.
+
+fdiscfactors := [x.factor for x in discfactors];
+
+-- +
+-- fdfactors := [x.factor for x in dfactors];
+--
+-- l := removeDuplicates [member?(x, fdiscfactors) for x in fdfactors];
+-- assertEquals(l, [true])
+-- -
+
+-- But not all factors of the discriminant are factors of $d$.
+
+-- +
+-- l := [member?(x, fdfactors) for x in fdiscfactors];
+-- assertEquals(l,[true,true,true,true,false,false,true,true]$List(Boolean))
+-- -
+
 xu5r := reduce(xu^5, xab)$QXRED1(C);
 
-zero? xu5r
+assertTrue(zero? xu5r)
 
-p := second(xu5r)::Pol(Q)
-variables(p)
-
--- There is also a polynomial pz(x,y) such that pz(t, z) = 0.
-
-xzz := toX1(C, first(1/11*(xu-xt^10)), 'Z)
-xabzz := samba(xt, [xt, xzz], nog)$QXSAMBA1(C)
-xzz5r := reduce(xzz^5, xabzz)$QXRED1(C);
-zero? xzz5r
-pzz := second(xzz5r)::Pol(Q)
-variables(pzz)
-dzz := discriminant(pzz, 'Z);
-flzz := factorList factor dzz;
-[x.exponent for x in flzz]
-flzzfactors := [x.factor for x in flzz]
-
-
+p := second(xu5r)::Pol(Q);
+assertEquals(p,_
+  1/108347059433883722041830251*U^5_
+  +(-5/108347059433883722041830251*T^10_
+    -2756/9849732675807611094711841*T^9_
+    -467690/9849732675807611094711841*T^8_
+    -1561204/895430243255237372246531*T^7_
+    -19603535/895430243255237372246531*T^6_
+    -9071001/81402749386839761113321*T^5_
+    -19603535/81402749386839761113321*T^4_
+    -1561204/7400249944258160101211*T^3_
+    -467690/7400249944258160101211*T^2 -2756/672749994932560009201*T_
+    -5/672749994932560009201)*U^4_
+  +(10/108347059433883722041830251*T^20_
+    -10250/9849732675807611094711841*T^19_
+    +2110692/9849732675807611094711841*T^18_
+    -6680835/895430243255237372246531*T^17_
+    +115828261/895430243255237372246531*T^16_
+    -118310975/81402749386839761113321*T^15_
+    +978927291/81402749386839761113321*T^14_
+    -575857717/7400249944258160101211*T^13_
+    +3019431117/7400249944258160101211*T^12_
+    -1189902646/672749994932560009201*T^11_
+    +4310301700/672749994932560009201*T^10_
+    -1189902646/61159090448414546291*T^9_
+    +3019431117/61159090448414546291*T^8_
+    -575857717/5559917313492231481*T^7_
+    +978927291/5559917313492231481*T^6_
+    -118310975/505447028499293771*T^5_
+    +115828261/505447028499293771*T^4 -6680835/45949729863572161*T^3_
+    +2110692/45949729863572161*T^2 -10250/4177248169415651*T_
+    +10/4177248169415651)*U^3_
+  +(-10/108347059433883722041830251*T^30_
+    -1840/9849732675807611094711841*T^29_
+    -64610/9849732675807611094711841*T^28_
+    +575396/895430243255237372246531*T^27_
+    -17702800/895430243255237372246531*T^26_
+    +30432597/81402749386839761113321*T^25_
+    -418611475/81402749386839761113321*T^24_
+    +411548321/7400249944258160101211*T^23_
+    -3657564624/7400249944258160101211*T^22_
+    +20642500/5559917313492231481*T^21_
+    -1469323818/61159090448414546291*T^20_
+    +754476860/5559917313492231481*T^19_
+    -3754698734/5559917313492231481*T^18_
+    +1506378024/505447028499293771*T^17_
+    -538231420/45949729863572161*T^16_
+    +1888549018/45949729863572161*T^15_
+    -538231420/4177248169415651*T^14 +1506378024/4177248169415651*T^13_
+    -3754698734/4177248169415651*T^12 +754476860/379749833583241*T^11_
+    -1469323818/379749833583241*T^10 +20642500/3138428376721*T^9_
+    -3657564624/379749833583241*T^8 +411548321/34522712143931*T^7_
+    -418611475/34522712143931*T^6 +30432597/3138428376721*T^5_
+    -17702800/3138428376721*T^4 +575396/285311670611*T^3_
+    -64610/285311670611*T^2 -1840/25937424601*T -10/25937424601)*U^2_
+  +(5/108347059433883722041830251*T^40_
+    +200/9849732675807611094711841*T^39_
+    -11670/9849732675807611094711841*T^38_
+    +2650/81402749386839761113321*T^37_
+    -515951/895430243255237372246531*T^36_
+    +597970/81402749386839761113321*T^35_
+    -5746926/81402749386839761113321*T^34_
+    +3791255/7400249944258160101211*T^33_
+    -19347270/7400249944258160101211*T^32_
+    +4008355/672749994932560009201*T^31_
+    +32139275/672749994932560009201*T^30_
+    -45591375/61159090448414546291*T^29_
+    +362111510/61159090448414546291*T^28_
+    -190104575/5559917313492231481*T^27_
+    +845062981/5559917313492231481*T^26_
+    -23000775/45949729863572161*T^25_
+    +472340551/505447028499293771*T^24_
+    +78902210/45949729863572161*T^23_
+    -1175497010/45949729863572161*T^22 +439316/3138428376721*T^21_
+    -203391415/379749833583241*T^20 +439316/285311670611*T^19_
+    -1175497010/379749833583241*T^18 +78902210/34522712143931*T^17_
+    +472340551/34522712143931*T^16 -23000775/285311670611*T^15_
+    +845062981/3138428376721*T^14 -190104575/285311670611*T^13_
+    +362111510/285311670611*T^12 -45591375/25937424601*T^11_
+    +32139275/25937424601*T^10 +4008355/2357947691*T^9_
+    -19347270/2357947691*T^8 +3791255/214358881*T^7_
+    -5746926/214358881*T^6 +597970/19487171*T^5 -515951/19487171*T^4_
+    +2650/161051*T^3 -11670/1771561*T^2 +200/161051*T +5/161051)*U_
+  -1/108347059433883722041830251*T^50_
+    +5/9849732675807611094711841*T^49_
+    -135/9849732675807611094711841*T^48_
+    +215/895430243255237372246531*T^47_
+    -2720/895430243255237372246531*T^46_
+    +216/7400249944258160101211*T^45_
+    -17700/81402749386839761113321*T^44_
+    +9250/7400249944258160101211*T^43 -325/61159090448414546291*T^42_
+    +9665/672749994932560009201*T^41 -405/61159090448414546291*T^40_
+    -7680/61159090448414546291*T^39 +1545/5559917313492231481*T^38_
+    +18675/5559917313492231481*T^37 -16925/505447028499293771*T^36_
+    +78526/505447028499293771*T^35 -16935/45949729863572161*T^34_
+    -7515/45949729863572161*T^33 +18955/4177248169415651*T^32_
+    -48580/4177248169415651*T^31 -1269/34522712143931*T^30_
+    +154615/379749833583241*T^29 -596565/379749833583241*T^28_
+    +87400/34522712143931*T^27 +171385/34522712143931*T^26_
+    -117501/3138428376721*T^25 +171385/3138428376721*T^24_
+    +87400/285311670611*T^23 -596565/285311670611*T^22_
+    +154615/25937424601*T^21 -1269/214358881*T^20_
+    -48580/2357947691*T^19 +18955/214358881*T^18 -7515/214358881*T^17_
+    -16935/19487171*T^16 +78526/19487171*T^15 -16925/1771561*T^14_
+    +18675/1771561*T^13 +1545/161051*T^12 -7680/161051*T^11_
+    -405/14641*T^10 +9665/14641*T^9 -325/121*T^8 +9250/1331*T^7_
+    -17700/1331*T^6 +216/11*T^5 -2720/121*T^4 +215/11*T^3 -135/11*T^2_
+    +5*T-1)
+assertEquals(variables(p), ['U,'T])
 
 -- The above polynomial p(T, U) is the respective
 -- relation between $t$ and $u$, i.e., $p(t, u)=0$.
@@ -1211,7 +1359,7 @@ flzzfactors := [x.factor for x in flzz]
 --
 -- to compute and print the resulting integral basis (not yet
 -- order-complete).
--- Via `read("integralbasis121.maple");` this file is evaluated in
+-- Via `read("p.maple");` this file is evaluated in
 -- [Maple](https://maplesoft.com).
 -- It gives the integral basis `[1, U, U^2, U^3, v(T, U)]`
 -- where $v$ is a rational function in $T$ and $U$ and
@@ -1228,37 +1376,21 @@ flzzfactors := [x.factor for x in flzz]
 
 dv := denom v;
 nv := numer v;
-PE C ==> PolynomialEvaluation(C, X)
+PE C ==> PolynomialEvaluation(C, X1(C))
 syms: List Symbol := ['T, 'U]
-elems: List X := [xt, xu]
-ev ==> eval((c:C):X1(C)+->c*1$X, ['T, 'U], [xt,xu])$PE(C)
-
-edv := ev dv;
-env := ev nv;
-
-fdv := (first edv)::A1(C);
-fnv := (first env)::A1(C);
-
+elems := [xt, xu];
+ev ==> eval((c:C):X1(C)+->c*1$X1(C), ['T, 'U], [xt,xu])$PE(C)
 
 -- After normalizing the leading coefficient of the series to 1,
 -- we obtain a series of order -1670.
 
+fdv := (first ev dv)::A1(C);
+fnv := (first ev nv)::A1(C);
 cfv0 := (fnv/fdv)::CA1(C);
 cfv := (1/qetaLeadingCoefficient(cfv0))*cfv0;
 --xv := toX1(C, cfv0, 'V)
-xv := toX1(C, cfv, 'V)
-qetaGrade cfv
-
--- Let us first reduce this series with respect to the
--- order-complete basis of $\mathbb{Q}[t,u]$,
--- see [xab = samba([xt, xu])](#xab).
--- This takes about 20 minutes.
-
-trEnter ==> traceEnter(1)$QXRED1(C)
-trLoop ==> traceLoop(1)$QXRED1(C)
-trReturn ==> traceReturn(1)$QXRED1(C)
-tReduce ==> tracedReduce(trEnter, trLoop, trReturn)$QXRED1(C);
-xw := tReduce(xv, xab);
+xv := toX1(C, cfv, 'V);
+assertEquals(qetaGrade cfv, 1670)
 
 -- Since we already know that
 -- $\langle 1, u, u^2, u^3, v(t,u)\rangle_{\mathbb{C}[t]}=M^\infty(121)$,
@@ -1275,13 +1407,12 @@ xw := tReduce(xv, xab);
 -- 0.5 hours.
 
 )set mess time on
-xvab := samba(xt, [xu, xu^2, xu^3, xv], genus, oneVerboseStep!(1,1,1,1))$QXTOPSAMBADP1(C);
+xvab := samba(xt, [xu, xu^2, xu^3, xv], 6)$QXTOPSAMBADP1(C);
 
-grades := [qcoerce(qetaGrade x)@P for x in basis xvab]
-numOfGaps(xvab)
+assertEquals(numberOfGaps(xvab), 6)
 
 xvabtopbas := sort(smallerMod5?, basis xvab);
-[qetaGrade x for x in xvabtopbas]
+assertEquals([qetaGrade x for x in xvabtopbas], [16,7,8,9])
 
 -- Let us tail-reduce the Laurent series up to the term of order 0.
 
@@ -1291,10 +1422,9 @@ xvabbas := [tailReduce(x, xvab)$QXRED1(C) for x in xvabtopbas];
 -- terms of the original series $t$, $u$, and $v$.
 
 )set stream calc 17
-
 for x in xvabbas for i in 1.. repeat vPrint(concat("bv", i::String), first x);
 
--- The variable `rvbas` corresponds to the set
+-- The variable `xvabbas` corresponds to the set
 -- $\{b_1, b_2, b_3, b_4\}$ from Section 8 of
 -- the article.
 -- However, each element is a pair consisting of
@@ -1302,6 +1432,7 @@ for x in xvabbas for i in 1.. repeat vPrint(concat("bv", i::String), first x);
 -- in terms of the elements $t$ and $u$.
 
 
+-- +
 vprintp(i: Z, p: Pol(C)): Void == (_
   print(""::Symbol); _
   for j in 0..4 repeat (_
@@ -1310,6 +1441,7 @@ vprintp(i: Z, p: Pol(C)): Void == (_
     vPrint(concat ["p",i::String,j::String], c)));
 
 for x in xvabbas for i in 1.. repeat vprintp(i, second(x)::Pol(C));
+-- -
 
 -- Of course, we can also reduce the non-leading coefficients
 -- of the $q$-series of the basis `xjbas`. Although that leads
@@ -1317,38 +1449,59 @@ for x in xvabbas for i in 1.. repeat vprintp(i, second(x)::Pol(C));
 -- it still involves huge polynomials in their representation
 -- in terms of $T$, $U$, $J0$ and $J2$.
 
-)set stream calc 2
-
-
-
--- We know that
--- $$b_i = p_1^{(i)}(t) + p_2^{(i)}(t) \, u + p_3^{(i)}(t) \, u^2 + p_4^{(i)}(t) \, u^3+ p_5^{(i)}(t) \, v(t,u).$$
+-- Since $b^{(v)}_i \in M^{\infty}(121)$, we have
+-- $$
+-- \begin{gather*}
+--   b^{(v)}_i
+--   =
+--     p_{i,0}(t)
+--   + p_{i,1}(t) \, u
+--   + p_{i,2}(t) \, u^2
+--   + p_{i,3}(t) \, u^3
+--   + p_{i,4}(t) \, v(t,u).
+-- \end{gather*}
+-- $$
 --
--- Compute the respective matrix $A$ cited in the paper,
--- i.e., $A=(a_{i,j})$ where
--- $a_{i,j}=\deg_T(p^{(i)}_j(T))$.
+-- Compute the respective matrix $A$ cited in the paper, i.e.,
+-- $A=(a_{i,j})_{i\in\{1,\dots,4\},j\in\{0,\dots,4\}}$, where
+-- $a_{i,j}:=\deg_T(p_{i,j}(T))$ and
+--
 
 bp := [second(x)::Pol(C) for x in xvabbas];
-cofactorsu(bi) == [coefficient(bi, ['U, 'V], [j, 0]) for j in 0..3];
-cofactorv(bi) == coefficient(bi, ['U, 'V], [0, 1]);
+cofactorsu(bi) ==> [coefficient(bi, ['U, 'V], [j, 0]) for j in 0..3];
+cofactorv(bi) ==> coefficient(bi, ['U, 'V], [0, 1]);
 cofactors := [concat(cofactorsu(bi), cofactorv(bi)) for bi in bp];
-[[variables(x) for x in l] for l in cofactors]
+l := removeDuplicates [removeDuplicates [variables(x) for x in l] for l in cofactors];
+
+z := removeDuplicates [removeDuplicates [variables(x) for x in l] for l in cofactors];
+
+assertEquals(#z, 1)
+assertEquals(# first z, 1)
+assertEquals(first first z, ['T])
+
+a1 := matrix [[degree(x, 'T) for x in l] for l in cofactors];
+a2 := matrix[[358, 358, 358, 358, 54],_
+             [356, 356, 356, 356, 52],_
+             [356, 356, 356, 356, 52],_
+             [356, 356, 356, 356, 52]];
+assertEquals(a1, a2)
+
 vPrint("a", matrix [[degree(x, 'T) for x in l] for l in cofactors])
 
 -- As an example, let us consider the polynomial
--- $p^{(1)}_5(T)$.
--- It is a polynomial in $T$ of degree 52.
--- We can divide a constant to make the coefficient
--- become smaller.
+-- $p_{1,4}(T)$.
+-- It is a polynomial in $T$ of degree 54.
 
 pv := coefficient(bp.1, ['U, 'V], [0, 1]);
-variables pv, degree pv
+assertEquals(leadingCoefficient degree pv, 54)
+
 den := lcm [denom leadingCoefficient x for x in monomials pv];
-num := gcd [numer leadingCoefficient x for x in monomials (den*pv)];
-num/den
+assertEquals(den*pv, clearDenominator(pv))
+-- -
 
--- Still, the polynomial $p^{(1)}_5(T)$ is rather big.
+-- By making the polynomial monic, it looks a bit smaller.
+-- Still, the polynomial $p_{1,4}(T)$ is rather big.
 -- Note that it is one of the smallest polynomials among
--- all the $p^{(i)}_j(T)$.
+-- all the $p_{i,j}(T)$.
 
-ipv := den/num*pv
+(1/leadingCoefficient(pv))*pv
