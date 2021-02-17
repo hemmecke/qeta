@@ -62,15 +62,15 @@ expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
 -- The result is a modular function in M(nn).
 -- Input condition: #r = #DIVISORS(nn*t), gcd(nn, t)=1.
 traceMap(nn: P, t: P, r: List Z): A1 C ==
-  divs: List P := DIVISORS(nn*t)
-  #divs ~= #r => error "length of r must match number of divisors)"
+  #r ~= numberOfDivisors(nn*t)$INTF =>
+    error "length of r must match number of divisors)"
   idgamma: SL2Z := matrix [[1,0],[0,1]]
-  ye := etaQuotient(nn*t, divs, r, idgamma)$YETAQG
+  ye := etaQuotient(nn*t, r, idgamma)$YETAQG
   e := expansion(ye::EtaQuotientGamma(C, 1, C, 1))
   alw: MZ := matrixAtkinLehner(nn*t, t)
   sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
   gamma := sm.red
-  yeg := etaQuotient(nn*t, divs, r, gamma)$YETAQG
+  yeg := etaQuotient(nn*t, r, gamma)$YETAQG
   -- Check that there is no need for an extension by a root of unity
   xiord := minimalRootOfUnity yeg;
   xiord > 2 =>

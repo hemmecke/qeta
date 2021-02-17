@@ -263,11 +263,11 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     monomialQuotient: (List Z, List Z, Z -> OutputForm) -> OutputForm
 
     etaQuotient: (P, List Z, Z -> OutputForm) -> OutputForm
-      ++ etaQuotient(n, r, v) returns the eta-quotient of level n
+      ++ etaQuotient(mm, r, v) returns the eta-quotient of level mm
       ++ connected to the exponent vector r where each part is
       ++ formatted by the function v.
     qQuotient: (P, List Z, Z -> OutputForm, Q) -> OutputForm
-      ++ qQuotient(n, r, v, e) returns the eta-quotient of level n
+      ++ qQuotient(mm, r, v, e) returns the eta-quotient of level mm
       ++ connected to the exponent vector r where each part is
       ++ formatted by the function v. The whole eta-quatient comes
       ++ multiplied with a q power with exponent e.
@@ -278,19 +278,20 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     f:  (%, Z, Z -> OutputForm, C, Q, List Z) -> OutputForm
 
     etaRelationMonomial: (P, SUP C, L Z, Z, Z -> OutputForm, Q) -> OutputForm
-      ++ etaRelationMonomial(n, ci, ri, fmt, v, e) return an
-      ++ eta-quoatient of level n with exponent vector ri and
+      ++ etaRelationMonomial(mm, ci, ri, fmt, v, e) return an
+      ++ eta-quoatient of level mm with exponent vector ri and
       ++ coefficient ci which is multiplied by q^e with variables
       ++ given through v and in a form given by fmt.
 
     etaRelation: (P, List SUP C, List List Z, Z, Z -> OutputForm, C, Q, List Z)
         -> OutputForm
-      ++ etaRelation(n, cis, bas, fmt, v, c, e, r) returns the
-      ++ eta-relation part multiplied by c*q^e*etaQuotient(n,r).
+      ++ etaRelation(mm, cis, bas, fmt, v, c, e, r) returns the
+      ++ eta-relation part multiplied by c*q^e*etaQuotient(mm,r).
 
     pretty: (%, Z, Z -> OutputForm, C, Q, List Z) -> OutputForm
       ++ pretty(x, fmt, v, c, e, r) outputs x as computed in
-      ++ eta-quotients, but multiplied by c*q^e*etaQuotient(n,r).
+      ++ eta-quotients, but multiplied by c*q^e*etaQuotient(nn,r) where
+      ++ nn=level(x).
 
     pretty: (%, Z, Z -> OutputForm) -> OutputForm
       ++ pretty(x, fmt, v) outputs x as computed with respect to a
@@ -452,12 +453,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         zero?(vector(neg)$Vector(Z)) => num
         num / monomial(divs, neg, v)
 
-    etaQuotient(n: P, r: List Z, v: Z -> OF): OF ==
-        divs: List Z := divisors(n)$IntegerNumberTheoryFunctions
+    etaQuotient(mm: P, r: List Z, v: Z -> OF): OF ==
+        divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
         monomialQuotient(divs, r, v)
 
-    qQuotient(n: P, r: List Z, v: Z -> OF, e: Q): OF ==
-        eq := etaQuotient(n, r, v)
+    qQuotient(mm: P, r: List Z, v: Z -> OF, e: Q): OF ==
+        eq := etaQuotient(mm, r, v)
         zero? e => eq
         q: OF := "q"::Symbol::OF
         one? e => q * eq

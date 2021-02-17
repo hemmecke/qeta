@@ -23,6 +23,8 @@ CX := Q;
 nn: P := 2;
 )r ../input/convenience
 )r ../input/tracemacros
+SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
+SIGMA0 ==> sigma0 $ QETAAUX
 
 )set mess type on
 
@@ -48,9 +50,8 @@ expansion(eta(24)$ETA(Z))
 -- ### $g_s(\tau) \in M(N)$ non-modular
 
 nn: P := 22; -- level N
-nndivs := DIVISORS nn;
 r := [1,2,-1,-1]
-e := etaQuotient(nndivs, r)$ETA(Z)
+e := etaQuotient(nn, r)$ETA(Z)
 
 )set message type on
 
@@ -69,7 +70,7 @@ seriesPart(e)$ETA(Z)
 -- with the prefactor to get a $q$-series.
 
 r := [24,0,0,0]
-e := etaQuotient(nndivs, r)$ETA(Z)
+e := etaQuotient(nn, r)$ETA(Z)
 expansion e
 
 -- ## Jacobi theta functions
@@ -100,9 +101,8 @@ f := g(revert h) -- if order(h) is different from 1 then g(revert(nthRoot(h, ord
 -- ### $g_s(\tau) \in M^\infty(N)$ --- the monoid generators
 
 nn: P := 22; -- level N
-nndivs := DIVISORS nn;
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
-eqgens := [expansion(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens]
+eqgens := [expansion(etaQuotient(nn, r)$ETA(Z)) for r in rgens]
 
 -- ### Create $g_s(\tau)$ with attached part
 
@@ -121,9 +121,8 @@ C ==> Q
 nn: P := 13;
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 m: P := 13; mm: P := m; s: List Z := first rgens;
-mmdivs: List P := DIVISORS mm
 gamma: SL2Z := matrix [[1,0],[0,1]]
-y: YSETAQG := etaQuotient(nn, mmdivs, s, m, t, gamma);
+y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -149,7 +148,7 @@ s1 := choose(24, 0, e::A1(CX))
 
 gamma := cuspToMatrix(nn, 1)$GAMMA0
 
-y: YSETAQG := etaQuotient(nn, mmdivs, s, m, t, gamma);
+y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -171,12 +170,11 @@ s1 := choose(24, 0, e::A1(CX))
 C ==> Q
 nn: P := 13;
 m: P := 13; mm: P := m; s: List Z := [-1, 0];
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
+shat: Z := SIGMAINFINITY(mm, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
 t := first first orbs
 gamma: SL2Z := matrix [[1,0],[0,1]]
-y: YSETAQG := etaQuotient(nn, mmdivs, s, m, t, gamma);
+y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -213,7 +211,7 @@ rx-s2
 
 gamma := cuspToMatrix(nn, 1)$GAMMA0
 
-y := etaQuotient(nn, mmdivs, s, m, t, gamma)$YSETAQG;
+y := etaQuotient(nn, mm, s, m, t, gamma)$YSETAQG;
 xiord := minimalRootOfUnity y
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -233,8 +231,7 @@ s1
 
 nn: P := 26; -- level N
 m: P := 13; mm: P := m; s: List Z := [-1, 0];
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
+shat: Z := SIGMAINFINITY(mm, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
 t := first first orbs
 
@@ -348,8 +345,7 @@ setFormat!(FormatMathJax)$JFriCASSupport
 -- Here we use all the generators of the monoid of all $\eta$-quotients.
 
 nn: P := 22; -- level
-nndivs := DIVISORS nn;
-etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
+etaQ(x) == expansion(etaQuotient(nn, x)$ETA(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
 rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
@@ -466,8 +462,7 @@ setFormat!(FormatMathJax)$JFriCASSupport
 
 nn: P := 13; -- level
 m: P := 13; mm: P := m; s: List Z := [-1, 0];
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
+shat: Z := SIGMAINFINITY(mm, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
 t: N := first first orbs
 
@@ -485,8 +480,7 @@ spitzen := cusps(nn)$GAMMA0
 ff := modularSiftedPartitionSeries(nn, m, t);
 xf := toX1(C, ff, F)
 
-nndivs := DIVISORS nn;
-etaQ(x) == expansion(etaQuotient(DIVISORS nn, x)$ETA(Z))
+etaQ(x) == expansion(etaQuotient(nn, x)$ETA(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
 rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
@@ -584,14 +578,13 @@ w := WIDTH0(242, gamma(2,1))
 -- temporarily switch to level 242 and take the trace of a series from
 -- there.
 
-divs242 := DIVISORS 242;
 rgens242 := etaQuotientMonoidExponentVectors(242)$QEQEV
-egens242 := [(expansion etaQuotient(divs242, r)$ETA(Z))::A1(C) for r in rgens242];
+egens242 := [(expansion etaQuotient(242, r)$ETA(Z))::A1(C) for r in rgens242];
 [qetaGrade(x) for x in egens242]
 
 -- For all the series we compute that we need at most a second root of unity, i.e. we continue our computation in $C=\mathbb{Q}$.
 
-[minimalRootOfUnity etaQuotient(242, divs242, r, gamma) for r in rgens242]
+[minimalRootOfUnity etaQuotient(242, 242, r, gamma) for r in rgens242]
 
 CX := Q;
 xiord := 2;
@@ -622,14 +615,14 @@ eqt242 := egens242.3
 -- Since internally the computation of `eqt242` is done by a different function, we first check that we optain the same result when the transformation is the identity matrix.
 
 idgamma: SL2Z := matrix [[1,0],[0,1]];
-yeq242: YETAQG := etaQuotient(242, divs242, r242, idgamma);
+yeq242: YETAQG := etaQuotient(242, 242, r242, idgamma);
 modularGamma0? yeq242
 
 eq242 := (expansion(yeq242::ETAQG(C, CX)))::A1(C)
 
 zero?(eqt242-eq242)
 
-yeq242g: YETAQG := etaQuotient(242, divs242, r242, gamma);
+yeq242g: YETAQG := etaQuotient(242, 242, r242, gamma);
 eq242g := (expansion(yeq242g::ETAQG(C,CX)))::A1(C)
 
 -- Now we apply the $U_2$ operator.
@@ -640,7 +633,7 @@ u2eq242g := choose(2, 0, eq242g)
 -- This is another check that we have no bug in the
 -- implementation.
 
-yseq242g: YSETAQG := etaQuotient(242, divs242, r242, 1, 0, gamma);
+yseq242g: YSETAQG := etaQuotient(242, 242, r242, 1, 0, gamma);
 seq242g := puiseux(yseq242g, w)$SETAQG(C,CX)
 
 -- Due to implementation as Laurent series, the above series is computed with $q$ standing for $q^{24}$. The result, however, says (den=24) that we should consider it as a series in $q=(q^{24})^{1/24}$.
@@ -685,9 +678,8 @@ CX := Q
 setFormat!(FormatMathJax)$JFriCASSupport
 
 nn := 121
-nndivs := DIVISORS nn;
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
-eqgens := [expansion(etaQuotient(nndivs, r)$ETA(Z)) for r in rgens];
+eqgens := [expansion(etaQuotient(nn, r)$ETA(Z)) for r in rgens];
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);

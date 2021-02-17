@@ -122,8 +122,7 @@ rgensExpected: List List Z := [_
 
 assertEquals(rgens, rgensExpected)
 
-divs := divisors(level)$IntegerNumberTheoryFunctions;
-etaquotgensZ := [etaQuotient(divs, r)$ETAZ for r in rgens]
+etaquotgensZ := [etaQuotient(level, r)$ETAZ for r in rgens]
 for x in etaquotgensZ repeat assertTrue(one? denom eulerExponent x)
 
 eqgensZ := [expansion x for x in etaquotgensZ];
@@ -188,9 +187,9 @@ r11Expected := _
   +1121505*q^5+204226*q^4+31185*q^3+3718*q^2+297*q+11 --: Fraction PolZ
 assertEquals(rationalFunction(r11, 10), r11Expected)
 
-eulerExpansion(etaQuotient(divs, [10,2,11,-22])$ETAZ)
+eulerExpansion(etaQuotient(level, [10,2,11,-22])$ETAZ)
 
-eqfZ:=etaQuotient(divs, [10,2,11,-22])$ETAZ
+eqfZ:=etaQuotient(level, [10,2,11,-22])$ETAZ
 assertEquals(eulerExponent(eqfZ)+13/24, -14)
 pfZ := monomial(1,-14)$LZ * eulerExpansion(eqfZ)::LZ
 pfZExpected: PolZ := _
@@ -385,7 +384,7 @@ first jp, second jp
 -- \left(\frac{\eta(\tau)}{\eta(11\tau)}\right)^{12}$$ in terms of $q
 -- = \exp(2\pi i \tau)$.
 
-tz := expansion(etaQuotient([1,11],[12,-12])$ETAZ); --: LZ
+tz := expansion(etaQuotient(11,[12,-12])$ETAZ); --: LZ
 tt := zcmap tz; --: L
 t := toX1(C, tt, T); --: X
 first t, second t
@@ -698,7 +697,7 @@ i := kleinJInvariant()$QFunctions(Q, LQ); --: LQ
 ip := multiplyExponents(i, 11); --: LQ
 jq := toX1(Q, i,  J); --: XQ
 jpq := toX1(Q, ip, Jp); --: XQ
-tz := expansion(etaQuotient([1,11],[12,-12])$ETAZ); --: LZ
+tz := expansion(etaQuotient(11,[12,-12])$ETAZ); --: LZ
 tq := toX1(Q, zqmap tz,  T); --: XQ
 mqgens := [tq, jq*tq^3, jpq*tq]; --: List XQ
 abq := samba(tq, mqgens)$QXTOPSAMBA1(Q);
@@ -779,11 +778,10 @@ assertEquals(monoms, monomsExpected)
 
 LZ ==> A1 Z
 XZ ==> X1 Z
-divs := divisors(level)$IntegerNumberTheoryFunctions;
 QEQEV ==> QEtaQuotientExponentVectors4ti2
 eqmev ==> etaQuotientMonoidExponentVectors $ QEQEV
 rgens := eqmev level;
-etaquotgensZ := [etaQuotient(divs, r)$ETAZ for r in rgens]; --: List ETAZ
+etaquotgensZ := [etaQuotient(level, r)$ETAZ for r in rgens]; --: List ETAZ
 eqgensZ := [expansion x for x in etaquotgensZ]; --: List LZ
 msyms := indexedSymbols("M", #rgens)
 xeqgensZ := [toX1(Z, x, s) for x in eqgensZ for s in msyms] --: List XZ
@@ -791,7 +789,7 @@ tez := xeqgensZ.3
 abez := samba(tez, xeqgensZ)$QXTOPSAMBA1(Z)
 assertEquals(# basis abez, 5)
 
-eqfZ := etaQuotient(divs, [10,2,11,-22])$ETAZ
+eqfZ := etaQuotient(level, [10,2,11,-22])$ETAZ
 pfZ := monomial(1,-14)$LZ * (eulerExpansion(eqfZ)::LZ);
 ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
 r11 := choose(11, 6, ps) --: LZ
@@ -843,7 +841,7 @@ ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
 r11: LZ := choose(11, 6, ps)
 q := monomial(1,1)$LZ
 fz := q*eulerFunction(11)$QFunctions(Z, LZ)*r11;--: LZ
-tz := expansion(etaQuotient([1,11],[12,-12])$ETAZ); --: LZ
+tz := expansion(etaQuotient(11,[12,-12])$ETAZ); --: LZ
 fep := toX1(C, zcmap(tz*fz), Y) --: X
 t := toX1(C, zcmap tz, T); --: X
 abp := samba(t, [fep])$QXTOPSAMBA1(C);
@@ -893,8 +891,7 @@ assertEquals(pol, polExpected)
 
 nn := 22; -- level
 m := 11::P; mm := m; s := [-1, 0]$List(Z);
-mmdivs := DIVISORS(mm) --: List P
-shat := sigmaInfinity(mmdivs, s) --: Z
+shat := sigmaInfinity(mm, s) --: Z
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(shat,m,tt); one? # orb)]
 t := first(first orbs) :: N
 
@@ -915,10 +912,9 @@ xf := toX1(C, ff, F)
 -- divisors of 22). The variable `rgens` corresponds to the generators
 -- of $R^\infty(22)$.
 
-nndivs := DIVISORS(nn);
 QEQEV ==> QEtaQuotientExponentVectors4ti2
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
-eqgens := [expansion(etaQuotient(nndivs, r)$ETA(C))::LC for r in rgens]
+eqgens := [expansion(etaQuotient(nn, r)$ETA(C))::LC for r in rgens]
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);

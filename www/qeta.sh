@@ -72,12 +72,11 @@ METAQ ==> ModularEtaQuotient(Q, mx, CX, xi);
 MODFUNX ==> ModularFunctionExpansions(CX, level);
 
 unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
-  divs: List P := DIVISORS m;_
   l: List List P := empty(); _
   for r in rs repeat (_
       lp: List P := empty();_
       for g in gammas repeat (_
-          e: YEQG := etaQuotient(m, divs, r, g);_
+          e: YEQG := etaQuotient(m, r, g);_
           lp := cons(minRootOfUnity e, lp) _
       );_
       l := cons(lp, l) _
@@ -113,7 +112,6 @@ pz: PZ := cyclotomic(mx)\$CyclotomicPolynomialPackage;
 pq: PQ := map(n+->monomial(1\$Q,1\$N)\$PQ, c+->c::Q::PQ, pz)\$PL;
 xsym: Symbol := "x"::Symbol;
 xi := generator()\$CX;
-divs: List P := DIVISORS m;
 
 tPrint("OUTPUT STARTS HERE")
 if not one?(det:=determinant first gammas) then (_
@@ -122,7 +120,6 @@ if not one?(det:=determinant first gammas) then (_
    systemCommand("quit"))
 
 vPrint("level", level)
-vPrint("divisors", divs)
 vPrint("exponent vectors (list of r-vectors) rs", rs)
 vPrint("maximal root of unity", mx)
 if mx > 2 then _
@@ -134,7 +131,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   vPrint("Non-modular quotients", lerr);_
   if expansionAtAllCusps? then vPrint("Expansion at cusps", cusps);_
   vPrint("Expansion at gammas", gammas);_
-  llse := [[etaQuotient(m, divs, rr, g)\$YEQG for g in gammas] _
+  llse := [[etaQuotient(m, rr, g)\$YEQG for g in gammas] _
            for rr in rs];_
   tPrint("Interpret resulting record as follows:");_
   tPrint("g_r(trf*tau) = lc * x^xpower * ser");_
