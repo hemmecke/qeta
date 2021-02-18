@@ -229,9 +229,10 @@ X4ti2: with
 
     zsolve(mat: MZ, rels: RELS, b: VZ): ZRESULT ==
         h: HashState := new()
-        r: Z := value hashUpdate!(hashUpdate!(hashUpdate!(h, mat), rels), b)
+        v: Z := value hashUpdate!(hashUpdate!(hashUpdate!(h, mat), rels), b)
+        r: Z := random(2^32) -- that is enough randomness
         dir: S := ""
-        basename: String := concat("4ti2-", string r)
+        basename: String := concat ["4ti2-", string v, "-", string r]
         for i in 0..100 repeat -- return for non-existing file
             base: String := concat(basename, string i)
             fn: FileName := filename(dir, base, "rel")
