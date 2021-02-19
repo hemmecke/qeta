@@ -1,7 +1,4 @@
 )cd /home/hemmecke/g/qeta/tmp
-)read ../zudilin/mf-20.2.a.a.input
-assertEquals(x,y)==>(if (x=y)@Boolean then true else (print x; false))
-assertTrue x ==> x
 )set mess time off
 )r etacompute
 
@@ -37,7 +34,7 @@ equalSeries?(f1: A1 C, f2: A1 C): Boolean ==
         false
     true
 
-computation() ==
+computation(): Boolean ==
     ff := (laurent(0, coefs :: Stream(C))$L1(C))::A1(C)
     idivs := [i for i in 1..#divs]
     rhs := concat([0 for i in idivs], 2*wght)
@@ -49,7 +46,6 @@ computation() ==
     vmodformgens := sort(grdsrt, [vector x for x in zmodformzi])
     rmodformgens := [members x for x in vmodformgens]
     emodformgens := [EQA1C r for r in rmodformgens]
-
     rnk := 0
     for rhxi in 0..20 while rnk < dimM repeat
         ncoefs := dimM + rhxi
@@ -57,19 +53,15 @@ computation() ==
                           for x in emodformgens]
         rnk := rank matrix cmodformgens
         dbgPrint("[ncoefs, rnk, dimM]", [ncoefs, rnk, dimM])
-
     if rnk < dim then
         dbgPrint("WARNING: rank smaller than dimension",
                  [ncoefs, #rmodformgens, rnk, dimM])
-
     matmodforms: MZ := transpose matrix cmodformgens
     vf := vector [coefficient(ff, i)::Z for i in 0..ncoefs]
     rels: VZ := new(nrows matmodforms, 0)
     zmodforms := zsolve(matmodforms, rels, vf)$X4ti2
     zmodformszi := zmodforms.zinhom
-
     mons := [monRZ x for x in rmodformgens]
-
     vPrint("divs", divs)
     if zero?(#zmodformszi) then
         vPrint("holomorphicRelationWithIntegerCoefficients", false)
@@ -81,7 +73,6 @@ computation() ==
         vPrint("holomorphicRelationWithIntegerCoefficients", true)
         vPrint("fzpol", fzpol)
         vPrint("lzpol", rez fzpol)
-
     sol := solve(matmodforms, vf)
     if sol.particular case "failed" then
         vPrint("holomorphicRelationWithRationalCoefficients", false)

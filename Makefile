@@ -130,7 +130,7 @@ ${patsubst %,${TMP}/%,${PREREQS_SAGE}}: ${TMP}/%: sagemath/%
 
 # This target creates lmfdb.ids and the zudilin/mf-*.input files.
 zudilin/lmfdb.ids:
-	cd zudilin && ../bin/lmfdb.sh
+	cd zudilin && ../bin/getlmfdb.sh
 
 zudilin/rel-%.tmp: zudilin/mf-%.input
 	bin/lmfdb.sh $*

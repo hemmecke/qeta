@@ -59,13 +59,15 @@ cat lmfdb.ids | while read id; do
     echo "wght := $weight" >> "mf-$id.input"
     (echo "load(\"mf-$id.sage\");f=make_data();[f[i] for i in range(0,1000)]")\
     | sage \
-    | awk '/^$/{next}/^In .1/,/^In .2/ {print}' \
-    | sed 's|,$|,_|;s|[]]$|];|;s|^In [[]1[]]:.*|coefs := _|;s|^In.*||' \
+    | awk '/^$/{next}/^sage: /,/^sage: Exiting/ {print}'\
+    | sed 's|,$|,_|; s|[]]$|];|; /sage: Exiting.*/d; s|^sage: |coefs := _\n |'\
     >> "mf-$id.input"
 done
 
 exit
 
+
+# Unused...
 get_urls | while read url; do
     id=$(echo $url | sed 's|/|.|;s|/||')
     echo $id
