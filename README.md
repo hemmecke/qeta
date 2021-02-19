@@ -1,31 +1,46 @@
-# QEta 2.1
+# QEta 2.2
 
-The QEta Project is connected to 3 articles.
+The QEta Project is connected to 4 articles.
 
 It implements the `samba` algorithm from
 
 [Ralf Hemmecke: "Dancing Samba with Ramanujan Partition Congruences",
 Journal of Symbolic Computation, 84:14–24,
-2018.](http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf) [doi:10.1016/j.jsc.2017.02.001](https://doi.org/10.1016/j.jsc.2017.02.001)
+2018.](http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf)
+[doi:10.1016/j.jsc.2017.02.001](https://doi.org/10.1016/j.jsc.2017.02.001)
 
 and implements the algorithm to compute all polynomial relations among
-eta functions of level N as described in
+eta-functions of level N as described in
 
-[Ralf Hemmecke and Silviu Radu: Construction of all Polynomial Relations
-  among Dedekind Eta Functions of Level N](http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf)
+[Ralf Hemmecke and Silviu Radu: "Construction of all Polynomial
+Relations among Dedekind Eta Functions of Level N", Journal of
+Symbolic Computation, 95:39-52,
+2019.](http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf)
+[10.1016/j.jsc.2018.10.001](https://doi.org/10.1016/j.jsc.2018.10.001)
 
 Furthermore the result about eta relations are used in
 
-[Ralf Hemmecke, Silviu Radu, and Liangjie Ye: The Generators of all
+[Ralf Hemmecke, Silviu Radu, and Liangjie Ye: "The Generators of all
 Polynomial Relations among Jacobi Theta
-Functions](http://www.risc.jku.at/publications/download/risc_5719/thetarelations.pdf)
+Functions" in "Elliptic Integrals, Elliptic Functions and Modular
+Forms in Quantum Field Theory, Springer, 2019](http://www.risc.jku.at/publications/download/risc_5719/thetarelations.pdf)
+[10.1007/978-3-030-04480-0_11](https:/doi.org/10.1007/978-3-030-04480-0_11)
+
+In the article
+
+[Ralf Hemmecke, Peter Paule, and Silviu Radu: Construction of Modular
+Function Bases for $Gamma_0(121)$ related to
+$p(11n+6)$](https://www.risc.jku.at/publications/download/risc_5983/integralbasis.pdf)
+(to appear in "Special Issue of "Integeral Transforms and Special
+Functions", Taylor and Franzis, 2021)
+[10.1080/10652469.2020.1806261](https://doi.org/10.1080/10652469.2020.1806261)
+
+we demonstrate 3 methods to compute a basis for the space of modular
+functions for $\Gamma_0(121)$.
 
 ### Prerequisites
 
-In order to use this package you need [FriCAS] 1.3.4 or higher.
-In fact, the package has been created on top of the
-[master-hemmecke](https://github.com/hemmecke/fricas/commits/master-hemmecke)
-branch of a clone of the FriCAS repository.
+In order to use this package you need [FriCAS] 1.3.7 or higher.
 
 We assume that [SBCL] is installed in version 1.4.11 or higher.
 
@@ -33,7 +48,7 @@ We assume that [SBCL] is installed in version 1.4.11 or higher.
 cd SOMEDIR
 ROOTDIR=`pwd`
 PREFIX=$ROOTDIR/install
-git clone -b master-hemmecke https://github.com/hemmecke/fricas.git
+git clone https://github.com/fricas/fricas.git
 mkdir build
 cd build
 $ROOTDIR/fricas/configure  --prefix=$PREFIX \
