@@ -86,10 +86,10 @@ TPROJECT=${TMP}/${PROJECT}
 all: compile-spad
 SPADFILES=4ti2 qfunct cachedpow \
   qetagamma0 qetagamma1 \
-  qetaalg qetasqrt qetaaux qetaqmev qetaser qetadom qetatool \
+  qetaalg qetasqrt qetaaux qetaqmev qetaser qetaquotinf qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
-  qetapowersamba qetacofactor qetafun qetark \
+  qetapowersamba qetacofactor qetaquot qetark \
   ivar iffts ffalgclos algclos newtonpuiseux \
 
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
