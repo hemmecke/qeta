@@ -160,7 +160,7 @@ QEtaTaylorSeries(C: Ring): Exports == Implementation where
 ++ extended by a few functions that we need in the computation of our
 ++ package.
 QEtaLaurentSeriesCategory(C: Ring): Category ==
-  UnivariateLaurentSeriesCategory C with
+  Join(UnivariateLaurentSeriesCategory C, RetractableTo QTS C) with
     coerce: ULS C -> %
       ++ coerce(x) assumes that the Laurent series x belongs to the
       ++ subalgebra of series with the properties of this damain.
@@ -206,6 +206,22 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
     Rep ==> ULS C
     Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
     qetaTaylorRep(x: %): QTS C == (x pretend Rec).ps
+    retractIfCan(x: %): Union(QTS C, "failed") ==
+        (d := degree x) < 0 =>
+            x := removeZeroes(-d, x)
+            degree x < 0 => "failed"
+            qetaTaylorRep x
+        z := qetaTaylorRep x
+        zero? d => z
+        z * monomial(1, d::N)
+    retract(x: %): QTS C ==
+        (d := degree x) < 0 =>
+            x := removeZeroes(-d, x)
+            degree x < 0 => error "QetaTaylorSeries: cannot retract"
+            qetaTaylorRep x
+        z := qetaTaylorRep x
+        zero? d => z
+        z * monomial(1, d::N)
     coerce(s: ULS C): % == per s
     coerce(x: %): ULS C == rep x
     choose(m: P, t: N, x: %): % ==
