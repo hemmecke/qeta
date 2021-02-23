@@ -1,10 +1,15 @@
+-- Many thing are already in
+-- test/Hemmecke_DancingSambaRamanujan_2019.input-test
+-- and other test files.
+
 -- # Demo for the what qetaquot.spad provides
 
 -- ## Init
 
 )clear completely
 
-)cd /home/hemmecke/g/qeta/tmp
+)cd
+)cd g/qeta/tmp
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
@@ -21,8 +26,8 @@ xiord := 2;
 xi := -1;
 CX := Q;
 nn: P := 2;
-)r ../input/convenience
-)r ../input/tracemacros
+)r convenience.input )quiet
+
 SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
 SIGMA0 ==> sigma0 $ QETAAUX
 
@@ -150,8 +155,7 @@ gamma := cuspToMatrix(nn, 1)$GAMMA0
 
 y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 w := WIDTH0(nn, gamma(2,1))
 
 )set stream calc 4
@@ -176,8 +180,7 @@ t := first first orbs
 gamma: SL2Z := matrix [[1,0],[0,1]]
 y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 w := WIDTH0(nn, gamma(2,1))
 
 )set stream calc 20
@@ -213,8 +216,7 @@ gamma := cuspToMatrix(nn, 1)$GAMMA0
 
 y := etaQuotient(nn, mm, s, m, t, gamma)$YSETAQG;
 xiord := minimalRootOfUnity y
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 w := WIDTH0(nn, gamma(2,1))
 
 )set mess type on
@@ -242,8 +244,7 @@ r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
 )clear prop y
 y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
 xiord: P := minimalRootOfUnity y
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 puiseux(y, w)$SETAQG(C, CX)
 
 -- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $1$
@@ -252,8 +253,7 @@ cusp := 1; gamma := cuspToMatrix(nn, cusp)$GAMMA0; w := WIDTH0(nn, denom cusp)
 r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
 y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
 xiord: P := minimalRootOfUnity y
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 puiseux(y, w)$SETAQG(C, CX)
 
 -- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at all cusp
@@ -271,14 +271,14 @@ spitzen := cusps(nn)$GAMMA0
 )set stream calc 3
 mf := expansions(f)::MODFUNX(CX)
 
--- Strangely, one has to reread `input/convenience`.
+-- Strangely, one has to reread `input/convenience.input`.
 --
 -- **TODO:** Create a `QEtaConvenienceTool` as a SPAD package.
 
 )cd
 )cd g/qeta/tmp
-)r ../input/convenience
-)r ../input/modfuns
+)r convenience.input )quiet
+)r modfuns.input )quiet
 
 -- +
 --expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma)
@@ -287,7 +287,7 @@ mf := expansions(f)::MODFUNX(CX)
 -- ## $\sum_{n=0}^\infty p(m\,n+t)\,q^n$ "sifted" partition series
 
 xiord := 2; xi := -1; CX := Q; nn: P := 22; -- just for convenience.input
-)r ../input/convenience
+)r convenience.input )quiet
 
 siftedPartitionSeries(13,6)
 
@@ -335,8 +335,7 @@ xiord := 2;
 xi := -1;
 CX := Q;
 nn: P := 22;
-)r ../input/convenience
-)r ../input/tracing
+)r convenience.input )quiet
 )set mess type on
 setFormat!(FormatMathJax)$JFriCASSupport
 
@@ -406,8 +405,8 @@ xab := samba(xt, xgens, genus, onet1Step!)$QXTOPSAMBA1(C)
 
 spitzen := cusps(nn)$GAMMA0
 
-)r ../input/convenience )quiet
-)r ../input/modfuns )quiet
+)r convenience.input )quiet
+)r modfuns.input )quiet
 
 nog := numberOfGaps(xab)
 nog - genus
@@ -434,7 +433,8 @@ removeDuplicates sort [zero? x for x in rbas]
 
 -- ### Load macros and Choose coefficient domain
 
-)cd /home/hemmecke/g/qeta/tmp
+)cd
+)cd g/qeta/tmp
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
@@ -444,14 +444,12 @@ removeDuplicates sort [zero? x for x in rbas]
 --C ==> Q
 --C ==> Z;
 C ==> IntegerLocalizedAtPrime 13
-CA ==> CA1 C
-X ==> X1 C
 xiord := 2;
 xi := -1;
 CX := Q
 nn: P := 13
-)r ../input/convenience
-)r ../input/tracing
+)r convenience.input )quiet
+)r tracing.input )quiet
 )set mess type on
 setFormat!(FormatMathJax)$JFriCASSupport
 
@@ -475,7 +473,7 @@ t: N := first first orbs
 
 spitzen := cusps(nn)$GAMMA0
 
-)r ../input/modfuns
+)r modfuns.input )quiet
 
 ff := modularSiftedPartitionSeries(nn, m, t);
 xf := toX1(C, ff, F)
@@ -515,7 +513,8 @@ xf - 11*(xgens.1)^6
 
 )clear completely
 
-)cd /home/hemmecke/g/qeta/tmp
+)cd
+)cd g/qeta/tmp
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
@@ -523,13 +522,11 @@ xf - 11*(xgens.1)^6
 )set stream calculate 20
 )set mess time on
 C ==> Q
-CA ==> CA1 C
-X ==> X1 C
 xiord := 2;
 xi := -1;
 CX := Q
-)r ../input/convenience
-)r ../input/tracing
+)r convenience.input )quiet
+)r tracing.input
 )set mess type on
 setFormat!(FormatMathJax)$JFriCASSupport
 
@@ -653,13 +650,14 @@ u2seq242g := choose(2*24, 0, eseq242g)::A1(C)
 
 cftraceeq242 := (eq242 + 2*u2eq242g)::CA
 
-xu: X := toX1(C, cftraceeq242, 'U);
+xu := toX1(C, cftraceeq242, 'U);
 
 -- # Denominator polynomial for $u$ with respect to `xab`
 
 -- Take the computation of $u$ = `xu` from the section above.
 
-)cd /home/hemmecke/g/qeta/tmp
+)cd
+)cd g/qeta/tmp
 )set mess type off
 )r projectlibs )quiet
 )r etamacros.input )quiet
@@ -669,13 +667,10 @@ xu: X := toX1(C, cftraceeq242, 'U);
 C ==> Q
 --C ==> Z;
 --C ==> IntegerLocalizedAtPrime 11
-CA ==> CA1 C
-X ==> X1 C
 xiord := 2;
 xi := -1;
 CX := Q
-)r ../input/convenience
-)r ../input/tracing
+)r convenience.input )quiet
 )set mess type on
 setFormat!(FormatMathJax)$JFriCASSupport
 
@@ -686,8 +681,8 @@ msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);
 genus := genus(nn)$GAMMA0;
-xt: X := xgens.1;
-)r ../input/tracing
+xt := xgens.1;
+
 xab := samba(xt, xgens, genus, onet1Step!)$QXTOPSAMBA1(C);
 
 -- We try to find a polynomial $p(t)$ such that .. see below.
