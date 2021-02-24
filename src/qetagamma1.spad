@@ -182,8 +182,8 @@ CongruenceSubgroupGamma1: with
       ++ $\Gamma_1(nn) \backslash \Gamma_1(1) / SL_2(\setZ)_\infty$
       ++ where $SL_2(\setZ)_\infty$ are matrices of the form [[1,h],[0,1]]
       ++ with h being an integer.
-    member?: (P, SL2Z) -> Boolean
-      ++ member?(n, mat) returns true if mat is an element of
+    member?: (SL2Z, P) -> Boolean
+      ++ member?(mat, n) returns true if mat is an element of
       ++ $\Gamma_0(n)$, i.e. if entry (2,1) is a multiple of n and
       ++ entries (1,1) and (2,2) are congruent 1 (mod n).
       ++ Here it is assumed that determinant(mat)=1.
@@ -210,8 +210,8 @@ CongruenceSubgroupGamma1: with
         g: SL2Z := cuspToMatrix(nn, a/c)
         ig: SL2Z := matrix [[g(2,2), -g(1,2)],[-g(2,1), g(1,1)]]
         for d in 1..index nn repeat
-            member?(nn, g * matrix [[ 1,d],[0, 1]] * ig) => return d
-            member?(nn, g * matrix [[-1,d],[0,-1]] * ig) => return d
+            member?(g * matrix [[ 1,d],[0, 1]] * ig, nn) => return d
+            member?(g * matrix [[-1,d],[0,-1]] * ig, nn) => return d
         error "width(Gamma1): we should not come here"
 
     index(m: P): P ==
@@ -397,7 +397,7 @@ CongruenceSubgroupGamma1: with
     doubleCosetRepresentatives(nn: P): List SL2Z ==
         [cuspToMatrix(nn, cusp) for cusp in cusps(nn)]
 
-    member?(nn: P, mat: SL2Z): Boolean ==
+    member?(mat: SL2Z, nn: P): Boolean ==
         zero?(mat(2,1) rem nn) _
            and zero?((mat(1,1)-1) rem nn) _
            and zero?((mat(2,2)-1) rem nn)
