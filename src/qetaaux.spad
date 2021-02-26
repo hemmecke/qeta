@@ -252,12 +252,20 @@ QEtaAuxiliaryPackage: with
       ++ highest power e such that p^e is a factor of d.
 
     matrixEtaOrder: (P, Q, P, Z) -> Q
-      ++ matrixEtaOrder(nn, cusp, delta, g) for g=-1 returns the order
-      ++ of \eta(delta*tau) at the respective cusp of Gamma1(nn). For g
-      ++ in the range 0..delta, it returns the order of
-      ++ \eta_{delta,g}(tau) at the respective cusp of Gamma1(nn). See
-      ++ \cite[Thm.~4.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
-      ++ and \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994}.
+      ++ For g in the range 0..delta matrixEtaOrder(nn,cusp,delta,g)
+      ++ returns the coefficient of r_{delta.g} in
+      ++ \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994},
+      ++ except for the case nn=4, gcd(denom(cusp),nn)=2 (or
+      ++ Gamma1(4)-equivalent) where we return half of this
+      ++ coefficient.
+      ++ matrixEtaOrder(nn,cusp,delta,-1)=matrixEtaOrder(nn,cusp,delta,0)/2.
+      ++ Note that Robins refers to an expansion in the uniformizing
+      ++ variable q^(gcd(c,nn)/nn) (where cusp=a/c). That is equal to
+      ++ q^(1/width(nn,c)$CongruenceSubgroupGamma1) except for the
+      ++ case nn=4 and gcd(nn,c)=2. In that case the width of the cusp
+      ++ 1/2 is 1 and not 2=4/gcd(4.2). For this case, we deviate from
+      ++ Robins' coefficients and adapt to an expansion in q rather
+      ++ than an expansion in q^(1/2).
 
     matrixEtaOrder: P -> MQ
       ++ matrixEtaOrder(nn) returns a matrix that is similar to
@@ -648,8 +656,9 @@ at all cusps of $\Gamma_1(N$)$.
         -- we try to find an equivalent cusp with this property.
         -- See function normalize in CongruenceSubgroupGamma1.
         c: Z := denom cusp
-        l: Z := numer cusp
-        e: Z := gcd(c, nn) -- divisor of nn (will not change)
+        l: Z := numer cusp -- \lambda
+        e: Z := gcd(c, nn) -- \epsilon: divisor of nn (will not change)
+        -- Note that nn/e = width(nn, c) (at least if (nn,c)~=(4,2)).
         -- Find a coprime (to nn) cofactor m such that m*e = c (mod nn).
         m: Z := (c exquo e)::Z
         n: Z := (nn exquo e)::Z
@@ -664,7 +673,9 @@ at all cusps of $\Gamma_1(N$)$.
                error "matrixEtaOrder: lambda too big"
 
         h: Z := gcd(delta, e)
-        entryFactor * (nn*h^2/(2*delta*e)) * fractionalBernoulli2(l*g/h)
+        z: Q := entryFactor * (nn*h^2/(2*delta*e)) * fractionalBernoulli2(l*g/h)
+        nn = 4 and e = 2 => 1/2*z
+        z
 
     matrixEtaOrder(nn: P): MQ ==
         spitzen: List Q := cusps(nn)$CongruenceSubgroupGamma1
