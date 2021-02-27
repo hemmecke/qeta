@@ -58,7 +58,11 @@ Furthermore, let $E(N)$ be the set of $\eta$-quotients that are
 modular functions, and let $E^\infty(N) := E(N)\cap K^\infty(N)$.
 
 This file contains code to compute a (finite) monoid basis for
-$E^\infty(N)$ in two variants.
+$E^\infty(N)$.
+
+This file contains code to compute a (finite) monoid basis for
+$GE^\infty(N)$ (the generalized eta-quotients that are modular for
+$\Gamma_1(N)$).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -560,44 +564,63 @@ $a\in X_c$.
 \subsubsection{Related to Generalized Eta Quotients}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A generalized eta-quotient $\phi(\tau)$ is given by
-\begin{gather*}
-  \prod_{\substack{\divides{\delta}{N}\\0\le g \le
-      \lfloor\delta/2\rfloor}} \eta_{\delta,g}(\tau)^{r_{\delta,g}}
-\end{gather*}
+In view of $\eta_{\delta,g}(\tau) = \eta_{\delta,\delta-g}(\tau)$ we
+can say that a generalized eta-quotient is a product of the form
+\begin{gather}
+  \prod_{\substack{\divides{\delta}{N}\\ 0\le g \le \lfloor\delta/2\rfloor}}
+       \eta_{\delta,g}(\tau)^{a_{\delta,g}}
+  \label{eq:redundant-generalized-eta-quotient}
+\end{gather}
 where
 \begin{gather}
-  r_{\delta,g}\in
+  \defineNotation[a-delta-g]{a_{\delta,g}}\in
   \begin{cases}
     \frac{1}{2}\setZ & \text{if $g=0$ or $g=\frac{\delta}{2}$},\\
     \setZ & \text{otherwise}.
   \end{cases}
 \end{gather}
-Since
-\begin{align*}
-    \eta_{\delta,0}(\tau)
-    &= \eta(\delta\tau)^2
-    &
-    \eta_{\delta,\frac{\delta}{2}}(\tau)
-    &=
-    \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2}
-\end{align*}
-if $\frac{\delta}{2}\in\setN$ we represent a generalized eta quotient as
-\begin{gather*}
-  \phi(\tau)=
-  \prod_{\delta|N} \eta(\delta\tau)^{r_{\delta}}
-  \prod_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
-    \eta_{\delta,g}(\tau)^{r_{\delta,g}}
-\end{gather*}
-where $r_\delta, r_{\delta,g} \in\setZ$ for every
-$\divides{\delta}{N}$ and $0 < g< \frac{\delta}{2}$.
-
-Let $\delta_1<\delta_2< \ldots < \delta_n$ be the positive divisors
-of $N$.
-
-We sort the variables by their indices like this.
+Since $\eta_{\delta,0}(\tau) = \eta(\delta\tau)^2$ and
+$\eta_{\delta,\frac{\delta}{2}}(\tau)
+=
+\frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2},
+$
+we can remove some redundancy from
+\eqref{eq:redundant-generalized-eta-quotient} by rewriting (in case of
+$\divides{2}{\delta}$)
 \begin{gather}
-  \delta_1, \delta_2, \ldots, \delta_n,
+  \eta_{\delta,\frac{\delta}{2}}(\tau)
+  =
+  \frac{\eta_{\frac{\delta}{2}, 0}(\tau)}{\eta_{\delta,0}(\tau)}
+\end{gather}
+and thus represent a generalized eta-quotient by
+\begin{gather}
+  \prod_{\substack{\divides{\delta}{N}\\0\le g < \delta/2}}
+       \eta_{\delta,g}(\tau)^{a_{\delta,g}}.
+  \label{eq:redundant-generalized-eta-quotient}
+\end{gather}
+
+By $\eta_{\delta,0}(\tau) = \eta(\delta\tau)^2$ and if we set
+$\defineNotation[r-delta-0]{r_{\delta,0}} = 2 a_{\delta,0}$ and
+$\defineNotation[r-delta-g]{r_{\delta,g}}=a_{\delta,g}$ for $0<g<\frac{\delta}{2}$, we can
+represent a generalized eta-quotient as
+\begin{gather}
+  \defineNotation[g-rbar-tau]{g_{\bar{r}}(\tau)} =
+  \prod_{\delta|N} \eta(\delta\tau)^{r_{\delta,0}}
+  \prod_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+  \eta_{\delta,g}(\tau)^{r_{\delta,g}}
+  \label{eq:g_rbar(tau)}
+\end{gather}
+where $ r_{\delta,g} \in\setZ$ for every
+$\divides{\delta}{N}$ and $0 \le g< \frac{\delta}{2}$.
+Above we denoted by $\bar{r}$ the integer tuple
+\begin{gather}
+  \bar{r} = (r_{\delta,g})_{\divides{\delta}{N}, 0\le g < \delta/2}.
+  \label{eq:rbar}
+\end{gather}
+
+In the implementation, we sort the indices like this:
+\begin{gather}
+  (\delta_1,0), (\delta_2,0), \ldots, (\delta_n,0),
   (\delta_2,1),\ldots, \Bigl(\delta_2,
   \Bigl\lceil\frac{\delta_2}{2} \Bigr\rceil-1\Bigr),
   \ldots,
@@ -606,8 +629,21 @@ We sort the variables by their indices like this.
   \Bigl(\delta_n,\Bigl\lceil\frac{\delta_n}{2}\Bigr\rceil-1\Bigr)
   \label{eq:sorted-indices}
 \end{gather}
+where $\delta_1<\delta_2< \ldots < \delta_n$ are the positive divisors
+of $N$.
+
 Note that $\delta_1=1$ and $\delta_n=N$. Therefore, $(\delta_1,1)$ is
 missing from the above list, since 1 is not smaller than $\delta_1=1$.
+
+By $\defineNotation[RbarN]{\bar{R}(N)}$ we denote the tuples with
+integer entries given in \eqref{eq:rbar}, \ie, an element
+$\bar{r} \in \bar{R}$ represents exponents of the eta-product
+$g_{\bar{r}}(\tau)$ given in \eqref{eq:g_rbar(tau)}.
+
+We someimes write $r_\delta$ instead of $r_{\delta,0}$, since it
+corresponds to the integer exponent of the (pure) eta-function
+$\eta(\delta\tau)$.
+
 
 )endif
 
@@ -637,7 +673,48 @@ missing from the above list, since 1 is not smaller than $\delta_1=1$.
 
 Similar to the matrix by Ligozat, we can build a matrix to determine
 the order of a (modular for $\Gamma_1(N)$) generallized eta quotient
-at all cusps of $\Gamma_1(N$)$.
+at all cusps of $\Gamma_1(N)$.
+
+
+Let us state a result of Robins about the order of an eta-quotient at
+a cusp of $\Gamma_1(N)$.
+
+\begin{Theorem}
+  \cite[Thm~4]{Robins:GeneralizedDedekindEtaProducts:1994}
+  %
+  Let $\bar{r}\in \bar{R}(N)$ and $g_{\bar{r}}(\tau)$ be an
+  eta-quotient as specified in \eqref{eq:g_rbar(tau)}.
+  Let
+  $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)\in\SL2Z$.
+  Let
+  $\lambda,\mu,\epsilon$ with $\divides{\epsilon}{N}$ and
+  \begin{gather}
+    \gcd(\lambda,N)=\gcd(\lambda,\mu)=\gcd(\mu,N)=1
+  \end{gather}
+  be such that
+  $\frac{\lambda}{\mu\epsilon}$ is a cusp that is
+  $\Gamma_1(N)$-equivalent to the cusp $\frac{a}{c}$ of $\Gamma_1(N)$.
+  %
+  Then the order of the transformation $g_{\bar{r}}(\gamma\tau)$ in
+  the uniformizing variable $q^{\epsilon/N}$ is
+  \begin{gather}
+    \frac{N}{24}  \sum_{\divides{\delta}{N}}
+    \frac{\gcd(\delta,\epsilon)^2}{\delta\epsilon} r_\delta
+    +
+    \frac{N}{2}  \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \frac{\gcd(\delta,\epsilon)^2}{\delta\epsilon}
+    P_2\Bigl(\frac{\lambda g}{\gcd(\delta,\epsilon)}\Bigr) r_{\delta,g}
+  \end{gather}
+\end{Theorem}
+
+Note that $\epsilon = \gcd(c, N)$. Except for the cusp $\frac{1}{2}$
+of $\Gamma_1(4)$ whose width is 1, the width $w_\gamma$ of a cusp
+$\frac{a}{c}$ of $\Gamma_1(N)$ is given by $\frac{N}{\gcd(N,c)}$.
+Since we always want an expansion in $q^{1/w_\gamma}$, we adjust the
+following function for the special case, so that if $A$ is the result
+of $\texttt{matrixOrder}(N)$, then $A \bar{r}$ gives the order of
+$g_{\bar{r}}(\gamma\tau)$ in terms of $q^{1/w_\gamma}$.
+
 
 )endif
 
