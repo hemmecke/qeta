@@ -450,8 +450,8 @@ QEtaCoFactor: Exports == Implementation where
             error "conditionCoEtaQuotientGamma0 not met"
 
         -- Setup matrix. Then solve inhomogeneous system.
-        mat: MZ := rStarConditionMatrix(nn)$QETAAUX
-        nr: N := nrows mat
+        mod0mat: MZ := modularGamma0ConditionMatrix(nn)$QETAAUX
+        nr: N := nrows mod0mat
         divs: List Z := divisors(mm)$INTF
         d: VZ := vector divs
         n: N := # divs
@@ -489,7 +489,7 @@ QEtaCoFactor: Exports == Implementation where
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
-        diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+        diophantineSystem(mod0mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
     etaCoFactorSpace(nn: P, mm: P, rr: List List Z, m: P, t: N): _
       Record(particular: Union(VZ, "failed"), basis: List VZ) ==

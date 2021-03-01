@@ -196,16 +196,16 @@ QEtaAuxiliaryPackage: with
       ++ modularGamma0(nn, r) returns true iff the eta quotient
       ++ corresponding to r is a modular function for Gamma_0(nn). It
       ++ is equivalent to zero?(modularGamma0Conditions(nn, r).
-    rStarConditionMatrix: P -> MZ
-      ++ rStarConditionMatrix(nn) returns a matrix mat such that if
-      ++ divs:=divisors(nn), n=#divisors(nn) and v is such that
-      ++ mat*v=0 then v(1..n) is in R^*(nn), in other words, the
-      ++ nullspace of mat "generates" R^*(nn).
-      ++ The first row of mat corresponds sum(r.i, i=1..n). The second
-      ++ row of mat corresponds to the
-      ++ sum(divs.i*r.i,i=1..n)+24*r(n+1). The third row of mat
-      ++ corresponds to the sum((nn/divs.i)*r.i,i=1..n)+24*r(n+2).
-      ++ The function computes matrix B_N (equation (8) from
+    modularGamma0ConditionMatrix: P -> MZ
+      ++ modularGamma0ConditionMatrix(nn) returns a matrix mat such
+      ++ that if divs:=divisors(nn), n=#divisors(nn) and v is such
+      ++ that mat*v=0 then v(1..n) is in R^*(nn), in other words, the
+      ++ nullspace of mat "generates" R^*(nn). The first row of mat
+      ++ corresponds sum(r.i, i=1..n). The second row of mat
+      ++ corresponds to the sum(divs.i*r.i,i=1..n)+24*r(n+1). The
+      ++ third row of mat corresponds to the
+      ++ sum((nn/divs.i)*r.i,i=1..n)+24*r(n+2). The function computes
+      ++ matrix B_N (equation (8) from
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}
       ++ \url{http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf}
       ++ (DOI:10.1016/j.jsc.2018.10.001).
@@ -213,7 +213,7 @@ QEtaAuxiliaryPackage: with
       ++ matrixLigozatRStar(nn, idivs) returns a matrix mat which
       ++ is a vertical concatenation (a part of) matrixLigozat(nn)
       ++ whose rowindices correspond to idivs and
-      ++ rStarConditionMatrix(nn).
+      ++ modularGamma0ConditionMatrix(nn).
       ++ It computes matrix B_N equation (8) in
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}
       ++ (DOI:10.1016/j.jsc.2018.10.001) put below the respective rows
@@ -383,7 +383,7 @@ QEtaAuxiliaryPackage: with
     modularGamma0?(nn: P, r: List Z): Boolean ==
         zero? modularGamma0Conditions(nn, r)
 
-    rStarConditionMatrix(m: P): MZ ==
+    modularGamma0ConditionMatrix(m: P): MZ ==
         divs: List Z := divisors(m)$INTF
         n: N := # divs
         d: Vector Z := vector divs
@@ -409,18 +409,18 @@ QEtaAuxiliaryPackage: with
         return mat
 
     matrixLigozatRStar(m: P, idivs: List Z): MZ ==
-        matRStar: MZ := rStarConditionMatrix m
-        empty? idivs => return matRStar
+        mod0mat: MZ := modularGamma0ConditionMatrix m
+        empty? idivs => return mod0mat
         matLigozat: MZ := matrixLigozat m -- is a square matrix
         l: N := ncols matLigozat
         n: N := # idivs
-        rows: N := nrows matRStar
-        cols: N := ncols matRStar
+        rows: N := nrows mod0mat
+        cols: N := ncols mod0mat
         mat: MZ := new(rows + n, cols, 0)
         for i in idivs for k in 1..n repeat for j in 1..l repeat
             qsetelt!(mat, k, j, qelt(matLigozat, i, j))
         for i in 1..rows repeat for j in 1..cols repeat
-            qsetelt!(mat, n+i, j, qelt(matRStar, i, j))
+            qsetelt!(mat, n+i, j, qelt(mod0mat, i, j))
         return mat
 
 )if LiterateDoc
