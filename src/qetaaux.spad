@@ -112,8 +112,8 @@ DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 asN x ==> x pretend N
 asP x ==> x pretend P
 
-
 )if LiterateDoc
+%$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Package QEtaAuxiliaryPackage: Check
 modularity of $\eta$ quotients}
@@ -151,6 +151,7 @@ QEtaAuxiliaryPackage: with
     sigmaInfinity: (P, List Z, List List Z) -> Q
       ++ sigmaInfinity(mm, r, gr) returns
       ++ sigmaInfinity(mm, r) + 12*sigmaInfinity(mm, gr).
+      ++ Compare with \eqref{eq:generalized-sigmaInfinity}.
     sigma0: (P, List Z) -> Z
       ++ sigma0(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
@@ -164,6 +165,7 @@ QEtaAuxiliaryPackage: with
       ++ [d,g,e] and describes the generalized eta-power \eta_{d,g}^e
     sigma0: (P, List Z, List List Z) -> Z
       ++ sigma0(mm, r, gr) returns sigma0(mm, r) + 2*sigma0(mm, gr).
+      ++ Compare with \eqref{eq:generalized-sigma0}.
     fractionalBernoulli2: Q -> Q
       ++ fractionalBernoulli2(x) computes t^2 - t + 1/6 where t is the
       ++ fractional part of x, i.e., t = x - floor(x)
@@ -184,7 +186,7 @@ QEtaAuxiliaryPackage: with
       ++ n=m/t and t*b + n*a = 1, see
       ++ \cite{Kohnen:WeierstrassPointsAtInfinity:2004}.
     modularGamma0Conditions: (P, List Z) -> Z
-      ++ modularGamma0Conditions returns 0 if all conditions are
+      ++ modularGamma0Conditions(nn, r) returns 0 if all conditions are
       ++ fulfilled. Otherwise it returns a positive number in the
       ++ range 1 to 4 that corresponds to the condition that is not
       ++ met. This corresponds to the conditions given for
@@ -255,6 +257,11 @@ QEtaAuxiliaryPackage: with
     primePower: (P, P) -> N
       ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
       ++ highest power e such that p^e is a factor of d.
+
+    modularGamma1Conditions: (P, List List Z) -> Z
+      ++ modularGamma1Conditions(nn, rr) returns 0 if the parameters
+      ++ specify a generalized eta-quotient that is modular for
+      ++ Gamma1(nn).
 
     matrixEtaOrder: (P, Q, P, Z) -> Q
       ++ For g in the range 0..delta matrixEtaOrder(nn,cusp,delta,g)
@@ -424,6 +431,7 @@ QEtaAuxiliaryPackage: with
         return mat
 
 )if LiterateDoc
+%$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Related to Transformations of Eta Quotients}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -510,7 +518,7 @@ QEtaAuxiliaryPackage: with
         [m1, m2]$Rec
 
 )if LiterateDoc
-% $
+%$
 
 We use \cite[Lemma~2.45]{Radu:PhD:2010} to compute the cusps of
 $\Gamma_0(N)$ as the set of all $\frac{a}{c}$ such that $c|N$ and
@@ -670,6 +678,83 @@ $\eta(\delta\tau)$.
         sigma0(mm, r) + 2*sigma0(mm, gr)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+According to \cite[Thm.~3]{Robins:GeneralizedDedekindEtaProducts:1994}
+a generalized eta-quotient of the form
+\eqref{eq:redundant-generalized-eta-quotient} is a modular function
+for $\Gamma_1(N)$ if
+\begin{gather}
+  \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
+  \delta P_2\Bigl(\frac{g}{\delta}\Bigr) a_{\delta,g} \equiv 0 \pmod{2}\\
+  \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
+  \frac{N}{\delta} P_2(0) a_{\delta,g} \equiv 0 \pmod{2}.
+\end{gather}
+
+Translated for an eta-quotient $g_{\bar{r}}$ given by
+\eqref{eq:g_rbar(tau)}, the above reads as
+\begin{align}
+  \sum_{\divides{\delta}{N}}
+  \delta P_2(0) \frac{r_{\delta,0}}{2}
+  +
+  \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+  \delta P_2\Bigl(\frac{g}{\delta}\Bigr) r_{\delta,g}
+  &\equiv 0 \pmod{2}    \notag\\
+  %
+  \sum_{\divides{\delta}{N}}
+  \delta r_{\delta,0}
+  +
+  12 \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+  \delta P_2\Bigl(\frac{g}{\delta}\Bigr) r_{\delta,g}
+  &\equiv 0 \pmod{24}
+  \label{eq:generalized-sigmaInfinity}
+\end{align}
+
+\begin{align}
+\sum_{\divides{\delta}{N}}
+  \frac{N}{\delta} P_2(0) \frac{r_{\delta,g}}{2}
+  +
+  \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+  \frac{N}{\delta} P_2(0) r_{\delta,g} \equiv 0 \pmod{2}  \notag\\
+  %
+  \sum_{\divides{\delta}{N}}
+  \frac{N}{\delta} r_{\delta,0}
+  +
+  2 \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+  \frac{N}{\delta} r_{\delta,g} \equiv 0 \pmod{24}.
+  \label{eq:generalized-sigma0}
+\end{align}
+
+Compare \eqref{eq:generalized-sigmaInfinity} and
+\eqref{eq:generalized-sigma0} with the implementation of
+\code{sigmaInfinity} and \code{sigma0} above as well as
+\code{conditionSigma0?} in \code{QEtaCoFactor}.
+
+)endif
+
+
 )if LiterateDoc
 %$
 
@@ -705,17 +790,68 @@ a cusp of $\Gamma_1(N)$.
     +
     \frac{N}{2}  \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
     \frac{\gcd(\delta,\epsilon)^2}{\delta\epsilon}
-    P_2\Bigl(\frac{\lambda g}{\gcd(\delta,\epsilon)}\Bigr) r_{\delta,g}
+    P_2\Bigl(\frac{\lambda g}{\gcd(\delta,\epsilon)}\Bigr)r_{\delta,g}
+    \label{eq:order-rbar-non-adjusted}
   \end{gather}
 \end{Theorem}
 
-Note that $\epsilon = \gcd(c, N)$. Except for the cusp $\frac{1}{2}$
-of $\Gamma_1(4)$ whose width is 1, the width $w_\gamma$ of a cusp
-$\frac{a}{c}$ of $\Gamma_1(N)$ is given by $\frac{N}{\gcd(N,c)}$.
-Since we always want an expansion in $q^{1/w_\gamma}$, we adjust the
-following function for the special case, so that if $A$ is the result
-of $\texttt{matrixOrder}(N)$, then $A \bar{r}$ gives the order of
-$g_{\bar{r}}(\gamma\tau)$ in terms of $q^{1/w_\gamma}$.
+Note that $\epsilon = \gcd(c, N)$.
+%
+The width $w_\gamma$ of a cusp $\frac{a}{c}$ of $\Gamma_1(N)$ is given
+by
+\begin{gather}
+  w_\gamma
+  =
+  \begin{cases}
+    1,                   & \text{if $N=4$ and $\gcd(c,2)=2$},\\
+    \frac{N}{\gcd(N,c)}, & \text{otherwise},
+  \end{cases}
+  \label{eq:width1}
+\end{gather}
+see Equation (2.49) in
+\cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019} or Corollary
+4 (2) of \cite{Cho+Koo+Park:ArithmeticRamanujanGoellnitzGordon:2009}
+%
+Since we always want an expansion in
+$q^{1/w_\gamma}$, we adjust the following function for the special
+case, so that if $A$ is the result of \code{matrixEtaOrder}$(N)$, then
+$A \bar{r}$ gives the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
+$q^{1/w_\gamma}$.
+
+
+Consider \ref{eq:order-rbar-non-adjusted} at the cusps $\infty$ and
+$0$ (which are $\Gamma_1(N)$-equivalent to $\frac{1}{N}$ and $1$,
+respectively).
+%
+For the cusp $\infty$ we get $\lambda=\mu=1$ and $\epsilon=N$. Thus,
+\begin{gather}
+  \frac{1}{24}
+  \left(
+    \sum_{\divides{\delta}{N}} \delta r_\delta
+    +
+    12 \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \delta
+    P_2\Bigl(\frac{g}{\delta}\Bigr)r_{\delta,g}
+  \right).
+\end{gather}
+
+For the cusp $0$ we get $\lambda=\mu=1$ and $\epsilon=1$. Thus,
+%
+\begin{gather}
+  \frac{1}{24}
+  \left(
+    \sum_{\divides{\delta}{N}} \frac{N}{\delta} r_\delta
+    +
+    2 \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \frac{N}{\delta} r_{\delta,g}
+  \right)
+\end{gather}
+since $P_2(g)=P_2(0)=\frac{1}{6}$.
+
+
+In other words, since these orders must be integers, we recover the
+conditions \ref{eq:generalized-sigmaInfinity} and
+\ref{eq:generalized-sigma0} from above.
 
 
 )endif
@@ -772,6 +908,38 @@ $g_{\bar{r}}(\gamma\tau)$ in terms of $q^{1/w_\gamma}$.
                     jj := jj + 1
                     qsetelt!(mat, i, n + jj, matrixEtaOrder(nn, cusp, d, g))
         return mat
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 )if LiterateDoc
