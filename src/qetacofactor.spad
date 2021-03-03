@@ -341,24 +341,6 @@ QEtaCoFactor: Exports == Implementation where
         z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
         asN z
 
-    -- See definition in specification of
-    -- generalizedEtaPower $ EtaQuotientInfinity.
-    -- Here we separate the pure eta-quotient specification from the
-    -- specification of generalized eta-quotients.
-    splitEtaQuotientSpecification(mm: P, rr: LLZ):
-      Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) ==
-        hr: XHashTable(Z, Z) := table() -- to compute r
-        gr: LLZ := empty() -- specify all generalized eta-quotients
-        for l in rr | not empty? l repeat
-            d: Z := first l
-            d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
-            #l = 1 => hr.d := 1
-            #l = 2 => hr.d := l.2
-            #l = 3 => gr := cons(l, gr)
-            error "splitEtaQuotientSpecification: list length > 3"
-        r: LZ := [elt(hr, d, 0) for d in divisors(mm)$INTF]
-        [r, gr]
-
     -- Return true iff \eqref{eq:Radu-productsquare} holds.
     checkSquare?(nn: P, s: LZ, mm: P, r: LZ, m: P, orbitSize: Z): Boolean ==
         nndivs: LP := DIVISORS nn
@@ -520,7 +502,7 @@ QEtaCoFactor: Exports == Implementation where
         v: VZ := new(rows, 0)
 
         rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
-            splitEtaQuotientSpecification(mm, rr)
+            splitEtaQuotientSpecification(mm, rr)$QETAAUX
         r: LZ := rrec.etaQuotientExponents
         gr: LLZ := rrec.generalizedParameters
         n: Z := # nndivs
@@ -725,7 +707,7 @@ QEtaCoFactor: Exports == Implementation where
         -- separate the true eta-quotient part from the generalized part
         -- i.e. extract an r-vector and a gr list.
         rec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
-            splitEtaQuotientSpecification(mm, rr)
+            splitEtaQuotientSpecification(mm, rr)$QETAAUX
         r: LZ := rec.etaQuotientExponents
         gr: LLZ := rec.generalizedParameters
 
@@ -818,12 +800,12 @@ QEtaCoFactor: Exports == Implementation where
 
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
         rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
-            splitEtaQuotientSpecification(mm, rr)
+            splitEtaQuotientSpecification(mm, rr)$QETAAUX
         r: LZ := rrec.etaQuotientExponents
         gr: LLZ := rrec.generalizedParameters
 
         srec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
-            splitEtaQuotientSpecification(nn, ss)
+            splitEtaQuotientSpecification(nn, ss)$QETAAUX
         s: LZ := srec.etaQuotientExponents
         gs: LLZ := srec.generalizedParameters
 

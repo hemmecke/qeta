@@ -105,6 +105,7 @@ Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 Rec ==> Record(red: SL2Z, triang: MZ)
 Pol ==> SparseUnivariatePolynomial Z
+LLZ ==> List List Z
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
@@ -134,6 +135,14 @@ vector to correspond to a modular $\eta$-quotient is violated.
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta quotients that are modular functions.
 QEtaAuxiliaryPackage: with
+    splitEtaQuotientSpecification: (P, List List Z) ->
+        Record(etaQuotientExponents: List Z, generalizedParameters: LLZ)
+      ++ splitEtaQuotientSpecification(nn, rr) separates the
+      ++ part of rr that specifies a pure eta-quotient from the
+      ++ part of rr that specifies a generalized eta-quotient.
+      ++ See definition in specification of
+      ++ generalizedEtaPower $ EtaQuotientInfinity for how each element
+      ++ of rr is interpreted.
     sigmaInfinity: (P, List Z) -> Z
       ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
@@ -499,7 +508,6 @@ QEtaAuxiliaryPackage: with
     -- Split matrix according to Section~\ref{sec:eta-transformation} in
     -- qetaquot.spad.
     splitMatrix(a: Z, b: Z, c: Z, d: Z): Rec ==
-        LLZ ==> List List Z
         exgcd: EXGCD := extendedEuclidean(a, c)
         g: Z := exgcd.generator
         d0: Z :=  exgcd.coef1 -- initial value for d1
@@ -657,6 +665,24 @@ $\eta(\delta\tau)$.
 
 
 )endif
+
+    -- See definition in specification of
+    -- generalizedEtaPower $ EtaQuotientInfinity.
+    -- Here we separate the pure eta-quotient specification from the
+    -- specification of generalized eta-quotients.
+    splitEtaQuotientSpecification(mm: P, rr: LLZ):
+      Record(etaQuotientExponents: List Z, generalizedParameters: LLZ) ==
+        hr: XHashTable(Z, Z) := table() -- to compute r
+        gr: LLZ := empty() -- specify all generalized eta-quotients
+        for l in rr | not empty? l repeat
+            d: Z := first l
+            d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
+            #l = 1 => hr.d := 1
+            #l = 2 => hr.d := l.2
+            #l = 3 => gr := cons(l, gr)
+            error "splitEtaQuotientSpecification: list length > 3"
+        r: List Z := [elt(hr, d, 0) for d in divisors(mm)$INTF]
+        [r, gr]
 
     sigmaInfinity(mm: P, gr: List List Z): Q ==
         res: Q := 0
