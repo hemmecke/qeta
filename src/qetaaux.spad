@@ -123,9 +123,8 @@ Here we mainly deal with the sets $R^*(N)$ and $R^\infty(N)$ from
 \cite{Hemmecke+Radu:EtaRelations:2018}.
 
 The function \code{matrixLigozat} computes the respective matrix $A_N$
-whereas \code{modularGamma0Conditions} checks which of the conditions
-for an $r$ vector to correspond to a modular $\eta$-quotient is
-violated.
+whereas \code{modularGamma0} checks which of the conditions for an $r$
+vector to correspond to a modular $\eta$-quotient is violated.
 
 
 )endif
@@ -185,8 +184,8 @@ QEtaAuxiliaryPackage: with
       ++ the 2x2 matrix with entries [[t, -a], [m, t*b]] such that
       ++ n=m/t and t*b + n*a = 1, see
       ++ \cite{Kohnen:WeierstrassPointsAtInfinity:2004}.
-    modularGamma0Conditions: (P, List Z) -> Z
-      ++ modularGamma0Conditions(nn, r) returns 0 if all conditions are
+    modularGamma0: (P, List Z) -> Z
+      ++ modularGamma0(nn, r) returns 0 if all conditions are
       ++ fulfilled. Otherwise it returns a positive number in the
       ++ range 1 to 4 that corresponds to the condition that is not
       ++ met. This corresponds to the conditions given for
@@ -194,12 +193,14 @@ QEtaAuxiliaryPackage: with
       ++ and to the conditions \eqref{eq:sum=0},
       ++ \eqref{eq:sigmainfinity}, \eqref{eq:sigma0}, and
       ++ \eqref{eq:productsquare} in qetaquot.spad.
+      ++ It is equivalent to check whether there is an extension v of r
+      ++ such that matrixModularGamma0(nn)*v is 0.
     modularGamma0?: (P, List Z) -> Boolean
       ++ modularGamma0(nn, r) returns true iff the eta quotient
       ++ corresponding to r is a modular function for Gamma_0(nn). It
-      ++ is equivalent to zero?(modularGamma0Conditions(nn, r).
-    modularGamma0ConditionMatrix: P -> MZ
-      ++ modularGamma0ConditionMatrix(nn) returns a matrix mat such
+      ++ is equivalent to zero?(modularGamma0(nn, r)).
+    matrixModularGamma0: P -> MZ
+      ++ matrixModularGamma0(nn) returns a matrix mat such
       ++ that if divs:=divisors(nn), n=#divisors(nn) and v is such
       ++ that mat*v=0 then v(1..n) is in R^*(nn), in other words, the
       ++ nullspace of mat "generates" R^*(nn). The first row of mat
@@ -215,7 +216,7 @@ QEtaAuxiliaryPackage: with
       ++ matrixLigozatModularGamma0(nn, idivs) returns a matrix mat which
       ++ is a vertical concatenation (a part of) matrixLigozat(nn)
       ++ whose rowindices correspond to idivs and
-      ++ modularGamma0ConditionMatrix(nn).
+      ++ matrixModularGamma0(nn).
       ++ It computes matrix B_N equation (8) in
       ++ \cite{Hemmecke+Radu:EtaRelations:2018}
       ++ (DOI:10.1016/j.jsc.2018.10.001) put below the respective rows
@@ -258,8 +259,8 @@ QEtaAuxiliaryPackage: with
       ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
       ++ highest power e such that p^e is a factor of d.
 
-    modularGamma1Conditions: (P, List List Z) -> Z
-      ++ modularGamma1Conditions(nn, rr) returns 0 if the parameters
+    modularGamma1: (P, List List Z) -> Z
+      ++ modularGamma1(nn, rr) returns 0 if the parameters
       ++ specify a generalized eta-quotient that is modular for
       ++ Gamma1(nn).
 
@@ -368,7 +369,7 @@ QEtaAuxiliaryPackage: with
     -- These are the conditions (1) to (4) of
     -- \cite{Hemmecke+Radu:EtaRelations:2018} that have to be fulfilled
     -- by a vector r to lie in R^*(N).
-    modularGamma0Conditions(m: P, r: List Z): Z ==
+    modularGamma0(m: P, r: List Z): Z ==
         divs: List Z := divisors(m)$INTF
         rdivs: List Z := reverse divs
         s: Z := 0
@@ -388,9 +389,9 @@ QEtaAuxiliaryPackage: with
         return 0
 
     modularGamma0?(nn: P, r: List Z): Boolean ==
-        zero? modularGamma0Conditions(nn, r)
+        zero? modularGamma0(nn, r)
 
-    modularGamma0ConditionMatrix(m: P): MZ ==
+    matrixModularGamma0(m: P): MZ ==
         divs: List Z := divisors(m)$INTF
         n: N := # divs
         d: Vector Z := vector divs
@@ -416,18 +417,18 @@ QEtaAuxiliaryPackage: with
         return mat
 
     matrixLigozatModularGamma0(m: P, idivs: List Z): MZ ==
-        mod0mat: MZ := modularGamma0ConditionMatrix m
-        empty? idivs => return mod0mat
+        matmod0: MZ := matrixModularGamma0 m
+        empty? idivs => return matmod0
         matLigozat: MZ := matrixLigozat m -- is a square matrix
         l: N := ncols matLigozat
         n: N := # idivs
-        rows: N := nrows mod0mat
-        cols: N := ncols mod0mat
+        rows: N := nrows matmod0
+        cols: N := ncols matmod0
         mat: MZ := new(rows + n, cols, 0)
         for i in idivs for k in 1..n repeat for j in 1..l repeat
             qsetelt!(mat, k, j, qelt(matLigozat, i, j))
         for i in 1..rows repeat for j in 1..cols repeat
-            qsetelt!(mat, n+i, j, qelt(mod0mat, i, j))
+            qsetelt!(mat, n+i, j, qelt(matmod0, i, j))
         return mat
 
 )if LiterateDoc
