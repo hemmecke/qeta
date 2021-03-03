@@ -33,7 +33,7 @@
 \maketitle
 \begin{abstract}
   The packages \code{QEtaAuxiliaryPackage} contains helper functions
-  for transformations of eta quotients.
+  for transformations of eta-quotients.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -105,7 +105,8 @@ Z24 ==> IntegerMod 24
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 Rec ==> Record(red: SL2Z, triang: MZ)
 Pol ==> SparseUnivariatePolynomial Z
-LLZ ==> List List Z
+LZ ==> List Z
+LLZ ==> List LZ
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
@@ -133,7 +134,7 @@ vector to correspond to a modular $\eta$-quotient is violated.
 -- Maybe this should become a domain CongruenceSubgroupGamma0(m).
 )abbrev package QETAAUX QEtaAuxiliaryPackage
 ++ QEtaAuxiliaryPackage helps to do computations with
-++ eta quotients that are modular functions.
+++ eta-quotients that are modular functions.
 QEtaAuxiliaryPackage: with
     splitEtaQuotientSpecification: (P, List List Z) ->
         Record(etaQuotientExponents: List Z, generalizedParameters: LLZ)
@@ -205,7 +206,7 @@ QEtaAuxiliaryPackage: with
       ++ It is equivalent to check whether there is an extension v of r
       ++ such that matrixModularGamma0(nn)*v is 0.
     modularGamma0?: (P, List Z) -> Boolean
-      ++ modularGamma0(nn, r) returns true iff the eta quotient
+      ++ modularGamma0(nn, r) returns true iff the eta-quotient
       ++ corresponding to r is a modular function for Gamma_0(nn). It
       ++ is equivalent to zero?(modularGamma0(nn, r)).
     matrixModularGamma0: P -> MZ
@@ -269,9 +270,32 @@ QEtaAuxiliaryPackage: with
       ++ highest power e such that p^e is a factor of d.
 
     modularGamma1: (P, List List Z) -> Z
-      ++ modularGamma1(nn, rr) returns 0 if the parameters
-      ++ specify a generalized eta-quotient that is modular for
-      ++ Gamma1(nn).
+      ++ modularGamma1(nn, rr) returns 0 if the parameters specify a
+      ++ generalized eta-quotient that is modular for Gamma1(nn). It
+      ++ returns 1, if condition \eqref{eq:generalized-weight} is not
+      ++ met, 2, if condition \eqref{eq:generalized-sigmaInfinity} is
+      ++ not met, and 3 if condition \eqref{eq:generalized-sigma0}
+      ++ does not hold. It is equivalent to check whether there is an
+      ++ extension v of rr such that matrixModularGamma1(nn)*v is 0
+      ++ where for we sort rr according to the order given by
+      ++ \eqref{eq:sorted-indices}.
+    modularGamma1?: (P, List List Z) -> Boolean
+      ++ modularGamma1(nn, rr) returns true iff the generalized
+      ++ eta-quotient corresponding to rr is a modular function for
+      ++ Gamma_1(nn). It is equivalent to zero?(modularGamma1(nn, rr)).
+    matrixModularGamma1: P -> MQ
+      ++ matrixModularGamma0(nn) returns a matrix mat such
+      ++ that if divs:=divisors(nn), n=#divisors(nn) and v is such
+      ++ that mat*v=0 then v(1..n) is in R^*(nn), in other words, the
+      ++ nullspace of mat "generates" R^*(nn). The first row of mat
+      ++ corresponds sum(r.i, i=1..n). The second row of mat
+      ++ corresponds to the sum(divs.i*r.i,i=1..n)+24*r(n+1). The
+      ++ third row of mat corresponds to the
+      ++ sum((nn/divs.i)*r.i,i=1..n)+24*r(n+2). The function computes
+      ++ matrix B_N (equation (8) from
+      ++ \cite{Hemmecke+Radu:EtaRelations:2018}
+      ++ \url{http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf}
+      ++ (DOI:10.1016/j.jsc.2018.10.001).
 
     matrixEtaOrder: (P, Q, P, Z) -> Q
       ++ For g in the range 0..delta matrixEtaOrder(nn,cusp,delta,g)
@@ -343,7 +367,7 @@ QEtaAuxiliaryPackage: with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Related to Eta Quotients}
+\subsubsection{Related to Eta-Quotients}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
@@ -443,7 +467,7 @@ QEtaAuxiliaryPackage: with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Related to Transformations of Eta Quotients}
+\subsubsection{Related to Transformations of Eta-Quotients}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
@@ -580,7 +604,7 @@ $a\in X_c$.
 %$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Related to Generalized Eta Quotients}
+\subsubsection{Related to Generalized Eta-Quotients}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In view of $\eta_{\delta,g}(\tau) = \eta_{\delta,\delta-g}(\tau)$ we
@@ -734,6 +758,7 @@ a generalized eta-quotient of the form
 \eqref{eq:redundant-generalized-eta-quotient} is a modular function
 for $\Gamma_1(N)$ if
 \begin{gather}
+  \sum_{\divides{\delta}{N}} a_{g,0} = 0\\
   \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
   \delta P_2\Bigl(\frac{g}{\delta}\Bigr) a_{\delta,g} \equiv 0 \pmod{2}\\
   \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
@@ -742,6 +767,11 @@ for $\Gamma_1(N)$ if
 
 Translated for an eta-quotient $g_{\bar{r}}$ given by
 \eqref{eq:g_rbar(tau)}, the above reads as
+\begin{align}
+  \sum_{\divides{\delta}{N}} r_{g,0} = 0,
+  \label{eq:generalized-weight}
+\end{align}
+which means that the weight (of the eta-quotient) should be 0,
 \begin{align}
   \sum_{\divides{\delta}{N}}
   \delta P_2(0) \frac{r_{\delta,0}}{2}
@@ -758,7 +788,7 @@ Translated for an eta-quotient $g_{\bar{r}}$ given by
   &\equiv 0 \pmod{24}
   \label{eq:generalized-sigmaInfinity}
 \end{align}
-
+and
 \begin{align}
 \sum_{\divides{\delta}{N}}
   \frac{N}{\delta} P_2(0) \frac{r_{\delta,g}}{2}
@@ -786,7 +816,7 @@ Compare \eqref{eq:generalized-sigmaInfinity} and
 %$
 
 Similar to the matrix by Ligozat, we can build a matrix to determine
-the order of a (modular for $\Gamma_1(N)$) generallized eta quotient
+the order of a (modular for $\Gamma_1(N)$) generallized eta-quotient
 at all cusps of $\Gamma_1(N)$.
 
 
@@ -846,7 +876,7 @@ $A \bar{r}$ gives the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
 $q^{1/w_\gamma}$.
 
 
-Consider \ref{eq:order-rbar-non-adjusted} at the cusps $\infty$ and
+Consider \eqref{eq:order-rbar-non-adjusted} at the cusps $\infty$ and
 $0$ (which are $\Gamma_1(N)$-equivalent to $\frac{1}{N}$ and $1$,
 respectively).
 %
@@ -860,6 +890,7 @@ For the cusp $\infty$ we get $\lambda=\mu=1$ and $\epsilon=N$. Thus,
     \delta
     P_2\Bigl(\frac{g}{\delta}\Bigr)r_{\delta,g}
   \right).
+  \label{eq:modularGamma1-sigmaInfinity}
 \end{gather}
 
 For the cusp $0$ we get $\lambda=\mu=1$ and $\epsilon=1$. Thus,
@@ -872,6 +903,7 @@ For the cusp $0$ we get $\lambda=\mu=1$ and $\epsilon=1$. Thus,
     2 \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
     \frac{N}{\delta} r_{\delta,g}
   \right)
+  \label{eq:modularGamma1-sigma0}
 \end{gather}
 since $P_2(g)=P_2(0)=\frac{1}{6}$.
 
@@ -882,6 +914,53 @@ conditions \ref{eq:generalized-sigmaInfinity} and
 
 
 )endif
+
+    modularGamma1(nn: P, rr: List List Z): Z ==
+        rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+            splitEtaQuotientSpecification(nn, rr)
+        r: LZ := rrec.etaQuotientExponents
+        gr: LLZ := rrec.generalizedParameters
+        not zero? reduce(_+, r) => 1 -- non-zero weight
+
+        -- order at inifinity is an integer
+        shat: Q := sigmaInfinity(nn, r, gr)
+        not one? denom shat => 2
+        not zero? positiveRemainder(numer shat, 24) => 2
+
+        -- order at 0 is an integer
+        not zero? positiveRemainder(sigma0(nn, r, gr), 24) => 3
+
+        return 0 -- modular function for Gamma1(nn)
+
+    modularGamma1?(nn: P, rr: List List Z): Boolean ==
+        zero? modularGamma1(nn, rr)
+
+    matrixModularGamma1(nn: P): MQ ==
+        nndivs: List P := DIVISORS nn
+        n: Z := # nndivs
+        numOfVars: N := 0 -- number of the r_d and r_{d,g} variables
+        for d in nndivs repeat numOfVars := numOfVars + asN(ceiling(d/2)$Q)
+        mat: MQ := new(3, numOfVars+2, 0) -- 2 more for "mod 24" rows
+        jj := 0
+        -- We run over the coulumns of the matrix.
+        for d in nndivs for j in 1..n repeat
+            -- sum exponents of pure eta-quotient part
+            -- \eqref{eq:generalized-weight}
+            qsetelt!(mat, 1, j, 1)
+            -- row 2 and 3 correspond to the rows of matrixEtaOrder(nn)
+            -- corresponding to the cusps 1/nn (infinity) and 1/1 (0).
+            -- Thus, we use the same code as in matrixEtaOrder(nn).
+            qsetelt!(mat, 2, j, matrixEtaOrder(nn, 1/nn, d, -1))
+            qsetelt!(mat, 3, j, matrixEtaOrder(nn, 1/1,  d, -1))
+            for g in 1..ceiling(d/2)-1 repeat
+                jj := jj + 1
+                qsetelt!(mat, 2, n + jj, matrixEtaOrder(nn, 1/nn, d, g))
+                qsetelt!(mat, 3, n + jj, matrixEtaOrder(nn, 1/1,  d, g))
+
+        -- make sure that row 2 and 3 must be integers
+        qsetelt!(mat, 2, numOfVars+1, 1)
+        qsetelt!(mat, 3, numOfVars+2, 1)
+        return mat
 
     -- matrixEtaOrder(nn, cusp, delta, g) returns the coefficient of
     -- r_{delta.g} in
