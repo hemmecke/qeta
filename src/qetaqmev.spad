@@ -121,6 +121,7 @@ Z ==> Integer
 Q ==> Fraction Z
 SQ ==> Matrix Q -- SquareMatrix(n, Q)
 MZ ==> Matrix Z
+MQ ==> Matrix Q
 VZ ==> Vector Z
 VQ ==> Vector Q
 LVZ ==> List VZ
@@ -524,6 +525,22 @@ QEtaQuotientExponentVectors4ti2: with
       ++ Note that the (n+1)-th entry corresponds to the weight.
       ++ See in the specification of matrixLigozatModularGamma0 about
       ++ the meaning of the other rows of the matrix.
+
+    generalizedEtaQuotientMonoidExponentVectors: P -> List List Z
+      ++ generalizedEtaQuotientMonoidExponentVectors(nn) returns a
+      ++ list of list of exponents for generalized eta-quotients that
+      ++ (together with the zero-vector) generate the (multiplicative)
+      ++ monoid of all generalized eta-quotients that are modular
+      ++ functions for $\Gamma_1(nn)$ and have at most a pole at
+      ++ infinity.
+      ++ An element of this list is a collection $r$ of exponents for
+      ++ a generalized eta-quotient.
+      ++ As in the discription of matrixEtaOrder $ QEtaAuxiliaryPackage,
+      ++ the exponent correspond to
+      ++ [eta(d\tau) for d in divsors(nn)]
+      ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)]
+      ++ in this order.
+
   == add
     QEVAux ==> QEtaQuotientExponentVectorsAux
 
@@ -582,6 +599,44 @@ QEtaQuotientExponentVectors4ti2: with
         idivs: List Z := [i for i in 1..n-1]
         etaQuotientMonoidExponentVectors(m, idivs)
 
+    -- local auxiliary function
+    copyRow!(i: N, matQ: MQ, matZ: MZ): Void ==
+        cols := ncols matQ
+        den: Z := 1
+        for j in 1..cols repeat den := lcm(den, denom qelt(matQ, i, j))
+        for j in 1..cols repeat
+            qsetelt!(matZ, i, j, numer(den*qelt(matQ, i, j)))
+
+    generalizedEtaQuotientMonoidExponentVectors(nn: P): List List Z ==
+        spitzen: List Q := cusps(nn)$CongruenceSubgroupGamma1
+        -- At the cusp infinity (=1/nn) the order must be an integer.
+        -- That, however, is already taken care of in the
+        -- matrixModularGamma1(nn) part of the matrix. Therefore, we
+        -- remove this cusp.
+        spitzen := remove!(1/nn, spitzen)
+        matQ: MQ := matrixEtaOrderModularGamma1(nn, spitzen)$QETAAUX
+        n: N := # spitzen
+        rows: N := nrows matQ
+        cols: N := ncols matQ
+        b: VZ := new(rows, 0) -- the right hand side vector
+        rels: VZ := new(rows, 0) -- all equations
+        -- However the first n entries are inequations A x >= b.
+        for i in 1..n repeat rels.i := 1 -- non-negative order
+        -- zsolve needs an integer matrix, so we multiply the lines
+        -- by the respective common denominator.
+        matZ: MZ := new(rows, cols, 0)
+        for i in 1..rows repeat copyRow!(i, matQ, matZ)
+        res: ZRESULT := zsolve(matZ, rels, b)$X4ti2
+        -- We sort the result vectors for the homogeneous system by
+        -- the pole-order of the respective generalized eta-quotient.
+        -- Since the last-but-one line of matQ corresponds to the
+        -- order of the expansion at the cusp infinity and there is an
+        -- entry 1 in the last-but-one column, we only need to sort
+        -- the vectors by the last-but-one column in order to sort
+        -- them by the order of the respective expansion.
+        c: Z := cols-1
+        sres: List VZ := sort((x:VZ,y:VZ):Boolean +-> (x.c<y.c), res.zhom)
+        [members g(1..cols-2) for g in sres]
 
 
 )if LiterateDoc
