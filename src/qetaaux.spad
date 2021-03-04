@@ -144,6 +144,16 @@ QEtaAuxiliaryPackage: with
       ++ See definition in specification of
       ++ generalizedEtaPower $ EtaQuotientInfinity for how each element
       ++ of rr is interpreted.
+    toEtaQuotientSpecification: (P, List Z) -> List List Z
+      ++ toEtaQuotientSpecification(nn, exponentList) returns a
+      ++ specification for a generalized eta-quotient where
+      ++ exponentList is considered to be a list of exponents for the
+      ++ (generalized) eta-functions listed in the following order.
+      ++ [eta(d\tau) for d in divsors(nn)]
+      ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)].
+      ++ This function basically adds the d and (d,g) part to the exponents.
+      ++ If the exponentList is too long an error is signalled.
+      ++ If the exponentList is too short, that is no problem.
     sigmaInfinity: (P, List Z) -> Z
       ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
@@ -714,6 +724,29 @@ $\eta(\delta\tau)$.
             error "splitEtaQuotientSpecification: list length > 3"
         r: List Z := [elt(hr, d, 0) for d in divisors(mm)$INTF]
         [r, gr]
+
+    toEtaQuotientSpecification(nn: P, exponentList: List Z): List List Z ==
+        nndivs: List P := DIVISORS nn
+        n: Z := # nndivs
+        numOfVars: N := 0 -- number of the r_d and r_{d,g} variables
+        for d in nndivs repeat numOfVars := numOfVars + asN(ceiling(d/2)$Q)
+        #exponentList > numOfVars =>
+            error "toEtaQuotientSpecification: exponentList too long"
+        spec: List List Z := empty()
+        for d in nndivs repeat
+            if not empty? exponentList then
+                -- only add non-zero exponent contributions
+                e: Z := first exponentList
+                exponentList := rest exponentList
+                if not zero? e then spec := cons([d, e], spec)
+        for d in nndivs repeat
+            for g in 1..ceiling(d/2)-1 repeat
+                if not empty? exponentList then
+                    -- only add non-zero exponent contributions
+                    e: Z := first exponentList
+                    exponentList := rest exponentList
+                    if not zero? e then spec := cons([d, g, e], spec)
+        return reverse! spec
 
     sigmaInfinity(mm: P, gr: List List Z): Q ==
         res: Q := 0
