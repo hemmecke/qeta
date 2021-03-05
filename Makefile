@@ -141,7 +141,7 @@ zudilin/rel-%.input: zudilin/rel-%.tmp
 	  awk '/^fpol:=/,/SUCCESS:=true/{print}' $< \
 	  | sed '$$d' > $@; else :; fi
 
-IDS=$(shell cat zudilin/lmfdb.ids)
+IDS=$(shell cat zudilin/lmfdb.ids 2>/dev/null)
 RELS=$(patsubst %,zudilin/rel-%.input, ${IDS})
 zudilin/allrels: zudilin/lmfdb.ids $(RELS)
 
