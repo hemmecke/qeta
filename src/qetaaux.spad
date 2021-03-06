@@ -144,6 +144,10 @@ QEtaAuxiliaryPackage: with
       ++ See definition in specification of
       ++ generalizedEtaPower $ EtaQuotientInfinity for how each element
       ++ of rr is interpreted.
+    lengthOfGeneralizedEtaQuotientSpecification: P -> N
+      ++ lengthOfGeneralizedEtaQuotientSpecification(nn) returns
+      ++ # toEtaQuotientSpecification(nn,[]) without ever
+      ++ computing the specification list explicitly.
     toEtaQuotientSpecification: (P, List Z) -> List List Z
       ++ toEtaQuotientSpecification(nn, exponentList) returns a
       ++ specification for a generalized eta-quotient where
@@ -151,9 +155,21 @@ QEtaAuxiliaryPackage: with
       ++ (generalized) eta-functions listed in the following order.
       ++ [eta(d\tau) for d in divsors(nn)]
       ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)].
-      ++ This function basically adds the d and (d,g) part to the exponents.
-      ++ If the exponentList is too long an error is signalled.
-      ++ If the exponentList is too short, that is no problem.
+
+      ++ This function basically adds the index part d and (d,g) part
+      ++ to the exponents. If the exponentList is too long an error is
+      ++ signalled. If the exponentList is too short, that is no
+      ++ problem.
+
+      ++ For the special case that the exponentList is empty,
+      ++ toEtaQuotientSpecification(nn, []) returns all the indices
+      ++ (without exponents), i.e., it return the list in
+      ++ \eqref{eq:sorted-indices} where the 0 in the second argument
+      ++ is removed. To be precise, it returns
+      ++ [[d1],[d2],...,[dn],[d2,1],...,[d2,f2],...,[dn,1],...,[dn,fn]]
+      ++ where di is the i-th positive divisor of nn and
+      ++ fi=ceiling(di/2)-1.
+
     sigmaInfinity: (P, List Z) -> Z
       ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
@@ -725,27 +741,33 @@ $\eta(\delta\tau)$.
         r: List Z := [elt(hr, d, 0) for d in divisors(mm)$INTF]
         [r, gr]
 
+    lengthOfGeneralizedEtaQuotientSpecification(nn: P): N ==
+        nndivs: List P := DIVISORS nn
+        len: N := 0
+        for d in nndivs repeat len := len + asN(ceiling(d/2)$Q)
+        return len
+
     toEtaQuotientSpecification(nn: P, exponentList: List Z): List List Z ==
         nndivs: List P := DIVISORS nn
         n: Z := # nndivs
-        numOfVars: N := 0 -- number of the r_d and r_{d,g} variables
-        for d in nndivs repeat numOfVars := numOfVars + asN(ceiling(d/2)$Q)
+        -- number of the r_d and r_{d,g} variables
+        numOfVars: N := lengthOfGeneralizedEtaQuotientSpecification nn
         #exponentList > numOfVars =>
             error "toEtaQuotientSpecification: exponentList too long"
+
+        indices: List List Z := empty()
+        for d in nndivs repeat indices := cons([d], indices)
+        for d in nndivs repeat
+            for g in 1..ceiling(d/2)$Q-1 repeat indices := cons([d, g], indices)
+        indices := reverse! indices
+
+        -- Now we have all indices and just need to append the exponent
+        -- entry to every element list.
+        empty? exponentList => return indices
+
         spec: List List Z := empty()
-        for d in nndivs repeat
-            if not empty? exponentList then
-                -- only add non-zero exponent contributions
-                e: Z := first exponentList
-                exponentList := rest exponentList
-                if not zero? e then spec := cons([d, e], spec)
-        for d in nndivs repeat
-            for g in 1..ceiling(d/2)-1 repeat
-                if not empty? exponentList then
-                    -- only add non-zero exponent contributions
-                    e: Z := first exponentList
-                    exponentList := rest exponentList
-                    if not zero? e then spec := cons([d, g, e], spec)
+        for i in indices for e in exponentList repeat
+            if not zero? e then spec := cons(concat(i, e), spec)
         return reverse! spec
 
     sigmaInfinity(mm: P, gr: List List Z): Q ==
@@ -978,8 +1000,8 @@ conditions \ref{eq:generalized-sigmaInfinity} and
     matrixModularGamma1(nn: P): MQ ==
         nndivs: List P := DIVISORS nn
         n: Z := # nndivs
-        numOfVars: N := 0 -- number of the r_d and r_{d,g} variables
-        for d in nndivs repeat numOfVars := numOfVars + asN(ceiling(d/2)$Q)
+        -- number of the r_d and r_{d,g} variables
+        numOfVars: N := lengthOfGeneralizedEtaQuotientSpecification nn
         mat: MQ := new(3, numOfVars+2, 0) -- 2 more for "mod 24" rows
         jj := 0
         -- We run over the coulumns of the matrix.
@@ -1041,8 +1063,8 @@ conditions \ref{eq:generalized-sigmaInfinity} and
     matrixEtaOrder(nn: P, spitzen: List Q): MQ ==
         nndivs: List P := DIVISORS nn
         n: Z := # nndivs
-        numOfVars: N := 0 -- number of the r_d and r_{d,g} variables
-        for d in nndivs repeat numOfVars := numOfVars + asN ceiling(d/2)
+        -- number of the r_d and r_{d,g} variables
+        numOfVars: N := lengthOfGeneralizedEtaQuotientSpecification nn
         numrows: N := # spitzen
         mat: MQ := new(numrows, numOfVars, 0)
         for cusp in spitzen for i in 1..numrows repeat
