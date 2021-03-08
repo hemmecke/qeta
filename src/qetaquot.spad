@@ -2878,7 +2878,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
     orbit: % -> List N
       ++ orbit(x) returns $\modularOrbit{r, m, t}$ where
       ++ r=exponents(x), m=multiplier(x), t=offset(x).
-      ++ See definition of orbit in qetacofactor.spad
+      ++ See definition of orbit in qetacofactorspace.spad
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)]
@@ -2908,7 +2908,7 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
         divs: LP := DIVISORS mm
         rhat: Z := 0 -- sigmaInfty
         for delta in divs for rdelta in r repeat rhat := rhat + delta * rdelta
-        orb: List N := orbit(rhat, m, t)$QEtaCoFactor
+        orb: List N := orbit(rhat, m, t)$QEtaCoFactorSpace
         h: HT := empty()
         minroot: P := 1
         for tt in orb repeat
@@ -3003,7 +3003,7 @@ SymbolicModularSiftedEtaQuotientGamma: SetCategory with
     yy ==> rep y
 
     etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
-        not modularGamma0?(nn, s, mm, r, m, t)$QEtaCoFactor =>
+        not modularGamma0?(nn, s, mm, r, m, t)$QEtaCoFactorSpace =>
             error "modular conditions are not fulfilled"
         nndivs: LP := DIVISORS nn
         mmdivs: LP := DIVISORS mm
@@ -3678,7 +3678,7 @@ QEtaModularGamma0: Exports == Implementation where
       ++ y=etaQuotient(nn, s, mm, r, m, t)$SymbolicModularSiftedEtaQuotient.
     etaCoFactorInfinity: (P, P, LZ, P, N) -> LZ
       ++ etaCoFactorInfinity(nn,mm,r,m,t) returns a list s such that
-      ++ modularGamma0?(nn,s,mm,r,m,t)$QEtaCoFactor and
+      ++ modularGamma0?(nn,s,mm,r,m,t)$QEtaCoFactorSpace and
       ++ etaQuotient(nn,r,mm,s,m,t)$SymbolicModularSiftedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
@@ -3837,7 +3837,7 @@ QEtaModularGamma0: Exports == Implementation where
         members(sinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
 
     etaCoFactorInfinity(nn: P, mm: P, r: LZ, m: P, t: N): LZ ==
-        ecfs: ECFS := etaCoFactorSpace(nn, mm, r, m, t)$QEtaCoFactor
+        ecfs: ECFS := etaCoFactorSpace(nn, mm, r, m, t)$QEtaCoFactorSpace
         n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
         sinitial: VZ := ((ecfs.particular)::VZ)(1..n)
         b: LVZ := [x(1..n) for x in ecfs.basis]
@@ -3889,7 +3889,7 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
         -- First compute the expansion of the orbit product.
         eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, r)$ETAQI(C))
 
-        orb: List N := orbit(mm, r, m, t)$QEtaCoFactor
+        orb: List N := orbit(mm, r, m, t)$QEtaCoFactorSpace
         tt := first orb
         p: T1 C := multisect(m-tt, tt, eulerquo)
         -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
@@ -3905,11 +3905,11 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
 
         -- We have to multiply by some q-power to get the expansion of
         -- a modular function f.
-        alpha: Z := alphaInfinity(nn, s, mm, r, m, t)$QEtaCoFactor
+        alpha: Z := alphaInfinity(nn, s, mm, r, m, t)$QEtaCoFactorSpace
         laurent(alpha, tf)$A1(C)
 
     modularSiftedEtaQuotientInfinity(nn: P, mm: P, r: LZ, m: P, t: N): A1 C ==
-        orb: List N := orbit(mm, r, m, t)$QEtaCoFactor
+        orb: List N := orbit(mm, r, m, t)$QEtaCoFactorSpace
         tracePrint("orbit", sort orb)
         s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)$QEtaModularGamma0
         tracePrint("cofactor", s)

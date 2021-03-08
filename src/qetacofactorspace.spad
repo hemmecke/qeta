@@ -39,8 +39,8 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 \date{26-Jan-2018}
 \maketitle
 \begin{abstract}
-  The package \code{QEtaCoFactor} implements functions to help turning
-  a sifted eta quotient into a modular function by finding an
+  The package \code{QEtaCoFactorSpace} implements functions to help
+  turning a sifted eta quotient into a modular function by finding an
   appropriate cofactor.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,7 +52,8 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We try to find all missing parts to find a Ramanujan-Kolberg relation
-as defined in \cite[p.~227]{Radu:RamanujanKolberg:2015}.
+as defined in \cite[p.~227]{Radu:RamanujanKolberg:2015} and also for
+\cite[Sect.~10]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
 Assume that we are given a series
 \begin{gather*}
@@ -67,6 +68,23 @@ eta-quotients and (maybe) an appropriate power of
 $q^{1/24}=\unityPower{\frac{\tau}{24}}$.
 
 For mathematical background see \PathName{qetaquot.spad}.
+
+As an extensionn of the above problem, we assume that
+\begin{gather*}
+  \sum_{n=0}^\infty a(n) q^n
+  =
+  g_{\bar{r}}(\tau)
+\end{gather*}
+is given by \ref{eq:g_rbar(tau)} (as defined in
+\PathName{qetaaux.spad}).
+
+By multiplication with a prefactor, we want to make
+$\sum_{n=0}^\infty a(mn+t) q^n$ into a modular function for
+$\Gamma_0(N)$ or $\Gamma_1(N)$ (for a suitable positive number $N$).
+In case of $\Gamma_0(N)$, the sum might have to be multiplied with
+similar sums in order to take care of the fact that by an arbitrary
+transformation with a matrix from $\Gamma_0(N)$ we might come to a sum
+with a different $t$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -123,13 +141,13 @@ SIGMA0 ==> sigma0 $ QETAAUX
 %$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{P QEtaCoFactor}
+\subsection{P QEtaCoFactorSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
 
-)abbrev package QETACOF QEtaCoFactor
-QEtaCoFactor: Exports == Implementation where
+)abbrev package QETACOFS QEtaCoFactorSpace
+QEtaCoFactorSpace: Exports == Implementation where
   Exports ==> with
     conditionPrimeDivisors?: (P, P) -> Boolean
       ++ conditionExponentSum?(nn, m) returns true if every prime
