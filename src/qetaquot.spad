@@ -3660,9 +3660,9 @@ ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
 \label{sec:QEtaModularGamma0}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Compute a vector that must be multiplied to the (sifted) eta quotient
-in order to make it a modular function having a pole only at infinity
-or to make the (positive) orders at all cusps (\code{qetaGrades})
-small in total sum.
+in order to make it a modular function for
+$\Gamma_0(N)$ having a pole only at infinity or to make the (positive)
+orders at all cusps (\code{qetaGrades}) small in total sum.
 
 )endif
 
@@ -3679,9 +3679,12 @@ QEtaModularGamma0: Exports == Implementation where
     etaCoFactorInfinity: (P, P, LZ, P, N) -> LZ
       ++ etaCoFactorInfinity(nn,mm,r,m,t) returns a list s such that
       ++ modularGamma0?(nn,s,mm,r,m,t)$QEtaCoFactorSpace and
-      ++ etaQuotient(nn,r,mm,s,m,t)$SymbolicModularSiftedEtaQuotient
+      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularSiftedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
+
+    -- temporarily exported
+    minimizeVector: (VZ, List VZ) -> VZ
 
   Implementation ==> add
     LVZ ==> List VZ
@@ -3817,7 +3820,7 @@ QEtaModularGamma0: Exports == Implementation where
     -- shouldn't have too high exponents.
     minimizeGrades(nn: P, mm: P, r: LZ, m: P, t: N, rinitial: VZ, b: LVZ): LZ ==
         sinitial := minimizeVector(rinitial, b)
-        -- Compute the poleorders/grades (at all cusps)for the
+        -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution rinitial.
         g: XHashTable(Q, Z) := qetaGrades(nn, members sinitial, mm, r, m, t);
         -- Exclude order at the cusp infinity.
