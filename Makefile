@@ -178,7 +178,9 @@ pdfall: pdf
 
 pdf: ${patsubst %,${TPROJECT}.%, tex bib sty} ${TPROJECT}abstracts.tex \
      ${patsubst %,${TMP}/%.pdf,${SPADFILES}}
-	cd ${TMP} && pdflatex ${PROJECT}.tex && bibtex ${PROJECT}.aux
+	cd ${TMP} && pdflatex ${PROJECT}.tex \
+	          && bibtex ${PROJECT}.aux \
+	          && makeindex ${PROJECT}
 
 ${TPROJECT}abstracts.tex: ${patsubst %,${TMP}/%, ${PREREQS_SPAD}}
 	(echo '\\begin{description}'; \
