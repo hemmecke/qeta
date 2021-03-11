@@ -35,9 +35,9 @@ SIGMA0 ==> sigma0 $ QETAAUX
 
 -- ## Dedekind Eta Function $\eta(\tau)$
 
-e := eta(1)$ETAQI(Q)
+e := eta(1)$EQI(Q)
 
-polynomialToEta(E1)$ETAQI(Q)
+polynomialToEta(E1)$EQI(Q)
 
 -- Express in terms of $x=q^{1/24}$ but written with $q$ instead of $x$
 
@@ -48,7 +48,7 @@ monomial(1,prefactor(e))$L1(Q) * (seriesPart(e)::L1(Q))(q^24)
 
 -- Modular discriminant $\Delta(\tau)=\eta(\tau)^{24}$
 
-expansion(eta(24)$ETAQI(Z))
+expansion(eta(24)$EQI(Z))
 
 -- ## $g_s(\tau) \in M(N)$ --- EtaQuotientInfinity
 
@@ -56,7 +56,7 @@ expansion(eta(24)$ETAQI(Z))
 
 nn: P := 22; -- level N
 r := [1,2,-1,-1]
-e := etaQuotient(nn, r)$ETAQI(Z)
+e := etaQuotient(nn, r)$EQI(Z)
 
 )set message type on
 
@@ -65,8 +65,8 @@ e := etaQuotient(nn, r)$ETAQI(Z)
 -- $q$-series. Note that for the prefactor exponent it always holds
 -- $0\le f<1$.
 
-f := prefactor(e)$ETAQI(Z)
-seriesPart(e)$ETAQI(Z)
+f := prefactor(e)$EQI(Z)
+seriesPart(e)$EQI(Z)
 
 -- ### $g_s(\tau) \in M^\infty(N)$
 
@@ -75,7 +75,7 @@ seriesPart(e)$ETAQI(Z)
 -- with the prefactor to get a $q$-series.
 
 r := [24,0,0,0]
-e := etaQuotient(nn, r)$ETAQI(Z)
+e := etaQuotient(nn, r)$EQI(Z)
 expansion e
 
 -- ## Jacobi theta functions
@@ -91,10 +91,10 @@ expansion e
 -- in terms of $q=e^{\pi i \tau}$.
 -- In the following we express the series with $q=e^{2\pi i \omega}$ where $\omega=\frac{\tau}{2}$.
 
-theta2half := etaQuotient(4, [ 0,-1, 2])$ETAQI(C)
+theta2half := etaQuotient(4, [ 0,-1, 2])$EQI(C)
 theta2     := 2*theta2half
-theta3     := etaQuotient(4, [-2, 5,-2])$ETAQI(C)
-theta4     := etaQuotient(4, [ 2,-1, 0])$ETAQI(C)
+theta3     := etaQuotient(4, [-2, 5,-2])$EQI(C)
+theta4     := etaQuotient(4, [ 2,-1, 0])$EQI(C)
 
 g := expansion(theta3^2) :: L1(C)
 h := expansion((theta2half/theta3)^4) :: L1(C)
@@ -107,7 +107,7 @@ f := g(revert h) -- if order(h) is different from 1 then g(revert(nthRoot(h, ord
 
 nn: P := 22; -- level N
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
-eqgens := [expansion(etaQuotient(nn, r)$ETAQI(Z)) for r in rgens]
+eqgens := [expansion(etaQuotient(nn, r)$EQI(Z)) for r in rgens]
 
 -- ### Create $g_s(\tau)$ with attached part
 
@@ -127,7 +127,7 @@ nn: P := 13;
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
 m: P := 13; mm: P := m; s: List Z := first rgens;
 gamma: SL2Z := matrix [[1,0],[0,1]]
-y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
+y: YSEQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
@@ -135,7 +135,7 @@ w := WIDTH0(nn, gamma(2,1))
 
 )set stream calc 4
 )set mess type on
-p := puiseux(y, 13)$SETAQG(C,CX)
+p := puiseux(y, 13)$SEQG(C,CX)
 
 r := rationalPowerDenominator(p)
 e := expansion p
@@ -153,14 +153,14 @@ s1 := choose(24, 0, e::A1(CX))
 
 gamma := cuspToMatrix(nn, 1)$GAMMA0
 
-y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
+y: YSEQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 w := WIDTH0(nn, gamma(2,1))
 
 )set stream calc 4
 )set mess type on
-p := puiseux(y, w)$SETAQG(C, CX)
+p := puiseux(y, w)$SEQG(C, CX)
 r := rationalPowerDenominator(p)
 e := expansion p
 order e
@@ -178,14 +178,14 @@ shat: Z := SIGMAINFINITY(mm, s)
 orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
 t := first first orbs
 gamma: SL2Z := matrix [[1,0],[0,1]]
-y: YSETAQG := etaQuotient(nn, mm, s, m, t, gamma);
+y: YSEQG := etaQuotient(nn, mm, s, m, t, gamma);
 xiord := minimalRootOfUnity y
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 w := WIDTH0(nn, gamma(2,1))
 
 )set stream calc 20
 )set mess type on
-p := puiseux(y, w)$SETAQG(C, CX)
+p := puiseux(y, w)$SEQG(C, CX)
 
 -- The above data structure actually represents the Puiseux series
 -- where $q$ is replaced by $q^{1/\mathrm{den}}=q^{1/24}$.
@@ -216,14 +216,14 @@ rx-s2
 
 gamma := cuspToMatrix(nn, 1)$GAMMA0
 
-y := etaQuotient(nn, mm, s, m, t, gamma)$YSETAQG;
+y := etaQuotient(nn, mm, s, m, t, gamma)$YSEQG;
 xiord := minimalRootOfUnity y
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 w := WIDTH0(nn, gamma(2,1))
 
 )set mess type on
 )set stream calc 10
-p := puiseux(y, w)$SETAQG(C, CX)
+p := puiseux(y, w)$SEQG(C, CX)
 e := expansion p;
 order e
 
@@ -244,26 +244,26 @@ t := first first orbs
 cusp := 1/nn; gamma := cuspToMatrix(nn, cusp)$GAMA0; w := WIDTH0(nn, denom cusp)
 r := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
 )clear prop y
-y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
+y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSEQG;
 xiord: P := minimalRootOfUnity y
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-puiseux(y, w)$SETAQG(C, CX)
+puiseux(y, w)$SEQG(C, CX)
 
 -- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $1$
 
 cusp := 1; gamma := cuspToMatrix(nn, cusp)$GAMMA0; w := WIDTH0(nn, denom cusp)
 r: List Z := etaCoFactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
-y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSETAQG;
+y := etaQuotient(nn, r, mm, s, m, t, gamma)$YMSEQG;
 xiord: P := minimalRootOfUnity y
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-puiseux(y, w)$SETAQG(C, CX)
+puiseux(y, w)$SEQG(C, CX)
 
 -- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at all cusp
 
 nn, r, mm, s, m, t, gamma
 
-y := etaQuotient(nn, r, mm, s, m, t)$YMSETAQ;
-f := y::MSETAQ(C, CX);
+y := etaQuotient(nn, r, mm, s, m, t)$YMSEQ;
+f := y::MSEQ(C, CX);
 
 -- For each of the cusps we get one expansion in terms in the canonical
 -- variable $q^{1/w}$ where $w$ is the width of the respective cusp.
@@ -348,7 +348,7 @@ setFormat!(FormatMathJax)$JFriCASSupport
 -- Here we use all the generators of the monoid of all $\eta$-quotients.
 
 nn: P := 22; -- level
-etaQ(x) == expansion(etaQuotient(nn, x)$ETAQI(Z))
+etaQ(x) == expansion(etaQuotient(nn, x)$EQI(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
 rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
@@ -482,7 +482,7 @@ spitzen := cusps(nn)$GAMMA0
 ff := modularSiftedPartitionSeries(nn, m, t);
 xf := toX1(C, ff, F)
 
-etaQ(x) == expansion(etaQuotient(nn, x)$ETAQI(Z))
+etaQ(x) == expansion(etaQuotient(nn, x)$EQI(Z))
 smallerR?(x: List Z, y: List Z): Boolean == smallerGrade?(etaQ x, etaQ y)@Boolean
 rgens := sort(smallerR?,etaQuotientMonoidExponentVectors(nn)$QEQEV)$List(List Z)
 eqgens := [etaQ r for r in rgens];
@@ -580,7 +580,7 @@ w := WIDTH0(242, gamma(2,1))
 -- there.
 
 rgens242 := etaQuotientMonoidExponentVectors(242)$QEQEV
-egens242 := [(expansion etaQuotient(242, r)$ETAQI(Z))::A1(C) for r in rgens242];
+egens242 := [(expansion etaQuotient(242, r)$EQI(Z))::A1(C) for r in rgens242];
 [qetaGrade(x) for x in egens242]
 
 -- For all the series we compute that we need at most a second root of unity, i.e. we continue our computation in $C=\mathbb{Q}$.
@@ -618,15 +618,15 @@ eqt242 := egens242.3
 -- transformation is the identity matrix.
 
 idgamma: SL2Z := matrix [[1,0],[0,1]];
-yeq242: YETAQG := etaQuotient(242, 242, r242, idgamma);
+yeq242: YEQG := etaQuotient(242, 242, r242, idgamma);
 modularGamma0? yeq242
 
-eq242 := (expansion(yeq242::ETAQG(C, CX)))::A1(C)
+eq242 := (expansion(yeq242::EQG(C, CX)))::A1(C)
 
 zero?(eqt242-eq242)
 
-yeq242g: YETAQG := etaQuotient(242, 242, r242, gamma);
-eq242g := (expansion(yeq242g::ETAQG(C,CX)))::A1(C)
+yeq242g: YEQG := etaQuotient(242, 242, r242, gamma);
+eq242g := (expansion(yeq242g::EQG(C,CX)))::A1(C)
 
 -- Now we apply the $U_2$ operator.
 
@@ -636,8 +636,8 @@ u2eq242g := choose(2, 0, eq242g)
 -- This is another check that we have no bug in the
 -- implementation.
 
-yseq242g: YSETAQG := etaQuotient(242, 242, r242, 1, 0, gamma);
-seq242g := puiseux(yseq242g, w)$SETAQG(C,CX)
+yseq242g: YSEQG := etaQuotient(242, 242, r242, 1, 0, gamma);
+seq242g := puiseux(yseq242g, w)$SEQG(C,CX)
 
 -- Due to implementation as Laurent series, the above series is computed with $q$ standing for $q^{24}$. The result, however, says (den=24) that we should consider it as a series in $q=(q^{24})^{1/24}$.
 
@@ -680,7 +680,7 @@ setFormat!(FormatMathJax)$JFriCASSupport
 
 nn := 121
 rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV
-eqgens := [expansion(etaQuotient(nn, r)$ETAQI(Z)) for r in rgens];
+eqgens := [expansion(etaQuotient(nn, r)$EQI(Z)) for r in rgens];
 msyms := indexedSymbols("M", #rgens)
 mxgens := [toX1(C, x, sym) for x in eqgens for sym in msyms];
 xgens := cons(toX1(C, eqgens.1, 'T), rest mxgens);

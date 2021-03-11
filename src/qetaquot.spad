@@ -271,7 +271,7 @@ following correspondence.
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain YETAQG SymbolicEtaQuotientGamma
+)abbrev domain YEQG SymbolicEtaQuotientGamma
 ++ SymbolicEtaQuotientGamma holds data to compute an eta quotient expansion
 ++ of g_r(\gamma \tau).
 ++ See \eqref{eq:g_r(gamma*tau)}.
@@ -430,7 +430,7 @@ we have \code{e.cusp} is the corresponding data from
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain YETAQ SymbolicEtaQuotient
+)abbrev domain YEQ SymbolicEtaQuotient
 ++ SymbolicEtaQuotient holds data to compute an eta quotient expansions
 ++ of g_r(\tau) at all cusps of $\Gamma_0(N)$ or at the given cusps.
 ++ See \eqref{g_r(tau)}
@@ -734,7 +734,7 @@ $= \divisorsum{M} \frac{r_\delta(v_{\delta,m,\lambda} +
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain YSETAQLG SymbolicSiftedEtaQuotientLambdaGamma
+)abbrev domain YSEQLG SymbolicSiftedEtaQuotientLambdaGamma
 ++ SymbolicSiftedEtaQuotientLambdaGamma is a generalization of
 ++ SymbolicEtaQuotientGamma. It holds data to compute an eta
 ++ quotient expansion of g_{r,m,t,\lambda}(\gamma \tau) or
@@ -914,7 +914,7 @@ of $g_{r,m}=U_mg_r$.
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain YSETAQG SymbolicSiftedEtaQuotientGamma
+)abbrev domain YSEQG SymbolicSiftedEtaQuotientGamma
 ++ SymbolicSiftedEtaQuotientGamma is a generalization of
 ++ SymbolicEtaQuotientGamma. It holds data to compute an eta
 ++ quotient expansion of $g_{r,m,t}(\gamma \tau)$ or $g_{r,m}(\gamma \tau)$.
@@ -1003,7 +1003,7 @@ for $P_{r,m,t}(\gamma\tau)$.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain YSETAQOG SymbolicSiftedEtaQuotientOrbitProductGamma
+)abbrev domain YSEQOG SymbolicSiftedEtaQuotientOrbitProductGamma
 ++ SymbolicSiftedEtaQuotientOrbitProductGamma
 ++ holds data to compute an eta quotient
 ++ expansions of $P_{r, m, t}(\gamma \tau)$.
@@ -1041,8 +1041,8 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
       ++ x.u returns the data corresponding to the respective
       ++ orbit element u.
  == add
-    YSETAQG ==> SymbolicSiftedEtaQuotientGamma
-    HT ==> XHashTable(N, YSETAQG)
+    YSEQG ==> SymbolicSiftedEtaQuotientGamma
+    HT ==> XHashTable(N, YSEQG)
     Rep ==> Record(
               flevel: P,     -- level \Gamma_0(lev)
               fdivs: LP,     -- all divisors of level that are given at creation
@@ -1066,12 +1066,12 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
         h: HT := empty()
         minroot: P := 1
         for tt in orb repeat
-            e: YSETAQG := etaQuotient(mm, r, m, tt, gamma)
+            e: YSEQG := etaQuotient(mm, r, m, tt, gamma)
             minroot := lcmP(minroot, minimalRootOfUnity e)
             h.tt := e
         per [mm, divs, r, m, t, gamma, orb, h, minroot]
 
-    elt(x: %, tt: N): YSETAQG == rep(x).fdata.tt
+    elt(x: %, tt: N): YSEQG == rep(x).fdata.tt
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
     exponents(x: %): LZ == xx.fexponents
@@ -1125,7 +1125,7 @@ computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain YMSETAQG SymbolicModularSiftedEtaQuotientGamma
+)abbrev domain YMSEQG SymbolicModularSiftedEtaQuotientGamma
 ++ SymbolicModularSiftedEtaQuotientGamma
 ++ holds data to compute an eta quotient
 ++ expansions of $F_{s, r, m, t}(\gamma \tau)$.
@@ -1202,7 +1202,7 @@ it computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain YMSETAQ SymbolicModularSiftedEtaQuotient
+)abbrev domain YMSEQ SymbolicModularSiftedEtaQuotient
 ++ SymbolicModularSiftedEtaQuotient holds data to compute an eta
 ++ quotient expansions of $F_{s, r, m, t}(\gamma \tau)$ at all cusps
 ++ of $Gamma_0(N)$. See \eqref{eq:F_s-r-m-t(gamma*tau)}.
@@ -1231,12 +1231,12 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
  == add
-    YMSETAQG ==> SymbolicModularSiftedEtaQuotientGamma
-    HT ==> XHashTable(Q, YMSETAQG)
+    YMSEQG ==> SymbolicModularSiftedEtaQuotientGamma
+    HT ==> XHashTable(Q, YMSEQG)
     Rep ==> Record(
               flevel: P,  -- corresponds to Gamma_0(N)
               fcusps: LQ, -- cusps of Gamma_0(N)
-              fmseq: HT,  -- mapping gamma to YMSETAQG
+              fmseq: HT,  -- mapping gamma to YMSEQG
               fminroot: P -- minimal root of unity needed for the coefficients
             )
     import from Rep
@@ -1248,7 +1248,7 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
         minroot: P := 1
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA0
-            e: YMSETAQG := etaQuotient(nn, s, mm, r, m, t, gamma)
+            e: YMSEQG := etaQuotient(nn, s, mm, r, m, t, gamma)
             h.cusp := e
             minroot := lcmP(minroot, minimalRootOfUnity e)
         per [nn, cusps, h, minroot]
@@ -1257,7 +1257,7 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
         etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
 
     level(x: %): P == xx.flevel
-    elt(x: %, cusp: Q): YMSETAQG == xx.fmseq.cusp
+    elt(x: %, cusp: Q): YMSEQG == xx.fmseq.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
     cusps(x: %): LQ == xx.fcusps
 
@@ -1322,7 +1322,7 @@ $x=\unityPower{\frac{\tau}{w_\gamma}}$ where $w_\gamma$ is given by
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain ETAQG EtaQuotientGamma
+)abbrev domain EQG EtaQuotientGamma
 ++ EtaQuotientGamma(C, mx, CX, xi, LX) represents the semigroup
 ++ of eta-quotient expansions at gamma.
 ++ The eta quotient need not be a modular function, but the (c*tau+d)
@@ -1457,7 +1457,7 @@ for each cusp $\frac{a}{c}$ of $\Gamma_0(N)$.
 
 
 )endif
-)abbrev domain METAQ ModularEtaQuotient
+)abbrev domain MEQ ModularEtaQuotient
 ++ ModularEtaQuotient(C, mx, CX, xi, LX) represents the set
 ++ of eta-quotients that are modular functions for Gamma_0(N).
 ++ In fact, this domain is meant to do computation for a specific N,
@@ -1468,10 +1468,10 @@ ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX ==> QEtaLaurentSeries CX -- domain for the series expansions
-  YETAQ ==> SymbolicEtaQuotient
+  YEQ ==> SymbolicEtaQuotient
   Exports ==> SetCategory with
     --assert(one? xi^mx)
-    coerce: YETAQ -> %
+    coerce: YEQ -> %
       ++ coerce(y) represents the expansion of
       ++ g_r(\tau) in terms of x = \exp(2 \pi i \tau/w) where
       ++ w=width(m, c) at all cusps of Gamma0(level y).
@@ -1494,7 +1494,7 @@ ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
     level: % -> P
       ++ level(x) returns m such that x corresponds to a modular
       ++ function for Gamma_0(m).
-    symbolicEtaQuotient: % -> YETAQ
+    symbolicEtaQuotient: % -> YEQ
       ++ symbolicEtaQuotient(x) returns the meta data corresponding to x.
       ++ If x=etaQuotient(y) then symbolicEtaQuotient(x)=y.
     expansions: % -> XHashTable(Q, LX)
@@ -1502,15 +1502,15 @@ ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
       ++ $g_r(tau)$ at all cusps of Gamma_0(level x) corresponding to
       ++ cusps(symbolicEtaQuotient x).
   Implementation ==> add
-    Rep ==> Record(meta: YETAQ, ser: XHashTable(Q, LX))
+    Rep ==> Record(meta: YEQ, ser: XHashTable(Q, LX))
     xx ==> rep x
 
-    coerce(y: YETAQ): % ==
+    coerce(y: YEQ): % ==
         m: P := level y
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
         if not modularGamma0?(m, exponents y)$QETAAUX then
-            dbgPrint("METAQ coerce: not a modular function", exponents y)
+            dbgPrint("MEQ coerce: not a modular function", exponents y)
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
             ye: SymbolicEtaQuotientGamma := y.cusp
@@ -1518,10 +1518,10 @@ ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
             hser.cusp := expansion e
         per [y, hser]
     etaQuotient(mm: P, r: LZ, cusps: LQ): % ==
-        (etaQuotient(mm, r, cusps)$YETAQ)::%
-    etaQuotient(mm: P, r: LZ): % == (etaQuotient(mm, r)$YETAQ)::%
+        (etaQuotient(mm, r, cusps)$YEQ)::%
+    etaQuotient(mm: P, r: LZ): % == (etaQuotient(mm, r)$YEQ)::%
     level(x: %): P == level(xx.meta)
-    symbolicEtaQuotient(x: %): YETAQ == xx.meta
+    symbolicEtaQuotient(x: %): YEQ == xx.meta
     expansions(x: %): XHashTable(Q, LX) == xx.ser
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
@@ -1540,7 +1540,7 @@ expansion of various eta quotients.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain SETAQG SiftedEtaQuotientGamma
+)abbrev domain SEQG SiftedEtaQuotientGamma
 ++ SiftedEtaQuotientGamma is a generalization of
 ++ EtaQuotientGamma. It holds data to compute an eta
 ++ quotient expansion of $g_{r,m,t,\lambda}(\gamma \tau)$,
@@ -1613,7 +1613,7 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
     laurent(x: %): LX ==
         ord: Q := order x
         not one? denom ord =>
-            error "SETAQG: Laurent series with fractional exponent"
+            error "SEQG: Laurent series with fractional exponent"
         laurent(numer ord, qetaTaylorRep x)$LX
     coerce(x: %): OutputForm == xx::OutputForm
 
@@ -1748,7 +1748,7 @@ series expansion of various eta quotients.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain MSETAQ ModularSiftedEtaQuotient
+)abbrev domain MSEQ ModularSiftedEtaQuotient
 ++ ModularSiftedEtaQuotient is a generalization of
 ++ ModularEtaQuotient. It holds the expansions
 ++ of F_{s,r,m,t}(\tau) at all cusps of $\Gamma_0(N)$.
@@ -1777,8 +1777,8 @@ ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
       ++ $F_{s,r,m,t}(tau)$ at all cusps of Gamma_0(N).
 
   Implementation ==> add
-    YMSETAQ ==> SymbolicModularSiftedEtaQuotient
-    Rep ==> Record(meta: YMSETAQ, ser: XHashTable(Q, LX))
+    YMSEQ ==> SymbolicModularSiftedEtaQuotient
+    Rep ==> Record(meta: YMSEQ, ser: XHashTable(Q, LX))
     xx ==> rep x
 
     coerce(y: SymbolicModularSiftedEtaQuotient): % ==
@@ -1850,8 +1850,8 @@ QEtaModularGamma0: Exports == Implementation where
     CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
     TX ==> QEtaTaylorSeries CX
     LX ==> QEtaLaurentSeries CX
-    YMSETAQ ==> SymbolicModularSiftedEtaQuotient
-    MSETAQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi)
+    YMSEQ ==> SymbolicModularSiftedEtaQuotient
+    MSEQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi)
     a ==> aLigozat $ QETAAUX
 
     -- order of eta^r at cusp a/c.
@@ -1863,19 +1863,19 @@ QEtaModularGamma0: Exports == Implementation where
     grades(nn: P, divs: LP, cusps: LQ, r: LZ): LZ ==
         [grade(nn, divs, denom cusp, r) for cusp in cusps]
 
-    qetaGrades(y: YMSETAQ): XHashTable(Q, Z) ==
+    qetaGrades(y: YMSEQ): XHashTable(Q, Z) ==
         mx: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
-        msetaq := y::MSETAQ
+        msetaq := y::MSEQ
         e: XHashTable(Q, LX) := expansions(msetaq)
         ht: XHashTable(Q, Z) := empty()
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
 
     qetaGrades(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): XHashTable(Q, Z) ==
-        y: YMSETAQ := etaQuotient(nn, s, mm, r, m, t);
+        y: YMSEQ := etaQuotient(nn, s, mm, r, m, t);
         qetaGrades y
 
 
@@ -2026,7 +2026,7 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
   T1 C  ==> QEtaTaylorSeries C
   L1 C  ==> QEtaLaurentSeries C
   A1 C ==> Finite0Series C
-  ETAQI C  ==> EtaQuotientInfinity C
+  EQI C  ==> EtaQuotientInfinity C
   Exports ==> with
     modularSiftedEtaQuotientInfinity: (P, LZ, P, LZ, P, N) -> A1 C
       ++ modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t) returns
@@ -2044,7 +2044,7 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
 
     modularSiftedEtaQuotientInfinity(nn:P, s:LZ, mm:P, r:LZ, m:P, t:N): A1 C ==
         -- First compute the expansion of the orbit product.
-        eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, r)$ETAQI(C))
+        eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, r)$EQI(C))
 
         orb: List N := orbit(mm, r, m, t)$QEtaCoFactorSpace
         tt := first orb
@@ -2054,7 +2054,7 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
 
         -- The expansion of the coFactor is here.
         -- We take care of the right q-order through alphaInfinity.
-        cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, s)$ETAQI(C))
+        cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, s)$EQI(C))
 
         -- We multiply both things together to get (nearly) a modular
         -- function.

@@ -68,7 +68,7 @@ QETAAUX ==> QEtaAuxiliaryPackage;
 SEDG ==> SymbolicEtaDeltaGamma;
 YEQG ==> SymbolicEtaQuotientGamma;
 EQG ==> EtaQuotientGamma(Q, mx, CX, xi);
-METAQ ==> ModularEtaQuotient(Q, mx, CX, xi);
+MEQ ==> ModularEtaQuotient(Q, mx, CX, xi);
 MODFUNX ==> ModularFunctionExpansions(CX, level);
 
 unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
@@ -146,8 +146,8 @@ if not empty? lerr or not expansionAtAllCusps? then (_
 ) else (_
   vPrint("Expansion at cusps", cusps);_
   vPrint("Expansion at CUSPS", [cuspToMatrix(m, cusp)\$GAMMA0 for cusp in cusps(m)$GAMMA0]);_
-  le := [etaQuotient(m, r)\$METAQ for r in rs];_
-  ees := [expansions(e)::METAQX for e in le];_
+  le := [etaQuotient(m, r)\$MEQ for r in rs];_
+  ees := [expansions(e)::MODFUNX for e in le];_
   [[rr, ex] for rr in rs for ex in ees])
 
 EOF
