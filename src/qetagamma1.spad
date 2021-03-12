@@ -179,18 +179,23 @@ CongruenceSubgroupGamma1: with
       ++ with h being an integer.
     member?: (SL2Z, P) -> Boolean
       ++ member?(mat, n) returns true if mat is an element of
-      ++ $\Gamma_0(n)$, i.e. if entry (2,1) is a multiple of n and
+      ++ $\Gamma_1(n)$, i.e. if entry (2,1) is a multiple of n and
       ++ entries (1,1) and (2,2) are congruent 1 (mod n).
       ++ Here it is assumed that determinant(mat)=1.
-    normalize: (P, Z, Z) -> Q
-      ++ normalize(nn, a, c) normalizes the cusp a/c to another
-      ++ (equivalent modulo Gamma1(nn)) cusp u/w such that numerator
-      ++ and denominator are positive and small.
+    equivalentCusps?: (P, Q, Q) -> Boolean
+      ++ equivalentCusps?(nn, a/c, u/w) returns true iff the cusp
+      ++ a/c is equivalent to u/w modulo the action of Gamma1(nn).
       ++ Two cusps a/c and u/w are equivalent modulo the action of
       ++ Gamma1(N) if either
       ++ (1) c =  w (mod N) and a =  u (mod gcd(c, N)
       ++ or
       ++ (2) c = -w (mod N) and a = -u (mod gcd(c, N).
+      ++ See Proposition 2.27 in the PhD thesis of
+      ++ William Stein: https://www.wstein.org/thesis/.
+    normalize: (P, Z, Z) -> Q
+      ++ normalize(nn, a, c) normalizes the cusp a/c to another
+      ++ (equivalent modulo Gamma1(nn)) cusp u/w such that numerator
+      ++ and denominator are positive and small.
 
   == add
 
@@ -217,6 +222,21 @@ CongruenceSubgroupGamma1: with
     projectiveIndex(m: P): P ==
         m < 3 => index m
         asP shift(index m, -1)
+
+    equivalentCusps?(level: P, c1: Q, c2: Q): Boolean ==
+        pr ==> positiveRemainder
+        c := pr(denom c1, level)
+        dbgPrint("c", c)
+        zero? c => -- we must check + and - numerators
+            a := pr(numer c1, level)
+            dbgPrint("a", a)
+            dbgPrint("u", pr(numer c2, level))
+            dbgPrint("-u", pr(- numer c2, level))
+            a = pr(numer c2, level) or a = pr(- numer c2, level)
+        g := gcd(c, level)
+        c = pr(  denom c2, level) => pr(numer c1, g) = pr(  numer c2, g)
+        c = pr(- denom c2, level) => pr(numer c1, g) = pr(- numer c2, g)
+        false
 
     smallerCusp(x: Q, y: Q): Boolean ==
         denom x < denom y => true
@@ -351,8 +371,7 @@ CongruenceSubgroupGamma1: with
         --assert(delta*qm>0)
         --assert(one? gcd(delta, qm))
         c := lambda * qm
-        REC ==> Record(coef1: Z, coef2: Z, generator: Z)
-        rec: REC := extendedEuclidean(delta, lambda*qm)
+        rec: EXGCD := extendedEuclidean(delta, lambda*qm)
         return matrix [[rec.coef1, -rec.coef2], [c, delta]]
 
     -- This function corresponds to R_{N,\delta} in
