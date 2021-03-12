@@ -192,8 +192,8 @@ CongruenceSubgroupGamma1: with
       ++ (2) c = -w (mod N) and a = -u (mod gcd(c, N).
       ++ See Proposition 2.27 in the PhD thesis of
       ++ William Stein: https://www.wstein.org/thesis/.
-    normalize: (P, Z, Z) -> Q
-      ++ normalize(nn, a, c) normalizes the cusp a/c to another
+    normalizeCusp: (P, Z, Z) -> Q
+      ++ normalizeCusp(nn, a, c) normalizes the cusp a/c to another
       ++ (equivalent modulo Gamma1(nn)) cusp u/w such that numerator
       ++ and denominator are positive and small.
 
@@ -249,7 +249,7 @@ CongruenceSubgroupGamma1: with
         while not one? gcd(a, c) and a < c repeat a := a + d
         a
 
-    normalize(level: P, a: Z, c: Z): Q ==
+    normalizeCusp(level: P, a: Z, c: Z): Q ==
         c: Z := positiveRemainder(c, level)
         zero? c =>
             a := positiveRemainder(a, level)
@@ -279,7 +279,7 @@ CongruenceSubgroupGamma1: with
             for x in 1..g-1 | one? gcd(x, g) repeat
                 a: Z := x
                 while not one? gcd(a, c) repeat a := a + g
-                cusp := normalize(level, a, c)
+                cusp := normalizeCusp(level, a, c)
                 h.cusp := cusp -- might override existing cusp
         sort!(smallerCusp, keys h)
 

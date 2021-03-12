@@ -177,6 +177,8 @@ CongruenceSubgroupGamma0: with
     cuspToMatrix: (P, Q) -> SL2Z
       ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]]
       ++ corresponding to the cusp a/c of Gamma0(m).
+      ++ We assum that a/c is a normalized cusp,
+      ++ i.e. a/c=normalizeCusp(m,a/c).
     doubleCosetRepresentatives: P -> List SL2Z
       ++ doubleCosetRepresentatives(nn) returns a list of double
       ++ coset representatives of
@@ -187,6 +189,20 @@ CongruenceSubgroupGamma0: with
       ++ member?(mat, n) returns true if mat is an element of
       ++ $\Gamma_0(n)$, i.e. if entry (2,1) is a multiple of n.
       ++ Here it is assumed that determinant(mat)=1.
+    equivalentCusps?: (P, Q, Q) -> Boolean
+      ++ equivalentCusps?(nn, a/c, u/w) returns true iff the cusp
+      ++ a/c is equivalent to u/w modulo the action of Gamma0(nn).
+      ++ Two cusps a/c and u/w are equivalent modulo the action of
+      ++ Gamma0(N) if either
+      ++ (1) gcd(c,N)=gcd(w,N)
+      ++ or
+      ++ (2) c = -w (mod N) and a = -u (mod gcd(c, N).
+      ++ See Proposition 2.27 in the PhD thesis of
+      ++ William Stein: https://www.wstein.org/thesis/.
+    normalizeCusp: (P, Z, Z) -> Q
+      ++ normalizeCusp(nn, a, c) normalizes the cusp a/c to another
+      ++ (equivalent modulo Gamma0(nn)) cusp u/w such that numerator
+      ++ and denominator are positive and small and w is a divisor of nn.
 
   == add
     width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
@@ -342,6 +358,45 @@ $a\in X_c$.
 -------------------------------------------------------------------
 -- exported function
 -------------------------------------------------------------------
+    equivalentCusps?(level: P, c1: Q, c2: Q): Boolean ==
+        -- implementation according to Proposition 8.13 of
+        -- \cite{Stein:ModularFormas:2007}.
+        pr ==> positiveRemainder
+        u1: Z := numer c1; v1: Z := denom c1;
+        u2: Z := numer c2; v2: Z := denom c2;
+        g: Z := gcd(v1*v2, level)
+        exgcd: EXGCD := extendedEuclidean(u1, v1)
+        s1 := exgcd.coef1
+        exgcd := extendedEuclidean(u2, v2)
+        s2 := exgcd.coef1
+        zero? positiveRemainder(s1*v2 - s2*v1, g)
+
+    -- local function
+    coprimeRemainder(a: Z, c: Z, d: Z): Z ==
+        a := positiveRemainder(a, d)
+        while not one? gcd(a, c) and a < c repeat a := a + d
+        a
+
+    normalizeCusp(level: P, a: Z, c: Z): Q ==
+        -- Algorithm according to PhD Thesis of Silviu Radu.
+        -- Lemma 2.45 of \cite{Radu:PhD:2010}
+        -- First compute the corresponding b and d for the matrix.
+        exgcd: EXGCD := extendedEuclidean(a, c)
+        b: Z := -exgcd.coef2
+        d: Z := exgcd.coef1
+        zero? d => 1 -- Then c = 1 (mod level). So this is the cusp 0=1.
+        delta: Z := gcd(c, level)
+        cdelta := (c exquo delta)::Z
+        ndelta := (level exquo delta)::Z
+        g: Z := gcd(delta, ndelta)
+        -- compute the inverse of d mod g
+        -- Note that
+        -- gcd(d,g)=gcd(d,delta,N/delta)=gcd(d,c,N,N/delta)=gcd(c,d)=1.
+        exgcd := extendedEuclidean(d, g)
+        alambda := coprimeRemainder(cdelta * exgcd.coef1, delta, g)
+        zero? alambda => 1
+        alambda/delta
+
     cuspToMatrix(m: P, cusp: Q): MZ ==
         a: Z := numer cusp
         c: Z := denom cusp
@@ -349,7 +404,7 @@ $a\in X_c$.
         --assert(zero?(m rem c)) -- holds for canonical cusps of Gamma0
         exgcd: EXGCD := extendedEuclidean(a, c)
         g: Z := exgcd.generator
-        dprime: Z :=  exgcd.coef1
+        dprime: Z := exgcd.coef1
         -- The extended Euclidean algorithm leave some freedom in the choice
         -- of cofactors. We improve in the following in such a way to make
         -- d as small as possible, since that corresponds to a d-th root
