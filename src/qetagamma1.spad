@@ -250,21 +250,21 @@ CongruenceSubgroupGamma1: with
         a
 
     normalizeCusp(level: P, a: Z, c: Z): Q ==
+        not one? gcd(a, c) => error "normalizeCusp: cusp not in lowest terms"
+        one? level => 1 -- = cusp infinity
         c: Z := positiveRemainder(c, level)
         zero? c =>
             a := positiveRemainder(a, level)
-            min(a, level - a)/level
+            min(a, level - a)/level -- cannot be zero
 
         a: Z := positiveRemainder(a, c)
         d: Z := gcd(c, level)
 
         c2: Z := level - c
-        one? d =>
-            one? c or one? c2 => 1
-            1/min(c, c2)
+        one? d => 1/min(c, c2)
 
         c < c2 => coprimeRemainder( a, c , d)/c
-        c > c2 => coprimeRemainder(-c, c2, d)/c2
+        c > c2 => coprimeRemainder(-a, c2, d)/c2
         min(coprimeRemainder(a, c, d), coprimeRemainder(-a, c, d))/c -- c=c2
 
     cusps(level: P): List Q ==

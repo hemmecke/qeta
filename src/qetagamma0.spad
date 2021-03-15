@@ -178,7 +178,7 @@ CongruenceSubgroupGamma0: with
       ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]]
       ++ corresponding to the cusp a/c of Gamma0(m).
       ++ We assum that a/c is a normalized cusp,
-      ++ i.e. a/c=normalizeCusp(m,a/c).
+      ++ i.e. a/c=normalizeCusp(m,a,c).
     doubleCosetRepresentatives: P -> List SL2Z
       ++ doubleCosetRepresentatives(nn) returns a list of double
       ++ coset representatives of
@@ -200,7 +200,7 @@ CongruenceSubgroupGamma0: with
       ++ See Proposition 2.27 in the PhD thesis of
       ++ William Stein: https://www.wstein.org/thesis/.
     normalizeCusp: (P, Z, Z) -> Q
-      ++ normalizeCusp(nn, a, c) normalizes the cusp a/c to another
+      ++ normalizeCusp(nn,a,c) normalizes the cusp a/c to another
       ++ (equivalent modulo Gamma0(nn)) cusp u/w such that numerator
       ++ and denominator are positive and small and w is a divisor of nn.
 
@@ -382,6 +382,8 @@ $a\in X_c$.
         -- Lemma 2.45 of \cite{Radu:PhD:2010}
         -- First compute the corresponding b and d for the matrix.
         exgcd: EXGCD := extendedEuclidean(a, c)
+        not one? exgcd.generator =>
+            error "normalizeCusp: cusp not in lowest terms"
         b: Z := -exgcd.coef2
         d: Z := exgcd.coef1
         zero? d => 1 -- Then c = 1 (mod level). So this is the cusp 0=1.
