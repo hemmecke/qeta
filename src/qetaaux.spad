@@ -191,9 +191,25 @@ QEtaAuxiliaryPackage: with
     sigma0: (P, List Z, List List Z) -> Z
       ++ sigma0(mm, r, gr) returns sigma0(mm, r) + 2*sigma0(mm, gr).
       ++ Compare with \eqref{eq:generalized-sigma0}.
+    fractionalBernoulli1: Q -> Q
+      ++ fractionalBernoulli1(x) computes t - 1/2 where t is the
+      ++ fractional part of x, i.e., t = x - floor(x)
     fractionalBernoulli2: Q -> Q
       ++ fractionalBernoulli2(x) computes t^2 - t + 1/6 where t is the
       ++ fractional part of x, i.e., t = x - floor(x)
+    sawTooth: Q -> Q
+      ++ sawTooth(x) is 0 if x is an integer and
+      ++ fractionalBernoulli1(x) otherwise.
+    dedekindSum: (Z, Z) -> Q
+       ++ dedekindSum(p,q) returns for two relatively prime integers
+       ++ p and q the Dedekind sum as defined by
+       ++ dedekindSum(p,q)=sum(sawTooth(1/q)*sawTooth(p*i/q), i=1..q-1).
+    generalizedDedekindSum: (Z, Z, Z, Z, Z) -> Q
+       ++ generalizedDedekindSum(p,q,g,h,nn) returns the generalized
+       ++ Dedekind sum as defined in
+       ++ \cite[p~673]{Yang:GeneralizedDedekindEtaFunctions} by
+       ++ generalizedDedekindSum(p,q,g,h,nn) =
+       ++ sum(sawTooth((g+i*nn)/(q*nn))*sawTooth((g'+p*i*nn)/(q*nn)),i=1..q-1).
     aLigozat: (P, Z, Z) -> Z
       ++ aLigozat(m, c, delta) computes an entry of the matrix of
       ++ Ligozat corresponding to the index (c, delta) counted in
@@ -374,11 +390,6 @@ QEtaAuxiliaryPackage: with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
-
-    -- local function
-    fractionalBernoulli2(x: Q): Q ==
-        t: Q := x - floor(x)::Q
-        t^2 - t + 1/6
 
     sigmaAux(divs: List P, r: List Z): Z ==
         z: Z := 0
@@ -649,6 +660,32 @@ $a\in X_c$.
             error "splitEtaQuotientSpecification: list length > 3"
         r: List Z := [elt(hr, d, 0) for d in divisors(mm)$INTF]
         [r, gr]
+
+    fractionalBernoulli1(x: Q): Q ==
+        t: Q := x - floor(x)::Q
+        t - 1/2
+    fractionalBernoulli2(x: Q): Q ==
+        t: Q := x - floor(x)::Q
+        t^2 - t + 1/6
+    sawTooth(x: Q): Q ==
+        one? denom x => 0
+        fractionalBernoulli1 x
+    dedekindSum(p: Z, q: Z): Q ==
+        not one? gcd(p, q) => error "dedekindSum: input not coprime"
+        ds: Q := 0
+        for i in 1..q-1 repeat
+            ds := ds + sawTooth(i/q)*sawTooth(p*i/q)
+        return ds
+    generalizedDedekindSum(p: Z, q: Z, g: Z, h: Z, nn: Z): Q ==
+        not one? gcd(p, q) => error "generalizedDedekindSum: input not coprime"
+        gds: Q := 0
+        gg: Z := p*g + q*h
+        for i in 1..q-1 repeat
+            qq := q * nn
+            s1 := sawTooth((g+i*nn)/qq)
+            s2 := sawTooth((gg+p*i*nn)/qq)
+            gds := gds + s1*s2
+        return gds
 
     lengthOfGeneralizedEtaQuotientSpecification(nn: P): N ==
         nndivs: List P := DIVISORS nn
