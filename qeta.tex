@@ -153,8 +153,8 @@ Let $\delta$ be a positive natural number and $g$ be a residue class
 %
 We consider the generalized eta-function which is given by
 \begin{gather}
-  \label{eq:generalized-eta-function}
-  \defineNotation[eta-delta-g]{\eta_{\delta,g}}(\tau)
+  \label{eq:eta_{delta,g}(tau)}
+  \defineNotation[eta-delta-g-tau]{\eta_{\delta,g}}(\tau)
   = q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
   %
   \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
@@ -162,10 +162,13 @@ We consider the generalized eta-function which is given by
 \end{gather}
 where $q = e^{2\pi i \tau}$ and
 \begin{gather}
-  P_2(t) = \{t\}^2 - \{t\} + \frac{1}{6}
+    \defineNotation[P-2]{P_2(x)} = \{x\}^2 - \{x\} + \frac{1}{6}
 \end{gather}
-is the second Bernoulli function and $\{t\}$ denotes the fractional
-part of $t$, see
+is the second Bernoulli function, $\{x\}$ denotes the fractional part
+of $x$, \ie,
+$\defineNotation[x-fractional]{\{x\}} = x - \lfloor x \rfloor$ and
+$\defineNotation[x-floor]{\lfloor x \rfloor}$ denotes the greatest
+integer less than or equal to $x$, see
 \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
 
@@ -441,6 +444,7 @@ $\tau'\in\setH$ and
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Transformation of $\eta_\delta$ under $\SL2Z$}
+\label{sec:eta_delta-transformation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Let $\delta \in \setN\setminus\Set{0}$.
 
@@ -1937,6 +1941,116 @@ See function \code{rightCosetRepresentatives} in
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Related to Generalized Eta-Quotients}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Transformations of Generalized Eta-Functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The transformation rules for the generalized eta-function are usually
+given in terms of their notation by Schoeneberg, see
+\cite[Chp.~VIII]{Schoeneberg:EllipticModularFunctions:1974} and
+\cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}. For our
+purpose we add additional indices $h$ and $N$ to refer to the implicit
+parameters used by Schoeneberg. We also add an upper index $(s)$ to
+refer to Schoeneberg's definition.
+
+Let $N$ be a positive integer, and $g$ and $h$ be real numbers, then
+the generalized eta-function $\eta_{g,h,N}^{(s)}$ (version
+Schoeneberg) is defined by
+\begin{gather}
+  \label{eq:eta_{g,h,N}^(s)(tau)}
+  \defineNotation[eta-g-h-N-tau-Schoeneberg]{\eta_{g,h,N}^{(s)}(\tau)}
+  :=
+  \alpha(g,h,N) q^{\frac{1}{2} P_2(\frac{g}{N})}
+  \prod_{\substack{n>0\\n\equiv g \bmod N}}
+       (1-\zeta_N^h q^{n/N})
+  \prod_{\substack{n>0\\n\equiv -g \bmod N}}
+       (1-\zeta_N^{-h} q^{n/N})
+\end{gather}
+where $\zeta_N$ is a primitive $N$-th root of unity,
+\begin{gather}
+  \label{eq:eta_{g,h,N}^(s)(tau)-prefactor}
+  \defineNotation[alpha-g-h-N]{\alpha(g,h,N)}
+  =
+  \begin{cases}
+    (1 - \zeta_N^{-h}) q^{\frac{1}{2} P_1(\frac{h}{N})},
+    &
+    \text{if $g\equiv0\pmod{N}$ and $h\not\equiv0\pmod{N}$,}
+    \\
+    1, & \text{otherwise},
+  \end{cases}
+\end{gather}
+and $P_1(x)$ is the first Bernoulli function given by
+\begin{gather*}
+  \defineNotation[P-1]{P_1(x)}
+  =
+  \begin{cases}
+    \{x\} - \frac{1}{2}, & \text{if $x\notin\setZ$},
+    \\
+    0, & \text{if $x \in \setZ$}.
+  \end{cases}
+\end{gather*}
+
+If there is no possibility of confusion, we drop the parameter $N$
+that denotes the level, i.e.,
+$\defineNotation[eta-g-h-tau-Schoeneberg]{\eta_{g,h}^{(s)}(\tau)} =
+\eta_{g,h,N}^{(s)}(\tau)$.
+
+
+The connection with our definiton of generalized eta-function from
+\eqref{eq:eta_{delta,g}(tau)} is given by
+\begin{gather}
+  \eta_{\delta,g}(\tau) = \eta_{g,0,\delta}^{(s)}(\delta\tau).
+\end{gather}
+
+Since $\eta_{\delta,0}(\tau) = \eta(\delta\tau)^2$ and we already have
+a transformation formula for the pure eta-function given by
+\eqref{eq:eta_delta(gamma*tau)}, we only need to consider
+transformation rules with $g \not\equiv 0 \pmod{\delta}$.
+
+A transformation formula was given in
+\cite[Chp.~VIII]{Schoeneberg:EllipticModularFunctions:1974}, see
+also \cite[p.~673]{Yang:GeneralizedDedekindEtaFunctions:2004}. Let
+$\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in \SL2Z$.
+and $N>0$ be an integer. Then
+\begin{gather}
+  \label{eq:eta_{g,h,N}^(s)(gamma*tau)}
+  \defineNotation[eta-g-h-N-gamma-tau-Schoeneberg]{\eta_{g,h,N}^{(s)}(\gamma\tau)}
+  =
+  \unityPower{\kappa_{g,h,N,\gamma}} \, \eta_{g',h',N}^{(s)}(\tau)
+\end{gather}
+where $\unityPowerSymbol$ is defined in Definition~\ref{def:epsilon},
+\begin{gather*}
+  \defineNotation[kappa-g-h-N-gamma]{\kappa_{g,h,N,\gamma}}
+  =
+  \begin{cases}
+    \frac{b}{2d} P_2(\frac{g}{N}), &\text{if $c=0$},
+    \\
+    \frac{a}{2c} P_2(\frac{g}{N})
+      + \frac{d}{2c} P_2(\frac{g'}{N})
+      - \sign c \cdot s_{g,h,N}(a,c),
+      &
+      \text{if $c\not=0$},
+    \end{cases}
+\end{gather*}
+$g'=ag+ch$, $h'=bg+dh$,
+and $s_{g,h,N}(a,c)$ is the generalized Dedekind sum defined by
+\begin{gather*}
+  s_{g,h,N}(a,c)
+  =
+  \sum_{k \bmod c}
+    \Bigl(\Bigl( \frac{g + k N}{c N} \Bigr)\Bigr)
+    \Bigl(\Bigl( \frac{g' + k a N}{c N} \Bigr)\Bigr),
+\end{gather*}
+where the summation runs over a complete set of representatives mod
+$c$, see \cite{Yang:GeneralizedDedekindEtaFunctions:2004}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Generalized Eta-Quotients that are Modular for $\Gamma_1(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In view of $\eta_{\delta,g}(\tau) = \eta_{\delta,\delta-g}(\tau)$ we
 can say that a generalized eta-quotient is a product of the form
@@ -2174,6 +2288,64 @@ In other words, since these orders must be integers, we recover the
 conditions \ref{eq:generalized-sigmaInfinity} and
 \ref{eq:generalized-sigma0} from above.
 
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Transformation of Generalized Eta-Quotients under $\SL2Z$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us take a generalized eta-quotient $g_{\bar{r}}$ of the form
+\eqref{eq:g_rbar(tau)}. We aim to find the expansion of
+$g_{\bar{r}}(\gamma\tau)$ for
+$\gamma = \left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)
+\in \SL2Z$. Since the expansion of the pure eta-quotient
+$g_r(\gamma\tau)$ (with $r=(r_{\delta,0})_{\divides{\delta}{N}}$ is
+given by \eqref{eq:g_r(gamma*tau)}, we only need to combine the
+transformations given by \eqref{eq:eta_{g,h,N}^(s)(gamma*tau)}.
+
+We followed the derivation in
+Section~\ref{sec:eta_delta-transformation} and get (with the same
+notation as in that section)
+\begin{gather*}
+  \delta\gamma\tau = \gamma_\delta \tau_\delta.
+\end{gather*}
+Thus, we have
+\begin{align}
+  g_{\bar{r}}(\gamma\tau)
+  &=
+    g_r(\gamma\tau)
+    \cdot
+    \prod_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \eta_{\delta,g}(\gamma\tau)^{r_{\delta,g}}
+  \notag\\
+  &=
+    g_r(\gamma\tau)
+    \cdot
+    \prod_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \eta_{g,0,\delta}^{(s)}(\delta\gamma\tau)^{r_{\delta,g}}
+  \notag\\
+  &=
+    g_r(\gamma\tau)
+    \cdot
+    \prod_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \eta_{g,0,\delta}^{(s)}(\gamma_\delta\tau_\delta)^{r_{\delta,g}}
+  \notag\\
+  &=
+    g_r(\gamma\tau)
+    \cdot
+    \prod_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    \left(
+      \unityPower{\kappa_{g,0,\delta,\gamma_\delta}}\,
+      \eta_{a_\delta g, b_\delta g,\delta}^{(s)}(\tau_\delta)
+  \right)^{r_{\delta,g}}.
+  \label{eq:g_rbar(gamma*tau)}
+\end{align}
+Note that formula \eqref{eq:g_rbar(gamma*tau)} corresponds to (2.25)
+in \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
 
 
