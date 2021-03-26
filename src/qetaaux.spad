@@ -210,6 +210,7 @@ QEtaAuxiliaryPackage: with
        ++ \cite[p~673]{Yang:GeneralizedDedekindEtaFunctions} by
        ++ generalizedDedekindSum(p,q,g,h,nn) =
        ++ sum(sawTooth((g+i*nn)/(q*nn))*sawTooth((g'+p*i*nn)/(q*nn)),i=1..q-1).
+       ++ Condition: one? gcd(p,q).
     aLigozat: (P, Z, Z) -> Z
       ++ aLigozat(m, c, delta) computes an entry of the matrix of
       ++ Ligozat corresponding to the index (c, delta) counted in
@@ -673,14 +674,14 @@ $a\in X_c$.
     dedekindSum(p: Z, q: Z): Q ==
         not one? gcd(p, q) => error "dedekindSum: input not coprime"
         ds: Q := 0
-        for i in 1..q-1 repeat
+        for i in 1..abs(q)-1 repeat
             ds := ds + sawTooth(i/q)*sawTooth(p*i/q)
         return ds
     generalizedDedekindSum(p: Z, q: Z, g: Z, h: Z, nn: Z): Q ==
         not one? gcd(p, q) => error "generalizedDedekindSum: input not coprime"
         gds: Q := 0
         gg: Z := p*g + q*h
-        for i in 1..q-1 repeat
+        for i in 0..abs(q)-1 repeat
             qq := q * nn
             s1 := sawTooth((g+i*nn)/qq)
             s2 := sawTooth((gg+p*i*nn)/qq)
