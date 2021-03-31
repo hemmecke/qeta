@@ -3,20 +3,44 @@
 
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input
 
+-- +
 --setup
+-- -
+
+
 u ==> upsilonExponent $ QETAAUX
 rsr ==> rationalSquareRoot $ QETAAUX
+matCusps(nn: P): List Matrix Z == [cuspToMatrix(nn,c)$GAMMA1 for c in cusps(nn)$GAMMA1]
+kappa(nn: P, g: Z, h: Z, mat: Matrix Z): List Q ==
+  ks := kappaSchoeneberg(nn, g, h, mat)$QETAAUX
+  ky := kappaYang(nn, g, h, mat)$QETAAUX
+  gprime := mat(1,1)*g+mat(2,1)*h
+  hprime := mat(1,2)*g+mat(2,2)*h
+  e := floor(gprime/nn)*(1/2 - hprime/nn)
+  [nn,g,h,gprime, hprime, positiveRemainder(gprime,nn),_
+   ks, ky, e,_fractionalPart(ks - ky - e)]
+
+
+-- +
 --endsetup
 
 
+-- +
 --test:upsilon
+-- -
+
 assertEquals(u(1,0,0,1), 0)
 assertEquals(u(-1,0,0,-1), 6) -- compensate for the (c\tau+d)^(1/2) factor
 assertEquals(u(1,1,0,1), 1) -- t +-> t+1
 assertEquals(u(0,-1,1,0), 21) -- t +-> - 1/t
+
+-- +
 --endtest
 
+-- +
 --test:rationalSquareRoot
+-- -
+
 RQP ==> Record(rat: Q, rootOf: P)
 chkrsr x ==> (z: RQP := rsr x; assertEquals(x, (z.rat)^2*z.rootOf))
 chkrsr 1
@@ -24,9 +48,14 @@ chkrsr 16
 chkrsr(1/16)
 chkrsr(9/16)
 chkrsr(7*6^2/(5^3*11^2))
+
+-- +
 --endtest
 
+-- +
 --test:primePower
+-- -
+
 pp(a,p,e) ==> assertEquals(primePower(a, p), e)
 pp(5, 3, 0)
 pp(6, 3, 1)
@@ -36,17 +65,27 @@ pp(12, 2, 2)
 pp(36, 5, 0)
 pp(72, 2, 3)
 pp(72, 3, 2)
+
+-- +
 --endtest
 
+-- +
 --test:lengthOfGeneralizedEtaQuotientSpecification
+-- -
+
 l := [lengthOfGeneralizedEtaQuotientSpecification nn for nn in 1..50];
 expected := [1,2,3,4,4,7,5,8,8,10,7,15,8,13,14,16,10,21,11,22,_
              18,19,13,31,17,22,22,29,16,38,17,32,26,28,26,47,20,31,30,46,_
              22,50,23,43,42,37,25,63,30,48]
 assertEquals(l, expected)
+
+-- +
 --endtest
 
+-- +
 --test:toEtaQuotientSpecification
+-- -
+
 expected := [_
   [[1]],_
   [[1],[2]],_
@@ -79,9 +118,14 @@ s := [toEtaQuotientSpecification(nn,[]) for nn in 1..20]
 assertEquals(s, expected)
 l := [lengthOfGeneralizedEtaQuotientSpecification nn for nn in 1..20];
 assertEquals([#x for x in s], l)
+
+-- +
 --endtest
 
+-- +
 --test:dedekindSum
+-- -
+
 l := [[dedekindSum(a,c) for a in 1..c | one? gcd(a,c)] for c in 1..20]
 expected := [_
   [0],
@@ -109,11 +153,117 @@ expected := [_
 
 assertEquals(l, expected)
 
+-- +
 --endtest
 
+-- +
 --test:generalizedDedekindSum
+-- -
 
 for c in 1..20 repeat for a in 1..c | one? gcd(a,c) repeat
-  assertEquals(dedekindSum(a,c), generalizedDedekindSum(a,c,0,0,10))
+  assertEquals(dedekindSum(a,c), generalizedDedekindSum(10,0,0,a,c))
 
+-- +
+--endtest
+-- -
+
+-- Check that the transformation of $E_{g,h}$ and $\eta_{g,h}^{[S]}$ agree if
+-- $g$ and $g'=l.6$ are not zero.
+
+-- +
+--test:kappa-1-10
+-- -
+
+for nn in 1..10 repeat
+  for mat in matCusps(nn) repeat
+    for g in 1..nn-1 repeat
+      for h in 0..g-1 repeat
+        l :=  kappa(nn,g,h,mat)
+        if not zero? l.6 then assertTrue(zero? last l)
+
+-- +
+--endtest
+
+-- +
+--test:kappa-11-20
+-- -
+
+for nn in 11..20 repeat
+  for mat in matCusps(nn) repeat
+    for g in 1..nn-1 repeat
+      for h in 0..g-1 repeat
+        l :=  kappa(nn,g,h,mat)
+        if not zero? l.6 then assertTrue(zero? last l)
+
+-- +
+--endtest
+
+-- +
+--test:kappa-21-30
+-- -
+
+for nn in 21..30 repeat
+  for mat in matCusps(nn) repeat
+    for g in 1..nn-1 repeat
+      for h in 0..g-1 repeat
+        l :=  kappa(nn,g,h,mat)
+        if not zero? l.6 then assertTrue(zero? last l)
+
+-- +
+--endtest
+
+-- +
+--test:kappa-31-40
+-- -
+
+for nn in 31..40 repeat
+  for mat in matCusps(nn) repeat
+    for g in 1..nn-1 repeat
+      for h in 0..g-1 repeat
+        l :=  kappa(nn,g,h,mat)
+        if not zero? l.6 then assertTrue(zero? last l)
+
+-- +
+--endtest
+
+-- +
+--test:kappa-41-50
+-- -
+
+for nn in 41..50 repeat
+  for mat in matCusps(nn) repeat
+    for g in 1..nn-1 repeat
+      for h in 0..g-1 repeat
+        l :=  kappa(nn,g,h,mat)
+        if not zero? l.6 then assertTrue(zero? last l)
+
+-- +
+--endtest
+
+-- +
+--test:kappa-51-60
+-- -
+
+for nn in 51..60 repeat
+  for mat in matCusps(nn) repeat
+    for g in 1..nn-1 repeat
+      for h in 0..g-1 repeat
+        l :=  kappa(nn,g,h,mat)
+        if not zero? l.6 then assertTrue(zero? last l)
+
+-- +
+--endtest
+
+-- +
+--test:kappa-61-70
+-- -
+
+for nn in 61..70 repeat
+  for mat in matCusps(nn) repeat
+    for g in 1..nn-1 repeat
+      for h in 0..g-1 repeat
+        l :=  kappa(nn,g,h,mat)
+        if not zero? l.6 then assertTrue(zero? last l)
+
+-- +
 --endtest
