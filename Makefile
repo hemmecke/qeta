@@ -103,7 +103,16 @@ PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQ
 
 prerequisites: ${PREREQS}
 
-recompile-spad compile-spad clean distclean doc localdoc github.io-local\
+QETAEXTS=aux bbl blg idx ilg ind log out synctex.gz toc
+clean:
+	-cd ${TMP} && ${MAKE} clean
+	rm -f $(patsubst %,qeta.%, ${QETAEXTS})
+
+distclean: clean
+	-cd ${TMP} && ${MAKE} distclean
+	rm -f qeta.pdf project.pdf
+
+recompile-spad compile-spad doc localdoc github.io-local\
     compute-all eqmev eqig elig er checksomos runfricassomos seg slg ceg clg:
 	${MAKE} prerequisites
 	cd ${TMP} && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@
@@ -111,7 +120,7 @@ recompile-spad compile-spad clean distclean doc localdoc github.io-local\
 ${TMP}/Makefile: Makefile.sub
 	${MKDIR_P} ${TMP}
 	cp -a $< $@
-${patsubst %,${TPROJECT}.%, tex bib sty}: ${TPROJECT}.%: ${PROJECT}.%
+${patsubst %,${TPROJECT}.%, bib sty}: ${TPROJECT}.%: ${PROJECT}.%
 	${MKDIR_P} ${TMP}
 	cp -a $< $@
 ${patsubst %,${TMP}/%,${PREREQS_INPUT}}: ${TMP}/%: input/%
@@ -173,14 +182,17 @@ toweb: zudilin/index.html
 # documentation
 # Compile all .spad files to .pdf and join them together.
 pdfall: pdf
-	cd ${TMP} && \
-	pdfjoin --outfile project.pdf qeta.pdf ${patsubst %,%.pdf, ${SPADFILES}}
+	pdfjam --fitpaper true --rotateoversize true \
+               --outfile project.pdf qeta.pdf \
+               ${patsubst %,${TMP}/%.pdf, ${SPADFILES}}
 
-pdf: ${patsubst %,${TPROJECT}.%, tex bib sty} ${TPROJECT}abstracts.tex \
+# We generate qeta.pdf in the directory where qeta.tex lives so that
+# we can use forward and inverse search.
+pdf: ${patsubst %,${TPROJECT}.%, bib sty} ${TPROJECT}abstracts.tex \
      ${patsubst %,${TMP}/%.pdf,${SPADFILES}}
-	cd ${TMP} && pdflatex ${PROJECT}.tex \
-	          && bibtex ${PROJECT}.aux \
-	          && makeindex ${PROJECT}
+	TEXINPUTS=${TMP}:  pdflatex --synctex=1 ${PROJECT}.tex \
+	  && bibtex ${PROJECT}.aux \
+	  && makeindex ${PROJECT}
 
 ${TPROJECT}abstracts.tex: ${patsubst %,${TMP}/%, ${PREREQS_SPAD}}
 	(echo '\\begin{description}'; \
