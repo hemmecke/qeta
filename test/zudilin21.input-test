@@ -6,7 +6,8 @@
 -- # Init
 
 -- In this file we deal with the computation of a relation for
--- $f_{21}$ that is printed in Section 6.3 (page 77) of \cite{Brunault+Zudilin:ManyVariationsMahlerMeasures:2020}.
+-- $f_{21}$ that is printed in Section 6.3 (page 77) of
+-- \cite{Brunault+Zudilin:ManyVariationsMahlerMeasures:2020}.
 --
 -- In fact, by choosing another adjustment, we even find the 3 term relation:
 --
@@ -56,8 +57,35 @@ MZ ==> Matrix Z
 -------------------------------------------------------------------
 -- -
 
--- We have given f21 as an expression in level 63. So we first
--- compute the respective q-series and then multiply with
+-- ```
+-- From: Wadim Zudilin <wzudilin@gmail.com>
+-- Date: Thu, 12 Mar 2020 08:28:07 +0100
+--
+-- P.S. Can you shorten the 6-term version of
+-- ```
+-- $$
+-- \begin{align*}
+-- f_{21}(\tau)
+-- =
+-- \frac{\eta_7}{2\eta_1^2\eta_3\eta_9\eta_{21}}
+-- & (3\eta_1^2\eta_7^2\eta_9^4
+--    - \eta_3^5\eta_7\eta_9\eta_{21}
+--    + 7\eta_1\eta_3^2\eta_9\eta_{21}^4
+-- \\ &\qquad
+--    + 3\eta_1^3\eta_7\eta_9^3\eta_{63}
+--    - 3\eta_1\eta_3^5\eta_{21}\eta_{63}
+--    + 3\eta_1^4\eta_9^2\eta_{63}^2)
+-- \end{align*}
+-- $$
+-- ```
+-- ?
+-- ```
+
+-- We have given $f_{21}$ as an expression in level 63 although
+-- it is known that it is a modular form of weight 2 for
+-- $\Gamma_0(21)$.
+--
+-- So we first compute the respective q-series and then multiply with
 -- a cofactor of level 42 to get a modular function in level 42.
 
 level := 63;
@@ -77,7 +105,8 @@ f21 := rzToA1C f21polzudilinRZ
 
 )clear prop esyms dim f21polzudilinRZ
 
--- From now on we work in level 42.
+-- From now on we work in level 42 and only work with the
+-- $q$ expansion of $f_{21}$.
 --
 -- The generators of the $\eta$-quotients of level 42 are given by
 -- these exponents for the $\eta$ functions (with arguments being the
@@ -123,9 +152,10 @@ rhs: List Z := concat([0 for i in idivs], -2*wght);
 z := zsolve4ti2(level, idivs, rhs);
 zzi := sortByComponentGrade(level, [x(1..#divs) for x in z.zinhom]);
 zzh := sortByComponentGrade(level, [x(1..#divs) for x in z.zhom]);
-assertEquals(zzi, etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV)
-assertEquals(#zzi,570)
-assertEquals(#zzh, #rgens42)
+assertEquals(zzi, etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV);
+assertEquals(#zzi,570);
+assertEquals(#zzh, #rgens42);
+#zzi
 
 -- The order of $f_{21}$ is 1. So we aim at a cofactor
 -- that leads to a small pole order of the resulting
@@ -134,10 +164,10 @@ assertEquals(#zzh, #rgens42)
 min [qetaGrade EQA1C r for r in zzi]
 qetaGrade EQA1C zzi.1
 
-rfcofactor := zzi.1;
-assertEquals(rfcofactor, [1, - 2, - 3, 6, - 3, 6, 9, - 18])
-f := f21 * EQA1C rfcofactor;
-assertEquals(qetaGrade f, 19)
+rfcofactor := zzi.1
+assertEquals(rfcofactor, [1, - 2, - 3, 6, - 3, 6, 9, - 18]);
+f := f21 * EQA1C rfcofactor
+assertEquals(qetaGrade f, 19);
 xf := toX1(C, f, 'F);
 
 -- Clearly, $f$ must reduce to zero
@@ -157,12 +187,12 @@ fmpol := -second(ixfr)::PolC + F  -- This corresponds to the mod func f.
 assertEquals(# monomials fmpol, 17)
 
 -- However, this relation has 17 terms in contrast to the
--- representation with only 7 eta-quotients of $M^\infty(63)$.
+-- representation with only 6 eta-quotients of $M^\infty(63)$.
 
--- # Find a basis for all eta-quotients of weight 4 that are modular forms
+-- # Find a basis for all eta-quotients of weight 2 that are modular forms
 
 -- We now try another method. Namely, we find a basis for all
--- eta-quotients of weight 4 involving only
+-- eta-quotients of weight 2 involving only
 -- $\eta(\delta\tau)$ with $\delta | 42$.
 --
 -- To reduce the search space, we consider only exponent vectors
@@ -175,6 +205,14 @@ assertEquals(# monomials fmpol, 17)
 -- at the cusps.
 
 matrixLigozat(42)
+
+-- where
+-- $$
+-- a(c,\delta)
+-- =
+-- \frac{N/c}{\gcd(N/c,c)}\frac{\gcd(c,\delta)^2}{\delta}
+-- $$
+-- and the rows and columns are indexed by the divisors of 42.
 
 -- We have to solve an integer problem which can easily be
 -- done by the program 4ti2.
@@ -195,7 +233,7 @@ vmodformgens := [vector x for x in zmodformzi];
 vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
 rmodformgens := [members x for x in vmodformgenss];
 
--- # Check whether there is a Q-linear combinationn of holomorphic eta-quotients of level 42 that is equal to $f_{21}$.
+-- # Check whether there is a $\mathbb{Q}$-linear combinationn of holomorphic eta-quotients of level 42 that is equal to $f_{21}$.
 
 --$ sage: dimension_modular_forms(Gamma0(42),2)
 --: 12
@@ -207,16 +245,16 @@ emodformgens := [EQA1C r for r in rmodformgens];
 
 -- Although the dimension of the space of modular forms for
 -- $\Gamma_0(42)$ of weight 2 is 12, we need to consider the
--- first 14 coefficients in order to ensure that we find a
+-- first 15 coefficients in order to ensure that we find a
 -- solution.
 --
--- For each of our generators we compute the first 14
+-- For each of our generators we compute the first 15
 -- coefficients and put it into a matrix `matmodforms`.
 
 dimM42 := 12
 ncoefs := 14
 cmodformgens := [[coefficient(x, i) for i in 0..ncoefs] for x in emodformgens];
-matmodforms := transpose matrix cmodformgens;
+matmodforms := transpose matrix cmodformgens
 assertEquals(rank matmodforms, dimM42)
 
 -- The coefficients from $f_{21}$ that we want to obtain
@@ -244,7 +282,7 @@ assertEquals(#zmodformszf,126)
 -- We are lucky. In the only particular (inhomogeneous) solution
 -- there are only 5 entries different from 0.
 
-zzi := first zmodformszi;
+zzi := first zmodformszi
 iv := [[i, x] for i in 1..#zzi | (x := zzi.i; not zero? x)];
 assertEquals(iv, [[54, -2], [58, -3], [59, 6], [79, 2], [130, 21]])
 
@@ -253,7 +291,7 @@ assertEquals(iv, [[54, -2], [58, -3], [59, 6], [79, 2], [130, 21]])
 --
 -- Not surprisingly, we find that the linear combination that
 -- we have just found does not only equal $f_{21}$ in the first
--- 14 coefficients, but in 500 coefficients.
+-- 15 coefficients, but in 500 coefficients.
 
 u := emodformgens;
 h := -2*u.54 -3*u.58 +6*u.59 +2*u.79 +21*u.130;
@@ -263,7 +301,12 @@ assertEquals(removeDuplicates [coefficient(z0, i) for i in -10..500],[0])
 
 -- # Reduce the number of terms
 
-matrix [cons(i, x) for i in 1..#zmodformszf |(x:=zmodformszf.i; not zero? x.54 and x.54 + x.79 = 0)]
+-- We do not stop here, but rather look for homogeneous
+-- solution vectors that could bring down the number of terms
+-- even more.
+
+[cons(i, x) for i in 1..#zmodformszf |
+    (x:=zmodformszf.i; not zero? x.54 and x.54 + x.79 = 0)]
 
 -- Luckily, the 38th homogeneous solution is already quite appropriate,
 -- since it has many entries that are the negation of our inhomogeneous
@@ -276,7 +319,7 @@ assertEquals(ivh, [[54,2],[57,-1],[58,3],[59,-6],[60,2],[79,-2],[100,1],[130,-21
 -- If we add the homogeneous solution to the inhomogeneous one,
 -- we get an inhomogeneous solution with only 3 terms.
 
-z := zzi + zmodformszf.38;
+z := zzi + zmodformszf.38
 ivi := [[i, x] for i in 1..#z | (x := z.i; not zero? x)];
 assertEquals(ivi, [[57, -1], [60, 2], [100, 1]])
 

@@ -45,6 +45,8 @@ NEGATE x ==> members(- vector x) -- negate all entries in a list
 --
 -- It was not known whether this form can be expressed as
 -- a sum of eta-quotients.
+--
+-- For our computations Zudilin provided the first 300 coefficients.
 
 q := monomial(1,1)$A1(C)
 f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
@@ -83,7 +85,7 @@ f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
 -- of $R^\infty(128)$.
 
 level := 128;
-rgens := etaQuotientMonoidExponentVectors(level)$QEQEV;
+rgens := etaQuotientMonoidExponentVectors(level)$QEQEV
 rgensExpected: List List Z := [_
     [0, 0, 0, 0, - 1, 2, 1, - 2], [0, 0, 0, 0, 0, - 2, 6, - 4],_
     [0, 0, 0, - 2, 5, - 2, 1, - 2], [0, 0, 0, 2, - 1, 0, 1, - 2],_
@@ -109,7 +111,7 @@ assertEquals([qetaGrade x for x in egens],_
 msyms := indexedSymbols("M", #egens)
 xgens: List X1 C := [toX1(C, x, s) for x in egens for s in msyms];
 
--- We take a minimal (in terms the order in q) element from the
+-- We take a minimal (in terms of the pole-order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_{28}]$.
 
@@ -121,13 +123,23 @@ abx := samba(tx, xgens, 9)$QXTOPSAMBA1(C)
 assertEquals(genus(level)$GAMMA0, 9)
 assertEquals(numberOfGaps(abx), 9)
 
--- We compute a cofactor such that the product with $f_{128}$
--- will be a modular function in $M^\infty(128)$.
+-- Since the genus is equal to the number of gaps, we know by the
+-- Weierstrass Gap Theorem that for the above algebra basis it holds
+-- $$
+-- M^\infty(128) = \langle 1, b_1, b_2, b_3, b_4, b_5 \rangle_{\mathbb{C}[t]}
+-- $$
+-- where $t=M_1$,
+-- $b_1=M_6 M_7$, $b_2=M_6$, $b_3=M_{16}$, $b_4=M_{27}$, $b_5=M_7$.
+
+-- We try to compute an eta-quotient cofactor of weight -4
+-- such that the product with $f_{128}$ will be
+-- a modular function in $M^\infty(128)$.
 
 divs := DIVISORS level;
 idivs := [i for i in 1.. #divs-1];
 wght := 4
-rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV;
+rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV
+
 rfcofactor := rwgens.1;
 assertEquals(rfcofactor,[0, 0, 0, 0, 0, 0, 8, - 16])
 fcofactor := EQA1C rfcofactor
@@ -140,7 +152,7 @@ assertEquals([qetaGrade x for x in fcofactors], [64])
 
 f := f128 * fcofactor;
 xf := toX1(C, f, 'F)
-xfr := reduce(xf, abx)$QXTOPRED1(C);
+xfr := reduce(xf, abx)$QXTOPRED1(C)
 assertTrue(zero? xfr)
 
 assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
@@ -212,6 +224,9 @@ assertEquals(order(z0, 301), 301)
 -- that our computation expands to the same coefficients.
 
 assertEquals(removeDuplicates [qetaCoefficient(z0, -i) for i in 0..300], [0])
+
+-- We have found a representation of $f_{128}$ as a sum
+-- of $25$ eta-quotients.
 
 assertEquals(#monomials(rez f128polRZ), 25)
 
@@ -304,8 +319,8 @@ assertEquals(qetaGrades gA128, [31,31,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 
 -- # Find cofactor to bring $f_{128}$ into $M^\infty(64)$
 
--- Try to find another cofactor `rcofactor3` such that the respective
--- series `hser` is, in fact a modular function for $\Gamma_0(64)$. So
+-- Try to find another cofactor `rhcofactor` such that the respective
+-- series `hA128` is, in fact a modular function for $\Gamma_0(64)$. So
 -- let's multiply with another nice eta-quotient that brings it to
 -- $M^\infty(64)$.
 
@@ -317,12 +332,20 @@ idivs := [1,2,3,4,5,6];
 z := zsolve4ti2(64, idivs, concat([0 for i in idivs], [-2*wght,0,12]))$QEQEV;
 z.zinhom
 
+-- The above command solved the following integer problem.
+
+(matrixLigozatModularGamma0(64, idivs)$QETAAUX)::OF * 'z =
+  (transpose matrix [concat([0 for i in idivs], [-2*wght,0,12,0])])::OF
+
 -- We consider the resulting vectors as eta-quotient exponent vectors
 -- where the entry for $\eta_{128}$ is equal to zero.
 
 liftTo128(vs: List Vector Z): List List Z == (_
     n := # DIVISORS 128;_
     [(v := copy x(1..n); v.n := 0; v) for x in vs]);
+
+-- We lift the inhomogeneous as well as the homogeneous
+-- solution vectors.
 
 zzi := liftTo128 z.zinhom;
 assertEquals(zzi,[_
@@ -364,7 +387,7 @@ hA128 := rzToAnCX hpolRZ
 assertEquals(qetaGrades hA128, _
   [-2, -2, -2, -2, -2, -2, -2, -2, 0, 0, 0, 0, -2, -2, 34, 34])
 
--- $h$ has expansions at the cusps of 128 that have the following form.
+-- `hA128` has expansions at the cusps of 128 that have the following form.
 
 for cusp in spitzen for i in 1..#spitzen repeat _
     print([cusp, WIDTH0(128, denom cusp)/WIDTH0(64, denom cusp), series(hA128, i)]);
@@ -382,13 +405,20 @@ assertEquals(order(z, 100), 100)
 
 -- ## Reduction of $h$ by algebra basis of $M^\infty(64)$
 
--- Let us consider the expansion of `h := series(hA128, 16)` and try to
+-- Let us consider the expansion of `h := series(hA128, 16)`, i.e.,
+-- the expansion of the modular function at $\infty$, and try to
 -- reduce it by the algebra basis of eta-quotients in $M^\infty(64)$.
 
 hx := series(hA128, 16);
 h := abfmap(CX, C, retract, hx)::A1(C)
 
--- Now we want to compute in $M^\infty(64)$, i.e. modular function for $\Gamma_0(64)$.
+-- Now we want to compute in $M^\infty(64)$, i.e. modular function for
+-- $\Gamma_0(64)$.
+
+-- Note that in constrast to the series $f$ (with pole order 65),
+-- we now have to deal only with a series of pole order 34.
+-- Therefore, we can expect that the redcution by the algebra
+-- basis involves fewer reduction steps.
 
 level := 64;
 rgens64 := etaQuotientMonoidExponentVectors(level)$QEQEV;
@@ -416,7 +446,7 @@ assertEquals(genus(64)$GAMMA0, 3)
 
 -- The $h$ that we constructed was $f_{128}$ multiplied by a
 -- certain eta-quotient cofactor
--- (given by the exponent vector `rcofactor3`)
+-- (given by the exponent vector `rhcofactor`)
 -- to bring it into $M^\infty(64)$.
 --
 -- Clearly, we should be able to reduce that series to zero
@@ -434,10 +464,14 @@ assertEquals(# monomials haupol, 23)
 assertEquals(haupol,_
   (U1^10-20*U1^8-24*U1^6-128*U1^4-512*U1^2+2048)*U5_
  +(-2*U1^8-36*U1^6+208*U1^4-224*U1^2+1024)*U11_
- -2*U1^11+4*U1^10+40*U1^9+56*U1^8+48*U1^7+368*U1^6+256*U1^5-1024*U1^4+1024*U1^3+2048*U1^2-4096*U1-8192)
+ -2*U1^11+4*U1^10+40*U1^9+56*U1^8+48*U1^7+368*U1^6+256*U1^5-1024*U1^4_
+   +1024*U1^3+2048*U1^2-4096*U1-8192)
 
 -- We have found a relation for $f_{128}$ with only
--- 23 eta-quotients from $M^\infty(64)$.
+-- 23 eta-quotients from $M^\infty(64)$ (in contrast to
+-- the 25 eta-quotients for $f$).
+--
+-- We have still not beaten the result of Brunault.
 
 -- The following is the exponent vector that was multiplied
 -- to $f_{128}$ to bring it into $M^\infty(64)$.
@@ -477,10 +511,10 @@ ha128denRZ := monomial(1, - reduce(minEntries, ha128monsDZ, 0$DZ)$List(DZ))$RZ
 num0 := rez (ha128polRZ * ha128denRZ)
 den0 := rez(ha128denRZ)
 
--- ## Partial Manual reduction of `hser` by eta-quotients from $M^\infty(64)$
+-- ## Partial manual reduction of $h$ by eta-quotients from $M^\infty(64)$
 
 -- Up to now we have represented $f_{128}$ or rather
--- `hser` by eta-quotients with the following exponents.
+-- $h$ by eta-quotients with the following exponents.
 --
 -- Note that $\eta(128\tau)$ is not involved, therefore it is an
 -- element of $M(64)$, in fact, even in $M^\infty(64)$.
@@ -518,6 +552,9 @@ qetaGrades(k0A64)
 qetaGrades(u.4*u.3*u.1^2)
 kA64 := haA64/(u.4*u.3*u.1^2);
 qetaGrades(kA64)
+cusps(64)$GAMMA0
+
+-- We have poles at $\frac{1}{16}$, $\frac{3}{16}$, and $\infty$.
 
 -- Let us keep track of the cofactor to $f_{128}$ so that
 -- $k\in M(64)$ (with poles at any cusp).
@@ -583,6 +620,8 @@ k3A64 := k2A64 - mon3;
 qetaGrades k3A64
 series(k3A64,12)
 
+-- Now we reduce the remaining series by the algebra basis.
+
 k3 := series(k3A64,12)::A1(C)
 xk3 := toX1(C, k3, 'K3)
 xk3r := reduce(xk3, abx64)$QXTOPRED1(C)
@@ -597,6 +636,10 @@ vsyms64 := indexedSymbols("V", #rgens64);
 vsyms64RZ := [monRZ NEGATE x for x in rgens64x];
 EV64RZ x ==> EVALRZ(concat[u0syms64,   vsyms64],_
                     concat(u0syms64RZ, vsyms64RZ), x)
+
+-- Adding the monomials that we subtracted earlier, gives
+-- a representation for $k$ (and therefore also for $f_{128}$
+-- with only 12 terms.
 
 kpolRZ := EV64RZ(k3upol + umon1 + umon2 + umon3)
 # monomials kpolRZ
@@ -746,7 +789,8 @@ abxx64 := samba(xgens64.2, [xgens64.1, xgens64.7])$QXTOPSAMBA1(C)
 numberOfGaps(abxx64) = genus(64)$GAMMA0
 
 -- So we only need to do the first two reductions
--- manually and can then emply `samba` to do the rest.
+-- manually and can then employ the algebra basis
+-- reduction to do the rest.
 
 kb2 := series(k2A64,12)::A1(C);
 xkb2 := toX1(C, kb2, 'KB2)

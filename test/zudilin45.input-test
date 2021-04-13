@@ -6,13 +6,15 @@
 --
 -- # Init
 
--- In this file we deal with the computation of a relation for $f_45$ that is printed in Section 6.3 (page 81) of \cite{Brunault+Zudilin:ManyVariationsMahlerMeasures:2020}.
+-- In this file we deal with the computation of a relation for
+-- $f_{45}$ that is printed in Section 6.3 (page 81) of
+-- \cite{Brunault+Zudilin:ManyVariationsMahlerMeasures:2020}.
 --
 -- We find the 3 term relation:
 --
 -- $$
 -- f_{45} =
---   \frac{\eta_{15}}{\eta_5^3 \eta_{45}^3}
+--   \frac{\eta_{15}^{10}}{\eta_5^3 \eta_{45}^3}
 -- - \frac{\eta_1 \eta_9 \eta_{15}^6}{\eta_5^2 \eta_{45}^2}
 -- - \frac{\eta_3^2  \eta_5^2 \eta_{45}^2}
 --        {\eta_1 \eta_9}
@@ -143,14 +145,14 @@ rgensExpected: List List Z := [_
     [-2, 11, 1, -1, 1, -10], [-3, 13, 0, -2, 3, -11]];
 assertEquals(rgens, rgensExpected)
 
-eqgens := [EQA1C r for r in rgens];
-assertEquals([qetaGrade x for x in eqgens],_
+egens := [EQA1C r for r in rgens];
+assertEquals([qetaGrade x for x in egens],_
     [4, 6, 6, 7, 8, 8, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10, 10, 11, 11, 11,_
     12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 14, 14, 15,_
     16, 16, 16, 16, 17, 18])
 
-msyms := indexedSymbols("M", #eqgens)
-xgens: List X1 C := [toX1(C, x, s) for x in eqgens for s in msyms];
+msyms := indexedSymbols("M", #egens)
+xgens: List X1 C := [toX1(C, x, s) for x in egens for s in msyms];
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
@@ -170,7 +172,8 @@ assertEquals(# bas, grdt-1)
 
 divs := DIVISORS level;
 idivs := [i for i in 1.. #divs-1];
-rwgens := etaQuotientExponentVectors(level, idivs, -4)$QEQEV;
+wght := 2
+rwgens := etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV;
 
 rfcofactor := rwgens.1
 assertEquals(rfcofactor, [0, - 1, 0, 3, 3, - 9])
@@ -193,6 +196,9 @@ fmpol := second(ixfr)::Pol(C) + F  -- This corresponds to the mod func f.
 -- `fmpol` corresponds to the modular function $f$.
 
 assertEquals(fmpol, (-M1^2+3*M1)*M3+(M1^2-6*M1-5)*M2+4*M1^2-M1-5)
+
+-- We have just found a relation for $f_{45}$ as a sum
+-- of 8 eta-quotients.
 
 f45mpol := M0*fmpol -- Corresponds to the original f45.
 assertEquals(# monomials f45mpol, 8)
@@ -447,7 +453,7 @@ assertEquals(# first zzf, 30)
 [# remove(0, l) for l in zzf]
 
 -- We are quite lucky.
--- By instection, we find that one of the homegeneous
+-- By inspection, we find that one of the homegeneous
 -- solution vectors (namely the lasst one) looks pretty
 -- much like the inhomogeneous solution.
 
