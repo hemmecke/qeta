@@ -84,6 +84,8 @@ f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
 -- divisors of 128). The variable `rgens` corresponds to the generators
 -- of $R^\infty(128)$.
 
+-- ### Find monoid basis for all eta-quotients modular for $\Gamma_0(128)$
+
 level := 128;
 rgens := etaQuotientMonoidExponentVectors(level)$QEQEV
 rgensExpected: List List Z := [_
@@ -108,6 +110,8 @@ assertEquals([qetaGrade x for x in egens],_
   [6, 8, 8, 8, 8, 8, 11, 12, 12, 12, 12, 15, 15, 15, 15, 15, _
   16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16])
 
+-- ### Compute algebra basis
+
 msyms := indexedSymbols("M", #egens)
 xgens: List X1 C := [toX1(C, x, s) for x in egens for s in msyms];
 
@@ -131,6 +135,8 @@ assertEquals(numberOfGaps(abx), 9)
 -- where $t=M_1$,
 -- $b_1=M_6 M_7$, $b_2=M_6$, $b_3=M_{16}$, $b_4=M_{27}$, $b_5=M_7$.
 
+-- ### Find cofactor for $f_{128}$
+
 -- We try to compute an eta-quotient cofactor of weight -4
 -- such that the product with $f_{128}$ will be
 -- a modular function in $M^\infty(128)$.
@@ -146,6 +152,8 @@ fcofactor := EQA1C rfcofactor
 
 fcofactors := [EQA1C r for r in rwgens];
 assertEquals([qetaGrade x for x in fcofactors], [64])
+
+-- ### Express $f$ in terms of algebra basis
 
 -- In the following, we will deal with the modular function
 -- $f \in M^\infty(128)$.
@@ -165,6 +173,8 @@ assertEquals(fmpol, (_
     (-2*M1^7-24*M1^6+8*M1^5-56*M1^4+336*M1^3+368*M1^2+256*M1)*M6+2*M1^8_
      -56*M1^7+12*M1^6-128*M1^5+400*M1^4+704*M1^3-224*M1^2-1024*M1-1024)*M7_
     +(M1^8-20*M1^7+48*M1^6-136*M1^5+96*M1^4+288*M1^3+160*M1^2+64*M1-64)*M16)
+
+-- ### Express in quotients of eta-functions
 
 f128mpol := M0*fmpol -- Corresponds to the original f128.
 assertEquals(# monomials f128mpol, 25)
@@ -310,9 +320,12 @@ z := zsolve4ti2(level, idivs, concat([0 for i in idivs], -2*wght))$QEQEV;
 rgcofactor := members((z.zinhom.1)(1..#divs));
 assertEquals(rgcofactor, [0,-16,8,0,0,0,0,0])
 
+z
+
 gpolRZ := f128polRZ * monRZ(rgcofactor);
 gA128 := rzToAnCX gpolRZ
 
+-- **Note:**
 -- $g$ has series expansion of the form `q*series(q^2)` at every cusp.
 
 assertEquals(qetaGrades gA128, [31,31,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1])
@@ -420,6 +433,8 @@ h := abfmap(CX, C, retract, hx)::A1(C)
 -- Therefore, we can expect that the redcution by the algebra
 -- basis involves fewer reduction steps.
 
+-- ### Find monoid basis for all eta-quotients modular for $\Gamma_0(64)$
+
 level := 64;
 rgens64 := etaQuotientMonoidExponentVectors(level)$QEQEV;
 assertEquals(rgens64, [_
@@ -433,6 +448,8 @@ assertEquals(rgens64, [_
 egens64 := [EQA1C r for r in rgens64]
 [qetaGrade x for x in egens64]
 
+-- ### Compute algebra basis
+
 usyms64 := indexedSymbols("U", #rgens64)
 xgens64 := [toX1(C, x, sy) for x in egens64 for sy in usyms64]
 
@@ -443,6 +460,8 @@ abx64 := samba(tx64, xgens64)$QXTOPSAMBA1(C)
 
 assertEquals(numberOfGaps(abx64), 3)
 assertEquals(genus(64)$GAMMA0, 3)
+
+-- ### Reduce $h$ by algebra basis
 
 -- The $h$ that we constructed was $f_{128}$ multiplied by a
 -- certain eta-quotient cofactor
@@ -478,6 +497,8 @@ assertEquals(haupol,_
 
 rhcofactor
 
+-- ### Representation
+
 -- We must append a zero to the rgens64 vectors, because we do evaluation
 -- into a domain that contains an entry for E128.
 
@@ -496,6 +517,8 @@ assertTrue(zero?(h - rzToA1C hapolRZ))
 ha128upol := U0 * haupol;
 ha128polRZ := EVALRZ(u0syms64, u0syms64RZ, ha128upol);
 rez ha128polRZ
+
+-- ### Safety check against original terms of $f_{128}$
 
 -- Indeed, if we replace the $E_i$ by the respective
 -- eta-function we get he following.
@@ -531,6 +554,8 @@ u := egens64n;
 assertEquals(level, 64)
 haA64 := rzToAnCX hapolRZ;
 qetaGrades(haA64)
+
+-- ### "Reduction" by inspection
 
 -- Let us look at the pole orders of $h_a$ and all the
 -- generators of the monoid of eta-quotient of $M^\infty(64)$.
@@ -637,6 +662,8 @@ vsyms64RZ := [monRZ NEGATE x for x in rgens64x];
 EV64RZ x ==> EVALRZ(concat[u0syms64,   vsyms64],_
                     concat(u0syms64RZ, vsyms64RZ), x)
 
+-- ### Yields representation for $f_{128}$ with only 12 summands
+
 -- Adding the monomials that we subtracted earlier, gives
 -- a representation for $k$ (and therefore also for $f_{128}$
 -- with only 12 terms.
@@ -661,6 +688,8 @@ zero? z0
 -- eta-quotients for the reduction ourselves.
 --
 -- Up to $k_3$ we do the same as in the previous section.
+
+abx64
 
 mon4 := -112*u.2^2*u.8;
 umon4 := -112*U2^2*U8;
@@ -780,7 +809,8 @@ assertEquals(removeDuplicates ords, [50])
 -- another $t$. This time with pole order 4 instead of 3.
 -- Choosing also the input elements carefully, leads to a
 -- algebra basis (in fact an integral basis for $M^\infty(64)$)
--- that are all Laurent series in $q^2$.
+-- that look like Laurent-series-in-$q^2$, or
+-- $q$-times-Laurent-series-in-$q^2$.
 
 )set stream calc 10
 xgens64
