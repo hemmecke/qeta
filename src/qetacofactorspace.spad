@@ -119,6 +119,7 @@ EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
+ECFS ==> Record(particular: Union(VZ, "failed"), basis: List VZ)
 QETAAUX ==> QEtaAuxiliaryPackage
 
 INTF ==> IntegerNumberTheoryFunctions
@@ -316,14 +317,14 @@ QEtaCoFactorSpace: Exports == Implementation where
       ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta r_\delta$.
       ++ See Lemma \ref{thm:chi-exponent}.
       ++ Furthermore, we assume that orb = orbit(sigmaInfty, m, t).
-    etaCoFactorSpace: (P, P, List Z, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ)
+    etaCoFactorSpace: (P, P, List Z, P, N) -> ECFS
       ++ etaCoFactorSpace(nn, mm, r, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
       ++ modularGamma0?(nn, members s, mm, r, m, t) is true for any
       ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
-    etaCoFactorSpace: (P, P, LLZ, P, N) -> Record(particular: Union(VZ, "failed"), basis: List VZ)
+    etaCoFactorSpace: (P, P, LLZ, P, N) -> ECFS
       ++ etaCoFactorSpace(nn, mm, rr, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
       ++ modularGamma1?(nn, ss, mm, r, m, t) is true for any
@@ -447,8 +448,7 @@ QEtaCoFactorSpace: Exports == Implementation where
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
         positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
 
-    etaCoFactorSpace(nn: P, mm: P, r: List Z, m: P, t: N): _
-      Record(particular: Union(VZ, "failed"), basis: List VZ) ==
+    etaCoFactorSpace(nn: P, mm: P, r: List Z, m: P, t: N): ECFS ==
         not conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) =>
             error "conditionCoEtaQuotientGamma0 not met"
 
@@ -494,8 +494,7 @@ QEtaCoFactorSpace: Exports == Implementation where
         -- solve mat*x=v for x.
         diophantineSystem(matmod0, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
-    etaCoFactorSpace(nn: P, mm: P, rr: List List Z, m: P, t: N): _
-      Record(particular: Union(VZ, "failed"), basis: List VZ) ==
+    etaCoFactorSpace(nn: P, mm: P, rr: List List Z, m: P, t: N): ECFS ==
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
 
         not conditionCoEtaQuotientGamma1?(nn, mm, rr, m, t) =>
