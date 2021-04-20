@@ -140,7 +140,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
             (g := gamma(se)),_
             WIDTH0(level, g(2, 1)),_
             leadingCoefficient(e := etaQuotient(se)\$EQG),_
-            xExponent(se)/24,_
+            xExponent se,_
             eulerExpansion e]\$Rec_
            for se in lse] for lse in llse]_
 ) else (_
