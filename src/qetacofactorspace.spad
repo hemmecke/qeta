@@ -317,15 +317,15 @@ QEtaCoFactorSpace: Exports == Implementation where
       ++ We assume $sigmaInfty = \sum_{\delta|mm} \delta r_\delta$.
       ++ See Lemma \ref{thm:chi-exponent}.
       ++ Furthermore, we assume that orb = orbit(sigmaInfty, m, t).
-    etaCoFactorSpace: (P, P, List Z, P, N) -> ECFS
-      ++ etaCoFactorSpace(nn, mm, r, m, t) returns a vector v and the
+    etaCoFactorSpace0: (P, P, List Z, P, N) -> ECFS
+      ++ etaCoFactorSpace0(nn, mm, r, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
       ++ modularGamma0?(nn, members s, mm, r, m, t) is true for any
       ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
-    etaCoFactorSpace: (P, P, LLZ, P, N) -> ECFS
-      ++ etaCoFactorSpace(nn, mm, rr, m, t) returns a vector v and the
+    etaCoFactorSpace1: (P, P, LLZ, P, N) -> ECFS
+      ++ etaCoFactorSpace1(nn, mm, rr, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
       ++ modularGamma1?(nn, ss, mm, r, m, t) is true for any
       ++ ss = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
@@ -448,7 +448,7 @@ QEtaCoFactorSpace: Exports == Implementation where
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
         positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
 
-    etaCoFactorSpace(nn: P, mm: P, r: List Z, m: P, t: N): ECFS ==
+    etaCoFactorSpace0(nn: P, mm: P, r: List Z, m: P, t: N): ECFS ==
         not conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) =>
             error "conditionCoEtaQuotientGamma0 not met"
 
@@ -494,7 +494,7 @@ QEtaCoFactorSpace: Exports == Implementation where
         -- solve mat*x=v for x.
         diophantineSystem(matmod0, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
-    etaCoFactorSpace(nn: P, mm: P, rr: List List Z, m: P, t: N): ECFS ==
+    etaCoFactorSpace1(nn: P, mm: P, rr: List List Z, m: P, t: N): ECFS ==
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
 
         not conditionCoEtaQuotientGamma1?(nn, mm, rr, m, t) =>
@@ -556,7 +556,8 @@ QEtaCoFactorSpace: Exports == Implementation where
         q: Q := nnalpha*(m^2-1)/m -- intermediate
         -- Security check. Should never fail because of Condition 8 on page 37
         -- of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-        not one? denom q => error "etaCoFactorSpace: nnalpha not divisible by m"
+        not one? denom q =>
+            error "etaCoFactorSpace1: nnalpha not divisible by m"
         v.3 := - (m*nnrrhat - numer q)
 
         -- Condition (4) and slack variable for mod 2 for all a
@@ -570,11 +571,11 @@ QEtaCoFactorSpace: Exports == Implementation where
                 expo: Q := 0
                 for l in gr repeat --assert(#l=3) -- l=[d,g,e]
                     not DIVISIBLEBY?(l.1, mm) =>
-                        error "etaCoFactorSpace: delta is not a divisor"
+                        error "etaCoFactorSpace1: delta is not a divisor"
                     expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
                 expo := (a-1)*expo
                 not one? denom expo =>
-                    error "etaCoFactorSpace: exponent not integral"
+                    error "etaCoFactorSpace1: exponent not integral"
                 isOdd?: Boolean := odd? numer expo
                 for d in mmdivs for rd in r | odd? rd repeat
                     if jacobi(m*d, a) < 0 then isOdd? := not isOdd?
@@ -588,7 +589,7 @@ QEtaCoFactorSpace: Exports == Implementation where
                         jj := jj + 1
                         q := (a-1)*(g/d-1/2)
                         not one? denom q =>
-                            error "etaCoFactorSpace: e exponent not integral"
+                            error "etaCoFactorSpace1: e exponent not integral"
                         if odd? numer q then qsetelt!(mat, ii, n + jj, 1)
 
         -- We have to solve mat*z=v for some integer vector z.
