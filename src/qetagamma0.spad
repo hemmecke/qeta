@@ -399,22 +399,23 @@ $a\in X_c$.
         zero? alambda => 1
         alambda/delta
 
-    cuspToMatrix(m: P, cusp: Q): MZ ==
+    cuspToMatrix(nn: P, cusp: Q): MZ ==
         a: Z := numer cusp
         c: Z := denom cusp
         --assert(one? gcd(a,c))
         --assert(zero?(m rem c)) -- holds for canonical cusps of Gamma0
         exgcd: EXGCD := extendedEuclidean(a, c)
-        g: Z := exgcd.generator
         dprime: Z := exgcd.coef1
         -- The extended Euclidean algorithm leave some freedom in the choice
         -- of cofactors. We improve in the following in such a way to make
         -- d as small as possible, since that corresponds to a d-th root
         -- of unity in the coefficients of the transformed series.
         -- bprime: Z := -exgcd.coef2 -- ((not needed ))
-        mc: Z := (m exquo c) :: Z
-        u: Z := coprimePart(mc, c)
-        -- v: Z := (mc exquo u) :: Z -- ((not meeded here))
+        -- An important property here is that for any cusp a/c of Gamma0(nn)
+        -- c is a divisor of nn.
+        nnc: Z := (nn exquo c) :: Z
+        u: Z := coprimePart(nnc, c)
+        -- v: Z := (nnc exquo u) :: Z -- ((not meeded here))
         t: Z := mulmod(dprime, invmod(u, c), c)
         d: Z := t*u
         -- s: Z := ((t*u - dprime) exquo c) :: Z
