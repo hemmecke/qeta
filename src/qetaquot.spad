@@ -106,6 +106,12 @@ In fact, we have two types of domains, namely,
 \end{enumerate}
 Domains in the first category are marked with the prefix
 \code{Symbolic}.
+%
+These \emph{Symbolic} domains actually only serve the purpose to
+compute an upper bound for $k$ so that the the series expansions all
+live in $\setQ[\xi][x]$ where $\xi=\exp\bigl(\frac{2\pi i}{k}\bigr)$
+is a $k$-th primitive root of unity and $x$ is a fractional power of
+$q$.
 
 Another naming convention is that domains that involve the string
 \code{Sifted} correspond to an application of the
@@ -1234,6 +1240,156 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
 
 
 
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{D SymbolicGeneralizedEtaQuotientGamma}
+\label{sec:SymbolicGeneralizedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $g_{\bar{r}}(\tau)$ be a generalized eta-quotient of the form
+\eqref{eq:g_rbar(tau)},
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$,
+%
+$\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
+%
+Then elements from the domain
+\code{SymbolicGeneralizedEtaQuotientGamma} represent the tuple
+\begin{gather}
+  \left(
+  N
+  ,
+  \bar{r}
+  ,
+  \gamma
+  ,
+  y
+  ,
+  \tilde{r}
+  ,
+  \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    r_{\delta,g} \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
+  ,
+  \left(
+    (r_{\delta,g},
+    \kappa_{g,0,\delta,\gamma_\delta}^{[S]},
+    a_\delta,
+    b_\delta,
+    u_\delta,
+    v_\delta)
+  \right)_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+  \right)
+\end{gather}
+where $y = \text{\code{etaQuotient(nn, r, gamma)}}$ is an element of
+\code{SymbolicEtaQuotientGamma} and denotes the data of the pure
+eta-quotient part, see \eqref{eq:g_r(gamma*tau)}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YGEQG SymbolicGeneralizedEtaQuotientGamma
+++ SymbolicGeneralizedEtaQuotientGamma holds data to compute a
+++ generalized eta-quotient expansion of g_rr(\gamma \tau). See
+++ \eqref{eq:g_rbar(gamma*tau)}.
+SymbolicGeneralizedEtaQuotientGamma: SetCategory with
+    generalizedEtaQuotient: (P, LLZ, SL2Z) -> %
+      ++ generalizedEtaQuotient(mm, rr, gamma) represents the expansion of
+      ++ $g_rr(\gamma \tau)$. see \eqref{eq:g_rbar(gamma*tau)}.}
+      ++ gamma=matrix[[a,b],[c,d]]  represents the cusp a/c of Gamma1(mm).
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+    exponents: % -> LLZ
+      ++ If x = generalizedEtaQuotient(mm, rr, gamma), then
+      ++ exponents(x) returns rr.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+    symbolicEtaQuotient: % -> SymbolicEtaQuotientGamma
+      ++ symbolicEtaQuotient(x) returns the data corresponding to the
+      ++ pure eta-quotient part.
+    unityPower: % -> Q
+      ++ unityPower(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
+      ++ It corresponds to the third product of eq:g_r(gamma*tau).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(e) returns the smallest positive integer n
+      ++ such that the expansion of the function g_rr(\gamma \tau)
+      ++ corresponding to e=etaQuotient(mm, r, gamma) (neglecting the
+      ++ (c\tau+d)^* factor) lives in Q[w][[x]] where w is a n-th root
+      ++ of unity.
+    elt: (%, P, N) -> SymbolicGeneralizedEtaDeltaGamma
+      ++ elt(x, delta, g) returns the data corresponding to the
+      ++ respective (delta, g) pair.
+    modularGamma1?: % -> Boolean
+      ++ modularGamma0?(x) returns true if the eta quotient is a modular
+      ++ function for Gamma1(level x), i.e, it returns
+      ++ modularGamma1?(level x, exponents x) from
+      ++ QEtaAuxiliaryPackage.
+ == add
+    HT ==> XHashTable(P, SymbolicGeneralizedEtaDeltaGamma)
+            -- mapping (delta, g) to \eta_(\delta, g) where
+            -- (delta, g) is encoded by n=level*delta+g
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fexponents: LLZ,-- the rr vector
+              fgamma: SL2Z,  -- gamma
+              feta: SymbolicEtaQuotientGamma, -- pure eta-quotient part
+              fgeta: HT,     -- mapping delta to \eta_{\delta,g}
+              funityPower: Q,-- sum r_{d,g} * kappa_{g,0,d,gamma_d}
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    generalizedEtaQuotient(nn: P, rr: LLZ, gamma: SL2Z): % ==
+        geta: HT := empty()
+        -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
+        if gamma(2,1) < 0 then gamma := -gamma
+        rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+            splitEtaQuotientSpecification(nn, rr)
+        r: LZ := rrec.etaQuotientExponents
+        gr: LLZ := rrec.generalizedParameters
+
+        e := etaQuotient(nn, r, gamma) $ SymbolicEtaQuotient
+
+        upower := 0
+        minroot: P := lcmP(minimalRoot e, denom upower)
+        for l in gr repeat
+            delta := l.1; g := l.2, rdg := l.3
+            k := nn*delta + g
+            ge := generalizedEta(nn, delta, g, gamma)$SymbolicGeneralizedEtaDeltaGamma
+            geta.k := ge
+            upower := upower + rdf * kappa(ge)
+            minroot := lcmP(minroot, minimialRoot ge)
+
+        upower := fractionalPart upower
+        per [nn, rr, gamma, e, geta, upower, minroot]
+
+    level(x: %): P == xx.flevel
+    elt(x: %, delta: P, g: N): SymbolicGeneralizedEtaDeltaGamma ==
+        k: P := asP(level(x)*delta + g)
+        xx.fgeta.k
+    exponents(x: %): LLZ == xx.fexponents
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    unityPower(x: %): Q == xx.funityPower
+    minimalRootOfUnity(x: %): P == xx.fminroot
+    modularGamma1?(x: %): Boolean ==
+        modularGamma1?(level x, exponents x)$QETAAUX
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fgamma = yy.fgamma
 
 
 )if LiterateDoc
