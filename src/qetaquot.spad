@@ -180,7 +180,7 @@ SymbolicEtaDeltaGamma: SetCategory with
               frat: Q,      -- h_delta/delta
               fkappa: Z,    -- upsilonExponent(a1,b2,c1,d1)
               fedelta: P,   -- edelta = width*hdelta^2/delta \eqref{eq:q_delta}}
-              fudelta: Q,   -- edelta = hdelta^2/delta \eqref{eq:q_delta}}
+              fudelta: Q,   -- udelta = hdelta^2/delta \eqref{eq:q_delta}}
               fvdelta: Q    -- b2/d2, reduced form of roots of unity
                             -- 0<=b2<d2, 0<d2
              )
@@ -1239,6 +1239,135 @@ SymbolicModularSiftedEtaQuotient: SetCategory with
 
 
 
+
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{D SymbolicGeneralizedEtaDeltaGamma}
+\label{sec:SymbolicGeneralizedEtaDeltaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $g_{\bar{r}}(\tau)$ be a generalized eta-quotient of the form
+\eqref{eq:g_rbar(tau)},
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$,
+%
+$\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
+%
+Then for $\divides{\delta}{N}$, $0<g<\delta$,
+$r_{\delta,g}\in \setZ\setminus\Set{0}$ elements from the domain
+\code{SymbolicGeneralizedEtaDeltaGamma} represent the tuple
+\begin{gather}
+  \left(
+  N
+  ,
+  \delta
+  ,
+  g
+  ,
+  r_{\delta,g}
+  ,
+  \gamma
+  ,
+  \kappa_{g,0,\delta,\gamma_\delta}^{[S]},
+  a_\delta,
+  b_\delta,
+  u_\delta,
+  v_\delta)
+  \right),
+\end{gather}
+see \eqref{eq:g_r(gamma*tau)}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YGEDG SymbolicGeneralizedEtaDeltaGamma
+++ SymbolicGeneralizedEtaDeltaGamma holds data to compute a
+++ generalized eta-function expansion of \eta_{\delta.g}(\gamma \tau).
+++ See \eqref{eq:g_rbar(gamma*tau)} and
+++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
+SymbolicGeneralizedEtaDeltaGamma: SetCategory with
+    generalizedEtaQuotient: (P, P, P, Z, SL2Z) -> %
+      ++ generalizedEtaQuotient(nn, delta, g, r, gamma) represents the
+      ++ expansion of $\eta_{delta,g}(\gamma \tau)^r$, see
+      ++ \eqref{eq:g_rbar(gamma*tau)} and
+      ++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
+      ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c of
+      ++ Gamma1(nn).
+    level: % -> P
+      ++ level(x) returns the level of the eta-function.
+    exponent: % -> Z
+      ++ If x = generalizedEtaQuotient(nn, delta, g, r, gamma), then
+      ++ exponent(x) returns r.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+    gamma1: % -> SL2Z
+      ++ gamma1(x) returns splitMatrix(gamma, delta).red.
+    unityPower: % -> Q
+      ++ unityPower(x) returns kappaSchoeneberg(nn, g, 0, gammaDelta x).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns the smallest positive integer n
+      ++ such that the expansion of the function
+      ++ \eta_{\delta,g}(\gamma \tau) corresponding to
+      ++ x=generalizedEtaQuotient(nn, delta, g, r, gamma) lives in
+      ++ Q[w][[x]] where w is a n-th root of unity.
+ == add
+    HT ==> XHashTable(P, SymbolicGeneralizedEtaDeltaGamma)
+            -- mapping (delta, g) to \eta_(\delta, g) where
+            -- (delta, g) is encoded by n=level*delta+g
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fexponents: Z,
+              fgamma: SL2Z,  -- gamma
+              fgamma1: SL2Z, -- gammaDelta
+              fgamma2: SL2Z, -- matrix corresponding to \tau_\delta
+              fudelta: Q,    -- edelta = hdelta^2/delta \eqref{eq:q_delta}}
+              fvdelta: Q     -- b2/d2, reduced form of roots of unity
+                             -- 0<=b2<d2, 0<d2
+              funityPower: Q,-- kappa_{g,0,d,gamma_d}
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+
+    generalizedEtaQuotient(nn: P, delta: P, g: P, r: Z, gamma: SL2Z): % ==
+        gamma(2,1) <= 0 =>
+            error "generalizedEtaQuotient: expect gamma(2,1) to be positive"
+        rec: Rec := splitMatrix(gamma, delta)$QETAAUX
+        gamma1 := rec.red
+        gamma2 := rec.triang
+        kappa := kappaSchoeneberg(nn, g, 0, gamma1)
+        upower := fractionalPart kappa
+        udelta := gcd(gamma(2,1),delta)^2 / delta
+        vdelta := gamma(1,2) / gamma(2,2)
+        minroot := lcmP(denom upower, denom(vdelta)
+        per [nn, rr, gamma, e, geta, upower, minroot]
+
+    level(x: %): P == xx.flevel
+    elt(x: %, delta: P, g: N): SymbolicGeneralizedEtaDeltaGamma ==
+        k: P := asP(level(x)*delta + g)
+        xx.fgeta.k
+    exponents(x: %): LLZ == xx.fexponents
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    unityPower(x: %): Q == xx.funityPower
+    minimalRootOfUnity(x: %): P == xx.fminroot
+    modularGamma1?(x: %): Boolean ==
+        modularGamma1?(level x, exponents x)$QETAAUX
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fgamma = yy.fgamma
 
 
 )if LiterateDoc
