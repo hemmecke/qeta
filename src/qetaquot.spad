@@ -82,6 +82,7 @@ SL2Z ==> MZ -- matrices with determinant = 1
 LSym ==> List Symbol
 LP ==> List P
 LZ ==> List Z
+LLZ ==> List LZ
 LQ ==> List Q
 LSL2Z ==> List SL2Z
 VZ ==> Vector Z
@@ -1288,8 +1289,8 @@ see \eqref{eq:g_r(gamma*tau)}.
 ++ See \eqref{eq:g_rbar(gamma*tau)} and
 ++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
 SymbolicGeneralizedEtaDeltaGamma: SetCategory with
-    generalizedEtaQuotient: (P, P, P, Z, SL2Z) -> %
-      ++ generalizedEtaQuotient(nn, delta, g, r, gamma) represents the
+    generalizedEta: (P, P, P, Z, SL2Z) -> %
+      ++ generalizedEta(nn, delta, g, r, gamma) represents the
       ++ expansion of $\eta_{delta,g}(\gamma \tau)^r$, see
       ++ \eqref{eq:g_rbar(gamma*tau)} and
       ++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
@@ -1313,60 +1314,60 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
       ++ x=generalizedEtaQuotient(nn, delta, g, r, gamma) lives in
       ++ Q[w][[x]] where w is a n-th root of unity.
  == add
-    HT ==> XHashTable(P, SymbolicGeneralizedEtaDeltaGamma)
-            -- mapping (delta, g) to \eta_(\delta, g) where
-            -- (delta, g) is encoded by n=level*delta+g
+    Rec ==> Record(red: SL2Z, triang: MZ)
     Rep ==> Record(
               flevel: P,     -- level \Gamma_0(lev)
-              fexponents: Z,
+              fdelta: P,     -- delta
+              fg: P,         -- g
+              fexponent: Z,  -- rdg = r_{\delta,g}
               fgamma: SL2Z,  -- gamma
               fgamma1: SL2Z, -- gammaDelta
-              fgamma2: SL2Z, -- matrix corresponding to \tau_\delta
+              fgamma2: MZ, -- matrix corresponding to \tau_\delta
               fudelta: Q,    -- edelta = hdelta^2/delta \eqref{eq:q_delta}}
-              fvdelta: Q     -- b2/d2, reduced form of roots of unity
+              fvdelta: Q,    -- b2/d2, reduced form of roots of unity
                              -- 0<=b2<d2, 0<d2
               funityPower: Q,-- kappa_{g,0,d,gamma_d}
               fminroot: P    -- minimal root of unity needed for coefficients
             )
     import from Rep
     xx ==> rep x
+    yy ==> rep y
 
-    generalizedEtaQuotient(nn: P, delta: P, g: P, r: Z, gamma: SL2Z): % ==
+    generalizedEta(nn: P, delta: P, g: P, r: Z, gamma: SL2Z): % ==
         gamma(2,1) <= 0 =>
             error "generalizedEtaQuotient: expect gamma(2,1) to be positive"
         rec: Rec := splitMatrix(gamma, delta)$QETAAUX
-        gamma1 := rec.red
-        gamma2 := rec.triang
-        kappa := kappaSchoeneberg(nn, g, 0, gamma1)
-        upower := fractionalPart kappa
-        udelta := gcd(gamma(2,1),delta)^2 / delta
-        vdelta := gamma(1,2) / gamma(2,2)
-        minroot := lcmP(denom upower, denom(vdelta)
-        per [nn, rr, gamma, e, geta, upower, minroot]
+        gamma1: SL2Z := rec.red
+        gamma2: MZ := rec.triang
+        kappa: Q := kappaSchoeneberg(nn, g, 0, gamma1) $ QETAAUX
+        upower: Q := fractionalPart kappa
+        udelta: Q := gcd(gamma(2,1),delta)^2 / delta
+        vdelta: Q := gamma(1,2) / gamma(2,2)
+        minroot := lcmP(denom upower, denom vdelta)
+        per [nn, delta, g, r, gamma,
+             gamma1, gamma2, udelta, vdelta, upower, minroot]
 
     level(x: %): P == xx.flevel
-    elt(x: %, delta: P, g: N): SymbolicGeneralizedEtaDeltaGamma ==
-        k: P := asP(level(x)*delta + g)
-        xx.fgeta.k
-    exponents(x: %): LLZ == xx.fexponents
+    exponent(x: %): Z == xx.fexponent
     gamma(x: %): SL2Z == xx.fgamma
-    rationalPrefactor(x: %): Q == xx.frat
     unityPower(x: %): Q == xx.funityPower
     minimalRootOfUnity(x: %): P == xx.fminroot
-    modularGamma1?(x: %): Boolean ==
-        modularGamma1?(level x, exponents x)$QETAAUX
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
     hashUpdate!(h: HashState, x: %): HashState ==
         h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fdelta)
+        h := hashUpdate!(h, xx.fg)
+        h := hashUpdate!(h, xx.fexponent)
         h := hashUpdate!(h, xx.fgamma)
         h
 
     ((x: %) = (y: %)): Boolean ==
         xx.flevel ~= yy.flevel => false
-        xx.fexponents ~= yy.fexponents => false
+        xx.fdelta ~= yy.fdelta => false
+        xx.fg ~= yy.fg => false
+        xx.fexponent ~= yy.fexponent => false
         xx.fgamma = yy.fgamma
 
 
@@ -1402,19 +1403,16 @@ Then elements from the domain
   \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
     r_{\delta,g} \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
   ,
-  \left(
-    (r_{\delta,g},
-    \kappa_{g,0,\delta,\gamma_\delta}^{[S]},
-    a_\delta,
-    b_\delta,
-    u_\delta,
-    v_\delta)
-  \right)_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+  (y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}
   \right)
 \end{gather}
 where $y = \text{\code{etaQuotient(nn, r, gamma)}}$ is an element of
 \code{SymbolicEtaQuotientGamma} and denotes the data of the pure
-eta-quotient part, see \eqref{eq:g_r(gamma*tau)}.
+eta-quotient part, see \eqref{eq:g_r(gamma*tau)}. and
+$(y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}$
+is a collection of elements from
+\code{SymbolicGeneralizedEtaDeltaGamma}.
+
 
 )endif
 -------------------------------------------------------------------
@@ -1450,7 +1448,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
       ++ elt(x, delta, g) returns the data corresponding to the
       ++ respective (delta, g) pair.
     modularGamma1?: % -> Boolean
-      ++ modularGamma0?(x) returns true if the eta quotient is a modular
+      ++ modularGamma1?(x) returns true if the eta quotient is a modular
       ++ function for Gamma1(level x), i.e, it returns
       ++ modularGamma1?(level x, exponents x) from
       ++ QEtaAuxiliaryPackage.
@@ -1470,28 +1468,29 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
     import from Rep
     xx ==> rep x
     yy ==> rep y
-
+    YGEDG ==> SymbolicGeneralizedEtaDeltaGamma
     generalizedEtaQuotient(nn: P, rr: LLZ, gamma: SL2Z): % ==
         geta: HT := empty()
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
-            splitEtaQuotientSpecification(nn, rr)
+            splitEtaQuotientSpecification(nn, rr) $ QETAAUX
         r: LZ := rrec.etaQuotientExponents
         gr: LLZ := rrec.generalizedParameters
 
-        e := etaQuotient(nn, r, gamma) $ SymbolicEtaQuotient
+        e := etaQuotient(nn, r, gamma) $ SymbolicEtaQuotientGamma
 
-        upower := 0
-        minroot: P := lcmP(minimalRoot e, denom upower)
+        upower: Q := 0
+        minroot: P := minimalRootOfUnity e
         for l in gr repeat
-            delta := l.1; g := l.2, rdg := l.3
+            delta := asP l.1; g := asP l.2; rdg := l.3;
             k := nn*delta + g
-            ge := generalizedEta(nn, delta, g, gamma)$SymbolicGeneralizedEtaDeltaGamma
+            ge := generalizedEta(nn, delta, g, rdg, gamma) $ YGEDG
             geta.k := ge
-            upower := upower + rdf * kappa(ge)
-            minroot := lcmP(minroot, minimialRoot ge)
+            upower := upower + rdg * unityPower(ge)
+            minroot := lcmP(minroot, minimalRootOfUnity ge)
 
+        minroot := lcmP(minroot, denom upower)
         upower := fractionalPart upower
         per [nn, rr, gamma, e, geta, upower, minroot]
 
@@ -1501,7 +1500,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
         xx.fgeta.k
     exponents(x: %): LLZ == xx.fexponents
     gamma(x: %): SL2Z == xx.fgamma
-    rationalPrefactor(x: %): Q == xx.frat
+    symbolicEtaQuotient(x: %): SymbolicEtaQuotientGamma == xx.feta
     unityPower(x: %): Q == xx.funityPower
     minimalRootOfUnity(x: %): P == xx.fminroot
     modularGamma1?(x: %): Boolean ==
