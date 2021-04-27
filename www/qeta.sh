@@ -43,6 +43,7 @@ done
 #echo "stream calculate = $calc"
 #echo "rvectors = $rvectors"
 
+# cat <<EOF  | $teecmd | timeout 60s fricas -nosman | sed '1,/OUTPUT STARTS HERE/d; /Type:/d; s/([0-9]*) -> //g; /   ([0-9]*)$/d'
 cat <<EOF  | $teecmd | timeout 60s fricas -nosman | sed '1,/OUTPUT STARTS HERE/d; /Type:/d; s/([0-9]*) -> //g; /   ([0-9]*)$/d'
 )cd $tmp
 )r projectlibs
@@ -50,26 +51,14 @@ cat <<EOF  | $teecmd | timeout 60s fricas -nosman | sed '1,/OUTPUT STARTS HERE/d
 )set stream calculate $calc
 
 tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_
-QMEVS==>QEtaQuotientMonoidExponentVectorsStar;
-eqmevx==>etaQuotientMonoidExponentVectorsX\$QMEVS;
 
 S ==> Symbol;
 EZ ==> Expression Z;
 expr x ==> x :: S :: EZ;
 PZ ==> SparseUnivariatePolynomial Z;
 PQ ==> SparseUnivariatePolynomial Q;
-PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ);
+PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, Z, PZ, PQ);
 CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
-LX ==> QEtaLaurentSeries CX;
-MZ ==> Matrix Z -- consider only 2x2 matricies
-SL2Z ==> MZ -- matrices with determinant = 1
-
-QETAAUX ==> QEtaAuxiliaryPackage;
-SEDG ==> SymbolicEtaDeltaGamma;
-YEQG ==> SymbolicEtaQuotientGamma;
-EQG ==> EtaQuotientGamma(Q, mx, CX, xi);
-MEQ ==> ModularEtaQuotient(Q, mx, CX, xi);
-MODFUNX ==> ModularFunctionExpansions(CX, level);
 
 unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
   l: List List P := empty(); _
@@ -77,21 +66,21 @@ unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
       lp: List P := empty();_
       for g in gammas repeat (_
           e: YEQG := etaQuotient(m, r, g);_
-          lp := cons(minRootOfUnity e, lp) _
+          lp := cons(minimalRootOfUnity e, lp) _
       );_
       l := cons(lp, l) _
   );_
   l_
 );
 
-level := m := $level;
+level := $level;
 expansionAtAllCusps? := empty? "$gamma";
 gammas: List SL2Z := empty();
 -- Expand at all cusps if no gamma was given.
 if (expansionAtAllCusps?) then (_
-  cusps: List Q := cusps(m)\$GAMMA0;_
-  for cusp in cusps repeat (_
-    g: SL2Z := cuspToMatrix(m, cusp)\$GAMMA0;_
+  spitzen: List Q := cusps(level)\$GAMMA0;_
+  for cusp in spitzen repeat (_
+    g: SL2Z := cuspToMatrix(level, cusp)\$GAMMA0;_
     gammas := cons(g, gammas));_
   gammas := reverse! gammas_
 ) else (_
@@ -106,9 +95,9 @@ if not one?(det:=determinant first gammas) then (_
    cPrint("Error: Determinant of gamma is not 1. det(gamma)", det);_
    systemCommand("quit"))
 
-minroots := unityroots(m, rs, gammas)
-mx: P := lcm [lcm l for l in minroots]
-pz: PZ := cyclotomic(mx)\$CyclotomicPolynomialPackage;
+minroots := unityroots(level, rs, gammas)
+xiord: P := lcm [lcm l for l in minroots]
+pz: PZ := cyclotomic(xiord)\$CyclotomicPolynomialPackage;
 pq: PQ := map(n+->monomial(1\$Q,1\$N)\$PQ, c+->c::Q::PQ, pz)\$PL;
 xsym: Symbol := "x"::Symbol;
 xi := generator()\$CX;
@@ -121,17 +110,17 @@ if not one?(det:=determinant first gammas) then (_
 
 vPrint("level", level)
 vPrint("exponent vectors (list of r-vectors) rs", rs)
-vPrint("maximal root of unity", mx)
-if mx > 2 then _
-  vPrint("The symbol ? corresponds to the n-th root of unity where n", mx)
-lerr := [r for r in rs | not modularGamma0?(m, r)\$QETAAUX];
+vPrint("maximal root of unity", xiord)
+if xiord > 2 then _
+  vPrint("The symbol ? corresponds to the n-th root of unity where n", xiord)
+lerr := [r for r in rs | not modularGamma0?(level, r)\$QETAAUX];
 
-Rec ==> Record(r: List Z, trf: SL2Z, w: Z, lc: CX, xpower: Q, ser: LX)
+Rec ==> Record(r: List Z, trf: SL2Z, w: Z, lc: CX, xpower: Q, ser: L1 CX)
 if not empty? lerr or not expansionAtAllCusps? then (_
   vPrint("Non-modular quotients", lerr);_
-  if expansionAtAllCusps? then vPrint("Expansion at cusps", cusps);_
+  if expansionAtAllCusps? then vPrint("Expansion at cusps", spitzen);_
   vPrint("Expansion at gammas", gammas);_
-  llse := [[etaQuotient(m, rr, g)\$YEQG for g in gammas] _
+  llse := [[etaQuotient(level, rr, g)\$YEQG for g in gammas] _
            for rr in rs];_
   tPrint("Interpret resulting record as follows:");_
   tPrint("g_r(trf*tau) = lc * x^xpower * ser");_
@@ -139,15 +128,15 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   lle := [[[exponents(se),_
             (g := gamma(se)),_
             WIDTH0(level, g(2, 1)),_
-            leadingCoefficient(e := etaQuotient(se)\$EQG),_
+            leadingCoefficient(e := se :: EQG(Q,CX)),_
             xExponent se,_
             eulerExpansion e]\$Rec_
            for se in lse] for lse in llse]_
 ) else (_
-  vPrint("Expansion at cusps", cusps);_
-  vPrint("Expansion at CUSPS", [cuspToMatrix(m, cusp)\$GAMMA0 for cusp in cusps(m)$GAMMA0]);_
-  le := [etaQuotient(m, r)\$MEQ for r in rs];_
-  ees := [expansions(e)::MODFUNX for e in le];_
+  vPrint("Expansion at cusps", spitzen);_
+  vPrint("Expansion at CUSPS", [cuspToMatrix(level, cusp)\$GAMMA0 for cusp in spitzen]);_
+  le := [etaQuotient(level, r)\$MEQ(Q,CX) for r in rs];_
+  ees := [expansions(e)::MODFUNX CX for e in le];_
   [[rr, ex] for rr in rs for ex in ees])
 
 EOF
