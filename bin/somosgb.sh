@@ -19,7 +19,7 @@ function usage {
 
 The script reads the files "\$SOMOS/somos\$N.input", translates
 the Somos-relation into E variables (i.e, from Euler series (with
-variables u and q) to eta functions), creates the file
+variables u and q) to eta-functions), creates the file
 \$DIR/Somos/somosetagens\$N.input", and translates it into
 \$DIR/Somos/somosetagens\$N.sage", a form that SageMath can read.
 Then a degrevlex Groebner bases (slimgb from Singular via SageMath)

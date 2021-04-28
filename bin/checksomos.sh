@@ -26,7 +26,7 @@ function usage {
 The script reads the files $SOMOS/somos\$N.input and a corresponding
 file \$DIR/\$VARIANT/etaRelations\$N.input. The script then translates
 the Somos-relation into E variables (i.e, from Euler series (with
-variables u and q) to eta functions) and reduces this relation with
+variables u and q) to eta-functions) and reduces this relation with
 respect to the Groebner basis given by etaRelations\$N. This is
 (should be) a reduction to zero. The script outputs to stdout
 data that contain etaRelations\$N as well as the relations of Somos

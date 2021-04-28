@@ -49,7 +49,7 @@ function usageQuotientIdealGenerators {
     echo "Usage:"
     echo "  eta quotientIdealGenerators N [DIR=etafiles] [VARIANT=Hemmecke]"
     echo "where N is a positive integer computes the relations between"
-    echo "the eta-quotients and the eta functions of level N."
+    echo "the eta-quotients and the eta-functions of level N."
     usageDIR
     usageVARIANT
 }
@@ -84,7 +84,7 @@ function usageLaurentIdealGenerators {
     echo "Usage:"
     echo "  eta LaurentIdealGenerators N [DIR=etafiles] [VARIANT=Hemmecke]"
     echo "where N is a positive integer computes the relations between"
-    echo "the eta-quotients and the eta functions of level N."
+    echo "the eta-quotients and the eta-functions of level N."
     usageDIR
     usageVARIANT
 }
@@ -124,7 +124,7 @@ function usageRelations {
     echo "Usage:"
     echo "  eta Relations N [DIR=etafiles] [VARIANT=Hemmecke]"
     echo "where N is a positive integer computes the relations between"
-    echo "the eta-quotients and the eta functions of level N."
+    echo "the eta-quotients and the eta-functions of level N."
     usageDIR
     usageVARIANT
 }
