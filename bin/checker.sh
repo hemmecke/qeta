@@ -12,7 +12,7 @@ The script reads the file etafiles/Hemmecke/etaRelations$N.input.
 For each polynomial, it divides it by the leading powerproduct.
 Then it replaces each powerproduct in this Laurent polynomial by
 the (vector of) Laurent series expansions at each cusp of Gamma_0(N)
-of the eta quotient corresponding to the exponent vector of the
+of the eta-quotient corresponding to the exponent vector of the
 powerproduct. The resulting series vector should be the zero vector.
 
 The output is written to stdout.
@@ -37,7 +37,7 @@ LX ==> QEtaLaurentSeries CX
 EQX ==> EtaQuotientX(Q, mx, CX, xi, LX)
 EQXA ==> EtaQuotientExpansionAlgebra(CX, LX, level)
 
--- compute the basis of eta quotients in terms of expansions
+-- compute the basis of eta-quotients in terms of expansions
 level := $LEVEL
 )r ../etafiles/Hemmecke/etaRelations$LEVEL
 erels := etaRelations$N

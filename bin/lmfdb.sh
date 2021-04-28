@@ -9,7 +9,7 @@
 # This script read zudilin/lmfdb.ids and computes via
 # input/lmfdb.input for a label $id from the respective file
 # zudilin/mf-$id.input the file zudilin/rel-$id.input which contains a
-# relation for the modular form in terms of eta quotients in the form
+# relation for the modular form in terms of eta-quotients in the form
 # of Laurent polynomials with variables Ei and with exponent vectors.
 
 # Usage:
