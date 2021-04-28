@@ -1,0 +1,1517 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2018-2021  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\externaldocument{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Metadata for (sifted and generalized) Dedekind Eta Functions
+  for expansion as several cusps}
+\author{Ralf Hemmecke}
+\date{26-Jan-2018}
+\maketitle
+\begin{abstract}
+  The domains in this file collect all the (meta) data that is needed
+  to compute the actual Puiseux series expansion of the object in
+  question, but do not itself hold the series expansion.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+MZ ==> Matrix Z -- consider only 2x2 matricies
+SL2Z ==> MZ -- matrices with determinant = 1
+LSym ==> List Symbol
+LP ==> List P
+LZ ==> List Z
+LLZ ==> List LZ
+LQ ==> List Q
+LSL2Z ==> List SL2Z
+GAMMA0 ==> CongruenceSubgroupGamma0
+QETAAUX ==> QEtaAuxiliaryPackage
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+WIDTH0(nn, c) ==> asP(width(nn, c)$GAMMA0)
+
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
+lcmP(a, b) ==> asP lcm(a::Integer, b::Integer)
+
+)if LiterateDoc
+%$
+In fact, we have two types of domains, namely,
+\begin{enumerate}
+\item domains that just collect/precompute certain data, and
+\item domains that actually compute a series expansion.
+\end{enumerate}
+Domains in the first category are marked with the prefix
+\code{Symbolic}.
+%
+These \emph{Symbolic} domains actually only serve the purpose to
+compute an upper bound for $k$ so that the the series expansions all
+live in $\setQ[\xi][x]$ where $\xi=\exp\bigl(\frac{2\pi i}{k}\bigr)$
+is a $k$-th primitive root of unity and $x$ is a fractional power of
+$q$.
+
+Another naming convention is that domains that involve the string
+\code{Sifted} correspond to an application of the
+$U_m$ operator, \ie, instead of looking on a series
+$\sum_{n=0}^\infty{a(n)}
+q^n$, we deal with a ``sifted'' series of the form
+$\sum_{n=0}^\infty{a(mn+t) q^n}$.
+
+Domains in the second category are implemented int he file
+\PathName{qetaquot.spad}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicEtaDeltaGamma}
+\label{sec:SymbolicEtaDeltaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $N\in\setN$,
+$\divides{\delta}{N}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain \code{SymbolicEtaDelta}
+represent the tuple
+\begin{gather*}
+  \left(\frac{h_{\delta}}{\delta}, e_\delta, u_\delta, v_\delta, \kappa_\delta\right)
+\end{gather*}
+from \eqref{eq:eta_delta(gamma*tau)-expansion}.
+
+)endif
+
+)abbrev domain YEDG SymbolicEtaDeltaGamma
+++ SymbolicEtaDeltaGamma collects data for the expansion of
+++ eta_delta(\gamma \tau).
+++ See \eqref{eq:eta_delta(gamma*tau)}.
+SymbolicEtaDeltaGamma: SetCategory with
+    eta: (P, P, SL2Z) -> % -- gamma=[[a,b],[c,d]], m=level, delta, r_delta
+      ++ eta(m, delta, gamma) represents the expansion of
+      ++ \eta_\delta(\gamma \tau) in terms of
+      ++ x = \exp(2 \pi i \tau/w) where w=width(m, c) and
+      ++ gamma=cuspToMatrix(m, a/c) for some cusp a/c of Gamma0(m).
+    level: % -> P
+      ++ level(x) returns the level corresponding to x.
+    delta: % -> P
+      ++ delta(x) returns the delta that was used at creation time of x.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the gamma as given at creation time of x.
+    rationalPrefactor: % -> Q -- (h_delta/delta)
+      ++ See \ref{thm:c*tau+d}.
+    upsilonExponent: % -> Z -- kappa_delta
+      ++ See \eqref{eta_delta(gamma*tau)}.
+    edelta: % -> P            -- width*udelta
+      ++ See \eqref{eq:uv_delta}
+    udelta: % -> Q            -- gcd(delta,c)^2/delta
+      ++ See \eqref{eq:uv_delta}
+    vdelta: % -> Q            -- b2/d2
+      ++ See \eqref{eq:uv_delta}.
+ == add
+    Rec ==> Record(red: SL2Z, triang: MZ)
+    Rep ==> Record(
+              flevel: P,    -- level \Gamma_0(lev)
+              fdelta: P,    -- the divisor used at creation
+              fgamma: SL2Z, -- the gamma used at creation
+              frat: Q,      -- h_delta/delta
+              fkappa: Z,    -- upsilonExponent(a1,b2,c1,d1)
+              fedelta: P,   -- edelta = width*hdelta^2/delta \eqref{eq:q_delta}}
+              fudelta: Q,   -- udelta = hdelta^2/delta \eqref{eq:q_delta}}
+              fvdelta: Q    -- b2/d2, reduced form of roots of unity
+                            -- 0<=b2<d2, 0<d2
+             )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    eta(mm: P, delta: P, gamma: SL2Z): % ==
+        c: Z := gamma(2, 1)
+        --assert(c>0)
+        hdelta: Z := gcd(c, delta)
+        rat: Q := hdelta/delta
+        rec: Rec := splitMatrix(gamma, delta)$QETAAUX
+        gamma1: SL2Z := rec.red
+        gamma2: MZ := rec.triang
+        b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
+        a2: Z := gamma2(1, 1); wgamma: Z := WIDTH0(mm, c)
+        udelta: Q := gcd(c,delta)^2 / delta
+        edelta: P := asP numer(wgamma*udelta)
+        if not one?(denom(wgamma*udelta)) then
+            error "edelta is not integer"
+        --assert(edelta = ((a2*wgamma exquo d2) :: Z))
+        if udelta ~= a2/d2 then
+            error "edelta does not match"
+        vdelta: Q := b2/d2
+        kappa: Z := upsilonExponent(gamma1)$QETAAUX
+        per [mm, delta, gamma, rat, kappa, edelta, udelta, vdelta]
+
+    level(x: %): P == xx.flevel
+    delta(x: %): P == xx.fdelta
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    upsilonExponent(x: %): Z == xx.fkappa
+    edelta(x: %): P == xx.fedelta
+    udelta(x: %): Q == xx.fudelta
+    vdelta(x: %): Q == xx.fvdelta
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.frat)
+        h := hashUpdate!(h, xx.fkappa)
+        h := hashUpdate!(h, xx.fudelta)
+        h := hashUpdate!(h, xx.fvdelta)
+    ((x: %) = (y: %)): Boolean ==
+        level x ~= level y => false
+        delta x ~= delta y => false
+        gamma x = gamma y
+
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicEtaQuotientGamma}
+\label{sec:SymbolicEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $N\in\setN$, $r\in R(N)$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain \code{SymbolicEtaQuotientGamma}
+represent the tuple
+\begin{gather}
+  \left(
+  N
+  ,
+  r
+  ,
+  \gamma
+  ,
+  \divisorprod{N}
+  \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}
+  ,
+  \divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}
+  ,
+  \divisorsum{N} \frac{r_\delta e_\delta}{24}
+  \right)
+\end{gather}
+and thus corresponds to the data from \eqref{eq:g_r(gamma*tau)}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YEQG SymbolicEtaQuotientGamma
+++ SymbolicEtaQuotientGamma holds data to compute an eta quotient expansion
+++ of g_r(\gamma \tau).
+++ See \eqref{eq:g_r(gamma*tau)}.
+SymbolicEtaQuotientGamma: SetCategory with
+    etaQuotient: (P, LZ, SL2Z) -> %
+      ++ etaQuotient(mm, r, gamma) represents the expansion of
+      ++ $g_r(\gamma \tau) =
+      ++   \prod_{\delta in divisors(m)} \eta(\delta \gamma \tau)^{r_{\delta}}$
+      ++ in terms of
+      ++ x = \exp(2 \pi i \tau/w) where w=width(m, c) and
+      ++ gamma=matrix[[a,b],[c,d]]  represents the cusp a/c of Gamma0(mm).
+      ++ $r$ is indexed by the divisors of $mm$.
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+    divisors: % -> LP
+      ++ divisors(x) returns the divisors of level(x) that were
+      ++ given at creation time of x.
+    exponents: % -> LZ
+      ++ exponents(x) returns the list of exponents corresponding to all
+      ++ divisors.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+    rationalPrefactor: % -> Q
+      ++ rationalPrefactor(x) returns the square of the second product
+      ++ in \eqref{eq:g_r(gamma*tau)}.
+    unityPower: % -> Q
+      ++ unityPower(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
+      ++ It corresponds to the third product of eq:g_r(gamma*tau).
+    xExponent: % -> Q
+      ++ xExponent(e) returns the order of the expansion
+      ++ of e in x = \exp(2 \pi i \tau/w) where w is the width of the cusp
+      ++ while neglecting the (c \tau+d) factor.
+      ++ It corresponds to the exponent of the fourth product
+      ++ of \eqref{eq:g_r(gamma*tau)}.
+    qExponent: % -> Q
+      ++ qExponent(e) returns the order of the expansion
+      ++ of e in q = \exp(2 \pi i \tau) while neglecting the (c \tau+d)
+      ++ factor. It corresponds to the exponent of the fourth
+      ++ product of \eqref{eq:g_r(gamma*tau)}.
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(e) returns the smallest positive integer n such that
+      ++ the expansion of the function g_r(\gamma \tau) corresponding to
+      ++ e=etaQuotient(mm, r, gamma) (neglecting the (c\tau+d)^* factor)
+      ++ lives in Q[w][[x]] where w is a n-th root of unity.
+    elt: (%, P) -> SymbolicEtaDeltaGamma
+      ++ elt(x, delta) returns the data corresponding to the respective
+      ++ delta.
+    modularGamma0?: % -> Boolean
+      ++ modularGamma0?(x) returns true if the eta quotient is a modular
+      ++ function for Gamma0(level x), i.e, it returns
+      ++ modularGamma0?(level x, exponents x) from
+      ++ QEtaAuxiliaryPackage.
+ == add
+    HT ==> XHashTable(P, SymbolicEtaDeltaGamma) -- mapping delta to \eta_\delta
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fdivs: LP,     -- all divisors of level that are given at creation
+              fexponents: LZ,-- the r vector
+              fgamma: SL2Z,  -- gamma
+              feta: HT,      -- mapping delta to \eta_\delta
+              frat: Q,       -- square of rational prefactor
+              funityPower: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
+              fxExponent: Q, -- \sum_delta rdelta*edelta/24
+              fqExponent: Q, -- \sum_delta rdelta*udelta/24
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    -- divs must be ALL divisors of m sorted ascendingly
+    etaquot(mm: P, r: LZ, gamma: SL2Z, eta: HT): % ==
+        divs: LP := DIVISORS mm
+        rat: Q := 1
+        upower: Q := 0
+        xexponent: Q := 0
+        qexponent: Q := 0
+        for delta in divs for rdelta in r | not zero? rdelta repeat
+            e := eta(delta)
+            rat := rat * rationalPrefactor(e)^rdelta
+            rd := rdelta/24
+            xexponent := xexponent + rd * edelta(e)
+            qexponent := qexponent + rd * udelta(e)
+
+            kappa: Q := (upsilonExponent e)::Q
+            upower := upower + rd * (vdelta e + kappa)
+
+        -- Now make the numerator small.
+        upower := fractionalPart(upower)$QETAAUX
+
+        -- minimal root of unity needed for the expansion is determined from
+        -- expressing the squareroot of the rational prefactor in roots of unity
+        -- and from the unityPower.
+        -- Additionally, we have to consider the root of unity factor in
+        -- q_\delta, i.e., the denominator of the v_\delta.
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
+        p: P := rr.rootOf
+        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QETAAUX)
+        minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
+        per [mm, divs, r, gamma, eta, rat, upower, xexponent, qexponent, minroot]
+
+    etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
+        eta: HT := empty()
+        -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
+        if gamma(2,1) < 0 then gamma := -gamma
+        for delta in DIVISORS mm repeat
+            eta.delta := eta(mm, delta, gamma)$SymbolicEtaDeltaGamma
+        etaquot(mm, r, gamma, eta)
+
+    level(x: %): P == xx.flevel
+    divisors(x: %): LP == xx.fdivs
+    elt(x: %, delta: P): SymbolicEtaDeltaGamma == xx.feta.delta
+    exponents(x: %): LZ == xx.fexponents
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    unityPower(x: %): Q == xx.funityPower
+    xExponent(x: %): Q == xx.fxExponent
+    qExponent(x: %): Q == xx.fqExponent
+    minimalRootOfUnity(x: %): P == xx.fminroot
+    modularGamma0?(x: %): Boolean ==
+        modularGamma0?(level x, exponents x)$QETAAUX
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fdivs)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fdivs ~= yy.fdivs => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fgamma = yy.fgamma
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicEtaQuotient}
+\label{sec:SymbolicEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $N\in\setN$, $r\in R(N)$,
+elements from the domain \code{SymbolicEtaQuotient}
+is a container of data from  \code{SymbolicEtaQuotientGamma} for each
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, corresponding to a cusp of $\Gamma_0(N)$.
+
+If \code{e = etaQuotient(nn, r)}, then
+for each cusp in
+\code{cusps(nn)$CongruenceSubgroupGamma0(nn)}
+%$
+we have \code{e.cusp} is the corresponding data from
+\code{SymbolicEtaQuotientGamma}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YEQ SymbolicEtaQuotient
+++ SymbolicEtaQuotient holds data to compute an eta quotient expansions
+++ of g_r(\tau) at all cusps of $\Gamma_0(N)$ or at the given cusps.
+++ See \eqref{g_r(tau)}
+SymbolicEtaQuotient: SetCategory with
+    etaQuotient: (P, LZ, LQ) -> %
+      ++ etaQuotient(mm, r, cusps) represents the expansion of
+      ++ g_r(\tau) at the given cusps a/c of Gamma0(mm)
+      ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
+      ++ gamma=cuspToMatrix(m, a/c).
+      ++ $r$ is indexed by the divisors of $mm$.
+      ++ See \eqref{eq:g_r(tau)}.
+    etaQuotient: (P, LZ) -> %
+      ++ etaQuotient(mm, r) represents the expansion of g_r(\tau) at
+      ++ all cusps a/c of Gamma0(mm) in terms of x = \exp(2 \pi i \tau/w)
+      ++ where w=width(m, c) and gamma=cuspToMatrix(mm, a/c).
+      ++ It is the same as
+      ++ etaQuotient(mm, r, cusps(mm)$CongruenceSubgroupGamma0).
+      ++ $r$ is indexed by the divisors of $mm$.
+      ++ See \eqref{eq:g_r(tau)}.
+    level: % -> P
+      ++ If x=etaQuotient(mm, r) then level(x) returns the level of
+      ++ the eta quotient, i.e., level(x)=mm.
+    exponents: % -> LZ
+      ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
+      ++ exponents, i.e., exponents(x)=r.
+    cusps: % -> LQ
+      ++ If x=etaQuotient(mm, r), then
+      ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma0.
+    minimalRootOfUnity: % -> P
+      ++ If x=etaQuotient(mm, r), then minimalRootOfUnity(x) returns the
+      ++ smallest positive integer n such that the expansion of the
+      ++ function g_r(\tau) at any cusp of Gamma_0(mm)
+      ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[x]] where w
+      ++ is an n-th root of unity.
+    elt: (%, Q) -> SymbolicEtaQuotientGamma
+      ++ x.cusp returns the data corresponding to the respective
+      ++ cusp.
+    qetaGrades: % -> List Q
+      ++ qetaGrades(x) returns the (negated) exponents of a series
+      ++ expansion of x at all the cusps in the canonical variables.
+      ++ Internally, the matrix of Ligozat is employed.
+ == add
+    HT ==> XHashTable(Q, SymbolicEtaQuotientGamma)
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(level)
+              fexponents: LZ,-- the r vector
+              fcusps: LQ,
+              feta: HT,      -- mapping delta to \eta_\delta
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    qetaGrades(x: %): List Q == [-xExponent(x.cusp) for cusp in cusps x]
+
+    etaQuotient(mm: P, r: LZ, cusps: LQ): % ==
+        divs: LP := DIVISORS mm
+        h: HT := empty()
+        minroot: P := 1
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA0
+            e: SymbolicEtaQuotientGamma := etaQuotient(mm, r, gamma)
+            h.cusp := e
+            minroot := lcmP(minroot, minimalRootOfUnity e)
+        per [mm, r, cusps, h, minroot]
+
+    etaQuotient(mm: P, r: LZ): % == etaQuotient(mm, r, cusps(mm)$GAMMA0)
+
+    level(x: %): P == xx.flevel
+    exponents(x: %): LZ == xx.fexponents
+    cusps(x: %): LQ == xx.fcusps
+    elt(x: %, cusp: Q): SymbolicEtaQuotientGamma == xx.feta.cusp
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents = yy.fexponents
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicSiftedEtaDeltaLambdaGamma}
+\label{sec:SymbolicSiftedEtaDeltaLambdaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $\divides{\delta}{M}$,
+$\lambda \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain
+\code{SymbolicSiftedEtaDeltaLambdaGamma} represent the tuple
+\begin{gather}
+  \left(
+  M,
+  \delta,
+  m,
+  \lambda,
+  \gamma,
+  \frac{h_{\delta,m,\lambda}}{\delta}
+  ,
+  u_{\delta,m,\lambda},
+  v_{\delta,m,\lambda},
+  \kappa_{\delta,m,\lambda}
+  \right)
+\end{gather}
+and thus corresponds to the data from
+\eqref{eq:eta_delta-m-lambda(gamma*tau)}, \ie, it computes the
+building blocks for $\eta_{\delta,m,\lambda}(\gamma\tau)$.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YSEDLG SymbolicSiftedEtaDeltaLambdaGamma
+++ SymbolicSiftedEtaDeltaLambdaGamma is a generalization of
+++ SymbolicEtaDeltaGamma. It holds data to compute an eta
+++ expansion of $\eta_{delta.m,\lambda}(\gamma \tau)$.
+++ See \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
+    eta: (P, P, P, N, SL2Z) -> %
+      ++ eta(mm, delta, m, lambda, gamma) represents the
+      ++ expansion of $\eta_{\delta,m,\lambda}(\gamma \tau)$ in terms of
+      ++ $q = \exp(2 \pi i \tau)$.
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+      -- Returns mm.
+    delta: % -> P
+      ++ delta(x) returns the corresponding delta.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    lambda: % -> N
+      ++ lambda(x) returns lambda.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in eta(...,gamma).
+    rationalPrefactor: % -> Q
+      ++ rationalPrefactor(x) returns the square of the second product
+      ++ in \eqref{eq:g_r(gamma*tau)}
+    upsilonExponent: % -> Z
+      ++ Returns $\kappa_{\gamma_{\delta,m,\lambda}}$. See
+      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+    udelta: % -> Q
+      ++ Returns $u_{\delta,m,\lambda}$. See
+      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+    vdelta: % -> Q
+      ++ Returns $v_{\delta,m,\lambda}$. See
+      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+ == add
+    Rec ==> Record(red: SL2Z, triang: MZ)
+    Rep ==> Record(
+              flevel: P,
+              fdelta: P,
+              fmultiplier: P,
+              flambda: N,
+              fgamma: SL2Z, -- gamma
+              frat: Q,      -- square of rational prefactor
+              fkappa: Z,    -- upsilonExponent(a1,b2,c1,d1)
+              fudelta: Q,   -- udelta = hdelta^2/(delta*m)
+                            -- \eqref{eq:uv_delta-m-lambda}}
+              fvdelta: Q    -- b2/d2, reduced form of roots of unity
+                            -- 0<=b2<d2, 0<d2
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    eta(mm: P, delta: P, m: P, lambda: N, gamma: SL2Z): % ==
+        --assert(gamma(2, 1)>0)
+        rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
+        gamma1: SL2Z := rec.red
+        gamma2: MZ := rec.triang
+        a2: Z := gamma2(1, 1); b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
+        rat: Q := a2/delta -- = hdelta/delta
+        udelta: Q := a2/d2 -- = hdelta^2/delta/m
+        vdelta: Q := b2/d2
+        kappa: Z := upsilonExponent(gamma1)$QETAAUX
+        per [mm, delta, m, lambda, gamma, rat, kappa, udelta, vdelta]
+
+    level(x: %): P == xx.flevel
+    delta(x: %): P == xx.fdelta
+    multiplier(x: %): P == xx.fmultiplier
+    lambda(x: %): N == xx.flambda
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    upsilonExponent(x: %): Z == xx.fkappa
+    udelta(x: %): Q == xx.fudelta
+    vdelta(x: %): Q == xx.fvdelta
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.frat)
+        h := hashUpdate!(h, xx.fkappa)
+        h := hashUpdate!(h, xx.fudelta)
+        h := hashUpdate!(h, xx.fvdelta)
+    ((x: %) = (y: %)): Boolean ==
+        level x ~= level y => false
+        delta x ~= delta y => false
+        multiplier x ~= multiplier y => false
+        lambda x ~= lambda y => false
+        gamma x = gamma y
+
+
+)if LiterateDoc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicSiftedEtaQuotientLambdaGamma}
+\label{sec:SymbolicSiftedEtaQuotientLambdaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This domain represents data for $g_{r,m,t,\lambda}(\gamma\tau)$
+as well as $g_{r,m,-,\lambda}(\gamma\tau)$.
+
+For $m, M\in\setN$, $r \in R(M)$, $t,\lambda \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain
+\code{SymbolicSiftedEtaQuotientLambdaGamma} represent the tuple
+\begin{gather}
+  \left(
+  M,
+  r,
+  m,
+  t,
+  \lambda,
+  \gamma,
+  y,
+  \divisorprod{M}
+  \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!r_\delta}
+  ,
+  -\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr) +
+  \divisorsum{M} \frac{r_\delta(v_{\delta,m,\lambda} + \kappa_{\delta,m,\lambda})}{24}
+  ,
+  \divisorsum{M} \frac{r_\delta u_{\delta,m,\lambda}}{24}
+  \right)
+\end{gather}
+and thus corresponds to the data from
+\eqref{eq:g_r-m-t-lambda(gamma*tau)}, \ie, it computes the building
+blocks for $g_{r,m,t,\lambda}(\gamma\tau)$.
+
+The special entry $y=(y_\delta)_{\divides{\delta}{M}}$ is a container
+of the \code{SymbolicSiftedEtaDeltaLambdaGamma} values for each
+divisor $\delta$ of $M$.
+
+
+For the special case $t=-1$, the part
+$-\frac{\lambda}{24m}\Bigl(24t+\sumdelta{r}\Bigr)$ is missing, i.e.,
+we get
+\begin{gather}
+  \left(
+  M,
+  r,
+  m,
+  t,
+  \lambda,
+  \gamma,
+  y,
+  \divisorprod{M}
+  \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!r_\delta}
+  ,
+  \divisorsum{M} \frac{r_\delta(v_{\delta,m,\lambda} + \kappa_{\delta,m,\lambda})}{24}
+  ,
+  \divisorsum{M} \frac{r_\delta u_{\delta,m,\lambda}}{24}
+  \right).
+\end{gather}
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YSEQLG SymbolicSiftedEtaQuotientLambdaGamma
+++ SymbolicSiftedEtaQuotientLambdaGamma is a generalization of
+++ SymbolicEtaQuotientGamma. It holds data to compute an eta
+++ quotient expansion of g_{r,m,t,\lambda}(\gamma \tau) or
+++ of g_{r,m,-,\lambda}(\gamma \tau).
+++ See \eqref{eq:g_r-m-t-lambda(gamma*tau)} and
+++ \eqref{eq:g_r-m---lambda(gamma*tau)}.
+SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
+    etaQuotient: (P, LZ, P, Z, N, SL2Z) -> %
+      ++ etaQuotient(mm, r, m, t, lambda, gamma) represents the
+      ++ expansion of $g_{r,m,t,\lambda}(\gamma \tau)$ in terms of
+      ++ $x = \exp(2 \pi i \tau/w)$ where w=width(nn, c) and
+      ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c of Gamma0(mm).
+      ++ $r$ is indexed by the divisors of $mm$.
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+      -- Returns mm.
+    divisors: % -> LP
+      ++ divisors(x) returns the divisors of level(x) that were given
+      ++ at creation time of x.
+      -- Returns divs.
+    exponents: % -> LZ
+      ++ exponents(x) returns the list of exponents corresponding to all
+      ++ divisors.
+      -- Returns r.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    offset: % -> Z
+      ++ offset(x) returns the subsequence offset.
+      ++ Returns t.
+    lambda: % -> N
+      ++ lambda(x) returns lambda
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+
+    rationalPrefactor: % -> Q
+      ++ rationalPrefactor(x) returns the square of the second product
+      ++ in \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
+    unityPower: % -> Q
+      ++ unityPower(e) returns $- lambda*(24*t+\sumdelta{r})/(24*m) +
+      ++ sum_{\delta} rdelta*(vdelta+Kappa_delta)/24$. It corresponds to
+      ++ the second factor of \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
+    qExponent: % -> Q
+      ++ qExponent(e) returns the order of the expansion
+      ++ of e in q = \exp(2 \pi i \tau)  while neglecting the (c\tau+d) factor.
+      ++ It corresponds to the exponent of the fourth product
+      ++ of \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(e) returns the smallest positive integer n
+      ++ such that the expansion of the function
+      ++ $g_{r,m,t,\lambda}(\gamma \tau)$ corresponding to
+      ++ e=etaQuotient(mm, divs, r, m, t, lambda, gamma) (neglecting
+      ++ the (c \tau+d)^* factor) lives in Q[w][[z]] where w is a n-th
+      ++ root of unity and z a fractional q power.
+    elt: (%, P) -> SymbolicSiftedEtaDeltaLambdaGamma
+      ++ x.delta returns the data corresponding to the respective
+      ++ delta.
+ == add
+    HT ==> XHashTable(P, SymbolicSiftedEtaDeltaLambdaGamma)
+      -- mapping delta to \eta_{\delta,m,\lambda}
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fdivs: LP,     -- all divisors of level that are given at creation
+              fexponents: LZ,-- the s vector
+              fmultiplier: P,-- the multiplier m
+              foffset: Z,    -- the offset t \in 0..(m-1) or t=-1
+              flambda: N,    -- lambda \in 0..(m-1)
+              fgamma: SL2Z,  -- gamma
+              feta: HT,      -- mapping delta to \eta_{\delta,m,lambda}
+              frat: Q,       -- square of rational prefactor
+              funityPower: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
+                             -- - lambda*(24*t+\sumdelta{s})/(24*m)
+              fqExponent: Q, -- \sum_delta rdelta*udelta/24
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaquot(mm: P, divs: LP, r: LZ,
+            m: P, t: Z, lambda: N, gamma: SL2Z, eta: HT): % ==
+        rat: Q := 1
+        upower: Q := 0
+        qexponent: Q := 0
+        sigmaInfty: Z := 0
+        for delta in divs for rdelta in r | not zero? rdelta repeat
+            e := eta(delta)
+            rat := rat * rationalPrefactor(e)^rdelta
+            rd := rdelta/24
+            qexponent := qexponent + rd * udelta(e)
+
+            kappa: Q := (upsilonExponent e)::Q
+            upower := upower + rd * (vdelta e + kappa)
+            sigmaInfty := sigmaInfty + delta * rdelta
+
+        -- Distinguish between g_{s,m,t,\lambda} and g_{s,m,-,\lamnbda}.
+        if t>=0 then upower := upower - lambda/m * ((t::Q) + sigmaInfty/24)
+
+        -- Now make the numerator small.
+        upower := fractionalPart(upower)$QETAAUX
+
+        -- minimal root of unity needed for the expansion is determined from
+        -- expressing the squareroot of the rational prefactor in roots of unity
+        -- and from the unityPower.
+        -- Additionally, we have to consider the root of unity factor in
+        -- q_\delta, i.e., the denominator of the v_\delta.
+        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
+        p: P := rr.rootOf
+        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QETAAUX)
+        minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
+        per [mm, divs, r, m, t, lambda, gamma, eta, rat, upower, qexponent, minroot]
+
+    etaQuotient(mm: P, r: LZ, m: P, t: Z, lambda: N, gamma: SL2Z): % ==
+        divs: LP := DIVISORS mm
+        eta: HT := empty()
+        -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
+        if gamma(2,1) < 0 then gamma := -gamma
+        for delta in divs repeat
+            YSEDLG ==> SymbolicSiftedEtaDeltaLambdaGamma
+            eta.delta := eta(mm, delta, m, lambda, gamma)$YSEDLG
+        etaquot(mm, divs, r, m, t, lambda, gamma, eta)
+
+    level(x: %): P == xx.flevel
+    divisors(x: %): LP == xx.fdivs
+    elt(x: %, delta: P): SymbolicSiftedEtaDeltaLambdaGamma == xx.feta.delta
+    exponents(x: %): LZ == xx.fexponents
+    multiplier(x: %): P == xx.fmultiplier
+    offset(x: %): Z == xx.foffset
+    lambda(x: %): N == xx.flambda
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    unityPower(x: %): Q == xx.funityPower
+    qExponent(x: %): Q == xx.fqExponent
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fdivs)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fmultiplier)
+        h := hashUpdate!(h, xx.foffset)
+        h := hashUpdate!(h, xx.flambda)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fdivs ~= yy.fdivs => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fmultiplier ~= yy.fmultiplier => false
+        xx.foffset ~= yy.foffset => false
+        xx.flambda ~= yy.flambda => false
+        xx.fgamma = yy.fgamma
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicSiftedEtaQuotientGamma}
+\label{sec:SymbolicSiftedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This domain represents data for $g_{r,m,t}(\gamma\tau)$ as well as
+$g_{r,m}(\gamma\tau)$.
+
+For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{-1, 0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain
+\code{SymbolicSiftedEtaQuotientGamma} represent the collection
+\code{SymbolicSiftedEtaQuotientLambdaGamma} for each $\lambda \in
+\Set{0,\ldots,m-1}$ and thus corresponds to the data from
+\eqref{eq:g_r-m-t(gamma*tau)}, \ie, it computes the building
+blocks for $g_{r,m,t}(\gamma\tau)$ and for $t=-1$ the building blocks
+of $g_{r,m}=U_mg_r$.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YSEQG SymbolicSiftedEtaQuotientGamma
+++ SymbolicSiftedEtaQuotientGamma is a generalization of
+++ SymbolicEtaQuotientGamma. It holds data to compute an eta
+++ quotient expansion of $g_{r,m,t}(\gamma \tau)$ or $g_{r,m}(\gamma \tau)$.
+++ See \eqref{eq:g_r-m-t(gamma*tau)} and \eqref{eq:g_r-m(gamma*tau)}.
+SymbolicSiftedEtaQuotientGamma: SetCategory with
+    etaQuotient: (P, LZ, P, Z, SL2Z) -> %
+      ++ etaQuotient(mm, r, m, t, gamma) represents the
+      ++ expansion of $g_{r,m,t}(\gamma \tau)$ where $r$ is indexed
+      ++ by the divisors of $mm$.
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+      -- Returns mm.
+    divisors: % -> LP
+      ++ divisors(x) returns the divisors of level(x) that were
+      ++ given at creation time of x.
+      -- Returns divs.
+    exponents: % -> LZ
+      ++ exponents(x) returns the list of exponents corresponding to all
+      ++ divisors.
+      -- Returns r.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    offset: % -> Z
+      ++ offset(x) returns the subsequence offset.
+      ++ Returns t.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaQuotient(...,gamma).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.lambda) for lambda in 0..m-1].
+    elt: (%, N) -> SymbolicSiftedEtaQuotientLambdaGamma
+      ++ x.lambda returns the data corresponding to the respective
+      ++ lambda.
+ == add
+    A ==> IndexedOneDimensionalArray(SymbolicSiftedEtaQuotientLambdaGamma, 0)
+    Rep ==> Record(
+              feta: A,    -- mapping lambda to \eta_{\delta,m,lambda}
+              fminroot: P -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+
+    etaQuotient(mm: P, r: LZ, m: P, t: Z, gamma: SL2Z): % ==
+        e: SymbolicSiftedEtaQuotientLambdaGamma :=
+            etaQuotient(mm, r, m, t, 0, gamma)
+        minroot: P := minimalRootOfUnity e
+        eta: A := new(m, e) -- fill with dummy values
+        for lambda in 1..m-1 repeat -- can start with 1.
+            e := etaQuotient(mm, r, m, t, lambda, gamma)
+            minroot := lcmP(minroot, minimalRootOfUnity e)
+            eta.lambda := e
+        per [eta, minroot]
+
+    elt(x: %, lambda: N): SymbolicSiftedEtaQuotientLambdaGamma ==
+        rep(x).feta.lambda
+    level(x: %): P == level(x.0)
+    divisors(x: %): LP == divisors(x.0)
+    exponents(x: %): LZ == exponents(x.0)
+    multiplier(x: %): P == multiplier(x.0)
+    offset(x: %): Z == offset(x.0)
+    gamma(x: %): SL2Z == gamma(x.0)
+    minimalRootOfUnity(x: %): P == rep(x).fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, x.0)
+    ((x: %) = (y: %)): Boolean == x.0 = y.0
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicSiftedEtaQuotientOrbitProductGamma}
+\label{sec:SymbolicSiftedEtaQuotientOrbitProductGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain
+\code{SymbolicSiftedEtaQuotientOrbitProductGamma} represent the
+collection \code{SymbolicSiftedEtaQuotientGamma}
+for each
+$t' \in \modularOrbit{r, m, t}$ and thus corresponds to the data from
+\eqref{eq:P_r-m-t(gamma*tau)}, \ie, it computes the building blocks
+for $P_{r,m,t}(\gamma\tau)$.
+
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YSEQOG SymbolicSiftedEtaQuotientOrbitProductGamma
+++ SymbolicSiftedEtaQuotientOrbitProductGamma
+++ holds data to compute an eta quotient
+++ expansions of $P_{r, m, t}(\gamma \tau)$.
+++ See \eqref{eq:P_r-m-t(gamma*tau)}.}
+SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
+    etaQuotient: (P, LZ, P, N, SL2Z) -> %
+      ++ etaQuotient(mm, r, m, t, gamma) represents the expansion
+      ++ of $P_{r, m, t}(\gamma \tau)$.
+      ++ $r$ is indexed by the divisors of $mm$.
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+      -- Returns mm.
+    exponents: % -> LZ
+      ++ exponents(x) returns the list of exponents corresponding to all
+      ++ divisors.
+      -- Returns r.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    offset: % -> N
+      ++ offset(x) returns the subsequence offset.
+      ++ Returns t.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+    orbit: % -> List N
+      ++ orbit(x) returns $\modularOrbit{r, m, t}$ where
+      ++ r=exponents(x), m=multiplier(x), t=offset(x).
+      ++ See definition of orbit in qetacofactorspace.spad
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)]
+      ++ where $rhat = \sum_\delta \delta r_\delta$
+    elt: (%, N) -> SymbolicSiftedEtaQuotientGamma
+      ++ x.u returns the data corresponding to the respective
+      ++ orbit element u.
+ == add
+    YSEQG ==> SymbolicSiftedEtaQuotientGamma
+    HT ==> XHashTable(N, YSEQG)
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fdivs: LP,     -- all divisors of level that are given at creation
+              fexponents: LZ,-- the r vector
+              fmultiplier: P,-- the multiplier m
+              foffset: N,    -- the offset t \in 0..(m-1)
+              fgamma: SL2Z,  -- gamma
+              forbit: List N,-- \modularOrbit(r, m, t}
+              fdata: HT,
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaQuotient(mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
+        divs: LP := DIVISORS mm
+        rhat: Z := 0 -- sigmaInfty
+        for delta in divs for rdelta in r repeat rhat := rhat + delta * rdelta
+        orb: List N := orbit(rhat, m, t)$QEtaCoFactorSpace
+        h: HT := empty()
+        minroot: P := 1
+        for tt in orb repeat
+            e: YSEQG := etaQuotient(mm, r, m, tt, gamma)
+            minroot := lcmP(minroot, minimalRootOfUnity e)
+            h.tt := e
+        per [mm, divs, r, m, t, gamma, orb, h, minroot]
+
+    elt(x: %, tt: N): YSEQG == rep(x).fdata.tt
+    level(x: %): P == xx.flevel
+    divisors(x: %): LP == xx.fdivs
+    exponents(x: %): LZ == xx.fexponents
+    multiplier(x: %): P == xx.fmultiplier
+    offset(x: %): N == xx.foffset
+    gamma(x: %): SL2Z == xx.fgamma
+    orbit(x: %): List N == xx.forbit
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fdivs)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fmultiplier)
+        h := hashUpdate!(h, xx.foffset)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fdivs ~= yy.fdivs => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fmultiplier ~= yy.fmultiplier => false
+        xx.foffset ~= yy.foffset => false
+        xx.fgamma = yy.fgamma
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicModularSiftedEtaQuotientGamma}
+\label{sec:SymbolicModularSiftedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For $m, M, N\in\setN$, $s \in R(N)$, $r \in R(M)$, $t \in
+\Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain
+\code{SymbolicModularSiftedEtaQuotientGamma} represent the product of
+an
+$\eta$-quotient cofactor to an element of
+\code{SymbolicSiftedEtaQuotientOrbitProductGamma} in order to make the
+product a modular function.
+
+It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)}, \ie, it
+computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YMSEQG SymbolicModularSiftedEtaQuotientGamma
+++ SymbolicModularSiftedEtaQuotientGamma
+++ holds data to compute an eta quotient
+++ expansions of $F_{s, r, m, t}(\gamma \tau)$.
+++ See \eqref{eq:F_s-r-m-t(gamma*tau)} in this file.
+SymbolicModularSiftedEtaQuotientGamma: SetCategory with
+    etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
+      ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the expansion
+      ++ of $F_{s,r,m,t}(\gamma \tau)$.
+      ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
+    coFactor: % -> SymbolicSiftedEtaQuotientGamma
+      ++ coFactor(x) returns the coFactor part to make $F_{s,r,m,t}$ a
+      ++ modular function.
+    orbitProduct: % -> SymbolicSiftedEtaQuotientOrbitProductGamma
+      ++ orbitProduct(x) returns the orbit product part of $F_{s,r,m,t}$.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
+ == add
+    Rep ==> Record(
+              fcoetaqg: SymbolicSiftedEtaQuotientGamma,
+              fseqopg: SymbolicSiftedEtaQuotientOrbitProductGamma,
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
+        not modularGamma0?(nn, s, mm, r, m, t)$QEtaCoFactorSpace =>
+            error "modular conditions are not fulfilled"
+        nndivs: LP := DIVISORS nn
+        mmdivs: LP := DIVISORS mm
+        coetaqg: SymbolicSiftedEtaQuotientGamma :=
+            etaQuotient(nn, s, 1, 0, gamma)
+        seqopg: SymbolicSiftedEtaQuotientOrbitProductGamma :=
+            etaQuotient(mm, r, m, t, gamma)
+        minR1: P := minimalRootOfUnity coetaqg
+        minR2: P := minimalRootOfUnity seqopg
+        per [coetaqg, seqopg, lcmP(minR1, minR2)]
+
+    coFactor(x: %): SymbolicSiftedEtaQuotientGamma == xx.fcoetaqg
+    orbitProduct(x: %): SymbolicSiftedEtaQuotientOrbitProductGamma == xx.fseqopg
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.fcoetaqg)
+        h := hashUpdate!(h, xx.fseqopg)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        (xx.fcoetaqg = yy.fcoetaqg) and (xx.fseqopg = yy.fseqopg)
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicModularSiftedEtaQuotient}
+\label{sec:SymbolicModularSiftedEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For $m, M, N\in\setN$, $s \in R(N)$, $r \in R(M)$, $t \in
+\Set{0,\ldots,m-1}$, elements from the domain
+\code{SymbolicModularSiftedEtaQuotient} represent the collection of
+element from \code{SymbolicSiftedEtaQuotienGamma} for all $\gamma \in
+\SL2Z$ corresponding to a cusp of $\Gamma_0(N)$.
+
+It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)}, \ie,
+it computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YMSEQ SymbolicModularSiftedEtaQuotient
+++ SymbolicModularSiftedEtaQuotient holds data to compute an eta
+++ quotient expansions of $F_{s, r, m, t}(\gamma \tau)$ at all cusps
+++ of $Gamma_0(N)$. See \eqref{eq:F_s-r-m-t(gamma*tau)}.
+SymbolicModularSiftedEtaQuotient: SetCategory with
+    etaQuotient: (P, LZ, P, LZ, P, N, LQ) -> %
+      ++ etaQuotient(nn, s, mm, r, m, t, cusps) represents the expansion
+      ++ of $F_{s,r,m,t}(\gamma \tau)$ for all gamma corresponding to
+      ++ the given cusps.
+      ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
+    etaQuotient: (P, LZ, P, LZ, P, N) -> %
+      ++ etaQuotient(nn, s, mm, r, m, t) represents the expansion of
+      ++ $F_{r,s,m,t}(\gamma \tau)$ for all gamma corresponding to the
+      ++ cusps of $\Gamma_0(nn)$.
+      ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
+    level: % -> P
+      ++ level(x) returns nn such that x corresponds to a modular
+      ++ function for Gamma_0(nn).
+    cusps: % -> LQ
+      ++ cusps(x) either returns the value that was given to
+      ++ etaQuotient at creation time or cusps(level
+      ++ x)$CongruenceSubgroupGamma0 if the cusps where not given.
+    elt: (%, Q) -> SymbolicModularSiftedEtaQuotientGamma
+      ++ x.cusp returns the data corresponding to the respective
+      ++ cusp.
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
+ == add
+    YMSEQG ==> SymbolicModularSiftedEtaQuotientGamma
+    HT ==> XHashTable(Q, YMSEQG)
+    Rep ==> Record(
+              flevel: P,  -- corresponds to Gamma_0(N)
+              fcusps: LQ, -- cusps of Gamma_0(N)
+              fmseq: HT,  -- mapping gamma to YMSEQG
+              fminroot: P -- minimal root of unity needed for the coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, cusps: LQ): % ==
+        h: HT := empty()
+        minroot: P := 1
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA0
+            e: YMSEQG := etaQuotient(nn, s, mm, r, m, t, gamma)
+            h.cusp := e
+            minroot := lcmP(minroot, minimalRootOfUnity e)
+        per [nn, cusps, h, minroot]
+
+    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): % ==
+        etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
+
+    level(x: %): P == xx.flevel
+    elt(x: %, cusp: Q): YMSEQG == xx.fmseq.cusp
+    minimalRootOfUnity(x: %): P == xx.fminroot
+    cusps(x: %): LQ == xx.fcusps
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fmseq)
+    ((x: %) = (y: %)): Boolean == xx.fmseq = yy.fmseq
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicGeneralizedEtaDeltaGamma}
+\label{sec:SymbolicGeneralizedEtaDeltaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $g_{\bar{r}}(\tau)$ be a generalized eta-quotient of the form
+\eqref{eq:g_rbar(tau)},
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$,
+%
+$\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
+%
+Then for $\divides{\delta}{N}$, $0<g<\delta$,
+$r_{\delta,g}\in \setZ\setminus\Set{0}$ elements from the domain
+\code{SymbolicGeneralizedEtaDeltaGamma} represent the tuple
+\begin{gather}
+  \left(
+  N
+  ,
+  \delta
+  ,
+  g
+  ,
+  r_{\delta,g}
+  ,
+  \gamma
+  ,
+  \kappa_{g,0,\delta,\gamma_\delta}^{[S]},
+  a_\delta,
+  b_\delta,
+  u_\delta,
+  v_\delta)
+  \right),
+\end{gather}
+see \eqref{eq:g_r(gamma*tau)}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YGEDG SymbolicGeneralizedEtaDeltaGamma
+++ SymbolicGeneralizedEtaDeltaGamma holds data to compute a
+++ generalized eta-function expansion of \eta_{\delta.g}(\gamma \tau).
+++ See \eqref{eq:g_rbar(gamma*tau)} and
+++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
+SymbolicGeneralizedEtaDeltaGamma: SetCategory with
+    generalizedEta: (P, P, P, Z, SL2Z) -> %
+      ++ generalizedEta(nn, delta, g, r, gamma) represents the
+      ++ expansion of $\eta_{delta,g}(\gamma \tau)^r$, see
+      ++ \eqref{eq:g_rbar(gamma*tau)} and
+      ++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
+      ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c of
+      ++ Gamma1(nn).
+    level: % -> P
+      ++ level(x) returns the level of the eta-function.
+    exponent: % -> Z
+      ++ If x = generalizedEtaQuotient(nn, delta, g, r, gamma), then
+      ++ exponent(x) returns r.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+    gamma1: % -> SL2Z
+      ++ gamma1(x) returns splitMatrix(gamma, delta).red.
+    unityPower: % -> Q
+      ++ unityPower(x) returns kappaSchoeneberg(nn, g, 0, gammaDelta x).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns the smallest positive integer n
+      ++ such that the expansion of the function
+      ++ \eta_{\delta,g}(\gamma \tau) corresponding to
+      ++ x=generalizedEtaQuotient(nn, delta, g, r, gamma) lives in
+      ++ Q[w][[x]] where w is a n-th root of unity.
+ == add
+    Rec ==> Record(red: SL2Z, triang: MZ)
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fdelta: P,     -- delta
+              fg: P,         -- g
+              fexponent: Z,  -- rdg = r_{\delta,g}
+              fgamma: SL2Z,  -- gamma
+              fgamma1: SL2Z, -- gammaDelta
+              fgamma2: MZ, -- matrix corresponding to \tau_\delta
+              fudelta: Q,    -- edelta = hdelta^2/delta \eqref{eq:q_delta}}
+              fvdelta: Q,    -- b2/d2, reduced form of roots of unity
+                             -- 0<=b2<d2, 0<d2
+              funityPower: Q,-- kappa_{g,0,d,gamma_d}
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    generalizedEta(nn: P, delta: P, g: P, r: Z, gamma: SL2Z): % ==
+        gamma(2,1) <= 0 =>
+            error "generalizedEtaQuotient: expect gamma(2,1) to be positive"
+        rec: Rec := splitMatrix(gamma, delta)$QETAAUX
+        gamma1: SL2Z := rec.red
+        gamma2: MZ := rec.triang
+        kappa: Q := kappaSchoeneberg(nn, g, 0, gamma1) $ QETAAUX
+        upower: Q := fractionalPart kappa
+        udelta: Q := gcd(gamma(2,1),delta)^2 / delta
+        vdelta: Q := gamma(1,2) / gamma(2,2)
+        minroot := lcmP(denom upower, denom vdelta)
+        per [nn, delta, g, r, gamma,
+             gamma1, gamma2, udelta, vdelta, upower, minroot]
+
+    level(x: %): P == xx.flevel
+    exponent(x: %): Z == xx.fexponent
+    gamma(x: %): SL2Z == xx.fgamma
+    unityPower(x: %): Q == xx.funityPower
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fdelta)
+        h := hashUpdate!(h, xx.fg)
+        h := hashUpdate!(h, xx.fexponent)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fdelta ~= yy.fdelta => false
+        xx.fg ~= yy.fg => false
+        xx.fexponent ~= yy.fexponent => false
+        xx.fgamma = yy.fgamma
+
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicGeneralizedEtaQuotientGamma}
+\label{sec:SymbolicGeneralizedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $g_{\bar{r}}(\tau)$ be a generalized eta-quotient of the form
+\eqref{eq:g_rbar(tau)},
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$,
+%
+$\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
+%
+Then elements from the domain
+\code{SymbolicGeneralizedEtaQuotientGamma} represent the tuple
+\begin{gather}
+  \left(
+  N
+  ,
+  \bar{r}
+  ,
+  \gamma
+  ,
+  y
+  ,
+  \tilde{r}
+  ,
+  \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
+    r_{\delta,g} \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
+  ,
+  (y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}
+  \right)
+\end{gather}
+where $y = \text{\code{etaQuotient(nn, r, gamma)}}$ is an element of
+\code{SymbolicEtaQuotientGamma} and denotes the data of the pure
+eta-quotient part, see \eqref{eq:g_r(gamma*tau)}. and
+$(y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}$
+is a collection of elements from
+\code{SymbolicGeneralizedEtaDeltaGamma}.
+
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YGEQG SymbolicGeneralizedEtaQuotientGamma
+++ SymbolicGeneralizedEtaQuotientGamma holds data to compute a
+++ generalized eta-quotient expansion of g_rr(\gamma \tau). See
+++ \eqref{eq:g_rbar(gamma*tau)}.
+SymbolicGeneralizedEtaQuotientGamma: SetCategory with
+    generalizedEtaQuotient: (P, LLZ, SL2Z) -> %
+      ++ generalizedEtaQuotient(mm, rr, gamma) represents the expansion of
+      ++ $g_rr(\gamma \tau)$. see \eqref{eq:g_rbar(gamma*tau)}.}
+      ++ gamma=matrix[[a,b],[c,d]]  represents the cusp a/c of Gamma1(mm).
+    level: % -> P
+      ++ level(x) returns the level of the eta quotient.
+    exponents: % -> LLZ
+      ++ If x = generalizedEtaQuotient(mm, rr, gamma), then
+      ++ exponents(x) returns rr.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+    symbolicEtaQuotient: % -> SymbolicEtaQuotientGamma
+      ++ symbolicEtaQuotient(x) returns the data corresponding to the
+      ++ pure eta-quotient part.
+    unityPower: % -> Q
+      ++ unityPower(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
+      ++ It corresponds to the third product of eq:g_r(gamma*tau).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(e) returns the smallest positive integer n
+      ++ such that the expansion of the function g_rr(\gamma \tau)
+      ++ corresponding to e=etaQuotient(mm, r, gamma) (neglecting the
+      ++ (c\tau+d)^* factor) lives in Q[w][[x]] where w is a n-th root
+      ++ of unity.
+    elt: (%, P, N) -> SymbolicGeneralizedEtaDeltaGamma
+      ++ elt(x, delta, g) returns the data corresponding to the
+      ++ respective (delta, g) pair.
+    modularGamma1?: % -> Boolean
+      ++ modularGamma1?(x) returns true if the eta quotient is a modular
+      ++ function for Gamma1(level x), i.e, it returns
+      ++ modularGamma1?(level x, exponents x) from
+      ++ QEtaAuxiliaryPackage.
+ == add
+    HT ==> XHashTable(P, SymbolicGeneralizedEtaDeltaGamma)
+            -- mapping (delta, g) to \eta_(\delta, g) where
+            -- (delta, g) is encoded by n=level*delta+g
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(lev)
+              fexponents: LLZ,-- the rr vector
+              fgamma: SL2Z,  -- gamma
+              feta: SymbolicEtaQuotientGamma, -- pure eta-quotient part
+              fgeta: HT,     -- mapping delta to \eta_{\delta,g}
+              funityPower: Q,-- sum r_{d,g} * kappa_{g,0,d,gamma_d}
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+    YGEDG ==> SymbolicGeneralizedEtaDeltaGamma
+    generalizedEtaQuotient(nn: P, rr: LLZ, gamma: SL2Z): % ==
+        geta: HT := empty()
+        -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
+        if gamma(2,1) < 0 then gamma := -gamma
+        rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+            splitEtaQuotientSpecification(nn, rr) $ QETAAUX
+        r: LZ := rrec.etaQuotientExponents
+        gr: LLZ := rrec.generalizedParameters
+
+        e := etaQuotient(nn, r, gamma) $ SymbolicEtaQuotientGamma
+
+        upower: Q := 0
+        minroot: P := minimalRootOfUnity e
+        for l in gr repeat
+            delta := asP l.1; g := asP l.2; rdg := l.3;
+            k := nn*delta + g
+            ge := generalizedEta(nn, delta, g, rdg, gamma) $ YGEDG
+            geta.k := ge
+            upower := upower + rdg * unityPower(ge)
+            minroot := lcmP(minroot, minimalRootOfUnity ge)
+
+        minroot := lcmP(minroot, denom upower)
+        upower := fractionalPart upower
+        per [nn, rr, gamma, e, geta, upower, minroot]
+
+    level(x: %): P == xx.flevel
+    elt(x: %, delta: P, g: N): SymbolicGeneralizedEtaDeltaGamma ==
+        k: P := asP(level(x)*delta + g)
+        xx.fgeta.k
+    exponents(x: %): LLZ == xx.fexponents
+    gamma(x: %): SL2Z == xx.fgamma
+    symbolicEtaQuotient(x: %): SymbolicEtaQuotientGamma == xx.feta
+    unityPower(x: %): Q == xx.funityPower
+    minimalRootOfUnity(x: %): P == xx.fminroot
+    modularGamma1?(x: %): Boolean ==
+        modularGamma1?(level x, exponents x)$QETAAUX
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fgamma = yy.fgamma
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\printindex
+\end{document}
+)endif

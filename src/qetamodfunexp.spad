@@ -1,0 +1,238 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2018-2021  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\externaldocument{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Algebra of $q$-series expansions of modular functions at
+  various cusps}
+
+\author{Ralf Hemmecke}
+\date{26-Jan-2018}
+\maketitle
+\begin{abstract}
+  The code in this file deals with $q$-series expansion of modular
+  functions at cusps where the modular function has poles.
+
+  Important property of usage: if the expansion has no pole at the
+  given cusps then it has no poles at other cusps, i.e. must be a
+  constant. This property is used for zero-testing.
+
+  This code is a generalisation of the code in
+  \PathName{qetaquotinf.spad}.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+LZ ==> List Z
+LQ ==> List Q
+GAMMA0 ==> CongruenceSubgroupGamma0
+
+asP x ==> x pretend P
+
+
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D ModularFunctionExpansionsAtCusps}
+\label{sec:ModularFunctionExpansionsAtCusps}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+If $N\in\setN$, $s\in R(N)$, and \code{e = etaQuotient(N, s)},
+\code{v=coerce(expansions(e))} then $v$ represents the vector of
+ Laurent expansions of an eta quotient (corresponding to $s$) at
+the cusps of $\Gamma_0(N)$ given in the argument of the constructor.
+It is assumed that the corresponding modular function has only
+poles at these cusps.
+%
+These vectors form an algebra that similar to
+\code{Finite0Series} have a finite zero test. A vector $v$ is zero, if
+\code{qetaGrade(v, k)} is smaller than 0 for all indices $k$ from 1 to
+$n$ where $n$ is the number of cusps of the given cusps.
+
+)endif
+
+)abbrev domain MODFUNC ModularFunctionExpansionsAtCusps
+++ ModularFunctionExpansionsAtCusps(C, L, cusps) represents the
+++ algebra of eta quotients that are modular functions for a certain
+++ Gamma_0(m) and have only poles at the given cusps.
+ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
+ where
+  C: IntegralDomain
+  L ==> QEtaLaurentSeries C
+  cusps: LQ
+  Exports ==> XEtaGradedAlgebra C with
+    coerce: XHashTable(Q, L) -> %
+      ++ If t is a hashtable containing (for each cusp of Gamma_0(m)
+      ++ the series expansions at the cusps, then etaQuotient(t) creates
+      ++ a data structure that can be used for computations.
+    series: (%, P) -> L
+      ++ series(x, n) returns the series corresponding to the n-th index.
+      ++ Indices can run from 1 to maxIndex().
+  Implementation ==> add
+    ncusps: P := asP(#cusps)
+    Rep ==> DirectProduct(ncusps, L)
+    xx ==> rep x
+    yy ==> rep y
+
+    coerce(t: XHashTable(Q, L)): % ==
+        -- sanity check
+        # (cs := keys t) ~= ncusps or sort cs ~= sort cusps =>
+            error "keys do not agree with cusps of this domain"
+        per directProduct vector [t.c for c in cusps]
+
+    coerce(x: %): OutputForm == xx::OutputForm
+    0: % == per(0$Rep)
+    1: % == per(1$Rep)
+    zero?(x: %): Boolean ==
+        for kn in 1..ncusps repeat
+            k: P := asP kn
+            qetaGrade(x, k, 0) > 0 => return false
+            not zero? xx.k.0 => return false
+        return true
+
+    _-(x: %): % == per(- xx)
+    ((x: %) + (y: %)): % == per(xx + yy)
+    ((x: %) - (y: %)): % == per(xx - yy)
+    ((x: %) * (y: %)): % == per(xx * yy)
+    ((c: C) * (x: %)): % == per map((s: L): L +-> c * s, xx)
+    ((x: %) ^ (n: N)): % == per map((s: L): L +-> s^n, xx)
+    maxIndex(): P == ncusps
+    qetaIndex(x: %): P ==
+        --assert(not zero? x) -- therefore for one k qetaGrade(x,k)>=0
+        maxGrade: Z := -1 -- dummy value
+        idx: N := 0
+        for kn in 1 .. ncusps repeat
+            k: P := asP kn
+            if (mx := qetaGrade(x, k)) > maxGrade then
+                maxGrade := mx
+                idx: P := k
+        return idx
+    qetaGrade(x: %, k: P): Z == - order(xx.k)
+    qetaGrade(x: %, k: P, mn: Z): Z == - order(xx.k, -mn)
+    qetaLeadingCoefficient(x: %, k: P): C == leadingCoefficient(xx.k)
+    series(x: %, k: P): L == xx.k
+    qetaGrades(x: %): LZ ==
+        zero? x => [-1$Z for k in 1..ncusps]
+        [qetaGrade(x, asP k) for k in 1..ncusps]
+    if C has Field then
+        ((x: %) / (y: %)): % ==
+            v: Vector L := new(ncusps, 0) -- new vector
+            for i in 1..ncusps repeat v.i := xx.i / yy.i
+            per(directProduct(v)$Rep)
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D ModularFunctionExpansions}
+\label{sec:ModularFunctionExpansions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+If $N\in\setN$, $s\in R(N)$, and \code{e=etaQuotient(N, s)},
+\code{v=coerce(expansions(e))} then $v$ represents the vector of Laurent
+expansions of an eta quotient (corresponding to $s$) at each cusp of
+$\Gamma_0(N)$. These vectors form an algebra that similar to
+\code{Finite0Series} have a finite zero test. A vector $v$ is zero, if
+\code{qetaGrade(v, k)} is smaller than 0 for all indices $k$ from 1 to
+$n$ where $n$ is the number of cusps of $\Gamma_0(N)$.
+
+)endif
+)abbrev domain MODFUNX ModularFunctionExpansions
+++ ModularFunctionExpansions(C, m) represents the algebra of
+++ eta quotients that are modular functions for Gamma_0(m).
+ModularFunctionExpansions(C, m): Exports == Implementation where
+  C: IntegralDomain
+  L ==> QEtaLaurentSeries C
+  m: P -- level
+  Exports ==> XEtaGradedAlgebra C with
+    coerce: XHashTable(Q, L) -> %
+      ++ If t is a hashtable containing (for each cusp of Gamma_0(m)
+      ++ the series expansions at the cusps, then etaQuotient(t) creates
+      ++ a data structure that can be used for computations.
+    series: (%, P) -> L
+      ++ series(x, n) returns the series corresponding to the n-th index.
+      ++ Indices can run from 1 to maxIndex().
+  cog0 ==> cusps(m)$GAMMA0
+  Implementation ==> ModularFunctionExpansionsAtCusps(C, cog0)
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\printindex
+\end{document}
+)endif
