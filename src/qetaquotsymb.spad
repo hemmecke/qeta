@@ -232,7 +232,7 @@ For $N\in\setN$, $r\in R(N)$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \SL2Z$, elements from the domain \code{SymbolicEtaQuotientGamma}
 represent the tuple
-\begin{gather}
+\begin{gather*}
   \left(
   N
   ,
@@ -247,7 +247,7 @@ represent the tuple
   ,
   \divisorsum{N} \frac{r_\delta e_\delta}{24}
   \right)
-\end{gather}
+\end{gather*}
 and thus corresponds to the data from \eqref{eq:g_r(gamma*tau)}.
 
 )endif
@@ -1235,6 +1235,9 @@ SymbolicModularGamma0SiftedEtaQuotient: SetCategory with
 
 )if LiterateDoc
 %$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicGeneralizedEtaDeltaGamma}
@@ -1379,7 +1382,7 @@ $\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
 %
 Then elements from the domain
 \code{SymbolicGeneralizedEtaQuotientGamma} represent the tuple
-\begin{gather}
+\begin{gather*}
   \left(
   N
   ,
@@ -1396,7 +1399,8 @@ Then elements from the domain
   ,
   (y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}
   \right)
-\end{gather}
+\end{gather*}
+according to \eqref{eq:g_rbar(gamma*tau)}
 where $y = \text{\code{etaQuotient(nn, r, gamma)}}$ is an element of
 \code{SymbolicEtaQuotientGamma} and denotes the data of the pure
 eta-quotient part, see \eqref{eq:g_r(gamma*tau)}. and
@@ -1452,7 +1456,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
               fexponents: LLZ,-- the rr vector
               fgamma: SL2Z,  -- gamma
               feta: SymbolicEtaQuotientGamma, -- pure eta-quotient part
-              fgeta: HT,     -- mapping delta to \eta_{\delta,g}
+              fgeta: HT,     -- mapping (delta,g) to \eta_{\delta,g}
               funityPower: Q,-- sum r_{d,g} * kappa_{g,0,d,gamma_d}
               fminroot: P    -- minimal root of unity needed for coefficients
             )
@@ -1509,6 +1513,115 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
         xx.flevel ~= yy.flevel => false
         xx.fexponents ~= yy.fexponents => false
         xx.fgamma = yy.fgamma
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicGeneralizedEtaQuotient}
+\label{sec:SymbolicGeneralizedEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $N\in\setN$, $\bar{r}\in \bar{R}(N)$, elements from the domain
+\code{SymbolicGeneralizedEtaQuotient} is a container of data from
+\code{SymbolicGeneralizedEtaQuotientGamma} for each
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, corresponding to a cusp of $\Gamma_1(N)$ or for other given
+cusps.
+
+If \code{e = generalizedEtaQuotient(nn, rr)}, then
+for each cusp in
+\code{cusps(nn)$CongruenceSubgroupGamma1(nn)}
+%$
+we have \code{e.cusp} is the corresponding data from
+\code{SymbolicEtaGeneralizedQuotientGamma}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YGEQ SymbolicGeneralizedEtaQuotient
+++ SymbolicGeneralizedEtaQuotient holds data to compute a generalized
+++ eta-quotient expansions of g_rr(\tau) at all cusps of $\Gamma_1(N)$
+++ or at the given cusps. See \eqref{g_rbar(tau)}
+SymbolicGeneralizedEtaQuotient: SetCategory with
+    generalizedEtaQuotient: (P, LLZ, LQ) -> %
+      ++ generalizedEtaQuotient(mm,rbar,cusps) represents the
+      ++ expansion of g_rbar(\tau) at the given cusps a/c of
+      ++ Gamma1(mm) in terms of $x = \exp(2 \pi i \tau/w)$ where
+      ++ w=width(m, c)$GAMMA1 and gamma=cuspToMatrix(m, a/c)$GAMMA1.
+      ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
+    generalizedEtaQuotient: (P, LLZ) -> %
+      ++ generalizedEtaQuotient(mm, rbar) represents the expansion of
+      ++ g_rbar(\tau) at all cusps a/c of Gamma1(mm) in terms of
+      ++ $x = \exp(2 \pi i \tau/w)$ where w=width(m,c) and
+      ++ gamma=cuspToMatrix(mm, a/c). It is the same as
+      ++ generalizedEtaQuotient(mm,rbar,cusps(mm)$CongruenceSubgroupGamma0).
+      ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
+    level: % -> P
+      ++ If x=generalizedEtaQuotient(mm,rbar) then level(x) returns
+      ++ the level of the generalized eta-quotient, i.e., level(x)=mm.
+    exponents: % -> LLZ
+      ++ If x=etaQuotient(mm, rbar) then exponents(x) returns the list
+      ++ rbar.
+    cusps: % -> LQ
+      ++ If x=generalizedEtaQuotient(mm, rbar, cusps), then
+      ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma1.
+    minimalRootOfUnity: % -> P
+      ++ If x=generalizedEtaQuotient(mm, rbar, cusps), then
+      ++ minimalRootOfUnity(x) returns the smallest positive integer n
+      ++ such that the expansion of the function g_rbar(\tau) at any
+      ++ cusp of cusps (neglecting the (c\tau+d)^* factor lives in
+      ++ Q[w][[x]] where w is an n-th root of unity.
+    elt: (%, Q) -> SymbolicGeneralizedEtaQuotientGamma
+      ++ x.cusp returns the data corresponding to the respective
+      ++ cusp.
+    qetaGrades: % -> List Q
+      ++ qetaGrades(x) returns the (negated) exponents of a series
+      ++ expansion of x at all the cusps in the canonical variables.
+ == add
+    HT ==> XHashTable(Q, SymbolicGeneralizedEtaQuotientGamma)
+    Rep ==> Record(
+              flevel: P,      -- level \Gamma_1(level)
+              fexponents: LLZ,-- the defining vector
+              fcusps: LQ,
+              feta: HT,       -- mapping delta to \eta_\delta
+              fminroot: P     -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    qetaGrades(x: %): LQ == [-xExponent(x.cusp) for cusp in cusps x]
+
+    generalizedEtaQuotient(mm: P, rbar: LLZ, cusps: LQ): % ==
+        h: HT := empty()
+        minroot: P := 1
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA1
+            import from ymbolicGeneralizedEtaQuotientGamma
+            e := generalizedEtaQuotient(mm, r, gamma)
+            h.cusp := e
+            minroot := lcmP(minroot, minimalRootOfUnity e)
+        per [mm, rbar, cusps, h, minroot]
+
+    generalizedEtaQuotient(mm: P, rbar: LLZ): % ==
+        generalizedEtaQuotient(mm, rbar, cusps(mm)$GAMMA1)
+
+    level(x: %): P == xx.flevel
+    exponents(x: %): LLZ == xx.fexponents
+    cusps(x: %): LQ == xx.fcusps
+    elt(x: %, cusp: Q): SymbolicGeneralizedEtaQuotientGamma == xx.feta.cusp
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fcusps)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.cusps = yy.fcusps
 
 
 )if LiterateDoc
