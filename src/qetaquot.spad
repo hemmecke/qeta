@@ -292,8 +292,8 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D ModularEtaQuotient}
-\label{sec:ModularEtaQuotient}
+\subsection{D ModularGamma0EtaQuotient}
+\label{sec:ModularGamma0EtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 If $N\in\setN$, $r\in R^*(N)$, and \code{e = etaQuotient(N, r)}, then
 $e$ represents the information given in
@@ -302,12 +302,12 @@ for each cusp $\frac{a}{c}$ of $\Gamma_0(N)$.
 
 
 )endif
-)abbrev domain MEQ ModularEtaQuotient
-++ ModularEtaQuotient(C, mx, CX, xi, LX) represents the set
+)abbrev domain M0EQ ModularGamma0EtaQuotient
+++ ModularGamma0EtaQuotient(C, mx, CX, xi, LX) represents the set
 ++ of eta-quotients that are modular functions for Gamma_0(N).
 ++ In fact, this domain is meant to do computation for a specific N,
 ++ but is actually implementing the union over all N.
-ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
+ModularGamma0EtaQuotient(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
@@ -355,7 +355,7 @@ ModularEtaQuotient(C, mx, CX, xi): Exports == Implementation where
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
         if not modularGamma0?(m, exponents y)$QETAAUX then
-            dbgPrint("MEQ coerce: not a modular function", exponents y)
+            dbgPrint("M0EQ coerce: not a modular function", exponents y)
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
             ye: SymbolicEtaQuotientGamma := y.cusp
@@ -413,7 +413,7 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
       ++ puiseux(y, w) represents the q-expansion of
       ++ $\prod_{t' \in \modularOrbit{r,m,t}} g_{r,m,t}(\gamma \tau)$
       ++ at $\tau=i \infity$.
-    puiseux: (SymbolicModularSiftedEtaQuotientGamma, P) -> %
+    puiseux: (SymbolicModularGamma0SiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma \tau)$ at $\tau=i \infity$.
     rationalPowerDenominator: % -> P
@@ -563,7 +563,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
             error "SiftedEtaQuotientGamma: orbit product: denominator for q does not vanish"
         per [d, ord, tx]
 
-    puiseux(y: SymbolicModularSiftedEtaQuotientGamma, w: P): % ==
+    puiseux(y: SymbolicModularGamma0SiftedEtaQuotientGamma, w: P): % ==
         yc: SymbolicSiftedEtaQuotientGamma := coFactor y
         yo: SymbolicSiftedEtaQuotientOrbitProductGamma := orbitProduct y
         pc: % := puiseux(yc, w)
@@ -584,22 +584,22 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D ModularSiftedEtaQuotient}
-\label{sec:ModularSiftedEtaQuotient}
+\subsection{D ModularGamma0SiftedEtaQuotient}
+\label{sec:ModularGamma0SiftedEtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The domain \code{ModularSiftedEtaQuotient} represents the Puiseux
+The domain \code{ModularGamma0SiftedEtaQuotient} represents the Puiseux
 series expansion of various eta-quotients.
 
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain MSEQ ModularSiftedEtaQuotient
-++ ModularSiftedEtaQuotient is a generalization of
-++ ModularEtaQuotient. It holds the expansions
+)abbrev domain M0SEQ ModularGamma0SiftedEtaQuotient
+++ ModularGamma0SiftedEtaQuotient is a generalization of
+++ ModularGamma0EtaQuotient. It holds the expansions
 ++ of F_{s,r,m,t}(\tau) at all cusps of $\Gamma_0(N)$.
 ++ See \eqref{eq:F_s-r-m-t(gamma*tau)}.
 ++ The domain serves as the representation of the underlying q-series.
-ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
+ModularGamma0SiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
@@ -608,25 +608,25 @@ ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
   LX ==> QEtaLaurentSeries CX
 
   Exports ==> SetCategory with
-    coerce: SymbolicModularSiftedEtaQuotient -> %
+    coerce: SymbolicModularGamma0SiftedEtaQuotient -> %
       ++ coerce(y) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma \tau)$ at all cusps of $\Gamma_0(N)$ where
       ++ N=level(y).
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_0(nn).
-    metadata: % -> SymbolicModularSiftedEtaQuotient
+    metadata: % -> SymbolicModularGamma0SiftedEtaQuotient
       ++ metadata(x) returns y such that coerce(y) = x.
     expansions: % -> XHashTable(Q, LX)
       ++ expansions(x) returns the Laurent series expansions of
       ++ $F_{s,r,m,t}(tau)$ at all cusps of Gamma_0(N).
 
   Implementation ==> add
-    YMSEQ ==> SymbolicModularSiftedEtaQuotient
-    Rep ==> Record(meta: YMSEQ, ser: XHashTable(Q, LX))
+    YM0SEQ ==> SymbolicModularGamma0SiftedEtaQuotient
+    Rep ==> Record(meta: YM0SEQ, ser: XHashTable(Q, LX))
     xx ==> rep x
 
-    coerce(y: SymbolicModularSiftedEtaQuotient): % ==
+    coerce(y: SymbolicModularGamma0SiftedEtaQuotient): % ==
         PX ==> SiftedEtaQuotientGamma(C, mx, CX, xi)
         import from PX
         nn: P := level y
@@ -636,7 +636,7 @@ ModularSiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
             hser.cusp := laurent puiseux(y.cusp, w)
         per [y, hser]
     level(x: %): P == level(xx.meta)
-    metadata(x: %): SymbolicModularSiftedEtaQuotient == xx.meta
+    metadata(x: %): SymbolicModularGamma0SiftedEtaQuotient == xx.meta
     expansions(x: %): XHashTable(Q, LX) == xx.ser
 
     coerce(x: %): OutputForm == rep(x)::OutputForm

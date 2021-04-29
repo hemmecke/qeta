@@ -116,17 +116,17 @@ orders at all cusps (\code{qetaGrades}) small in total sum.
 )abbrev package QETAMG0 QEtaModularGamma0
 QEtaModularGamma0: Exports == Implementation where
   Exports ==> with
-    qetaGrades: SymbolicModularSiftedEtaQuotient -> XHashTable(Q, Z)
+    qetaGrades: SymbolicModularGamma0SiftedEtaQuotient -> XHashTable(Q, Z)
       ++ qetaGrades(y) returns the qetaGrades of the modular
       ++ function corresponding to y.
     qetaGrades: (P, LZ, P, LZ, P, N) -> XHashTable(Q, Z)
       ++ qetaGrades(nn, s, mm, r, m, t) returns
       ++ qetaGrades(y) where
-      ++ y=etaQuotient(nn, s, mm, r, m, t)$SymbolicModularSiftedEtaQuotient.
+      ++ y=etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0SiftedEtaQuotient.
     etaCoFactorInfinity: (P, P, LZ, P, N) -> LZ
       ++ etaCoFactorInfinity(nn,mm,r,m,t) returns a list s such that
       ++ modularGamma0?(nn,s,mm,r,m,t)$QEtaCoFactorSpace and
-      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularSiftedEtaQuotient
+      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0SiftedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
 
@@ -143,8 +143,8 @@ QEtaModularGamma0: Exports == Implementation where
     CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
     TX ==> QEtaTaylorSeries CX
     LX ==> QEtaLaurentSeries CX
-    YMSEQ ==> SymbolicModularSiftedEtaQuotient
-    MSEQ ==> ModularSiftedEtaQuotient(C, mx, CX, xi)
+    YM0SEQ ==> SymbolicModularGamma0SiftedEtaQuotient
+    M0SEQ ==> ModularGamma0SiftedEtaQuotient(C, mx, CX, xi)
     a ==> aLigozat $ QETAAUX
 
     -- order of eta^r at cusp a/c.
@@ -156,19 +156,19 @@ QEtaModularGamma0: Exports == Implementation where
     grades(nn: P, divs: LP, cusps: LQ, r: LZ): LZ ==
         [grade(nn, divs, denom cusp, r) for cusp in cusps]
 
-    qetaGrades(y: YMSEQ): XHashTable(Q, Z) ==
+    qetaGrades(y: YM0SEQ): XHashTable(Q, Z) ==
         mx: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
-        msetaq := y::MSEQ
+        msetaq := y::M0SEQ
         e: XHashTable(Q, LX) := expansions(msetaq)
         ht: XHashTable(Q, Z) := empty()
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
 
     qetaGrades(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): XHashTable(Q, Z) ==
-        y: YMSEQ := etaQuotient(nn, s, mm, r, m, t);
+        y: YM0SEQ := etaQuotient(nn, s, mm, r, m, t);
         qetaGrades y
 
 
@@ -324,7 +324,7 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
     modularSiftedEtaQuotientInfinity: (P, LZ, P, LZ, P, N) -> A1 C
       ++ modularSiftedEtaQuotientInfinity(nn, s, mm, r, m, t) returns
       ++ the series expansion of
-      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularSiftedEtaQuotient
+      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0SiftedEtaQuotient
       ++ at the cusp infinity.
     modularSiftedEtaQuotientInfinity: (P, P, LZ, P, N) -> A1 C
       ++ modularSiftedEtaQuotientInfinity(nn, mm, r, m, t) returns
