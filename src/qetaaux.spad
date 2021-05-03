@@ -125,11 +125,11 @@ vector to correspond to a modular eta-quotient is violated.
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta-quotients that are modular functions.
 QEtaAuxiliaryPackage: with
-    splitEtaQuotientSpecification: (P, List List Z) ->
-        Record(etaQuotientExponents: List Z, generalizedParameters: LLZ)
+    splitEtaQuotientSpecification: (P, LLZ) ->
+        Record(pure: LZ, properGeneralized: LLZ)
       ++ splitEtaQuotientSpecification(nn, rr) separates the
       ++ part of rr that specifies a pure eta-quotient from the
-      ++ part of rr that specifies a generalized eta-quotient.
+      ++ part of rr that specifies a proper generalized eta-quotient.
       ++ See definition in specification of
       ++ generalizedEtaPower $ EtaQuotientInfinity for how each element
       ++ of rr is interpreted.
@@ -137,7 +137,7 @@ QEtaAuxiliaryPackage: with
       ++ lengthOfGeneralizedEtaQuotientSpecification(nn) returns
       ++ # toEtaQuotientSpecification(nn,[]) without ever
       ++ computing the specification list explicitly.
-    toEtaQuotientSpecification: (P, List Z) -> List List Z
+    toEtaQuotientSpecification: (P, LZ) -> LLZ
       ++ toEtaQuotientSpecification(nn, exponentList) returns a
       ++ specification for a generalized eta-quotient where
       ++ exponentList is considered to be a list of exponents for the
@@ -674,7 +674,7 @@ $a\in X_c$.
     -- Here we separate the pure eta-quotient specification from the
     -- specification of generalized eta-quotients.
     splitEtaQuotientSpecification(mm: P, rr: LLZ):
-      Record(etaQuotientExponents: List Z, generalizedParameters: LLZ) ==
+      Record(pure: List Z, properGeneralized: LLZ) ==
         hr: XHashTable(Z, Z) := table() -- to compute r
         gr: LLZ := empty() -- specify all generalized eta-quotients
         for l in rr | not empty? l repeat
@@ -766,10 +766,10 @@ $a\in X_c$.
         sigma0(mm, r) + 2*sigma0(mm, gr)
 
     modularGamma1(nn: P, rr: List List Z): Z ==
-        rrec: Record(etaQuotientExponents: LZ, generalizedParameters: LLZ) :=
+        rrec: Record(pure: LZ, properGeneralized: LLZ) :=
             splitEtaQuotientSpecification(nn, rr)
-        r: LZ := rrec.etaQuotientExponents
-        gr: LLZ := rrec.generalizedParameters
+        r: LZ := rrec.pure
+        gr: LLZ := rrec.properGeneralized
         not zero? reduce(_+, r) => 1 -- non-zero weight
 
         -- order at inifinity is an integer
