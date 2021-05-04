@@ -1244,124 +1244,146 @@ SymbolicModularGamma0SiftedEtaQuotient: SetCategory with
 \label{sec:SymbolicGeneralizedEtaDeltaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Let $g_{\bar{r}}(\tau)$ be a generalized eta-quotient of the form
-\eqref{eq:g_rbar(tau)},
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\SL2Z$,
+Let $N$ be a positive integer and $\divides{\delta}{N}$, $0<g<\delta$.
 %
-$\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
-%
-Then for $\divides{\delta}{N}$, $0<g<\delta$,
-$r_{\delta,g}\in \setZ\setminus\Set{0}$ elements from the domain
-\code{SymbolicGeneralizedEtaDeltaGamma} represent the tuple
+Elements from the domain \code{SymbolicGeneralizedEtaDeltaGamma}
+represent data for the expansion of
+$\eta_{\delta,g}^{[R]}(\gamma\tau)$ as given implicitly in
+equation \eqref{eq:eta_delta-g^[R](gamma*tau)}, \ie,
 \begin{gather}
   \left(
-  N
-  ,
   \delta
   ,
   g
   ,
-  r_{\delta,g}
-  ,
   \gamma
   ,
-  \kappa_{g,0,\delta,\gamma_\delta}^{[S]},
-  a_\delta,
-  b_\delta,
+  \gamma_\delta
+  ,
+%  \kappa_{g,0,\delta,\gamma_\delta}^{[S]},
   u_\delta,
-  v_\delta)
+  v_\delta
   \right),
 \end{gather}
-see \eqref{eq:g_r(gamma*tau)}.
+see \eqref{eq:g_rbar(gamma*tau)}.
 
 )endif
 -------------------------------------------------------------------
 )abbrev domain YGEDG SymbolicGeneralizedEtaDeltaGamma
 ++ SymbolicGeneralizedEtaDeltaGamma holds data to compute a
-++ generalized eta-function expansion of \eta_{\delta.g}(\gamma \tau).
-++ See \eqref{eq:g_rbar(gamma*tau)} and
+++ generalized eta-function expansion of \eta_{\delta.g}(\gamma\tau).
+++ See \eqref{eq:eta_delta-g^[R](tau)}, \eqref{eq:g_rbar(gamma*tau)} and
 ++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
 SymbolicGeneralizedEtaDeltaGamma: SetCategory with
-    generalizedEta: (P, P, P, Z, SL2Z) -> %
-      ++ generalizedEta(nn, delta, g, r, gamma) represents the
-      ++ expansion of $\eta_{delta,g}(\gamma \tau)^r$, see
+    generalizedEta: (P, P, SL2Z) -> %
+      ++ generalizedEta(delta, g, gamma) represents the
+      ++ expansion of $\eta_{delta,g}(\gamma \tau)$, see
       ++ \eqref{eq:g_rbar(gamma*tau)} and
       ++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
       ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c of
       ++ Gamma1(nn).
     level: % -> P
-      ++ level(x) returns the level of the eta-function.
-    exponent: % -> Z
-      ++ If x = generalizedEtaQuotient(nn, delta, g, r, gamma), then
-      ++ exponent(x) returns r.
+      ++ If x = generalizedEta(delta, g, gamma), then
+      ++ level(x) returns delta.
+    general: % -> P
+      ++ If x = generalizedEta(delta, g, gamma), then
+      ++ general(x) returns g.
     gamma: % -> SL2Z
-      ++ gamma(x) returns the transformation corresponding to x.
-    gamma1: % -> SL2Z
+      ++ If x = generalizedEtaQuotient(delta, g, r, gamma), then
+      ++ gamma(x) returns gamma.
+    gammaDelta: % -> SL2Z
       ++ gamma1(x) returns splitMatrix(gamma, delta).red.
+    udelta: % -> Q            -- gcd(delta,c)^2/delta
+      ++ See \eqref{eq:uv_delta}
+    vdelta: % -> Q            -- b2/d2
+      ++ See \eqref{eq:uv_delta}.
     unityPower: % -> Q
-      ++ unityPower(x) returns kappaSchoeneberg(nn, g, 0, gammaDelta x).
+      ++ If x = generalizedEta(delta, g, gamma), then
+      ++ unityPower(x) returns the argument of the first product of
+      ++ \eqref{eq:eta_delta-g^[R](gamma*tau)}.
+    qExponent: % -> Q
+      ++ If x = generalizedEta(delta, g, gamma), then
+      ++ qExponent(x) returns the argument of the third product of
+      ++ \eqref{eq:eta_delta-g^[R](gamma*tau)}, i.e.,
+      ++ $\frac{u_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)$.
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function
-      ++ \eta_{\delta,g}(\gamma \tau) corresponding to
+      ++ $\eta_{\delta,g}^{[R]}(\gamma \tau)$ corresponding to
       ++ x=generalizedEtaQuotient(nn, delta, g, r, gamma) lives in
       ++ Q[w][[x]] where w is a n-th root of unity.
  == add
     Rec ==> Record(red: SL2Z, triang: MZ)
     Rep ==> Record(
-              flevel: P,     -- level \Gamma_0(lev)
               fdelta: P,     -- delta
-              fg: P,         -- g
-              fexponent: Z,  -- rdg = r_{\delta,g}
+              fgeneral: P,  -- g
               fgamma: SL2Z,  -- gamma
-              fgamma1: SL2Z, -- gammaDelta
-              fgamma2: MZ, -- matrix corresponding to \tau_\delta
+              fgammaDelta: SL2Z, -- $gamma_\delta$
               fudelta: Q,    -- edelta = hdelta^2/delta \eqref{eq:q_delta}}
               fvdelta: Q,    -- b2/d2, reduced form of roots of unity
                              -- 0<=b2<d2, 0<d2
               funityPower: Q,-- kappa_{g,0,d,gamma_d}
+                             --   + vdelta/2*P_2(adelta*g/delta)
+              fqExponent: Q, -- order of expansion in q
               fminroot: P    -- minimal root of unity needed for coefficients
             )
     import from Rep
     xx ==> rep x
     yy ==> rep y
 
-    generalizedEta(nn: P, delta: P, g: P, r: Z, gamma: SL2Z): % ==
+    generalizedEta(delta: P, g: P, gamma: SL2Z): % ==
         gamma(2,1) <= 0 =>
             error "generalizedEtaQuotient: expect gamma(2,1) to be positive"
         rec: Rec := splitMatrix(gamma, delta)$QETAAUX
         gamma1: SL2Z := rec.red
         gamma2: MZ := rec.triang
-        kappa: Q := kappaSchoeneberg(nn, g, 0, gamma1) $ QETAAUX
-        upower: Q := fractionalPart kappa
-        udelta: Q := gcd(gamma(2,1),delta)^2 / delta
-        vdelta: Q := gamma(1,2) / gamma(2,2)
-        minroot := lcmP(denom upower, denom vdelta)
-        per [nn, delta, g, r, gamma,
-             gamma1, gamma2, udelta, vdelta, upower, minroot]
+        kappa: Q := kappaSchoeneberg(delta, g, 0, gamma1)$QETAAUX
+        udelta: Q := gamma2(1,1) / gamma2(2,2)
+        vdelta: Q := gamma2(1,2) / gamma2(2,2)
+        gprime: Z := gamma1(1,1)*g -- $a_\delta g$
+        hprime: Z := gamma1(1,2)*g -- $b_\delta g$
+        qdeltaexp: Q := (1/2)*fractionalBernoulli2(gprime/delta)
+        upower: Q := fractionalPart(kappa + vdelta * qdeltaexp)
+        qexp: Q := udelta * qdeltaexp
 
-    level(x: %): P == xx.flevel
-    exponent(x: %): Z == xx.fexponent
+        -- Take the $q_delta^{\left\{g/\delta\right\}}$ and
+        -- $\zeta_\delta^h$ in the q-Pochhammer into account. See
+        -- \eqref{eq:g_rtilde(gamma*tau)}.
+        minroot: Z := denom vdelta -- q_\delta in q-Pochhammer
+        minroot := lcm(minroot, denom(vdelta*(gprime/delta) + hprime/delta))
+        -- Take unityPower into acount.
+        minroot := lcm(minroot, denom upower)
+
+        -- Take the \alpha(a_delta g. b_delta g, delta) into account.
+        if zero?(gprime rem delta) and not zero?(hprime rem delta) then
+            x: Q := hprime/delta      -- for delta's root of unity
+            y := 1/2*fractionalBernoulli1(x)-- factor in \alpha(g',h',delta)
+            minroot := lcm(minroot, lcm(denom x, denom y))
+           -- Note that we do not compute or store
+           -- $\alpha(a_\delta g, b_\delta g, \delta)$ here.
+        per [delta, g, gamma, gamma1, udelta, vdelta, upower, qexp, asP minroot]
+
+    level(x: %): P == xx.fdelta
+    general(x: %): P == xx.fgeneral
     gamma(x: %): SL2Z == xx.fgamma
+    gammaDeleta(x: %): SL2Z == xx.fgammaDelta
+    udeleta(x: %): Q == xx.fudelta
+    vdeleta(x: %): Q == xx.fvdelta
     unityPower(x: %): Q == xx.funityPower
+    qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
     hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
         h := hashUpdate!(h, xx.fdelta)
-        h := hashUpdate!(h, xx.fg)
-        h := hashUpdate!(h, xx.fexponent)
+        h := hashUpdate!(h, xx.fgeneral)
         h := hashUpdate!(h, xx.fgamma)
         h
 
     ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
         xx.fdelta ~= yy.fdelta => false
-        xx.fg ~= yy.fg => false
-        xx.fexponent ~= yy.fexponent => false
+        xx.fgeneral ~= yy.fgeneral => false
         xx.fgamma = yy.fgamma
 
 
@@ -1410,6 +1432,7 @@ is a collection of elements from
 
 
 )endif
+
 -------------------------------------------------------------------
 )abbrev domain YGEQG SymbolicGeneralizedEtaQuotientGamma
 ++ SymbolicGeneralizedEtaQuotientGamma holds data to compute a
@@ -1514,7 +1537,6 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
         xx.fexponents ~= yy.fexponents => false
         xx.fgamma = yy.fgamma
 
-
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicGeneralizedEtaQuotient}
@@ -1532,7 +1554,7 @@ for each cusp in
 \code{cusps(nn)$CongruenceSubgroupGamma1(nn)}
 %$
 we have \code{e.cusp} is the corresponding data from
-\code{SymbolicEtaGeneralizedQuotientGamma}.
+\code{SymbolicGeneralizedEtaQuotientGamma}.
 
 )endif
 -------------------------------------------------------------------
