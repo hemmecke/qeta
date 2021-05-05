@@ -1387,48 +1387,172 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
         xx.fgamma = yy.fgamma
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 )if LiterateDoc
 %$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicGeneralizedEtaQuotientGamma}
-\label{sec:SymbolicGeneralizedEtaQuotientGamma}
+\subsection{D SymbolicProperGeneralizedEtaQuotientGamma}
+\label{sec:SymbolicProperGeneralizedEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Let $g_{\bar{r}}(\tau)$ be a generalized eta-quotient of the form
-\eqref{eq:g_rbar(tau)},
+Let $g_{\bar{r}}(\tau) = g_{r}(\tau) g_{\tilde{r}}(\tau)$ be a
+generalized eta-quotient of the form \eqref{eq:g_rbar(tau)},
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \SL2Z$,
 %
 $\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
 %
 Then elements from the domain
-\code{SymbolicGeneralizedEtaQuotientGamma} represent the tuple
+\code{SymbolicProperGeneralizedEtaQuotientGamma} represent
+$g_{\tilde{r}}(\gamma\tau)$ through the tuple
 \begin{gather*}
   \left(
   N
   ,
-  \bar{r}
+  \tilde{r}
   ,
   \gamma
   ,
-  y
-  ,
-  \tilde{r}
-  ,
-  \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
-    r_{\delta,g} \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
-  ,
-  (y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}
+  \underbrace{\widetilde{\sum}
+  r_{\delta,g}
+  \left(
+    \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
+    +
+    \frac{v_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)
   \right)
+  }_{\texttt{unityPower}}
+  ,
+  \underbrace{
+  \widetilde{\sum}
+  \frac{r_{\delta,g} u_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)
+  }_{\texttt{qExponent}}
+  ,
+  \tilde{y}
+\right)
 \end{gather*}
-according to \eqref{eq:g_rbar(gamma*tau)}
-where $y = \text{\code{etaQuotient(nn, r, gamma)}}$ is an element of
-\code{SymbolicEtaQuotientGamma} and denotes the data of the pure
-eta-quotient part, see \eqref{eq:g_r(gamma*tau)}. and
-$(y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}$
-is a collection of elements from
-\code{SymbolicGeneralizedEtaDeltaGamma}.
+according to \eqref{eq:g_rtilde(gamma*tau)} where
+$\tilde{y}=(y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}$
+and $y_{\delta,g} = \text{\code{generalizedEta(delta,g,gamma)}}$ is an
+element of \code{SymbolicGeneralizedEtaDeltaGamma}.
+
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YPGEQG SymbolicProperGeneralizedEtaQuotientGamma
+++ SymbolicProperGeneralizedEtaQuotientGamma holds data to compute a
+++ proper generalized eta-quotient expansion of g_rtilde(\gamma \tau).
+++ See \eqref{eq:g_rtilde(gamma*tau)}.
+SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
+    properGeneralizedEtaQuotient: (P, LLZ, SL2Z) -> %
+      ++ generalizedEtaQuotient(nn, rtilde, gamma) represents the
+      ++ expansion of $g_{\tilde{r}}(\gamma \tau)$. see
+      ++ \eqref{eq:g_rtilde(gamma*tau)}.
+      ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c of Gamma1(mm).
+    level: % -> P
+      ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
+      ++ exponents(x) returns nn.
+    exponents: % -> LLZ
+      ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
+      ++ exponents(x) returns rtilde.
+    gamma: % -> SL2Z
+      ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
+      ++ gamma(x) returns gamma.
+    unityPower: % -> Q
+      ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
+      ++ unityPower(x) returns the argument of the first product of
+      ++ \eqref{eq:g_rtilde(gamma*tau)}.
+    qExponent: % -> Q
+      ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
+      ++ qExponent(x) returns the argument of the third product of
+      ++ \eqref{eq:g_rtilde(gamma*tau)}, i.e.,
+      ++ $\widetilde{\sum}
+      ++   \frac{r_{\delta,g} u_\delta}{2}
+      ++   P_2\left(\frac{a_\delta g}{\delta}\right)$.
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(e) returns the smallest positive integer n
+      ++ such that the expansion of the function g_rtilde(\gamma \tau)
+      ++ corresponding to e=etaQuotient(nn, rtilde, gamma) lives in
+      ++ Q[w][[x]] where w is a n-th root of unity.
+    elt: (%, P, N) -> SymbolicGeneralizedEtaDeltaGamma
+      ++ elt(x, delta, g) returns the data corresponding to the
+      ++ respective (delta, g) pair.
+ == add
+    YGEDG ==> SymbolicGeneralizedEtaDeltaGamma
+    HT ==> XHashTable(Z, YGEDG)
+            -- mapping (delta, g) to $\eta_{\delta, g}^{[R]}$ where
+            -- (delta, g) is encoded by n=level*delta+g
+    Rep ==> Record(
+              flevel: P,      -- level \Gamma_1(lev)
+              fexponents: LLZ,-- the rr vector
+              fgamma: SL2Z,   -- gamma
+              fdgeta: HT,     -- mapping (delta,g) to $\eta_{\delta,g}^{[R]}$
+              funityPower: Q, -- sum of unityPower of elements in fdgeta
+              fqExponent: Q, -- order of expansion in q
+              fminroot: P     -- minimal root of unity needed for coefficients
+                              -- lcm of minimalRootOfUnity of elements in fdgeta
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    -- index for hashtable HT
+    idx(nn: P, delta: P, g: Z): Z == nn*delta + g
+
+    properGeneralizedEtaQuotient(nn: P, rtilde: LLZ, gamma: SL2Z): % ==
+        dgeta: HT := empty()
+        upower: Q := 0
+        qexp: Q := 0
+        minroot: P := 1
+        for l in rtilde repeat
+            delta := asP l.1; g := asP l.2; rdg := l.3;
+            k: Z := idx(nn, delta, g)
+            dge := generalizedEta(delta, g, gamma)$YGEDG
+            dgeta.k := dge
+            upower := upower + rdg * unityPower(dge)
+            minroot := lcmP(minroot, minimalRootOfUnity dge)
+            qexp := qexp + qExponent dge
+        upower := fractionalPart(upower)$QETAAUX
+        per [nn, rtilde, gamma, dgeta, upower, qexp, minroot]
+
+    level(x: %): P == xx.flevel
+    elt(x: %, delta: P, g: N): YGEDG == xx.fdgeta.idx(level x, delta, g)
+    exponents(x: %): LLZ == xx.fexponents
+    gamma(x: %): SL2Z == xx.fgamma
+    unityPower(x: %): Q == xx.funityPower
+    qExponent(x: %): Q == xx.fqExponent
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fgamma)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents ~= yy.fexponents => false
+        xx.fgamma = yy.fgamma
+
+)if LiterateDoc
 
 
 )endif
