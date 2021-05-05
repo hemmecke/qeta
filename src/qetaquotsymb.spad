@@ -83,11 +83,13 @@ LLZ ==> List LZ
 LQ ==> List Q
 LSL2Z ==> List SL2Z
 GAMMA0 ==> CongruenceSubgroupGamma0
+GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage
 
 asN x ==> x pretend N
 asP x ==> x pretend P
 WIDTH0(nn, c) ==> asP(width(nn, c)$GAMMA0)
+WIDTH1(nn, c) ==> asP(width(nn, c)$GAMMA1)
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
@@ -1695,6 +1697,19 @@ SymbolicGeneralizedEtaQuotientGamma: Exports == Implementation where
         xx.fexponents ~= yy.fexponents => false
         xx.fgamma = yy.fgamma
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicGeneralizedEtaQuotient}
@@ -1732,23 +1747,24 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
       ++ g_rbar(\tau) at all cusps a/c of Gamma1(mm) in terms of
       ++ $x = \exp(2 \pi i \tau/w)$ where w=width(m,c) and
       ++ gamma=cuspToMatrix(mm, a/c). It is the same as
-      ++ generalizedEtaQuotient(mm,rbar,cusps(mm)$CongruenceSubgroupGamma0).
+      ++ generalizedEtaQuotient(mm,rbar,cusps(mm)$CongruenceSubgroupGamma1).
       ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
     level: % -> P
-      ++ If x=generalizedEtaQuotient(mm,rbar) then level(x) returns
-      ++ the level of the generalized eta-quotient, i.e., level(x)=mm.
+      ++ If x=generalizedEtaQuotient(nn,rbar) then level(x) returns nn.
     exponents: % -> LLZ
-      ++ If x=etaQuotient(mm, rbar) then exponents(x) returns the list
-      ++ rbar.
+      ++ If x=generalizedEtaQuotient(mm, rbar) then exponents(x)
+      ++ returns the list rbar.
     cusps: % -> LQ
-      ++ If x=generalizedEtaQuotient(mm, rbar, cusps), then
-      ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma1.
+      ++ If x=generalizedEtaQuotient(mm, rbar, spitzen), then
+      ++ cusps(x)=spitzen.
     minimalRootOfUnity: % -> P
-      ++ If x=generalizedEtaQuotient(mm, rbar, cusps), then
+      ++ If x=generalizedEtaQuotient(nn, rbar, cusps), then
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function g_rbar(\tau) at any
       ++ cusp of cusps (neglecting the (c\tau+d)^* factor lives in
       ++ Q[w][[x]] where w is an n-th root of unity.
+      ++ It is computed as the lcm of the values for the respective
+      ++ expansion at the cusps.
     elt: (%, Q) -> SymbolicGeneralizedEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
@@ -1768,21 +1784,23 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    qetaGrades(x: %): LQ == [-xExponent(x.cusp) for cusp in cusps x]
+    xExponent(x: %, cusp: Q): Q ==
+        WIDTH1(level x, denom cusp) * qExponent(x.cusp)
+    qetaGrades(x: %): LQ == [-xExponent(x, cusp) for cusp in cusps x]
 
-    generalizedEtaQuotient(mm: P, rbar: LLZ, cusps: LQ): % ==
+    generalizedEtaQuotient(nn: P, rbar: LLZ, cusps: LQ): % ==
         h: HT := empty()
         minroot: P := 1
         for cusp in cusps repeat
-            gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA1
-            import from ymbolicGeneralizedEtaQuotientGamma
-            e := generalizedEtaQuotient(mm, r, gamma)
-            h.cusp := e
-            minroot := lcmP(minroot, minimalRootOfUnity e)
-        per [mm, rbar, cusps, h, minroot]
+            gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA1
+            import from SymbolicGeneralizedEtaQuotientGamma
+            geq := generalizedEtaQuotient(nn, rbar, gamma)
+            h.cusp := geq
+            minroot := lcmP(minroot, minimalRootOfUnity geq)
+        per [nn, rbar, cusps, h, minroot]
 
-    generalizedEtaQuotient(mm: P, rbar: LLZ): % ==
-        generalizedEtaQuotient(mm, rbar, cusps(mm)$GAMMA1)
+    generalizedEtaQuotient(nn: P, rbar: LLZ): % ==
+        generalizedEtaQuotient(nn, rbar, cusps(nn)$GAMMA1)
 
     level(x: %): P == xx.flevel
     exponents(x: %): LLZ == xx.fexponents
@@ -1801,7 +1819,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     ((x: %) = (y: %)): Boolean ==
         xx.flevel ~= yy.flevel => false
         xx.fexponents ~= yy.fexponents => false
-        xx.cusps = yy.fcusps
+        xx.fcusps = yy.fcusps
 
 
 )if LiterateDoc
