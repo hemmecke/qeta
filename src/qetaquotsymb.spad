@@ -1552,7 +1552,42 @@ SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
         xx.fexponents ~= yy.fexponents => false
         xx.fgamma = yy.fgamma
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 )if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicGeneralizedEtaQuotientGamma}
+\label{sec:SymbolicGeneralizedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $g_{\bar{r}}(\tau) = g_{r}(\tau) g_{\tilde{r}}(\tau)$ be a
+generalized eta-quotient of the form \eqref{eq:g_rbar(tau)},
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$,
+%
+$\bar{r} = (r, \tilde{r})$ as defined in Definition~\ref{def:rbar}.
+%
+Then elements from the domain
+\code{SymbolicGeneralizedEtaQuotientGamma} represent the data for the
+pair $(g_{r}(\gamma\tau) g_{\tilde{r}}(\gamma\tau)$ and yields the
+parts as given in \eqref{eq:g_rbar(gamma*tau)}
 
 
 )endif
@@ -1562,89 +1597,88 @@ SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
 ++ SymbolicGeneralizedEtaQuotientGamma holds data to compute a
 ++ generalized eta-quotient expansion of g_rr(\gamma \tau). See
 ++ \eqref{eq:g_rbar(gamma*tau)}.
-SymbolicGeneralizedEtaQuotientGamma: SetCategory with
+SymbolicGeneralizedEtaQuotientGamma: Exports == Implementation where
+  YEQG ==> SymbolicEtaQuotientGamma
+  YPGEQG ==> SymbolicProperGeneralizedEtaQuotientGamma
+  Exports ==> SetCategory with
     generalizedEtaQuotient: (P, LLZ, SL2Z) -> %
       ++ generalizedEtaQuotient(mm, rr, gamma) represents the expansion of
       ++ $g_rr(\gamma \tau)$. see \eqref{eq:g_rbar(gamma*tau)}.}
       ++ gamma=matrix[[a,b],[c,d]]  represents the cusp a/c of Gamma1(mm).
     level: % -> P
-      ++ level(x) returns the level of the eta-quotient.
+      ++ If x = generalizedEtaQuotient(nn, rr, gamma), then
+      ++ level(x) returns nn.
     exponents: % -> LLZ
-      ++ If x = generalizedEtaQuotient(mm, rr, gamma), then
+      ++ If x = generalizedEtaQuotient(nn, rr, gamma), then
       ++ exponents(x) returns rr.
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
-    symbolicEtaQuotient: % -> SymbolicEtaQuotientGamma
+    symbolicEtaQuotient: % -> YEQG
+      ++ symbolicEtaQuotient(x) returns the data corresponding to the
+      ++ pure eta-quotient part.
+    symbolicProperGeneralizedEtaQuotient: % -> YPGEQG
       ++ symbolicEtaQuotient(x) returns the data corresponding to the
       ++ pure eta-quotient part.
     unityPower: % -> Q
       ++ unityPower(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
       ++ It corresponds to the third product of eq:g_r(gamma*tau).
+    qExponent: % -> Q
+      ++ If x = generalizedEtaQuotient(nn, rbar, gamma), then
+      ++ qExponent(x) returns the sum of
+      ++ qExponent(symbolicEtaQuotient(x)) and
+      ++ qExponent(symbolicProperGeneralizedEtaQuotient(x)).
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(e) returns the smallest positive integer n
       ++ such that the expansion of the function g_rr(\gamma \tau)
       ++ corresponding to e=etaQuotient(mm, r, gamma) (neglecting the
       ++ (c\tau+d)^* factor) lives in Q[w][[x]] where w is a n-th root
-      ++ of unity.
-    elt: (%, P, N) -> SymbolicGeneralizedEtaDeltaGamma
-      ++ elt(x, delta, g) returns the data corresponding to the
-      ++ respective (delta, g) pair.
+      ++ of unity, i.e., the lcm of
+      ++ minimalRootOfUnity(symbolicEtaQuotient(x)) and
+      ++ minimalRootOfUnity(symbolicProperGeneralizedEtaQuotient(x)).
     modularGamma1?: % -> Boolean
       ++ modularGamma1?(x) returns true if the eta-quotient is a modular
       ++ function for Gamma1(level x), i.e, it returns
       ++ modularGamma1?(level x, exponents x) from
       ++ QEtaAuxiliaryPackage.
- == add
+  Implementation ==> add
     HT ==> XHashTable(P, SymbolicGeneralizedEtaDeltaGamma)
             -- mapping (delta, g) to \eta_(\delta, g) where
             -- (delta, g) is encoded by n=level*delta+g
     Rep ==> Record(
-              flevel: P,     -- level \Gamma_0(lev)
+              flevel: P,      -- level \Gamma_0(lev)
               fexponents: LLZ,-- the rr vector
-              fgamma: SL2Z,  -- gamma
-              feta: SymbolicEtaQuotientGamma, -- pure eta-quotient part
-              fgeta: HT,     -- mapping (delta,g) to \eta_{\delta,g}
-              funityPower: Q,-- sum r_{d,g} * kappa_{g,0,d,gamma_d}
-              fminroot: P    -- minimal root of unity needed for coefficients
+              fgamma: SL2Z,   -- gamma
+              feqg: YEQG,     -- pure eta-quotient part
+              fpgeqg: YPGEQG, -- proper generalized eta-quotient part
+              funityPower: Q, -- sum of the pure and proper generalized case
+              fminroot: P     -- lcm of the pure and proper generalized case
             )
     import from Rep
     xx ==> rep x
     yy ==> rep y
-    YGEDG ==> SymbolicGeneralizedEtaDeltaGamma
+
     generalizedEtaQuotient(nn: P, rr: LLZ, gamma: SL2Z): % ==
         geta: HT := empty()
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(nn, rr) $ QETAAUX
+            splitEtaQuotientSpecification(nn, rr)$QETAAUX
         r: LZ := rrec.pure
-        gr: LLZ := rrec.properGeneralized
-
-        e := etaQuotient(nn, r, gamma) $ SymbolicEtaQuotientGamma
-
-        upower: Q := 0
-        minroot: P := minimalRootOfUnity e
-        for l in gr repeat
-            delta := asP l.1; g := asP l.2; rdg := l.3;
-            k := nn*delta + g
-            ge := generalizedEta(nn, delta, g, rdg, gamma) $ YGEDG
-            geta.k := ge
-            upower := upower + rdg * unityPower(ge)
-            minroot := lcmP(minroot, minimalRootOfUnity ge)
-
-        minroot := lcmP(minroot, denom upower)
-        upower := fractionalPart upower
-        per [nn, rr, gamma, e, geta, upower, minroot]
+        rtilde: LLZ := rrec.properGeneralized
+        yeqg := etaQuotient(nn, r, gamma)$YEQG
+        ypgeqg := properGeneralizedEtaQuotient(nn, rtilde, gamma)$YPGEQG
+        upower: Q := unityPower(yeqg) + unityPower(ypgeqg)
+        minroot: P := lcmP(minimalRootOfUnity yeqg, minimalRootOfUnity ypgeqg)
+        per [nn, rr, gamma, yeqg, ypgeqg, upower, minroot]
 
     level(x: %): P == xx.flevel
-    elt(x: %, delta: P, g: N): SymbolicGeneralizedEtaDeltaGamma ==
-        k: P := asP(level(x)*delta + g)
-        xx.fgeta.k
     exponents(x: %): LLZ == xx.fexponents
     gamma(x: %): SL2Z == xx.fgamma
-    symbolicEtaQuotient(x: %): SymbolicEtaQuotientGamma == xx.feta
+    symbolicEtaQuotient(x: %): YEQG == xx.feqg
+    symbolicProperGeneralizedEtaQuotient(x: %): YPGEQG == xx.fpgeqg
     unityPower(x: %): Q == xx.funityPower
     minimalRootOfUnity(x: %): P == xx.fminroot
+
     modularGamma1?(x: %): Boolean ==
         modularGamma1?(level x, exponents x)$QETAAUX
 
