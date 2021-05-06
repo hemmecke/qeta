@@ -122,6 +122,136 @@ Domains in the second category are implemented int he file
 \PathName{qetaquot.spad}.
 
 
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Package QEtaAuxiliaryPackage: Check modularity of
+  eta-quotients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Here we mainly deal with the sets $R^*(N)$ and $R^\infty(N)$ from
+\cite{Hemmecke+Radu:EtaRelations:2018}.
+
+The function \code{matrixLigozat} computes the respective matrix $A_N$
+whereas \code{modularGamma0} checks which of the conditions for an $r$
+vector to correspond to a modular eta-quotient is violated.
+
+
+)endif
+
+)abbrev domain QETADATA QEtaSymbolicData
+++ QEtaSymbolicData creates certain necessary values for the
+++ computation of the expansion of the transformation of pure and
+++ generalized eta-quotients.
+QEtaSymbolicData: with
+    create: (P, P, N, SL2Z) -> %
+      ++ create(delta,m,lambda,gamma) represents the expansion of
+      ++ $\eta_{\delta,m,\lambda}(\gamma \tau)$ in terms of
+      ++ $q = \exp(2 \pi i \tau)$.
+    create: (P, P, N) -> %
+      ++ create(delta,m,lambda) returns
+      ++ create(delta,m,lambda,id) where id is the identity matrix.
+    create: (P, SL2Z) -> %
+      ++ create(delta,gamma)  returns
+      ++ create(delta,1,0,gamma).
+    delta: % -> P
+      ++ delta(x) returns the corresponding delta.
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    lambda: % -> N
+      ++ lambda(x) returns lambda.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in eta(...,gamma).
+    gamma1: % -> SL2Z
+      ++ gamma1(x) returns the SL2Z part of
+      ++ splitMatrix(gamma,delta,m,lambda)).
+    gamma2: % -> MZ
+      ++ gamma2(x) returns the triangular part of
+      ++ splitMatrix(gamma,delta,m,lambda)).
+    rationalPrefactor: % -> Q
+      ++ rationalPrefactor(x) returns the square of the second product
+      ++ in \eqref{eq:g_r(gamma*tau)}
+    upsilonExponent: % -> Z
+      ++ Returns $\kappa_{\gamma_{\delta,m,\lambda}}$. See
+      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+    udelta: % -> Q
+      ++ Returns $u_{\delta,m,\lambda}$. See
+      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+    vdelta: % -> Q
+      ++ Returns $v_{\delta,m,\lambda}$. See
+      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+ == add
+    Rec ==> Record(red: SL2Z, triang: MZ)
+    Rep ==> Record(
+              fdelta: P,
+              fmultiplier: P,
+              flambda: N,
+              fgamma: SL2Z, -- gamma
+              fgamma1: SL2Z,-- splitMatrix.red
+              fgamma2: MZ,  -- splitMatrix.triang
+              frat: Q,      -- square of rational prefactor
+              fkappa: Z,    -- upsilonExponent(a1,b2,c1,d1)
+              fudelta: Q,   -- udelta = hdelta^2/(delta*m)
+                            -- \eqref{eq:uv_delta-m-lambda}}
+              fvdelta: Q    -- b2/d2, reduced form of roots of unity
+                            -- 0<=b2<d2, 0<d2
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    create(delta: P, m: P, lambda: N, gamma: SL2Z): % ==
+        --assert(gamma(2, 1)>0)
+        rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
+        gamma1: SL2Z := rec.red
+        gamma2: MZ := rec.triang
+        a2: Z := gamma2(1, 1); b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
+        rat: Q := a2/delta -- = hdelta/delta
+        udelta: Q := a2/d2 -- = hdelta^2/delta/m
+        vdelta: Q := b2/d2
+        kappa: Z := upsilonExponent(gamma1)$QETAAUX
+        per [delta, m, lambda, gamma,
+             gamma1, gamma2,rat, kappa, udelta, vdelta]
+
+    delta(x: %): P == xx.fdelta
+    multiplier(x: %): P == xx.fmultiplier
+    lambda(x: %): N == xx.flambda
+    gamma(x: %): SL2Z == xx.fgamma
+    rationalPrefactor(x: %): Q == xx.frat
+    upsilonExponent(x: %): Z == xx.fkappa
+    udelta(x: %): Q == xx.fudelta
+    vdelta(x: %): Q == xx.fvdelta
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.frat)
+        h := hashUpdate!(h, xx.fkappa)
+        h := hashUpdate!(h, xx.fudelta)
+        h := hashUpdate!(h, xx.fvdelta)
+    ((x: %) = (y: %)): Boolean ==
+        delta x ~= delta y => false
+        multiplier x ~= multiplier y => false
+        lambda x ~= lambda y => false
+        gamma x = gamma y
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicEtaDeltaGamma}
 \label{sec:SymbolicEtaDeltaGamma}
@@ -1834,6 +1964,13 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
         xx.flevel ~= yy.flevel => false
         xx.fexponents ~= yy.fexponents => false
         xx.fcusps = yy.fcusps
+
+
+
+
+
+
+
 
 
 )if LiterateDoc
