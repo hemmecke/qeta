@@ -280,8 +280,8 @@ SymbolicEtaQuotientGamma: SetCategory with
     rationalPrefactor: % -> Q
       ++ rationalPrefactor(x) returns the square of the second product
       ++ in \eqref{eq:g_r(gamma*tau)}.
-    unityPower: % -> Q
-      ++ unityPower(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
+    unityExponent: % -> Q
+      ++ unityExponent(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
       ++ It corresponds to the third product of eq:g_r(gamma*tau).
     xExponent: % -> Q
       ++ xExponent(e) returns the order of the expansion
@@ -316,7 +316,7 @@ SymbolicEtaQuotientGamma: SetCategory with
               fgamma: SL2Z,  -- gamma
               feta: HT,      -- mapping delta to \eta_\delta
               frat: Q,       -- square of rational prefactor
-              funityPower: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
+              funityExponent: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
               fxExponent: Q, -- \sum_delta rdelta*edelta/24
               fqExponent: Q, -- \sum_delta rdelta*udelta/24
               fminroot: P    -- minimal root of unity needed for coefficients
@@ -329,7 +329,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     etaquot(mm: P, r: LZ, gamma: SL2Z, eta: HT): % ==
         divs: LP := DIVISORS mm
         rat: Q := 1
-        upower: Q := 0
+        uexponent: Q := 0
         xexponent: Q := 0
         qexponent: Q := 0
         for delta in divs for rdelta in r | not zero? rdelta repeat
@@ -340,21 +340,21 @@ SymbolicEtaQuotientGamma: SetCategory with
             qexponent := qexponent + rd * udelta(e)
 
             kappa: Q := (upsilonExponent e)::Q
-            upower := upower + rd * (vdelta e + kappa)
+            uexponent := uexponent + rd * (vdelta e + kappa)
 
         -- Now make the numerator small.
-        upower := fractionalPart(upower)$QETAAUX
+        uexponent := fractionalPart(uexponent)$QETAAUX
 
-        -- minimal root of unity needed for the expansion is determined from
-        -- expressing the squareroot of the rational prefactor in roots of unity
-        -- and from the unityPower.
+        -- minimal root of unity needed for the expansion is
+        -- determined from expressing the squareroot of the rational
+        -- prefactor in roots of unity and from the unityExponent
         -- Additionally, we have to consider the root of unity factor in
         -- q_\delta, i.e., the denominator of the v_\delta.
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
         p: P := rr.rootOf
-        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QETAAUX)
+        minroot: P := lcmP(denom uexponent, minimalSquareRootOfUnity(p)$QETAAUX)
         minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
-        per [mm, divs, r, gamma, eta, rat, upower, xexponent, qexponent, minroot]
+        per [mm, divs, r, gamma, eta, rat, uexponent, xexponent, qexponent, minroot]
 
     etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
         eta: HT := empty()
@@ -370,7 +370,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     exponents(x: %): LZ == xx.fexponents
     gamma(x: %): SL2Z == xx.fgamma
     rationalPrefactor(x: %): Q == xx.frat
-    unityPower(x: %): Q == xx.funityPower
+    unityExponent(x: %): Q == xx.funityExponent
     xExponent(x: %): Q == xx.fxExponent
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
@@ -733,8 +733,8 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     rationalPrefactor: % -> Q
       ++ rationalPrefactor(x) returns the square of the second product
       ++ in \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
-    unityPower: % -> Q
-      ++ unityPower(e) returns $- lambda*(24*t+\sumdelta{r})/(24*m) +
+    unityExponent: % -> Q
+      ++ unityExponent(e) returns $- lambda*(24*t+\sumdelta{r})/(24*m) +
       ++ sum_{\delta} rdelta*(vdelta+Kappa_delta)/24$. It corresponds to
       ++ the second factor of \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
     qExponent: % -> Q
@@ -765,7 +765,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
               fgamma: SL2Z,  -- gamma
               feta: HT,      -- mapping delta to \eta_{\delta,m,lambda}
               frat: Q,       -- square of rational prefactor
-              funityPower: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
+              funityExponent: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
                              -- - lambda*(24*t+\sumdelta{s})/(24*m)
               fqExponent: Q, -- \sum_delta rdelta*udelta/24
               fminroot: P    -- minimal root of unity needed for coefficients
@@ -777,7 +777,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     etaquot(mm: P, divs: LP, r: LZ,
             m: P, t: Z, lambda: N, gamma: SL2Z, eta: HT): % ==
         rat: Q := 1
-        upower: Q := 0
+        uexponent: Q := 0
         qexponent: Q := 0
         sigmaInfty: Z := 0
         for delta in divs for rdelta in r | not zero? rdelta repeat
@@ -787,25 +787,25 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
             qexponent := qexponent + rd * udelta(e)
 
             kappa: Q := (upsilonExponent e)::Q
-            upower := upower + rd * (vdelta e + kappa)
+            uexponent := uexponent + rd * (vdelta e + kappa)
             sigmaInfty := sigmaInfty + delta * rdelta
 
         -- Distinguish between g_{s,m,t,\lambda} and g_{s,m,-,\lamnbda}.
-        if t>=0 then upower := upower - lambda/m * ((t::Q) + sigmaInfty/24)
+        if t>=0 then uexponent := uexponent - lambda/m * ((t::Q) + sigmaInfty/24)
 
         -- Now make the numerator small.
-        upower := fractionalPart(upower)$QETAAUX
+        uexponent := fractionalPart(uexponent)$QETAAUX
 
-        -- minimal root of unity needed for the expansion is determined from
-        -- expressing the squareroot of the rational prefactor in roots of unity
-        -- and from the unityPower.
+        -- minimal root of unity needed for the expansion is
+        -- determined from expressing the squareroot of the rational
+        -- prefactor in roots of unity and from the unityExponent
         -- Additionally, we have to consider the root of unity factor in
         -- q_\delta, i.e., the denominator of the v_\delta.
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
         p: P := rr.rootOf
-        minroot: P := lcmP(denom upower, minimalSquareRootOfUnity(p)$QETAAUX)
+        minroot: P := lcmP(denom uexponent, minimalSquareRootOfUnity(p)$QETAAUX)
         minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
-        per [mm, divs, r, m, t, lambda, gamma, eta, rat, upower, qexponent, minroot]
+        per [mm, divs, r, m, t, lambda, gamma, eta, rat, uexponent, qexponent, minroot]
 
     etaQuotient(mm: P, r: LZ, m: P, t: Z, lambda: N, gamma: SL2Z): % ==
         divs: LP := DIVISORS mm
@@ -826,7 +826,7 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
     rationalPrefactor(x: %): Q == xx.frat
-    unityPower(x: %): Q == xx.funityPower
+    unityExponent(x: %): Q == xx.funityExponent
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
 
@@ -1299,9 +1299,9 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
       ++ See \eqref{eq:uv_delta}
     vdelta: % -> Q            -- b2/d2
       ++ See \eqref{eq:uv_delta}.
-    unityPower: % -> Q
+    unityExponent: % -> Q
       ++ If x = generalizedEta(delta, g, gamma), then
-      ++ unityPower(x) returns the argument of the first product of
+      ++ unityExponent(x) returns the argument of the first product of
       ++ \eqref{eq:eta_delta-g^[R](gamma*tau)}.
     qExponent: % -> Q
       ++ If x = generalizedEta(delta, g, gamma), then
@@ -1324,7 +1324,7 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
               fudelta: Q,    -- edelta = hdelta^2/delta \eqref{eq:q_delta}}
               fvdelta: Q,    -- b2/d2, reduced form of roots of unity
                              -- 0<=b2<d2, 0<d2
-              funityPower: Q,-- kappa_{g,0,d,gamma_d}
+              funityExponent: Q,-- kappa_{g,0,d,gamma_d}
                              --   + vdelta/2*P_2(adelta*g/delta)
               fqExponent: Q, -- order of expansion in q
               fminroot: P    -- minimal root of unity needed for coefficients
@@ -1345,7 +1345,7 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
         gprime: Z := gamma1(1,1)*g -- $a_\delta g$
         hprime: Z := gamma1(1,2)*g -- $b_\delta g$
         qdeltaexp: Q := (1/2)*fractionalBernoulli2(gprime/delta)
-        upower: Q := fractionalPart(kappa + vdelta * qdeltaexp)
+        uexponent: Q := fractionalPart(kappa + vdelta * qdeltaexp)
         qexp: Q := udelta * qdeltaexp
 
         -- Take the $q_delta^{\left\{g/\delta\right\}}$ and
@@ -1353,8 +1353,8 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
         -- \eqref{eq:g_rtilde(gamma*tau)}.
         minroot: Z := denom vdelta -- q_\delta in q-Pochhammer
         minroot := lcm(minroot, denom(vdelta*(gprime/delta) + hprime/delta))
-        -- Take unityPower into acount.
-        minroot := lcm(minroot, denom upower)
+        -- Take unityExponent into acount.
+        minroot := lcm(minroot, denom uexponent)
 
         -- Take the \alpha(a_delta g. b_delta g, delta) into account.
         if zero?(gprime rem delta) and not zero?(hprime rem delta) then
@@ -1363,7 +1363,7 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
             minroot := lcm(minroot, lcm(denom x, denom y))
            -- Note that we do not compute or store
            -- $\alpha(a_\delta g, b_\delta g, \delta)$ here.
-        per [delta, g, gamma, gamma1, udelta, vdelta, upower, qexp, asP minroot]
+        per [delta, g, gamma, gamma1, udelta, vdelta, uexponent, qexp, asP minroot]
 
     level(x: %): P == xx.fdelta
     general(x: %): P == xx.fgeneral
@@ -1371,7 +1371,7 @@ SymbolicGeneralizedEtaDeltaGamma: SetCategory with
     gammaDeleta(x: %): SL2Z == xx.fgammaDelta
     udeleta(x: %): Q == xx.fudelta
     vdeleta(x: %): Q == xx.fvdelta
-    unityPower(x: %): Q == xx.funityPower
+    unityExponent(x: %): Q == xx.funityExponent
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
 
@@ -1438,7 +1438,7 @@ $g_{\tilde{r}}(\gamma\tau)$ through the tuple
     +
     \frac{v_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)
   \right)
-  }_{\texttt{unityPower}}
+  }_{\texttt{unityExponent}}
   ,
   \underbrace{
   \widetilde{\sum}
@@ -1476,9 +1476,9 @@ SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
     gamma: % -> SL2Z
       ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
       ++ gamma(x) returns gamma.
-    unityPower: % -> Q
+    unityExponent: % -> Q
       ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
-      ++ unityPower(x) returns the argument of the first product of
+      ++ unityExponent(x) returns the argument of the first product of
       ++ \eqref{eq:g_rtilde(gamma*tau)}.
     qExponent: % -> Q
       ++ If x = properGeneralizedEtaQuotient(nn, rtilde, gamma), then
@@ -1505,7 +1505,7 @@ SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
               fexponents: LLZ,-- the rr vector
               fgamma: SL2Z,   -- gamma
               fdgeta: HT,     -- mapping (delta,g) to $\eta_{\delta,g}^{[R]}$
-              funityPower: Q, -- sum of unityPower of elements in fdgeta
+              funityExponent: Q, -- sum of unityExponent of elements in fdgeta
               fqExponent: Q, -- order of expansion in q
               fminroot: P     -- minimal root of unity needed for coefficients
                               -- lcm of minimalRootOfUnity of elements in fdgeta
@@ -1519,7 +1519,7 @@ SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
 
     properGeneralizedEtaQuotient(nn: P, rtilde: LLZ, gamma: SL2Z): % ==
         dgeta: HT := empty()
-        upower: Q := 0
+        uexponent: Q := 0
         qexp: Q := 0
         minroot: P := 1
         for l in rtilde repeat
@@ -1527,17 +1527,17 @@ SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
             k: Z := idx(nn, delta, g)
             dge := generalizedEta(delta, g, gamma)$YGEDG
             dgeta.k := dge
-            upower := upower + rdg * unityPower(dge)
+            uexponent := uexponent + rdg * unityExponent(dge)
             minroot := lcmP(minroot, minimalRootOfUnity dge)
             qexp := qexp + qExponent dge
-        upower := fractionalPart(upower)$QETAAUX
-        per [nn, rtilde, gamma, dgeta, upower, qexp, minroot]
+        uexponent := fractionalPart(uexponent)$QETAAUX
+        per [nn, rtilde, gamma, dgeta, uexponent, qexp, minroot]
 
     level(x: %): P == xx.flevel
     elt(x: %, delta: P, g: N): YGEDG == xx.fdgeta.idx(level x, delta, g)
     exponents(x: %): LLZ == xx.fexponents
     gamma(x: %): SL2Z == xx.fgamma
-    unityPower(x: %): Q == xx.funityPower
+    unityExponent(x: %): Q == xx.funityExponent
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
 
@@ -1621,8 +1621,8 @@ SymbolicGeneralizedEtaQuotientGamma: Exports == Implementation where
     symbolicProperGeneralizedEtaQuotient: % -> YPGEQG
       ++ symbolicEtaQuotient(x) returns the data corresponding to the
       ++ pure eta-quotient part.
-    unityPower: % -> Q
-      ++ unityPower(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
+    unityExponent: % -> Q
+      ++ unityExponent(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
       ++ It corresponds to the third product of eq:g_r(gamma*tau).
     qExponent: % -> Q
       ++ If x = generalizedEtaQuotient(nn, rbar, gamma), then
@@ -1652,7 +1652,7 @@ SymbolicGeneralizedEtaQuotientGamma: Exports == Implementation where
               fgamma: SL2Z,   -- gamma
               feqg: YEQG,     -- pure eta-quotient part
               fpgeqg: YPGEQG, -- proper generalized eta-quotient part
-              funityPower: Q, -- sum of the pure and proper generalized case
+              funityExponent: Q, -- sum of the pure and proper generalized case
               fminroot: P     -- lcm of the pure and proper generalized case
             )
     import from Rep
@@ -1669,16 +1669,16 @@ SymbolicGeneralizedEtaQuotientGamma: Exports == Implementation where
         rtilde: LLZ := rrec.properGeneralized
         yeqg := etaQuotient(nn, r, gamma)$YEQG
         ypgeqg := properGeneralizedEtaQuotient(nn, rtilde, gamma)$YPGEQG
-        upower: Q := unityPower(yeqg) + unityPower(ypgeqg)
+        uexponent: Q := unityExponent(yeqg) + unityExponent(ypgeqg)
         minroot: P := lcmP(minimalRootOfUnity yeqg, minimalRootOfUnity ypgeqg)
-        per [nn, rr, gamma, yeqg, ypgeqg, upower, minroot]
+        per [nn, rr, gamma, yeqg, ypgeqg, uexponent, minroot]
 
     level(x: %): P == xx.flevel
     exponents(x: %): LLZ == xx.fexponents
     gamma(x: %): SL2Z == xx.fgamma
     symbolicEtaQuotient(x: %): YEQG == xx.feqg
     symbolicProperGeneralizedEtaQuotient(x: %): YPGEQG == xx.fpgeqg
-    unityPower(x: %): Q == xx.funityPower
+    unityExponent(x: %): Q == xx.funityExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
 
     modularGamma1?(x: %): Boolean ==
