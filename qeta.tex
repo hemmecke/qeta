@@ -1062,6 +1062,7 @@ then
   \\
   &=
     \sum_{n=0}^\infty a(mn+t) q^n
+  \label{eq:U_m-f_t}
 \end{align}
 is the generating function for the series
 $(a(mn+t))_{n\in\setN}$.
@@ -2767,7 +2768,7 @@ define
   \defineNotation[g-rtilde-tau]{g_{\tilde{r}}(\tau)}
   &=
   \prod_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}
-  \eta_{\delta,g}(\tau)^{r_{\delta,g}}
+  \eta_{\delta,g}^{[R]}(\tau)^{r_{\delta,g}}
 \end{align}
 and thus split $g_{\bar{r}}(\tau)$ into a product of a (pure)
 eta-quotient and a proper generalized eta-quotient, \ie,
@@ -3019,22 +3020,6 @@ $g_r(\gamma\tau)$ is given by formula
 Note that formula \eqref{eq:g_rbar(gamma*tau)} corresponds to (2.25)
 in \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
-If \code{e = generalizedEtaQuotient(nn, rr, gamma)}, then
-\begin{align*}
-  \text{\code{splitEtaQuotientSpecification(rr).pure}}
-  &=
-    \text{\code{r}},
-  \\
-  \text{\code{symbolicEtaQuotient(e)}}
-  &=
-    \text{\code{etaQuotient(nn, r, gamma)}},
-  \\
-  \text{\code{unityPower(e) : Q}}
-  &=
-    \sum_{\substack{\divides{\delta}{N}\\0 < g < \frac{\delta}{2}}}
-      r_{\delta,g} \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
-\end{align*}
-
 
 
 
@@ -3052,6 +3037,7 @@ Furthermore let $\bar{r}\in\bar{R}(M)$.
 %
 We follow the derivation from Section~\ref{sec:function-g_r-m-t} and
 define
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \defineNotation[rtilde^{}]{\sumdelta{\tilde{r}}}
   &=
@@ -3077,70 +3063,71 @@ define
     =
     \unityPower{\frac{- \tau (24t + \sumdelta{\bar{r}})}{24}} g_{\bar{r}}(\tau).
 \end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
+Recall that from \eqref{eq:U_m-f_t} that
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align*}
   (U_mf_t)(\tau)
   &=
-  \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)\\
+  \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)
+  =
+    \sum_{n=0}^\infty a(mn+t) q^n.
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We can also evaluate $(U_mf_t)(\tau)$ in another way.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align*}
+  (U_mf_t)(\tau)
   &=
+  \frac{1}{m} \sum_{\lambda=0}^{m-1}f_t\left(\frac{\tau+\lambda}{m}\right)
+%  \\
+%  &
+    =
     \frac{1}{m} \sum_{\lambda=0}^{m-1}
     \unityPower{-\frac{(\tau+\lambda) (24 t + \sumdelta{\bar{r}})}{24 m}}
     g_{\bar{r}}\!\left(\frac{\tau+\lambda}{m}\right)
   \\
+% &=
+% \frac{1}{m} \sum_{\lambda=0}^{m-1}
+% \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sumdelta{r}}
+% g_r\left(\frac{\tau+\lambda}{m}\right)\\
   &=
   \frac{1}{m}
-  \unityPower{-\frac{\tau (24t+\sumdelta{\bar{r}})}{24m}}
+  \unityPower{-\tau\frac{24t+\sumdelta{\bar{r}}}{24m}}
   \sum_{\lambda=0}^{m-1}
   \unityPower{-\frac{\lambda (24t+\sumdelta{\bar{r}})}{24m}}
-    g_{\bar{r}}\!
-    \left(
-    \begin{pmatrix}
-      1 & \lambda\\
-      0 & m
-    \end{pmatrix}
-          \tau
-    \right)
+  g_{\bar{r}}\!\left(\frac{\tau+\lambda}{m}\right)
+  \\
+  &=
+  \frac{1}{m}
+  \unityPower{-\tau\frac{24t+\sumdelta{\bar{r}}}{24m}}
+  \sum_{\lambda=0}^{m-1} g_{\bar{r},m,t,\lambda}(\tau)
 \end{align*}
-
-
-As abbreviation, we define the function
-\begin{align}
-  \defineNotation[g-rtilde-m-0-lambda-tau]{g_{\tilde{r},m,0,\lambda}(\tau)}
-  &:=
-  \unityPower{-\frac{\lambda \sumdelta{\bar{r}}}{24m}}
-    \cdot
-    \prod_{\substack{\divides{\delta}{M}\\0 < g < \frac{\delta}{2}}}
-  \eta_{\delta,g}
-  \left(
-  \begin{pmatrix}
-    1 & \lambda\\
-    0 & m
-  \end{pmatrix}
-  \tau
-  \right)^{r_{\delta,g}},
-  \label{eq:g_rtilde-m-0-lambda(tau)}
-\end{align}
-so that with \eqref{eq:g_r-m-t-lambda(tau)} we can define
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+with the abbreviation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \defineNotation[g-rbar-m-t-lambda-tau]{g_{\bar{r},m,t,\lambda}(\tau)}
   &:=
-  g_{r,m,t,\lambda}(\tau) \cdot g_{\tilde{r},m,0,\lambda}(\tau)
-  =
-    \unityPower{-\frac{\lambda (24t+\sumdelta{\bar{r}})}{24m}}
-    g_{\bar{r}}\!
-    \left(
-    \begin{pmatrix}
-      1 & \lambda\\
-      0 & m
-    \end{pmatrix}
-    \tau
-    \right)
+    \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{\bar{r}})}
+    g_{\bar{r}}
+      \!\left(
+      \begin{pmatrix}
+        1 & \lambda\\
+        0 & m
+      \end{pmatrix}
+            \tau
+      \right)
   \label{eq:g_rbar-m-t-lambda(tau)}
 \end{align}
-and eventually consider the function (similar to
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Eventually, we consider the function (similar to
 \eqref{eq:g_r-m-t(tau)})
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \defineNotation[g-rbar-m-t-tau]{g_{\bar{r},m,t}(\tau)}
   &:= \unityPower{\frac{\tau (24t+\sumdelta{\bar{r}})}{24m} } (U_mf_t)(\tau)
@@ -3148,10 +3135,117 @@ and eventually consider the function (similar to
   \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{\bar{r},m,t,\lambda}(\tau)
   \label{eq:g_rbar-m-t(tau)}
 \end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 and its transformations under $\SL2Z$.
 
 
 
+Let us first investigate the transformation of
+$g_{\bar{r},m,t,\lambda}(\tau)$ under some $\gamma\in\SL2Z$.
+%
+Since the prefactor in \eqref{eq:g_rbar-m-t-lambda(tau)} does not
+depend on $\tau$, we essentially look for a transformation of the form
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  g_{\bar{r}}
+  \left(
+  \begin{pmatrix}
+    1 & \lambda\\
+    0 & m
+  \end{pmatrix}
+  \gamma
+  \tau
+  \right)
+  &=
+  g_r
+  \left(
+  \begin{pmatrix}
+    1 & \lambda\\
+    0 & m
+  \end{pmatrix}
+  \gamma
+  \tau
+  \right)
+  \cdot
+  g_{\tilde{r}}
+  \left(
+  \begin{pmatrix}
+    1 & \lambda\\
+    0 & m
+  \end{pmatrix}
+  \gamma
+  \tau
+  \right)
+  \notag\\
+  &=
+  \divisorprod{M}
+  \eta_\delta
+  \left(
+  \begin{pmatrix}
+    1 & \lambda\\
+    0 & m
+  \end{pmatrix}
+  \gamma
+  \tau
+  \right)^{r_\delta}
+  \cdot
+      \prod_{\substack{\divides{\delta}{M}\\0<g<\frac{\delta}{2}}}
+  \eta_{\delta,g}^{[R]}
+  \left(
+  \begin{pmatrix}
+    1 & \lambda\\
+    0 & m
+  \end{pmatrix}
+  \gamma
+  \tau
+  \right)^{r_{\delta,g}},
+  \notag\\
+  &=
+  \divisorprod{M}
+  \eta(W\tau)^{r_\delta}
+  \cdot
+  \prod_{\substack{\divides{\delta}{M}\\0 < g < \frac{\delta}{2}}}
+  \eta_{g,0,\delta}^{[S]}(W\tau)^{r_{\delta,g}},
+  \notag\\
+  &=
+  \divisorprod{M}
+  \eta(\gamma_{\delta,m,\lambda}\tau_{\delta,m,\lambda})^{r_\delta}
+  \cdot
+  \prod_{\substack{\divides{\delta}{M}\\0 < g < \frac{\delta}{2}}}
+  \eta_{g,0,\delta}^{[S]}(\gamma_{\delta,m,\lambda}\tau_{\delta,m,\lambda})^{r_{\delta,g}},
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+where $W$, $\gamma_{\delta,m,\lambda}$, and $\tau_{\delta,m,\lambda}$
+are defined in \eqref{eq:W_delta-m-lambda},
+\eqref{eq:gamma_delta-m-lambda}, and
+\eqref{eq:tau_delta-m-lambda}, respectively.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[g-rbar-m-t-lambda-gamma*tau]{g_{\bar{r},m,t,\lambda}(\gamma\tau)}
+  &:=
+  \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{\bar{r}})}
+  \cdot
+  \divisorprod{M}
+  \eta(\gamma_{\delta,m,\lambda}\tau_{\delta,m,\lambda})^{r_\delta}
+  \cdot
+  \prod_{\substack{\divides{\delta}{M}\\0 < g < \frac{\delta}{2}}}
+  \eta_{g,0,\delta}^{[S]}(\gamma_{\delta,m,\lambda}\tau_{\delta,m,\lambda})^{r_{\delta,g}}.
+  \label{eq:g_rbar-m-t-lambda}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+===============================================
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3162,6 +3256,7 @@ Let $r$ and $\tilde{r}$ be defined as in Definition~\ref{def:rbar}.
 Because of \eqref{eq:g_rbar-m-t-lambda(tau)} and
 \eqref{eq:g_r-m-t-lambda(gamma*tau)}, we first establish a formula for
 $g_{\tilde{r},m,0,\lambda}(\gamma\tau)$.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \defineNotation[g-rtilda-m-0-lambda]{g_{\tilde{r},m,0,\lambda}(\gamma\tau)}
   &=
@@ -3222,6 +3317,7 @@ $g_{\tilde{r},m,0,\lambda}(\gamma\tau)$.
   \right)^{r_{\delta,g}},
   \label{eq:g_rtilde-m-0-lambda(gamma*tau)}
 \end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 where $\gamma_{\delta,m,\lambda}$ and $\tau_{\delta,m,\lambda}$ are as
 defined \eqref{eq:gamma_delta-m-lambda} and
 \eqref{eq:tau_delta-m-lambda}, \ie,
@@ -3236,6 +3332,7 @@ $
 
 
 In total we get
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \defineNotation[g-rbar-m-r-lambda]{g_{\bar{r},m,t,\lambda}(\gamma\tau)}
   &=
@@ -3298,6 +3395,7 @@ In total we get
   \end{split}
   \label{eq:g_rbar-m-t-lambda(gamma*tau)}
 \end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -3311,12 +3409,14 @@ In total we get
 
 Eventually, we get for the transformation of $g_{\bar{r},m,t}$ the
 following.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   g_{\bar{r},m,t}(\gamma\tau)
   &=
   \frac{1}{m} \sum_{\lambda=0}^{m-1} g_{\bar{r},m,t,\lambda}(\gamma\tau)
   \label{eq:g_rbar-m-t(gamma*tau)}
 \end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
