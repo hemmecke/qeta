@@ -733,10 +733,18 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     rationalPrefactor: % -> Q
       ++ rationalPrefactor(x) returns the square of the second product
       ++ in \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
+    unityExponentPrefactor: % -> Q
+      ++ unityExponentPrefactor(e) returns
+      ++ $-lambda*(24*t+\sumdelta{r})/(24*m)$. It corresponds to the
+      ++ second factor of \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
+    unityExponentEta: % -> Q
+      ++ unityExponentEta(e) returns
+      ++ $sum_{\delta} rdelta*(vdelta+Kappa_delta)/24$.
+      ++ It corresponds to the second factor of
+      ++ \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
     unityExponent: % -> Q
-      ++ unityExponent(e) returns $- lambda*(24*t+\sumdelta{r})/(24*m) +
-      ++ sum_{\delta} rdelta*(vdelta+Kappa_delta)/24$. It corresponds to
-      ++ the second factor of \eqref{eq:g_r-m-t-lambda(gamma*tau)}.
+      ++ unityExponent(e) returns
+      ++ unityExponentPrefactor(e)+unityExponentEta(e).
     qExponent: % -> Q
       ++ qExponent(e) returns the order of the expansion
       ++ of e in q = \exp(2 \pi i \tau)  while neglecting the (c\tau+d) factor.
@@ -765,8 +773,8 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
               fgamma: SL2Z,  -- gamma
               feta: HT,      -- mapping delta to \eta_{\delta,m,lambda}
               frat: Q,       -- square of rational prefactor
-              funityExponent: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
-                             -- - lambda*(24*t+\sumdelta{s})/(24*m)
+              funityExponentPrefactor: Q,-- - lambda*(24*t+\sumdelta{s})/(24*m)
+              funityExponentEta: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
               fqExponent: Q, -- \sum_delta rdelta*udelta/24
               fminroot: P    -- minimal root of unity needed for coefficients
             )
@@ -776,8 +784,9 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
 
     etaquot(mm: P, divs: LP, r: LZ,
             m: P, t: Z, lambda: N, gamma: SL2Z, eta: HT): % ==
+        import from QETAAUX
         rat: Q := 1
-        uexponent: Q := 0
+        uexpeta: Q := 0
         qexponent: Q := 0
         sigmaInfty: Z := 0
         for delta in divs for rdelta in r | not zero? rdelta repeat
@@ -787,14 +796,15 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
             qexponent := qexponent + rd * udelta(e)
 
             kappa: Q := (upsilonExponent e)::Q
-            uexponent := uexponent + rd * (vdelta e + kappa)
+            uexpeta := uexpeta + rd * (vdelta e + kappa)
             sigmaInfty := sigmaInfty + delta * rdelta
 
         -- Distinguish between g_{s,m,t,\lambda} and g_{s,m,-,\lamnbda}.
-        if t>=0 then uexponent := uexponent - lambda/m * ((t::Q) + sigmaInfty/24)
+        uexppre: Q := fractionalPart(- lambda/m * ((t::Q) + sigmaInfty/24))
 
         -- Now make the numerator small.
-        uexponent := fractionalPart(uexponent)$QETAAUX
+        uexpeta := fractionalPart(uexpeta)
+        uexponent: Q := uexppre + uexpeta
 
         -- minimal root of unity needed for the expansion is
         -- determined from expressing the squareroot of the rational
@@ -805,7 +815,8 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
         p: P := rr.rootOf
         minroot: P := lcmP(denom uexponent, minimalSquareRootOfUnity(p)$QETAAUX)
         minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
-        per [mm, divs, r, m, t, lambda, gamma, eta, rat, uexponent, qexponent, minroot]
+        per [mm, divs, r, m, t, lambda, gamma, eta, rat,
+             uexppre, uexpeta, qexponent, minroot]
 
     etaQuotient(mm: P, r: LZ, m: P, t: Z, lambda: N, gamma: SL2Z): % ==
         divs: LP := DIVISORS mm
@@ -826,7 +837,10 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
     rationalPrefactor(x: %): Q == xx.frat
-    unityExponent(x: %): Q == xx.funityExponent
+    unityExponentPrefactor(x: %): Q == xx.funityExponentPrefactor
+    unityExponentEta(x: %): Q == xx.funityExponentEta
+    unityExponent(x: %): Q ==
+        fractionalPart(unityExponentPrefactor x + unityExponentEta x)$QETAAUX
     qExponent(x: %): Q == xx.fqExponent
     minimalRootOfUnity(x: %): P == xx.fminroot
 
