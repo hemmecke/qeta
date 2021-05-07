@@ -128,8 +128,8 @@ Domains in the second category are implemented int he file
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Package QEtaAuxiliaryPackage: Check modularity of
-  eta-quotients}
+\subsection{D QEtaSymbolicData}
+\label{sec:QEtaSymbolicData}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Here we mainly deal with the sets $R^*(N)$ and $R^\infty(N)$ from
@@ -146,7 +146,7 @@ vector to correspond to a modular eta-quotient is violated.
 ++ QEtaSymbolicData creates certain necessary values for the
 ++ computation of the expansion of the transformation of pure and
 ++ generalized eta-quotients.
-QEtaSymbolicData: with
+QEtaSymbolicData: SetCategory with
     create: (P, P, N, SL2Z) -> %
       ++ create(delta,m,lambda,gamma) represents the expansion of
       ++ $\eta_{\delta,m,\lambda}(\gamma \tau)$ in terms of
@@ -175,7 +175,7 @@ QEtaSymbolicData: with
       ++ splitMatrix(gamma,delta,m,lambda)).
     rationalPrefactor: % -> Q
       ++ rationalPrefactor(x) returns the square of the second product
-      ++ in \eqref{eq:g_r(gamma*tau)}
+      ++ in \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
     upsilonExponent: % -> Z
       ++ Returns $\kappa_{\gamma_{\delta,m,\lambda}}$. See
       ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
@@ -207,6 +207,7 @@ QEtaSymbolicData: with
 
     create(delta: P, m: P, lambda: N, gamma: SL2Z): % ==
         --assert(gamma(2, 1)>0)
+        gamma(2, 1) <= 0 ==> error "QEtaSymbolicData: we want gamma(2,1)>0"
         rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
         gamma1: SL2Z := rec.red
         gamma2: MZ := rec.triang
@@ -278,6 +279,9 @@ SymbolicEtaDeltaGamma: SetCategory with
       ++ \eta_\delta(\gamma \tau) in terms of
       ++ x = \exp(2 \pi i \tau/w) where w=width(m, c) and
       ++ gamma=cuspToMatrix(m, a/c) for some cusp a/c of Gamma0(m).
+    data: % -> QEtaSymbolicData
+      ++ data(x) returns important data in connection with the parameters
+      ++ of the eta function transformation.
     level: % -> P
       ++ level(x) returns the level corresponding to x.
     delta: % -> P
@@ -295,62 +299,31 @@ SymbolicEtaDeltaGamma: SetCategory with
     vdelta: % -> Q            -- b2/d2
       ++ See \eqref{eq:uv_delta}.
  == add
-    Rec ==> Record(red: SL2Z, triang: MZ)
-    Rep ==> Record(
-              flevel: P,    -- level \Gamma_0(lev)
-              fdelta: P,    -- the divisor used at creation
-              fgamma: SL2Z, -- the gamma used at creation
-              frat: Q,      -- h_delta/delta
-              fkappa: Z,    -- upsilonExponent(a1,b2,c1,d1)
-              fedelta: P,   -- edelta = width*hdelta^2/delta \eqref{eq:q_delta}}
-              fudelta: Q,   -- udelta = hdelta^2/delta \eqref{eq:q_delta}}
-              fvdelta: Q    -- b2/d2, reduced form of roots of unity
-                            -- 0<=b2<d2, 0<d2
-             )
+    Rep ==> Record(fdata: QEtaSymbolicData, flevel: P)
     import from Rep
-    xx ==> rep x
-    yy ==> rep y
+    import from QEtaSymbolicData
+    dx ==> rep(x).fdata
 
     eta(mm: P, delta: P, gamma: SL2Z): % ==
-        c: Z := gamma(2, 1)
-        --assert(c>0)
-        hdelta: Z := gcd(c, delta)
-        rat: Q := hdelta/delta
-        rec: Rec := splitMatrix(gamma, delta)$QETAAUX
-        gamma1: SL2Z := rec.red
-        gamma2: MZ := rec.triang
-        b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
-        a2: Z := gamma2(1, 1); wgamma: Z := WIDTH0(mm, c)
-        udelta: Q := gcd(c,delta)^2 / delta
-        edelta: P := asP numer(wgamma*udelta)
-        if not one?(denom(wgamma*udelta)) then
-            error "edelta is not integer"
-        --assert(edelta = ((a2*wgamma exquo d2) :: Z))
-        if udelta ~= a2/d2 then
-            error "edelta does not match"
-        vdelta: Q := b2/d2
-        kappa: Z := upsilonExponent(gamma1)$QETAAUX
-        per [mm, delta, gamma, rat, kappa, edelta, udelta, vdelta]
+        data: QEtaSymbolicData := create(delta, gamma)
+        per [data, mm]
 
-    level(x: %): P == xx.flevel
-    delta(x: %): P == xx.fdelta
-    gamma(x: %): SL2Z == xx.fgamma
-    rationalPrefactor(x: %): Q == xx.frat
-    upsilonExponent(x: %): Z == xx.fkappa
-    edelta(x: %): P == xx.fedelta
-    udelta(x: %): Q == xx.fudelta
-    vdelta(x: %): Q == xx.fvdelta
+    data(x: %): QEtaSymbolicData == rep(x).fdata
+    level(x: %): P == rep(x).flevel
+    delta(x: %): P == delta dx
+    gamma(x: %): SL2Z == gamma dx
+    rationalPrefactor(x: %): Q == rationalPrefactor dx
+    upsilonExponent(x: %): Z == upsilonExponent dx
+    edelta(x: %): P ==
+        g: SL2Z := gamma x
+        e: Q := WIDTH0(level x, g(2,1)) * udelta x
+        not one? denom e => error "edelta is not integer"
+        asP numer e
+    udelta(x: %): Q == udelta dx
+    vdelta(x: %): Q == vdelta dx
     coerce(x: %): OutputForm == rep(x)::OutputForm
-    hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.frat)
-        h := hashUpdate!(h, xx.fkappa)
-        h := hashUpdate!(h, xx.fudelta)
-        h := hashUpdate!(h, xx.fvdelta)
-    ((x: %) = (y: %)): Boolean ==
-        level x ~= level y => false
-        delta x ~= delta y => false
-        gamma x = gamma y
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, data x)
+    ((x: %) = (y: %)): Boolean == data x = data y
 
 
 
