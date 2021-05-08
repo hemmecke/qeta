@@ -127,38 +127,82 @@ Domains in the second category are implemented int he file
 
 
 
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D QEtaSymbolicData}
-\label{sec:QEtaSymbolicData}
+\subsection{D SymbolicEtaGamma}
+\label{sec:SymbolicEtaGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $N\in\setN$,
+$\divides{\delta}{N}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain \code{SymbolicEtaGamma}
+represent the tuple
+\begin{gather*}
+  \left(\frac{h_{\delta}}{\delta}, e_\delta, u_\delta, v_\delta, \kappa_\delta\right)
+\end{gather*}
+from \eqref{eq:eta_delta(gamma*tau)-expansion}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Here we mainly deal with the sets $R^*(N)$ and $R^\infty(N)$ from
-\cite{Hemmecke+Radu:EtaRelations:2018}.
-
-The function \code{matrixLigozat} computes the respective matrix $A_N$
-whereas \code{modularGamma0} checks which of the conditions for an $r$
-vector to correspond to a modular eta-quotient is violated.
-
+For $m, M\in\setN$, $\divides{\delta}{M}$,
+$\lambda \in \Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain
+\code{SymbolicEtaGamma} represent the tuple
+\begin{gather}
+  \left(
+  M,
+  \delta,
+  m,
+  \lambda,
+  \gamma,
+  \frac{h_{\delta,m,\lambda}}{\delta}
+  ,
+  u_{\delta,m,\lambda},
+  v_{\delta,m,\lambda},
+  \kappa_{\delta,m,\lambda}
+  \right)
+\end{gather}
+and thus corresponds to the data from
+\eqref{eq:eta_delta-m-lambda(gamma*tau)}, \ie, it computes the
+building blocks for $\eta_{\delta,m,\lambda}(\gamma\tau)$.
 
 )endif
 
-)abbrev domain QETADATA QEtaSymbolicData
-++ QEtaSymbolicData creates certain necessary values for the
-++ computation of the expansion of the transformation of pure and
-++ generalized eta-quotients.
-QEtaSymbolicData: SetCategory with
-    create: (P, P, N, SL2Z) -> %
-      ++ create(delta,m,lambda,gamma) represents the expansion of
-      ++ $\eta_{\delta,m,\lambda}(\gamma \tau)$ in terms of
+)abbrev domain YEG SymbolicEtaGamma
+++ SymbolicEtaGamma collects data for the expansion of
+++ eta_delta(\gamma \tau).
+++ See \eqref{eq:eta_delta(gamma*tau)}.
+SymbolicEtaGamma: SetCategory with
+    eta: (P, P, P, N, SL2Z) -> %
+      ++ eta(mm, delta, m, lambda, gamma) represents the
+      ++ expansion of $\eta_{\delta,m,\lambda}(\gamma \tau)$ in terms of
       ++ $q = \exp(2 \pi i \tau)$.
-    create: (P, P, N) -> %
-      ++ create(delta,m,lambda) returns
-      ++ create(delta,m,lambda,id) where id is the identity matrix.
-    create: (P, SL2Z) -> %
-      ++ create(delta,gamma)  returns
-      ++ create(delta,1,0,gamma).
+      ++ See \eqref{eq:eta_delta-m-lambda-gamma-tau}.
+      ++ We require that c>0 in gamma=matrix[[a,b],[c,d]].
+    eta: (P, P, N, SL2Z) -> %
+      ++ eta(delta, m, lambda, gamma) returns
+      ++ eta(delta, delta, m, lambda, gamma)
+    eta: (P, P, SL2Z) -> % -- gamma=[[a,b],[c,d]], mm=level, delta
+      ++ eta(mm, delta, gamma) represents the expansion of
+      ++ \eta_\delta(\gamma \tau) in terms of
+      ++ q = \exp(2 \pi i \tau).
+      ++ It is the same as eta(mm, delta, 1, 0, gamma).
+      ++ See \eqref{eq:eta_delta-m-lambda-gamma-tau} for m=1, lambda=0.
+    eta: (P, SL2Z) -> %
+      ++ eta(delta, gamma) returns eta(delta, delta, gamma).
+    level: % -> P
+      ++ level(x) returns the level corresponding to x.
     delta: % -> P
-      ++ delta(x) returns the corresponding delta.
+      ++ delta(x) returns the delta that was used at creation time of x.
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
       ++ Returns m.
@@ -173,21 +217,28 @@ QEtaSymbolicData: SetCategory with
     gamma2: % -> MZ
       ++ gamma2(x) returns the triangular part of
       ++ splitMatrix(gamma,delta,m,lambda)).
-    rationalPrefactor: % -> Q
+    rationalPrefactor: % -> Q -- (h_delta/delta)
       ++ rationalPrefactor(x) returns the square of the second product
       ++ in \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
-    upsilonExponent: % -> Z
-      ++ Returns $\kappa_{\gamma_{\delta,m,\lambda}}$. See
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+      ++ See \ref{thm:c*tau+d}.
+    upsilonExponent: % -> Z -- kappa_delta
+      ++ Returns $\kappa_{\gamma_{\delta,m,\lambda}}$.
+      ++ See \eqref{eq:eta_delta-m-lambda(gamma*tau)}
+      ++ and \eqref{eta_delta(gamma*tau)}.
+    edelta: % -> P            -- width*udelta
+      ++ See \eqref{eq:uv_delta}
     udelta: % -> Q
       ++ Returns $u_{\delta,m,\lambda}$. See
       ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+      ++ See \eqref{eq:uv_delta}
     vdelta: % -> Q
       ++ Returns $v_{\delta,m,\lambda}$. See
       ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+      ++ See \eqref{eq:uv_delta}.
  == add
     Rec ==> Record(red: SL2Z, triang: MZ)
     Rep ==> Record(
+              flevel: P,
               fdelta: P,
               fmultiplier: P,
               flambda: N,
@@ -205,7 +256,7 @@ QEtaSymbolicData: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    create(delta: P, m: P, lambda: N, gamma: SL2Z): % ==
+    eta(mm: P, delta: P, m: P, lambda: N, gamma: SL2Z): % ==
         --assert(gamma(2, 1)>0)
         gamma(2, 1) <= 0 ==> error "QEtaSymbolicData: we want gamma(2,1)>0"
         rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
@@ -216,9 +267,16 @@ QEtaSymbolicData: SetCategory with
         udelta: Q := a2/d2 -- = hdelta^2/delta/m
         vdelta: Q := b2/d2
         kappa: Z := upsilonExponent(gamma1)$QETAAUX
-        per [delta, m, lambda, gamma,
+        per [mm, delta, m, lambda, gamma,
              gamma1, gamma2,rat, kappa, udelta, vdelta]
 
+    eta(delta: P, m: P, lambda: N, gamma: SL2Z): % ==
+        eta(delta, delta, m, lambda, gamma)
+
+    eta(mm: P, delta: P, gamma: SL2Z): % == eta(mm, delta, 1, 0, gamma)
+    eta(delta: P, gamma: SL2Z): % == eta(delta, delta, gamma)
+
+    level(x: %): P == rep(x).flevel
     delta(x: %): P == xx.fdelta
     multiplier(x: %): P == xx.fmultiplier
     lambda(x: %): N == xx.flambda
@@ -238,92 +296,11 @@ QEtaSymbolicData: SetCategory with
         multiplier x ~= multiplier y => false
         lambda x ~= lambda y => false
         gamma x = gamma y
-
-
-
-
-
-
-
-
-
-
-
-
-
-)if LiterateDoc
-%$
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaDeltaGamma}
-\label{sec:SymbolicEtaDeltaGamma}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $N\in\setN$,
-$\divides{\delta}{N}$,
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\SL2Z$, elements from the domain \code{SymbolicEtaDelta}
-represent the tuple
-\begin{gather*}
-  \left(\frac{h_{\delta}}{\delta}, e_\delta, u_\delta, v_\delta, \kappa_\delta\right)
-\end{gather*}
-from \eqref{eq:eta_delta(gamma*tau)-expansion}.
-
-)endif
-
-)abbrev domain YEDG SymbolicEtaDeltaGamma
-++ SymbolicEtaDeltaGamma collects data for the expansion of
-++ eta_delta(\gamma \tau).
-++ See \eqref{eq:eta_delta(gamma*tau)}.
-SymbolicEtaDeltaGamma: SetCategory with
-    eta: (P, P, SL2Z) -> % -- gamma=[[a,b],[c,d]], m=level, delta, r_delta
-      ++ eta(m, delta, gamma) represents the expansion of
-      ++ \eta_\delta(\gamma \tau) in terms of
-      ++ x = \exp(2 \pi i \tau/w) where w=width(m, c) and
-      ++ gamma=cuspToMatrix(m, a/c) for some cusp a/c of Gamma0(m).
-    data: % -> QEtaSymbolicData
-      ++ data(x) returns important data in connection with the parameters
-      ++ of the eta function transformation.
-    level: % -> P
-      ++ level(x) returns the level corresponding to x.
-    delta: % -> P
-      ++ delta(x) returns the delta that was used at creation time of x.
-    gamma: % -> SL2Z
-      ++ gamma(x) returns the gamma as given at creation time of x.
-    rationalPrefactor: % -> Q -- (h_delta/delta)
-      ++ See \ref{thm:c*tau+d}.
-    upsilonExponent: % -> Z -- kappa_delta
-      ++ See \eqref{eta_delta(gamma*tau)}.
-    edelta: % -> P            -- width*udelta
-      ++ See \eqref{eq:uv_delta}
-    udelta: % -> Q            -- gcd(delta,c)^2/delta
-      ++ See \eqref{eq:uv_delta}
-    vdelta: % -> Q            -- b2/d2
-      ++ See \eqref{eq:uv_delta}.
- == add
-    Rep ==> Record(fdata: QEtaSymbolicData, flevel: P)
-    import from Rep
-    import from QEtaSymbolicData
-    dx ==> rep(x).fdata
-
-    eta(mm: P, delta: P, gamma: SL2Z): % ==
-        data: QEtaSymbolicData := create(delta, gamma)
-        per [data, mm]
-
-    data(x: %): QEtaSymbolicData == rep(x).fdata
-    level(x: %): P == rep(x).flevel
-    delta(x: %): P == delta dx
-    gamma(x: %): SL2Z == gamma dx
-    rationalPrefactor(x: %): Q == rationalPrefactor dx
-    upsilonExponent(x: %): Z == upsilonExponent dx
     edelta(x: %): P ==
         g: SL2Z := gamma x
         e: Q := WIDTH0(level x, g(2,1)) * udelta x
         not one? denom e => error "edelta is not integer"
         asP numer e
-    udelta(x: %): Q == udelta dx
-    vdelta(x: %): Q == vdelta dx
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, data x)
-    ((x: %) = (y: %)): Boolean == data x = data y
 
 
 
@@ -402,7 +379,7 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ the expansion of the function g_r(\gamma \tau) corresponding to
       ++ e=etaQuotient(mm, r, gamma) (neglecting the (c\tau+d)^* factor)
       ++ lives in Q[w][[x]] where w is a n-th root of unity.
-    elt: (%, P) -> SymbolicEtaDeltaGamma
+    elt: (%, P) -> SymbolicEtaGamma
       ++ elt(x, delta) returns the data corresponding to the respective
       ++ delta.
     modularGamma0?: % -> Boolean
@@ -411,7 +388,7 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ modularGamma0?(level x, exponents x) from
       ++ QEtaAuxiliaryPackage.
  == add
-    HT ==> XHashTable(P, SymbolicEtaDeltaGamma) -- mapping delta to \eta_\delta
+    HT ==> XHashTable(P, SymbolicEtaGamma) -- mapping delta to \eta_\delta
     Rep ==> Record(
               flevel: P,     -- level \Gamma_0(lev)
               fdivs: LP,     -- all divisors of level that are given at creation
@@ -464,12 +441,12 @@ SymbolicEtaQuotientGamma: SetCategory with
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         for delta in DIVISORS mm repeat
-            eta.delta := eta(mm, delta, gamma)$SymbolicEtaDeltaGamma
+            eta.delta := eta(mm, delta, gamma)$SymbolicEtaGamma
         etaquot(mm, r, gamma, eta)
 
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
-    elt(x: %, delta: P): SymbolicEtaDeltaGamma == xx.feta.delta
+    elt(x: %, delta: P): SymbolicEtaGamma == xx.feta.delta
     exponents(x: %): LZ == xx.fexponents
     gamma(x: %): SL2Z == xx.fgamma
     rationalPrefactor(x: %): Q == xx.frat
@@ -605,135 +582,27 @@ SymbolicEtaQuotient: SetCategory with
         xx.fexponents = yy.fexponents
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicSiftedEtaDeltaLambdaGamma}
-\label{sec:SymbolicSiftedEtaDeltaLambdaGamma}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $m, M\in\setN$, $\divides{\delta}{M}$,
-$\lambda \in \Set{0,\ldots,m-1}$,
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\SL2Z$, elements from the domain
-\code{SymbolicSiftedEtaDeltaLambdaGamma} represent the tuple
-\begin{gather}
-  \left(
-  M,
-  \delta,
-  m,
-  \lambda,
-  \gamma,
-  \frac{h_{\delta,m,\lambda}}{\delta}
-  ,
-  u_{\delta,m,\lambda},
-  v_{\delta,m,\lambda},
-  \kappa_{\delta,m,\lambda}
-  \right)
-\end{gather}
-and thus corresponds to the data from
-\eqref{eq:eta_delta-m-lambda(gamma*tau)}, \ie, it computes the
-building blocks for $\eta_{\delta,m,\lambda}(\gamma\tau)$.
-
-)endif
--------------------------------------------------------------------
-)abbrev domain YSEDLG SymbolicSiftedEtaDeltaLambdaGamma
-++ SymbolicSiftedEtaDeltaLambdaGamma is a generalization of
-++ SymbolicEtaDeltaGamma. It holds data to compute an eta
-++ expansion of $\eta_{delta.m,\lambda}(\gamma \tau)$.
-++ See \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
-SymbolicSiftedEtaDeltaLambdaGamma: SetCategory with
-    eta: (P, P, P, N, SL2Z) -> %
-      ++ eta(mm, delta, m, lambda, gamma) represents the
-      ++ expansion of $\eta_{\delta,m,\lambda}(\gamma \tau)$ in terms of
-      ++ $q = \exp(2 \pi i \tau)$.
-    level: % -> P
-      ++ level(x) returns the level of the eta-quotient.
-      -- Returns mm.
-    delta: % -> P
-      ++ delta(x) returns the corresponding delta.
-    multiplier: % -> P
-      ++ multiplier(x) returns the subsequence multiplier.
-      ++ Returns m.
-    lambda: % -> N
-      ++ lambda(x) returns lambda.
-    gamma: % -> SL2Z
-      ++ gamma(x) returns the transformation corresponding to x.
-      -- Returns gamma as given in eta(...,gamma).
-    rationalPrefactor: % -> Q
-      ++ rationalPrefactor(x) returns the square of the second product
-      ++ in \eqref{eq:g_r(gamma*tau)}
-    upsilonExponent: % -> Z
-      ++ Returns $\kappa_{\gamma_{\delta,m,\lambda}}$. See
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
-    udelta: % -> Q
-      ++ Returns $u_{\delta,m,\lambda}$. See
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
-    vdelta: % -> Q
-      ++ Returns $v_{\delta,m,\lambda}$. See
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
- == add
-    Rec ==> Record(red: SL2Z, triang: MZ)
-    Rep ==> Record(
-              flevel: P,
-              fdelta: P,
-              fmultiplier: P,
-              flambda: N,
-              fgamma: SL2Z, -- gamma
-              frat: Q,      -- square of rational prefactor
-              fkappa: Z,    -- upsilonExponent(a1,b2,c1,d1)
-              fudelta: Q,   -- udelta = hdelta^2/(delta*m)
-                            -- \eqref{eq:uv_delta-m-lambda}}
-              fvdelta: Q    -- b2/d2, reduced form of roots of unity
-                            -- 0<=b2<d2, 0<d2
-            )
-    import from Rep
-    xx ==> rep x
-    yy ==> rep y
-
-    eta(mm: P, delta: P, m: P, lambda: N, gamma: SL2Z): % ==
-        --assert(gamma(2, 1)>0)
-        rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
-        gamma1: SL2Z := rec.red
-        gamma2: MZ := rec.triang
-        a2: Z := gamma2(1, 1); b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
-        rat: Q := a2/delta -- = hdelta/delta
-        udelta: Q := a2/d2 -- = hdelta^2/delta/m
-        vdelta: Q := b2/d2
-        kappa: Z := upsilonExponent(gamma1)$QETAAUX
-        per [mm, delta, m, lambda, gamma, rat, kappa, udelta, vdelta]
-
-    level(x: %): P == xx.flevel
-    delta(x: %): P == xx.fdelta
-    multiplier(x: %): P == xx.fmultiplier
-    lambda(x: %): N == xx.flambda
-    gamma(x: %): SL2Z == xx.fgamma
-    rationalPrefactor(x: %): Q == xx.frat
-    upsilonExponent(x: %): Z == xx.fkappa
-    udelta(x: %): Q == xx.fudelta
-    vdelta(x: %): Q == xx.fvdelta
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-    hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.frat)
-        h := hashUpdate!(h, xx.fkappa)
-        h := hashUpdate!(h, xx.fudelta)
-        h := hashUpdate!(h, xx.fvdelta)
-    ((x: %) = (y: %)): Boolean ==
-        level x ~= level y => false
-        delta x ~= delta y => false
-        multiplier x ~= multiplier y => false
-        lambda x ~= lambda y => false
-        gamma x = gamma y
-
-
-)if LiterateDoc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicSiftedEtaQuotientLambdaGamma}
@@ -769,7 +638,7 @@ and thus corresponds to the data from
 blocks for $g_{r,m,t,\lambda}(\gamma\tau)$.
 
 The special entry $y=(y_\delta)_{\divides{\delta}{M}}$ is a container
-of the \code{SymbolicSiftedEtaDeltaLambdaGamma} values for each
+of the \code{SymbolicEtaGamma} values for each
 divisor $\delta$ of $M$.
 
 
@@ -795,6 +664,8 @@ we get
 \end{gather}
 
 )endif
+
+
 -------------------------------------------------------------------
 )abbrev domain YSEQLG SymbolicSiftedEtaQuotientLambdaGamma
 ++ SymbolicSiftedEtaQuotientLambdaGamma is a generalization of
@@ -860,11 +731,11 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
       ++ e=etaQuotient(mm, divs, r, m, t, lambda, gamma) (neglecting
       ++ the (c \tau+d)^* factor) lives in Q[w][[z]] where w is a n-th
       ++ root of unity and z a fractional q power.
-    elt: (%, P) -> SymbolicSiftedEtaDeltaLambdaGamma
+    elt: (%, P) -> SymbolicEtaGamma
       ++ x.delta returns the data corresponding to the respective
       ++ delta.
  == add
-    HT ==> XHashTable(P, SymbolicSiftedEtaDeltaLambdaGamma)
+    HT ==> XHashTable(P, SymbolicEtaGamma)
       -- mapping delta to \eta_{\delta,m,\lambda}
     Rep ==> Record(
               flevel: P,     -- level \Gamma_0(lev)
@@ -927,13 +798,12 @@ SymbolicSiftedEtaQuotientLambdaGamma: SetCategory with
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         for delta in divs repeat
-            YSEDLG ==> SymbolicSiftedEtaDeltaLambdaGamma
-            eta.delta := eta(mm, delta, m, lambda, gamma)$YSEDLG
+            eta.delta := eta(mm, delta, m, lambda, gamma)$SymbolicEtaGamma
         etaquot(mm, divs, r, m, t, lambda, gamma, eta)
 
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
-    elt(x: %, delta: P): SymbolicSiftedEtaDeltaLambdaGamma == xx.feta.delta
+    elt(x: %, delta: P): SymbolicEtaGamma == xx.feta.delta
     exponents(x: %): LZ == xx.fexponents
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): Z == xx.foffset
