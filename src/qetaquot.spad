@@ -184,9 +184,6 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
       ++ r = exponents(s), and g_r is defined by
       ++ $g_r(\tau) =
       ++   \prod_{\delta in divisors(s)} \eta(\delta \gamma \tau)^{r_{\delta}}$.
-    eulerFunctionPower: (P, N, Z) -> LX
-      ++ eulerFunctionPower(u, v, p) computes eulerFunction(1)^p and
-      ++ replaces q=monomial(1,1)$LC by monomial(xi^v, u)$LX
     symbolicEtaQuotient: % -> SymbolicEtaQuotientGamma
       ++ symbolicEtaQuotient(x) returns meta-data corresponding to x.
     eulerExpansion: % -> LX
@@ -227,34 +224,6 @@ EtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
     -- p = xExponent symbolicEtaQuotient e
     -- s = eulerExpansion e
     xx ==> rep x
-    -- We maintain a cache of expansions of powers of the Euler function.
-    q: Symbol := "q"::Symbol
-    ef: LX := eulerFunction(1)$QFunctions(CX, LX)
-    ef1: CX := coefficient(ef, 1) -- avoid null pointer by expansion
-    efc: CachedPower LX := ef :: CachedPower(LX)
-    ps: LX := partitionSeries(1)$QFunctions(CX, LX)
-    ps1: CX := coefficient(ps, 1) -- avoid null pointer by expansion
-    psc: CachedPower LX := ps :: CachedPower(LX)
-    xic: CachedPower CX := xi :: CachedPower(CX)
-
-    xiPower(v: N): (Z -> CX) == (e: Z): CX +->
-         -- Take care of the fact that xi^mx = 1.
-        e := positiveRemainder(v*e, mx)
-        zero? e => 1$CX
-        power!(xic, asP e)$CachedPower(CX)
-
-    -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
-    substitute(s: LX, u: P, v: N): LX ==
-        multiplyExponents(multiplyCoefficients(xiPower v, s), u)
-
-    eulerFunctionPower(u: P, v: N, rd: Z): LX ==
-        zero? rd => 1$LX
-        rd < 0 => substitute(power!(psc, -rd)$CachedPower(LX), u, v)
-        substitute(power!(efc, rd)$CachedPower(LX), u, v)
-
-    squareRoot(fq: Q): CX ==
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QETAAUX
-        ((rr.rat)::C::CX) * squareRoot(rr.rootOf)$GaussRoot(CX, xi, mx)
 
     coerce(e: SymbolicEtaQuotientGamma): % ==
         m: P := level e
@@ -403,6 +372,9 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
 
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
+    puiseux: (SymbolicEtaQuotientGamma, P) -> %
+      ++ puiseux(y, w) represents the
+      ++ q-expansion of g_r(\gamma \tau) at \tau=i \infity.
 --    puiseux: (SymbolicEtaQuotientLambdaGamma, P) -> %
 --      ++ puiseux(y, w) represents the
 --      ++ q-expansion of g_{r,m,t,\lambda}(\gamma \tau) at \tau=i \infity.
@@ -441,7 +413,35 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
     Rep ==> Record(den: P, ord: Q, ser: TX)
     xx ==> rep x
 
-    import from EtaQuotientGamma(C, mx, CX, xi)
+    -- We maintain a cache of expansions of powers of the Euler function.
+    q: Symbol := "q"::Symbol
+
+    -- Cache for frequently used objects
+    ef: LX := eulerFunction(1)$QFunctions(CX, LX)
+    ef1: CX := coefficient(ef, 1) -- avoid null pointer by expansion
+    efc: CachedPower LX := ef :: CachedPower(LX)
+    ps: LX := partitionSeries(1)$QFunctions(CX, LX)
+    ps1: CX := coefficient(ps, 1) -- avoid null pointer by expansion
+    psc: CachedPower LX := ps :: CachedPower(LX)
+    xic: CachedPower CX := xi :: CachedPower(CX)
+
+-------------------------------------------------------------------
+-- local functions
+-------------------------------------------------------------------
+    xiPower(v: N): (Z -> CX) == (e: Z): CX +->
+         -- Take care of the fact that xi^mx = 1.
+        e := positiveRemainder(v*e, mx)
+        zero? e => 1$CX
+        power!(xic, asP e)$CachedPower(CX)
+
+    -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
+    substitute(s: LX, u: P, v: N): LX ==
+        multiplyExponents(multiplyCoefficients(xiPower v, s), u)
+
+    eulerFunctionPower(u: P, v: N, rd: Z): LX ==
+        zero? rd => 1$LX
+        rd < 0 => substitute(power!(psc, -rd)$CachedPower(LX), u, v)
+        substitute(power!(efc, rd)$CachedPower(LX), u, v)
 
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.
@@ -461,6 +461,27 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
             error "SEQG: Laurent series with fractional exponent"
         laurent(numer ord, qetaTaylorRep x)$LX
     coerce(x: %): OutputForm == xx::OutputForm
+
+    puiseu(y: SymbolicEtaQuotientGamma, w: P): % ==
+        m: P := level e
+        divs: LP := divisors e
+        s: LX := 1
+        for delta in divs for rd in exponents e | not zero? rd repeat
+            etadelta: SymbolicEtaGamma := e.delta
+            u: P := edelta(etadelta)
+            v: N := asN numer(mx * vdelta(etadelta))
+            s := s * eulerFunctionPower(u, v, rd)
+        q: Q := mx * unityExponent e
+        if not one? denom q then
+            error "EtaQuotientGamma: denominator does not vanish"
+        n: N := asN positiveRemainder(numer q, mx)
+        cx: CX := xi^n * squareRoot rationalPrefactor e -- leading coefficient
+        per [e, cx, s]
+
+
+
+
+
 
 )if LiterateDoc
 %$
@@ -494,8 +515,12 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
                 dbgPrint("delta, d", [delta, d]$List(P))
                 dbgPrint("udelta", [udelta etadelta, u]$List(Q))
                 error "SiftedEtaQuotientGamma: denominator does not vanish"
-            v: N := asN numer(mx * vdelta(etadelta))
-            s := s * eulerFunctionPower(asP numer u, v, rd)
+            v: Q := mx * vdelta etadelta
+            not one? denom v or v<0 =>
+                dbgPrint("delta, d", [delta, d]$List(P))
+                dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
+                error "SiftedEtaQuotientGamma: denominator does not vanish"
+            s := s * eulerFunctionPower(asP numer u, asN numer v, rd)
         q: Q := mx * unityExponent y
         not one? denom q =>
             dbgPrint("mx * unityExponent y", q)
@@ -525,6 +550,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 
     puiseux(y: SymbolicSiftedEtaQuotientGamma, w: P): % ==
         m: P := multiplier y
+        x: % := puiseux(y.0, w)
         lx: LX := laurent yeqlgpuiseux(y.0, w)
         one? m => per [w, order(lx)::Q, qetaTaylorRep lx]
 
