@@ -403,17 +403,17 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
 
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
-    puiseux: (SymbolicEtaQuotientLambdaGamma, P) -> %
-      ++ puiseux(y, w) represents the
-      ++ q-expansion of g_{r,m,t,\lambda}(\gamma \tau) at \tau=i \infity.
+--    puiseux: (SymbolicEtaQuotientLambdaGamma, P) -> %
+--      ++ puiseux(y, w) represents the
+--      ++ q-expansion of g_{r,m,t,\lambda}(\gamma \tau) at \tau=i \infity.
     puiseux: (SymbolicSiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $g_{r,m,t}(\gamma \tau)$ at $\tau=i \infity$.
-    puiseux: (SymbolicSiftedEtaQuotientOrbitProductGamma, P) -> %
-      ++ puiseux(y, w) represents the q-expansion of
-      ++ $\prod_{t' \in \modularOrbit{r,m,t}} g_{r,m,t}(\gamma \tau)$
-      ++ at $\tau=i \infity$.
-    puiseux: (SymbolicModularGamma0SiftedEtaQuotientGamma, P) -> %
+--    puiseux: (SymbolicSiftedEtaQuotientOrbitProductGamma, P) -> %
+--      ++ puiseux(y, w) represents the q-expansion of
+--      ++ $\prod_{t' \in \modularOrbit{r,m,t}} g_{r,m,t}(\gamma \tau)$
+--      ++ at $\tau=i \infity$.
+    ym0seqgpuiseux: (SymbolicModularGamma0SiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma \tau)$ at $\tau=i \infity$.
     rationalPowerDenominator: % -> P
@@ -480,7 +480,7 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    puiseux(y: SymbolicEtaQuotientLambdaGamma, w: P): % ==
+    yeqlgpuiseux(y: SymbolicEtaQuotientLambdaGamma, w: P): % ==
         -- w=width
         mm: P := level y
         divs: LP := divisors y
@@ -525,9 +525,11 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 
     puiseux(y: SymbolicSiftedEtaQuotientGamma, w: P): % ==
         m: P := multiplier y
-        lx: LX := 0
+        lx: LX := laurent yeqlgpuiseux(y.0, w)
+        one? m => per [24 * w, order(lx)::Q, qetaTaylorRep lx]
+
         m1: P := asP(m::Z - 1)
-        for lambda in 0..m1 repeat lx := lx + laurent puiseux(y.lambda, w)
+        for lambda in 0..m1 repeat lx := lx + laurent yeqlgpuiseux(y.lambda, w)
         -- A sifted version of an eta-quotient is a non-zero function.
         -- Thus, we can safely remove initial zeroes.
         --TODO: WARNING: The above is not true.
@@ -548,7 +550,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         tx := (1/m)$Q::C::CX * multisect(m, 0, tx)
         per [24 * w, ord/m, tx]
 
-    puiseux(y: SymbolicSiftedEtaQuotientOrbitProductGamma, w: P): % ==
+    yseqogpuiseux(y: SymbolicSiftedEtaQuotientOrbitProductGamma, w: P): % ==
         orb := orbit y
         t: N := first orb;
         px: % := puiseux(y.t, w)
@@ -563,11 +565,11 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
             error "SiftedEtaQuotientGamma: orbit product: denominator for q does not vanish"
         per [d, ord, tx]
 
-    puiseux(y: SymbolicModularGamma0SiftedEtaQuotientGamma, w: P): % ==
+    ym0seqgpuiseux(y: SymbolicModularGamma0SiftedEtaQuotientGamma, w: P): % ==
         yc: SymbolicSiftedEtaQuotientGamma := coFactor y
         yo: SymbolicSiftedEtaQuotientOrbitProductGamma := orbitProduct y
         pc: % := puiseux(yc, w)
-        po: % := puiseux(yo, w)
+        po: % := yseqogpuiseux(yo, w)
         d: P := rationalPowerDenominator pc
         -- Sanity check.
         d ~= 24 * w =>
@@ -633,7 +635,7 @@ ModularGamma0SiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
         hser: XHashTable(Q, LX) := empty()
         for cusp in cusps y repeat
             w: P := WIDTH0(nn, denom cusp) -- width of cusp
-            hser.cusp := laurent puiseux(y.cusp, w)
+            hser.cusp := laurent ym0seqgpuiseux(y.cusp, w)
         per [y, hser]
     level(x: %): P == level(xx.meta)
     metadata(x: %): SymbolicModularGamma0SiftedEtaQuotient == xx.meta
