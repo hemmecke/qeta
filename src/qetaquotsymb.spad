@@ -305,295 +305,6 @@ SymbolicEtaGamma: SetCategory with
 
 
 
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaQuotientGamma}
-\label{sec:SymbolicEtaQuotientGamma}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $N\in\setN$, $r\in R(N)$,
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\SL2Z$, elements from the domain \code{SymbolicEtaQuotientGamma}
-represent the tuple
-\begin{gather*}
-  \left(
-  N
-  ,
-  r
-  ,
-  \gamma
-  ,
-  \divisorprod{N}
-  \left(\frac{h_\delta}{\delta}\right)^{\!r_\delta}
-  ,
-  \divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24}
-  ,
-  \divisorsum{N} \frac{r_\delta e_\delta}{24}
-  \right)
-\end{gather*}
-and thus corresponds to the data from \eqref{eq:g_r(gamma*tau)}.
-
-)endif
--------------------------------------------------------------------
-)abbrev domain YEQG SymbolicEtaQuotientGamma
-++ SymbolicEtaQuotientGamma holds data to compute an eta-quotient expansion
-++ of g_r(\gamma \tau).
-++ See \eqref{eq:g_r(gamma*tau)}.
-SymbolicEtaQuotientGamma: SetCategory with
-    etaQuotient: (P, LZ, SL2Z) -> %
-      ++ etaQuotient(mm, r, gamma) represents the expansion of
-      ++ $g_r(\gamma \tau) =
-      ++   \prod_{\delta in divisors(m)} \eta(\delta \gamma \tau)^{r_{\delta}}$
-      ++ in terms of
-      ++ x = \exp(2 \pi i \tau/w) where w=width(m, c) and
-      ++ gamma=matrix[[a,b],[c,d]]  represents the cusp a/c of Gamma0(mm).
-      ++ $r$ is indexed by the divisors of $mm$.
-    level: % -> P
-      ++ level(x) returns the level of the eta-quotient.
-    divisors: % -> LP
-      ++ divisors(x) returns the divisors of level(x) that were
-      ++ given at creation time of x.
-    exponents: % -> LZ
-      ++ exponents(x) returns the list of exponents corresponding to all
-      ++ divisors.
-    gamma: % -> SL2Z
-      ++ gamma(x) returns the transformation corresponding to x.
-    rationalPrefactor: % -> Q
-      ++ rationalPrefactor(x) returns the square of the second product
-      ++ in \eqref{eq:g_r(gamma*tau)}.
-    unityExponent: % -> Q
-      ++ unityExponent(e) returns sum_{\delta} rdelta*(vdelta+kappa_delta)/24.
-      ++ It corresponds to the third product of eq:g_r(gamma*tau).
-    xExponent: % -> Q
-      ++ xExponent(e) returns the order of the expansion
-      ++ of e in x = \exp(2 \pi i \tau/w) where w is the width of the cusp
-      ++ while neglecting the (c \tau+d) factor.
-      ++ It corresponds to the exponent of the fourth product
-      ++ of \eqref{eq:g_r(gamma*tau)}.
-    qExponent: % -> Q
-      ++ qExponent(e) returns the order of the expansion
-      ++ of e in q = \exp(2 \pi i \tau) while neglecting the (c \tau+d)
-      ++ factor. It corresponds to the exponent of the fourth
-      ++ product of \eqref{eq:g_r(gamma*tau)}.
-    minimalRootOfUnity: % -> P
-      ++ minimalRootOfUnity(e) returns the smallest positive integer n such that
-      ++ the expansion of the function g_r(\gamma \tau) corresponding to
-      ++ e=etaQuotient(mm, r, gamma) (neglecting the (c\tau+d)^* factor)
-      ++ lives in Q[w][[x]] where w is a n-th root of unity.
-    elt: (%, P) -> SymbolicEtaGamma
-      ++ elt(x, delta) returns the data corresponding to the respective
-      ++ delta.
-    modularGamma0?: % -> Boolean
-      ++ modularGamma0?(x) returns true if the eta-quotient is a modular
-      ++ function for Gamma0(level x), i.e, it returns
-      ++ modularGamma0?(level x, exponents x) from
-      ++ QEtaAuxiliaryPackage.
- == add
-    HT ==> XHashTable(P, SymbolicEtaGamma) -- mapping delta to \eta_\delta
-    Rep ==> Record(
-              flevel: P,     -- level \Gamma_0(lev)
-              fdivs: LP,     -- all divisors of level that are given at creation
-              fexponents: LZ,-- the r vector
-              fgamma: SL2Z,  -- gamma
-              feta: HT,      -- mapping delta to \eta_\delta
-              frat: Q,       -- square of rational prefactor
-              funityExponent: Q,-- \sum_\delta rdelta*(vdelta+kappa_delta)/24
-              fxExponent: Q, -- \sum_delta rdelta*edelta/24
-              fqExponent: Q, -- \sum_delta rdelta*udelta/24
-              fminroot: P    -- minimal root of unity needed for coefficients
-            )
-    import from Rep
-    xx ==> rep x
-    yy ==> rep y
-
-    -- divs must be ALL divisors of m sorted ascendingly
-    etaquot(mm: P, r: LZ, gamma: SL2Z, eta: HT): % ==
-        divs: LP := DIVISORS mm
-        rat: Q := 1
-        uexponent: Q := 0
-        xexponent: Q := 0
-        qexponent: Q := 0
-        for delta in divs for rdelta in r | not zero? rdelta repeat
-            e := eta(delta)
-            rat := rat * rationalPrefactor(e)^rdelta
-            rd := rdelta/24
-            xexponent := xexponent + rd * edelta(e)
-            qexponent := qexponent + rd * udelta(e)
-
-            kappa: Q := (upsilonExponent e)::Q
-            uexponent := uexponent + rd * (vdelta e + kappa)
-
-        -- Now make the numerator small.
-        uexponent := fractionalPart(uexponent)$QETAAUX
-
-        -- minimal root of unity needed for the expansion is
-        -- determined from expressing the squareroot of the rational
-        -- prefactor in roots of unity and from the unityExponent
-        -- Additionally, we have to consider the root of unity factor in
-        -- q_\delta, i.e., the denominator of the v_\delta.
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
-        p: P := rr.rootOf
-        minroot: P := lcmP(denom uexponent, minimalSquareRootOfUnity(p)$QETAAUX)
-        minroot := lcmP(minroot, lcm [denom vdelta eta delta for delta in divs])
-        per [mm, divs, r, gamma, eta, rat, uexponent, xexponent, qexponent, minroot]
-
-    etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
-        eta: HT := empty()
-        -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
-        if gamma(2,1) < 0 then gamma := -gamma
-        for delta in DIVISORS mm repeat
-            eta.delta := eta(mm, delta, gamma)$SymbolicEtaGamma
-        etaquot(mm, r, gamma, eta)
-
-    level(x: %): P == xx.flevel
-    divisors(x: %): LP == xx.fdivs
-    elt(x: %, delta: P): SymbolicEtaGamma == xx.feta.delta
-    exponents(x: %): LZ == xx.fexponents
-    gamma(x: %): SL2Z == xx.fgamma
-    rationalPrefactor(x: %): Q == xx.frat
-    unityExponent(x: %): Q == xx.funityExponent
-    xExponent(x: %): Q == xx.fxExponent
-    qExponent(x: %): Q == xx.fqExponent
-    minimalRootOfUnity(x: %): P == xx.fminroot
-    modularGamma0?(x: %): Boolean ==
-        modularGamma0?(level x, exponents x)$QETAAUX
-
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-
-    hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fdivs)
-        h := hashUpdate!(h, xx.fexponents)
-        h := hashUpdate!(h, xx.fgamma)
-        h
-
-    ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fdivs ~= yy.fdivs => false
-        xx.fexponents ~= yy.fexponents => false
-        xx.fgamma = yy.fgamma
-
-
-)if LiterateDoc
-%$
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaQuotient}
-\label{sec:SymbolicEtaQuotient}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $N\in\setN$, $r\in R(N)$,
-elements from the domain \code{SymbolicEtaQuotient}
-is a container of data from  \code{SymbolicEtaQuotientGamma} for each
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\SL2Z$, corresponding to a cusp of $\Gamma_0(N)$ or other given cusps.
-
-If \code{e = etaQuotient(nn, r)}, then
-for each cusp in
-\code{cusps(nn)$CongruenceSubgroupGamma0(nn)}
-%$
-we have \code{e.cusp} is the corresponding data from
-\code{SymbolicEtaQuotientGamma}.
-
-)endif
--------------------------------------------------------------------
-)abbrev domain YEQ SymbolicEtaQuotient
-++ SymbolicEtaQuotient holds data to compute an eta-quotient expansions
-++ of g_r(\tau) at all cusps of $\Gamma_0(N)$ or at the given cusps.
-++ See \eqref{g_r(tau)}
-SymbolicEtaQuotient: SetCategory with
-    etaQuotient: (P, LZ, LQ) -> %
-      ++ etaQuotient(mm, r, cusps) represents the expansion of
-      ++ g_r(\tau) at the given cusps a/c of Gamma0(mm)
-      ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
-      ++ gamma=cuspToMatrix(m, a/c).
-      ++ $r$ is indexed by the divisors of $mm$.
-      ++ See \eqref{eq:g_r(tau)}.
-    etaQuotient: (P, LZ) -> %
-      ++ etaQuotient(mm, r) represents the expansion of g_r(\tau) at
-      ++ all cusps a/c of Gamma0(mm) in terms of x = \exp(2 \pi i \tau/w)
-      ++ where w=width(m, c) and gamma=cuspToMatrix(mm, a/c).
-      ++ It is the same as
-      ++ etaQuotient(mm, r, cusps(mm)$CongruenceSubgroupGamma0).
-      ++ $r$ is indexed by the divisors of $mm$.
-      ++ See \eqref{eq:g_r(tau)}.
-    level: % -> P
-      ++ If x=etaQuotient(mm, r) then level(x) returns the level of
-      ++ the eta-quotient, i.e., level(x)=mm.
-    exponents: % -> LZ
-      ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
-      ++ exponents, i.e., exponents(x)=r.
-    cusps: % -> LQ
-      ++ If x=etaQuotient(mm, r), then
-      ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma0.
-    minimalRootOfUnity: % -> P
-      ++ If x=etaQuotient(mm, r), then minimalRootOfUnity(x) returns the
-      ++ smallest positive integer n such that the expansion of the
-      ++ function g_r(\tau) at any cusp of Gamma_0(mm)
-      ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[x]] where w
-      ++ is an n-th root of unity.
-    elt: (%, Q) -> SymbolicEtaQuotientGamma
-      ++ x.cusp returns the data corresponding to the respective
-      ++ cusp.
-    qetaGrades: % -> List Q
-      ++ qetaGrades(x) returns the (negated) exponents of a series
-      ++ expansion of x at all the cusps in the canonical variables.
-      ++ Internally, the matrix of Ligozat is employed.
- == add
-    HT ==> XHashTable(Q, SymbolicEtaQuotientGamma)
-    Rep ==> Record(
-              flevel: P,     -- level \Gamma_0(level)
-              fexponents: LZ,-- the r vector
-              fcusps: LQ,
-              feta: HT,      -- mapping delta to \eta_\delta
-              fminroot: P    -- minimal root of unity needed for coefficients
-            )
-    import from Rep
-    xx ==> rep x
-    yy ==> rep y
-
-    qetaGrades(x: %): List Q == [-xExponent(x.cusp) for cusp in cusps x]
-
-    etaQuotient(mm: P, r: LZ, cusps: LQ): % ==
-        divs: LP := DIVISORS mm
-        h: HT := empty()
-        minroot: P := 1
-        for cusp in cusps repeat
-            gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA0
-            e: SymbolicEtaQuotientGamma := etaQuotient(mm, r, gamma)
-            h.cusp := e
-            minroot := lcmP(minroot, minimalRootOfUnity e)
-        per [mm, r, cusps, h, minroot]
-
-    etaQuotient(mm: P, r: LZ): % == etaQuotient(mm, r, cusps(mm)$GAMMA0)
-
-    level(x: %): P == xx.flevel
-    exponents(x: %): LZ == xx.fexponents
-    cusps(x: %): LQ == xx.fcusps
-    elt(x: %, cusp: Q): SymbolicEtaQuotientGamma == xx.feta.cusp
-    minimalRootOfUnity(x: %): P == xx.fminroot
-
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-
-    hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fexponents)
-        h
-
-    ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fexponents = yy.fexponents
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 )if LiterateDoc
@@ -668,8 +379,7 @@ we get
 
 -------------------------------------------------------------------
 )abbrev domain YEQLG SymbolicEtaQuotientLambdaGamma
-++ SymbolicEtaQuotientLambdaGamma is a generalization of
-++ SymbolicEtaQuotientGamma. It holds data to compute an eta
+++ SymbolicEtaQuotientLambdaGamma holds data to compute an eta
 ++ quotient expansion of g_{r,m,t,\lambda}(\gamma \tau) or
 ++ of g_{r,m,-,\lambda}(\gamma \tau).
 ++ See \eqref{eq:g_r-m-t-lambda(gamma*tau)} and
@@ -842,8 +552,8 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicSiftedEtaQuotientGamma}
-\label{sec:SymbolicSiftedEtaQuotientGamma}
+\subsection{D SymbolicEtaQuotientGamma}
+\label{sec:SymbolicEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This domain represents data for $g_{r,m,t}(\gamma\tau)$ as well as
 $g_{r,m}(\gamma\tau)$.
@@ -851,7 +561,7 @@ $g_{r,m}(\gamma\tau)$.
 For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{-1, 0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \SL2Z$, elements from the domain
-\code{SymbolicSiftedEtaQuotientGamma} represent the collection
+\code{SymbolicEtaQuotientGamma} represent the collection
 \code{SymbolicEtaQuotientLambdaGamma} for each $\lambda \in
 \Set{0,\ldots,m-1}$ and thus corresponds to the data from
 \eqref{eq:g_r-m-t(gamma*tau)}, \ie, it computes the building
@@ -860,16 +570,24 @@ of $g_{r,m}=U_mg_r$.
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain YSEQG SymbolicSiftedEtaQuotientGamma
-++ SymbolicSiftedEtaQuotientGamma is a generalization of
-++ SymbolicEtaQuotientGamma. It holds data to compute an eta
+)abbrev domain YEQG SymbolicEtaQuotientGamma
+++ SymbolicEtaQuotientGamma holds data to compute an eta
 ++ quotient expansion of $g_{r,m,t}(\gamma \tau)$ or $g_{r,m}(\gamma \tau)$.
 ++ See \eqref{eq:g_r-m-t(gamma*tau)} and \eqref{eq:g_r-m(gamma*tau)}.
-SymbolicSiftedEtaQuotientGamma: SetCategory with
+SymbolicEtaQuotientGamma: SetCategory with
     etaQuotient: (P, LZ, P, Z, SL2Z) -> %
       ++ etaQuotient(mm, r, m, t, gamma) represents the
       ++ expansion of $g_{r,m,t}(\gamma \tau)$ where $r$ is indexed
       ++ by the divisors of $mm$.
+    etaQuotient: (P, LZ, SL2Z) -> %
+      ++ etaQuotient(mm, r, gamma) returns etaQuotient(mm,r,1,0,gamma)
+      ++ and represents the expansion of
+      ++ $g_r(\gamma \tau) =
+      ++   \prod_{\delta in divisors(m)} \eta(\delta \gamma \tau)^{r_{\delta}}$
+      ++ in terms of
+      ++ x = \exp(2 \pi i \tau/w) where w=width(m, c) and
+      ++ gamma=matrix[[a,b],[c,d]]  represents the cusp a/c of Gamma0(mm).
+      ++ $r$ is indexed by the divisors of $mm$.
     level: % -> P
       ++ level(x) returns the level of the eta-quotient.
       -- Returns mm.
@@ -915,6 +633,9 @@ SymbolicSiftedEtaQuotientGamma: SetCategory with
             eta.lambda := e
         per [eta, minroot]
 
+    etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
+        etaQuotient(mm, r, 1, 0, gamma)
+
     elt(x: %, lambda: N): SymbolicEtaQuotientLambdaGamma ==
         rep(x).feta.lambda
     level(x: %): P == level(x.0)
@@ -939,7 +660,7 @@ For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \SL2Z$, elements from the domain
 \code{SymbolicSiftedEtaQuotientOrbitProductGamma} represent the
-collection \code{SymbolicSiftedEtaQuotientGamma}
+collection \code{SymbolicEtaQuotientGamma}
 for each
 $t' \in \modularOrbit{r, m, t}$ and thus corresponds to the data from
 \eqref{eq:P_r-m-t(gamma*tau)}, \ie, it computes the building blocks
@@ -983,12 +704,12 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)]
       ++ where $rhat = \sum_\delta \delta r_\delta$
-    elt: (%, N) -> SymbolicSiftedEtaQuotientGamma
+    elt: (%, N) -> SymbolicEtaQuotientGamma
       ++ x.u returns the data corresponding to the respective
       ++ orbit element u.
  == add
-    YSEQG ==> SymbolicSiftedEtaQuotientGamma
-    HT ==> XHashTable(N, YSEQG)
+    YEQG ==> SymbolicEtaQuotientGamma
+    HT ==> XHashTable(N, YEQG)
     Rep ==> Record(
               flevel: P,     -- level \Gamma_0(lev)
               fdivs: LP,     -- all divisors of level that are given at creation
@@ -1012,12 +733,12 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
         h: HT := empty()
         minroot: P := 1
         for tt in orb repeat
-            e: YSEQG := etaQuotient(mm, r, m, tt, gamma)
+            e: YEQG := etaQuotient(mm, r, m, tt, gamma)
             minroot := lcmP(minroot, minimalRootOfUnity e)
             h.tt := e
         per [mm, divs, r, m, t, gamma, orb, h, minroot]
 
-    elt(x: %, tt: N): YSEQG == rep(x).fdata.tt
+    elt(x: %, tt: N): YEQG == rep(x).fdata.tt
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
     exponents(x: %): LZ == xx.fexponents
@@ -1044,6 +765,137 @@ SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
         xx.fmultiplier ~= yy.fmultiplier => false
         xx.foffset ~= yy.foffset => false
         xx.fgamma = yy.fgamma
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicEtaQuotient}
+\label{sec:SymbolicEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For $N\in\setN$, $r\in R(N)$,
+elements from the domain \code{SymbolicEtaQuotient}
+is a container of data from  \code{SymbolicEtaQuotientGamma} for each
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, corresponding to a cusp of $\Gamma_0(N)$ or other given cusps.
+
+If \code{e = etaQuotient(nn, r)}, then
+for each cusp in
+\code{cusps(nn)$CongruenceSubgroupGamma0(nn)}
+%$
+we have \code{e.cusp} is the corresponding data from
+\code{SymbolicEtaQuotientGamma}.
+
+)endif
+-------------------------------------------------------------------
+)abbrev domain YEQ SymbolicEtaQuotient
+++ SymbolicEtaQuotient holds data to compute an eta-quotient expansions
+++ of g_r(\tau) at all cusps of $\Gamma_0(N)$ or at the given cusps.
+++ See \eqref{g_r(tau)}
+SymbolicEtaQuotient: SetCategory with
+    etaQuotient: (P, LZ, LQ) -> %
+      ++ etaQuotient(mm, r, cusps) represents the expansion of
+      ++ g_r(\tau) at the given cusps a/c of Gamma0(mm)
+      ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
+      ++ gamma=cuspToMatrix(m, a/c).
+      ++ $r$ is indexed by the divisors of $mm$.
+      ++ See \eqref{eq:g_r(tau)}.
+    etaQuotient: (P, LZ) -> %
+      ++ etaQuotient(mm, r) represents the expansion of g_r(\tau) at
+      ++ all cusps a/c of Gamma0(mm) in terms of x = \exp(2 \pi i \tau/w)
+      ++ where w=width(m, c) and gamma=cuspToMatrix(mm, a/c).
+      ++ It is the same as
+      ++ etaQuotient(mm, r, cusps(mm)$CongruenceSubgroupGamma0).
+      ++ $r$ is indexed by the divisors of $mm$.
+      ++ See \eqref{eq:g_r(tau)}.
+    level: % -> P
+      ++ If x=etaQuotient(mm, r) then level(x) returns the level of
+      ++ the eta-quotient, i.e., level(x)=mm.
+    exponents: % -> LZ
+      ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
+      ++ exponents, i.e., exponents(x)=r.
+    cusps: % -> LQ
+      ++ If x=etaQuotient(mm, r), then
+      ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma0.
+    minimalRootOfUnity: % -> P
+      ++ If x=etaQuotient(mm, r), then minimalRootOfUnity(x) returns the
+      ++ smallest positive integer n such that the expansion of the
+      ++ function g_r(\tau) at any cusp of Gamma_0(mm)
+      ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[x]] where w
+      ++ is an n-th root of unity.
+    elt: (%, Q) -> SymbolicEtaQuotientGamma
+      ++ x.cusp returns the data corresponding to the respective
+      ++ cusp.
+    qetaGrades: % -> List Z
+      ++ qetaGrades(x) returns the (negated) exponents of a series
+      ++ expansion of x at all the cusps in the canonical variables,
+      ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA0
+      ++ Internally, the matrix of Ligozat is employed.
+      ++
+ == add
+    HT ==> XHashTable(Q, SymbolicEtaQuotientGamma)
+    Rep ==> Record(
+              flevel: P,     -- level \Gamma_0(level)
+              fexponents: LZ,-- the r vector
+              fcusps: LQ,
+              feta: HT,      -- mapping delta to \eta_\delta
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    xExponent(x: %, cusp: Q): Z ==
+        qe: Q := qExponent(x.cusp.0)$SymbolicEtaQuotientLambdaGamma
+        xe: Q := WIDTH0(level x, denom cusp) * qe
+        not one? denom xe =>
+            error "SymbolicEtaQuotient: fractional exponent"
+        numer xe
+    qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
+
+    etaQuotient(mm: P, r: LZ, cusps: LQ): % ==
+        divs: LP := DIVISORS mm
+        h: HT := empty()
+        minroot: P := 1
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA0
+            e: SymbolicEtaQuotientGamma := etaQuotient(mm, r, gamma)
+            h.cusp := e
+            minroot := lcmP(minroot, minimalRootOfUnity e)
+        per [mm, r, cusps, h, minroot]
+
+    etaQuotient(mm: P, r: LZ): % == etaQuotient(mm, r, cusps(mm)$GAMMA0)
+
+    level(x: %): P == xx.flevel
+    exponents(x: %): LZ == xx.fexponents
+    cusps(x: %): LQ == xx.fcusps
+    elt(x: %, cusp: Q): SymbolicEtaQuotientGamma == xx.feta.cusp
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fexponents)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fexponents = yy.fexponents
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1081,7 +933,7 @@ SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
       ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the expansion
       ++ of $F_{s,r,m,t}(\gamma \tau)$.
       ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
-    coFactor: % -> SymbolicSiftedEtaQuotientGamma
+    coFactor: % -> SymbolicEtaQuotientGamma
       ++ coFactor(x) returns the coFactor part to make $F_{s,r,m,t}$ a
       ++ modular function.
     orbitProduct: % -> SymbolicSiftedEtaQuotientOrbitProductGamma
@@ -1094,7 +946,7 @@ SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
       ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
  == add
     Rep ==> Record(
-              fcoetaqg: SymbolicSiftedEtaQuotientGamma,
+              fcoetaqg: SymbolicEtaQuotientGamma,
               fseqopg: SymbolicSiftedEtaQuotientOrbitProductGamma,
               fminroot: P    -- minimal root of unity needed for coefficients
             )
@@ -1107,7 +959,7 @@ SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
             error "modular conditions are not fulfilled"
         nndivs: LP := DIVISORS nn
         mmdivs: LP := DIVISORS mm
-        coetaqg: SymbolicSiftedEtaQuotientGamma :=
+        coetaqg: SymbolicEtaQuotientGamma :=
             etaQuotient(nn, s, 1, 0, gamma)
         seqopg: SymbolicSiftedEtaQuotientOrbitProductGamma :=
             etaQuotient(mm, r, m, t, gamma)
@@ -1115,7 +967,7 @@ SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
         minR2: P := minimalRootOfUnity seqopg
         per [coetaqg, seqopg, lcmP(minR1, minR2)]
 
-    coFactor(x: %): SymbolicSiftedEtaQuotientGamma == xx.fcoetaqg
+    coFactor(x: %): SymbolicEtaQuotientGamma == xx.fcoetaqg
     orbitProduct(x: %): SymbolicSiftedEtaQuotientOrbitProductGamma == xx.fseqopg
     minimalRootOfUnity(x: %): P == xx.fminroot
 
@@ -1656,7 +1508,8 @@ SymbolicGeneralizedEtaQuotientGamma: Exports == Implementation where
         rtilde: LLZ := rrec.properGeneralized
         yeqg := etaQuotient(nn, r, gamma)$YEQG
         ypgeqg := properGeneralizedEtaQuotient(nn, rtilde, gamma)$YPGEQG
-        uexponent: Q := unityExponent(yeqg) + unityExponent(ypgeqg)
+        error "uexponent: Q := unityExponent(yeqg) + unityExponent(ypgeqg)"
+        uexponent: Q := unityExponent(ypgeqg)
         minroot: P := lcmP(minimalRootOfUnity yeqg, minimalRootOfUnity ypgeqg)
         per [nn, rr, gamma, yeqg, ypgeqg, uexponent, minroot]
 
@@ -1755,9 +1608,10 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     elt: (%, Q) -> SymbolicGeneralizedEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
-    qetaGrades: % -> List Q
+    qetaGrades: % -> List Z
       ++ qetaGrades(x) returns the (negated) exponents of a series
       ++ expansion of x at all the cusps in the canonical variables.
+      ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA0
  == add
     HT ==> XHashTable(Q, SymbolicGeneralizedEtaQuotientGamma)
     Rep ==> Record(
@@ -1771,9 +1625,12 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    xExponent(x: %, cusp: Q): Q ==
-        WIDTH1(level x, denom cusp) * qExponent(x.cusp)
-    qetaGrades(x: %): LQ == [-xExponent(x, cusp) for cusp in cusps x]
+    xExponent(x: %, cusp: Q): Z ==
+        xe: Q := WIDTH1(level x, denom cusp) * qExponent(x.cusp)
+        not one? denom xe =>
+            error "SymbolicGeneralizedEtaQuotient: fractional exponent"
+        numer xe
+    qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
 
     generalizedEtaQuotient(nn: P, rbar: LLZ, cusps: LQ): % ==
         h: HT := empty()

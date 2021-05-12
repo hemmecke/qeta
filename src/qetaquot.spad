@@ -161,12 +161,6 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
     puiseux: (SymbolicEtaQuotientGamma, P) -> %
-      ++ puiseux(y, w) represents the
-      ++ q-expansion of g_r(\gamma \tau) at \tau=i \infity.
---    puiseux: (SymbolicEtaQuotientLambdaGamma, P) -> %
---      ++ puiseux(y, w) represents the
---      ++ q-expansion of g_{r,m,t,\lambda}(\gamma \tau) at \tau=i \infity.
-    puiseux: (SymbolicSiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $g_{r,m,t}(\gamma \tau)$ at $\tau=i \infity$.
 --    puiseux: (SymbolicSiftedEtaQuotientOrbitProductGamma, P) -> %
@@ -256,43 +250,6 @@ SiftedEtaQuotientGamma(C, mx, CX, xi): Exports == Implementation where
         laurent(numer ord, qetaTaylorRep x)$LX
     coerce(x: %): OutputForm == xx::OutputForm
 
-    puiseux(y: SymbolicEtaQuotientGamma, w: P): % ==
-        -- taken from yeqlgpuiseux
-        -- w=width
-        mm: P := level y
-        divs: LP := divisors y
-        m: P := 1 -- multiplier y
-        d: P := m*w
-        s: LX := 1
-        for delta in divs for rd in exponents y | not zero? rd repeat
-            etadelta: SymbolicEtaGamma := y.delta
-            u: Q := d * udelta etadelta
-            not one? denom u =>
-                dbgPrint("delta, d", [delta, d]$List(P))
-                dbgPrint("udelta", [udelta etadelta, u]$List(Q))
-                error "SiftedEtaQuotientGamma: denominator does not vanish"
-            v: Q := mx * vdelta etadelta
-            not one? denom v or v<0 =>
-                dbgPrint("delta, d", [delta, d]$List(P))
-                dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
-                error "SiftedEtaQuotientGamma: denominator does not vanish"
-            s := s * eulerFunctionPower(asP numer u, asN numer v, rd)
-        q: Q := mx * unityExponent y
-        not one? denom q =>
-            dbgPrint("mx * unityExponent y", q)
-            error "SiftedEtaQuotientGamma: denominator for xi does not vanish"
-        n: N := asN positiveRemainder(numer q, mx)
-        cx: CX := xi^n * squareRoot rationalPrefactor y -- leading coefficient
-        p: Q := d * qExponent y
-        not one? denom p =>
-            error "SiftedEtaQuotientGamma: denominator for q does not vanish"
-        tx: TX := cx * qetaTaylorRep s
-        per [d, p, tx]
-
-
-
-
-
 
 )if LiterateDoc
 %$
@@ -359,7 +316,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    puiseux(y: SymbolicSiftedEtaQuotientGamma, w: P): % ==
+    puiseux(y: SymbolicEtaQuotientGamma, w: P): % ==
         m: P := multiplier y
         x: % := yeqlgpuiseux(y.0, w)
         one? m => x
@@ -380,7 +337,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         for i in 1..m1 repeat
             stx := rest stx
             if not zero? first stx then
-                dbgPrint("YSEQG c", first stx)
+                dbgPrint("YEQG c", first stx)
                 dbgPrint("Laurent expansion", lx)
                 error "SiftedEtaQuotientGamma: m-lambda sum"
         tx := (1/m)$Q::C::CX * multisect(m, 0, tx)
@@ -402,7 +359,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         per [d, ord, tx]
 
     ym0seqgpuiseux(y: SymbolicModularGamma0SiftedEtaQuotientGamma, w: P): % ==
-        yc: SymbolicSiftedEtaQuotientGamma := coFactor y
+        yc: SymbolicEtaQuotientGamma := coFactor y
         yo: SymbolicSiftedEtaQuotientOrbitProductGamma := orbitProduct y
         pc: % := puiseux(yc, 24*w)
         po: % := yseqogpuiseux(yo, 24*w)
