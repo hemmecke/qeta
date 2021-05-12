@@ -127,7 +127,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   tPrint("where x=q^(1/w).");_
   lle := [[(g := gamma se;_
             w := WIDTH0(level, g(2, 1));_
-            px := puiseux(se, w)\$SEQG(Q,CX);_
+            px := puiseux(se, w)\$EQG(Q,CX);_
             [exponents se, g, w, order px, qetaTaylorRep px]\$Rec)_
            for se in lse] for lse in llse]_
 ) else (_
