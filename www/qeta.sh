@@ -123,14 +123,12 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   llse := [[etaQuotient(level, rr, g)\$YEQG for g in gammas] _
            for rr in rs];_
   tPrint("Interpret resulting record as follows:");_
-  tPrint("g_r(trf*tau) = lc * x^xpower * ser");_
+  tPrint("g_r(trf*tau) = x^xpower * ser");_
   tPrint("where x=q^(1/w).");_
-  lle := [[[exponents(se),_
-            (g := gamma(se)),_
-            WIDTH0(level, g(2, 1)),_
-            leadingCoefficient(e := se :: EQG(Q,CX)),_
-            xExponent se,_
-            eulerExpansion e]\$Rec_
+  lle := [[(g := gamma se;_
+            w := WIDTH0(level, g(2, 1));_
+            px := puiseux(se, w)\$SEQG(Q,CX);_
+            [exponents se, g, w, order px, qetaTaylorRep px]\$Rec)_
            for se in lse] for lse in llse]_
 ) else (_
   vPrint("Expansion at cusps", spitzen);_

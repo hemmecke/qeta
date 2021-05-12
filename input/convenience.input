@@ -33,7 +33,6 @@ EXPAND x ==> expansions(x::M0EQ(C, CX))::An(CX);
 EQAnCX(r) ==> EXPAND YEQn r -- expansion at all cusps for moduler eta-quotients
 
 YEQG1(l, g) ==> etaQuotient(level, l, g)$YEQG
-EQGL1CX(l, g) ==> expansion(YEQG1(l, g)::EQG(C, CX))$EQG(C,CX)
 
 -- polyToA1C: Polynomial(C) -> A1(C)
 -- polyToA1C(E1^12*E2^6+E1^24)
@@ -80,14 +79,10 @@ ALGSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
 
 -- We assum that mon is such that degree(mon): DZ.
 monToA1C(mon) ==> leadingCoefficient(mon)*EQA1C(members degree mon)
-monToL1CX(mon, g) ==> leadingCoefficient(mon)*EQGL1CX(members degree mon, g)
 monToAnCX(mon) ==> leadingCoefficient(mon)*EQAnCX(members degree mon)
 
 -- rzToA1CX: RZ -> A1 C
 rzToA1C(x) ==> ALGSUM(monToA1C, x)
-
--- rzToL1CX: (RZ, SL2Z) -> L1 CX
-rzToL1CX(x, gamma) ==> ALGSUM(m +-> monToL1CX(m, gamma), x)
 
 -- rzToAnCX: RZ -> An CX
 rzToAnCX(x) ==> ALGSUM(monToAnCX, x)
