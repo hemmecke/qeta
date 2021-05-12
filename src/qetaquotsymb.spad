@@ -653,13 +653,13 @@ SymbolicEtaQuotientGamma: SetCategory with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicSiftedEtaQuotientOrbitProductGamma}
-\label{sec:SymbolicSiftedEtaQuotientOrbitProductGamma}
+\subsection{D SymbolicEtaQuotientOrbitProductGamma}
+\label{sec:SymbolicEtaQuotientOrbitProductGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \SL2Z$, elements from the domain
-\code{SymbolicSiftedEtaQuotientOrbitProductGamma} represent the
+\code{SymbolicEtaQuotientOrbitProductGamma} represent the
 collection \code{SymbolicEtaQuotientGamma}
 for each
 $t' \in \modularOrbit{r, m, t}$ and thus corresponds to the data from
@@ -670,12 +670,12 @@ for $P_{r,m,t}(\gamma\tau)$.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain YSEQOG SymbolicSiftedEtaQuotientOrbitProductGamma
-++ SymbolicSiftedEtaQuotientOrbitProductGamma
+)abbrev domain YEQOG SymbolicEtaQuotientOrbitProductGamma
+++ SymbolicEtaQuotientOrbitProductGamma
 ++ holds data to compute an eta-quotient
 ++ expansions of $P_{r, m, t}(\gamma \tau)$.
 ++ See \eqref{eq:P_r-m-t(gamma*tau)}.}
-SymbolicSiftedEtaQuotientOrbitProductGamma: SetCategory with
+SymbolicEtaQuotientOrbitProductGamma: SetCategory with
     etaQuotient: (P, LZ, P, N, SL2Z) -> %
       ++ etaQuotient(mm, r, m, t, gamma) represents the expansion
       ++ of $P_{r, m, t}(\gamma \tau)$.
@@ -914,7 +914,7 @@ $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \code{SymbolicModularGamma0SiftedEtaQuotientGamma} represent the product of
 an
 eta-quotient cofactor to an element of
-\code{SymbolicSiftedEtaQuotientOrbitProductGamma} in order to make the
+\code{SymbolicEtaQuotientOrbitProductGamma} in order to make the
 product a modular function.
 
 It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)}, \ie, it
@@ -936,7 +936,7 @@ SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
     coFactor: % -> SymbolicEtaQuotientGamma
       ++ coFactor(x) returns the coFactor part to make $F_{s,r,m,t}$ a
       ++ modular function.
-    orbitProduct: % -> SymbolicSiftedEtaQuotientOrbitProductGamma
+    orbitProduct: % -> SymbolicEtaQuotientOrbitProductGamma
       ++ orbitProduct(x) returns the orbit product part of $F_{s,r,m,t}$.
     gamma: % -> SL2Z
       ++ gamma(x) returns the transformation corresponding to x.
@@ -947,7 +947,7 @@ SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
  == add
     Rep ==> Record(
               fcoetaqg: SymbolicEtaQuotientGamma,
-              fseqopg: SymbolicSiftedEtaQuotientOrbitProductGamma,
+              fyeqopg: SymbolicEtaQuotientOrbitProductGamma,
               fminroot: P    -- minimal root of unity needed for coefficients
             )
     import from Rep
@@ -961,24 +961,24 @@ SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
         mmdivs: LP := DIVISORS mm
         coetaqg: SymbolicEtaQuotientGamma :=
             etaQuotient(nn, s, 1, 0, gamma)
-        seqopg: SymbolicSiftedEtaQuotientOrbitProductGamma :=
+        yeqopg: SymbolicEtaQuotientOrbitProductGamma :=
             etaQuotient(mm, r, m, t, gamma)
         minR1: P := minimalRootOfUnity coetaqg
-        minR2: P := minimalRootOfUnity seqopg
-        per [coetaqg, seqopg, lcmP(minR1, minR2)]
+        minR2: P := minimalRootOfUnity yeqopg
+        per [coetaqg, yeqopg, lcmP(minR1, minR2)]
 
     coFactor(x: %): SymbolicEtaQuotientGamma == xx.fcoetaqg
-    orbitProduct(x: %): SymbolicSiftedEtaQuotientOrbitProductGamma == xx.fseqopg
+    orbitProduct(x: %): SymbolicEtaQuotientOrbitProductGamma == xx.fyeqopg
     minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
         h := hashUpdate!(h, xx.fcoetaqg)
-        h := hashUpdate!(h, xx.fseqopg)
+        h := hashUpdate!(h, xx.fyeqopg)
         h
 
     ((x: %) = (y: %)): Boolean ==
-        (xx.fcoetaqg = yy.fcoetaqg) and (xx.fseqopg = yy.fseqopg)
+        (xx.fcoetaqg = yy.fcoetaqg) and (xx.fyeqopg = yy.fyeqopg)
 
 
 )if LiterateDoc
