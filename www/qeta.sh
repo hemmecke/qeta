@@ -133,7 +133,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
 ) else (_
   vPrint("Expansion at cusps", spitzen);_
   vPrint("Expansion at CUSPS", [cuspToMatrix(level, cusp)\$GAMMA0 for cusp in spitzen]);_
-  le := [etaQuotient(level, r)\$M0EQ(Q,CX) for r in rs];_
+  le := [etaQuotient(level, r)\$QELX(Q,CX) for r in rs];_
   ees := [expansions(e)::MODFUNX CX for e in le];_
   [[rr, ex] for rr in rs for ex in ees])
 
