@@ -132,7 +132,7 @@ Domains in the second category are implemented int he file
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaGamma}
+\subsection{D SymbolicEtaGamma $\eta_{\delta,m,\lambda}(\gamma\tau)$}
 \label{sec:SymbolicEtaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $N\in\setN$,
@@ -316,7 +316,7 @@ SymbolicEtaGamma: SetCategory with
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaQuotientLambdaGamma}
+\subsection{D SymbolicEtaQuotientLambdaGamma $g_{r,m,t,\lambda}(\gamma\tau)$}
 \label{sec:SymbolicEtaQuotientLambdaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This domain represents data for $g_{r,m,t,\lambda}(\gamma\tau)$
@@ -552,11 +552,16 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaQuotientGamma}
+\subsection{D SymbolicEtaQuotientGamma $g_{r,m,t}(\gamma\tau)$}
 \label{sec:SymbolicEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This domain represents data for $g_{r,m,t}(\gamma\tau)$ as well as
 $g_{r,m}(\gamma\tau)$.
+
+\begin{align*}
+g_{r,m,t}(\gamma\tau)
+  &:=\frac{1}{m} \sum_{\lambda=0}^{m-1} g_{r,m,t,\lambda}(\gamma\tau)
+\end{align*}
 
 For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{-1, 0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
@@ -653,9 +658,14 @@ SymbolicEtaQuotientGamma: SetCategory with
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaQuotientOrbitProductGamma}
+\subsection{D SymbolicEtaQuotientOrbitProductGamma $P_{r, m, t}(\gamma\tau)$}
 \label{sec:SymbolicEtaQuotientOrbitProductGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align*}
+  P_{r, m, t}(\gamma\tau)
+  &:= \prod_{k \in \modularOrbit{r,m,t}} g_{r,m,k}(\gamma\tau)\\
+\end{align*}
+
 For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \SL2Z$, elements from the domain
@@ -772,7 +782,98 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicEtaQuotient}
+\subsection{D SymbolicModularGamma0SiftedEtaQuotientGamma
+  $F_{s, r, m, t}(\gamma\tau)$}
+\label{sec:SymbolicModularGamma0SiftedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{align*}
+  F_{s, r, m, t}(\gamma\tau)
+  &:= \divisorprod{N} \eta(\delta\tau)^{s_\delta} \cdot P_{r, m, t}(\tau)
+\end{align*}
+
+For $m, M, N\in\setN$, $s \in R(N)$, $r \in R(M)$, $t \in
+\Set{0,\ldots,m-1}$,
+$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
+\SL2Z$, elements from the domain
+\code{SymbolicModularGamma0SiftedEtaQuotientGamma} represent the product of
+an
+eta-quotient cofactor to an element of
+\code{SymbolicEtaQuotientOrbitProductGamma} in order to make the
+product a modular function.
+
+It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)}, \ie, it
+computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YM0SEQG SymbolicModularGamma0SiftedEtaQuotientGamma
+++ SymbolicModularGamma0SiftedEtaQuotientGamma
+++ holds data to compute an eta-quotient
+++ expansions of $F_{s, r, m, t}(\gamma \tau)$.
+++ See \eqref{eq:F_s-r-m-t(gamma*tau)} in this file.
+SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
+    etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
+      ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the expansion
+      ++ of $F_{s,r,m,t}(\gamma \tau)$.
+      ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
+    coFactor: % -> SymbolicEtaQuotientGamma
+      ++ coFactor(x) returns the coFactor part to make $F_{s,r,m,t}$ a
+      ++ modular function.
+    orbitProduct: % -> SymbolicEtaQuotientOrbitProductGamma
+      ++ orbitProduct(x) returns the orbit product part of $F_{s,r,m,t}$.
+    gamma: % -> SL2Z
+      ++ gamma(x) returns the transformation corresponding to x.
+      -- Returns gamma as given in etaSequence(...,gamma).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
+ == add
+    Rep ==> Record(
+              fcoetaqg: SymbolicEtaQuotientGamma,
+              fyeqopg: SymbolicEtaQuotientOrbitProductGamma,
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
+        not modularGamma0?(nn, s, mm, r, m, t)$QEtaCoFactorSpace =>
+            error "modular conditions are not fulfilled"
+        nndivs: LP := DIVISORS nn
+        mmdivs: LP := DIVISORS mm
+        coetaqg: SymbolicEtaQuotientGamma :=
+            etaQuotient(nn, s, 1, 0, gamma)
+        yeqopg: SymbolicEtaQuotientOrbitProductGamma :=
+            etaQuotient(mm, r, m, t, gamma)
+        minR1: P := minimalRootOfUnity coetaqg
+        minR2: P := minimalRootOfUnity yeqopg
+        per [coetaqg, yeqopg, lcmP(minR1, minR2)]
+
+    coFactor(x: %): SymbolicEtaQuotientGamma == xx.fcoetaqg
+    orbitProduct(x: %): SymbolicEtaQuotientOrbitProductGamma == xx.fyeqopg
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.fcoetaqg)
+        h := hashUpdate!(h, xx.fyeqopg)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        (xx.fcoetaqg = yy.fcoetaqg) and (xx.fyeqopg = yy.fyeqopg)
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicEtaQuotient $(g_{r,m,t}(\gamma\tau))_\gamma$}
 \label{sec:SymbolicEtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $N\in\setN$, $r\in R(N)$,
@@ -903,88 +1004,8 @@ SymbolicEtaQuotient: SetCategory with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicModularGamma0SiftedEtaQuotientGamma}
-\label{sec:SymbolicModularGamma0SiftedEtaQuotientGamma}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-For $m, M, N\in\setN$, $s \in R(N)$, $r \in R(M)$, $t \in
-\Set{0,\ldots,m-1}$,
-$\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\SL2Z$, elements from the domain
-\code{SymbolicModularGamma0SiftedEtaQuotientGamma} represent the product of
-an
-eta-quotient cofactor to an element of
-\code{SymbolicEtaQuotientOrbitProductGamma} in order to make the
-product a modular function.
-
-It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)}, \ie, it
-computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
-
-)endif
-
--------------------------------------------------------------------
-)abbrev domain YM0SEQG SymbolicModularGamma0SiftedEtaQuotientGamma
-++ SymbolicModularGamma0SiftedEtaQuotientGamma
-++ holds data to compute an eta-quotient
-++ expansions of $F_{s, r, m, t}(\gamma \tau)$.
-++ See \eqref{eq:F_s-r-m-t(gamma*tau)} in this file.
-SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
-    etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
-      ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the expansion
-      ++ of $F_{s,r,m,t}(\gamma \tau)$.
-      ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
-    coFactor: % -> SymbolicEtaQuotientGamma
-      ++ coFactor(x) returns the coFactor part to make $F_{s,r,m,t}$ a
-      ++ modular function.
-    orbitProduct: % -> SymbolicEtaQuotientOrbitProductGamma
-      ++ orbitProduct(x) returns the orbit product part of $F_{s,r,m,t}$.
-    gamma: % -> SL2Z
-      ++ gamma(x) returns the transformation corresponding to x.
-      -- Returns gamma as given in etaSequence(...,gamma).
-    minimalRootOfUnity: % -> P
-      ++ minimalRootOfUnity(x) returns
-      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
- == add
-    Rep ==> Record(
-              fcoetaqg: SymbolicEtaQuotientGamma,
-              fyeqopg: SymbolicEtaQuotientOrbitProductGamma,
-              fminroot: P    -- minimal root of unity needed for coefficients
-            )
-    import from Rep
-    xx ==> rep x
-    yy ==> rep y
-
-    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
-        not modularGamma0?(nn, s, mm, r, m, t)$QEtaCoFactorSpace =>
-            error "modular conditions are not fulfilled"
-        nndivs: LP := DIVISORS nn
-        mmdivs: LP := DIVISORS mm
-        coetaqg: SymbolicEtaQuotientGamma :=
-            etaQuotient(nn, s, 1, 0, gamma)
-        yeqopg: SymbolicEtaQuotientOrbitProductGamma :=
-            etaQuotient(mm, r, m, t, gamma)
-        minR1: P := minimalRootOfUnity coetaqg
-        minR2: P := minimalRootOfUnity yeqopg
-        per [coetaqg, yeqopg, lcmP(minR1, minR2)]
-
-    coFactor(x: %): SymbolicEtaQuotientGamma == xx.fcoetaqg
-    orbitProduct(x: %): SymbolicEtaQuotientOrbitProductGamma == xx.fyeqopg
-    minimalRootOfUnity(x: %): P == xx.fminroot
-
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-    hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.fcoetaqg)
-        h := hashUpdate!(h, xx.fyeqopg)
-        h
-
-    ((x: %) = (y: %)): Boolean ==
-        (xx.fcoetaqg = yy.fcoetaqg) and (xx.fyeqopg = yy.fyeqopg)
-
-
-)if LiterateDoc
-%$
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicModularGamma0SiftedEtaQuotient}
+\subsection{D SymbolicModularGamma0SiftedEtaQuotient
+  $(F_{s,r,m,t}(\gamma\tau))_\gamma$}
 \label{sec:SymbolicModularGamma0SiftedEtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
