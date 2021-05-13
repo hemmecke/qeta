@@ -405,7 +405,7 @@ ModularGamma0EtaQuotient(C, mx, CX, xi): Exports == Implementation where
   xi: CX --primitive mx-th root of unity.
   LX ==> QEtaLaurentSeries CX -- domain for the series expansions
   YEQ ==> SymbolicEtaQuotient
-  Exports ==> SetCategory with
+  Exports ==> CoercibleTo OutputForm with
     --assert(one? xi^mx)
     coerce: YEQ -> %
       ++ coerce(y) represents the expansion of
@@ -427,18 +427,16 @@ ModularGamma0EtaQuotient(C, mx, CX, xi): Exports == Implementation where
       ++ etaQuotient(mm, r, cusps(mm)$CongruenceSubgroupGamma0).
       ++ $r$ is indexed by the divisors of $mm$.
       ++ See \eqref{eq:g_r(tau)}.
-    level: % -> P
-      ++ level(x) returns m such that x corresponds to a modular
-      ++ function for Gamma_0(m).
-    symbolicEtaQuotient: % -> YEQ
-      ++ symbolicEtaQuotient(x) returns the meta data corresponding to x.
-      ++ If x=etaQuotient(y) then symbolicEtaQuotient(x)=y.
+    coerce: SymbolicModularGamma0SiftedEtaQuotient -> %
+      ++ coerce(y) represents the q-expansion of
+      ++ $F_{s,r,m,t}(\gamma \tau)$ at all cusps of $\Gamma_0(N)$ where
+      ++ N=level(y).
     expansions: % -> XHashTable(Q, LX)
       ++ expansions(x) returns the Laurent series expansions of
       ++ $g_r(tau)$ at all cusps of Gamma_0(level x) corresponding to
       ++ cusps(symbolicEtaQuotient x).
   Implementation ==> add
-    Rep ==> Record(meta: YEQ, ser: XHashTable(Q, LX))
+    Rep ==> XHashTable(Q, LX)
     xx ==> rep x
 
     coerce(y: YEQ): % ==
@@ -452,65 +450,10 @@ ModularGamma0EtaQuotient(C, mx, CX, xi): Exports == Implementation where
         for cusp in cusps y repeat
             w: P := WIDTH0(nn, denom cusp) -- width of cusp
             hser.cusp := laurent puiseux(y.cusp, w)
-        per [y, hser]
+        per hser
     etaQuotient(mm: P, r: LZ, cusps: LQ): % ==
         (etaQuotient(mm, r, cusps)$YEQ)::%
     etaQuotient(mm: P, r: LZ): % == (etaQuotient(mm, r)$YEQ)::%
-    level(x: %): P == level(xx.meta)
-    symbolicEtaQuotient(x: %): YEQ == xx.meta
-    expansions(x: %): XHashTable(Q, LX) == xx.ser
-
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-    ((x: %) = (y: %)): Boolean ==
-        -- it is enough if we compare the symbolic data
-        symbolicEtaQuotient x = symbolicEtaQuotient y
-
-
-)if LiterateDoc
-%$
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D ModularGamma0SiftedEtaQuotient}
-\label{sec:ModularGamma0SiftedEtaQuotient}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The domain \code{ModularGamma0SiftedEtaQuotient} represents the Puiseux
-series expansion of various eta-quotients.
-
-)endif
-
--------------------------------------------------------------------
-)abbrev domain M0SEQ ModularGamma0SiftedEtaQuotient
-++ ModularGamma0SiftedEtaQuotient is a generalization of
-++ ModularGamma0EtaQuotient. It holds the expansions
-++ of F_{s,r,m,t}(\tau) at all cusps of $\Gamma_0(N)$.
-++ See \eqref{eq:F_s-r-m-t(gamma*tau)}.
-++ The domain serves as the representation of the underlying q-series.
-ModularGamma0SiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
-  C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
-  mx: P -- mx-th root of unity needed.
-  CX: Algebra C
-  xi: CX --primitive mx-th root of unity.
-  TX ==> QEtaTaylorSeries CX
-  LX ==> QEtaLaurentSeries CX
-
-  Exports ==> SetCategory with
-    coerce: SymbolicModularGamma0SiftedEtaQuotient -> %
-      ++ coerce(y) represents the q-expansion of
-      ++ $F_{s,r,m,t}(\gamma \tau)$ at all cusps of $\Gamma_0(N)$ where
-      ++ N=level(y).
-    level: % -> P
-      ++ level(x) returns nn such that x corresponds to a modular
-      ++ function for Gamma_0(nn).
-    metadata: % -> SymbolicModularGamma0SiftedEtaQuotient
-      ++ metadata(x) returns y such that coerce(y) = x.
-    expansions: % -> XHashTable(Q, LX)
-      ++ expansions(x) returns the Laurent series expansions of
-      ++ $F_{s,r,m,t}(tau)$ at all cusps of Gamma_0(N).
-
-  Implementation ==> add
-    YM0SEQ ==> SymbolicModularGamma0SiftedEtaQuotient
-    Rep ==> Record(meta: YM0SEQ, ser: XHashTable(Q, LX))
-    xx ==> rep x
-
     coerce(y: SymbolicModularGamma0SiftedEtaQuotient): % ==
         import from EtaQuotientGamma(C, mx, CX, xi)
         nn: P := level y
@@ -518,17 +461,9 @@ ModularGamma0SiftedEtaQuotient(C, mx, CX, xi): Exports == Implementation where
         for cusp in cusps y repeat
             w: P := WIDTH0(nn, denom cusp) -- width of cusp
             hser.cusp := laurent ym0seqgpuiseux(y.cusp, w)
-        per [y, hser]
-    level(x: %): P == level(xx.meta)
-    metadata(x: %): SymbolicModularGamma0SiftedEtaQuotient == xx.meta
-    expansions(x: %): XHashTable(Q, LX) == xx.ser
-
-    coerce(x: %): OutputForm == rep(x)::OutputForm
-    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.meta)
-    ((x: %) = (y: %)): Boolean ==
-        -- it is enough if we compare the symbolic data
-        metadata x = metadata y
-
+        per hser
+    expansions(x: %): XHashTable(Q, LX) == xx
+    coerce(x: %): OutputForm == xx::OutputForm
 
 
 
