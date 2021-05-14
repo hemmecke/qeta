@@ -141,15 +141,23 @@ for $\Gamma_1(N)$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The domain \code{QEtaPuiseuxExpansion} represents the Puiseux series
 expansion of various eta-quotients.
+
+Since eta-quotient expansions are expressed in the canonical
+variables, these will be Laurent series, thus,
+\code{QEtaPuiseuxExpansion} serves as an auxiliary domain that is only
+uses for \code{QEtaLaurentExpansion}
+
+
 )endif
 
 -------------------------------------------------------------------
 )abbrev domain QEPX QEtaPuiseuxExpansion
-++ QEtaPuiseuxExpansion holds data to compute an eta
-++ quotient expansion of $g_{r,m,t,\lambda}(\gamma \tau)$,
-++ $g_{r,m,t}(\gamma \tau)$, $F_{s,r,m,t}(\gamma \tau)$.
-++ See \eqref{eq:g_r-m-t-lambda(gamma*tau)}.}
-++ This Domain behaves partly like univariate Puiseux series.
+++ QEtaPuiseuxExpansion holds data to compute an eta quotient
+++ expansion of $g_{r,m,t,\lambda}(\gamma \tau)$,
+++ $g_{r,m,t}(\gamma\tau)$, $F_{s,r,m,t}(\gamma\tau)$. See
+++ \eqref{eq:g_r-m-t-lambda(gamma*tau)} and
+++ \eqref{eq:F_r-m-t-(gamma*tau)}.
+++ This domain is used as an auxiliary domain for QEtaLaurentExpansion.
 QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   -- We need Algebra(Q) for multiplication with (1/m)
@@ -164,7 +172,7 @@ QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
     puiseux: (SymbolicEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $g_{r,m,t}(\gamma \tau)$ at $\tau=i \infity$.
-    ym0seqgpuiseux: (SymbolicModularGamma0SiftedEtaQuotientGamma, P) -> %
+    puiseux: (SymbolicModularGamma0SiftedEtaQuotientGamma, P) -> %
       ++ puiseux(y, w) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma \tau)$ at $\tau=i \infity$.
     rationalPowerDenominator: % -> P
@@ -180,7 +188,8 @@ QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ If w=rationalPowerDenominator(x) and f=qetaTaylorRep(x) then
       ++ order(x) returns k such that x(q)=z^(k)*f(z) with z=q^(1/w).
       ++ order(x) returns the order o
-    laurent: % -> LX
+
+    laurentExpansion: % -> LX
       ++ If order(x) is an integer, then laurent(x) returns the
       ++ Laurent series f of x without the prefactor corresponding to
       ++ $(c \tau + d)$ such that x(q) = f(z) for z=q^(1/w) where
@@ -240,12 +249,13 @@ QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
     rationalPowerDenominator(x: %): P == xx.den
     order(x: %): Q == xx.ord
     qetaTaylorRep(x: %): TX == xx.ser
-    laurent(x: %): LX ==
+    coerce(x: %): OutputForm == xx::OutputForm
+
+    laurentExpansion(x: %): LX ==
         ord: Q := order x
         not one? denom ord =>
-            error "QEtaPuiseuxExpansion: Laurent series with fractional exponent"
+            error "QEtaPuiseuxExpansion: fractional exponent in Laurent series"
         laurent(numer ord, qetaTaylorRep x)$LX
-    coerce(x: %): OutputForm == xx::OutputForm
 
 
 )if LiterateDoc
@@ -266,7 +276,8 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    yeqlgpuiseux(y: SymbolicEtaQuotientLambdaGamma, w: P): % ==
+    -- local
+    auxpuiseux(y: SymbolicEtaQuotientLambdaGamma, w: P): % ==
         -- w=width
         mm: P := level y
         divs: LP := divisors y
@@ -298,6 +309,9 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
         tx: TX := cx * qetaTaylorRep s
         per [d, p, tx]
 
+
+
+
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -313,13 +327,15 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
+
     puiseux(y: SymbolicEtaQuotientGamma, w: P): % ==
         m: P := multiplier y
-        x: % := yeqlgpuiseux(y.0, w)
+        x: % := auxpuiseux(y.0, w) -- $g_{r,m,t,\lambda}$
         one? m => x
-        lx: LX := laurent x
+        lx: LX := laurentExpansion x
         m1: P := asP(m::Z - 1)
-        for lambda in 1..m1 repeat lx := lx + laurent yeqlgpuiseux(y.lambda, w)
+        for lambda in 1..m1 repeat
+            lx := lx + laurentExpansion auxpuiseux(y.lambda, w)
         -- A sifted version of an eta-quotient is a non-zero function.
         -- Thus, we can safely remove initial zeroes.
         --TODO: WARNING: The above is not true.
@@ -334,16 +350,17 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         for i in 1..m1 repeat
             stx := rest stx
             if not zero? first stx then
-                dbgPrint("YEQG c", first stx)
+                dbgPrint("SymbolicEtaQuotientGamma c", first stx)
                 dbgPrint("Laurent expansion", lx)
                 error "QEtaPuiseuxExpansion: m-lambda sum"
         tx := (1/m)$Q::C::CX * multisect(m, 0, tx)
         per [w, ord/m, tx]
 
-    yeqogpuiseux(y: SymbolicEtaQuotientOrbitProductGamma, w: P): % ==
+    -- local
+    auxpuiseux(y: SymbolicEtaQuotientOrbitProductGamma, w: P): % ==
         orb := orbit y
         t: N := first orb;
-        px: % := puiseux(y.t, w)
+        px: % := puiseux(y.t, w) -- g_{r,m,t}
         d: P := rationalPowerDenominator px
         tx: TX := qetaTaylorRep px
         ord: Q := order px
@@ -355,11 +372,11 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
             error "QEtaPuiseuxExpansion: orbit product: denominator for q does not vanish"
         per [d, ord, tx]
 
-    ym0seqgpuiseux(y: SymbolicModularGamma0SiftedEtaQuotientGamma, w: P): % ==
+    puiseux(y: SymbolicModularGamma0SiftedEtaQuotientGamma, w: P): % ==
         yc: SymbolicEtaQuotientGamma := coFactor y
         yo: SymbolicEtaQuotientOrbitProductGamma := orbitProduct y
         pc: % := puiseux(yc, 24*w)
-        po: % := yeqogpuiseux(yo, 24*w)
+        po: % := auxpuiseux(yo, 24*w)
         d: P := rationalPowerDenominator pc
         -- Sanity check.
         d ~= 24 * w =>
@@ -384,87 +401,87 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D QEtaLaurentExpansions}
-\label{sec:QEtaLaurentExpansions}
+\subsection{P QEtaLaurentExpansion}
+\label{sec:QEtaLaurentExpansion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-If $N\in\setN$, $r\in R^*(N)$, and \code{e = etaQuotient(N, r)}, then
-$e$ represents the information given in
-\eqref{eq:modular-g_r(gamma*tau)}
-for each cusp $\frac{a}{c}$ of $\Gamma_0(N)$.
+
+The package \code{QEtaLaurentExpansion} provides functions for the
+conversion of eta-quotients into Laurent series either at a specific
+cusp or at several cusps.
 
 
 )endif
-)abbrev domain QELX QEtaLaurentExpansions
-++ QEtaLaurentExpansions(C, mx, CX, xi, LX) represents the set
+)abbrev package QELX QEtaLaurentExpansion
+++ QEtaLaurentExpansion(C, mx, CX, xi, LX) represents the set
 ++ of eta-quotients that are modular functions for Gamma_0(N).
 ++ In fact, this domain is meant to do computation for a specific N,
 ++ but is actually implementing the union over all N.
-QEtaLaurentExpansions(C, mx, CX, xi): Exports == Implementation where
+QEtaLaurentExpansion(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   mx: P -- mx-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX ==> QEtaLaurentSeries CX -- domain for the series expansions
+  QLX ==> XHashTable(Q, LX)
+  YEQG ==> SymbolicEtaQuotientGamma
   YEQ ==> SymbolicEtaQuotient
-  Exports ==> CoercibleTo OutputForm with
-    --assert(one? xi^mx)
-    coerce: YEQ -> %
-      ++ coerce(y) represents the expansion of
-      ++ g_r(\tau) in terms of x = \exp(2 \pi i \tau/w) where
-      ++ w=width(m, c) at all cusps of Gamma0(level y).
-      ++ See \eqref{eq:g_r(tau)}.
-    etaQuotient: (P, LZ, LQ) -> %
-      ++ etaQuotient(mm, r, cusps) represents the expansion of
-      ++ g_r(\tau) at the given cusps a/c of Gamma0(mm)
-      ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
-      ++ gamma=cuspToMatrix(m, a/c).
-      ++ $r$ is indexed by the divisors of $mm$.
-      ++ See \eqref{eq:g_r(tau)}.
-    etaQuotient: (P, LZ) -> %
-      ++ etaQuotient(mm, r) represents the expansion of g_r(\tau) at
-      ++ all cusps a/c of Gamma0(mm) in terms of x = \exp(2 \pi i \tau/w)
-      ++ where w=width(m, c) and gamma=cuspToMatrix(mm, a/c).
-      ++ It is the same as
-      ++ etaQuotient(mm, r, cusps(mm)$CongruenceSubgroupGamma0).
-      ++ $r$ is indexed by the divisors of $mm$.
-      ++ See \eqref{eq:g_r(tau)}.
-    coerce: SymbolicModularGamma0SiftedEtaQuotient -> %
-      ++ coerce(y) represents the q-expansion of
-      ++ $F_{s,r,m,t}(\gamma \tau)$ at all cusps of $\Gamma_0(N)$ where
-      ++ N=level(y).
-    expansions: % -> XHashTable(Q, LX)
-      ++ expansions(x) returns the Laurent series expansions of
-      ++ $g_r(tau)$ at all cusps of Gamma_0(level x) corresponding to
-      ++ cusps(symbolicEtaQuotient x).
-  Implementation ==> add
-    Rep ==> XHashTable(Q, LX)
-    xx ==> rep x
 
-    coerce(y: YEQ): % ==
+  Exports ==> with
+    --assert(one? xi^mx)
+    laurentExpansion: (YEQG, P) -> LX
+      ++ laurentExpansion(y, w) returns a Laurent expansion
+      ++ corresponding to y in terms of the variable z=q^(1/w). It is
+      ++ an error if y cannot be expressed in z.
+    laurentExpansion: SymbolicModularGamma0SiftedEtaQuotientGamma -> LX
+      ++ laurentExpansion y represents the q-expansion of
+      ++ $F_{s,r,m,t}(\gamma\tau)$ given by y in the canonical
+      ++ variables given by the width of the cusp wrt.
+      ++ Gamma_0(level(y)).
+    laurentExpansionsGamma0: YEQ -> QLX
+      ++ laurentExpansions y represents the expansion of
+      ++ $g_{r,m,t}(\tau)$ in terms of x = \exp(2 \pi i \tau/w) where
+      ++ w=width(m,c)$CongruenceSubgroupGamma0 at all cusps that are
+      ++ given in y. See \eqref{eq:g_r-m-t(gamma*tau)}.
+    laurentExpansions: SymbolicModularGamma0SiftedEtaQuotient -> QLX
+      ++ laurentExpansions y represents the q-expansion of
+      ++ $F_{s,r,m,t}(\gamma\tau)$ at all cusps given by y in the
+      ++ canonical variables given by the width of the cusp wrt.
+      ++ Gamma_0(level y).
+
+  Implementation ==> add
+    QEPX(C, CX) ==> QEtaPuiseuxExpansion(C, mx, CX, xi)
+
+    laurentExpansion(y: YEQG, w: P): LX ==
+        x: QEPX(C, CX) := puiseux(y, w)
+        laurentExpansion(x)$QEPX(C, CX)
+
+    laurentExpansion(y: SymbolicModularGamma0SiftedEtaQuotientGamma): LX ==
+        cy: YEQG := coFactor y
+        nn: P := level cy
+        g: SL2Z := gamma cy
+        w: P := WIDTH0(nn, g(2,1))
+        x: QEtaPuiseuxExpansion(C, mx, CX, xi) := puiseux(y, w)
+        laurentExpansion x
+
+    laurentExpansionsGamma0(y: YEQ): QLX ==
         import from QEtaPuiseuxExpansion(C, mx, CX, xi)
         nn: P := level y
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
         if not modularGamma0?(nn, exponents y)$QETAAUX then
-            dbgPrint("QELX coerce: not a modular function", exponents y)
-        hser: XHashTable(Q, LX) := empty()
+            dbgPrint("QEtaLaurenExpansion: not a modular function", exponents y)
+        hser: QLX := empty()
         for cusp in cusps y repeat
             w: P := WIDTH0(nn, denom cusp) -- width of cusp
-            hser.cusp := laurent puiseux(y.cusp, w)
-        per hser
-    etaQuotient(mm: P, r: LZ, cusps: LQ): % ==
-        (etaQuotient(mm, r, cusps)$YEQ)::%
-    etaQuotient(mm: P, r: LZ): % == (etaQuotient(mm, r)$YEQ)::%
-    coerce(y: SymbolicModularGamma0SiftedEtaQuotient): % ==
+            hser.cusp := laurentExpansion(y.cusp, w)
+        hser
+
+    laurentExpansions(y: SymbolicModularGamma0SiftedEtaQuotient): QLX ==
         import from QEtaPuiseuxExpansion(C, mx, CX, xi)
         nn: P := level y
         hser: XHashTable(Q, LX) := empty()
-        for cusp in cusps y repeat
-            w: P := WIDTH0(nn, denom cusp) -- width of cusp
-            hser.cusp := laurent ym0seqgpuiseux(y.cusp, w)
-        per hser
-    expansions(x: %): XHashTable(Q, LX) == xx
-    coerce(x: %): OutputForm == xx::OutputForm
+        for cusp in cusps y repeat hser.cusp := laurentExpansion(y.cusp)
+        hser
 
 
 
