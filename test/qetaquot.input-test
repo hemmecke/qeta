@@ -59,15 +59,13 @@ minroot := 60 :: P
 yf := etaQuotient(nn, r, mm, s, m, t)$YM0SEQ;
 xiord := minimalRootOfUnity(yf)::P
 assertEquals(xiord, minroot)
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
-f :=  yf::QELX(C, CX);
-mf := expansions(f)::MODFUNX(CX)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+mf := EXPANDn yf
 -- compare result with formula (4) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
 -- Note that mf comes with the cofactor given by r. So we also must
 -- multiply the right-hand side. That then equals to the constant 5.
-minusfive := (-5)*1$MODFUNX(CX)
+minusfive := (-5)*1$An(CX)
 assertTrue zero?(mf+minusfive)
 
 -- +
@@ -108,8 +106,7 @@ assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
 
-modfunx x ==> expansions(x::QELX(C, CX))::MODFUNX(CX)
-mf := modfunx yf;
+mf := EXPANDn yf;
 
 -- compare result with formula (5) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
@@ -122,7 +119,7 @@ mf := modfunx yf;
 y1 := etaQuotient(nn,[3,1, 3,-7],mm,[0,0],1,0)$YM0SEQ;
 y2 := etaQuotient(nn,[-1,1,7,-7],mm,[0,0],1,0)$YM0SEQ;
 
-rhs := 7*modfunx(y1)+49*modfunx(y2)
+rhs := 7*EXPANDn(y1) + 49*EXPANDn(y2)
 assertTrue(zero?(mf - rhs))
 
 -- +
@@ -145,21 +142,11 @@ xiord := 168
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
 
-eqx1 := table()$XHashTable(Q, LX)
-eqx2 := table()$XHashTable(Q, LX)
 spitzen := cusps(nn)$GAMMA0
-for cusp in spitzen repeat
-  w := WIDTH0(nn, denom cusp) --: P
-  gamma := cuspToMatrix(nn, cusp)$GAMMA0 --: SL2Z
-  y1 := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0,gamma)$YM0SEQG
-  y2 := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0,gamma)$YM0SEQG
-  p1 := ym0seqgpuiseux(y1, w)$QEPX(Q, CX)
-  p2 := ym0seqgpuiseux(y2, w)$QEPX(Q, CX)
-  eqx1.cusp := laurent p1
-  eqx2.cusp := laurent p2
-
-m1 := eqx1 :: MODFUNX(CX)
-m2 := eqx2 :: MODFUNX(CX)
+y1 := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0)$YM0SEQ
+y2 := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0)$YM0SEQ
+m1 := EXPANDn y1
+m2 := EXPANDn y2
 assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 
 -- +
@@ -193,10 +180,8 @@ minroot := 264 :: P;
 yf := etaQuotient(nn, r, mm, s, m, t)$YM0SEQ;
 xiord:= minimalRootOfUnity(yf) :: P
 assertEquals(xiord, minroot)
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
-f := yf::QELX(C, CX);
-mf := expansions(f)::MODFUNX(CX)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+mf := EXPANDn yf
 
 
 -- compare result with formula (9) from
@@ -217,10 +202,9 @@ rgens := [_
 assertEquals(rgens, etaQuotientMonoidExponentVectors nn)
 
 ygens := [etaQuotient(nn,r,mm,[0,0],1,0)$YM0SEQ for r in rgens];
-mgens := [x::QELX(C, CX) for x in ygens];
-M := [expansions(x)::MODFUNX(CX) for x in mgens];
+M := [EXPANDn x for x in ygens];
 F ==> mf
-X n ==> n * 1$MODFUNX(CX)
+X n ==> n * 1$An(CX)
 
 repr := 11*(_
   11*3068*M.7_

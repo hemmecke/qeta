@@ -115,7 +115,7 @@ if xiord > 2 then _
   vPrint("The symbol ? corresponds to the n-th root of unity where n", xiord)
 lerr := [r for r in rs | not modularGamma0?(level, r)\$QETAAUX];
 
-Rec ==> Record(r: List Z, trf: SL2Z, w: Z, lc: CX, xpower: Q, ser: L1 CX)
+Rec ==> Record(r: List Z, trf: SL2Z, w: Z, ser: L1 CX)
 if not empty? lerr or not expansionAtAllCusps? then (_
   vPrint("Non-modular quotients", lerr);_
   if expansionAtAllCusps? then vPrint("Expansion at cusps", spitzen);_
@@ -127,14 +127,14 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   tPrint("where x=q^(1/w).");_
   lle := [[(g := gamma se;_
             w := WIDTH0(level, g(2, 1));_
-            px := puiseux(se, w)\$QEPX(Q,CX);_
-            [exponents se, g, w, order px, qetaTaylorRep px]\$Rec)_
+            lx := laurentExpansion(se, w)\$QELX(Q,CX);_
+            [exponents se, g, w, lx]\$Rec)_
            for se in lse] for lse in llse]_
 ) else (_
   vPrint("Expansion at cusps", spitzen);_
   vPrint("Expansion at CUSPS", [cuspToMatrix(level, cusp)\$GAMMA0 for cusp in spitzen]);_
   le := [etaQuotient(level, r)\$QELX(Q,CX) for r in rs];_
-  ees := [expansions(e)::MODFUNX CX for e in le];_
+  ees := [EXPANDn e for e in le];_
   [[rr, ex] for rr in rs for ex in ees])
 
 EOF

@@ -40,7 +40,7 @@ mj11 := hj11::Fn(CX); qetaGrades mj11
 
 )if false
 expansionModular(xiord, CX, xi, y, w) ==
-    e := expansion(puiseux(y, w)$QEPX(C, CX))::A1(CX)
+    e := (laurentExpansion(y, w)$QELX(C, CX))::A1(CX)
     abmap(CX, C, e)
 
 expansionModularSiftedEtaQuotientGamma(nn, r, mm, s, m, t, gamma) ==
@@ -66,7 +66,7 @@ traceMap(nn: P, t: P, r: List Z): A1 C ==
     error "length of r must match number of divisors)"
   idgamma: SL2Z := matrix [[1,0],[0,1]]
   ye := etaQuotient(nn*t, r, idgamma)$YEQG
-  e := laurent puiseux(ye, 1)$QEtaPuiseuxExpansion(C, 1, C, 1)
+  e := laurentExpansion(ye, 1)$QEtaLaurentExpansion(C, 1, C, 1)
   alw: MZ := matrixAtkinLehner(nn*t, t)
   sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
   gamma := sm.red
@@ -77,7 +77,7 @@ traceMap(nn: P, t: P, r: List Z): A1 C ==
     print("minimalRootOfUnity yeg"::Symbol::OutputForm)
     print((minimalRootOfUnity yeg)::OutputForm)
     error "traceMap: need extension by root of unity"
-  eg := laurent puiseux(yeg, t)$QEtaPuiseuxExpansion(C, 2, C, -1)
+  eg := laurentExpansion(yeg, t)$QEtaLaurentExpansion(C, 2, C, -1)
   -- finally apply Ut operator
   uteg := choose(t, 0, eg)
   -- and add things up

@@ -190,9 +190,9 @@ QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ order(x) returns the order o
 
     laurentExpansion: % -> LX
-      ++ If order(x) is an integer, then laurent(x) returns the
-      ++ Laurent series f of x without the prefactor corresponding to
-      ++ $(c \tau + d)$ such that x(q) = f(z) for z=q^(1/w) where
+      ++ If order(x) is an integer, then laurentExpansion(x) returns
+      ++ the Laurent series f of x without the prefactor corresponding
+      ++ to $(c \tau + d)$ such that x(q) = f(z) for z=q^(1/w) where
       ++ w=rationalPowerDenominator(x). It is an error if order(x) is
       ++ not an integer.
 
@@ -277,7 +277,7 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
 )endif
 
     -- local
-    auxpuiseux(y: SymbolicEtaQuotientLambdaGamma, w: P): % ==
+    puiseuxlambda(y: SymbolicEtaQuotientLambdaGamma, w: P): % ==
         -- w=width
         mm: P := level y
         divs: LP := divisors y
@@ -330,12 +330,12 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 
     puiseux(y: SymbolicEtaQuotientGamma, w: P): % ==
         m: P := multiplier y
-        x: % := auxpuiseux(y.0, w) -- $g_{r,m,t,\lambda}$
+        x: % := puiseuxlambda(y.0, w) -- $g_{r,m,t,\lambda}$
         one? m => x
         lx: LX := laurentExpansion x
         m1: P := asP(m::Z - 1)
         for lambda in 1..m1 repeat
-            lx := lx + laurentExpansion auxpuiseux(y.lambda, w)
+            lx := lx + laurentExpansion puiseuxlambda(y.lambda, w)
         -- A sifted version of an eta-quotient is a non-zero function.
         -- Thus, we can safely remove initial zeroes.
         --TODO: WARNING: The above is not true.
@@ -357,7 +357,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         per [w, ord/m, tx]
 
     -- local
-    auxpuiseux(y: SymbolicEtaQuotientOrbitProductGamma, w: P): % ==
+    puiseuxOrbit(y: SymbolicEtaQuotientOrbitProductGamma, w: P): % ==
         orb := orbit y
         t: N := first orb;
         px: % := puiseux(y.t, w) -- g_{r,m,t}
@@ -376,7 +376,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         yc: SymbolicEtaQuotientGamma := coFactor y
         yo: SymbolicEtaQuotientOrbitProductGamma := orbitProduct y
         pc: % := puiseux(yc, 24*w)
-        po: % := auxpuiseux(yo, 24*w)
+        po: % := puiseuxOrbit(yo, 24*w)
         d: P := rationalPowerDenominator pc
         -- Sanity check.
         d ~= 24 * w =>
@@ -479,7 +479,7 @@ QEtaLaurentExpansion(C, mx, CX, xi): Exports == Implementation where
     laurentExpansions(y: SymbolicModularGamma0SiftedEtaQuotient): QLX ==
         import from QEtaPuiseuxExpansion(C, mx, CX, xi)
         nn: P := level y
-        hser: XHashTable(Q, LX) := empty()
+        hser: QLX := empty()
         for cusp in cusps y repeat hser.cusp := laurentExpansion(y.cusp)
         hser
 
