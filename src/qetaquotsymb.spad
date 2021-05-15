@@ -782,9 +782,9 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicModularGamma0SiftedEtaQuotientGamma
+\subsection{D SymbolicModularGamma0EtaQuotientGamma
   $F_{s, r, m, t}(\gamma\tau)$}
-\label{sec:SymbolicModularGamma0SiftedEtaQuotientGamma}
+\label{sec:SymbolicModularGamma0EtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{align*}
@@ -796,7 +796,7 @@ For $m, M, N\in\setN$, $s \in R(N)$, $r \in R(M)$, $t \in
 \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 \SL2Z$, elements from the domain
-\code{SymbolicModularGamma0SiftedEtaQuotientGamma} represent the product of
+\code{SymbolicModularGamma0EtaQuotientGamma} represent the product of
 an
 eta-quotient cofactor to an element of
 \code{SymbolicEtaQuotientOrbitProductGamma} in order to make the
@@ -808,12 +808,12 @@ computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain YM0SEQG SymbolicModularGamma0SiftedEtaQuotientGamma
-++ SymbolicModularGamma0SiftedEtaQuotientGamma
+)abbrev domain YM0EQG SymbolicModularGamma0EtaQuotientGamma
+++ SymbolicModularGamma0EtaQuotientGamma
 ++ holds data to compute an eta-quotient
 ++ expansions of $F_{s, r, m, t}(\gamma \tau)$.
 ++ See \eqref{eq:F_s-r-m-t(gamma*tau)} in this file.
-SymbolicModularGamma0SiftedEtaQuotientGamma: SetCategory with
+SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
       ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the expansion
       ++ of $F_{s,r,m,t}(\gamma \tau)$.
@@ -1004,14 +1004,14 @@ SymbolicEtaQuotient: SetCategory with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicModularGamma0SiftedEtaQuotient
+\subsection{D SymbolicModularGamma0EtaQuotient
   $(F_{s,r,m,t}(\gamma\tau))_\gamma$}
-\label{sec:SymbolicModularGamma0SiftedEtaQuotient}
+\label{sec:SymbolicModularGamma0EtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 For $m, M, N\in\setN$, $s \in R(N)$, $r \in R(M)$, $t \in
 \Set{0,\ldots,m-1}$, elements from the domain
-\code{SymbolicModularGamma0SiftedEtaQuotient} represent the collection of
+\code{SymbolicModularGamma0EtaQuotient} represent the collection of
 element from \code{SymbolicSiftedEtaQuotienGamma} for all $\gamma \in
 \SL2Z$ corresponding to a cusp of $\Gamma_0(N)$.
 
@@ -1021,11 +1021,11 @@ it computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 )endif
 
 -------------------------------------------------------------------
-)abbrev domain YM0SEQ SymbolicModularGamma0SiftedEtaQuotient
-++ SymbolicModularGamma0SiftedEtaQuotient holds data to compute an eta
+)abbrev domain YM0EQ SymbolicModularGamma0EtaQuotient
+++ SymbolicModularGamma0EtaQuotient holds data to compute an eta
 ++ quotient expansions of $F_{s, r, m, t}(\gamma \tau)$ at all cusps
 ++ of $Gamma_0(N)$. See \eqref{eq:F_s-r-m-t(gamma*tau)}.
-SymbolicModularGamma0SiftedEtaQuotient: SetCategory with
+SymbolicModularGamma0EtaQuotient: SetCategory with
     etaQuotient: (P, LZ, P, LZ, P, N, LQ) -> %
       ++ etaQuotient(nn, s, mm, r, m, t, cusps) represents the expansion
       ++ of $F_{s,r,m,t}(\gamma \tau)$ for all gamma corresponding to
@@ -1043,19 +1043,19 @@ SymbolicModularGamma0SiftedEtaQuotient: SetCategory with
       ++ cusps(x) either returns the value that was given to
       ++ etaQuotient at creation time or cusps(level
       ++ x)$CongruenceSubgroupGamma0 if the cusps where not given.
-    elt: (%, Q) -> SymbolicModularGamma0SiftedEtaQuotientGamma
+    elt: (%, Q) -> SymbolicModularGamma0EtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
  == add
-    YM0SEQG ==> SymbolicModularGamma0SiftedEtaQuotientGamma
-    HT ==> XHashTable(Q, YM0SEQG)
+    YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
+    HT ==> XHashTable(Q, YM0EQG)
     Rep ==> Record(
               flevel: P,  -- corresponds to Gamma_0(N)
               fcusps: LQ, -- cusps of Gamma_0(N)
-              fmseq: HT,  -- mapping gamma to YM0SEQG
+              fmseq: HT,  -- mapping gamma to YM0EQG
               fminroot: P -- minimal root of unity needed for the coefficients
             )
     import from Rep
@@ -1067,7 +1067,7 @@ SymbolicModularGamma0SiftedEtaQuotient: SetCategory with
         minroot: P := 1
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA0
-            e: YM0SEQG := etaQuotient(nn, s, mm, r, m, t, gamma)
+            e: YM0EQG := etaQuotient(nn, s, mm, r, m, t, gamma)
             h.cusp := e
             minroot := lcmP(minroot, minimalRootOfUnity e)
         per [nn, cusps, h, minroot]
@@ -1076,7 +1076,7 @@ SymbolicModularGamma0SiftedEtaQuotient: SetCategory with
         etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
 
     level(x: %): P == xx.flevel
-    elt(x: %, cusp: Q): YM0SEQG == xx.fmseq.cusp
+    elt(x: %, cusp: Q): YM0EQG == xx.fmseq.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
     cusps(x: %): LQ == xx.fcusps
 
