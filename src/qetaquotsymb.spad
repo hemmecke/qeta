@@ -1095,16 +1095,23 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D SymbolicGeneralizedEtaDeltaGamma}
-\label{sec:SymbolicGeneralizedEtaDeltaGamma}
+\subsection{D SymbolicGeneralizedEtaGamma}
+\label{sec:SymbolicGeneralizedEtaGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Let $N$ be a positive integer and $\divides{\delta}{N}$, $0<g<\delta$.
 %
-Elements from the domain \code{SymbolicGeneralizedEtaDeltaGamma}
+Elements from the domain \code{SymbolicGeneralizedEtaGamma}
 represent data for the expansion of
-$\eta_{\delta,g}^{[R]}(\gamma\tau)$ as given implicitly in
-equation \eqref{eq:eta_delta-g^[R](gamma*tau)}, \ie,
+$\eta_{\delta,g}^{[R]}
+  \left(
+  \begin{pmatrix}
+    1 & \lambda\\
+    0 & m
+  \end{pmatrix}
+  \gamma \tau \right)$
+as given implicitly in equation
+\eqref{eq:eta_delta-g^[R](gamma*tau)}, \ie,
 \begin{gather}
   \left(
   \delta
@@ -1124,12 +1131,12 @@ see \eqref{eq:g_rbar(gamma*tau)}.
 
 )endif
 -------------------------------------------------------------------
-)abbrev domain YGEDG SymbolicGeneralizedEtaDeltaGamma
-++ SymbolicGeneralizedEtaDeltaGamma holds data to compute a
+)abbrev domain YGEG SymbolicGeneralizedEtaGamma
+++ SymbolicGeneralizedEtaGamma holds data to compute a
 ++ generalized eta-function expansion of \eta_{\delta.g}(\gamma\tau).
 ++ See \eqref{eq:eta_delta-g^[R](tau)}, \eqref{eq:g_rbar(gamma*tau)} and
 ++ \eqref{eq:eta_g-h-N^[S](gamma*tau)}.
-SymbolicGeneralizedEtaDeltaGamma: SetCategory with
+SymbolicGeneralizedEtaGamma: SetCategory with
     generalizedEta: (P, P, SL2Z) -> %
       ++ generalizedEta(delta, g, gamma) represents the
       ++ expansion of $\eta_{delta,g}(\gamma \tau)$, see
@@ -1304,7 +1311,7 @@ $g_{\tilde{r}}(\gamma\tau)$ through the tuple
 according to \eqref{eq:g_rtilde(gamma*tau)} where
 $\tilde{y}=(y_{\delta,g})_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}$
 and $y_{\delta,g} = \text{\code{generalizedEta(delta,g,gamma)}}$ is an
-element of \code{SymbolicGeneralizedEtaDeltaGamma}.
+element of \code{SymbolicGeneralizedEtaGamma}.
 
 
 )endif
@@ -1345,11 +1352,11 @@ SymbolicProperGeneralizedEtaQuotientGamma: SetCategory with
       ++ such that the expansion of the function g_rtilde(\gamma \tau)
       ++ corresponding to e=etaQuotient(nn, rtilde, gamma) lives in
       ++ Q[w][[x]] where w is a n-th root of unity.
-    elt: (%, P, N) -> SymbolicGeneralizedEtaDeltaGamma
+    elt: (%, P, N) -> SymbolicGeneralizedEtaGamma
       ++ elt(x, delta, g) returns the data corresponding to the
       ++ respective (delta, g) pair.
  == add
-    YGEDG ==> SymbolicGeneralizedEtaDeltaGamma
+    YGEG ==> SymbolicGeneralizedEtaGamma
     HT ==> XHashTable(Z, YGEDG)
             -- mapping (delta, g) to $\eta_{\delta, g}^{[R]}$ where
             -- (delta, g) is encoded by n=level*delta+g
@@ -1496,7 +1503,7 @@ SymbolicGeneralizedEtaQuotientGamma: Exports == Implementation where
       ++ modularGamma1?(level x, exponents x) from
       ++ QEtaAuxiliaryPackage.
   Implementation ==> add
-    HT ==> XHashTable(P, SymbolicGeneralizedEtaDeltaGamma)
+    HT ==> XHashTable(P, SymbolicGeneralizedEtaGamma)
             -- mapping (delta, g) to \eta_(\delta, g) where
             -- (delta, g) is encoded by n=level*delta+g
     Rep ==> Record(
