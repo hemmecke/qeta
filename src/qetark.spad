@@ -325,8 +325,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     monomialX: (List Symbol, List Z) -> Pol C
     monomialQuotientX: (List Symbol, List Z) -> Fraction Pol C
     etaQuotientX: (P, List Z, String) -> Fraction Pol C
-    coFactorX: % -> Fraction Pol C
-    qcoFactorX:% -> Fraction Pol C
+    cofactorX: % -> Fraction Pol C
+    qcofactorX:% -> Fraction Pol C
 
   Implementation ==> add
     Rep ==> Record(fnn: P,_
@@ -383,14 +383,14 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         k: N := offset x
         mm: P := definingLevel x
         s: List Z := definingExponents x
-        alphaInfinity(level x, coExponents x, mm, s, m, k)$QEtaCoFactorSpace
+        alphaInfinity(level x, coExponents x, mm, s, m, k)$QEtaCofactorSpace
 
     alphaEtaInfinity(x: %): Q ==
         rhat: Z := sigmaInfinity(level x, coExponents x)$QETAAUX
         alphaInfinity(x)::Q - rhat/24
 
     orbit(x: %): List N == orbit(definingLevel x, definingExponents x,
-                                 multiplier x, offset x)$QEtaCoFactorSpace
+                                 multiplier x, offset x)$QEtaCofactorSpace
 
     oeq(x, y) ==> ((concat(x,"(x)")$String)::Symbol::OF) = (y::OF)
     coerce(x: %): OutputForm ==
@@ -608,7 +608,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         vsyms: List Symbol := indexedSymbols(var, divs)$QAuxiliaryTools
         monomialQuotientX(vsyms, r)
 
-    coFactorX(x: %): Fraction Pol C ==
+    cofactorX(x: %): Fraction Pol C ==
         nn: P := level x
         eq: Fraction Pol C := etaQuotientX(nn, coExponents x, "E")
         e: Z := numer(24*alphaEtaInfinity(x))
@@ -616,7 +616,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         xvar: Fraction Pol(C) := "x"::Symbol::Pol(C)::Fraction(Pol C)
         xvar^e * eq
 
-    qcoFactorX(x: %): Fraction Pol C ==
+    qcofactorX(x: %): Fraction Pol C ==
         eq: Fraction Pol C := etaQuotientX(level x, coExponents x, "u")
         alpha: Z := alphaInfinity x
         zero? alpha => eq
@@ -709,12 +709,12 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
     findIdentity(nn: P, mm: P, r: List Z, m: P, t: N,
                  rgens: List List Z): IDENTITY ==
         import from QEtaModularGamma0
-        s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)
+        s: List Z := etaCofactorInfinity(nn, mm, r, m, t)
         findIdentity(nn, s, mm, r, m, t, rgens)
 
     findIdentity(nn: P, mm: P, r: List Z, m: P, t: N): IDENTITY ==
         import from QEtaModularGamma0
-        s: List Z := etaCoFactorInfinity(nn, mm, r, m, t)
+        s: List Z := etaCofactorInfinity(nn, mm, r, m, t)
         findIdentity(nn, s, mm, r, m, t)
 
 
