@@ -357,12 +357,15 @@ QEtaAuxiliaryPackage: with
 
     matrixEtaOrder: (P, Q, P, Z) -> Q
       ++ For g in the range 0..delta matrixEtaOrder(nn,cusp,delta,g)
-      ++ returns the coefficient of r_{delta.g} in
+      ++ returns the coefficient of r_{delta,g} in
       ++ \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994},
       ++ except for the case nn=4, gcd(denom(cusp),nn)=2 (or
       ++ Gamma1(4)-equivalent) where we return half of this
       ++ coefficient.
-      ++ matrixEtaOrder(nn,cusp,delta,-1)=matrixEtaOrder(nn,cusp,delta,0)/2.
+      ++ matrixEtaOrder(nn,cusp,delta,-1)=matrixEtaOrder(nn,cusp,delta,0)/2,
+      ++ thus for g=-1 corresponds to the coefficient of $r_\delta$ in
+      ++ \eqref{eq:order-rbar-non-adjusted} in
+      ++ Theorem~\ref{thm:matrixEtaOrderRobins}.
       ++ Note that Robins refers to an expansion in the uniformizing
       ++ variable q^(gcd(c,nn)/nn) (where cusp=a/c). That is equal to
       ++ q^(1/width(nn,c)$CongruenceSubgroupGamma1) except for the
@@ -380,6 +383,10 @@ QEtaAuxiliaryPackage: with
       ++ following generalized eta-functions (in this order).
       ++ [eta(d\tau) for d in divsors(nn)]
       ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)].
+      ++ It gives the coefficients of $r_\delta$ and $r_{\delta,g}$ in
+      ++ the sense of Theorem~\ref{thm:matrixEtaOrderRobins}, in
+      ++ particular to the coefficients in
+      ++ \eqref{eq:order-rbar-non-adjusted}.
 
     matrixEtaOrder: P -> MQ
       ++ matrixEtaOrder(nn) returns matrixEtaOrder(nn, spitzen) where
@@ -814,7 +821,14 @@ $a\in X_c$.
 
     -- matrixEtaOrder(nn, cusp, delta, g) returns the coefficient of
     -- r_{delta.g} in
-    -- \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994}.
+    -- \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994}. See
+    -- also Theorem~\ref{thm:matrixEtaOrderRobins}. Since we always
+    -- want an expansion in $q^{1/w_\gamma}$ where $w_\gamma$ is the
+    -- width of the respective cusp for $\Gamma_1(nn)$, we adjust the
+    -- following function for the special case, so that if $A$ is the
+    -- result of \code{matrixEtaOrder}$(N)$, then $A \bar{r}$ gives
+    -- the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
+    -- $q^{1/w_\gamma}$.
     matrixEtaOrder(nn: P, cusp: Q, delta: P, g: Z): Q ==
         --assert(cusp>0) -- comes from cusps(nn)$CongruenceSubgroupGamma1
         g > delta => error "matrixEtaOrder: no such g allowed"
