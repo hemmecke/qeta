@@ -169,14 +169,14 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
 
     conditionGSigma0?: (P, P, LLZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, gr, m) returns true if
-      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in gr) = 0 mod 2.
+      ++ conditionSigma0?(nn, mm, rtilde, m) returns true if
+      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in rtilde) = 0 mod 2.
       ++ This corresponds to condition 3 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionSigma0?: (P, P, LLZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, gr, m) returns true if
-      ++ (kappa(m)*m*nn^2)*sum(e/d for [d,g,e] in gr) = 0 mod 12.
+      ++ conditionSigma0?(nn, mm, rtilde, m) returns true if
+      ++ (kappa(m)*m*nn^2)*sum(e/d for [d,g,e] in rtilde) = 0 mod 12.
       ++ This corresponds to condition 5 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
@@ -188,8 +188,8 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ (Definition 35).
 
     conditionSumExponents?: (P, LLZ, P) -> Boolean
-      ++ conditionSumExponents?(nn, gr, m) returns true if the sum of
-      ++ the entries (corresponding to the exponents) of gr multiplied
+      ++ conditionSumExponents?(nn, rtilde, m) returns true if the sum of
+      ++ the entries (corresponding to the exponents) of rtilde multiplied
       ++ by kappa(m)*nn is divisible by 4.
       ++ This corresponds to condition 4 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
@@ -203,12 +203,11 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
 
     conditionNDivisor?: (P, P, LZ, LLZ, P, N) -> Boolean
-      ++ conditionNDivisor?(nn, mm, r, gr, m, t) returns true if the
+      ++ conditionNDivisor?(nn, mm, r, rtilde, m, t) returns true if the
       ++ expression (24*m*mm)/gcd(mm*kappa(m)*alpha, 24*m*mm) is a
       ++ divisor of nn where
-      ++ alpha=-mm(sigmaInfinity(mm,r)+12*sum(d*fractionalBernoulli2(g/d)*e
-      ++ for [d,g,e] in gr)+24*mm*t).
-      ++ This corresponds to condition 7 on page 37 of Chapter 10 of
+      ++ alpha=sigmaInfinity(mm,r,rtilde) + 24*t.
+      ++ This corresponds to condition 8 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionEvenMultiplier?: (P, P, LZ, P) -> Boolean
@@ -236,15 +235,15 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ \cite{Radu:RamanujanKolberg:2015}.
 
     conditionCoEtaQuotientGamma1?: (P, P, LLZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma01?(nn, mm, rr, m, t) returns true
+      ++ conditionCoEtaQuotientGamma01?(nn, mm, rbar, m, t) returns true
       ++ iff the conditions in Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
       ++ just before Theorem 10.1 are fulfilled. These are conditions
       ++ for the existence of a product of eta- and generalized
       ++ eta-quotient to exist as a cofactor for a disection of such a
       ++ quotient.
-      ++ The parameter rr specifies the generalized eta-quotient via
-      ++ generalizedEtaQuotient(rr).
+      ++ The parameter rbar specifies the generalized eta-quotient via
+      ++ generalizedEtaQuotient(rbar).
 
     conditionOrbitLength?: (P, P, LZ, P, N) -> Boolean
       ++ conditionOrbitLength?(nn, mm, r, m, t) returns true if the
@@ -253,11 +252,11 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     conditionOrbitLength?: (P, P, LZ, LLZ, P, N) -> Boolean
-      ++ conditionOrbitLength?(nn, mm, r, gr, m, t) returns true if
+      ++ conditionOrbitLength?(nn, mm, r, rtilde, m, t) returns true if
       ++ the conditions for an orbit of length 1 are satisfied. This
       ++ corresponds to condition 10 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-      ++ The parameters r and gr specify the defining eta-quotient and
+      ++ The parameters r and rtilde specify the defining eta-quotient and
       ++ generalized eta-quotient part.
 
     minimalLevelCoEtaQuotientGamma0: (P, LZ, P, N) -> P
@@ -275,14 +274,14 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
     minimalLevelCoEtaQuotientGamma1: (P, LLZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma1(mm, rr, m, t) returns the
+      ++ minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t) returns the
       ++ smallest nn such that
-      ++ conditionCoEtaQuotientGamma1?(nn,mm,rr,m,t) is true, i.e.
-      ++ that (nn,mm,rr m,t) fulfills the 10 conditions as defined in
+      ++ conditionCoEtaQuotientGamma1?(nn,mm,rbar,m,t) is true, i.e.
+      ++ that (nn,mm,rbar m,t) fulfills the 10 conditions as defined in
       ++ Section 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-      ++ The parameter rr specifies the generalized eta-quotient via
-      ++ generalizedEtaQuotient(rr).
+      ++ The parameter rbar specifies the generalized eta-quotient via
+      ++ generalizedEtaQuotient(rbar).
 
     modularGamma0?: (P, LZ, P, LZ, P, N) -> Boolean
       ++ modularGamma0?(nn, s, mm, r, m, t) returns true iff all
@@ -291,10 +290,10 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ Compare with modularGamma0? from QEtaAuxiliaryPackage.
 
     modularGamma1?: (P, LLZ, P, LLZ, P, N) -> Boolean
-      ++ modularGamma1?(nn, ss, mm, rr, m, t) returns true iff all the
+      ++ modularGamma1?(nn, sbar, mm, rbar, m, t) returns true iff all the
       ++ conditions of Theorem~10.1 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-      ++ are fulfilled. Here the parameter ss stands for the exponents
+      ++ are fulfilled. Here the parameter sbar stands for the exponents
       ++ $a_\delta$ and $a_{\delta,g}$.
 
     orbit: (Z, P, N) -> List N
@@ -325,10 +324,10 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
     etaCofactorSpace1: (P, P, LLZ, P, N) -> ECFS
-      ++ etaCofactorSpace1(nn, mm, rr, m, t) returns a vector v and the
+      ++ etaCofactorSpace1(nn, mm, rbar, m, t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
-      ++ modularGamma1?(nn, ss, mm, r, m, t) is true for any
-      ++ ss = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
+      ++ modularGamma1?(nn, sbar, mm, r, m, t) is true for any
+      ++ sbar = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
     alphaInfinity: (P, LZ, P, LZ, P, N) -> Z
@@ -389,7 +388,7 @@ QEtaCofactorSpace: Exports == Implementation where
     -- return true if for some a in
     -- \cite[Thm~10.1(4)]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
     -- the condition is true.
-    checkSquare1?(nn: P, s: LZ, gs: LLZ, mm: P, r: LZ, gr: LLZ, m: P,
+    checkSquare1?(nn: P, s: LZ, stilde: LLZ, mm: P, r: LZ, rtilde: LLZ, m: P,
                  a: Z): Boolean ==
         --assert(one? gcd(a, d)) for every divisor of nn (and of mm).
         z: Z := 1
@@ -401,11 +400,11 @@ QEtaCofactorSpace: Exports == Implementation where
         zero? z => error "checkSquare1?: zero jacobi symbol"
 
         expo: Q := 0
-        for l in gr repeat --assert(#l=3) -- l=[d,g,e]
+        for l in rtilde repeat --assert(#l=3) -- l=[d,g,e]
             not DIVISIBLEBY?(l.1, mm) =>
                 error "checkSquare1?: delta is not a divisor"
             expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
-        for l in gs repeat --assert(#l=3) -- l=[d,g,e]
+        for l in stilde repeat --assert(#l=3) -- l=[d,g,e]
             not DIVISIBLEBY?(l.1, nn) =>
                 error "checkSquare1?: delta is not a divisor"
             expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
@@ -415,8 +414,8 @@ QEtaCofactorSpace: Exports == Implementation where
         (z > 0 and even? numer expo) or (z < 0 and odd? numer expo)
 
     -- local function
-    alphaAux(mm: P, r: LZ, gr: LLZ, t: N): Q ==
-        (24*t)::Q + SIGMAINFINITY(mm, r, gr)
+    alphaAux(mm: P, r: LZ, rtilde: LLZ, t: N): Q ==
+        (24*t)::Q + SIGMAINFINITY(mm, r, rtilde)
 
     -- exported functions
 
@@ -494,10 +493,10 @@ QEtaCofactorSpace: Exports == Implementation where
         -- solve mat*x=v for x.
         diophantineSystem(matmod0, v)$SmithNormalForm(Z, VZ, VZ, MZ)
 
-    etaCofactorSpace1(nn: P, mm: P, rr: List List Z, m: P, t: N): ECFS ==
+    etaCofactorSpace1(nn: P, mm: P, rbar: List List Z, m: P, t: N): ECFS ==
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
 
-        not conditionCoEtaQuotientGamma1?(nn, mm, rr, m, t) =>
+        not conditionCoEtaQuotientGamma1?(nn, mm, rbar, m, t) =>
             error "conditionCoEtaQuotientGamma1? not met"
 
         nndivs: List P := DIVISORS nn
@@ -518,9 +517,9 @@ QEtaCofactorSpace: Exports == Implementation where
         v: VZ := new(rows, 0)
 
         rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rr)$QETAAUX
+            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
         r: LZ := rrec.pure
-        gr: LLZ := rrec.properGeneralized
+        rtilde: LLZ := rrec.properGeneralized
         n: Z := # nndivs
 
         -- Condition (1)
@@ -536,7 +535,7 @@ QEtaCofactorSpace: Exports == Implementation where
                 jj := jj + 1
                 qsetelt!(mat, 2, n + jj, 2*d)
         qsetelt!(mat, 2, numOfVars+1, 24) -- slack variable for (mod 24)
-        v.2 := - m * SIGMA0(mm, r, gr) -- fill right-hand side
+        v.2 := - m * SIGMA0(mm, r, rtilde) -- fill right-hand side
 
         -- Condition (3) and slack variable for mod 24
         -- We multiply the entries and the rhs by nn to remove denominators.
@@ -551,8 +550,8 @@ QEtaCofactorSpace: Exports == Implementation where
 
         -- fill right-hand side
         --assert(DIVISIBLEBY?(mm, nn))
-        nnrrhat: Z := numer(nn*SIGMAINFINITY(mm, r, gr)) -- is integral
-        nnalpha: Z := nnrrhat + 24*t*nn -- nn*alphaAux(mm, r, gr, t)
+        nnrrhat: Z := numer(nn*SIGMAINFINITY(mm, r, rtilde)) -- is integral
+        nnalpha: Z := nnrrhat + 24*t*nn -- nn*alphaAux(mm, r, rtilde, t)
         q: Q := nnalpha*(m^2-1)/m -- intermediate
         -- Security check. Should never fail because of Condition 8 on page 37
         -- of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
@@ -569,7 +568,7 @@ QEtaCofactorSpace: Exports == Implementation where
                 ii := ii+1
                 -- setEntries!(mat, v, n, ii, ...)
                 expo: Q := 0
-                for l in gr repeat --assert(#l=3) -- l=[d,g,e]
+                for l in rtilde repeat --assert(#l=3) -- l=[d,g,e]
                     not DIVISIBLEBY?(l.1, mm) =>
                         error "etaCofactorSpace1: delta is not a divisor"
                     expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
@@ -679,36 +678,36 @@ QEtaCofactorSpace: Exports == Implementation where
 -------------------------------------------------------------------
 
     -- CDZ condition 3 (p. 37)
-    conditionGSigma0?(nn: P, mm: P, gr: LLZ, m: P): Boolean ==
+    conditionGSigma0?(nn: P, mm: P, rtilde: LLZ, m: P): Boolean ==
         rv: Q := 0
-        for l in gr repeat rv := rv + l.2*l.3/l.1
+        for l in rtilde repeat rv := rv + l.2*l.3/l.1
         x: Q := kappa(m)*nn*rv
         one? denom x and even? numer x
 
     -- CDZ condition 4 (p. 37)
-    conditionSumExponents?(nn: P, gr: LLZ, m: P): Boolean ==
+    conditionSumExponents?(nn: P, rtilde: LLZ, m: P): Boolean ==
         rsum: Z := 0
-        for l in gr repeat rsum := rsum + l.3
+        for l in rtilde repeat rsum := rsum + l.3
         x: Z := kappa(m)*nn*rsum
         DIVISIBLEBY?(4, x)
 
     -- CDZ condition 5 (p. 37)
-    conditionSigma0?(nn: P, mm: P, gr: LLZ, m: P): Boolean ==
+    conditionSigma0?(nn: P, mm: P, rtilde: LLZ, m: P): Boolean ==
         rv: Q := 0
-        for l in gr repeat rv := rv + l.3/l.1
+        for l in rtilde repeat rv := rv + l.3/l.1
         x: Q := kappa(m)*m*nn*nn*rv
         one? denom x and DIVISIBLEBY?(12, numer x)
 
     -- CDZ condition 8 (p. 37)
-    conditionNDivisor?(nn: P, mm: P, r: LZ, gr: LLZ, m: P,t: N): Boolean ==
-        a: Z := kappa(m)*numer(mm*alphaAux(mm, r, gr, t))
+    conditionNDivisor?(nn: P, mm: P, r: LZ, rtilde: LLZ, m: P,t: N): Boolean ==
+        a: Z := kappa(m)*numer(mm*alphaAux(mm, r, rtilde, t))
         n: Z := 24*m*mm
         w: Z := (n exquo gcd(a, n)) :: Z
         DIVISIBLEBY?(w, nn)
 
     -- CDZ condition 10 (p. 38)
-    conditionOrbitLength?(nn: P, mm: P, r: LZ, gr: LLZ, m: P, t: N): Boolean ==
-        a: Q := alphaAux(mm, r, gr, t)
+    conditionOrbitLength?(nn: P, mm: P, r: LZ, rtilde: LLZ, m: P, t: N): Boolean ==
+        a: Q := alphaAux(mm, r, rtilde, t)
         n: P := 24*m*mm
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn)) (j^2-1 is in S_{n})
@@ -719,25 +718,26 @@ QEtaCofactorSpace: Exports == Implementation where
         return true
 
     -- condition for the disection of mixed-generalized eta-quotients
-    conditionCoEtaQuotientGamma1?(nn: P, mm: P, rr: LLZ, m: P, t: N): Boolean ==
+    conditionCoEtaQuotientGamma1?(
+      nn: P, mm: P, rbar: LLZ, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
         -- separate the true eta-quotient part from the generalized part
-        -- i.e. extract an r-vector and a gr list.
+        -- i.e. extract an r-vector and a rtilde list.
         rec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rr)$QETAAUX
+            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
         r: LZ := rec.pure
-        gr: LLZ := rec.properGeneralized
+        rtilde: LLZ := rec.properGeneralized
 
         zero?(nn rem mm) -- M|N
          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
-          and conditionGSigma0?(nn, mm, gr, m) -- CDZ condition 3 (p. 37)
-           and conditionSumExponents?(nn, gr, m) -- CDZ condition 4 (p. 37)
-            and conditionSigma0?(nn, mm, gr, m) -- CDZ condition 5 (p. 37)
+          and conditionGSigma0?(nn, mm, rtilde, m) -- CDZ condition 3 (p. 37)
+           and conditionSumExponents?(nn, rtilde, m) -- CDZ condition 4 (p. 37)
+            and conditionSigma0?(nn, mm, rtilde, m) -- CDZ condition 5 (p. 37)
              and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
               and conditionSigma0?(nn, mm, r, m) -- \eqref{eq:sv24}
-               and conditionNDivisor?(nn, mm, r, gr, m, t) -- CDZ 8 (p.37)
+               and conditionNDivisor?(nn, mm, r, rtilde, m, t) -- CDZ 8 (p.37)
                 and conditionEvenMultiplier?(nn, mm, r, m) --\eqref{eq:even-m}
-                 and conditionOrbitLength?(nn, mm, r, gr, m, t) -- CDZ cond. 10
+                 and conditionOrbitLength?(nn, mm, r, rtilde, m, t) -- CDZ cond. 10
 
 -------------------------------------------------------------------
 -- use of conditions from above
@@ -753,9 +753,10 @@ QEtaCofactorSpace: Exports == Implementation where
             conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma1: should not be here"
 
-    minimalLevelCoEtaQuotientGamma1(mm: P, rr: LLZ, m: P, t: N): P ==
+    minimalLevelCoEtaQuotientGamma1(mm: P, rbar: LLZ, m: P, t: N): P ==
         for nn in 1..24*m*mm repeat
-            conditionCoEtaQuotientGamma1?(asP nn, mm, rr, m, t) => return asP nn
+            conditionCoEtaQuotientGamma1?(asP nn, mm, rbar, m, t) =>
+                return asP nn
         error "minimalLevelCoEtaQuotientGamma1: should not be here"
 
     modularGamma0?(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Boolean ==
@@ -812,61 +813,61 @@ QEtaCofactorSpace: Exports == Implementation where
 
         true
 
-    modularGamma1?(nn: P, ss: LLZ, mm: P, rr: LLZ, m: P, t: N): Boolean ==
-        not conditionCoEtaQuotientGamma1?(nn, mm, rr, m, t) => false
+    modularGamma1?(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N): Boolean ==
+        not conditionCoEtaQuotientGamma1?(nn, mm, rbar, m, t) => false
 
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
         rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rr)$QETAAUX
+            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
         r: LZ := rrec.pure
-        gr: LLZ := rrec.properGeneralized
+        rtilde: LLZ := rrec.properGeneralized
 
         srec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(nn, ss)$QETAAUX
+            splitEtaQuotientSpecification(nn, sbar)$QETAAUX
         s: LZ := srec.pure
-        gs: LLZ := srec.properGeneralized
+        stilde: LLZ := srec.properGeneralized
 
         -- Condition (1)
         not zero?(reduce(_+, s, 0) + reduce(_+, r, 0)) =>
             dbgPrint("Chen: Theorem 10.1(1) nn", nn)
-            dbgPrint("Chen: Theorem 10.1(1) ss", ss)
+            dbgPrint("Chen: Theorem 10.1(1) sbar", sbar)
             dbgPrint("Chen: Theorem 10.1(1) mm", mm)
-            dbgPrint("Chen: Theorem 10.1(1) rr", rr)
+            dbgPrint("Chen: Theorem 10.1(1) rbar", rbar)
             false
 
         -- Condition (2)
-        rrv: Z := SIGMA0(mm, r, gr)
-        ssv: Z := SIGMA0(nn, s, gs)
+        rrv: Z := SIGMA0(mm, r, rtilde)
+        ssv: Z := SIGMA0(nn, s, stilde)
         z: Z := ssv + m*rrv
         not DIVISIBLEBY?(24, z) =>
             dbgPrint("Chen: Theorem 10.1(2) nn", nn)
-            dbgPrint("Chen: Theorem 10.1(2) ss", ss)
+            dbgPrint("Chen: Theorem 10.1(2) sbar", sbar)
             dbgPrint("Chen: Theorem 10.1(2) mm", mm)
-            dbgPrint("Chen: Theorem 10.1(2) rr", rr)
+            dbgPrint("Chen: Theorem 10.1(2) rbar", rbar)
             dbgPrint("Chen: Theorem 10.1(2) z", z)
             false
 
         -- Condition (3)
-        rrhat: Q := SIGMAINFINITY(mm, r, gr)
-        sshat: Q := SIGMAINFINITY(nn, s, gs)
-        alpha: Q := rrhat + (24*t)::Q -- alphaAux(mm, r, gr, t)
+        rrhat: Q := SIGMAINFINITY(mm, r, rtilde)
+        sshat: Q := SIGMAINFINITY(nn, s, stilde)
+        alpha: Q := rrhat + (24*t)::Q -- alphaAux(mm, r, rtilde, t)
         q: Q := sshat + m*rrhat - ((m^2-1)/m)*alpha
         not one? denom q or not DIVISIBLEBY?(24, z) => --shouldn't happen
             dbgPrint("Chen: Theorem 10.1(3) nn", nn)
-            dbgPrint("Chen: Theorem 10.1(3) ss", ss)
+            dbgPrint("Chen: Theorem 10.1(3) sbar", sbar)
             dbgPrint("Chen: Theorem 10.1(3) mm", mm)
-            dbgPrint("Chen: Theorem 10.1(3) rr", rr)
+            dbgPrint("Chen: Theorem 10.1(3) rbar", rbar)
             dbgPrint("Chen: Theorem 10.1(3) q", q)
             false
 
         -- Condition (4)
         for i in 1..11 repeat
             a: Z := nn*i+1
-            one? gcd(a,6) and not checkSquare1?(nn,s,gs,mm,r,gr,m,a) =>
+            one? gcd(a,6) and not checkSquare1?(nn,s,stilde,mm,r,rtilde,m,a) =>
                 dbgPrint("Chen: Theorem 10.1(4) nn", nn)
-                dbgPrint("Chen: Theorem 10.1(4) ss", ss)
+                dbgPrint("Chen: Theorem 10.1(4) sbar", sbar)
                 dbgPrint("Chen: Theorem 10.1(4) mm", mm)
-                dbgPrint("Chen: Theorem 10.1(4) rr", rr)
+                dbgPrint("Chen: Theorem 10.1(4) rbar", rbar)
                 dbgPrint("Chen: Theorem 10.1(4) a", a)
                 return false
 

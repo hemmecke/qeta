@@ -127,12 +127,12 @@ vector to correspond to a modular eta-quotient is violated.
 QEtaAuxiliaryPackage: with
     splitEtaQuotientSpecification: (P, LLZ) ->
         Record(pure: LZ, properGeneralized: LLZ)
-      ++ splitEtaQuotientSpecification(nn, rr) separates the
-      ++ part of rr that specifies a pure eta-quotient from the
-      ++ part of rr that specifies a proper generalized eta-quotient.
+      ++ splitEtaQuotientSpecification(nn, rbar) separates the
+      ++ part of rbar that specifies a pure eta-quotient from the
+      ++ part of rbar that specifies a proper generalized eta-quotient.
       ++ See definition in specification of
       ++ generalizedEtaPower $ EtaQuotientInfinity for how each element
-      ++ of rr is interpreted.
+      ++ of rbar is interpreted.
     lengthOfGeneralizedEtaQuotientSpecification: P -> N
       ++ lengthOfGeneralizedEtaQuotientSpecification(nn) returns
       ++ # toEtaQuotientSpecification(nn,[]) without ever
@@ -165,16 +165,16 @@ QEtaAuxiliaryPackage: with
       ++ of mm.
       ++ It corresponds to \eqref{eq:sumdelta} in qetaquot.spad.
     sigmaInfinity: (P, List List Z) -> Q
-      ++ sigmaInfinity(mm, gr) returns
+      ++ sigmaInfinity(mm, rtilde) returns
       ++ \sum_{delta|mm,0<g<delta/2}
       ++      delta*fractionalBernoulli2(g/delta)*r_{delta,g}
       ++ or rather
-      ++ \sum_{l \in gr}(d*fractionalBernoulli2(g/d)*e | (d,g,e)=l).
-      ++ We assume here that everly element of gr is of the form
+      ++ \sum_{l \in rtilde}(d*fractionalBernoulli2(g/d)*e | (d,g,e)=l).
+      ++ We assume here that everly element of rtilde is of the form
       ++ [d,g,e] and describes the generalized eta-power \eta_{d,g}^e
     sigmaInfinity: (P, List Z, List List Z) -> Q
-      ++ sigmaInfinity(mm, r, gr) returns
-      ++ sigmaInfinity(mm, r) + 12*sigmaInfinity(mm, gr).
+      ++ sigmaInfinity(mm, r, rtilde) returns
+      ++ sigmaInfinity(mm, r) + 12*sigmaInfinity(mm, rtilde).
       ++ Compare with \eqref{eq:generalized-sigmaInfinity}.
     sigma0: (P, List Z) -> Z
       ++ sigma0(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
@@ -182,13 +182,13 @@ QEtaAuxiliaryPackage: with
       ++ of mm.
       ++ It corresponds to \eqref{eq:sumdelta} in qetaquot.spad.
     sigma0: (P, List List Z) -> Z
-      ++ sigma0(mm, gr) returns
+      ++ sigma0(mm, rtilde) returns
       ++ \sum_{delta|mm, 0<g<delta/2} (mm/delta)*r_{delta,g}
-      ++ or rather \sum_{l \in gr}((mm/d)*e | (d,g,e)=l).
-      ++ We assume here that everly element of gr is of the form
+      ++ or rather \sum_{l \in rtilde}((mm/d)*e | (d,g,e)=l).
+      ++ We assume here that everly element of rtilde is of the form
       ++ [d,g,e] and describes the generalized eta-power \eta_{d,g}^e
     sigma0: (P, List Z, List List Z) -> Z
-      ++ sigma0(mm, r, gr) returns sigma0(mm, r) + 2*sigma0(mm, gr).
+      ++ sigma0(mm, r, rtilde) returns sigma0(mm, r) + 2*sigma0(mm, rtilde).
       ++ Compare with \eqref{eq:generalized-sigma0}.
     fractionalPart: Q -> Q
       ++ fractionalPart(x) returns x - floor(x)::Fraction(Integer).
@@ -328,19 +328,19 @@ QEtaAuxiliaryPackage: with
       ++ highest power e such that p^e is a factor of d.
 
     modularGamma1: (P, List List Z) -> Z
-      ++ modularGamma1(nn, rr) returns 0 if the parameters specify a
+      ++ modularGamma1(nn, rbar) returns 0 if the parameters specify a
       ++ generalized eta-quotient that is modular for Gamma1(nn). It
       ++ returns 1, if condition \eqref{eq:generalized-weight} is not
       ++ met, 2, if condition \eqref{eq:generalized-sigmaInfinity} is
       ++ not met, and 3 if condition \eqref{eq:generalized-sigma0}
       ++ does not hold. It is equivalent to check whether there is an
-      ++ extension v of rr such that matrixModularGamma1(nn)*v is 0
-      ++ where for we sort rr according to the order given by
+      ++ extension v of rbar such that matrixModularGamma1(nn)*v is 0
+      ++ where for we sort rbar according to the order given by
       ++ \eqref{eq:sorted-indices}.
     modularGamma1?: (P, List List Z) -> Boolean
-      ++ modularGamma1(nn, rr) returns true iff the generalized
-      ++ eta-quotient corresponding to rr is a modular function for
-      ++ Gamma_1(nn). It is equivalent to zero?(modularGamma1(nn, rr)).
+      ++ modularGamma1(nn, rbar) returns true iff the generalized
+      ++ eta-quotient corresponding to rbar is a modular function for
+      ++ Gamma_1(nn). It is equivalent to zero?(modularGamma1(nn, rbar)).
     matrixModularGamma1: P -> MQ
       ++ matrixModularGamma0(nn) returns a matrix mat such
       ++ that if divs:=divisors(nn), n=#divisors(nn) and v is such
@@ -680,19 +680,19 @@ $a\in X_c$.
     -- generalizedEtaPower $ EtaQuotientInfinity.
     -- Here we separate the pure eta-quotient specification from the
     -- specification of generalized eta-quotients.
-    splitEtaQuotientSpecification(mm: P, rr: LLZ):
+    splitEtaQuotientSpecification(mm: P, rbar: LLZ):
       Record(pure: List Z, properGeneralized: LLZ) ==
         hr: XHashTable(Z, Z) := table() -- to compute r
-        gr: LLZ := empty() -- specify all generalized eta-quotients
-        for l in rr | not empty? l repeat
+        rtilde: LLZ := empty() -- specify all generalized eta-quotients
+        for l in rbar | not empty? l repeat
             d: Z := first l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
             #l = 1 => hr.d := 1
             #l = 2 => hr.d := l.2
-            #l = 3 => gr := cons(l, gr)
+            #l = 3 => rtilde := cons(l, rtilde)
             error "splitEtaQuotientSpecification: list length > 3"
         r: List Z := [elt(hr, d, 0) for d in divisors(mm)$INTF]
-        [r, gr]
+        [r, rtilde]
 
     fractionalPart(x: Q): Q == -- local function
         d: Z := denom x
@@ -752,45 +752,45 @@ $a\in X_c$.
             if not zero? e then spec := cons(concat(i, e), spec)
         return reverse! spec
 
-    sigmaInfinity(mm: P, gr: List List Z): Q ==
+    sigmaInfinity(mm: P, rtilde: List List Z): Q ==
         res: Q := 0
-        for l in gr repeat --assert(#l=3)
+        for l in rtilde repeat --assert(#l=3)
             not DIVISIBLEBY?(l.1, mm) =>
                 error "sigmaInfinity: delta is not a divisor"
             res := res + l.1 * l.3 * fractionalBernoulli2(l.2/l.1)
         res
 
-    sigmaInfinity(mm: P, r: List Z, gr: List List Z): Q ==
-        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, gr)
+    sigmaInfinity(mm: P, r: List Z, rtilde: List List Z): Q ==
+        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, rtilde)
 
-    sigma0(mm: P, gr: List List Z): Z ==
+    sigma0(mm: P, rtilde: List List Z): Z ==
         z: Z := 0
-        for l in gr repeat --assert(#l=3)
+        for l in rtilde repeat --assert(#l=3)
             z := z + l.3 * ((mm exquo l.1)::Z)
         z
 
-    sigma0(mm: P, r: List Z, gr: List List Z): Z ==
-        sigma0(mm, r) + 2*sigma0(mm, gr)
+    sigma0(mm: P, r: List Z, rtilde: List List Z): Z ==
+        sigma0(mm, r) + 2*sigma0(mm, rtilde)
 
-    modularGamma1(nn: P, rr: List List Z): Z ==
+    modularGamma1(nn: P, rbar: List List Z): Z ==
         rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(nn, rr)
+            splitEtaQuotientSpecification(nn, rbar)
         r: LZ := rrec.pure
-        gr: LLZ := rrec.properGeneralized
+        rtilde: LLZ := rrec.properGeneralized
         not zero? reduce(_+, r) => 1 -- non-zero weight
 
         -- order at inifinity is an integer
-        shat: Q := sigmaInfinity(nn, r, gr)
+        shat: Q := sigmaInfinity(nn, r, rtilde)
         not one? denom shat => 2
         not zero? positiveRemainder(numer shat, 24) => 2
 
         -- order at 0 is an integer
-        not zero? positiveRemainder(sigma0(nn, r, gr), 24) => 3
+        not zero? positiveRemainder(sigma0(nn, r, rtilde), 24) => 3
 
         return 0 -- modular function for Gamma1(nn)
 
-    modularGamma1?(nn: P, rr: List List Z): Boolean ==
-        zero? modularGamma1(nn, rr)
+    modularGamma1?(nn: P, rbar: List List Z): Boolean ==
+        zero? modularGamma1(nn, rbar)
 
     matrixModularGamma1(nn: P): MQ ==
         nndivs: List P := DIVISORS nn
