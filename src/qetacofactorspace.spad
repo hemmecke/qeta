@@ -235,14 +235,15 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ \cite{Radu:RamanujanKolberg:2015}.
 
     conditionCoEtaQuotientGamma1?: (P, P, LLZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma01?(nn, mm, rbar, m, t) returns true
-      ++ iff the conditions in Chapter 10 of
+      ++ conditionCoEtaQuotientGamma01?(nn, mm, rbar, m, t) returns
+      ++ true iff the conditions in Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
-      ++ just before Theorem 10.1 are fulfilled. These are conditions
-      ++ for the existence of a product of eta- and generalized
-      ++ eta-quotient to exist as a cofactor for a disection of such a
-      ++ quotient.
-      ++ The parameter rbar specifies the generalized eta-quotient via
+      ++ just before Theorem 10.1 are fulfilled. See
+      ++ Definition~\ref{def:condition-co-eta-quotient-gamma1}. These
+      ++ are conditions for the existence of a product of eta- and
+      ++ generalized eta-quotient to exist as a cofactor for a
+      ++ disection of such a quotient. The parameter rbar specifies
+      ++ the generalized eta-quotient via
       ++ generalizedEtaQuotient(rbar).
 
     conditionOrbitLength?: (P, P, LZ, P, N) -> Boolean
@@ -295,6 +296,7 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
       ++ are fulfilled. Here the parameter sbar stands for the exponents
       ++ $a_\delta$ and $a_{\delta,g}$.
+      ++ See also Theorem~\ref{thm:condition-co-eta-quotient-gamma1}.
 
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
@@ -387,6 +389,7 @@ QEtaCofactorSpace: Exports == Implementation where
     -- local function
     -- return true if for some a in
     -- \cite[Thm~10.1(4)]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+    -- or in \eqref{eq:CDZ-productsquare}
     -- the condition is true.
     checkSquare1?(nn: P, s: LZ, stilde: LLZ, mm: P, r: LZ, rtilde: LLZ, m: P,
                  a: Z): Boolean ==
@@ -394,9 +397,8 @@ QEtaCofactorSpace: Exports == Implementation where
         z: Z := 1
         nndivs: List P := DIVISORS nn
         mmdivs: List P := DIVISORS mm
-        for d in nndivs for sd in s repeat if odd? sd then z := z * jacobi(d, a)
-        for d in mmdivs for rd in r repeat
-            if odd? rd then z := z * jacobi(m*d, a)
+        for d in nndivs for sd in s | odd? sd repeat z := z * jacobi(d, a)
+        for d in mmdivs for rd in r | odd? rd repeat z := z * jacobi(m*d, a)
         zero? z => error "checkSquare1?: zero jacobi symbol"
 
         expo: Q := 0
@@ -828,6 +830,7 @@ QEtaCofactorSpace: Exports == Implementation where
         stilde: LLZ := srec.properGeneralized
 
         -- Condition (1)
+        -- Condition \eqref{eq:CDZ-sum=0}
         not zero?(reduce(_+, s, 0) + reduce(_+, r, 0)) =>
             dbgPrint("Chen: Theorem 10.1(1) nn", nn)
             dbgPrint("Chen: Theorem 10.1(1) sbar", sbar)
@@ -836,6 +839,7 @@ QEtaCofactorSpace: Exports == Implementation where
             false
 
         -- Condition (2)
+        -- Condition \eqref{eq:CDZ-sigma0=0}
         rrv: Z := SIGMA0(mm, r, rtilde)
         ssv: Z := SIGMA0(nn, s, stilde)
         z: Z := ssv + m*rrv
@@ -848,6 +852,7 @@ QEtaCofactorSpace: Exports == Implementation where
             false
 
         -- Condition (3)
+        -- Condition \eqref{eq:CDZ-sigmainfinity=0}
         rrhat: Q := SIGMAINFINITY(mm, r, rtilde)
         sshat: Q := SIGMAINFINITY(nn, s, stilde)
         alpha: Q := rrhat + (24*t)::Q -- alphaAux(mm, r, rtilde, t)
@@ -861,6 +866,7 @@ QEtaCofactorSpace: Exports == Implementation where
             false
 
         -- Condition (4)
+        -- Condition \eqref{eq:CDZ-productsquare}
         for i in 1..11 repeat
             a: Z := nn*i+1
             one? gcd(a,6) and not checkSquare1?(nn,s,stilde,mm,r,rtilde,m,a) =>

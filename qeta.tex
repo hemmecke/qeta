@@ -75,13 +75,18 @@ to compute the relation among eta-functions.
   \label{eq:SL2Z}
 \end{gather}
 
-Let $N$ be a positive natural number and define a $\Gamma_0(N)$ as a
+Let $N$ be a positive natural number. We abbreviate \emph{congruence
+  modulo N} by
+\begin{gather}
+  a \equiv_N b :\iff a \equiv b \pmod{N}
+\end{gather}
+and define a $\Gamma_0(N)$ as a
 subgroup of the special linear group $\SL2Z$ as follows.
 \begin{gather}
 \defineNotation[Gamma0N]{\Gamma_0(N)} := \SetDef{  \begin{pmatrix}
     a & b\\
     c & d
-  \end{pmatrix} \in \SL2Z}{c \equiv 0 \pmod{N}}
+  \end{pmatrix} \in \SL2Z}{c \equiv_N 0}
   \label{eq:Gamma0}
 \end{gather}
 
@@ -91,7 +96,7 @@ subgroup of the special linear group $\SL2Z$ as follows.
 \defineNotation[Gamma1N]{\Gamma_1(N)} := \SetDef{  \begin{pmatrix}
     a & b\\
     c & d
-  \end{pmatrix} \in \SL2Z}{c\equiv0 \pmod{N}, a\equiv d\equiv1 \pmod{N}}
+  \end{pmatrix} \in \SL2Z}{c \equiv_N 0 \pmod{N}, a \equiv_N d \equiv_N 1}
   \label{eq:Gamma1}
 \end{gather}
 
@@ -185,8 +190,8 @@ $r=(r_\delta)_{\delta\in\Delta}$ of $R(N)$ that fulfil the following
 conditions.
 \begin{align}
  \divisorsum{N} r_\delta &= 0\label{eq:sum=0}\\
- \divisorsum{N} \delta r_\delta &\equiv 0\pmod{24}\label{eq:sigmainfinity}\\
- \divisorsum{N} (N/\delta)r_\delta &\equiv 0\pmod{24}\label{eq:sigma0}\\
+ \divisorsum{N} \delta r_\delta &\equiv_{24} 0\label{eq:sigmainfinity}\\
+ \divisorsum{N} (N/\delta)r_\delta &\equiv_{24} 0\label{eq:sigma0}\\
  \sqrt{\divisorprod{N}\delta^{r_\delta}} &\in \setQ\label{eq:productsquare}
 \end{align}
 
@@ -1294,7 +1299,7 @@ into an element of $SL_2(Z)$ and a triangular matrix.
 %
 Then we determine natural numbers $u$ and $v$ such that $u v = N/c$
 and $\gcd(c, u)=1$. Thus, we can find $s \in \setZ$ such that
-$s \equiv -d'c^{-1} \pmod{u}$, \ie, $cs + d' = tu$ for some integer
+$s \equiv_u -d'c^{-1}$, \ie, $cs + d' = tu$ for some integer
 $t$ with $0\le t<c$.
 %
 Thus,
@@ -1338,27 +1343,11 @@ $\frac{a}{c}$.
 \label{sec:p_r-m-t}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  $p_{r,m,t}(\tau)=\unityPowerTau{\frac{24t+\sumdelta{r}}{24m}} \sum_{n=0}^\infty
-  a(mn+t) q^n$ In the following let
-$\defineNotation[m]{m},
-\defineNotation[M]{M},
-N \in \setN \setminus \Set{0}$, and
-$r \in R(M)$
-be subject to the following conditions
-\begin{gather}
-  \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
-  %\label{eq:p|m=>p|N}
-  \\
-  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
-    $\divides{\delta}{mN}$.}
-  %\label{eq:delta|M=>delta|mN}
-\end{gather}
-
-For the above conditions see (13) and (14) in
-\cite{Radu:AlgorithmicApproachRamanujanCongruences:2009} or
-Section~4.2 in \cite{Radu:PhD:2010}.
-
-Furthermore, we fix $t\in\Set{0,\ldots,m-1}$.
+In the following let $\defineNotation[m]{m}, \defineNotation[M]{M}, N
+\in \setN \setminus \Set{0}$, $r \in
+R(M)$, and
+$t\in\Set{0,\ldots,m-1}$ be subject to the conditions
+\eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1435,7 +1424,7 @@ then
   \\
   &=
     \sum_{n=0}^\infty a(mn+t) q^n
-  \label{eq:U_m-fbar_t}
+  \label{eq:U_m-f_t}
 \end{align}
 is the generating function for the series
 $(a(mn+t))_{n\in\setN}$.
@@ -1473,7 +1462,10 @@ In the following we consider the function
 \begin{align}
   \defineNotation[p-r-m-t-tau]{p_{r,m,t}(\tau)}
   &:= \unityPowerTau{\frac{24t+\sumdelta{r}}{24m} } (U_mf_t)(\tau)
-  =
+  = \unityPowerTau{\frac{24t+\sumdelta{r}}{24m}} \sum_{n=0}^\infty a(mn+t) q^n
+  \notag
+  \\
+  &=
     \frac{1}{m} \sum_{\lambda=0}^{m-1}
     \unityPower{-\frac{\lambda}{24m} (24t+\sumdelta{r})}
     g_{r,m,\lambda}(\tau)
@@ -1543,7 +1535,7 @@ following correspondence.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Find ``modular'' cofactor for $p_{r,m,t}(\tau)$}
+\subsubsection{Find ``$\Gamma_0(N)$-modular'' cofactor for $p_{r,m,t}(\tau)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1694,7 +1686,7 @@ $\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 By \eqref{eq:p_r-m-t(tau)} we can write the following.
 \begin{align}
-  P_{r, m, t}(\tau)
+  \defineNotation[P-r-m-t]{P_{r, m, t}(\tau)}
   &:= \prod_{k \in \modularOrbit{r,m,t}}
     \unityPowerTau{\frac{24k+\sumdelta{r}}{24m}} (U_mf_{k})(\tau)\\
   &:= \prod_{k \in \modularOrbit{r,m,t}}
@@ -1706,7 +1698,7 @@ By \eqref{eq:p_r-m-t(tau)} we can write the following.
     \prod_{k \in \modularOrbit{r,m,t}} \left[\sum_{n=0}^\infty a(mn+k) q^n\right]
   \\
   %
-  F_{s, r, m, t}(\tau)
+  \defineNotation[F-s-r-m-t]{F_{s, r, m, t}(\tau)}
   &:= \divisorprod{N} \eta(\delta\tau)^{s_\delta} \cdot P_{r,m,t}(\tau)
   \\
   &= \divisorprod{N} \eulerFunction{\delta}^{s_\delta}
@@ -1792,13 +1784,11 @@ The parts of \eqref{eq:P_r-m-t(gamma*tau)} are implemented via
       0,
     \label{eq:Radu-sum=0}\\
     \divisorsum{M} \delta s_\delta + \mu m \divisorsum{N} \delta r_\delta + \nu
-    &\equiv
-      0 \pmod{24},
+    &\equiv_{24} 0
     \label{eq:Radu-sigmainfinity}\\
     \divisorsum{N} \frac{N}{\delta} s_\delta
     + \frac{\mu m N}{M} \divisorsum{M} \frac{M}{\delta} r_\delta
-    &\equiv
-      0 \pmod{24},
+    &\equiv_{24} 0,
     \label{eq:Radu-sigma0}\\
     \sqrt{
     \divisorprod{N}\delta^{s_\delta}
@@ -2217,7 +2207,7 @@ $\frac{g}{N}$,
   \begin{cases}
     (1 - \zeta_N^{-h}) \unityPower{\frac{1}{2} P_1\!\left(\frac{h}{N}\right)},
     &
-    \text{if $g\equiv0\pmod{N}$ and $h\not\equiv0\pmod{N}$,}
+    \text{if $g\equiv_N 0$ and $h\not\equiv_N 0$,}
     \\
     1, & \text{otherwise},
   \end{cases}
@@ -2281,7 +2271,7 @@ We consider the generalized eta-function which is given by
   \label{eq:eta_delta-g^[R](tau)}
 \end{align}
 where $\bar{g}\in\Set{0,\ldots,\delta-1}$ is such that
-$\bar{g} \equiv g \pmod{\delta}$,
+$\bar{g} \equiv_\delta g$,
 \end{Definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2317,7 +2307,7 @@ The generalized Dedekind eta-function is given by
     \left( \zeta_N^{-h} q^{1-\frac{g}{N}}; q \right)
   \label{eq:eta_g-h^[Y](tau)}
 \end{align}
-For $g \not\equiv 0 \pmod{N}$ define
+For $g \not\equiv_N 0$ define
 \begin{align}
   \defineNotation[E-g-tau]{E_g(\tau)}
   &:=
@@ -2399,7 +2389,7 @@ essentially restrict the indices to $0<g<N$ and $0\le h<N$.
     E_{g+N,h}(\tau) = E_{-g,-h}(\tau) = -\zeta_N^{-h} E_{g,h}(\tau)\\
     E_{g,h+N}(\tau) = E_{g, h}(\tau)
   \end{gather}
-  Let $g \not\equiv 0 \pmod{N}$. Then
+  Let $g \not\equiv_N 0$. Then
   \begin{gather}
     E_{g+N}(\tau) = E_{-g}(\tau) = - E_g(\tau)
   \end{gather}
@@ -2427,7 +2417,7 @@ $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)\in\SL2Z$,
 Since $\eta_{\delta,0}^{[R]}(\tau) = \eta(\delta\tau)^2$ and we already have
 a transformation formula for the pure eta-function given by
 \eqref{eq:eta_delta(gamma*tau)}, we only need to consider
-transformation rules with $g \not\equiv 0 \pmod{\delta}$.
+transformation rules with $g \not\equiv_\delta 0$.
 
 A transformation formula was given in
 \cite[Chp.~VIII]{Schoeneberg:EllipticModularFunctions:1974}, see
@@ -2549,7 +2539,7 @@ $z$ it must hold:
     + \left\lfloor\frac{g'}{N} \right\rfloor
       \left(\frac{1}{2} - \frac{h'}{N}\right)
 \end{gather*}
-If $g\not\equiv0\pmod{0}$ and $g'\not\equiv0\pmod{0}$.
+if $g\not\equiv_N 0$ and $g'\not\equiv_N 0$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2984,9 +2974,9 @@ for $\Gamma_1(N)$ if
 \begin{gather}
   \sum_{\divides{\delta}{N}} a_{g,0} = 0\\
   \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
-  \delta P_2\Bigl(\frac{g}{\delta}\Bigr) a_{\delta,g} \equiv 0 \pmod{2}\\
+  \delta P_2\Bigl(\frac{g}{\delta}\Bigr) a_{\delta,g} \equiv_2 0\\
   \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
-  \frac{N}{\delta} P_2(0) a_{\delta,g} \equiv 0 \pmod{2}.
+  \frac{N}{\delta} P_2(0) a_{\delta,g} \equiv_2 0.
 \end{gather}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -3002,7 +2992,7 @@ which means that the weight (of the eta-quotient) should be 0,
   \delta r_{\delta,0}
   +
   12 \gensum \delta P_2\Bigl(\frac{g}{\delta}\Bigr) r_{\delta,g}
-  &\equiv 0 \pmod{24}
+  &\equiv_{24} 0
   \label{eq:generalized-sigmaInfinity}
 \end{align}
 and
@@ -3010,12 +3000,13 @@ and
 \sum_{\divides{\delta}{N}}
   \frac{N}{\delta} P_2(0) \frac{r_{\delta,g}}{2}
   +
-  \gensum \frac{N}{\delta} P_2(0) r_{\delta,g} \equiv 0 \pmod{2}  \notag\\
+  \gensum \frac{N}{\delta} P_2(0) r_{\delta,g} \equiv_2 0
+  \notag\\
   %
   \sum_{\divides{\delta}{N}}
   \frac{N}{\delta} r_{\delta,0}
   +
-  2 \gensum \frac{N}{\delta} r_{\delta,g} \equiv 0 \pmod{24}.
+  2 \gensum \frac{N}{\delta} r_{\delta,g} \equiv_{24} 0.
   \label{eq:generalized-sigma0}
 \end{align}
 
@@ -3285,15 +3276,16 @@ define
 \end{align}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Recall that from \eqref{eq:U_m-fbar_t} that
+Recall that from \eqref{eq:U_m-f_t} that
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align*}
+\begin{align}
   (U_m\bar{f}_t)(\tau)
   &=
   \frac{1}{m} \sum_{\lambda=0}^{m-1}\bar{f}_t\left(\frac{\tau+\lambda}{m}\right)
   =
     \sum_{n=0}^\infty \bar{a}(mn+t) q^n.
-\end{align*}
+  \label{eq:U_m-fbar_t}
+\end{align}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We can also evaluate $(U_m\bar{f}_t)(\tau)$ in another way.
@@ -3483,6 +3475,210 @@ following correspondence.
 
 
 
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Find ``$\Gamma_1(N)$-modular'' cofactor for $p_{\bar{r},m,t}(\tau)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We follow here Section~10 of
+\cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+%
+Most formulas are merely reformulations of the respective formulas in
+\cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+%
+Below, we use the notation CDZ($n$) to refer to condition $n$ in
+Section~10 of \cite[Sect.~10,
+cond~9]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+
+\begin{Definition}
+  \cite[Sect.~10]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+  \label{def:condition-co-eta-quotient-gamma1}
+
+  Let $\bar{\Delta}^*$ be the set of all tuples
+  $(N, M, \bar{r}, m, t)$ such that
+  $N, M, m \in \setN\setminus\Set{0}$,
+  %
+  $t \in \Set{0,\ldots,m-1}$,
+  %
+  $\bar{r} \in \bar{R}(M)$,
+  %
+  and for
+  %
+  $\kappa:=\gcd(1-m^2, 24)\ge1$,
+  %
+  $\alpha(t) := 24t + \sumdelta{\bar{r}}$,
+  %
+  $w' := \gcd(\kappa M \alpha(t), 24 m M)$,
+  %
+  $w := \frac{24 m M}{w'}$,
+  %
+  and $e, u\in\setZ$ such that $u$ is odd and
+  $\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$.
+  %
+  \begin{gather*}
+    \defineNotation[Sbar-n]{\bar{\setS}_{n}}
+    :=
+    \SetDef{[y^2]_n}{y \in \setZ \land \gcd(y, n)=1, y\equiv_N 1}
+    \subseteq
+    \setZ_n.
+  \end{gather*}
+  the following conditions hold:
+  \begingroup
+  \def\CDZ#1{CDZ(#1)}
+  \begin{gather}
+    \divides{M}{N},
+      %
+    \qquad
+    \text{see \CDZ{1}}
+    \\
+    \text{if $\divides{\delta}{M}$ and $r_{\delta,0}\ne0$, then
+      $\divides{\delta}{mN}$,}
+    \qquad
+    \text{see \eqref{eq:p|m=>p|N}, \CDZ{2}}
+    \label{eq:conditionPrimeDivisors?(nn,m)}
+    \\
+    \divides{2}{m} \implies (\divides{4}{\kappa N} \land \divides{8}{N e})
+    \lor
+    (\divides{2}{e} \land \divides{8}{N(u-1)}),
+    \qquad
+    \text{see \eqref{eq:even-m}, \CDZ{9}}
+    \label{eq:conditionEvenMultiplier?(nn,mm,r,m)}
+    \\
+    \kappa N \divisorsum{M} r_{\delta,0} \equiv_8 0,
+    \qquad
+    \text{see \eqref{eq:sum-r}, \CDZ{6}}
+    \label{eq:conditionSumExponents?(nn,r,m)}
+    \\
+    \kappa N \gensum[M] r_{\delta,g} \equiv_{4} 0,
+    \qquad
+    \text{see \CDZ{4}}
+    \label{eq:conditionSumExponents?(nn,rtilde,m)}
+    \\
+    \kappa N \gensum[M] \frac{g}{\delta} r_{\delta,g} \equiv_2 0,
+    \qquad
+    \text{see \CDZ{3}}
+    \label{eq:conditionGSigma0?(nn,mm,rtilde,m)}
+    \\
+    \kappa m N \divisorsum{M} \frac{N}{\delta} r_{\delta,0} \equiv_{24} 0,
+    \qquad
+    \text{see \CDZ{7}}
+    \label{eq:conditionSigma0(nn,mm,r,m)}
+    \\
+    \kappa m N \gensum[M] \frac{N}{\delta} r_{\delta,g} \equiv_{12} 0,
+    \qquad
+    \text{see \CDZ{5}}
+    \label{eq:conditionSigma0?(nn,mm,rtilde,m)}
+    \\
+    \divides{w}{N},
+    \qquad
+    \text{see \CDZ{8}}
+    \label{eq:conditionNDivosor?(nn,mm,r,rtilde,m,t)}
+    \\
+    \forall x\in\bar{\setS}_{24mM}: \frac{x-1}{24}
+    \left(
+      \divisorsum{M} \delta r_{\delta,0}
+      +
+      12 \gensum[M] \delta P_2\left(\frac{g}{\delta}\right) r_{\delta,g}
+      + 24 t
+    \right) \equiv_n 0,
+    \qquad
+    \text{see \CDZ{10}}.
+    \label{eq:conditionOrbitLength?(nn,mm,r,rtilde,m,t)}
+  \end{gather}
+  \endgroup
+\end{Definition}
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{Theorem}
+  \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+  \label{thm:condition-co-eta-quotient-gamma1}
+  Let $(N, M, \bar{r}, m, t) \in \bar{\Delta}^*$ according to
+  Definition~\ref{def:condition-co-eta-quotient-gamma1}.
+  %
+  Furthermore, let $s \in \bar{R}(N)$ and
+  \begin{align}
+  \defineNotation[F-sbar-rbar-m-t]{F_{\bar{s}, \bar{r}, m, t}(\tau)}
+    &:= \divisorprod{N} \eta(\delta\tau)^{s_{\delta,0}}
+      \genprod[N] \eta_{\delta,g}^{[R]}(\tau)^{s_{\delta,g}}
+      \cdot p_{\bar{r},m,t}(\tau).
+  \label{eq:F_sbar-rbar-m-t(tau)}
+  \end{align}
+  Then $F_{\bar{s}, \bar{r}, m, t}(\tau)$ is a modular function for
+  $\Gamma_1(N)$ if and only if $s$ satisfies the following conditions:
+  \begin{gather}
+    \divisorsum{n} s_{\delta,0} + \divisorsum{M} r_{\delta,0} = 0,
+    \label{eq:CDZ-sum=0}
+    \\
+    \left(
+      \divisorsum{N} \delta s_{\delta,0}
+      +
+      12 \gensum[N] \delta P_2\left(\frac{g}{\delta}\right) s_{\delta,g}
+    \right)
+    +
+    Nm
+    \left(
+      \divisorsum{M} \frac{r_{\delta,0}}{\delta}
+      +
+      12 \gensum[M] \delta P_2\left(\frac{g}{\delta}\right) r_{\delta,g}
+    \right)
+    \equiv_{24}
+    0,
+    \label{eq:CDZ-sigmainfinity=0}
+    \\
+    N
+    \left(
+      \divisorsum{N} \frac{s_{\delta,0}}{\delta}
+      +
+      2 \gensum[N] \frac{s_{\delta,g}}{\delta}
+    \right)
+    +
+    Nm
+    \left(
+      \divisorsum{M} \frac{r_{\delta,0}}{\delta}
+      +
+      2 \gensum[M] \frac{r_{\delta,g}}{\delta}
+    \right)
+    \equiv_{24}
+    0,
+    \label{eq:CDZ-sigma0=0}
+  \end{gather}
+  and for any integer $0<a<12N$ with $\gcd(a,6)=1$ and $a \equiv_N 1$,
+  \begin{gather}
+    \divisorprod{N} \jacobisymbol{\delta}{a}^{\abs{s_{\delta,0}}}
+    \divisorprod{M} \jacobisymbol{m \delta}{a}^{\abs{r_{\delta,0}}}
+    \unityPower{\frac{a-1}{2}
+      \left[
+      \gensum[N] \left( \frac{g}{\delta} - \frac{1}{2}\right) s_{\delta,g}
+      +
+      \gensum[M] \left( \frac{g}{\delta} - \frac{1}{2}\right) r_{\delta,g}
+      \right]
+    }
+    =
+    1.
+    \label{eq:CDZ-productsquare}
+  \end{gather}
+  Note that in \eqref{eq:CDZ-sigma0=0} the expression
+  $\jacobisymbol{\delta}{a}$ denotes the Jacobi symbol.
+\end{Theorem}
 
 
 
