@@ -111,14 +111,7 @@ live in $\setQ[\xi][x]$ where $\xi=\exp\bigl(\frac{2\pi i}{k}\bigr)$
 is a $k$-th primitive root of unity and $x$ is a fractional power of
 $q$.
 
-Another naming convention is that domains that involve the string
-\code{Sifted} correspond to an application of the
-$U_m$ operator, \ie, instead of looking on a series
-$\sum_{n=0}^\infty{a(n)}
-q^n$, we deal with a ``sifted'' series of the form
-$\sum_{n=0}^\infty{a(mn+t) q^n}$.
-
-Domains in the second category are implemented int he file
+Domains in the second category are implemented in the file
 \PathName{qetaquot.spad}.
 
 
@@ -773,7 +766,7 @@ computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 ++ SymbolicModularGamma0EtaQuotientGamma
 ++ holds data to compute an eta-quotient
 ++ expansions of $F_{s, r, m, t}(\gamma \tau)$.
-++ See \eqref{eq:F_s-r-m-t(gamma*tau)} in this file.
+++ See \eqref{eq:F_s-r-m-t(gamma*tau)}.
 SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
       ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the expansion
@@ -785,8 +778,9 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     orbitProduct: % -> SymbolicEtaQuotientOrbitProductGamma
       ++ orbitProduct(x) returns the orbit product part of $F_{s,r,m,t}$.
     minimalRootOfUnity: % -> P
-      ++ minimalRootOfUnity(x) returns
-      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
+      ++ minimalRootOfUnity(x) returns the lcm of the
+      ++ minimalRootUnity(cofactor(x)) and
+      ++ [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
  == add
     Rep ==> Record(
               fcoetaqg: SymbolicEtaQuotientGamma,
@@ -822,6 +816,15 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
 
     ((x: %) = (y: %)): Boolean ==
         (xx.fcoetaqg = yy.fcoetaqg) and (xx.fyeqopg = yy.fyeqopg)
+
+
+
+
+
+
+
+
+
 
 
 )if LiterateDoc
@@ -970,8 +973,8 @@ SymbolicEtaQuotient: SetCategory with
 For $m, M, N\in\setN$, $s \in R(N)$, $r \in R(M)$, $t \in
 \Set{0,\ldots,m-1}$, elements from the domain
 \code{SymbolicModularGamma0EtaQuotient} represent the collection of
-element from \code{SymbolicSiftedEtaQuotienGamma} for all $\gamma \in
-\SL2Z$ corresponding to a cusp of $\Gamma_0(N)$.
+element from \code{SymbolicModularGamma0EtaQuotienGamma} for all
+$\gamma \in \SL2Z$ corresponding to a cusp of $\Gamma_0(N)$.
 
 It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)}, \ie,
 it computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
@@ -1013,7 +1016,7 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     Rep ==> Record(
               flevel: P,  -- corresponds to Gamma_0(N)
               fcusps: LQ, -- cusps of Gamma_0(N)
-              fmseq: HT,  -- mapping gamma to YM0EQG
+              fy: HT,     -- mapping gamma to YM0EQG
               fminroot: P -- minimal root of unity needed for the coefficients
             )
     import from Rep
@@ -1034,13 +1037,13 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
         etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
 
     level(x: %): P == xx.flevel
-    elt(x: %, cusp: Q): YM0EQG == xx.fmseq.cusp
+    elt(x: %, cusp: Q): YM0EQG == xx.fy.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
     cusps(x: %): LQ == xx.fcusps
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
-    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fmseq)
-    ((x: %) = (y: %)): Boolean == xx.fmseq = yy.fmseq
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fy)
+    ((x: %) = (y: %)): Boolean == xx.fy = yy.fy
 
 
 
@@ -1760,6 +1763,94 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicModularGamma1GeneralizedEtaQuotientGamma
+  $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$}
+\label{sec:SymbolicModularGamma1GeneralizedEtaQuotientGamma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Elements from the domain
+\code{SymbolicModularGamma1GeneralizedEtaQuotientGamma} represent the
+product of an eta-quotient cofactor to an element of
+\code{SymbolicGeneralizedEtaQuotienttGamma} in order to make the
+product a modular function for $\Gamma_1(N)$.
+
+It corresponds to the data from \eqref{eq:F_sbar-rbar-m-t(gamma*tau)},
+\ie, it computes the building blocks for
+$F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YM1GEQG SymbolicModularGamma1GeneralizedEtaQuotientGamma
+++ SymbolicModularGamma1GeneralizedEtaQuotientGamma
+++ holds data to compute an eta-quotient
+++ expansions of $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
+++ See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
+SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
+    generalizedEtaQuotient: (P, LLZ, P, LLZ, P, N, SL2Z) -> %
+      ++ generalizedEtaQuotient(nn, sbar, mm, rbar, m, t, gamma)
+      ++ represents the expansion of
+      ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$.
+    cofactor: % -> SymbolicGeneralizedEtaQuotientGamma
+      ++ cofactor(x) returns the cofactor part to make
+      ++ $F_{\bar{s},\bar{r},m,t}$ a modular function for
+      ++ $\Gamma_1(N)$.
+    basefactor: % -> SymbolicGeneralizedEtaQuotientGamma
+      ++ basefactor(x) returns the part of $F_{\bar{s},\bar{r},m,t}$
+      ++ that is connected to the generating series of a(m*n+t).
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns the lcm of
+      ++ minimalRootOfUnity(cofactor(x)) and
+      ++ minimalRootOfUnity(basefactor(x)).
+ == add
+    YGEQG ==> SymbolicGeneralizedEtaQuotientGamma
+    Rep ==> Record(
+              fcofactor: YGEQG,   -- g_sbar
+              fbasefactor: YGEQG, -- p_rbar-m-t
+              fminroot: P    -- minimal root of unity needed for coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N,
+                           gamma: SL2Z): % ==
+        not modularGamma1?(nn, sbar, mm, rbar, m, t)$QEtaCofactorSpace =>
+            error "modular conditions are not fulfilled"
+        cofactor: YGEQG := generalizedEtaQuotient(nn, sbar, 1, 0, gamma)
+        basefactor: YGEQG := generalizedEtaQuotient(mm, rbar, m, t, gamma)
+        minR1: P := minimalRootOfUnity cofactor
+        minR2: P := minimalRootOfUnity basefactor
+        per [cofactor, basefactor, lcmP(minR1, minR2)]
+
+    cofactor(x: %): SymbolicGeneralizedEtaQuotientGamma == xx.fcofactor
+    basefactor(x: %): SymbolicGeneralizedEtaQuotientGamma == xx.fbasefactor
+    minimalRootOfUnity(x: %): P == xx.fminroot
+
+    coerce(x: %): OutputForm == xx::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.fcofactor)
+        h := hashUpdate!(h, xx.fbasefactor)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        (xx.fcofactor = yy.fcofactor) and (xx.fbasefactor = yy.fbasefactor)
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicGeneralizedEtaQuotient
   $(p_{\bar{r},m,t}(\gamma\tau))_\gamma$}
 \label{sec:SymbolicGeneralizedEtaQuotient}
@@ -1873,6 +1964,114 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
         xx.flevel ~= yy.flevel => false
         xx.fexponents ~= yy.fexponents => false
         xx.fcusps = yy.fcusps
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D SymbolicModularGamma1GeneralizedEtaQuotient
+  $(F_{\bar{s},\bar{r},m,t}(\gamma\tau))_\gamma$}
+\label{sec:SymbolicModularGamma1GeneralizedEtaQuotient}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For $m, M, N\in\setN$, $\bar{s} \in \bar{R}(N)$, $\bar{r} \in
+\bar{R}(M)$, $t \in \Set{0,\ldots,m-1}$, elements from the domain
+\code{SymbolicModularGamma1GeneralizedEtaQuotient} represent the
+collection of elements from
+\code{SymbolicModularGamma1GeneralizedEtaQuotienGamma} for all
+$\gamma \in \SL2Z$ corresponding to a cusp of $\Gamma_1(N)$.
+
+It corresponds to the data from \eqref{eq:F_sbar-rbar-m-t(gamma*tau)},
+\ie, it computes the building blocks for
+$F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
+
+)endif
+
+-------------------------------------------------------------------
+)abbrev domain YM1GEQ SymbolicModularGamma1GeneralizedEtaQuotient
+++ SymbolicModularGamma1GeneralizedEtaQuotient holds data to compute
+++ an generalized eta quotient expansions of
+$F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$ at all cusps
+++ of $Gamma_1(N)$. See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
+SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
+    generalizedEtaQuotient: (P, LLZ, P, LLZ, P, N, LQ) -> %
+      ++ generalizedEtaQuotient(nn,sbar,mm,rbar,m,t,cusps) represents
+      ++ the expansion of $F_{sbar,rbar,m,t}(\gamma \tau)$ for all gamma
+      ++ corresponding to the given cusps. $rbar$ and $sbar$ are indexed by
+      ++ the divisors of $mm$ and $nn$, repectively.
+    generalizedEtaQuotient: (P, LLZ, P, LLZ, P, N) -> %
+      ++ etaQuotient(nn,sbar,mm,rbar,m,t) represents the expansion of
+      ++ $F_{rbar,sbar,m,t}(\gamma \tau)$ for all gamma corresponding
+      ++ to the cusps of $\Gamma_0(nn)$. $rbar$ and $sbar$ are indexed
+      ++ by the divisors of $mm$ and $nn$, repectively.
+    level: % -> P
+      ++ level(x) returns nn such that x corresponds to a modular
+      ++ function for Gamma_1(nn).
+    cusps: % -> LQ
+      ++ cusps(x) either returns the value that was given to
+      ++ generalizedEtaQuotient at creation time or
+      ++ cusps(level(x))$CongruenceSubgroupGamma1 if the cusps where
+      ++ not given.
+    elt: (%, Q) -> SymbolicModularGamma1GeneralizedEtaQuotientGamma
+      ++ x.cusp returns the data corresponding to the respective
+      ++ cusp.
+    minimalRootOfUnity: % -> P
+      ++ minimalRootOfUnity(x) returns
+      ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
+ == add
+    YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
+    HT ==> XHashTable(Q, YM1GEQG)
+    Rep ==> Record(
+              flevel: P,  -- corresponds to Gamma_0(N)
+              fcusps: LQ, -- cusps of Gamma_1(N)
+              fy: HT,     -- mapping gamma to YM1GEQG
+              fminroot: P -- minimal root of unity needed for the coefficients
+            )
+    import from Rep
+    xx ==> rep x
+    yy ==> rep y
+
+    generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N,
+                           cusps: LQ): % ==
+        h: HT := empty()
+        minroot: P := 1
+        for cusp in cusps repeat
+            gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA1
+            e: YM1GEQG := generalizedEtaQuotient(nn, sbar, mm, rbar, m, t,gamma)
+            h.cusp := e
+            minroot := lcmP(minroot, minimalRootOfUnity e)
+        per [nn, cusps, h, minroot]
+
+    generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N): % ==
+        generalizedEtaQuotient(nn, sbar, mm, rbar, m, t, cusps(nn)$GAMMA1)
+
+    level(x: %): P == xx.flevel
+    elt(x: %, cusp: Q): YM1GEQG == xx.fy.cusp
+    minimalRootOfUnity(x: %): P == xx.fminroot
+    cusps(x: %): LQ == xx.fcusps
+
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fy)
+    ((x: %) = (y: %)): Boolean == xx.fy = yy.fy
+
+
+
+
+
+
+
 
 
 
