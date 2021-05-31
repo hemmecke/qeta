@@ -159,7 +159,7 @@ We have $\gamma_1=\gamma_{\delta,m,\lambda}$ and $\gamma=\gamma_1\gamma_2$.
 )abbrev domain YEG SymbolicEtaGamma
 ++ SymbolicEtaGamma collects data for the expansion of
 ++ eta_delta(\gamma \tau).
-++ See \eqref{eq:eta_delta(gamma*tau)}.
+++ See \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
 SymbolicEtaGamma: SetCategory with
     eta: (P, P, P, N, SL2Z) -> %
       ++ eta(mm, delta, m, lambda, gamma) represents the
@@ -1134,12 +1134,6 @@ SymbolicGeneralizedEtaGamma: SetCategory with
       ++ qExponent(x) returns the argument of the third product of
       ++ \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}, i.e.,
       ++ $\frac{u_{\delta,m,\lambda}}{2} P_2\left(\frac{a'g}{\delta}\right)$.
-    minimalRootOfUnity: % -> P
-      ++ minimalRootOfUnity(x) returns the smallest positive integer n
-      ++ such that the expansion of the function
-      ++ $\eta_{\delta,g,m,lambda}^{[R]}(\gamma \tau)$ corresponding
-      ++ to x=generalizedEtaQuotient(nn, delta, g, m, lambda, gamma)
-      ++ lives in Q[w][[x]] where w is a n-th root of unity.
  == add
     Rec ==> Record(red: SL2Z, triang: MZ)
     Rep ==> Record(
@@ -1329,11 +1323,6 @@ SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
       ++ $\gensum
       ++   \frac{r_{\delta,g} u_\delta}{2}
       ++   P_2\left(\frac{a_\delta g}{\delta}\right)$.
-    minimalRootOfUnity: % -> P
-      ++ minimalRootOfUnity(e) returns the smallest positive integer n
-      ++ such that the expansion of the function g_rtilde(\gamma \tau)
-      ++ corresponding to e=etaQuotient(nn, rtilde, gamma) lives in
-      ++ Q[w][[x]] where w is a n-th root of unity.
     elt: (%, P, P) -> SymbolicGeneralizedEtaGamma
       ++ elt(x, delta, g) returns the data corresponding to the
       ++ respective (delta, g) pair.
@@ -1664,8 +1653,8 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
         minroot
 
     -- local returns the minimal root of unity needed to express
-    -- $g_{\bar{r},m.\lambda}(\gamma\tau}$ of
-    -- \eqref{eq:g_rbar-m-lambda(gamma*tau)} for the lambda stored in y.
+    -- $g_{\tilde{r},m.\lambda}(\gamma\tau}$ of
+    -- \eqref{eq:g_rtilde-m-lambda(gamma*tau)} for the lambda stored in y.
     minRootOfUnityProperGeneralized(y: YPGEQLG): P ==
         minroot: Z := 1
         -- We have to consider the root of unity factor in
@@ -1675,6 +1664,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
         -- $v_{\delta,m,\lambda}$ and
         -- $\frac{a' g}{\delta} v_{\delta,m,\lambda}$.
         -- (minroot for the q-Pochhammer part)
+        -- See
         for l in exponents y repeat
             delta := asP l.1; g := asP l.2; rdg := l.3;
             ygeg := y(delta, g)
@@ -1682,8 +1672,9 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
             g1 := gamma1 ygeg
             a1 := g1(1,1); gprime := a1*g
             b1 := g1(1,2); hprime := b1*g
-            z := (gprime + hprime)/delta
-            minroot := lcm(minroot, lcm(denom v, denom(z*v)))
+            z := hprime/delta + gprime/delta * v
+            -- See \eqref{eq:mimimalRootOfUnity-g_rtilde-m-lambda}.
+            minroot := lcm(minroot, lcm(denom v, denom z))
             -- Take the \alpha(a' g. b' g, delta) into account.
             if zero?(gprime rem delta) and not zero?(hprime rem delta) then
                 t: Q := hprime/delta      -- for delta's root of unity
