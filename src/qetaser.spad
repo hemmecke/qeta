@@ -324,6 +324,9 @@ QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
       ++ qetaLaurentRep(x) returns the underlying Laurent representation
       ++ of the Puiseux seriers. This might return a taylor series that
       ++ has 0 as its constant coefficient.
+    rationalPower : % -> Q
+      ++ rationalPower(p(q)) returns a rational number r such that the
+      ++ p(q) = l(q^r) for some Laurent series l.
     puiseux: (Q, QLS C) -> %
       ++ puiseux(r, s) creates a Puiseux series by replacing the
       ++ variable q of a by q^r.
@@ -331,6 +334,7 @@ QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
     Rep ==> UPS C
     Rec ==> Record(expon: Q, lSeries: QLS C)
     qetaLaurentRep(x: %): QLS C == (x pretend Rec).lSeries
+    rationalPower(x: %): Q == (x pretend Rec).expon
     puiseux(q: Q, qls: QLS C): % ==
         rec: Rec := [q, qls]$Rec
         rec pretend %
