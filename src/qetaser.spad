@@ -175,8 +175,8 @@ QEtaLaurentSeriesCategory(C: Ring): Category ==
       ++ coefficient is the (m*n+t)-th coefficient of x, 0<=t<m.
       ++ It is an extension of multisect to Laurent series.
     qetaTaylorRep: % -> QTS C
-      ++ qetaTaylorRep(x) returns the underlying taylor representation
-      ++ of the laurent serirs. This might return a taylor series that
+      ++ qetaTaylorRep(x) returns the underlying Taylor representation
+      ++ of the Laurent serires. This might return a taylor series that
       ++ has 0 as its constant coefficient.
     laurent: (Z, QTS C) -> %
       ++ laurent(n, s) creates a Laurent series by multiplying the
@@ -311,26 +311,34 @@ Finite0Series(C: CommutativeRing): Exports == Implementation where
 )if LiterateDoc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Unused Domain QEtaPuiseuxSeries}
+\subsection{Domain QEtaPuiseuxSeries}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
 
-)if UNUSED
 
 )abbrev domain QETAPS QEtaPuiseuxSeries
 QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
   Exports ==> UnivariatePuiseuxSeriesCategory C with
     qetaLaurentRep: % -> QLS C
+      ++ qetaLaurentRep(x) returns the underlying Laurent representation
+      ++ of the Puiseux seriers. This might return a taylor series that
+      ++ has 0 as its constant coefficient.
     puiseux: (Q, QLS C) -> %
+      ++ puiseux(r, s) creates a Puiseux series by replacing the
+      ++ variable q of a by q^r.
   Implementation ==> UPS C add
+    Rep ==> UPS C
     Rec ==> Record(expon: Q, lSeries: QLS C)
     qetaLaurentRep(x: %): QLS C == (x pretend Rec).lSeries
     puiseux(q: Q, qls: QLS C): % ==
         rec: Rec := [q, qls]$Rec
         rec pretend %
 
-)endif
+
+
+
+
 
 )if LiterateDoc
 %$
