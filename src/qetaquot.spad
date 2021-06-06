@@ -517,8 +517,7 @@ the respective width of the cusp is given.
 ++ QEtaSeriesExpansion computes an eta quotient expansion of
 ++ $g_{r,m,\lambda}(\gamma \tau)$, $p_{r,m,t}(\gamma\tau)$,
 ++ $F_{s,r,m,t}(\gamma\tau)$. See \eqref{eq:g_r-m-lambda(gamma*tau)}
-++ and \eqref{eq:F_r-m-t-(gamma*tau)}. This package is used as an
-++ auxiliary package for QEtaLaurentExpansion.
+++ and \eqref{eq:F_r-m-t-(gamma*tau)}.
 QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   -- We need Algebra(Q) for multiplication with (1/m)
@@ -543,17 +542,20 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
     puiseux: (SymbolicModularGamma0EtaQuotientGamma, P) -> PX
       ++ puiseux(y, w) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma \tau)$.
-    laurentExpansion: % -> LX
-      ++ If order(x) is an integer, then laurentExpansion(x) returns
-      ++ the Laurent series f of x without the prefactor corresponding
-      ++ to $(c \tau + d)$ such that x(q) = f(z) for z=q^(1/w) where
-      ++ w=rationalPowerDenominator(x). It is an error if order(x) is
-      ++ not an integer.
+
+    laurentExpansion: (PX, P) -> LX
+      ++ If p(q)=s(z) is a Puiseux series p expressed as a Laurent
+      ++ series s in the variable z=q^r, then laurentExpansion(x, w)
+      ++ returns the laurent series l such that l(x)=s(z)=p(q) where
+      ++ x=q^(1/w) in case r*w is an integer. It is an error, if the
+      ++ p(q) cannot be expressed as a Laurent series in q^(1/w).
 
     --TODO: The following function should live somewhere else.
     substitute: (LX, Q, N) -> PX
       ++ If s(q) is a series in q, then substitute(s, u, v) returns a
       ++ series t(q) such that t(q)=s(q^u*xi^v).
+
+
 
   Implementation ==> PX add
     Rep ==> PX
@@ -608,11 +610,21 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
 -------------------------------------------------------------------
 -- exported functions
 -------------------------------------------------------------------
-    laurentExpansion(x: %): LX ==
-        import from PX
-        not one? rationalPower rep x =>
-            error "TODO: MAYBE RELAX for r=integer or r=1/n ========= QEtaPuiseuxExpansion: fractional exponent in Laurent series"
-        qetaLaurentRep rep x
+    laurentExpansion(x: PX, w: P, m: P): LX ==
+        x := multiplyExponents(x, w)
+        -- What follows below is equivalent to "laurent(x)".
+        r: Q := rationalPower x
+        not one? denom r  =>
+            -- Maybe in intermediate computation (computation with
+            -- lambda) we compute in a variable that is (up to) an
+            -- m-th root of q^(1/m). We should check this here or
+            -- possibly earlier. But since the puiseux series do not
+            -- know anything about the width, it cannot be done
+            -- elsewhere.
+            error "QEtaSeriesExpansion: fractional exponent in Laurent series"
+        n: P := numer(r)::P -- n should be positive
+        one? n => qetaLaurentRep x -- avoid needless "multiplyExponents"
+        multiplyExponents(qetaLaurentRep x, n)
 
 
 )if LiterateDoc
@@ -659,8 +671,7 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 For $m, M\in\setN$, $r \in R(M)$, $t \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
-\SL2Z$, elements from the domain \code{QEtaPuiseuxExpansion}
-represents the series expansion of
+\SL2Z$, the following function computes
 \begin{gather*}
   p_{r,m,t}(\gamma\tau)
   =\frac{1}{m} \sum_{\lambda=0}^{m-1} g_{r,m,\lambda}(\gamma\tau)
@@ -668,7 +679,6 @@ represents the series expansion of
 without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
-
 
     puiseux(y: SymbolicEtaQuotientGamma): PX ==
         ue: Q := unityExponent y
@@ -682,62 +692,25 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         -- "lx: LX := removeZeroes(lx)$LX" would be nice the following
         -- gives the zero series and thus wouldn't terminate.
         -- "findIdentity(4,1,[8],4,3)$QEtaRamanujanKolberg(Q)"
---        lx: LX := qetaLaurentRep px
---        (1/m)$Q::C::CX * puiseux(rationalPower px, removeZeroes(lx, 100))
-        px
-
-
-)fin
-
---m========        tx: TX := checkedMultisect(m, qetaTaylorRep lx)
-
+        (1/m)$Q::C::CX * px
 
 
     -- local
-    puiseuxOrbit(y: SymbolicEtaQuotientOrbitProductGamma, w: P): % ==
-        orb := orbit y
+    puiseuxOrbit(y: SymbolicEtaQuotientOrbitProductGamma): % ==
+        orb: List N := orbit y
         t: N := first orb;
-        px: % := puiseux(y.t, w) -- p_{r,m,t}
-        d: P := rationalPowerDenominator px
-        tx: TX := qetaTaylorRep px
-        ord: Q := order px
-        for k in rest orb repeat
-            px: % := puiseux(y.k, w) -- SymbolicEtaQuotientGamma
-            tx := tx * qetaTaylorRep px
-            ord := ord + order px
-        not one? denom ord =>
-            error "QEtaPuiseuxExpansion: orbit product: denominator for q does not vanish"
-        per [d, ord, tx]
+        px: PX := puiseux(y.t) -- p_{r,m,t}
+        for k in rest orb repeat px := px * puiseux(y.k)
+        px
 
     puiseux(y: SymbolicModularGamma0EtaQuotientGamma, w: P): % ==
         yc: SymbolicEtaQuotientGamma := cofactor y
         yo: SymbolicEtaQuotientOrbitProductGamma := orbitProduct y
 
+        pc: PX := puiseux yc
+        po: PX := puiseuxOrbit yo
 
--========
-        -- After summation only the coefficients with exponents divisible
-        -- by m should be non-zero. We make a sanity check.
-        tx: TX := checkedMultisect(m, qetaTaylorRep lx)
-        per [w, ord/m, tx] -- the */m disappears after multiplying the orbit
-=========
-
-        pc: % := puiseux(yc, 24*w)
-        po: % := puiseuxOrbit(yo, 24*w)
-        d: P := rationalPowerDenominator pc
-        -- Sanity check.
-        d ~= 24 * w =>
-            error "QEtaPuiseuxExpansion: Puiseux expansion in wrong variable"
-        rationalPowerDenominator pc ~= rationalPowerDenominator po =>
-            error "QEtaPuiseuxExpansion: expansion in different variables"
-        tx: TX := checkedMultisect(24, qetaTaylorRep pc * qetaTaylorRep po)
-        ord: Q := order pc + order po
-        ord := ord * (1$Z/24)-- It's a modular function.
-        not one? denom ord =>
-            error "QEtaPuiseuxExpansion: modular: denominator for q does not vanish"
-        per [w, ord, tx]
-
-
-
+        pc*po
 
 
 
