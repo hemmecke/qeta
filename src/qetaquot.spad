@@ -554,8 +554,11 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ If p(q)=s(z) is a Puiseux series p expressed as a Laurent
       ++ series s in the variable z=q^r, then laurent(x, w) returns
       ++ the laurent series l such that l(x)=s(z)=p(q) where x=q^(1/w)
-      ++ in case r*w is an integer. It is an error, if the p(q) cannot
-      ++ be expressed as a Laurent series in q^(1/w).
+      ++ in case r*w is an integer. It might happen that r*w is not an
+      ++ integer. That is even to be expected since non-modular
+      ++ eta-quotients involve a factor in terms of q^(1/24). If
+      ++ r=s/t, then we take only every t-th term and check that the
+      ++ intermediate terms come indeed with a zero coefficient.
 
     laurentExpansion: SymbolicModularGamma0EtaQuotientGamma -> LX
       ++ laurentExpansion y represents the q-expansion of
@@ -635,19 +638,25 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
 -------------------------------------------------------------------
     laurent(x: PX, w: P): LX ==
         x := multiplyExponents(x, w)
-        -- What follows below is equivalent to "laurent(x)".
         r: Q := rationalPower x
-        not one? denom r  =>
-            -- Maybe in intermediate computation (computation with
-            -- lambda) we compute in a variable that is (up to) an
-            -- m-th root of q^(1/m). We should check this here or
-            -- possibly earlier. But since the Puiseux series do not
-            -- know anything about the width, it cannot be done
-            -- elsewhere.
+        -- Here we assume that the Puiseux series x is indeed a
+        -- Laurent series in q^(1/w).
+        d: P := denom(r)::P
+        n: P := numer(r)::P
+        lx: LX := qetaLaurentRep x
+        -- if possible, get rid of some initial zeros up to degree 0
+        lx := removeZeroes(-degree lx, lx)
+        one? d => -- lucky case, no multisect needed
+            one? n => return lx -- avoid needless "multiplyExponents"
+            return multiplyExponents(lx, n)
+        -- It is clearly an error if the order of the Laurent series
+        -- representation is not divisible by d.
+        ord: Q := degree(lx)/d
+        not one? denom ord =>
             error "QEtaSeriesExpansion: fractional exponent in Laurent series"
-        n: P := numer(r)::P -- n should be positive
-        one? n => qetaLaurentRep x -- avoid needless "multiplyExponents"
-        multiplyExponents(qetaLaurentRep x, n)
+        lx := choose(d, 0, lx)$LX
+        one? n => return lx
+        return multiplyExponents(lx, n)
 
 
 )if LiterateDoc
