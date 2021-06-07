@@ -228,9 +228,8 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
     coerce(s: ULS C): % == per s
     coerce(x: %): ULS C == rep x
     choose(m: P, t: N, x: %): % ==
-        -- if possible, get rid of some initial zeros
-        d: Z := degree x
-        x := removeZeroes(order(x, max(d, 0)) - d, x)
+        -- if possible, get rid of some initial zeros up to degree 0
+        x := removeZeroes(-degree x, x)
         -- start with the actual selection of coefficients
         ord: Z := order(x, max(0, degree x))
         ord ~= degree x => error "choose$QEtaLaurentSeries: deg=ord expected"
