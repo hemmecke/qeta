@@ -500,7 +500,7 @@ QEtaLaurentExpansion(C, mx, CX, xi): Exports == Implementation where
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{P QEtaSeriesExpansion)
+\subsection{P QEtaSeriesExpansion
   $p_{r,m,t}(\gamma\tau)$, $F_{s, r, m, t}(\gamma\tau)$}
 \label{sec:QEtaSeriesExpansion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -517,7 +517,7 @@ the respective width of the cusp is given.
 ++ QEtaSeriesExpansion computes an eta quotient expansion of
 ++ $g_{r,m,\lambda}(\gamma \tau)$, $p_{r,m,t}(\gamma\tau)$,
 ++ $F_{s,r,m,t}(\gamma\tau)$. See \eqref{eq:g_r-m-lambda(gamma*tau)}
-++ and \eqref{eq:F_r-m-t-(gamma*tau)}.
+++ and \eqref{eq:F_s-r-m-t(gamma*tau)}.
 QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   -- We need Algebra(Q) for multiplication with (1/m)
@@ -530,25 +530,31 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
 
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
-    puiseux: (SymbolicEtaQuotientLambdaGamma, Q) -> PX
-      ++ puiseux(y, r) computes the Puiseux expansion of
-      ++ $g_{r,m,\lambda(\gamma\tau)$ in terms of $q$ multiplied
-      ++ by $\exp(2\pi i r)$.
+    puiseuxExpansion: (SymbolicEtaQuotientLambdaGamma, Q) -> PX
+      ++ puiseuxExpansion(y, r) computes the Puiseux expansion of
+      ++ $g_{r,m,\lambda(\gamma\tau)$ in terms of $q$ multiplied by
+      ++ $\exp(2\pi i r)$. The $(c\tau+d)$ factor is missing.
+      ++ See \eqref{eq:g_r-m-lambda(gamma*tau)}.
+    puiseuxExpansion: SymbolicEtaQuotientGamma -> PX
+      ++ puiseuxExpansion(y) computes the Puiseux expansion of the
+      ++ q-expansion of $p_{r,m,t}(\gamma \tau)$, see
+      ++ \eqref{eq:p_r-m-t(gamma*tau)}. The $(c\tau+d)$ factor is
+      ++ missing.
+    puiseuxExpansion: SymbolicEtaQuotientOrbitProductGamma -> PX
+      ++ puiseuxExpansion(x) computes the PuiseuX expansion of
+      ++ P_{r,m,t}(\gamma\tau), see \eqref{eq:P_r-m-t(gamma*tau)}.
       ++ The $(c\tau+d)$ factor is missing.
-    puiseux: (SymbolicEtaQuotientGamma) -> PX
-      ++ puiseux(y) computes the Puiseux expansion of  the q-expansion of
-      ++ $p_{r,m,t}(\gamma \tau)$.
-      ++ The $(c\tau+d)$ factor is missing.
-    puiseux: (SymbolicModularGamma0EtaQuotientGamma, P) -> PX
-      ++ puiseux(y, w) represents the q-expansion of
-      ++ $F_{s,r,m,t}(\gamma \tau)$.
+    puiseuxExpansion: SymbolicModularGamma0EtaQuotientGamma -> PX
+      ++ puiseuxExpansion(y) represents the q-expansion of
+      ++ $F_{s,r,m,t}(\gamma \tau)$, see
+      ++ \eqref{eq:F_s-r-m-t(gamma*tau)}.
 
-    laurentExpansion: (PX, P) -> LX
+    laurent: (PX, P) -> LX
       ++ If p(q)=s(z) is a Puiseux series p expressed as a Laurent
-      ++ series s in the variable z=q^r, then laurentExpansion(x, w)
-      ++ returns the laurent series l such that l(x)=s(z)=p(q) where
-      ++ x=q^(1/w) in case r*w is an integer. It is an error, if the
-      ++ p(q) cannot be expressed as a Laurent series in q^(1/w).
+      ++ series s in the variable z=q^r, then laurent(x, w) returns
+      ++ the laurent series l such that l(x)=s(z)=p(q) where x=q^(1/w)
+      ++ in case r*w is an integer. It is an error, if the p(q) cannot
+      ++ be expressed as a Laurent series in q^(1/w).
 
     --TODO: The following function should live somewhere else.
     substitute: (LX, Q, N) -> PX
@@ -610,7 +616,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
 -------------------------------------------------------------------
 -- exported functions
 -------------------------------------------------------------------
-    laurentExpansion(x: PX, w: P, m: P): LX ==
+    laurent(x: PX, w: P): LX ==
         x := multiplyExponents(x, w)
         -- What follows below is equivalent to "laurent(x)".
         r: Q := rationalPower x
@@ -618,7 +624,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
             -- Maybe in intermediate computation (computation with
             -- lambda) we compute in a variable that is (up to) an
             -- m-th root of q^(1/m). We should check this here or
-            -- possibly earlier. But since the puiseux series do not
+            -- possibly earlier. But since the Puiseux series do not
             -- know anything about the width, it cannot be done
             -- elsewhere.
             error "QEtaSeriesExpansion: fractional exponent in Laurent series"
@@ -645,22 +651,21 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    puiseux(y: SymbolicEtaQuotientLambdaGamma, ue: Q): PX ==
-        divs: LP := divisors y
+    puiseuxExpansion(y: SymbolicEtaQuotientLambdaGamma, ue: Q): PX ==
         px: PX := 1
-        for delta in divs for rd in exponents y | not zero? rd repeat
+        for delta in divisors y for rd in exponents y | not zero? rd repeat
             etadelta: SymbolicEtaGamma := y.delta
             u: Q := udelta etadelta
             v: Q := mx * vdelta etadelta
             not one? denom v or v<0 =>
                 dbgPrint("delta", delta)
                 dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
-                error "QEtaPuiseuxExpansion: denominator does not vanish"
+                error "QEtaSeriesExpansion: denominator does not vanish"
             px := px * eulerFunctionPower(u, asN numer v, rd)
         q: Q := mx * (lambda(y)*ue + unityExponent y)
         not one? denom q =>
             dbgPrint("mx * unityExponent y", q)
-            error "QEtaPuiseuxExpansion: denominator for xi does not vanish"
+            error "QEtaSeriesExpansion: denominator for xi does not vanish"
         -- leading coefficient
         cx: CX := xipow numer q * squareRoot rationalPrefactor y
         monomial(cx, qExponent y) * px
@@ -680,12 +685,12 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    puiseux(y: SymbolicEtaQuotientGamma): PX ==
+    puiseuxExpansion(y: SymbolicEtaQuotientGamma): PX ==
         ue: Q := unityExponent y
-        px: PX := puiseux(y.0, ue) -- $g_{r,m,\lambda}$ for lambda=0
+        px: PX := puiseuxExpansion(y.0, ue) -- $g_{r,m,\lambda}$ for lambda=0
         m: P := multiplier y
         m1: P := asP(m::Z - 1)
-        for lambda in 1..m1 repeat px := px + puiseux(y.lambda, ue)
+        for lambda in 1..m1 repeat px := px + puiseuxExpansion(y.lambda, ue)
         -- Summation possibly produces zero leading coefficients.
         -- We try to remove at most 100 leading coefficients.
         --TODO: Make 100 dependent on some parameters.
@@ -694,22 +699,18 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         -- "findIdentity(4,1,[8],4,3)$QEtaRamanujanKolberg(Q)"
         (1/m)$Q::C::CX * px
 
-
-    -- local
-    puiseuxOrbit(y: SymbolicEtaQuotientOrbitProductGamma): % ==
+    puiseuxExpansion(y: SymbolicEtaQuotientOrbitProductGamma): PX ==
         orb: List N := orbit y
         t: N := first orb;
-        px: PX := puiseux(y.t) -- p_{r,m,t}
-        for k in rest orb repeat px := px * puiseux(y.k)
+        px: PX := puiseuxExpansion(y.t) -- p_{r,m,t}
+        for k in rest orb repeat px := px * puiseuxExpansion(y.k)
         px
 
-    puiseux(y: SymbolicModularGamma0EtaQuotientGamma, w: P): % ==
+    puiseuxExpansion(y: SymbolicModularGamma0EtaQuotientGamma): PX ==
         yc: SymbolicEtaQuotientGamma := cofactor y
         yo: SymbolicEtaQuotientOrbitProductGamma := orbitProduct y
-
-        pc: PX := puiseux yc
-        po: PX := puiseuxOrbit yo
-
+        pc: PX := puiseuxExpansion yc
+        po: PX := puiseuxExpansion yo
         pc*po
 
 
