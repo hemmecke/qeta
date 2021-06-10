@@ -302,12 +302,12 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
                 dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
                 error "QEtaPuiseuxExpansion: denominator does not vanish"
             s := s * eulerFunctionPower(asP numer u, asN numer v, rd)
-        q: Q := mx * (lambda(y)*ue + unityExponent y)
-        not one? denom q =>
-            dbgPrint("mx * unityExponent y", q)
+        uexp: Q := mx * (lambda(y)*ue + unityExponent y)
+        not one? denom uexp =>
+            dbgPrint("mx * unityExponent y", uexp)
             error "QEtaPuiseuxExpansion: denominator for xi does not vanish"
         -- leading coefficient
-        cx: CX := xipow numer q * squareRoot rationalPrefactor y
+        cx: CX := xipow numer uexp * squareRoot rationalPrefactor y
         p: Q := d * qExponent y
         not one? denom p =>
             error "QEtaPuiseuxExpansion: denominator for q does not vanish"
@@ -583,14 +583,13 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ If s(q) is a series in q, then substitute(s, u, v) returns a
       ++ series t(q) such that t(q)=s(q^u*xi^v).
 
-    if CX has Field then
-        puiseuxExpansion: (SymbolicProperGeneralizedEtaQuotientLambdaGamma, Q) -> PX
-        puiseuxExpansion: (SymbolicGeneralizedEtaQuotientLambdaGamma, Q) -> PX
-        puiseuxExpansion: SymbolicGeneralizedEtaQuotientGamma -> PX
-        puiseuxExpansion: YM1GEQG -> PX
-        laurentExpansion: YM1GEQG -> LX
-        laurentExpansionsGamma1: SymbolicGeneralizedEtaQuotient -> QLX
-        laurentExpansions: YM1GEQ -> QLX
+    puiseuxExpansion: (SymbolicProperGeneralizedEtaQuotientLambdaGamma, Q) -> PX
+    puiseuxExpansion: (SymbolicGeneralizedEtaQuotientLambdaGamma, Q) -> PX
+    puiseuxExpansion: SymbolicGeneralizedEtaQuotientGamma -> PX
+    puiseuxExpansion: YM1GEQG -> PX
+    laurentExpansion: YM1GEQG -> LX
+    laurentExpansionsGamma1: SymbolicGeneralizedEtaQuotient -> QLX
+    laurentExpansions: YM1GEQ -> QLX
 
 
 
@@ -606,6 +605,15 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
     ps1: CX := coefficient(ps, 1) -- avoid null pointer by expansion
     psc: CachedPower LX := ps :: CachedPower(LX)
     xic: CachedPower CX := xi :: CachedPower(CX)
+
+    SUPF2 ==> SparseUnivariatePolynomialFunctions2
+    SUP ==> SparseUnivariatePolynomial
+    -- Note that cycZ is the same polynomial as in MINROOTPOL
+    -- in etamacros.input.
+    cycZ: SUP Z := cyclotomic(mx)$CyclotomicPolynomialPackage
+    cycQ: SUP Q := map(coerce, cycZ)$SUPF2(Z, Q)
+    Qxi ==> SimpleAlgebraicExtension(Q, SUP Q, cycQ)
+    qxi := generator()$Qxi
 
 -------------------------------------------------------------------
 -- local functions
@@ -672,7 +680,9 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    puiseuxExpansion(y: SymbolicEtaQuotientLambdaGamma, ue: Q): PX ==
+    -- local
+    -- The q-Pochhammer part (last product) of \eqref{g_r-m-lambda(gamma*tau)}.
+    qPochhammerPure(y: SymbolicEtaQuotientLambdaGamma): PX ==
         px: PX := 1
         for delta in divisors y for rd in exponents y | not zero? rd repeat
             etadelta: SymbolicEtaGamma := y.delta
@@ -683,13 +693,17 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
                 dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
                 error "QEtaSeriesExpansion: denominator does not vanish"
             px := px * eulerFunctionPower(u, asN numer v, rd)
-        q: Q := mx * (lambda(y)*ue + unityExponent y)
-        not one? denom q =>
-            dbgPrint("mx * unityExponent y", q)
+        return px
+
+    -- $g_{r,m,\lambda}(\gamma\tau)$
+    puiseuxExpansion(y: SymbolicEtaQuotientLambdaGamma, ue: Q): PX ==
+        uexp: Q := mx * (lambda(y)*ue + unityExponent y)
+        not one? denom uexp =>
+            dbgPrint("mx * unityExponent y", uexp)
             error "QEtaSeriesExpansion: denominator for xi does not vanish"
         -- leading coefficient
-        cx: CX := xipow numer q * squareRoot rationalPrefactor y
-        monomial(cx, qExponent y) * px
+        cx: CX := xipow numer uexp * squareRoot rationalPrefactor y
+        monomial(cx, qExponent y) * qPochhammerPure y
 
 
 )if LiterateDoc
@@ -706,6 +720,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
+    -- $p_{r,m,t}(\gamma\tau)$
     puiseuxExpansion(y: SymbolicEtaQuotientGamma): PX ==
         ue: Q := unityExponent y
         px: PX := puiseuxExpansion(y.0, ue) -- $g_{r,m,\lambda}$ for lambda=0
@@ -721,6 +736,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         -- "findIdentity(4,1,[8],4,3)$QEtaRamanujanKolberg(Q)"
         (1/m)$Q::C::CX * px
 
+    -- $P_{r,m,t}(\gamma\tau)$
     puiseuxExpansion(y: SymbolicEtaQuotientOrbitProductGamma): PX ==
         orb: List N := orbit y
         t: N := first orb;
@@ -728,9 +744,11 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         for k in rest orb repeat px := px * puiseuxExpansion(y.k)
         px
 
+    -- $f_{s,r,m,t}(\gamma\tau)$
     puiseuxExpansion(y: SymbolicModularGamma0EtaQuotientGamma): PX ==
         puiseuxExpansion cofactor y * puiseuxExpansion orbitProduct y
 
+    -- $F_{s,r,m,t}(\gamma\tau)$
     laurentExpansion(y: SymbolicModularGamma0EtaQuotientGamma): LX ==
         cy: SymbolicEtaQuotientGamma := cofactor y
         nn: P := level cy
@@ -738,6 +756,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         w: P := WIDTH0(nn, g(2,1))
         laurent(puiseuxExpansion y, w)
 
+    -- $g_r(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
     laurentExpansionsGamma0(y: SymbolicEtaQuotient): QLX ==
         nn: P := level y
         -- check whether the exponent vectors (rdelta) lead to a
@@ -750,6 +769,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
             hser.cusp := laurent(puiseuxExpansion(y.cusp), w)
         hser
 
+    -- $F_{s,r,m,t}(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
     laurentExpansions(y: SymbolicModularGamma0EtaQuotient): QLX ==
         hser: QLX := empty()
         for cusp in cusps y repeat hser.cusp := laurentExpansion(y.cusp)
@@ -772,67 +792,103 @@ $q^{1/w)}$, \ie, the series from
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    if CX has Field then
 
-        -- local
-        -- Note that xi is a mx-th root of unity so, we have to multiply
-        -- the (rational) exponent of xi by mx.
-        alphaSchoenemann(g: Z, h: Z, nn: Z, rdg: Z): CX ==
-            not zero?(g rem nn) or zero?(h rem nn) or zero? rdg => 1$CX
 
-            uexp: Q := (mx/2)*fractionalBernoulli1(h/nn)$QETAAUX
-            not one? denom uexp =>
-                dbgPrint("mx * Bernoulli1", uexp)
-                error "QEtaSeriesExpansion: alphaSchoenemann"
-            cx := xipow(rdg * numer uexp)
+    -- local
 
-            uexp: Q := -mx*h/nn
-            not one? denom uexp =>
-                dbgPrint("mx * alphaexp", uexp)
-                error "QEtaSeriesExpansion: alphaSchoenemann"
-            c: CX := (1 - xipow(numer uexp))^abs(rdg)
-            if rdg > 0 then cx := cx * c else cx := cx/c
+    -- inv1minusxi(n) computes (1-xi^n)^(-1). Since xi is a mx-th root
+    -- of unity, the result is in Z[xi] and thus can be expressed in
+    -- C[x] witout knowing that CX is a field.
+    -- The strategy is that we compute (1-xi^n)^(-1) in Q[xi] (which
+    -- is a field) convert to Z[xi] and then to CX=C[xi].
+    -- Here we use the property that we require CX: Algebra C.
+    inv1minusxi(z: Z): CX ==
+        -- assert(not zero?(positiveRemainder(z, mx)))
+        n: P := asP positiveRemainder(z, mx)
+        f: Qxi := inv(1-qxi^n)
+        pol: SUP Q := convert(f)@SUP(Q)
+        -- now substitude xi into pol
+        mons: List SUP Q := reverse! monomials pol
+        cx: CX := 0
+        while not empty? mons repeat
+            mon := first mons
+            mons := rest mons
+            cx := cx + numer(leadingCoefficient mon) * xi^leadingSupport(mon)
+        cx
 
-        puiseuxExpansion(y: SymbolicProperGeneralizedEtaQuotientLambdaGamma,_
-                         ue: Q): PX ==
-            -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
-            cx: CX := 1
-            for l in exponents y repeat
-                delta := asP l.1; g := asP l.2; rdg := l.3;
-                ygeg := y(delta, g)
-                g1 := gamma1 ygeg
-                cx := cx * alphaSchoenemann(g1(1,1)*g, g1(1,2)*g, delta, rdg)
+    -- local
+    -- Note that xi is a mx-th root of unity so, we have to multiply
+    -- the (rational) exponent of xi by mx.
+    alphaSchoenemann(g: Z, h: Z, nn: Z, rdg: Z): CX ==
+        not zero?(g rem nn) or zero?(h rem nn) or zero? rdg => 1$CX
 
-            uexp: Q := mx * (lambda(y)*ue + unityExponent y)
-            not one? denom uexp =>
-                dbgPrint("mx * unityExponent y", uexp)
-                error "QEtaSeriesExpansion: denominator for xi does not vanish"
-            cx: CX := cx * xipow(numer uexp)
-            px: PX := monomial(cx, qExponent y)
+        uexp: Q := (mx/2)*fractionalBernoulli1(h/nn)$QETAAUX
+        not one? denom uexp =>
+            dbgPrint("mx * Bernoulli1", uexp)
+            error "QEtaSeriesExpansion: alphaSchoenemann"
+        cx := xipow(rdg * numer uexp)
 
-            for l in exponents y repeat
-                delta := asP l.1; g := asP l.2; rdg := l.3;
-                ygeg := y(delta, g)
-                g1 := gamma1 ygeg
-                alphabeta := fractionalPart(g1(1,1)*g/delta)$QETAAUX
-                alpha: Z := numer alphabeta
-                beta: Z  := denom alphabeta
-                -- exponent for mx-th root of unity
-                h: Q := mx*g1(1,2)*g/delta -- is made smaller in xipow
-                not one? denom h => -- mx should be such that h is integral
-                    dbgPrint("mx*h'/delta", h)
-                    error "QEtaSeriesExpansion: denom for xi does not vanish"
-                qpoch ==> qPochhammer $ QFunctions(CX, LX)
-                lx := qpoch(xipow(numer h), alpha, beta::P)
-                lx := lx * qpoch(xipow(- numer h), beta-alpha, beta::P)
-                u: Q := udelta(ygeg)
-                v: Q := vdelta(ygeg)
-                vbeta: Q := mx * v * (1/beta)
-                not one? denom vbeta =>
-                    dbgPrint("vbeta", vbeta)
-                    error "QEtaSeriesExpansion: denom for xi does not vanish"
-                px := px * substitute(lx, (1/beta)*u, asP numer vbeta)
-            px
+        uexp: Q := -mx*h/nn
+        not one? denom uexp =>
+            dbgPrint("mx * alphaexp", uexp)
+            error "QEtaSeriesExpansion: alphaSchoenemann"
+
+        rdg > 0 => cx * (1 - xipow(numer uexp))^(asP rdg)
+        cx * inv1minusxi(numer uexp)^asP(- rdg)
+
+    -- local
+    alphaSchoenemannProperGeneralized(_
+      y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): CX ==
+        cx: CX := 1
+        for l in exponents y repeat
+            delta := asP l.1; g := asP l.2; rdg := l.3;
+            ygeg := y(delta, g)
+            g1 := gamma1 ygeg
+            cx := cx * alphaSchoenemann(g1(1,1)*g, g1(1,2)*g, delta, rdg)
+        cx
+
+    -- local
+    -- The q-Pochhammer part (last product) of
+    -- \eqref{g_rtilde-m-lambda(gamma*tau)}.
+    qPochhammerProperGeneralized(_
+      y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): PX ==
+        px: PX := 1
+        for l in exponents y repeat
+            delta := asP l.1; g := asP l.2; rdg := l.3;
+            ygeg := y(delta, g)
+            g1 := gamma1 ygeg
+            alphabeta := fractionalPart(g1(1,1)*g/delta)$QETAAUX
+            alpha: Z := numer alphabeta
+            beta: Z  := denom alphabeta
+            -- exponent for mx-th root of unity
+            h: Q := mx*g1(1,2)*g/delta -- is made smaller in xipow
+            not one? denom h => -- mx should be such that h is integral
+                dbgPrint("mx*h'/delta", h)
+                error "QEtaSeriesExpansion: denom for xi does not vanish"
+            qpoch ==> qPochhammer $ QFunctions(CX, LX)
+            lx := qpoch(xipow(numer h), alpha, beta::P)
+            lx := lx * qpoch(xipow(- numer h), beta-alpha, beta::P)
+            u: Q := udelta(ygeg)
+            v: Q := vdelta(ygeg)
+            vbeta: Q := mx * v * (1/beta)
+            not one? denom vbeta =>
+                dbgPrint("vbeta", vbeta)
+                error "QEtaSeriesExpansion: denom for xi does not vanish"
+            px := px * substitute(lx, (1/beta)*u, asP numer vbeta)
+        return px
+
+    -- $g_{\tilde{r},m,\lambda}(\gamma\tau)$
+    puiseuxExpansion(y: SymbolicProperGeneralizedEtaQuotientLambdaGamma,_
+                     ue: Q): PX ==
+        -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
+        cx: CX := alphaSchoenemannProperGeneralized y
+        uexp: Q := mx * (lambda(y)*ue + unityExponent y)
+        not one? denom uexp =>
+            dbgPrint("mx * unityExponent y", uexp)
+            error "QEtaSeriesExpansion: denominator for xi does not vanish"
+        cx: CX := cx * xipow(numer uexp)
+        px: PX := monomial(cx, qExponent y)
+        px * qPochhammerProperGeneralized y
 
 
 
@@ -856,13 +912,54 @@ without the $(c\tau+d)$-part.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    if CX has Field then
-        puiseuxExpansion(y: SymbolicGeneralizedEtaQuotientLambdaGamma,
-                         ue: Q): PX ==
-            ypure: SymbolicEtaQuotientLambdaGamma := pureEtaQuotient y
-            ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
-                properGeneralizedEtaQuotient y
-            puiseuxExpansion(ypure, ue) * puiseuxExpansion(ypg, 0)
+    -- $g_{\bar{r},m,\lambda}(\gamma\tau)$
+    puiseuxExpansion(y: SymbolicGeneralizedEtaQuotientLambdaGamma,
+                     ue: Q): PX ==
+        -- Theoretically, the following would be sufficient.
+        --
+        --: ypure: SymbolicEtaQuotientLambdaGamma := pureEtaQuotient y
+        --: ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
+        --:     properGeneralizedEtaQuotient y
+        --: puiseuxExpansion(ypure, ue) * puiseuxExpansion(ypg, 0)
+        --
+        -- However, in certain cases the expansion of the pure
+        -- eta-quotient with the unityExponent ue for the
+        -- generalized eta-quotient would lead to the necessity of
+        -- not only a mx-th root of unity, but a bigger root of unity.
+        -- This could be solve in different ways.
+        --
+        -- (a) Change the minimalRootOfUnity computation for
+        --     SymbolicGeneralizedEtaQuotientGamma, in order to be
+        --     able to use the above simple code.
+        -- (b) Split ue in the respective ue for the pure
+        --     eta-quotient and a rest (basically \sigma_\infty
+        --     for the proper generalized part), adapt the code
+        --     above accordingly, and also adapt the
+        --     minimalRootOfUnity computation accordingly.
+        -- (c) Implement according to what is under the sum sign in
+        --     \eqref{eq:p_rbar-m-t(gamma*tau)}.
+        --
+        -- We decided for (c), because that avoids some
+        -- multiplication with coefficients and monomials.
+
+        uexp: Q := mx * (lambda(y)*ue + unityExponent y)
+        not one? denom uexp =>
+            dbgPrint("mx * unityExponent y", uexp)
+            error "QEtaSeriesExpansion: denominator for xi does not vanish"
+
+        -- leading coefficient
+        ypure: SymbolicEtaQuotientLambdaGamma := pureEtaQuotient y
+        cx: CX := xipow numer uexp * squareRoot rationalPrefactor ypure
+
+        -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
+        ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
+            properGeneralizedEtaQuotient y
+        cx := cx * alphaSchoenemannProperGeneralized ypg
+
+        px := qPochhammerPure ypure * qPochhammerProperGeneralized ypg
+        monomial(cx, qExponent y) * px
+
+
 
 
 
@@ -881,47 +978,48 @@ without the $(c\tau+d)$-part.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 )endif
 
-    if CX has Field then
-        puiseuxExpansion(y: SymbolicGeneralizedEtaQuotientGamma): PX ==
-            ue: Q := unityExponent y
-            px: PX := puiseuxExpansion(y.0, ue) -- $g_{rbar,m,\lambda}$ for lambda=0
-            m: P := multiplier y
-            one? m => px
-            m1: P := asP(m::Z - 1)
-            for lambda in 1..m1 repeat px := px + puiseuxExpansion(y.lambda, ue)
-            (1/m)$Q::C::CX * px
+    -- $p_{\bar{r},m,t}(\gamma\tau)$
+    puiseuxExpansion(y: SymbolicGeneralizedEtaQuotientGamma): PX ==
+        ue: Q := unityExponent y
+        px: PX := puiseuxExpansion(y.0, ue) -- $g_{rbar,m,\lambda}$ for lambda=0
+        m: P := multiplier y
+        one? m => px
+        m1: P := asP(m::Z - 1)
+        for lambda in 1..m1 repeat px := px + puiseuxExpansion(y.lambda, ue)
+        (1/m)$Q::C::CX * px
 
-        puiseuxExpansion(y: YM1GEQG): PX ==
-            yc: SymbolicGeneralizedEtaQuotientGamma := cofactor y
-            yb: SymbolicGeneralizedEtaQuotientGamma := basefactor y
-            puiseuxExpansion yc * puiseuxExpansion yb
+    -- $F_{\bar{r},m,t}(\gamma\tau)$
+    puiseuxExpansion(y: YM1GEQG): PX ==
+        yc: SymbolicGeneralizedEtaQuotientGamma := cofactor y
+        yb: SymbolicGeneralizedEtaQuotientGamma := basefactor y
+        puiseuxExpansion yc * puiseuxExpansion yb
 
-        laurentExpansion(y: YM1GEQG): LX ==
-            cy: SymbolicGeneralizedEtaQuotientGamma := cofactor y
-            nn: P := level cy
-            g: SL2Z := gamma cy
-            dbgPrint("le YM1GEQ gamma",  g)
-            w: P := WIDTH1(nn, g(2,1))
-            dbgPrint("le YM1GEQ w",  w)
-            laurent(puiseuxExpansion y, w)
+    -- $F_{\bar{r},m,t}(\gamma\tau)$
+    laurentExpansion(y: YM1GEQG): LX ==
+        cy: SymbolicGeneralizedEtaQuotientGamma := cofactor y
+        nn: P := level cy
+        g: SL2Z := gamma cy
+        w: P := WIDTH1(nn, g(2,1))
+        laurent(puiseuxExpansion y, w)
 
-        laurentExpansionsGamma1(y: SymbolicGeneralizedEtaQuotient): QLX ==
-            nn: P := level y
-            -- check whether the exponent vectors (rdelta) lead to a
-            -- modular function.
-            if not modularGamma1?(nn, exponents y)$QETAAUX then
-                dbgPrint("QEtaSeriesExpansion: not a modular function", exponents y)
-            hser: QLX := empty()
-            for cusp in cusps y repeat
-                w: P := WIDTH1(nn, denom cusp) -- width of cusp
-                hser.cusp := laurent(puiseuxExpansion(y.cusp), w)
-            hser
+    -- $g_{\bar{r}}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
+    laurentExpansionsGamma1(y: SymbolicGeneralizedEtaQuotient): QLX ==
+        nn: P := level y
+        -- check whether the exponent vectors (rdelta) lead to a
+        -- modular function.
+        if not modularGamma1?(nn, exponents y)$QETAAUX then
+            dbgPrint("QEtaSeriesExpansion: not a modular function", exponents y)
+        hser: QLX := empty()
+        for cusp in cusps y repeat
+            w: P := WIDTH1(nn, denom cusp) -- width of cusp
+            hser.cusp := laurent(puiseuxExpansion(y.cusp), w)
+        hser
 
-        laurentExpansions(y: YM1GEQ): QLX ==
-            dbgPrint("les YM1GEQ", cusps y)
-            hser: QLX := empty()
-            for cusp in cusps y repeat hser.cusp := laurentExpansion(y.cusp)
-            hser
+    -- $F_{\bar{r},m,t}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
+    laurentExpansions(y: YM1GEQ): QLX ==
+        hser: QLX := empty()
+        for cusp in cusps y repeat hser.cusp := laurentExpansion(y.cusp)
+        hser
 
 
 
