@@ -1632,89 +1632,80 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
             )
     import from Rep
 
-    -- local returns the minimal root of unity needed to express a
-    -- part of a summand of \eqref{eq:p_r-m-t(gamma*tau)} for the
+    -- local
+    minRootOfUnityAlphaSchoenemannProperGeneralized(_
+      y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): P ==
+        mr: Z := 1
+        for l in exponents y repeat
+            delta := asP l.1; g := asP l.2;
+            ygeg := y(delta, g)
+            g1 := gamma1 ygeg
+            h: Z := g1(1,2)*g
+            if zero?((g1(1,1)*g) rem delta) and not zero?(h rem delta) then
+                hd: Q := h/delta
+                mr := lcm(mr, denom hd)
+                mr := lcm(mr, denom((1/2)*fractionalBernoulli1(hd)$QETAAUX))
+        asP mr
+
+    -- local
+    -- returns the minimal root of unity needed to express a
+    -- part of a summand of \eqref{eq:p_rbar-m-t(gamma*tau)} for the
     -- lambda stored in y.
-    minRootOfUnityPure(y: YEQLG): P ==
+    -- Compare with puiseuxExpansion in qetaquot.spad.
+    minRootOfUnity(y: YGEQLG, ue: Q): P ==
+        ypure: SymbolicEtaQuotientLambdaGamma := pureEtaQuotient y
         -- minimal root of unity needed for the expansion is
         -- determined from expressing the squareroot of the rational
         -- prefactor in roots of unity.
-        rat := rationalPrefactor y
+        rat := rationalPrefactor ypure
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
+        -- second factor of the summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
         minroot: Z := minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
 
-        -- Additionally, we have to consider the root of unity factor
-        -- in $q_{\delta,m,\lambda}$, i.e., the denominator of the
-        -- $v_{\delta,m,\lambda}$.
-        -- minroot for the q-Pochhammer part (last product) in
-        -- \eqref{eq:g_r-m-lambda(gamma*tau)}
-        divs: LP := divisors y
-        for delta in divs repeat minroot := lcm(minroot, denom vdelta(y.delta))
-        asP minroot
+        -- first factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
+        uexp: Q := lambda(y)*ue + unityExponent y
+        minroot := lcm(minroot, denom uexp)
 
-    -- local returns the minimal root of unity needed to express
-    -- $g_{\tilde{r},m.\lambda}(\gamma\tau}$ of
-    -- \eqref{eq:g_rtilde-m-lambda(gamma*tau)} for the lambda stored in y.
-    minRootOfUnityProperGeneralized(y: YPGEQLG): P ==
-        minroot: Z := 1
-        -- We have to consider the root of unity factor in
-        -- $q_{\delta,m,\lambda}$ and in
-        -- $q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}$,
-        -- i.e., lcm of the denominator of
-        -- $v_{\delta,m,\lambda}$ and
-        -- $\frac{a' g}{\delta} v_{\delta,m,\lambda}$.
-        -- (minroot for the q-Pochhammer part)
-        -- See
-        for l in exponents y repeat
-            delta := asP l.1; g := asP l.2; rdg := l.3;
-            ygeg := y(delta, g)
-            v := vdelta ygeg
+        -- third factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
+        -- See function alphaSchoenemannProperGeneralized in qetaquot.spad.
+        ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
+            properGeneralizedEtaQuotient y
+        mr: P := minRootOfUnityAlphaSchoenemannProperGeneralized ypg
+        minroot := lcm(minroot, mr)
+
+        -- fourth factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
+        -- See qPochhammerPure in qetaquot.spad.
+        divs: LP := divisors ypure
+        for delta in divs repeat
+            minroot := lcm(minroot, denom vdelta(ypure.delta))
+
+        -- fifth factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
+        -- See qPochhammerProperGeneralized in qetaquot.spad.
+        for l in exponents ypg repeat
+            delta := asP l.1; g := asP l.2;
+            ygeg := ypg(delta, g)
             g1 := gamma1 ygeg
-            a1 := g1(1,1); gprime := a1*g
-            b1 := g1(1,2); hprime := b1*g
-            z := lcm(denom(hprime/delta), denom(gprime/delta) * denom v)
-            -- See \eqref{eq:mimimalRootOfUnity-g_rtilde-m-lambda}.
-            minroot := lcm(minroot, z)
-            -- Take the \alpha(a' g. b' g, delta) into account.
-            if zero?(gprime rem delta) and not zero?(hprime rem delta) then
-                t: Q := hprime/delta      -- for delta's root of unity
-                w := 1/2*fractionalBernoulli1(t)$QETAAUX -- \alpha(g',h',delta)
-                minroot := lcm(minroot, lcm(denom t, denom w))
-               -- Note that we do not compute or store
-               -- $\alpha(a_\delta g, b_\delta g, \delta)$ here.
+            beta := denom(g1(1,1)*g/delta)
+            minroot := lcm(minroot, denom(vdelta(ygeg) * (1/beta)))
+            minroot := lcm(minroot, denom(g1(1,2)*g/delta))
+
         asP minroot
 
     generalizedEtaQuotient(mm: P, rbar: LLZ, m: P, t: Z, gamma: SL2Z): % ==
         y: YGEQLG := generalizedEtaQuotient(mm, rbar, m, 0, gamma)
         eta: A := new(m, y) -- fill with dummy values
 
-        ypure: YEQLG := pureEtaQuotient y
-        ypg: YPGEQLG := properGeneralizedEtaQuotient y
-        ue: Q := unityExponent y
-
-        minroot := lcm(denom ue, minRootOfUnityPure ypure)
-        minroot := lcm(minroot, minRootOfUnityProperGeneralized ypg)
-
-        r := exponents ypure
-        rtilde := exponents ypg
-        rbarhat := sigmaInfinity(mm, r, rtilde)$QETAAUX
+        rrec: Record(pure: LZ, properGeneralized: LLZ) :=
+            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
+        r: LZ := rrec.pure
+        rtilde: LLZ := rrec.properGeneralized
+        rbarhat: Q := sigmaInfinity(mm, r, rtilde)$QETAAUX
         uexponent: Q := fractionalPart(-(24*t::Q + rbarhat)*(1/(24*m)))
-
-        for lambda in 1..m-1 repeat -- can start with 1.
+        minroot: Z := minRootOfUnity(y, uexponent)
+        for lambda in 0..m-1 repeat -- can start with 1.
             y :=  generalizedEtaQuotient(mm, rbar, m, lambda, gamma)
             eta.lambda := y
-
-            -- We also must take the sum of unityExponent(e) and
-            -- lambda(e)*uexponent into account.
-            ypure := pureEtaQuotient y
-            ypg := properGeneralizedEtaQuotient y
-
-            minroot := lcm(minroot, minRootOfUnityPure ypure)
-            minroot := lcm(minroot, minRootOfUnityProperGeneralized ypg)
-
-            ue := unityExponent y
-            minroot := lcm(minroot, denom(ue + lambda * uexponent))
-
+            minroot := lcm(minroot, minRootOfUnity(y, uexponent))
         per [eta, t, uexponent, asP minroot]
 
     generalizedEtaQuotient(mm: P, rbar: LLZ, gamma: SL2Z): % ==
