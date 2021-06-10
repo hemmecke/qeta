@@ -536,16 +536,20 @@ SymbolicEtaQuotientGamma: SetCategory with
             )
     import from Rep
 
-    -- local returns the minimal root of unity needed to express a
+    -- local
+    -- returns the minimal root of unity needed to express a
     -- part of a summand of \eqref{eq:p_r-m-t(gamma*tau)} for the
     -- lambda stored in y.
-    minRootOfUnity(y: SymbolicEtaQuotientLambdaGamma): P ==
+    -- Compare with puiseuxExpansion in qetaquot.spad.
+    minRootOfUnity(y: SymbolicEtaQuotientLambdaGamma, ue: Q): P ==
         -- minimal root of unity needed for the expansion is
         -- determined from expressing the squareroot of the rational
         -- prefactor in roots of unity.
         rat := rationalPrefactor y
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
         minroot: Z := minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
+        uexp: Q := lambda(y)*ue + unityExponent y
+        minroot := lcm(minroot, denom uexp)
 
         -- Additionally, we have to consider the root of unity factor
         -- in $q_{\delta,m,\lambda}$, i.e., the denominator of the
@@ -557,17 +561,14 @@ SymbolicEtaQuotientGamma: SetCategory with
         asP minroot
 
     etaQuotient(mm: P, r: LZ, m: P, t: Z, gamma: SL2Z): % ==
-        e: SymbolicEtaQuotientLambdaGamma := etaQuotient(mm, r, m, 0, gamma)
-        minroot: Z := lcm(minRootOfUnity e, denom unityExponent e)
-        eta: A := new(m, e) -- fill with dummy values
-        rhat := sigmaInfinity(level e, exponents e)$QETAAUX
+        rhat := sigmaInfinity(mm, r)$QETAAUX
         uexponent: Q := fractionalPart(-(24*t + rhat)/(24*m))
+        y: SymbolicEtaQuotientLambdaGamma := etaQuotient(mm, r, m, 0, gamma)
+        minroot: Z := minRootOfUnity(y, uexponent)
+        eta: A := new(m, y) -- fill with dummy values
         for lambda in 1..m-1 repeat -- can start with 1.
-            eta.lambda := e := etaQuotient(mm, r, m, lambda, gamma)
-            -- We also must take the sum of unityExponent(e) and
-            -- lambda(e)*uexponent into account.
-            den: Z := denom(lambda(e)*uexponent + unityExponent e) -- \in P
-            minroot := lcm(minroot, lcm(den, minRootOfUnity e))
+            eta.lambda := y := etaQuotient(mm, r, m, lambda, gamma)
+            minroot := lcm(minroot, minRootOfUnity(y, uexponent))
         per [eta, t, uexponent, asP minroot]
 
     etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
