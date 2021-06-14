@@ -524,11 +524,12 @@ QEtaCofactorSpace: Exports == Implementation where
         rtilde: LLZ := rrec.properGeneralized
         n: Z := # nndivs
 
-        -- Condition (1)
+        -- CDZ Condition (1), \eqref{eq:CDZ-sum=0}
         for d in nndivs for j in 1..n repeat qsetelt!(mat, 1, j, 1)
         v.1 := - reduce(_+, r, 0) -- fill right-hand side
 
-        -- Condition (2) and slack variable for mod 24
+        -- CDZ Condition (2) and slack variable for mod 24
+        -- \eqref{eq:CDZ-sigmainfinity=0}
         jj: Z := 0
         for d in reverse nndivs for j in 1..n repeat
             -- Note that we reverse nndivs!
@@ -539,7 +540,8 @@ QEtaCofactorSpace: Exports == Implementation where
         qsetelt!(mat, 2, numOfVars+1, 24) -- slack variable for (mod 24)
         v.2 := - m * SIGMA0(mm, r, rtilde) -- fill right-hand side
 
-        -- Condition (3) and slack variable for mod 24
+        -- CDZ Condition (3) and slack variable for mod 24
+        -- \eqref{eq:CDZ-sigma0=0}
         -- We multiply the entries and the rhs by nn to remove denominators.
         jj := 0
         for d in nndivs for j in 1..n repeat
@@ -552,16 +554,17 @@ QEtaCofactorSpace: Exports == Implementation where
 
         -- fill right-hand side
         --assert(DIVISIBLEBY?(mm, nn))
-        nnrrhat: Z := numer(nn*SIGMAINFINITY(mm, r, rtilde)) -- is integral
-        nnalpha: Z := nnrrhat + 24*t*nn -- nn*alphaAux(mm, r, rtilde, t)
+        nnrbarhat: Z := numer(nn*SIGMAINFINITY(mm, r, rtilde)) -- is integral
+        nnalpha: Z := nnrbarhat + 24*t*nn -- nn*alphaAux(mm, r, rtilde, t)
         q: Q := nnalpha*(m^2-1)/m -- intermediate
         -- Security check. Should never fail because of Condition 8 on page 37
         -- of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
         not one? denom q =>
             error "etaCofactorSpace1: nnalpha not divisible by m"
-        v.3 := - (m*nnrrhat - numer q)
+        v.3 := - (m*nnrbarhat - numer q)
 
         -- Condition (4) and slack variable for mod 2 for all a
+        -- \eqref{eq:CDZ-productsquare}
         ii: Z := 3
         mmdivs: List P := DIVISORS mm
         for i in 1..11 repeat
@@ -840,9 +843,9 @@ QEtaCofactorSpace: Exports == Implementation where
 
         -- Condition (2)
         -- Condition \eqref{eq:CDZ-sigma0=0}
-        rrv: Z := SIGMA0(mm, r, rtilde)
-        ssv: Z := SIGMA0(nn, s, stilde)
-        z: Z := ssv + numer(nn/mm)*m*rrv -- Note that mm divides nn.
+        rbarv: Z := SIGMA0(mm, r, rtilde)
+        sbarv: Z := SIGMA0(nn, s, stilde)
+        z: Z := sbarv + numer(nn/mm)*m*rbarv -- Note that mm divides nn.
         not DIVISIBLEBY?(24, z) =>
             dbgPrint("Chen: Theorem 10.1(2) nn", nn)
             dbgPrint("Chen: Theorem 10.1(2) sbar", sbar)
@@ -853,10 +856,10 @@ QEtaCofactorSpace: Exports == Implementation where
 
         -- Condition (3)
         -- Condition \eqref{eq:CDZ-sigmainfinity=0}
-        rrhat: Q := SIGMAINFINITY(mm, r, rtilde)
-        sshat: Q := SIGMAINFINITY(nn, s, stilde)
-        alpha: Q := rrhat + (24*t)::Q -- alphaAux(mm, r, rtilde, t)
-        q: Q := sshat + m*rrhat - ((m^2-1)/m)*alpha
+        rbarhat: Q := SIGMAINFINITY(mm, r, rtilde)
+        sbarhat: Q := SIGMAINFINITY(nn, s, stilde)
+        alpha: Q := rbarhat + (24*t)::Q -- alphaAux(mm, r, rtilde, t)
+        q: Q := sbarhat + m*rbarhat - ((m^2-1)/m)*alpha
         not one? denom q or not DIVISIBLEBY?(24, z) => --shouldn't happen
             dbgPrint("Chen: Theorem 10.1(3) nn", nn)
             dbgPrint("Chen: Theorem 10.1(3) sbar", sbar)
