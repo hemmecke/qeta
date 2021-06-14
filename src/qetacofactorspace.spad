@@ -528,18 +528,6 @@ QEtaCofactorSpace: Exports == Implementation where
         for d in nndivs for j in 1..n repeat qsetelt!(mat, 1, j, 1)
         v.1 := - reduce(_+, r, 0) -- fill right-hand side
 
-        -- CDZ Condition (2) and slack variable for mod 24
-        -- \eqref{eq:CDZ-sigmainfinity=0}
-        jj: Z := 0
-        for d in nndivs for j in 1..n repeat
-            nnd := numer(nn/d)
-            qsetelt!(mat, 2, j, nnd)
-            for g in 1..ceiling(d/2)-1 repeat
-                jj := jj + 1
-                qsetelt!(mat, 2, n + jj, 2*nnd)
-        qsetelt!(mat, 2, numOfVars+1, 24) -- slack variable for (mod 24)
-        v.2 := - m * SIGMA0(mm, r, rtilde) -- fill right-hand side
-
         -- CDZ Condition (3) and slack variable for mod 24
         -- \eqref{eq:CDZ-sigma0=0}
         -- We multiply the entries and the rhs by nn to remove denominators.
@@ -550,7 +538,7 @@ QEtaCofactorSpace: Exports == Implementation where
                 jj := jj + 1
                 x: Z := 12*numer(nn*d*fractionalBernoulli2(g/d)$QETAAUX)
                 qsetelt!(mat, 3, n + jj, x)
-        qsetelt!(mat, 3, numOfVars+2, 24*nn) -- slack variable for (mod 24)
+        qsetelt!(mat, 3, numOfVars+1, 24*nn) -- slack variable for (mod 24)
 
         -- fill right-hand side
         --assert(DIVISIBLEBY?(mm, nn))
@@ -562,6 +550,18 @@ QEtaCofactorSpace: Exports == Implementation where
         not one? denom q =>
             error "etaCofactorSpace1: nnalpha not divisible by m"
         v.3 := - (m*nnrbarhat - numer q)
+
+        -- CDZ Condition (2) and slack variable for mod 24
+        -- \eqref{eq:CDZ-sigmainfinity=0}
+        jj: Z := 0
+        for d in nndivs for j in 1..n repeat
+            nnd := numer(nn/d)
+            qsetelt!(mat, 2, j, nnd)
+            for g in 1..ceiling(d/2)-1 repeat
+                jj := jj + 1
+                qsetelt!(mat, 2, n + jj, 2*nnd)
+        qsetelt!(mat, 2, numOfVars+2, 24) -- slack variable for (mod 24)
+        v.2 := - m * SIGMA0(mm, r, rtilde) -- fill right-hand side
 
         -- Condition (4) and slack variable for mod 2 for all a
         -- \eqref{eq:CDZ-productsquare}
