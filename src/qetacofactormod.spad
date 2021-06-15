@@ -366,6 +366,131 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
         modularEtaQuotientInfinity(nn, s, mm, r, m, t)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaModularGamma1}
+\label{sec:QEtaModularGamma1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Compute a vector that must be multiplied to the (sifted) (generalized)
+eta quotient in order to make it a modular function for $\Gamma_1(N)$
+having a pole only at infinity or to make the (positive) orders at all
+cusps (\code{qetaGrades}) small in total sum.
+
+)endif
+
+)abbrev package QETAMG1 QEtaModularGamma1
+QEtaModularGamma1: Exports == Implementation where
+  Exports ==> with
+    qetaGrades: SymbolicModularGamma1GeneralizedEtaQuotient -> XHashTable(Q, Z)
+      ++ qetaGrades(y) returns the qetaGrades of the modular
+      ++ function corresponding to y.
+    qetaGrades: (P, List LZ, P, List LZ, P, N) -> XHashTable(Q, Z)
+      ++ qetaGrades(nn, sbar, mm, rbar, m, t) returns
+      ++ qetaGrades(y) where
+      ++ y=etaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularSiftedEtaQuotient.
+    etaCofactorInfinity: (P, P, LLZ, P, N) -> LLZ
+      ++ etaCoFactorInfinity(nn,mm,rbar,m,t) returns a specification
+      ++ sbar such that
+      ++ modularGamma1?(nn,sbar,mm,rbar,m,t)$QEtaCoFactorSpace and
+      ++ generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1SiftedEtaQuotient
+      ++ corresponds to a modular function with poles only at infinity
+      ++ and with smallest pole order.
+  Implementation ==> add
+    LVZ ==> List VZ
+    ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
+    ECS ==>  Record(particular: Union(VZ, "failed"), basis: List VZ)
+    C ==> Q
+    lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
+    SUPC ==> SparseUnivariatePolynomial C
+    CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
+    TX ==> QEtaTaylorSeries CX
+    LX ==> QEtaLaurentSeries CX
+    YGEQ ==> SymbolicGeneralizedEtaQuotient
+    YM1GEQ ==> SymbolicModularGamma1GeneralizedEtaQuotient
+    QLX ==> XHashTable(Q, LX)
+
+    qetaGrades(y: YM1GEQ): XHashTable(Q, Z) ==
+        mx: P := minimalRootOfUnity y
+        supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
+        xi := generator()$CX;
+        xsym: Symbol := "x"::Symbol;
+        e: QLX := laurentExpansions(y)$QEtaSeriesExpansion(C, mx, CX, xi)
+        ht: XHashTable(Q, Z) := empty()
+        for cusp in keys e repeat ht.cusp := -order(e.cusp)
+        ht
+
+    qetaGrades(nn: P, sbar: LLZ,
+               mm: P, rbar: LLZ, m: P, t: N): XHashTable(Q, Z) ==
+        y: YM1GEQ := generalizedEtaQuotient(nn, sbar, mm, rbar, m, t);
+        qetaGrades y
+
+
+    -- local function
+    -- What actually counts is that the grade of eta-quotient corresponding
+    -- to sinitial is small.
+    -- The initial minimizeVector is only here, because the computation of
+    -- qetaGrades involves the actual computation of the Laurent series
+    -- expansion of the respective eta-quotient at all cusps. So we
+    -- shouldn't have too high exponents.
+    minimizeGrades(nn: P, mm: P, rbar: LLZ, m: P, t: N,
+                   rinitial: VZ, b: LVZ): LZ ==
+        sinitial: VZ := minimizeVector(rinitial, b)$QEtaModularGamma0
+        -- Compute the poleorders/grades (at all cusps) for the
+        -- particular solution rinitial.
+        sbar: LLZ := toEtaQuotientSpecification(nn, members sinitial)$QETAAUX
+        g: XHashTable(Q, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
+        -- Exclude order at the cusp infinity.
+        cusps: LQ := [cusp for cusp in cusps(nn)$GAMMA0 | cusp~=1/nn]
+        rhs: LZ := [g.cusp for cusp in cusps]
+
+        -- For the vectors in the basis, we don't need to compute the
+        -- series explicitly, since these vectors correspond to
+        -- modular eta quotients and thus we can use the matrixEtaOrder
+        -- to compute the order vectors.
+        n := lengthOfGeneralizedEtaQuotientSpecification nn
+        rbas := [toEtaQuotientSpecification(nn, members x(1..n)) for x in b]
+        ybas: List YGEQ := [generalizedEtaQuotient(nn, r, cusps) for r in rbas]
+        bas: LLZ := [qetaGrades y for y in ybas]
+        mat: MZ := transpose matrix bas
+        rels: VZ := vector [1 for x in 1..#cusps]
+        zresult: ZRESULT := zsolve(mat, rels, vector rhs)$X4ti2
+        adjustment := members first zresult.zinhom
+        members(sinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
+
+    etaCofactorInfinity(nn: P, mm: P, rbar: LLZ, m: P, t: N): LLZ ==
+        ecs: ECS := etaCofactorSpace1(nn, mm, rbar, m, t)$QEtaCofactorSpace
+        n: Z := lengthOfGeneralizedEtaQuotientSpecification(nn)$QETAAUX
+        sinitial: VZ := ((ecs.particular)::VZ)(1..n)
+        b: LVZ := [x(1..n) for x in ecs.basis]
+        mg: LZ := minimizeGrades(nn, mm, rbar, m, t, sinitial, b)
+        toEtaQuotientSpecification(nn, mg)
+
+
+
+
 )if LiterateDoc
 \bibliography{qeta}
 \printindex
