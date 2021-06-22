@@ -1,0 +1,322 @@
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+Z ==> Integer
+Q ==> Fraction Z
+C ==> Q
+L1 C  ==> QEtaLaurentSeries C
+QF ==> QFunctions(Q, L1 Q)
+QFX ==> QFunctions(CX, L1 CX)
+jf ==> jacobiFunction $ QF
+jfx ==> jacobiFunction $ QFX
+ef ==> eulerFunction $ QF
+efx ==> eulerFunction $ QFX
+gep ==> generalizedEulerProduct $ QF
+one(n: Z): Q == 1
+check(delta, g) ==> (_
+    j := jf(one, delta, g);_
+    e := ef delta;_
+    p := gep(delta, [g, delta-g]);_
+    t := e * p;_
+    for n in 0..20 repeat (_
+        lm := leadingMonomial(j); j := j - lm;_
+        lt := leadingMonomial(t); t := t - lt;_
+        assertEquals(order lm, order lt);_
+        assertEquals(leadingCoefficient lm, leadingCoefficient lt)));
+
+xicheck(delta, g, h) ==> (_
+    xiord := delta;_
+    EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);_
+    z := xi^h;_
+    j := jfx(n +-> z^n, delta, g);_
+    e := efx delta;_
+    p1 := qPochhammer(z,      g      , delta)$QFX;_
+    p2 := qPochhammer(z^(-1), delta-g, delta)$QFX;_
+    p := p1 * p2;_
+    t := e * p;_
+    for n in 0..20 repeat (_
+        lm := leadingMonomial(j); j := j - lm;_
+        lt := leadingMonomial(t); t := t - lt;_
+        assertEquals(order lm, order lt);_
+        assertEquals(leadingCoefficient lm, leadingCoefficient lt)));
+
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+)compile /home/hemmecke/g/qeta/src/qfunct
+)set output algebra on
+
+delta := 4
+g := 0
+h := 1
+xiord := delta
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+z := xi^h
+
+j := jfx(n +-> z^n, delta, g)
+
+e := efx delta;
+p1 := qPochhammer(z, g      , delta)$QFX;
+p2 := qPochhammer(z^(-1), delta-g, delta)$QFX;
+p := p1 * p2;
+t := e * p
+
+j-t
+
+)set stream calc 20
+)set message time on
+order(j-t,30)
+
+for n in 0..20 repeat (_
+    lm := leadingMonomial(j); j := j - lm;_
+    lt := leadingMonomial(t); t := t - lt;_
+    assertEquals(order lm, order lt);_
+    assertEquals(leadingCoefficient lm, leadingCoefficient lt));
+
+-- # Check jacobiFunction with rational coefficients
+
+--test:q31
+check(3, 1)
+--endtest
+
+--test:q41
+check(4, 1)
+--endtest
+
+--test:q42
+check(4, 2)
+--endtest
+
+--test:q51
+check(5, 1)
+--endtest
+
+--test:q52
+check(5, 2)
+--endtest
+
+--test:q61
+check(6, 1)
+--endtest
+
+--test:q62
+check(6, 2)
+--endtest
+
+--test:q63
+check(6, 3)
+--endtest
+
+--test:q111
+check(11, 1)
+--endtest
+
+--test:q112
+check(11, 2)
+--endtest
+
+--test:q113
+check(11, 3)
+--endtest
+
+--test:q114
+check(11, 4)
+--endtest
+
+--test:q151
+check(15, 1)
+--endtest
+
+--test:q152
+check(15, 2)
+--endtest
+
+--test:q153
+check(15, 3)
+--endtest
+
+--test:q154
+check(15, 4)
+--endtest
+
+--test:q155
+check(15, 5)
+--endtest
+
+--test:q156
+check(15, 6)
+--endtest
+
+--test:q157
+check(15, 7)
+--endtest
+
+--test:q168
+check(16, 8)
+--endtest
+
+-- # Check jacobiFunction with roots of unity
+
+--test:xiq30
+xicheck(3, 0, 1)
+xicheck(3, 0, 2)
+--endtest
+
+--test:xiq31
+xicheck(3, 1, 1)
+xicheck(3, 1, 2)
+--endtest
+
+--test:xiq40
+xicheck(4, 0, 1)
+xicheck(4, 0, 2)
+xicheck(4, 0, 3)
+--endtest
+
+--test:xiq41
+xicheck(4, 1, 1)
+xicheck(4, 1, 2)
+xicheck(4, 1, 3)
+--endtest
+
+--test:xiq41
+xicheck(4, 2, 1)
+xicheck(4, 2, 2)
+xicheck(4, 2, 3)
+--endtest
+
+--test:xiq50
+xicheck(5, 0, 1)
+xicheck(5, 0, 2)
+xicheck(5, 0, 3)
+xicheck(5, 0, 4)
+--endtest
+
+--test:xiq51
+xicheck(5, 1, 1)
+xicheck(5, 1, 2)
+xicheck(5, 1, 3)
+xicheck(5, 1, 4)
+--endtest
+
+--test:xiq52
+xicheck(5, 2, 1)
+xicheck(5, 2, 2)
+xicheck(5, 2, 3)
+xicheck(5, 2, 4)
+--endtest
+
+--test:xiq60
+xicheck(6, 0, 1)
+xicheck(6, 0, 2)
+xicheck(6, 0, 3)
+xicheck(6, 0, 4)
+xicheck(6, 0, 5)
+--endtest
+
+--test:xiq61
+xicheck(6, 1, 1)
+xicheck(6, 1, 2)
+xicheck(6, 1, 3)
+xicheck(6, 1, 4)
+xicheck(6, 1, 5)
+--endtest
+
+--test:xiq62
+xicheck(6, 2, 1)
+xicheck(6, 2, 2)
+xicheck(6, 2, 3)
+xicheck(6, 2, 4)
+xicheck(6, 2, 5)
+--endtest
+
+--test:xiq63
+xicheck(6, 3, 1)
+xicheck(6, 3, 2)
+xicheck(6, 3, 3)
+xicheck(6, 3, 4)
+xicheck(6, 3, 5)
+--endtest
+
+--test:xiq63
+xicheck(6, 4, 1)
+xicheck(6, 4, 2)
+xicheck(6, 4, 3)
+xicheck(6, 4, 4)
+xicheck(6, 4, 5)
+--endtest
+
+--test:xiq110
+xicheck(11, 0, 1)
+--endtest
+
+--test:xiq111
+xicheck(11, 1, 1)
+--endtest
+
+--test:xiq112
+xicheck(11, 2, 1)
+--endtest
+
+--test:xiq113
+xicheck(11, 3, 1)
+--endtest
+
+--test:xiq114
+xicheck(11, 4, 1)
+--endtest
+
+--test:xiq150
+xicheck(15, 0, 1)
+--endtest
+
+--test:xiq151
+xicheck(15, 1, 1)
+--endtest
+
+--test:xiq152
+xicheck(15, 2, 1)
+--endtest
+
+--test:xiq153
+xicheck(15, 3, 1)
+--endtest
+
+--test:xiq154
+xicheck(15, 4, 1)
+--endtest
+
+--test:xiq155
+xicheck(15, 5, 1)
+xicheck(15, 5, 2)
+xicheck(15, 5, 3)
+xicheck(15, 5, 4)
+xicheck(15, 5, 5)
+--endtest
+
+--test:xiq156
+xicheck(15, 6, 1)
+xicheck(15, 9, 1)
+--endtest
+
+--test:xiq157
+xicheck(15, 7, 1)
+--endtest
+
+--test:xiq16
+xicheck(16, 0, 1)
+xicheck(16, 1, 1)
+xicheck(16, 8, 1)
+xicheck(16, 15, 1)
+--endtest

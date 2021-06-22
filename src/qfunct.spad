@@ -17,6 +17,11 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 )if LiterateDoc
 \documentclass{article}
@@ -157,7 +162,7 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
       ++ Do not use this function! It is just another implementation
       ++ of eulerFunction.
     eulerStream: (P, Z, Z, S) -> S
-      ++ eulerStream is an auxiliary function forthe computation of
+      ++ eulerStream is an auxiliary function for the computation of
       ++ eulerFunction and only exported for debugging purposes.
     eulerFunction: P -> L
         ++ For s>0, eulerFunction(s) = qPochhammer(1, s, s).
@@ -207,6 +212,17 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
     generalizedEulerProduct: (P, List Z) -> L
         ++ generalizedEulerProduct(n, ts) computes the product of
         ++ qPochhammer(1, t, n) for each t in ts)
+
+    jacobiFunction: (Z -> R, P, N) -> L
+      ++ For d>0, 0<=g<d, jacobiFunction(f, d, g) returns
+      ++ $\sum_{n=-\infty}^\infty (-1)^n f(n) q^{g n + d n (n-1) / 2}$
+      ++ If f(n) = z^n for some element z from R
+      ++ (assuming that z is invertible), then the returned series is
+      ++ equal to the Jacobi triple product
+      ++ $\prod_{n=1}^\infty (1-zq^{\delta (n-1)+g}) (1-z^{-1}q^{\delta n-g}) (1-q^{\delta n})$
+      ++ For one(n)==1, we have the identity:
+      ++ jacobiFunction(one, d, g) =
+      ++ generalizedEulerProduct(d, [g, d-g]) * eulerFunction d.
 
   I ==> add
     qPochhammer(): L == qPochhammer(1, 1, 1)
@@ -390,6 +406,59 @@ summand for the previous index $k$.
 
     generalizedEulerProduct(n: P, ts: List Z): L ==
         reduce(_*, [qPochhammer(1, t, n) for t in ts], 1$L)$List(L)
+
+    -- local
+    -- assert(d>0)
+    -- case g=0.
+    -- see \eqref{eq:Jacobi-g=0}
+    jacobiStream0(f: Z -> R, d: Z, n: Z, s: S): S == delay
+        m := 2*n
+        e := d*(m+1)
+        en := e*n
+        cons([en, f(-m)-f(m+1)], cons([en+e, f(m+2)-f(-(m+1))],
+             jacobiStream0(f, d, n+1, s)))
+
+    -- local
+    -- assert(d>0)
+    -- case 2*g=d
+    -- $\sum_{n=1}^\infty (-1)^n (z^n + z^(-n)) q^{g*n^2}$.
+    -- see \eqref{eq:Jacobi-2g=delta}
+    jacobiStream2(f: Z -> R, g: Z, n: Z, s: S): S == delay
+        cons([g*n^2, -(f(n)+f(-n))], cons([g*(n+1)^2, f(n+1)+f(-(n+1))],
+            jacobiStream2(f, g, n+2, s)))
+
+    -- local
+    -- see \eqref{Jacobi-g-g'}
+    jacobiStream(f: Z -> R, g: Z, gprime: Z, n: Z, s: S): S == delay
+        --assert(g>0)
+        --assert(gptime>0)
+        --assert(g ~= gprime)
+        m := 2*n+1
+        n1 := n+1
+        m1a := m*(n1*g      + n*gprime)
+        m1b := m*(n1*gprime + n*g)
+        m2a := n1*((m+2)*g      + m*gprime)
+        m2b := n1*((m+2)*gprime + m*g)
+
+        gprime > g =>
+            cons([m1a, -f(m)], cons([m1b, -f(-m)],
+              cons([m2a,f(m+1)], cons([m2b, f(-(m+1))],
+                jacobiStream(f, g, gprime, n+1, s)))))
+
+        cons([m1b, -f(-m)], cons([m1a, -f(m)],
+          cons([m2b, f(-(m+1))], cons([m2a,f(m+1)],
+            jacobiStream(f, g, gprime, n+1, s)))))
+
+    jacobiFunction(f: Z -> R, d: P, g: N): L ==
+        g >= d => error "jacobiFunction: condition 0<=g<d violated"
+        zero? g =>
+            one? f(1) => 0 -- There is a zero factor (1-f(1)) in the product.
+            series jacobiStream0(f, d, 0, empty()$S)
+        d = 2*g => series cons([0,1], jacobiStream2(f, g, 1, empty()$S))
+        series cons([0,1], jacobiStream(f, g, d-g, 0, empty()$S))
+
+
+
 
 
 
