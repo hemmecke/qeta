@@ -78,7 +78,7 @@ expansionAtAllCusps? := empty? "$gamma";
 gammas: List SL2Z := empty();
 -- Expand at all cusps if no gamma was given.
 if (expansionAtAllCusps?) then (_
-  spitzen: List Q := cusps(level)\$GAMMA0;_
+  spitzen: List Cusp := cusps(level)\$GAMMA0;_
   for cusp in spitzen repeat (_
     g: SL2Z := cuspToMatrix(level, cusp)\$GAMMA0;_
     gammas := cons(g, gammas));_

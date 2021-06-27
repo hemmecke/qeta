@@ -44,6 +44,13 @@ NEGATE x ==> members(- vector x) -- negate all entries in a list
 )set mess type off
 )set mess time off
 )read convenience.input )quiet
+smallerCusp(x: Cusp, y: Cusp): Boolean ==
+   infinity? x => false
+   infinity? y => true
+   denom x < denom y => true
+   denom x > denom y => false
+   numer x < numer y
+
 --)set mess type on
 --)set mess time on
 
@@ -304,12 +311,14 @@ assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 -- agrees for all such a. We choose just a=1 (which is relevant for
 -- the Ligozat matrix.
 
-level := 45; spitzen := cusps(level)$GAMMA0;
+level := 45; spitzen := sort(smallerCusp, cusps(level)$GAMMA0)
 xiord := 24*level
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 fA45 := rzToAnCX fpolRZ
-
-fgrades := [qetaGrade(fA45, asP position(1/c, spitzen)) for c in divs]
+oo ==> infinity()$Cusp
+fgrades := [qetaGrade(fA45, _
+             position(normalizeCusp(level, cusp(1,c))$GAMMA0, spitzen)) _
+               for c in divs]
 assertEquals(fgrades, [-1, -1, -1, -3, -1, 13])
 
 -- For the following we have to take the full Ligozat matrix.

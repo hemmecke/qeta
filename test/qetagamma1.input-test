@@ -5,6 +5,7 @@
 
 --setup
 CUSPS1 ==> cusps $ GAMMA1
+oo ==> infinity()$Cusp
 --endsetup
 
 --test:cuspsOfGamma1
@@ -86,8 +87,17 @@ cusps40 := [_
    3/10,7/10,9/10,1/11,1/12,7/12,1/13,1/14,1/15,2/15,4/15,8/15,1/16,_
    3/16,5/16,7/16,1/17,1/18,1/19,1/20,3/20,7/20,9/20,1/40,3/40,7/40,9/40,_
    11/40,13/40,17/40,19/40]]
+
+c(n: Z, q: Q): Cusp ==
+  q = 1/n => oo
+  one? q => cusp(0, 1)$Cusp
+  cusp(numer q, denom q)$Cusp
+
 for cs in cusps40 for nn in 1..40 repeat
-    assertEquals(cusps(nn)$GAMMA1, cs)
+  ccs := cusps(nn)$GAMMA1
+  ecs := sort [c(nn,x) for x in cs]
+  assertEquals(ccs, ecs)
+
 --endtest
 
 --test:numberOfCuspsOfGamma1
@@ -140,9 +150,15 @@ for level in 1..#vals for n in vals repeat
 --test:normalizeCusp
 -- -
 
+ncusp(nn: P, a: Z, c: Z): Q ==
+  s := normalizeCusp(nn, cusp(a, c))$GAMMA1
+  infinity? s => 1/nn
+  zero? numer s => 1$Q
+  numer(s)/denom(s)
+
 normcusps := [_
   [[[[nn]]],_
-   [[ [(a/c), normalizeCusp(nn,a,c)$GAMMA1] for a in 1..c | one? gcd(a,c)] _
+   [[ [(a/c), ncusp(nn, a, c)] for a in 1..c | one? gcd(a,c)] _
     for c in 1..nn]_
   ] for nn in 1..10]
 
@@ -206,9 +222,11 @@ expected := _
 
 assertEquals(normcusps, expected)
 
-for nn in 1..30 repeat _
-  for c in 1..nn repeat for a in 1..c | one? gcd(a,c) repeat _
-    assertTrue(equivalentCusps?(nn,a/c, normalizeCusp(nn, a, c)$GAMMA0)$GAMMA0)
+for nn in 1..30 repeat
+  for c in 1..nn repeat for a in 1..c | one? gcd(a,c) repeat
+    ac: Cusp := cusp(a, c)
+    normedCusp := normalizeCusp(nn, ac)$GAMMA1
+    assertTrue(equivalentCusps?(nn, ac, normedCusp)$GAMMA1)
 
 --+
 --endtest

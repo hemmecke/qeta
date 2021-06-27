@@ -18,6 +18,13 @@ NEGATE x ==> members(- vector x) -- negate all entries in a list
 )set mess type off
 )set mess time off
 )read convenience.input )quiet
+smallerCusp(x: Cusp, y: Cusp): Boolean ==
+   infinity? x => false
+   infinity? y => true
+   denom x < denom y => true
+   denom x > denom y => false
+   numer x < numer y
+
 --)set mess type on
 --)set mess time on
 
@@ -280,10 +287,16 @@ f128monsDZ
 
 assertEquals([x.1 for x in f128monsDZ], [0 for i in 1..25])
 
-spitzen := cusps(level)$GAMMA0
-assertEquals(spitzen,_
-  [1,1/2,1/4,3/4,1/8,3/8,5/8,7/8,1/16,3/16,5/16,7/16,1/32,3/32,1/64,1/128])
-o := reduce(_+, [WIDTH0(level, denom cusp) for cusp in spitzen])
+spitzen := sort(smallerCusp, cusps(level)$GAMMA0)
+oo ==> infinity()$Cusp
+c(n: Z, q: Q): Cusp ==
+  q = 1/n => oo
+  one? q => cusp(0, 1)$Cusp
+  cusp(numer q, denom q)$Cusp
+ex := [1,1/2,1/4,3/4,1/8,3/8,5/8,7/8,1/16,3/16,5/16,7/16,1/32,3/32,1/64,1/128]
+assertEquals(spitzen, [c(level,x) for x in ex])
+
+o := reduce(_+, [WIDTH0(level, cusp) for cusp in spitzen])
 assertEquals(o, index(level)$GAMMA0)
 
 -- The index of $\Gamma_0(128)$ in $\mathrm{SL}_2(Z)$ is equal
@@ -403,7 +416,7 @@ assertEquals(qetaGrades hA128, _
 -- `hA128` has expansions at the cusps of 128 that have the following form.
 
 for cusp in spitzen for i in 1..#spitzen repeat _
-    print([cusp, WIDTH0(128, denom cusp)/WIDTH0(64, denom cusp), series(hA128, i)]);
+    print([cusp, WIDTH0(128, cusp)/WIDTH0(64, cusp), series(hA128, i)]);
 
 -- That is, if the quotient of the widths is 2, then the series is a
 -- series in $q^2$.
@@ -547,7 +560,7 @@ hapolRZ
 -- We introduce now `haA64` as the expansions of an element of
 -- $M^\infty(64)$ given by `hapolRZ`.
 
-level := 64; spitzen := cusps(level)$GAMMA0;
+level := 64; spitzen := sort(smallerCusp, cusps(level)$GAMMA0);
 egens64n := [EQAnCX r for r in rgens64];
 xgens64n := [toXn(CX, x, sy) for x in egens64n for sy in usyms64];
 u := egens64n;
@@ -577,7 +590,7 @@ qetaGrades(k0A64)
 qetaGrades(u.4*u.3*u.1^2)
 kA64 := haA64/(u.4*u.3*u.1^2);
 qetaGrades(kA64)
-cusps(64)$GAMMA0
+spitzen
 
 -- We have poles at $\frac{1}{16}$, $\frac{3}{16}$, and $\infty$.
 
@@ -796,7 +809,7 @@ assertEquals(removeDuplicates cs, [0])
 -- agrees with `fA128` (after multiplication
 -- with the respective eta-quotient).
 
-level:=128; spitzen:=cusps(level)$GAMMA0;
+level:=128; spitzen:=sort(smallerCusp, cusps(level)$GAMMA0);
 rkfadjust := members(vector rfcofactor - vector rkcofactor);
 assertEquals(rkfadjust, [0,0,0,-1,6,-7,18,-16])
 z0 := fA128 - rzToAnCX(kapolRZ * monRZ rkfadjust);
@@ -849,11 +862,11 @@ rez kbpolRZ
 -- It differs only by a zero expression, i.e.,
 -- a relation among eta-quotients.
 
-level:=128; spitzen:=cusps(level)$GAMMA0;
+level:=128; spitzen:=sort(smallerCusp, cusps(level)$GAMMA0);
 rzToAnCX(kapolRZ - kbpolRZ)
 rez(1/112*(kapolRZ - kbpolRZ))
 
-level:=64; spitzen:=cusps(level)$GAMMA0;
+level:=64; spitzen:=sort(smallerCusp, cusps(level)$GAMMA0);
 kbA64 := rzToAnCX kbpolRZ;
 kaA64-kbA64
 
@@ -1049,10 +1062,10 @@ LM kahalfA32
 
 
 for cusp in spitzen for i in 1..#spitzen repeat _
-    print([cusp, WIDTH0(64, denom cusp)/WIDTH0(32, denom cusp), series(kaA64, i)]);
+    print([cusp, WIDTH0(64, cusp)/WIDTH0(32, cusp), series(kaA64, i)]);
 
 for cusp in spitzen for i in 1..#spitzen repeat _
-    print([cusp, WIDTH0(64, denom cusp)/WIDTH0(32, denom cusp), series(kbA64, i)]);
+    print([cusp, WIDTH0(64, cusp)/WIDTH0(32, cusp), series(kbA64, i)]);
 
 -- That is, if the quotient of the widths is 2, then the series is a
 -- series in $q^2$.

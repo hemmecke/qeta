@@ -3,6 +3,9 @@
 
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input
 
+)compile /home/hemmecke/g/qeta/src/qetacofactorspace.spad
+)set output algebra on
+
 -- # Problem formulation
 
 
@@ -64,15 +67,58 @@ EQ ==> etaQuotient $ EQI(C)
 EE ==> eulerExpansion $ EQI(C)
 EX ==> expansion $ EQI(C)
 
-)set mess type on
-)set mess time on
+L ==> L1 C
+TX ==> T1 CX
+LX ==> L1 CX
+PX ==> QEtaPuiseuxSeries CX
+
+LZ ==> List Z
+LLZ ==> List LZ
+GEQSPLIT ==> Record(pure: LZ, properGeneralized: LLZ)
 
 ps := partitionSeries(1)$QFunctions(Q, L1(Q))
+
+QPX ==> puiseuxExpansion $ QESX(C, CX)
+QLX ==> laurentExpansion $ QESX(C, CX)
+QLXs ==> laurentExpansions $ QESX(C, CX)
+QLX1 ==> laurentExpansionsGamma1 $ QESX(C, CX)
+
+)set mess type on
+)set mess time on
 
 -- +
 -------------------------------------------------------------------
 --endsetup
 -------------------------------------------------------------------
+-- -
+
+-- # Garvan stuff
+
+-- +
+y := generalizedEtaQuotient(4, [[4,1,16],[4,2,-4]])$YGEQ;
+xiord := minimalRootOfUnity(y)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(y)
+
+cusp := normalizeCusp(4,1,2)$GAMMA1
+-- -
+
+QPX(y(cusp))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- +
 -------------------------------------------------------------------
 --test:p5n0
@@ -80,13 +126,126 @@ ps := partitionSeries(1)$QFunctions(Q, L1(Q))
 -- -
 -- # $p(5n)$
 
--- See Formula (1.4) of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+-- See Formula (1.4) of
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
-f := p5n0 := choose(5, 0, ps);
-f1 := EE GEQ [[1,-2],[5,1],[5,1,-8]];
-f2 := EE GEQ [[1,-7],[5,6],[5,1,2]];
-g := f1 - monomial(3, 1)$L1(C)*f2;
+mm := m := 5; t := 0;
+rbar := [[1,-1]]
+nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)
+
+f := p5n0 := choose(m, t, ps)
+rbar1 := [[1,-2],[5,1],[5,1,-8]];
+rbar2 := [[1,-7],[5,6],[5,1,2]];
+f1 := EE GEQ rbar1
+f2 := EE GEQ rbar2
+g := f1 - monomial(3, 1)$L1(C)*f2
 assertEquals(order(f - g,100), 100)
+
+f/f1, 1 - monomial(3,1)$L1(C)*f2/f1
+
+
+
+modularGamma1?(nn,[],mm,rbar,m,t)
+
+-- Let us compute the cofactor ourselves.
+
+n := lengthOfGeneralizedEtaQuotientSpecification nn
+ecs := etaCofactorSpace1(nn,mm,rbar,m,t)
+sbar := toEtaQuotientSpecification(nn, (ecs.particular)(1..n))
+
+sbar := etaCofactorInfinity(nn,mm,rbar,m,t)$QEtaModularGamma1
+
+-- Is the cofactor and the basis modular for $\Gamma_1(N)$.
+
+modularGamma1?(nn,sbar,mm,rbar,m,t)
+
+rbart := [[1,-5],[5,5],[5,1,10]]
+
+yf := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t);
+yt := generalizedEtaQuotient(nn,rbart);
+xiord := minimalRootOfUnity(yf)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(yf)
+
+hf := QLXs(yf)
+
+ht := QLX1(yt)
+
+mf := hf :: ModularFunctionExpansionsAtCusps(CX, spitzen)
+
+mt := ht :: An CX
+
+mf + 3*mt - 1$An(CX)
+
+x1 := hf(1/5)
+x2 := f/f1, 1 - monomial(3,1)$L1(C)*f2/f1;
+x1-x2
+
+ht(1/5), GEQ [[5,1,1]]
+
+)set stream calc 500
+yt := generalizedEtaQuotient(nn,[[5,1,1]]);
+ht := QPX(yt(1/5))
+ht := monomial(1/(xi^10-xi^30),-(1/60))$PX*QPX(yt(1/5))
+)set stream calc 10
+=============================================
+
+-- +
+rbas := [toEtaQuotientSpecification(nn, x(1..n)) for x in ecs.basis]
+
+
+b: LVZ := [x(1..n) for x in ecs.basis]
+[modularGamma1?(nn, basbar) for basbar in rbas]
+[modularGamma1?(nn,[],mm,basbar,1,0) for basbar in rbas]
+-- -
+
+modularGamma1?(5,[[5,2,60]],5,[],1,0)
+
+-- ## Try to compute the (1.4) eta-quotients
+
+etaCofactorSpace1(5,5,[[1,-2],[5,1]],5,0)
+
+etaCofactorSpace1(5,5,[],1,0)
+
+etaCofactorSpace1(5,5,[[1,-1]],5,0)
+
+
+
+
+
+x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t);
+xiord := minimalRootOfUnity(x)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(x)
+
+fx := vector [QPX(x(cusp)) for cusp in spitzen];
+xbas := [generalizedEtaQuotient(nn,rbasbar) for rbasbar in rbas];
+pxbas := [vector [QPX(x(cusp)) for cusp in spitzen] for x in xbas];
+
+for rr in rbas repeat print rr
+
+rrbas := [[]]
+
+)set stream calc 400
+h1 := fx.3 * (pxbas.1.3)^4
+)set stream calc 3
+
+h2 := (pxbas.2.3)*(pxbas.1.3)
+
+)set stream calc 400
+h1 - h2
+)set stream calc 3
+
+rationalPower(px)
+lx := qetaLaurentRep(px)
+order lx
+)set stream calc 200
+qetaTaylorRep lx
+)set stream calc 4
+
+QLX(y(1/5))
+
+)displLay op puiseuxExpansion
 
 -- +
 -------------------------------------------------------------------
@@ -99,26 +258,126 @@ assertEquals(order(f - g,100), 100)
 -- -
 -- # $p(11n+6)$
 
+-- See \cite[Thm.~1.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 -- Theorem 1.1 Equations (1.7)-(1.9)
 
+mm := m := 11; t := 6;
+rbar := [[1,-1]]
+nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)
+
 p11n6 := choose(11,6,ps);
-z0 := EQ(11,[24,-23])*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4)
-z0 := EQ(11,[24,-23])*GEQ(11,[1,2,3,4],[-28,-16,-12,-4])
-z0 := monomial(1,-20)$L1(C)* EE GEQ [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]]
+z01 := EE(EQ(11,[24,-23])*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4));
+z02 := EE(EQ(11,[24,-23])*GEQ(11,[1,2,3,4],[-28,-16,-12,-4]));
+assertEquals(order(z01 - z02, 100), 100)
 
-z := EX GEQ [[1,1],[11,-1],[11,1,-3],[11,2,-2]]
-z := EX(EQ(11,[1,-1]) * GEQ(11,[1,2],[-3,-2]))
+rbarz0 := [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
+z00 := EE GEQ rbarz0;
+assertEquals(order(z01-z00, 100), 100)
+z0 := monomial(1,-20)$L1(C)* z00;
 
-e := EX GEQ [[1,3],[11,-3],[11,1,-5],[11,2,-5],[11,3,-4],[11,4,-1]]
-e := EX(EQ(11,[3,-3]) * GEQ(11,[1,2,3,4],[-5,-5,-4,-1]))
+rbarz := [[1,1],[11,-1],[11,1,-3],[11,2,-2]];
+z := EX GEQ rbarz;
+assertEquals(order(z - EX(EQ(11,[1,-1]) * GEQ(11,[1,2],[-3,-2])), 100), 100)
+
+rbare := [[1,3],[11,-3],[11,1,-5],[11,2,-5],[11,3,-4],[11,4,-1]];
+e := EX GEQ rbare;
+ex := EX(EQ(11,[3,-3]) * GEQ(11,[1,2,3,4],[-5,-5,-4,-1]));
+assertEquals(order(e - ex, 100), 100)
 
 ts := [z^10, z^8*e, z^9, z^7*e, z^8, z^6*e, z^7, z^5*e, z^6, z^4*e,
-       z^5, z^3*e, z^4, z^2*e, z^3, z*e, z^2, z, 1$L1(Q)];
+       z^5, z^3*e, z^4, z^2*e, z^3, z*e, z^2, z, 1$L];
 cs := [1,11,30,-44,-90,44,72,-44,4,99,-12,-132,-41,88,68,-22,-39,7,1];
-[c*t for c in cs for t in ts];
-zz := z0*p11n6 - 11*reduce(_+, [c*t for c in cs for t in ts], 0$L1(Q));
+terms := [c*t for c in cs for t in ts];
+
+zz := z0*p11n6 - 11*reduce(_+, terms, 0$L);
 assertEquals(removeDuplicates[coefficient(zz,i) for i in -20..50],[0])
 assertEquals(order(zz, 100), 100)
+
+-- ## Check modularity for cofactor
+
+sbar := rbarz0
+modularGamma1?(nn,sbar,mm,rbar,m,t)
+x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$YM1GEQ;
+spitzen := cusps x
+xiord := minimalRootOfUnity(x)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+)set stream calc 2
+[order QPX(x(cusp)) for cusp in spitzen]
+
+xz0 := generalizedEtaQuotient(nn,rbarz0)$YGEQ;
+[order QPX(xz0(cusp)) for cusp in spitzen]
+
+xz := generalizedEtaQuotient(nn,rbarz)$YGEQ;
+[order QPX(xz(cusp)) for cusp in spitzen]
+qetaGrades(xz)
+
+xe := generalizedEtaQuotient(nn,rbare)$YGEQ;
+[order QPX(xe(cusp)) for cusp in spitzen]
+qetaGrades(xe)
+
+
+
+-- ## Check modularity of basis
+
+modularGamma1?(nn,[],mm,rbarz,1,0)
+modularGamma1?(nn,[],mm,rbare,1,0)
+
+-- ## Commpute our cofactor
+
+rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
+r: LZ := rrec.pure
+rtilde: LLZ := rrec.properGeneralized
+[nn,mm,m,t,sigmaInfinity(mm,r,rtilde)]
+
+ecs := etaCofactorSpace1(nn,mm,rbar,m,t)
+sbarx := etaCofactorInfinity(nn,mm,rbar,m,t)$QEtaModularGamma1
+
+modularGamma1?(nn,sbarx,mm,rbar,m,t)
+
+x := generalizedEtaQuotient(nn,sbarx,mm,rbar,m,t);
+
+y := x(1/11);
+cusps(x)
+
+QLX(y)
+
+
+
+
+
+n := lengthOfGeneralizedEtaQuotientSpecification nn
+sbar := toEtaQuotientSpecification(nn, (ecs.particular)(1..n))
+modularGamma1?(nn,sbar,mm,rbar,m,t)
+
+sol := ecs.particular;
+bas := ecs.basis;
+matrix cons(sol, bas)
+solx := sol + 81*bas.1
+sbarx := toEtaQuotientSpecification(nn, solx)
+
+modularGamma1?(nn,sbarx,mm,rbar,m,t)
+
+x := generalizedEtaQuotient(nn,sbarx,mm,rbar,m,t)$YM1GEQ;
+
+spitzen := cusps x
+xiord := minimalRootOfUnity(x)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+
+)set stream calc 2
+[order QPX(x(cusp)) for cusp in spitzen]
+hlx := QLXs x;
+[order hlx(cusp) for cusp in spitzen]
+
+matrix [(rbarelem := ecs2exponents(nn, bas.i);_
+         x := generalizedEtaQuotient(nn,rbarelem)$YGEQ;_
+         [order QPX(x1(cusp)) for cusp in spitzen]) for i in 1..#bas]
+
+rb1 := ecs2exponents(nn, bas.1);
+xb1 := generalizedEtaQuotient(nn,rb1)$YGEQ;
+hlx1 := QLX1 xb1;
+[order hlx1(cusp) for cusp in spitzen]
+
+[order hlx1(cusp) for cusp in spitzen]
 
 -- +
 -------------------------------------------------------------------
@@ -170,3 +429,173 @@ assertEquals(order(EX(xh*phi/y) - 1,100),100)
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+
+
+-- +
+-------------------------------------------------------------------
+--test:overpartition
+-------------------------------------------------------------------
+
+-- # test:overpartition
+
+-- See example after
+-- \cite[Thm.~2.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- and
+-- \cite[Thm.~3.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+mm := 2; m := 5; t := 2
+rbar := [[1,-2],[2,1]]
+nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)
+assertEquals(nn, 10)
+
+sbar := [[5,18],[10,-17],[10,4,-8]]
+
+-- +
+rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
+r: LZ := rrec.pure
+rtilde: LLZ := rrec.properGeneralized
+
+srec: GEQSPLIT := splitEtaQuotientSpecification(nn, sbar)$QETAAUX
+s: LZ := srec.pure
+stilde: LLZ := srec.properGeneralized
+-- -
+
+x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$YM1GEQ;
+
+cusps x
+xiord := minimalRootOfUnity(x)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+
+)set stream calc 2
+QLX(x)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:singularoverpartition-3-1
+-------------------------------------------------------------------
+-- -
+
+-- # test:singularoverpartition-3-1
+
+-- See \cite[Thm.~10.3]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+mm := 6; m := 9; t := 3
+nn := 6
+rbar := [[1,-1],[3,1],[3,1,-1],[6,2,1]]
+sbar := [[1,14],[2,-5],[3,-6],[6,-3]]
+
+rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
+r: LZ := rrec.pure
+rtilde: LLZ := rrec.properGeneralized
+
+srec: GEQSPLIT := splitEtaQuotientSpecification(nn, sbar)$QETAAUX
+s: LZ := srec.pure
+stilde: LLZ := srec.properGeneralized
+sigma0(nn,s,stilde) + numer(nn/mm)*m*sigma0(mm,r,rtilde)
+-- -
+x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient;
+cusps x
+xiord := minimalRootOfUnity(x)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+
+)set stream calc 2
+
+px := QPX(x(1/6))
+
+rationalPower px
+
+lx := qetaLaurentRep px
+
+degree lx
+
+)set stream calc 10
+tx := qetaTaylorRep lx
+
+
+
+
+
+
+
+h := QLX(x)
+
+)set stream calc 10
+
+h
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:Ramanujan-2-disection
+-------------------------------------------------------------------
+-- -
+
+-- # test:Ramanujan-2-disection
+
+-- See \cite[Thm.~10.4]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+mm := 5; m := 2; t := 0
+nn := 10
+rbar := [[5,1,-1],[5,2,1]]
+sbar := [[1,14],[2,-5],[3,-6],[6,-3]]
+
+matrixEtaOrder(10)
+
+matrix[[1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [10, 5, 2, 1, 20, 20, 20, 20, 10, 10, 24, 0, 0, 0, 0, 0, 0, 0, 0], [10, 20, 50, 100, 12, -132, 276, 24, -156, -264, 0, 240, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 1, 1, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 2, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0]]
+
+ecs := etaCofactorSpace1(nn,mm,[],m,t);
+bas := [x(1..10) for x in ecs.basis | not zero?(x(1..10))]
+A := transpose matrix bas
+b := [1,0,1,-2,-2,0,-1,0,0,0]
+
+solve(A,b)
+============================ CONTINUE HERE =============================
+
+toEtaQuotientSpecification(nn,[])
+
+
+
+rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
+r: LZ := rrec.pure
+rtilde: LLZ := rrec.properGeneralized
+
+sbar
+
+srec: GEQSPLIT := splitEtaQuotientSpecification(nn, sbar)$QETAAUX
+s: LZ := srec.pure
+stilde: LLZ := srec.properGeneralized
+
+sigma0(nn,s,stilde) + numer(nn/mm)*m*sigma0(mm,r,rtilde)
+
+mm
+
+x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient;
+minimalRootOfUnity x
+cusps x
+
+y := x(1/3);
+yb := basefactor y; yc := cofactor y;
+minimalRootOfUnity yb, minimalRootOfUnity yc
+
+yc.0
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+)compile /home/hemmecke/g/qeta/src/qetacofactorspace
+setFormat!(FormatMathJax)$JFriCASSupport
+
+)compile /home/hemmecke/g/qeta/src/qetaquotsymb
+setFormat!(FormatMathJax)$JFriCASSupport
