@@ -80,7 +80,6 @@ LSym ==> List Symbol
 LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
-LQ ==> List Q
 LSL2Z ==> List SL2Z
 GAMMA0 ==> CongruenceSubgroupGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
@@ -857,7 +856,7 @@ we have \code{e.cusp} is the corresponding data from
 ++ of g_r(\tau) at all cusps of $\Gamma_0(N)$ or at the given cusps.
 ++ See \eqref{g_r(tau)}
 SymbolicEtaQuotient: SetCategory with
-    etaQuotient: (P, LZ, LQ) -> %
+    etaQuotient: (P, LZ, List Cusp) -> %
       ++ etaQuotient(mm, r, cusps) represents the expansion of
       ++ g_r(\tau) at the given cusps a/c of Gamma0(mm)
       ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
@@ -878,7 +877,7 @@ SymbolicEtaQuotient: SetCategory with
     exponents: % -> LZ
       ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
       ++ exponents, i.e., exponents(x)=r.
-    cusps: % -> LQ
+    cusps: % -> List Cusp
       ++ If x=etaQuotient(mm, r), then
       ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma0.
     minimalRootOfUnity: % -> P
@@ -887,7 +886,7 @@ SymbolicEtaQuotient: SetCategory with
       ++ function g_r(\tau) at any cusp of Gamma_0(mm)
       ++ (neglecting the (c\tau+d)^* factor lives in Q[w][[x]] where w
       ++ is an n-th root of unity.
-    elt: (%, Q) -> SymbolicEtaQuotientGamma
+    elt: (%, Cusp) -> SymbolicEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
     qetaGrades: % -> List Z
@@ -897,11 +896,11 @@ SymbolicEtaQuotient: SetCategory with
       ++ Internally, the matrix of Ligozat is employed.
       ++
  == add
-    HT ==> XHashTable(Q, SymbolicEtaQuotientGamma)
+    HT ==> XHashTable(Cusp, SymbolicEtaQuotientGamma)
     Rep ==> Record(
               flevel: P,     -- level \Gamma_0(level)
               fexponents: LZ,-- the r vector
-              fcusps: LQ,
+              fcusps: List Cusp,
               feta: HT,      -- mapping delta to \eta_\delta
               fminroot: P    -- minimal root of unity needed for coefficients
             )
@@ -909,15 +908,15 @@ SymbolicEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    xExponent(x: %, cusp: Q): Z ==
+    xExponent(x: %, cusp: Cusp): Z ==
         qe: Q := qExponent(x.cusp.0)$SymbolicEtaQuotientLambdaGamma
-        xe: Q := WIDTH0(level x, denom cusp) * qe
+        xe: Q := WIDTH0(level x, cusp) * qe
         not one? denom xe =>
             error "SymbolicEtaQuotient: fractional exponent"
         numer xe
     qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
 
-    etaQuotient(mm: P, r: LZ, cusps: LQ): % ==
+    etaQuotient(mm: P, r: LZ, cusps: List Cusp): % ==
         divs: LP := DIVISORS mm
         h: HT := empty()
         minroot: Z := 1
@@ -932,8 +931,8 @@ SymbolicEtaQuotient: SetCategory with
 
     level(x: %): P == xx.flevel
     exponents(x: %): LZ == xx.fexponents
-    cusps(x: %): LQ == xx.fcusps
-    elt(x: %, cusp: Q): SymbolicEtaQuotientGamma == xx.feta.cusp
+    cusps(x: %): List Cusp == xx.fcusps
+    elt(x: %, cusp: Cusp): SymbolicEtaQuotientGamma == xx.feta.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
@@ -987,7 +986,7 @@ it computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 ++ quotient expansions of $F_{s, r, m, t}(\gamma \tau)$ at all cusps
 ++ of $Gamma_0(N)$. See \eqref{eq:F_s-r-m-t(gamma*tau)}.
 SymbolicModularGamma0EtaQuotient: SetCategory with
-    etaQuotient: (P, LZ, P, LZ, P, N, LQ) -> %
+    etaQuotient: (P, LZ, P, LZ, P, N, List Cusp) -> %
       ++ etaQuotient(nn, s, mm, r, m, t, cusps) represents the expansion
       ++ of $F_{s,r,m,t}(\gamma \tau)$ for all gamma corresponding to
       ++ the given cusps.
@@ -1000,11 +999,11 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_0(nn).
-    cusps: % -> LQ
+    cusps: % -> List Cusp
       ++ cusps(x) either returns the value that was given to
       ++ etaQuotient at creation time or cusps(level
       ++ x)$CongruenceSubgroupGamma0 if the cusps where not given.
-    elt: (%, Q) -> SymbolicModularGamma0EtaQuotientGamma
+    elt: (%, Cusp) -> SymbolicModularGamma0EtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
     minimalRootOfUnity: % -> P
@@ -1012,10 +1011,10 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
       ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
  == add
     YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
-    HT ==> XHashTable(Q, YM0EQG)
+    HT ==> XHashTable(Cusp, YM0EQG)
     Rep ==> Record(
               flevel: P,  -- corresponds to Gamma_0(N)
-              fcusps: LQ, -- cusps of Gamma_0(N)
+              fcusps: List Cusp, -- cusps of Gamma_0(N)
               fy: HT,     -- mapping gamma to YM0EQG
               fminroot: P -- minimal root of unity needed for the coefficients
             )
@@ -1023,7 +1022,7 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, cusps: LQ): % ==
+    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
         for cusp in cusps repeat
@@ -1037,9 +1036,9 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
         etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
 
     level(x: %): P == xx.flevel
-    elt(x: %, cusp: Q): YM0EQG == xx.fy.cusp
+    elt(x: %, cusp: Cusp): YM0EQG == xx.fy.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
-    cusps(x: %): LQ == xx.fcusps
+    cusps(x: %): List Cusp == xx.fcusps
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fy)
@@ -1858,17 +1857,17 @@ we have \code{e.cusp} is the corresponding data from
 ++ generalized eta-quotient expansions of g_rr(\tau) at all cusps of
 ++ $\Gamma_1(N)$ or at the given cusps. See \eqref{g_rbar(tau)}
 SymbolicGeneralizedEtaQuotient: SetCategory with
-    generalizedEtaQuotient: (P, LLZ, LQ) -> %
+    generalizedEtaQuotient: (P, LLZ, List Cusp) -> %
       ++ generalizedEtaQuotient(mm,rbar,cusps) represents the
-      ++ expansion of g_rbar(\tau) at the given cusps a/c of
+      ++ expansion of g_rbar(\tau) at the given cusps of
       ++ Gamma1(mm) in terms of $x = \exp(2 \pi i \tau/w)$ where
-      ++ w=width(m, c)$GAMMA1 and gamma=cuspToMatrix(m, a/c)$GAMMA1.
+      ++ w=width(m, cusp)$GAMMA1 and gamma=cuspToMatrix(m, cusp)$GAMMA1.
       ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
     generalizedEtaQuotient: (P, LLZ) -> %
       ++ generalizedEtaQuotient(mm, rbar) represents the expansion of
-      ++ g_rbar(\tau) at all cusps a/c of Gamma1(mm) in terms of
-      ++ $x = \exp(2 \pi i \tau/w)$ where w=width(m,c) and
-      ++ gamma=cuspToMatrix(mm, a/c). It is the same as
+      ++ g_rbar(\tau) at all cusps of Gamma1(mm) in terms of
+      ++ $x = \exp(2 \pi i \tau/w)$ where w=width(m,cusp) and
+      ++ gamma=cuspToMatrix(mm, cusp). It is the same as
       ++ generalizedEtaQuotient(mm,rbar,cusps(mm)$CongruenceSubgroupGamma1).
       ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
     level: % -> P
@@ -1876,7 +1875,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     exponents: % -> LLZ
       ++ If x=generalizedEtaQuotient(mm, rbar) then exponents(x)
       ++ returns the list rbar.
-    cusps: % -> LQ
+    cusps: % -> List Cusp
       ++ If x=generalizedEtaQuotient(mm, rbar, spitzen), then
       ++ cusps(x)=spitzen.
     minimalRootOfUnity: % -> P
@@ -1887,7 +1886,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
       ++ Q[w][[x]] where w is an n-th root of unity.
       ++ It is computed as the lcm of the values for the respective
       ++ expansion at the cusps.
-    elt: (%, Q) -> SymbolicGeneralizedEtaQuotientGamma
+    elt: (%, Cusp) -> SymbolicGeneralizedEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
     qetaGrades: % -> List Z
@@ -1896,11 +1895,11 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
       ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA0.
       ++ Internally, the matrixEtaOrder is used.
  == add
-    HT ==> XHashTable(Q, SymbolicGeneralizedEtaQuotientGamma)
+    HT ==> XHashTable(Cusp, SymbolicGeneralizedEtaQuotientGamma)
     Rep ==> Record(
               flevel: P,
               fexponents: LLZ,
-              fcusps: LQ,
+              fcusps: List Cusp,
               feta: HT,   -- mapping delta to \eta_\delta
               fminroot: P -- minimal root of unity needed for coefficients
             )
@@ -1908,15 +1907,15 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    xExponent(x: %, cusp: Q): Z ==
+    xExponent(x: %, cusp: Cusp): Z ==
         qe: Q := qExponent(x.cusp.0)$SymbolicGeneralizedEtaQuotientLambdaGamma
-        xe: Q := WIDTH1(level x, denom cusp) * qe
+        xe: Q := WIDTH1(level x, cusp) * qe
         not one? denom xe =>
             error "SymbolicGeneralizedEtaQuotient: fractional exponent"
         numer xe
     qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
 
-    generalizedEtaQuotient(mm: P, rbar: LLZ, cusps: LQ): % ==
+    generalizedEtaQuotient(mm: P, rbar: LLZ, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
         for cusp in cusps repeat
@@ -1932,8 +1931,8 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
 
     level(x: %): P == xx.flevel
     exponents(x: %): LLZ == xx.fexponents
-    cusps(x: %): LQ == xx.fcusps
-    elt(x: %, cusp: Q): SymbolicGeneralizedEtaQuotientGamma == xx.feta.cusp
+    cusps(x: %): List Cusp == xx.fcusps
+    elt(x: %, cusp: Cusp): SymbolicGeneralizedEtaQuotientGamma == xx.feta.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == xx::OutputForm
@@ -1988,7 +1987,7 @@ $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
 $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$ at all cusps
 ++ of $Gamma_1(N)$. See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
 SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
-    generalizedEtaQuotient: (P, LLZ, P, LLZ, P, N, LQ) -> %
+    generalizedEtaQuotient: (P, LLZ, P, LLZ, P, N, List Cusp) -> %
       ++ generalizedEtaQuotient(nn,sbar,mm,rbar,m,t,cusps) represents
       ++ the expansion of $F_{sbar,rbar,m,t}(\gamma \tau)$ for all gamma
       ++ corresponding to the given cusps. $rbar$ and $sbar$ are indexed by
@@ -2001,12 +2000,12 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_1(nn).
-    cusps: % -> LQ
+    cusps: % -> List Cusp
       ++ cusps(x) either returns the value that was given to
       ++ generalizedEtaQuotient at creation time or
       ++ cusps(level(x))$CongruenceSubgroupGamma1 if the cusps where
       ++ not given.
-    elt: (%, Q) -> SymbolicModularGamma1GeneralizedEtaQuotientGamma
+    elt: (%, Cusp) -> SymbolicModularGamma1GeneralizedEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
     minimalRootOfUnity: % -> P
@@ -2014,10 +2013,10 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
       ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
  == add
     YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
-    HT ==> XHashTable(Q, YM1GEQG)
+    HT ==> XHashTable(Cusp, YM1GEQG)
     Rep ==> Record(
               flevel: P,  -- corresponds to Gamma_0(N)
-              fcusps: LQ, -- cusps of Gamma_1(N)
+              fcusps: List Cusp, -- cusps of Gamma_1(N)
               fy: HT,     -- mapping gamma to YM1GEQG
               fminroot: P -- minimal root of unity needed for the coefficients
             )
@@ -2026,7 +2025,7 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
     yy ==> rep y
 
     generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N,
-                           cusps: LQ): % ==
+                           cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
         for cusp in cusps repeat
@@ -2040,9 +2039,9 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
         generalizedEtaQuotient(nn, sbar, mm, rbar, m, t, cusps(nn)$GAMMA1)
 
     level(x: %): P == xx.flevel
-    elt(x: %, cusp: Q): YM1GEQG == xx.fy.cusp
+    elt(x: %, cusp: Cusp): YM1GEQG == xx.fy.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
-    cusps(x: %): LQ == xx.fcusps
+    cusps(x: %): List Cusp == xx.fcusps
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fy)

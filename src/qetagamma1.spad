@@ -103,9 +103,9 @@ $\Gamma_1(N)$}
 ++ congruence subgroup $\Gamma_1(N)$.
 ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
 CongruenceSubgroupGamma1: with
-    width: (P, Z) -> Z
-      ++ width(m, c) returns the width of the cusp a/c for Gamma_1(m)
-      ++ and some a. The width is independent of a and given by
+    width: (P, Cusp) -> Z
+      ++ width(m, cusp) returns the width of the cusp for Gamma_1(m).
+      ++ If cusp=(a:c), the width is independent of a and given by
       ++ m/gcd(c,m) except when m=4 and gcd(c,m)=2 where the width is 1.
       ++ See Equation (2.49) in
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
@@ -121,12 +121,9 @@ CongruenceSubgroupGamma1: with
       ++ Gamma_1(n) in PSL2Z. It holds: if odd?(n), then
       ++ projectiveIndex(n)=index(n), otherwise
       ++ projectiveIndex(n)=index(n)/2.
-    cusps: P -> List Q
+    cusps: P -> List Cusp
       ++ cusps(m) returns representative for all the (inequivalent)
-      ++ cusps for Gamma_1(m) sorted first by denominator and then
-      ++ (among the cusps with the same denominator) by the numerator
-      ++ of the cusp.
-      ++ The cusp infinity is represented by 1/m.
+      ++ cusps for Gamma_1(m) sorted by size.
     nu2: P -> Z
       ++ nu2(n) returns the number of $\Gamma_1(n)$ inequivalent
       ++ elliptic points of order 2. This is \mu_{1,2}(n) of
@@ -168,9 +165,9 @@ CongruenceSubgroupGamma1: with
       ++ rightCosetRepresentatives(nn) returns
       ++ rightCosetRepresentatives(nn, 1). It is a list of right coset
       ++ representatives of $\Gamma_1(nn) \backslash \Gamma_1(1)$.
-    cuspToMatrix: (P, Q) -> SL2Z
-      ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]]
-      ++ corresponding to the cusp a/c of Gamma1(m).
+    cuspToMatrix: (P, Cusp) -> SL2Z
+      ++ cuspToMatrix(m, cusp) returns a matrix gamma=[[a,b],[c,d]]
+      ++ corresponding to the cusp of Gamma1(m).
     doubleCosetRepresentatives: P -> List SL2Z
       ++ doubleCosetRepresentatives(nn) returns a list of double
       ++ coset representatives of
@@ -182,7 +179,7 @@ CongruenceSubgroupGamma1: with
       ++ $\Gamma_1(n)$, i.e. if entry (2,1) is a multiple of n and
       ++ entries (1,1) and (2,2) are congruent 1 (mod n).
       ++ Here it is assumed that determinant(mat)=1.
-    equivalentCusps?: (P, Q, Q) -> Boolean
+    equivalentCusps?: (P, Cusp, Cusp) -> Boolean
       ++ equivalentCusps?(nn, a/c, u/w) returns true iff the cusp
       ++ a/c is equivalent to u/w modulo the action of Gamma1(nn).
       ++ Two cusps a/c and u/w are equivalent modulo the action of
@@ -190,21 +187,24 @@ CongruenceSubgroupGamma1: with
       ++ (1) c =  w (mod N) and a =  u (mod gcd(c, N)
       ++ or
       ++ (2) c = -w (mod N) and a = -u (mod gcd(c, N).
+      ++ For c=0, we interpret a/c as the cusp infinity.
       ++ See Proposition 2.27 in the PhD thesis of
       ++ William Stein: https://www.wstein.org/thesis/.
-    normalizeCusp: (P, Z, Z) -> Q
-      ++ normalizeCusp(nn, a, c) normalizes the cusp a/c to another
-      ++ (equivalent modulo Gamma1(nn)) cusp u/w such that numerator
+    normalizeCusp: (P, Cusp) -> Cusp
+      ++ normalizeCusp(nn, cusp) normalizes the cusp to another
+      ++ (equivalent modulo Gamma1(nn)) cusp (u:w) such that numerator
       ++ and denominator are positive and small.
+      ++ Exceptions are 0=(0:1) and infinity()=(1:0).
 
   == add
 
-    width(m: P, c: Z): Z ==
+    width(m: P, cusp: Cusp): Z ==
+        c := denom cusp
         m=4 and gcd(c,m)=2 => 1
         (m exquo gcd(c, m)) :: Z
 
     cuspWidth(nn: P, a: Z, c: Z): Z ==
-        g: SL2Z := cuspToMatrix(nn, a/c)
+        g: SL2Z := cuspToMatrix(cusp(a, c))$Cusp
         ig: SL2Z := matrix [[g(2,2), -g(1,2)],[-g(2,1), g(1,1)]]
         for d in 1..index nn repeat
             member?(g * matrix [[ 1,d],[0, 1]] * ig, nn) => return d
@@ -223,25 +223,13 @@ CongruenceSubgroupGamma1: with
         m < 3 => index m
         asP shift(index m, -1)
 
-    equivalentCusps?(level: P, c1: Q, c2: Q): Boolean ==
+    equivalentCusps?(level: P, c1: Cusp, c2: Cusp): Boolean ==
         pr ==> positiveRemainder
         c := pr(denom c1, level)
-        dbgPrint("c", c)
-        zero? c => -- we must check + and - numerators
-            a := pr(numer c1, level)
-            dbgPrint("a", a)
-            dbgPrint("u", pr(numer c2, level))
-            dbgPrint("-u", pr(- numer c2, level))
-            a = pr(numer c2, level) or a = pr(- numer c2, level)
         g := gcd(c, level)
-        c = pr(  denom c2, level) => pr(numer c1, g) = pr(  numer c2, g)
-        c = pr(- denom c2, level) => pr(numer c1, g) = pr(- numer c2, g)
+        c = pr(  denom c2, level) and zero? pr(numer c1 - numer c2, g) => true
+        c = pr(- denom c2, level) and zero? pr(numer c1 + numer c2, g) => true
         false
-
-    smallerCusp(x: Q, y: Q): Boolean ==
-        denom x < denom y => true
-        denom x > denom y => false
-        numer x < numer y
 
     -- local function
     coprimeRemainder(a: Z, c: Z, d: Z): Z ==
@@ -249,39 +237,51 @@ CongruenceSubgroupGamma1: with
         while not one? gcd(a, c) and a < c repeat a := a + d
         a
 
-    normalizeCusp(level: P, a: Z, c: Z): Q ==
-        not one? gcd(a, c) => error "normalizeCusp: cusp not in lowest terms"
-        one? level => 1 -- = cusp infinity
+    -- local
+    normCusp(a: Z, c: Z): Cusp ==
+        one? c => cusp(0, 1)
+        cusp(a, c)
+
+    normalizeCusp(level: P, cusp: Cusp): Cusp ==
+        a: Z := numer cusp
+        c: Z := denom cusp
+--        not one? gcd(a, c) => error "normalizeCusp: cusp not in lowest terms"
+        one? level => infinity() -- = cusp infinity
         c: Z := positiveRemainder(c, level)
         zero? c =>
             a := positiveRemainder(a, level)
-            min(a, level - a)/level -- cannot be zero
+            a := min(a, level - a) -- cannot be zero
+            one? a =>  infinity()
+            cusp(a, level)
 
         a: Z := positiveRemainder(a, c)
+        zero? a => cusp(0, 1)
+
         d: Z := gcd(c, level)
-
         c2: Z := level - c
-        one? d => 1/min(c, c2)
+        one? d => normCusp(1, min(c, c2))
 
-        c < c2 => coprimeRemainder( a, c , d)/c
-        c > c2 => coprimeRemainder(-a, c2, d)/c2
-        min(coprimeRemainder(a, c, d), coprimeRemainder(-a, c, d))/c -- c=c2
+        c < c2 => normCusp(coprimeRemainder( a, c , d), c)
+        c > c2 => normCusp(coprimeRemainder(-a, c2, d), c2)
+        -- c=c2
+        a := min(coprimeRemainder(a, c, d), coprimeRemainder(-a, c, d))
+        normCusp(a, c)
 
-    cusps(level: P): List Q ==
-        level = 1 => [1/1]
-        level = 2 => [1/1, 1/2]
-        level = 3 => [1/1, 1/3]
-        level = 4 => [1/1, 1/2, 1/4]
-        h: XHashTable(Q, Q) := table()
+    cusps(level: P): List Cusp ==
+        level = 1 => [infinity()]
+        level = 2 => [cusp(0, 1), infinity()]
+        level = 3 => [cusp(0,1), infinity()]
+        level = 4 => [cusp(0,1), cusp(1,2), infinity()]
+        h: XHashTable(Cusp, Cusp) := table()
         for c in 1..level repeat
             g: Z := gcd(c, level)
             if one? g then g := 2
             for x in 1..g-1 | one? gcd(x, g) repeat
                 a: Z := x
                 while not one? gcd(a, c) repeat a := a + g
-                cusp := normalizeCusp(level, a, c)
+                cusp := normalizeCusp(level, cusp(a, c))
                 h.cusp := cusp -- might override existing cusp
-        sort!(smallerCusp, keys h)
+        sort!(keys h)
 
     numberOfCusps(level: P): P ==
         --assert(one? first divisors level)
@@ -383,14 +383,7 @@ CongruenceSubgroupGamma1: with
 -------------------------------------------------------------------
 -- exported function
 -------------------------------------------------------------------
-    cuspToMatrix(m: P, cusp: Q): MZ ==
-        a: Z := numer cusp
-        c: Z := denom cusp
-        exgcd: EXGCD := extendedEuclidean(a, c)
-        g: Z := exgcd.generator
-        b: Z := -exgcd.coef2
-        d: Z := exgcd.coef1
-        matrix [[a, b], [c, d]]
+    cuspToMatrix(m: P, cusp: Cusp): SL2Z == cuspToMatrix(cusp)$Cusp
 
     TODOrightCosetRepresentatives(nn: P, mm: P): List SL2Z ==
         concat [rightCosetReps(delta, nn, mm) for delta in divisors(nn)$INTF]
@@ -401,7 +394,7 @@ CongruenceSubgroupGamma1: with
         for cusp in cusps nn repeat
             mat := cuspToMatrix(nn, cusp)
             reps := cons(mat, reps)
-            for h in 1..width(nn, denom cusp)-1 repeat
+            for h in 1..width(nn, cusp)-1 repeat
                 reps := cons(mat*minf, reps)
         reverse! reps
 

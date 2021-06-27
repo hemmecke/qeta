@@ -82,8 +82,7 @@ P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
-MZ ==> Matrix Z -- will be a square matrix
-SL2Z ==> MZ -- represents SL_2(Z)
+SL2Z ==> Matrix Z -- represents SL_2(Z), will be a 2x2 square matrix
 EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
 
 INTF ==> IntegerNumberTheoryFunctions
@@ -112,10 +111,9 @@ For the computation of the genus of $X_0(N)$ we use
 ++ congruence subgroup $\Gamma_0(N)$.
 ++ https://www.wstein.org/books/modform/modform/dimension_formulas.html
 CongruenceSubgroupGamma0: with
-    width: (P, Z) -> Z
-      ++ width(m, c) returns the width of the cusp a/c for Gamma_0(m)
-      ++ and some a. The width is independent of a and given by
-      ++ m/gcd(c^2,m).
+    width: (P, Cusp) -> Z
+      ++ width(m, cusp) returns the width of the cusp=(a:c) for Gamma_0(m)
+      ++ The width is independent of a and given by m/gcd(c^2,m).
       ++ \cite[Lemma~2.37]{Radu:PhD:2010}
     dedekindPsi:P -> P
       ++ dedekindPsi(n) computes the value of the Dedekind psi function.
@@ -123,16 +121,14 @@ CongruenceSubgroupGamma0: with
     index: P -> P
       ++ index(n) computes the index of Gamma_0(n) in SL2Z.
       ++ index(n) is equal to dedekindPsi(n).
-    cusps: P -> List Q
+    cusps: P -> List Cusp
       ++ According to
       ++ \cite[Lemma~2.45]{Radu:PhD:2010},
       ++ there are $\eulerphi(\gcd(N/c, c))$ different cusps $\frac{a}{c}$ of
       ++ $\Gamma_0(N)$ that correspond to a divisor $c$ of $N$.
       ++ cusps(m) returns representatives for all the (inequivalent)
-      ++ cusps for Gamma_0(m) sorted first by denominator and then
-      ++ (among the cusps with the same denominator) by the numerator
-      ++ of the cusp.
-      ++ The cusp infinity is represented by 1/m.
+      ++ cusps for Gamma_0(m) sorted by their size as rational numbers
+      ++ with infinity being the biggest cusp.
     nu2: P -> Z
       ++ nu2(n) returns the number of $\Gamma_0(n)$ inequivalent
       ++ elliptic points of order 2.
@@ -174,11 +170,11 @@ CongruenceSubgroupGamma0: with
       ++ rightCosetRepresentatives(nn) returns
       ++ rightCosetRepresentatives(nn, 1). It is a list of right coset
       ++ representatives of $\Gamma_0(nn) \backslash \Gamma_0(1)$.
-    cuspToMatrix: (P, Q) -> SL2Z
-      ++ cuspToMatrix(m, a/c) returns a matrix gamma=[[a,b],[c,d]]
-      ++ corresponding to the cusp a/c of Gamma0(m).
-      ++ We assum that a/c is a normalized cusp,
-      ++ i.e. a/c=normalizeCusp(m,a,c).
+    cuspToMatrix: (P, Cusp) -> SL2Z
+      ++ For cusp=(a:c), cuspToMatrix(m, cusp) returns a matrix
+      ++ gamma=[[a,b],[c,d]] corresponding to the cusp (a:c) of
+      ++ Gamma0(m). We assum that a/c is a normalized cusp, i.e.
+      ++ cusp=normalizeCusp(m,cusp).
     doubleCosetRepresentatives: P -> List SL2Z
       ++ doubleCosetRepresentatives(nn) returns a list of double
       ++ coset representatives of
@@ -189,23 +185,27 @@ CongruenceSubgroupGamma0: with
       ++ member?(mat, n) returns true if mat is an element of
       ++ $\Gamma_0(n)$, i.e. if entry (2,1) is a multiple of n.
       ++ Here it is assumed that determinant(mat)=1.
-    equivalentCusps?: (P, Q, Q) -> Boolean
-      ++ equivalentCusps?(nn, a/c, u/w) returns true iff the cusp
-      ++ a/c is equivalent to u/w modulo the action of Gamma0(nn).
-      ++ Two cusps a/c and u/w are equivalent modulo the action of
+    equivalentCusps?: (P, Cusp, Cusp) -> Boolean
+      ++ equivalentCusps?(nn, cusp1, cusp2) returns true iff the cusp
+      ++ cusp1=(a:c) is equivalent to cusp2=(u:w) modulo the action of
+      ++ Gamma0(nn).
+      ++ Two cusps (a:c) and (u:w) are equivalent modulo the action of
       ++ Gamma0(N) if either
       ++ (1) gcd(c,N)=gcd(w,N)
       ++ or
       ++ (2) c = -w (mod N) and a = -u (mod gcd(c, N).
       ++ See Proposition 2.27 in the PhD thesis of
       ++ William Stein: https://www.wstein.org/thesis/.
-    normalizeCusp: (P, Z, Z) -> Q
-      ++ normalizeCusp(nn,a,c) normalizes the cusp a/c to another
-      ++ (equivalent modulo Gamma0(nn)) cusp u/w such that numerator
-      ++ and denominator are positive and small and w is a divisor of nn.
+    normalizeCusp: (P, Cusp) -> Cusp
+      ++ normalizeCusp(nn,cusp) normalizes the cusp to another
+      ++ (equivalent modulo Gamma0(nn)) cusp such that if
+      ++ cusp is not equivalent to infinity, then infinity() is returned,
+      ++ if cusp is equivalent to (0:1), (0:1) is returned.
+      ++ Otherwise the numerator and denominator are positive
+      ++ and small and w is a divisor of nn.
 
   == add
-    width(m: P, c: Z): Z == (m exquo gcd(c^2, m)) :: Z
+    width(m: P, cusp: Cusp): Z == (m exquo gcd(denom(cusp)^2, m)) :: Z
 
     index(m: P): P == dedekindPsi(m)
     dedekindPsi(m: P): P ==
@@ -222,16 +222,11 @@ $a\in X_c$.
 
 )endif
 
-    smallerCusp(x: Q, y: Q): Boolean ==
-      denom x < denom y => true
-      denom x > denom y => false
-      numer x < numer y
-
-    cusps(level: P): List Q ==
+    cusps(level: P): List Cusp ==
         -- We use \cite[Lemma~2.45]{Radu:PhD:2010} with \delta replaced by
         -- c and N replaced by level.
         divs: List Z := divisors(level)$INTF
-        result: List Q := empty()
+        result: List Cusp := empty()
         for c in divs repeat
             -- Let's compute the list corresponding to $X_c$.
             g: Z := gcd(c, (level exquo c)::Z)
@@ -243,9 +238,8 @@ $a\in X_c$.
 --                exgcd: EXGCD := extendedEuclidean(a, c)
 --                d: Z := exgcd.coef1
 --                b: Z := -exgcd.coef2
-
-                result := cons(a/c, result)
-        sort!(smallerCusp, result)
+                result := cons(normalizeCusp(level, cusp(a, c)), result)
+        sort! result
 
     numberOfCusps(level: P): P ==
         --assert(one? first divisors level)
@@ -358,7 +352,7 @@ $a\in X_c$.
 -------------------------------------------------------------------
 -- exported function
 -------------------------------------------------------------------
-    equivalentCusps?(level: P, c1: Q, c2: Q): Boolean ==
+    equivalentCusps?(level: P, c1: Cusp, c2: Cusp): Boolean ==
         -- implementation according to Proposition 8.13 of
         -- \cite{Stein:ModularFormas:2007}.
         pr ==> positiveRemainder
@@ -377,16 +371,19 @@ $a\in X_c$.
         while not one? gcd(a, c) and a < c repeat a := a + d
         a
 
-    normalizeCusp(level: P, a: Z, c: Z): Q ==
+    normalizeCusp(level: P, cusp: Cusp): Cusp ==
         -- Algorithm according to PhD Thesis of Silviu Radu.
         -- Lemma 2.45 of \cite{Radu:PhD:2010}
         -- First compute the corresponding b and d for the matrix.
+        a: Z := numer cusp
+        c: Z := denom cusp
+        zero? positiveRemainder(c, level) => infinity()
         exgcd: EXGCD := extendedEuclidean(a, c)
         not one? exgcd.generator =>
             error "normalizeCusp: cusp not in lowest terms"
         b: Z := -exgcd.coef2
         d: Z := exgcd.coef1
-        zero? d => 1 -- Then c = 1 (mod level). So this is the cusp 0=1.
+        zero? d => cusp(0, 1) -- Then c=1 (mod level). So this is the cusp 0=1.
         delta: Z := gcd(c, level)
         cdelta := (c exquo delta)::Z
         ndelta := (level exquo delta)::Z
@@ -396,21 +393,19 @@ $a\in X_c$.
         -- gcd(d,g)=gcd(d,delta,N/delta)=gcd(d,c,N,N/delta)=gcd(c,d)=1.
         exgcd := extendedEuclidean(d, g)
         alambda := coprimeRemainder(cdelta * exgcd.coef1, delta, g)
-        zero? alambda => 1
-        alambda/delta
+        cusp(alambda, delta)
 
-    cuspToMatrix(nn: P, cusp: Q): MZ ==
-        a: Z := numer cusp
-        c: Z := denom cusp
-        --assert(one? gcd(a,c))
-        --assert(zero?(m rem c)) -- holds for canonical cusps of Gamma0
-        exgcd: EXGCD := extendedEuclidean(a, c)
-        dprime: Z := exgcd.coef1
+    cuspToMatrix(nn: P, cusp: Cusp): SL2Z ==
+        gamma: SL2Z := cuspToMatrix(cusp)$Cusp
+        infinity? cusp => gamma -- identity matrix
+        a: Z := gamma(1,1)
+        c: Z := gamma(2,1)
+        -- assert(not zero? c)
+        dprime: Z := gamma(2,2)
         -- The extended Euclidean algorithm leave some freedom in the choice
         -- of cofactors. We improve in the following in such a way to make
         -- d as small as possible, since that corresponds to a d-th root
         -- of unity in the coefficients of the transformed series.
-        -- bprime: Z := -exgcd.coef2 -- ((not needed ))
         -- An important property here is that for any cusp a/c of Gamma0(nn)
         -- c is a divisor of nn.
         nnc: Z := (nn exquo c) :: Z
@@ -420,7 +415,10 @@ $a\in X_c$.
         d: Z := t*u
         -- s: Z := ((t*u - dprime) exquo c) :: Z
         b := ((a*d -1) exquo c) :: Z -- instead of s we use that det=1
-        matrix [[a, b], [c, d]]
+        -- update destructively
+        gamma(1,2) := b
+        gamma(2,2) := d
+        return gamma
 
     rightCosetRepresentatives(nn: P, mm: P): List SL2Z ==
         concat [rightCosetReps(delta, nn, mm) for delta in divisors(nn)$INTF]

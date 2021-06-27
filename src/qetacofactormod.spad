@@ -79,7 +79,6 @@ SL2Z ==> MZ -- matrices with determinant = 1
 LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
-LQ ==> List Q
 VZ ==> Vector Z
 GAMMA0 ==> CongruenceSubgroupGamma0
 QETAAUX ==> QEtaAuxiliaryPackage
@@ -116,10 +115,10 @@ orders at all cusps (\code{qetaGrades}) small in total sum.
 )abbrev package QETAMG0 QEtaModularGamma0
 QEtaModularGamma0: Exports == Implementation where
   Exports ==> with
-    qetaGrades: SymbolicModularGamma0EtaQuotient -> XHashTable(Q, Z)
+    qetaGrades: SymbolicModularGamma0EtaQuotient -> XHashTable(Cusp, Z)
       ++ qetaGrades(y) returns the qetaGrades of the modular
       ++ function corresponding to y.
-    qetaGrades: (P, LZ, P, LZ, P, N) -> XHashTable(Q, Z)
+    qetaGrades: (P, LZ, P, LZ, P, N) -> XHashTable(Cusp, Z)
       ++ qetaGrades(nn, s, mm, r, m, t) returns
       ++ qetaGrades(y) where
       ++ y=etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0EtaQuotient.
@@ -144,30 +143,32 @@ QEtaModularGamma0: Exports == Implementation where
     TX ==> QEtaTaylorSeries CX
     LX ==> QEtaLaurentSeries CX
     YM0EQ ==> SymbolicModularGamma0EtaQuotient
-    QLX ==> XHashTable(Q, LX)
+    QLX ==> XHashTable(Cusp, LX)
 
     a ==> aLigozat $ QETAAUX
 
     -- order of eta^r at cusp a/c.
     grade(nn: P, divs: LP, c: Z, r: LZ): Z ==
+        zero? c => error "cusp (1:0) not allowed here" -- safety check
         l: LZ := [rdelta * a(nn, c, delta) for delta in divs for rdelta in r]
         -(reduce(_+, l, 0) exquo 24)::Z
 
+    -- local
     -- orders at cusps of Gamma0(nn) different from infinity
-    grades(nn: P, divs: LP, cusps: LQ, r: LZ): LZ ==
+    grades(nn: P, divs: LP, cusps: List Cusp, r: LZ): LZ ==
         [grade(nn, divs, denom cusp, r) for cusp in cusps]
 
-    qetaGrades(y: YM0EQ): XHashTable(Q, Z) ==
+    qetaGrades(y: YM0EQ): XHashTable(Cusp, Z) ==
         mx: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
         e: QLX := laurentExpansions(y)$QEtaLaurentExpansion(C, mx, CX, xi)
-        ht: XHashTable(Q, Z) := empty()
+        ht: XHashTable(Cusp, Z) := empty()
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
 
-    qetaGrades(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): XHashTable(Q, Z) ==
+    qetaGrades(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): XHashTable(Cusp, Z) ==
         y: YM0EQ := etaQuotient(nn, s, mm, r, m, t);
         qetaGrades y
 
@@ -269,9 +270,10 @@ QEtaModularGamma0: Exports == Implementation where
         sinitial: VZ := minimizeVector(rinitial, b)
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution rinitial.
-        g: XHashTable(Q, Z) := qetaGrades(nn, members sinitial, mm, r, m, t);
+        g: XHashTable(Cusp, Z) := qetaGrades(nn, members sinitial, mm, r, m, t);
         -- Exclude order at the cusp infinity.
-        cusps: LQ := [cusp for cusp in cusps(nn)$GAMMA0 | cusp~=1/nn]
+        cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA0 _
+                             | not infinity? cusp]
         rhs: LZ := [g.cusp for cusp in cusps]
 
         -- For the vectors in the basis, we don't need to compute the
@@ -404,10 +406,10 @@ cusps (\code{qetaGrades}) small in total sum.
 )abbrev package QETAMG1 QEtaModularGamma1
 QEtaModularGamma1: Exports == Implementation where
   Exports ==> with
-    qetaGrades: SymbolicModularGamma1GeneralizedEtaQuotient -> XHashTable(Q, Z)
+    qetaGrades: SymbolicModularGamma1GeneralizedEtaQuotient -> XHashTable(Cusp, Z)
       ++ qetaGrades(y) returns the qetaGrades of the modular
       ++ function corresponding to y.
-    qetaGrades: (P, List LZ, P, List LZ, P, N) -> XHashTable(Q, Z)
+    qetaGrades: (P, List LZ, P, List LZ, P, N) -> XHashTable(Cusp, Z)
       ++ qetaGrades(nn, sbar, mm, rbar, m, t) returns
       ++ qetaGrades(y) where
       ++ y=etaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularSiftedEtaQuotient.
@@ -430,20 +432,20 @@ QEtaModularGamma1: Exports == Implementation where
     LX ==> QEtaLaurentSeries CX
     YGEQ ==> SymbolicGeneralizedEtaQuotient
     YM1GEQ ==> SymbolicModularGamma1GeneralizedEtaQuotient
-    QLX ==> XHashTable(Q, LX)
+    QLX ==> XHashTable(Cusp, LX)
 
-    qetaGrades(y: YM1GEQ): XHashTable(Q, Z) ==
+    qetaGrades(y: YM1GEQ): XHashTable(Cusp, Z) ==
         mx: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
         e: QLX := laurentExpansions(y)$QEtaSeriesExpansion(C, mx, CX, xi)
-        ht: XHashTable(Q, Z) := empty()
+        ht: XHashTable(Cusp, Z) := empty()
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
 
     qetaGrades(nn: P, sbar: LLZ,
-               mm: P, rbar: LLZ, m: P, t: N): XHashTable(Q, Z) ==
+               mm: P, rbar: LLZ, m: P, t: N): XHashTable(Cusp, Z) ==
         y: YM1GEQ := generalizedEtaQuotient(nn, sbar, mm, rbar, m, t);
         qetaGrades y
 
@@ -461,9 +463,10 @@ QEtaModularGamma1: Exports == Implementation where
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution rinitial.
         sbar: LLZ := toEtaQuotientSpecification(nn, members sinitial)$QETAAUX
-        g: XHashTable(Q, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
+        g: XHashTable(Cusp, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
         -- Exclude order at the cusp infinity.
-        cusps: LQ := [cusp for cusp in cusps(nn)$GAMMA0 | cusp~=1/nn]
+        cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA0 _
+                             | not infinity? cusp]
         rhs: LZ := [g.cusp for cusp in cusps]
 
         -- For the vectors in the basis, we don't need to compute the

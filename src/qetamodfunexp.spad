@@ -82,7 +82,6 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 LZ ==> List Z
-LQ ==> List Q
 GAMMA0 ==> CongruenceSubgroupGamma0
 
 asP x ==> x pretend P
@@ -127,9 +126,9 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
  where
   C: IntegralDomain
   L ==> QEtaLaurentSeries C
-  cusps: LQ
+  cusps: List Cusp
   Exports ==> XEtaGradedAlgebra C with
-    coerce: XHashTable(Q, L) -> %
+    coerce: XHashTable(Cusp, L) -> %
       ++ If t is a hashtable containing (for each cusp of Gamma_0(m)
       ++ the series expansions at the cusps, then etaQuotient(t) creates
       ++ a data structure that can be used for computations.
@@ -142,7 +141,7 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
     xx ==> rep x
     yy ==> rep y
 
-    coerce(t: XHashTable(Q, L)): % ==
+    coerce(t: XHashTable(Cusp, L)): % ==
         -- sanity check
         # (cs := keys t) ~= ncusps or sort cs ~= sort cusps =>
             error "keys do not agree with cusps of this domain"
@@ -220,7 +219,7 @@ ModularFunctionExpansions(C, m): Exports == Implementation where
   L ==> QEtaLaurentSeries C
   m: P -- level
   Exports ==> XEtaGradedAlgebra C with
-    coerce: XHashTable(Q, L) -> %
+    coerce: XHashTable(Cusp, L) -> %
       ++ If t is a hashtable containing (for each cusp of Gamma_0(m)
       ++ the series expansions at the cusps, then etaQuotient(t) creates
       ++ a data structure that can be used for computations.

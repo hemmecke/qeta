@@ -158,7 +158,14 @@ Cusp: OrderedSet with
         infinity? x => false
         infinity? y => true
         rational x < rational y
-
+    coerce(x: %): OutputForm ==
+        infinity? x => "oo"::Symbol::OutputForm
+        q: Q := numer(x)/denom(x)
+        q :: OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, numer x)
+        h := hashUpdate!(h, denom x)
+        h
 
 
 

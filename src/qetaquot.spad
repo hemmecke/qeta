@@ -421,7 +421,7 @@ QEtaLaurentExpansion(C, mx, CX, xi): Exports == Implementation where
   CX: Algebra C
   xi: CX --primitive mx-th root of unity.
   LX ==> QEtaLaurentSeries CX -- domain for the series expansions
-  QLX ==> XHashTable(Q, LX)
+  QLX ==> XHashTable(Cusp, LX)
   YEQG ==> SymbolicEtaQuotientGamma
   YEQ ==> SymbolicEtaQuotient
 
@@ -458,7 +458,7 @@ QEtaLaurentExpansion(C, mx, CX, xi): Exports == Implementation where
         cy: YEQG := cofactor y
         nn: P := level cy
         g: SL2Z := gamma cy
-        w: P := WIDTH0(nn, g(2,1))
+        w: P := WIDTH0(nn, cusp(g(1,1),g(2,1)))
         x: QEtaPuiseuxExpansion(C, mx, CX, xi) := puiseux(y, w)
         laurentExpansion x
 
@@ -471,7 +471,7 @@ QEtaLaurentExpansion(C, mx, CX, xi): Exports == Implementation where
             dbgPrint("QEtaLaurenExpansion: not a modular function", exponents y)
         hser: QLX := empty()
         for cusp in cusps y repeat
-            w: P := WIDTH0(nn, denom cusp) -- width of cusp
+            w: P := WIDTH0(nn, cusp) -- width of cusp
             hser.cusp := laurentExpansion(y.cusp, w)
         hser
 
@@ -527,7 +527,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
   TX ==> QEtaTaylorSeries CX
   LX ==> QEtaLaurentSeries CX
   PX ==> QEtaPuiseuxSeries CX
-  QLX ==> XHashTable(Q, LX)
+  QLX ==> XHashTable(Cusp, LX)
   YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
   YM1GEQ ==> SymbolicModularGamma1GeneralizedEtaQuotient
 
@@ -753,7 +753,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         cy: SymbolicEtaQuotientGamma := cofactor y
         nn: P := level cy
         g: SL2Z := gamma cy
-        w: P := WIDTH0(nn, g(2,1))
+        w: P := WIDTH0(nn, cusp(g(1,1),g(2,1)))
         laurent(puiseuxExpansion y, w)
 
     -- $g_r(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
@@ -765,7 +765,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
             dbgPrint("QEtaSeriesExpansion: not a modular function", exponents y)
         hser: QLX := empty()
         for cusp in cusps y repeat
-            w: P := WIDTH0(nn, denom cusp) -- width of cusp
+            w: P := WIDTH0(nn, cusp) -- width of cusp
             hser.cusp := laurent(puiseuxExpansion(y.cusp), w)
         hser
 
@@ -1017,7 +1017,7 @@ without the $(c\tau+d)$-part.
         cy: SymbolicGeneralizedEtaQuotientGamma := cofactor y
         nn: P := level cy
         g: SL2Z := gamma cy
-        w: P := WIDTH1(nn, g(2,1))
+        w: P := WIDTH1(nn, cusp(g(1,1),g(2,1)))
         laurent(puiseuxExpansion y, w)
 
     -- $g_{\bar{r}}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
@@ -1029,7 +1029,7 @@ without the $(c\tau+d)$-part.
             dbgPrint("QEtaSeriesExpansion: not a modular function", exponents y)
         hser: QLX := empty()
         for cusp in cusps y repeat
-            w: P := WIDTH1(nn, denom cusp) -- width of cusp
+            w: P := WIDTH1(nn, cusp) -- width of cusp
             hser.cusp := laurent(puiseuxExpansion(y.cusp), w)
         hser
 

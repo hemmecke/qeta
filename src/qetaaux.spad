@@ -355,7 +355,7 @@ QEtaAuxiliaryPackage: with
       ++ \url{http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf}
       ++ (DOI:10.1016/j.jsc.2018.10.001).
 
-    matrixEtaOrder: (P, Q, P, Z) -> Q
+    matrixEtaOrder: (P, Cusp, P, Z) -> Q
       ++ For g in the range 0..delta matrixEtaOrder(nn,cusp,delta,g)
       ++ returns the coefficient of r_{delta,g} in
       ++ \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994},
@@ -374,7 +374,7 @@ QEtaAuxiliaryPackage: with
       ++ Robins' coefficients and adapt to an expansion in q rather
       ++ than an expansion in q^(1/2).
 
-    matrixEtaOrder: (P, List Q) -> MQ
+    matrixEtaOrder: (P, List Cusp) -> MQ
       ++ matrixEtaOrder(nn, spitzen) returns a matrix that is similar
       ++ to matrixLigozat(nn). It allows the compution of the order of
       ++ generalized eta-quotients at the cusps of Gamma1(nn) given by
@@ -392,7 +392,7 @@ QEtaAuxiliaryPackage: with
       ++ matrixEtaOrder(nn) returns matrixEtaOrder(nn, spitzen) where
       ++ spitzen := cusps(nn)$CongruenceSubgroupGamma1.
 
-    matrixEtaOrderModularGamma1: (P, List Q) -> MQ
+    matrixEtaOrderModularGamma1: (P, List Cusp) -> MQ
       ++ matrixEtaOrderModularGamma1(nn, spitzen) returns the
       ++ vertical concatenation of matrixEtaOrder(nn, spitzen) and
       ++ matrixModularGamma1(nn) so that there will be #spitzen+3 rows
@@ -807,12 +807,12 @@ $a\in X_c$.
             -- row 2 and 3 correspond to the rows of matrixEtaOrder(nn)
             -- corresponding to the cusps 1/nn (infinity) and 1/1 (0).
             -- Thus, we use the same code as in matrixEtaOrder(nn).
-            qsetelt!(mat, 2, j, matrixEtaOrder(nn, 1/nn, d, -1))
-            qsetelt!(mat, 3, j, matrixEtaOrder(nn, 1/1,  d, -1))
+            qsetelt!(mat, 2, j, matrixEtaOrder(nn, infinity(), d, -1))
+            qsetelt!(mat, 3, j, matrixEtaOrder(nn, cusp(0,1),  d, -1))
             for g in 1..ceiling(d/2)-1 repeat
                 jj := jj + 1
-                qsetelt!(mat, 2, n + jj, matrixEtaOrder(nn, 1/nn, d, g))
-                qsetelt!(mat, 3, n + jj, matrixEtaOrder(nn, 1/1,  d, g))
+                qsetelt!(mat, 2, n + jj, matrixEtaOrder(nn, infinity, d, g))
+                qsetelt!(mat, 3, n + jj, matrixEtaOrder(nn, cusp(0, 1),  d, g))
 
         -- make sure that row 2 and 3 must be integers
         qsetelt!(mat, 2, numOfVars+1, 1)
@@ -829,7 +829,7 @@ $a\in X_c$.
     -- result of \code{matrixEtaOrder}$(N)$, then $A \bar{r}$ gives
     -- the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
     -- $q^{1/w_\gamma}$.
-    matrixEtaOrder(nn: P, cusp: Q, delta: P, g: Z): Q ==
+    matrixEtaOrder(nn: P, cusp: Cusp, delta: P, g: Z): Q ==
         --assert(cusp>0) -- comes from cusps(nn)$CongruenceSubgroupGamma1
         g > delta => error "matrixEtaOrder: no such g allowed"
         entryFactor: Q := 1
@@ -842,6 +842,11 @@ $a\in X_c$.
         -- See function normalize in CongruenceSubgroupGamma1.
         c: Z := denom cusp
         l: Z := numer cusp -- \lambda
+        -- Make cusp (0:1)=infinity a special case, i.e. treat it like
+        -- (1:nn). See (11) of Robins.
+        if infinity? cusp then
+            c := nn
+            l := 1
         e: Z := gcd(c, nn) -- \epsilon: divisor of nn (will not change)
         -- Note that nn/e = width(nn, c) (at least if (nn,c)~=(4,2)).
         -- Find a coprime (to nn) cofactor m such that m*e = c (mod nn).
@@ -862,7 +867,7 @@ $a\in X_c$.
         nn = 4 and e = 2 => 1/2*z
         z
 
-    matrixEtaOrder(nn: P, spitzen: List Q): MQ ==
+    matrixEtaOrder(nn: P, spitzen: List Cusp): MQ ==
         nndivs: List P := DIVISORS nn
         n: Z := # nndivs
         -- number of the r_d and r_{d,g} variables
@@ -881,7 +886,7 @@ $a\in X_c$.
     matrixEtaOrder(nn: P): MQ ==
         matrixEtaOrder(nn, cusps(nn)$CongruenceSubgroupGamma1)
 
-    matrixEtaOrderModularGamma1(nn: P, spitzen: List Q): MQ ==
+    matrixEtaOrderModularGamma1(nn: P, spitzen: List Cusp): MQ ==
         matmod1 := matrixModularGamma1(nn)
         matord := matrixEtaOrder(nn, spitzen)
         mat: MQ := new(#spitzen+3, ncols matmod1, 0)
