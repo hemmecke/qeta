@@ -1,0 +1,169 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2021  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\externaldocument{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Cusps of subgroups of $\SL2Z$}
+\author{Ralf Hemmecke}
+\date{26-Jun-2021}
+\maketitle
+\begin{abstract}
+  Cusps of a subgroup $\Gamma$ of $\SL2Z$, are the equivalence classes
+  of $\setQ \cup \Set{\infty}$.
+  %
+  Here we implement representatives of cusps, \ie,
+  $\setQ \cup \Set{\infty}$.
+  %
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Indroduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We actually implement $P^1(\setQ)$, \ie, a pair of integers that have
+no common denominator and where not both entries are identically zero
+at the same time. The cusp $(a, c)$ corrsponds to the rational number
+$\frac{a}{c}$ if $c\neq0$ and to $\infty$ if $c=0$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+First of all for debugging.
+)endif
+
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+
+)if LiterateDoc
+%$
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+MZ ==> Matrix Z -- will be a square matrix
+SL2Z ==> MZ -- represents SL_2(Z)
+EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
+
+INTF ==> IntegerNumberTheoryFunctions
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Representatives of cusps}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+)endif
+
+)abbrev package CUSP Cusp
+++ Cusp implements representatives of cusps of a subgroup of $\SL2Z$
+Cusp: OrderedSet with
+    cusp: (Z, Z) -> %
+      ++ cusp(a, c) returns the cusp (a:c).
+    coerce: Q -> %
+      ++ coerce(a/c) returns the cusp (a:c).
+    infinity: () -> %
+      ++ infinity() returns the cusp (1:0).
+    infinity?: % -> Boolean
+      ++ infinity?(x) returns true if and only if x is the cusp (1:0).
+    numer: % -> Z
+      ++ For x=(a:c) numer(x) returns a.
+    denom: % -> Z
+      ++ For x=(a:c) denom(x) returns c.
+      ++ We assure that denom(x)>=0.
+    rational: % -> Q
+      ++ If not infinity?(x) then rational(x) returns the rational number
+      ++ numer(x)/denom(x).
+    cuspToMatrix: % -> SL2Z
+      ++ cuspToMatrix(x) returns a matrix gamma=[[a,b],[c,d]]
+      ++ corresponding to the cusp (a:c).
+
+  == add
+    Rep ==> Record(n: Z, d: Z)
+    import from Rep
+    cusp(a: Z, c: Z): % ==
+        zero? c => infinity()
+        zero? a => per [0, 1]
+        g := gcd(a, c)
+        per [(a exquo g)::Z, (c exquo g)::Z]
+    coerce(q: Q): % == per [numer q, denom q]
+    infinity(): % == per [1,0]
+    infinity?(x: %): Boolean == zero? denom x
+    numer(x: %): Z == rep(x).n
+    denom(x: %): Z == rep(x).d
+    rational(x: %): Q ==
+        infinity? x => error "argument is infinity"
+        numer(x)/denom(x)
+    cuspToMatrix(x: %): SL2Z ==
+        a: Z := numer x
+        c: Z := denom x
+        exgcd: EXGCD := extendedEuclidean(a, c)
+        g: Z := exgcd.generator
+        b: Z := -exgcd.coef2
+        d: Z := exgcd.coef1
+        matrix [[a, b], [c, d]]
+    ((x: %) = (y: %)): Boolean == rep x = rep y
+    ((x: %) < (y: %)): Boolean ==
+        infinity? x => false
+        infinity? y => true
+        rational x < rational y
+
+
+
+
+)if LiterateDoc
+%$
+\bibliography{qeta}
+\end{document}
+)endif

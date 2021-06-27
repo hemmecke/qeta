@@ -85,7 +85,7 @@ TPROJECT=${TMP}/${PROJECT}
 # toplevel targets
 all: compile-spad
 SPADFILES=4ti2 qfunct cachedpow \
-  qetagamma0 qetagamma1 \
+  qetacusp qetagamma0 qetagamma1 \
   qetaalg qetasqrt qetaaux qetaqmev qetaser qetaquotinf qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
