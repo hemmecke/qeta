@@ -279,13 +279,13 @@ QEtaAuxiliaryPackage: with
       ++ \eta_{g',h'}(tau) as given at the top of page 673 of
       ++ \cite{Yang:GeneralizedDedekindEtaFunctions:2004} where
       ++ mat=matrix[[a,b],[c,d]].
-      ++ Condition: not zero? c.
+      ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
     kappaSchoeneberg: (P, Z, Z, MZ) -> Q
       ++ kappaSchoeneberg(nn, g, h, mat) returns a value x such
       ++ that \eta_{g,h}(mat*tau) = exp(2*%pi*%i*x) *
       ++ \eta_{g',h'}(tau) as given at the top of page 673 of
       ++ \cite{Yang:GeneralizedDedekindEtaFunctions:2004}.
-      ++ Condition: not zero? c.
+      ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
     kappaYang: (P, Z, Z, Z, Z, Z, Z) -> Q
       ++ kappaYang(nn, g, h, a, b, c, d) returns a value x such that
       ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
@@ -901,8 +901,7 @@ $a\in X_c$.
         return mat
 
     kappaSchoeneberg(nn: P, g: Z, h: Z, a: Z, b: Z, c: Z, d: Z): Q ==
-        --assert(not zero? c)
-        zero? c => error "kappaSchoeneberg: works only for c~=0"
+        zero? c => fractionalPart(b/(2*d)*fractionalBernoulli2(g/nn))
         gprime: Z := a*g + c*h
         x := a/(2*c)*fractionalBernoulli2(g/nn) _
              + d/(2*c)*fractionalBernoulli2(gprime/nn)
@@ -911,7 +910,6 @@ $a\in X_c$.
         fractionalPart(x - gds)
 
     kappaYang(nn: P, g: Z, h: Z, a: Z, b: Z, c: Z, d: Z): Q ==
-        --assert(not zero? c) -- That's a formula for the c~=0 case.
         r: Q := 1/2* ((g^2*a*b + 2*g*h*b*c + h^2*c*d)/nn^2 _
            - (g*b + h*(d-1))/nn) -- corresponds to delta/2 in Yang's paper
         u: Z := c*(a+d-3)+b*d*(1-c^2)
