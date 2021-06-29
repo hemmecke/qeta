@@ -281,12 +281,43 @@ QEtaModularGamma0: Exports == Implementation where
         -- modular eta-quotients and thus we can use the matrix of
         -- Ligozat to compute the order vectors.
         nndivs: List P := DIVISORS nn
-        bas: List LZ := [grades(nn, nndivs, cusps, members r) for r in b]
+        bas: List LZ := [grades(nn, nndivs, cusps, members x) for x in b]
         mat: MZ := transpose matrix bas
         rels: VZ := vector [1 for x in 1..#cusps]
         zresult: ZRESULT := zsolve(mat, rels, vector rhs)$X4ti2
-        adjustment := members first zresult.zinhom
-        members(sinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
+        -- We are interested in the inhomogeneous solutions, since
+        -- they yield an adjustment such that the resulting cofactor
+        -- vector s leads to an element in M^\infty(nn) for the
+        -- etaQuotient(nn,s,mm,r,m,t).
+        --
+        -- There can be several inhomogeneous solutions. Any of them
+        -- is fine, but we want the resulting series to be of a small
+        -- qetaGrade (big order) at infinity. So we compute the series
+        -- expansion at infinity for each of the inhomogeneous
+        -- solutions and take the minimal qetaGrade.
+        s: LZ := empty()
+        adjustments := zresult.zinhom
+        v: VZ := first adjustments
+        sadjust:VZ := reduce(_+, [x*bb for x in members v for bb in b])
+        s: LZ := members(sinitial - sadjust)
+        -- The order of the expansion at infinity of the modular
+        -- function given by (nn, s, mm, r, m, t) can be approximated
+        -- by alphaInfinity. See its definition in QEtaCofactorSpace.
+        -- Even though it might not be the correct order since
+        -- a(m*n+t) can be zero for an initial segment of natural
+        -- numbers n, alphaInfinity can be used to determine which of
+        -- the possible inhomogeneous candidates gives a minimal
+        -- grade. Note that grade = -order.
+        grd: Z := - alphaInfinity(nn, s, mm, r, m, t)$QEtaCofactorSpace
+        while not empty?(adjustments := rest adjustments) repeat
+            v := first adjustments
+            sadjust:VZ := reduce(_+, [x*bb for x in members v for bb in b])
+            stest := members(sinitial - sadjust)
+            gi := - alphaInfinity(nn, stest, mm, r, m, t)$QEtaCofactorSpace
+            if gi < grd then
+                s := stest
+                grd := gi
+        return s
 
     etaCofactorInfinity(nn: P, mm: P, r: LZ, m: P, t: N): LZ ==
         ecfs: ECFS := etaCofactorSpace0(nn, mm, r, m, t)$QEtaCofactorSpace
@@ -414,9 +445,9 @@ QEtaModularGamma1: Exports == Implementation where
       ++ qetaGrades(y) where
       ++ y=etaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularSiftedEtaQuotient.
     etaCofactorInfinity: (P, P, LLZ, P, N) -> LLZ
-      ++ etaCoFactorInfinity(nn,mm,rbar,m,t) returns a specification
+      ++ etaCofactorInfinity(nn,mm,rbar,m,t) returns a specification
       ++ sbar such that
-      ++ modularGamma1?(nn,sbar,mm,rbar,m,t)$QEtaCoFactorSpace and
+      ++ modularGamma1?(nn,sbar,mm,rbar,m,t)$QEtaCofactorSpace and
       ++ generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1SiftedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
