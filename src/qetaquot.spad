@@ -819,32 +819,32 @@ $q^{1/w)}$, \ie, the series from
     -- local
     -- Note that xi is a mx-th root of unity so, we have to multiply
     -- the (rational) exponent of xi by mx.
-    alphaSchoenemann(g: Z, h: Z, nn: Z, rdg: Z): CX ==
+    alphaSchoeneberg(g: Z, h: Z, nn: Z, rdg: Z): CX ==
         not zero?(g rem nn) or zero?(h rem nn) or zero? rdg => 1$CX
 
         uexp: Q := (mx/2)*fractionalBernoulli1(h/nn)$QETAAUX
         not one? denom uexp =>
             dbgPrint("mx * Bernoulli1", uexp)
-            error "QEtaSeriesExpansion: alphaSchoenemann"
+            error "QEtaSeriesExpansion: alphaSchoeneberg"
         cx := xipow(rdg * numer uexp)
 
         uexp: Q := -mx*h/nn
         not one? denom uexp =>
             dbgPrint("mx * alphaexp", uexp)
-            error "QEtaSeriesExpansion: alphaSchoenemann"
+            error "QEtaSeriesExpansion: alphaSchoeneberg"
 
         rdg > 0 => cx * (1 - xipow(numer uexp))^(asP rdg)
         cx * inv1minusxi(numer uexp)^asP(- rdg)
 
     -- local
-    alphaSchoenemannProperGeneralized(_
+    alphaSchoenebergProperGeneralized(_
       y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): CX ==
         cx: CX := 1
         for l in exponents y repeat
             delta := asP l.1; g := asP l.2; rdg := l.3;
             ygeg := y(delta, g)
             g1 := gamma1 ygeg
-            cx := cx * alphaSchoenemann(g1(1,1)*g, g1(1,2)*g, delta, rdg)
+            cx := cx * alphaSchoeneberg(g1(1,1)*g, g1(1,2)*g, delta, rdg)
         cx
 
     -- local
@@ -974,7 +974,7 @@ without the $(c\tau+d)$-part.
         -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
         ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
             properGeneralizedEtaQuotient y
-        cx := cx * alphaSchoenemannProperGeneralized ypg
+        cx := cx * alphaSchoenebergProperGeneralized ypg
         monomial(cx, qExponent y)$PX * qPochhammerGeneralized y
 
 
