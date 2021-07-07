@@ -22,6 +22,8 @@ display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
 tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+warnPrint ==> tracePrint
+errorPrint ==> tracePrint
 
 )if LiterateDoc
 \documentclass{article}
@@ -591,8 +593,6 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
     laurentExpansionsGamma1: SymbolicGeneralizedEtaQuotient -> QLX
     laurentExpansions: YM1GEQ -> QLX
 
-
-
   Implementation ==> PX add
     Rep ==> PX
     xx ==> rep x
@@ -817,34 +817,30 @@ $q^{1/w)}$, \ie, the series from
         cx
 
     -- local
-    -- Note that xi is a mx-th root of unity so, we have to multiply
-    -- the (rational) exponent of xi by mx.
-    alphaSchoeneberg(g: Z, h: Z, nn: Z, rdg: Z): CX ==
-        not zero?(g rem nn) or zero?(h rem nn) or zero? rdg => 1$CX
-
-        uexp: Q := (mx/2)*fractionalBernoulli1(h/nn)$QETAAUX
-        not one? denom uexp =>
-            dbgPrint("mx * Bernoulli1", uexp)
-            error "QEtaSeriesExpansion: alphaSchoeneberg"
-        cx := xipow(rdg * numer uexp)
-
-        uexp: Q := -mx*h/nn
-        not one? denom uexp =>
-            dbgPrint("mx * alphaexp", uexp)
-            error "QEtaSeriesExpansion: alphaSchoeneberg"
-
-        rdg > 0 => cx * (1 - xipow(numer uexp))^(asP rdg)
-        cx * inv1minusxi(numer uexp)^asP(- rdg)
-
-    -- local
-    alphaSchoenebergProperGeneralized(_
+    -- Note that according to
+    -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)-0} and
+    -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)} the respective
+    -- $(1-\zeta_\delta^{-b'g})$ factor is taken care of in the
+    -- jacobiFunction arguments if a'g is divisibly by \delta.
+    -- So we only have the $exp(2\pi i \cdot 1/2*P_1(b'g/delta))$
+    -- contribution, which we here encode.
+    alphaSchoenebergContribution(_
       y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): CX ==
         cx: CX := 1
         for l in exponents y repeat
             delta := asP l.1; g := asP l.2; rdg := l.3;
             ygeg := y(delta, g)
             g1 := gamma1 ygeg
-            cx := cx * alphaSchoeneberg(g1(1,1)*g, g1(1,2)*g, delta, rdg)
+            gd: Q := fractionalPart(g1(1,1)*g/delta)$QETAAUX -- note that h=0
+            hd: Q := fractionalPart(g1(1,2)*g/delta)$QETAAUX
+            if zero? numer gd and not zero? numer hd and not zero? rdg then
+                -- Note that xi is a mx-th root of unity so, we have
+                -- to multiply the (rational) exponent of xi by mx.
+                uexp: Q := (mx/2)*fractionalBernoulli1(hd)$QETAAUX
+                not one? denom uexp =>
+                    dbgPrint("mx * Bernoulli1", uexp)
+                    error "QEtaSeriesExpansion: alphaSchoenebergContribution"
+                cx := cx * xipow(rdg * numer uexp)
         cx
 
     -- local
@@ -881,10 +877,14 @@ $q^{1/w)}$, \ie, the series from
                 dbgPrint("delta", delta)
                 dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
                 error "QEtaSeriesExpansion: denominator does not vanish"
-            dbgPrint("qpochG delta-u-v", [delta::Q,u,v,expo::Q]$List(Q))
             px := px * eulerFunctionPower(u, asN numer v, expo)
 
         -- Now the jacobiFunction part.
+
+        -- According to whether or not a'g/delta is an integer, we
+        -- distinguish two cases.
+        -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)-0} and
+        -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}
         for l in exponents ypg repeat
             delta := asP l.1; g := asP l.2; rdg := l.3;
             ygeg: SymbolicGeneralizedEtaGamma := ypg(delta, g)
@@ -900,7 +900,10 @@ $q^{1/w)}$, \ie, the series from
             jac ==> jacobiFunction $ QFunctions(CX, LX)
             -- See \eqref{eq:mimimalRootOfUnity-g_rtilde-m-lambda}.
             nh: Z := numer h
-            lx: LX := jac(xiPower nh, beta::P, alpha::N)^rdg
+            if zero? alpha then -- {eq:eta_delta-g-m-lambda^[R](gamma*tau)-0}
+                lx: LX := jac(xiPower(-nh), beta::P, 0)^rdg
+            else
+                lx: LX := jac(xiPower nh, beta::P, alpha::N)^rdg
             u: Q := udelta(ygeg)
             v: Q := vdelta(ygeg)
             vbeta: Q := mx * v * (1/beta)
@@ -974,7 +977,7 @@ without the $(c\tau+d)$-part.
         -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
         ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
             properGeneralizedEtaQuotient y
-        cx := cx * alphaSchoenebergProperGeneralized ypg
+        cx := cx * alphaSchoenebergContribution ypg
         monomial(cx, qExponent y)$PX * qPochhammerGeneralized y
 
 

@@ -2249,7 +2249,9 @@ split the sum. Then we have
 
 Clearly we have
 \begin{align}
-  J(zq^g,q^\delta) &= J(z^{-1}q^{\delta-g}, q^\delta).
+  \jacobiFunction{zq^g}{q^\delta}
+  &=
+  \jacobiFunction{z^{-1}q^{\delta-g}}{q^\delta}.
   \label{eq:Jacobi-g-delta-g}
 \end{align}
 
@@ -2480,6 +2482,7 @@ We define
   Let $g$ and $h$ be
   real numbers, then the generalized eta-function $\eta_{g,h}^{[S]}$
   is defined by
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \defineNotation[eta-g-h-tau-Schoeneberg]{\eta_{g,h}^{[S]}(\tau)}
   &:=
@@ -2488,26 +2491,11 @@ We define
        (1-\zeta_N^h q^{n/N})
   \prod_{\substack{n>0\\n\equiv -g \bmod N}}
        (1-\zeta_N^{-h} q^{n/N})
-  \notag\\
-  &=
-  \alpha(g,h,N) q^{\frac{1}{2} P_2(\frac{g}{N})}
-  \prod_{n=1}^\infty
-    \bigl(1-\zeta_N^h q^{n-1 + \left\{\frac{g}{N}\right\}}\bigr)
-    \bigl(1-\zeta_N^{-h} q^{n - \left\{\frac{g}{N}\right\}}\bigr)
-  \notag\\
-  &=
-  \alpha(g,h,N) q^{\frac{1}{2} P_2(\frac{g}{N})}
-  \qPochhammer{\zeta_N^h q^{\left\{\frac{g}{N}\right\}}}{q}
-  \qPochhammer{\zeta_N^{-h} q^{1-\left\{\frac{g}{N}\right\}}}{q}
-  \notag\\
-  &=
-  \alpha(g,h,N) q^{\frac{1}{2} P_2(\frac{g}{N})}
-    \jacobiFunction{\zeta_N^h q^{\left\{\frac{g}{N}\right\}}}{q}
-    \eulerFunction{}^{-1}
-  \label{eq:eta_g-h^[S](tau)}
+  \label{eq:def:eta_g-h^[S](tau)}
 \end{align}
-where $0\le\left\{\frac{g}{N}\right\}<N$ is the fractional part of
-$\frac{g}{N}$,
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+where
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{gather}
   \defineNotation[alpha-g-h-N]{\alpha(g,h,N)}
   :=
@@ -2520,21 +2508,116 @@ $\frac{g}{N}$,
   \end{cases}
   \label{eq:eta_g-h^[S](tau)-prefactor}
 \end{gather}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 and $P_1(x)$ is the first Bernoulli function given by
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{gather*}
   \defineNotation[P-1]{P_1(x)}
   =
   \{x\} - \frac{1}{2}.
 \end{gather*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In case $g\equiv_N 0$ and $h\not\equiv_N 0$ we have
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align*}
+  \eta_{g,h}^{[S]}(\tau)
+  &=
+  \unityPower{\frac{1}{2}
+    P_1\!\left(\frac{h}{N}\right)}
+    q^{\frac{1}{2} P_2(\frac{g}{N})}
+  \prod_{n=1}^\infty
+    \bigl(1-\zeta_N^h q^n\bigr)
+  \prod_{n=0}^\infty
+    \bigl(1-\zeta_N^{-h} q^n\bigr)
+  \notag\\
+  &=
+  \unityPower{\frac{1}{2}
+    P_1\!\left(\frac{h}{N}\right)}
+    q^{\frac{1}{2} P_2(\frac{g}{N})}
+  \qPochhammer{\zeta_N^h q}{q}
+  \qPochhammer{\zeta_N^{-h}}{q}
+  \notag\\
+  &=
+  \unityPower{\frac{1}{2}
+    P_1\!\left(\frac{h}{N}\right)}
+    q^{\frac{1}{2} P_2(\frac{g}{N})}
+    \jacobiFunction{\zeta_N^{-h}}{q} \eulerFunction{}^{-1}
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+If $g\not\equiv_N 0$ or $h\equiv_N 0$, then $\alpha(g,h,N)=1$ and thus
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align*}
+  \eta_{g,h}^{[S]}(\tau)
+  &=
+  q^{\frac{1}{2} P_2(\frac{g}{N})}
+  \prod_{n=1}^\infty
+    \bigl(1-\zeta_N^h q^{n-1 + \left\{\frac{g}{N}\right\}}\bigr)
+    \bigl(1-\zeta_N^{-h} q^{n - \left\{\frac{g}{N}\right\}}\bigr)
+  \notag\\
+  &=
+  q^{\frac{1}{2} P_2(\frac{g}{N})}
+  \qPochhammer{\zeta_N^h q^{\left\{\frac{g}{N}\right\}}}{q}
+  \qPochhammer{\zeta_N^{-h} q^{1-\left\{\frac{g}{N}\right\}}}{q}
+  \notag\\
+  &=
+  q^{\frac{1}{2} P_2(\frac{g}{N})}
+    \jacobiFunction{\zeta_N^h q^{\left\{\frac{g}{N}\right\}}}{q}
+    \eulerFunction{}^{-1}
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+where $0\le\left\{\frac{g}{N}\right\}<N$ is the fractional part of
+$\frac{g}{N}$.
+
+
+If we define
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[Jacobi-a-b-q]{\jacobiAlpha{a}{b}{q}}
+  &=
+    \begin{cases}
+      \unityPower{\frac{1}{2} P_1(b)}
+      \jacobiFunction{\unityPower{\left\{-b\right\}}}{q} & \text{if $a\in\setZ$ and
+        $b\not\in\setZ$},
+      \\
+      \jacobiFunction{\unityPower{\left\{b\right\}}q^{\{a\}}}{q} & \text{otherwise.}
+    \end{cases}
+  \label{eq:Jacobi_a-b-q}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+then we can combine the above cases and write
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[eta-g-h-tau-Schoeneberg]{\eta_{g,h}^{[S]}(\tau)}
+  &=
+  q^{\frac{1}{2} P_2(\frac{g}{N})}
+    \jacobiAlpha{\frac{g}{N}}{\frac{h}{N}}{q}
+    \eulerFunction{}^{-1}
+  \label{eq:eta_g-h^[S](tau)}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
 
 Since there is an implicit parameter $N$, we sometimes add an explicit
 third index $N$, \ie
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \label{eq:eta_g-h-N^[S](tau)}
   \defineNotation[eta-g-h-N-tau-Schoeneberg]{\eta_{g,h,N}^{[S]}(\tau)}
   &=
   \eta_{g,h}^{[S]}(\tau),
 \end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 in order to make this parameter explicit.
 \end{Definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2872,115 +2955,19 @@ Let us first find an expression for the transformation of
 $\eta_{\delta,g}(\gamma\tau)$ which is implemented through the domain
 \code{SymbolicGeneralizedEtaGamma}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  \defineNotation[eta-delta-g-gamma-tau-Robins]{\eta_{\delta,g}^{[R]}(\gamma\tau)}
-  &=
-    \eta_{g,0,\delta}^{[S]}(\delta\gamma\tau)
-%  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  &
-  =
-    \eta_{g,0,\delta}^{[S]}(\gamma_\delta\tau_\delta)
-%  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  &
-   =
-    \unityPower{\kappa_{g,0,\delta,\gamma_\delta}^{[S]}}\,
-    \eta_{a_\delta g, b_\delta g,\delta}^{[S]}(\tau_\delta)
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  &\eqby{eq:eta_g-h^[S](tau)}
-    \unityPower{\kappa_{g,0,\delta,\gamma_\delta}^{[S]}}
-    \cdot
-    \alpha(a_\delta g, b_\delta g,\delta)
-    \cdot
-    q_\delta^{{\frac{1}{2} P_2\left(\frac{a_\delta g}{\delta}\right)}}
-    \cdot
-    \qPochhammer{
-    \zeta_\delta^{b_\delta g} q_\delta^{\left\{\frac{a_\delta g}{\delta}\right\}}
-    }{q_\delta}
-    \qPochhammer{
-    \zeta_\delta^{-{b_\delta g}} q_\delta^{1-\left\{\frac{a_\delta g}{\delta}\right\}}
-    }{q_\delta}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-  \unityPower{\kappa_{g,0,\delta,\gamma_\delta}^{[S]}}
-  \cdot
-  \alpha(a_\delta g, b_\delta g,\delta)
-  \cdot
-  \unityPower{{\frac{v_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)}}
-  \cdot
-  q^{{\frac{u_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)}}
-  \cdot
-  \\
-  &\qquad\qquad
-  \cdot
-  \qPochhammer{
-    \zeta_\delta^{b_\delta g} q_\delta^{\left\{\frac{a_\delta g}{\delta}\right\}}
-    }{q_\delta}
-  \qPochhammer{
-    \zeta_\delta^{-{b_\delta g}} q_\delta^{1-\left\{\frac{a_\delta g}{\delta}\right\}}
-    }{q_\delta}
-  \end{split}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-    &=
-    \unityPower{
-      \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
-      +
-      \frac{v_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)
-    }
-    \cdot
-    \alpha(a_\delta g, b_\delta g,\delta)
-    \cdot
-    \unityPowerTau{
-      \frac{u_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)}
-    \cdot
-    \\
-    &\qquad\qquad
-    \cdot
-    \qPochhammer{
-      \zeta_\delta^{b_\delta g} q_\delta^{\left\{\frac{a_\delta g}{\delta}\right\}}
-      }{q_\delta}
-    \qPochhammer{
-      \zeta_\delta^{-{b_\delta g}} q_\delta^{1-\left\{\frac{a_\delta g}{\delta}\right\}}
-      }{q_\delta}
-  \end{split}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-    &=
-    \unityPower{
-      \kappa_{g,0,\delta,\gamma_\delta}^{[S]}
-      +
-      \frac{v_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)
-    }
-    \cdot
-    \alpha(a_\delta g, b_\delta g,\delta)
-    \cdot
-    \unityPowerTau{
-      \frac{u_\delta}{2} P_2\left(\frac{a_\delta g}{\delta}\right)}
-    \cdot
-    \\
-    &\qquad\qquad
-    \cdot
-    \jacobiFunction{
-      \zeta_\delta^{b_\delta g} q_\delta^{\left\{\frac{a_\delta g}{\delta}\right\}}
-      }{q_\delta}
-    \eulerFunction[q_\delta]{}^{-1}
-  \end{split}
-  \label{eq:eta_delta-g^[R](gamma*tau)}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Since $\eta_{\delta,g}=\eta_{\delta,g,1,0}$, we only expand here the
+more general case.
+
+Note that in our context we have $0 < g < \delta$ and
+$\gcd(a', b')=1$. Thus, $a'g$ and $b'g$ cannot be zero modulo $\delta$
+at the same time.
+Depending on whether or not $\frac{a' g}{\delta}\in\setZ$ we
+distinguishe two cases similar to \eqref{eq:eta_g-h^[S](tau)-prefactor}.
 
 With $W$, $\gamma_{\delta,m,\lambda}$, and $\tau_{\delta,m,\lambda}$
 defined as in in \eqref{eq:W_delta-m-lambda},
 \eqref{eq:gamma_delta-m-lambda}, and \eqref{eq:tau_delta-m-lambda},
-respectively, we have the following formula.
+respectively, we define:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
@@ -3003,40 +2990,11 @@ respectively, we have the following formula.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   &\eqby{eq:eta_g-h^[S](tau)}
     \unityPower{\kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}}
-    \cdot
-    \alpha(a' g, b' g,\delta)
-    \cdot
-    q_\delta^{{\frac{1}{2} P_2\left(\frac{a' g}{\delta}\right)}}
-    \cdot
-    \qPochhammer{
-    \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-    }{q_{\delta,m,\lambda}}
-    \qPochhammer{
-    \zeta_\delta^{-{b' g}} q_{\delta,m,\lambda}^{1-\left\{\frac{a' g}{\delta}\right\}}
-    }{q_{\delta,m,\lambda}}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-  \unityPower{\kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}}
-  \cdot
-  \alpha(a' g, b' g,\delta)
-  \cdot
-  \unityPower{{\frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}}
-  \cdot
-  q^{{\frac{u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}}
-  \cdot
-  \\
-  &\qquad\qquad
-  \cdot
-  \qPochhammer{
-    \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-    }{q_{\delta,m,\lambda}}
-  \qPochhammer{
-    \zeta_\delta^{-{b' g}} q_{\delta,m,\lambda}^{1-\left\{\frac{a' g}{\delta}\right\}}
-    }{q_{\delta,m,\lambda}}
-  \end{split}
-  \notag\\
+  q^{\frac{1}{2} P_2
+    \left(\frac{a'g}{\delta}\right)}
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{h' g}{\delta}}{q_{\delta,m,\lambda}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
+    \notag\\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \begin{split}
     &=
@@ -3046,47 +3004,20 @@ respectively, we have the following formula.
       \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
     }
     \cdot
-    \alpha(a' g, b' g,\delta)
-    \cdot
     \unityPowerTau{
       \frac{u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
     \cdot
     \\
     &\qquad\qquad
     \cdot
-    \qPochhammer{
-      \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
-    \qPochhammer{
-      \zeta_\delta^{-{b' g}} q_{\delta,m,\lambda}^{1-\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
-  \end{split}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-    &=
-    \unityPower{
-      \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-      +
-      \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-    }
-    \cdot
-    \alpha(a' g, b' g,\delta)
-    \cdot
-    \unityPowerTau{
-      \frac{u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
-    \cdot
-    \\
-    &\qquad\qquad
-    \cdot
-    \jacobiFunction{
-      \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{h' g}{\delta}}{q_{\delta,m,\lambda}}
     \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
   \end{split}
   \label{eq:eta_delta-g-m-lambda^[R](gamma*tau)}
 \end{align}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 
 
@@ -3552,11 +3483,6 @@ formula.
       \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
       \right)}
   \cdot
-  \genprod[M] \alpha(a' g, b' g,\delta)^{r_{\delta,g}}
-  \times
-  \\
-  &\qquad\qquad
-  \times
   \unityPowerTau{
     \gensum[M]
     \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
@@ -3566,9 +3492,7 @@ formula.
   \times
   \genprod[M]
   \left(
-    \jacobiFunction{
-      \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
     \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
   \right)^{r_{\delta,g}}
   \end{split}
@@ -3580,16 +3504,19 @@ Note that formula \eqref{eq:g_rtilde-m-lambda(gamma*tau)} corresponds
 to the proper generalized eta-quotient part of (2.25) in
 \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
-In terms of $q$, the $q$-Pochhammer symbol can be expanded into
+If $\left\{\frac{a'g}{\delta}\right\} = \frac{\alpha}{\beta} \ne 0$,
+the Jacobi function can be expanded into
 \begin{align}
+  \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+  &=
   \jacobiFunction{
       \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
       }{q_{\delta,m,\lambda}}
-  &=
+  =
     \jacobiFunction{\zeta_\delta^{b' g} x^{\alpha}}{x^{\beta}}
     \label{eq:mimimalRootOfUnity-g_rtilde-m-lambda}
 \end{align}
-where $\left\{\frac{a'g}{\delta}\right\} = \frac{\alpha}{\beta}$ and
+where
 $x = q_{\delta,m,\lambda}^{1/\beta} =
 \unityPower{\frac{v_{\delta,m,\lambda}}{\beta}} q^{u_{\delta,m,\lambda}/\beta}$.
 
@@ -3753,10 +3680,6 @@ for the transformation of $p_{\bar{r},m,t}$ under $\SL2Z$.
       \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
       \right)}
   \cdot
-  \genprod[M] \alpha(a' g, b' g,\delta)^{r_{\delta,g}}
-  \times\\
-  &\qquad\qquad
-  \times
   \unityPowerTau{
     \gensum[M]
     \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
@@ -3766,61 +3689,7 @@ for the transformation of $p_{\bar{r},m,t}$ under $\SL2Z$.
   \times
   \genprod[M]
   \left(
-    \qPochhammer{
-      \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
-    \qPochhammer{
-      \zeta_\delta^{-{b' g}} q_{\delta,m,\lambda}^{1-\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
-  \right)^{r_{\delta,g}}
-  \end{split}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
-  \times\\
-  & \qquad\times
-  \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)
-      + \divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
-        + \kappa_{\gamma_{\delta,m,\lambda}})}{24}
-      +
-      \gensum[M]
-      r_{\delta,g}
-      \left(
-        \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-        +
-        \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-      \right)}
-  \times\\
-  & \qquad\qquad\times
-    \divisorprod{M}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
-    \cdot
-    \genprod[M] \alpha(a' g, b' g,\delta)^{r_{\delta,g}}
-  \times\\
-  & \qquad\qquad\times
-    \unityPowerTau{
-    \frac{\divisorsum{M} r_\delta
-        u_{\delta,m,\lambda}}{24}
-      +
-    \gensum[M]
-    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a'
-        g}{\delta}\right)
-    }
-    \cdot
-    \divisorprod{M}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
-  \times
-  \\
-  &\qquad\qquad
-  \times
-  \genprod[M]
-  \left(
-    \jacobiFunction{
-      \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
     \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
   \right)^{r_{\delta,g}}
   \end{split}
@@ -3848,9 +3717,51 @@ for the transformation of $p_{\bar{r},m,t}$ under $\SL2Z$.
     \divisorprod{M}
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
     \cdot
-    \genprod[M] \alpha(a' g, b' g,\delta)^{r_{\delta,g}}
+    \unityPowerTau{
+    \frac{\divisorsum{M} r_\delta
+        u_{\delta,m,\lambda}}{24}
+      +
+    \gensum[M]
+    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a'
+        g}{\delta}\right)
+    }
+  \times
+  \\
+  &\qquad\qquad
+  \times
+  \divisorprod{M}
+  \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
+  \cdot
+  \genprod[M]
+  \left(
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
+  \right)^{r_{\delta,g}}
+  \end{split}
+  \notag\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{split}
+  &=
+    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
+  \times\\
+  & \qquad\times
+  \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)
+      + \divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
+        + \kappa_{\gamma_{\delta,m,\lambda}})}{24}
+      +
+      \gensum[M]
+      r_{\delta,g}
+      \left(
+        \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
+        +
+        \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+      \right)}
   \times\\
   & \qquad\qquad\times
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
+    \cdot
     \unityPowerTau{
     \frac{\divisorsum{M} r_\delta
         u_{\delta,m,\lambda}}{24}
@@ -3867,9 +3778,9 @@ for the transformation of $p_{\bar{r},m,t}$ under $\SL2Z$.
   \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta - \tilde{r}_\delta}
   \cdot
   \genprod[M]
-  \jacobiFunction{
-    \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-    }{q_{\delta,m,\lambda}}^{r_{\delta,g}}
+  \jacobiAlpha{\frac{a' g}{\delta}}
+              {\frac{b' g}{\delta}}
+              {q_{\delta,m,\lambda}}^{r_{\delta,g}}
   \end{split}
   \label{eq:p_rbar-m-t(gamma*tau)}
 \end{align}
