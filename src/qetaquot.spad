@@ -522,7 +522,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
   C: Join(Algebra Q, IntegralDomain) -- basic coefficient domain
   -- We need Algebra(Q) for multiplication with (1/m)
   mx: P -- mx-th root of unity needed.
-  CX: Algebra C
+  CX: Join(Algebra C, Field)
   xi: CX --primitive mx-th root of unity.
   TX ==> QEtaTaylorSeries CX
   LX ==> QEtaLaurentSeries CX
@@ -583,7 +583,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ If s(q) is a series in q, then substitute(s, u, v) returns a
       ++ series t(q) such that t(q)=s(q^u*xi^v).
 
-    puiseuxExpansion: (SymbolicProperGeneralizedEtaQuotientLambdaGamma, Q) -> PX
+--    puiseuxExpansion: (SymbolicProperGeneralizedEtaQuotientLambdaGamma, Q) -> PX
     puiseuxExpansion: (SymbolicGeneralizedEtaQuotientLambdaGamma, Q) -> PX
     puiseuxExpansion: SymbolicGeneralizedEtaQuotientGamma -> PX
     puiseuxExpansion: YM1GEQG -> PX
@@ -624,7 +624,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
         zero? e => 1$CX
         power!(xic, asP e)$CachedPower(CX)
 
-    xiPower(v: N): (Z -> CX) == (e: Z): CX +-> xipow(v*e)
+    xiPower(v: Z): (Z -> CX) == (e: Z): CX +-> xipow(v*e)
 
     -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
     substitute(s: LX, u: Q, v: N): PX ==
@@ -848,14 +848,45 @@ $q^{1/w)}$, \ie, the series from
         cx
 
     -- local
+    -- Compute $\tilde{r}_\delta$ from $\tilde{r}$. See definition
+    -- below \eqref{eq:p_rbar-m-lambda(gamma*tau)}, i.e.
+    -- $\tilde{r}_\delta := \sum_{0 < g < \frac{\delta}{2}} r_{\delta,g}$.
+    rtilde(delta: P, y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): Z ==
+        rd: Z := 0
+        for l in exponents y | delta = asP l.1 repeat rd := rd + l.3;
+        rd
+
+    -- local
     -- The q-Pochhammer part (last product) of
-    -- \eqref{g_rtilde-m-lambda(gamma*tau)}.
-    qPochhammerProperGeneralized(_
-      y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): PX ==
+    -- \eqref{eq:p_rbar-m-lambda(gamma*tau)}.
+    -- It includes the pure and properGeneralized part, because we
+    -- employ the jacobiProduct to compute it.
+    qPochhammerGeneralized(_
+      y: SymbolicGeneralizedEtaQuotientLambdaGamma): PX ==
+        ypure: SymbolicEtaQuotientLambdaGamma := pureEtaQuotient y
+        ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
+            properGeneralizedEtaQuotient y
+
+        -- We first compute the first q-Pochhammer product (with
+        -- exponent $r_\delta - \tilde{r}_\delta$, see
+        -- \eqref{eq:p_rbar-m-lambda(gamma*tau)}.
+        -- Compare also with implementation of qPochhammerPure
         px: PX := 1
-        for l in exponents y repeat
+        for delta in divisors ypure for rd in exponents ypure _
+                | not zero?(expo := rd - rtilde(delta, ypg)) repeat
+            etadelta: SymbolicEtaGamma := ypure.delta
+            u: Q := udelta etadelta
+            v: Q := mx * vdelta etadelta
+            not one? denom v or v<0 =>
+                dbgPrint("delta", delta)
+                dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
+                error "QEtaSeriesExpansion: denominator does not vanish"
+            px := px * eulerFunctionPower(u, asN numer v, expo)
+
+        -- Now the jacobiFunction part.
+        for l in exponents ypg repeat
             delta := asP l.1; g := asP l.2; rdg := l.3;
-            ygeg := y(delta, g)
+            ygeg: SymbolicGeneralizedEtaGamma := ypg(delta, g)
             g1 := gamma1 ygeg
             alphabeta := fractionalPart(g1(1,1)*g/delta)$QETAAUX
             alpha: Z := numer alphabeta
@@ -865,9 +896,10 @@ $q^{1/w)}$, \ie, the series from
             not one? denom h => -- mx should be such that h is integral
                 dbgPrint("mx*h'/delta", h)
                 error "QEtaSeriesExpansion: denom for xi does not vanish"
-            qpoch ==> qPochhammer $ QFunctions(CX, LX)
-            lx := qpoch(xipow(numer h), alpha, beta::P)
-            lx := lx * qpoch(xipow(- numer h), beta-alpha, beta::P)
+            jac ==> jacobiFunction $ QFunctions(CX, LX)
+            -- See \eqref{eq:mimimalRootOfUnity-g_rtilde-m-lambda}.
+            nh: Z := numer h
+            lx: LX := jac(xiPower nh, beta::P, alpha::P)^rdg
             u: Q := udelta(ygeg)
             v: Q := vdelta(ygeg)
             vbeta: Q := mx * v * (1/beta)
@@ -876,19 +908,6 @@ $q^{1/w)}$, \ie, the series from
                 error "QEtaSeriesExpansion: denom for xi does not vanish"
             px := px * substitute(lx, (1/beta)*u, asP numer vbeta)
         return px
-
-    -- $g_{\tilde{r},m,\lambda}(\gamma\tau)$
-    puiseuxExpansion(y: SymbolicProperGeneralizedEtaQuotientLambdaGamma,_
-                     ue: Q): PX ==
-        -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
-        cx: CX := alphaSchoenemannProperGeneralized y
-        uexp: Q := mx * (lambda(y)*ue + unityExponent y)
-        not one? denom uexp =>
-            dbgPrint("mx * unityExponent y", uexp)
-            error "QEtaSeriesExpansion: denominator for xi does not vanish"
-        cx: CX := cx * xipow(numer uexp)
-        px: PX := monomial(cx, qExponent y)
-        px * qPochhammerProperGeneralized y
 
 
 
@@ -926,7 +945,7 @@ without the $(c\tau+d)$-part.
         -- eta-quotient with the unityExponent ue for the
         -- generalized eta-quotient would lead to the necessity of
         -- not only a mx-th root of unity, but a bigger root of unity.
-        -- This could be solve in different ways.
+        -- This could be solved in different ways.
         --
         -- (a) Change the minimalRootOfUnity computation for
         --     SymbolicGeneralizedEtaQuotientGamma, in order to be
@@ -955,9 +974,8 @@ without the $(c\tau+d)$-part.
         ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
             properGeneralizedEtaQuotient y
         cx := cx * alphaSchoenemannProperGeneralized ypg
-
-        px := qPochhammerPure ypure * qPochhammerProperGeneralized ypg
-        monomial(cx, qExponent y) * px
+        px := monomial(cx, qExponent y)$PX * qPochhammerGeneralized y
+        px
 
 
 
