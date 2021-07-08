@@ -22,8 +22,8 @@ display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
 tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
-warnPrint ==> tracePrint
-errorPrint ==> tracePrint
+warnPrint(x,y) ==> tracePrint(x,y)
+errorPrint(x,y) ==> tracePrint(x,y)
 
 )if LiterateDoc
 \documentclass{article}
@@ -245,8 +245,8 @@ QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
         for i in 1..m-1 repeat
             stx := rest stx
             if not zero? first stx then
-                dbgPrint("checkedMultisect c", first stx)
-                dbgPrint("Taylor representation", tx)
+                errorPrint("checkedMultisect c", first stx)
+                errorPrint("Taylor representation", tx)
                 error "nonzero coefficients for multisect"
         tx := multisect(m, 0, tx)
 
@@ -295,18 +295,18 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
             etadelta: SymbolicEtaGamma := y.delta
             u: Q := d * udelta etadelta
             not one? denom u =>
-                dbgPrint("delta, d", [delta, d]$List(P))
-                dbgPrint("udelta", [udelta etadelta, u]$List(Q))
+                errorPrint("delta, d", [delta, d]$List(P))
+                errorPrint("udelta", [udelta etadelta, u]$List(Q))
                 error "QEtaPuiseuxExpansion: denominator does not vanish"
             v: Q := mx * vdelta etadelta
             not one? denom v or v<0 =>
-                dbgPrint("delta, d", [delta, d]$List(P))
-                dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
+                errorPrint("delta, d", [delta, d]$List(P))
+                errorPrint("vdelta", [vdelta etadelta, u]$List(Q))
                 error "QEtaPuiseuxExpansion: denominator does not vanish"
             s := s * eulerFunctionPower(asP numer u, asN numer v, rd)
         uexp: Q := mx * (lambda(y)*ue + unityExponent y)
         not one? denom uexp =>
-            dbgPrint("mx * unityExponent y", uexp)
+            errorPrint("mx * unityExponent y", uexp)
             error "QEtaPuiseuxExpansion: denominator for xi does not vanish"
         -- leading coefficient
         cx: CX := xipow numer uexp * squareRoot rationalPrefactor y
@@ -470,7 +470,7 @@ QEtaLaurentExpansion(C, mx, CX, xi): Exports == Implementation where
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
         if not modularGamma0?(nn, exponents y)$QETAAUX then
-            dbgPrint("QEtaLaurenExpansion: not a modular function", exponents y)
+            warnPrint("QEtaLaurenExpansion: not a modular function", exponents y)
         hser: QLX := empty()
         for cusp in cusps y repeat
             w: P := WIDTH0(nn, cusp) -- width of cusp
@@ -689,8 +689,8 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
             u: Q := udelta etadelta
             v: Q := mx * vdelta etadelta
             not one? denom v or v<0 =>
-                dbgPrint("delta", delta)
-                dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
+                errorPrint("delta", delta)
+                errorPrint("vdelta", [vdelta etadelta, u]$List(Q))
                 error "QEtaSeriesExpansion: denominator does not vanish"
             px := px * eulerFunctionPower(u, asN numer v, rd)
         return px
@@ -699,7 +699,7 @@ $\divides{\delta}{M}$ with $r_\delta\ne0$, \ie, the series from
     puiseuxExpansion(y: SymbolicEtaQuotientLambdaGamma, ue: Q): PX ==
         uexp: Q := mx * (lambda(y)*ue + unityExponent y)
         not one? denom uexp =>
-            dbgPrint("mx * unityExponent y", uexp)
+            errorPrint("mx * unityExponent y", uexp)
             error "QEtaSeriesExpansion: denominator for xi does not vanish"
         -- leading coefficient
         cx: CX := xipow numer uexp * squareRoot rationalPrefactor y
@@ -762,7 +762,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
         if not modularGamma0?(nn, exponents y)$QETAAUX then
-            dbgPrint("QEtaSeriesExpansion: not a modular function", exponents y)
+            warnPrint("QEtaSeriesExpansion: not a modular function", exponents y)
         hser: QLX := empty()
         for cusp in cusps y repeat
             w: P := WIDTH0(nn, cusp) -- width of cusp
@@ -838,7 +838,7 @@ $q^{1/w)}$, \ie, the series from
                 -- to multiply the (rational) exponent of xi by mx.
                 uexp: Q := (mx/2)*fractionalBernoulli1(hd)$QETAAUX
                 not one? denom uexp =>
-                    dbgPrint("mx * Bernoulli1", uexp)
+                    errorPrint("mx * Bernoulli1", uexp)
                     error "QEtaSeriesExpansion: alphaSchoenebergContribution"
                 cx := cx * xipow(rdg * numer uexp)
         cx
@@ -874,8 +874,8 @@ $q^{1/w)}$, \ie, the series from
             u: Q := udelta etadelta
             v: Q := mx * vdelta etadelta
             not one? denom v or v<0 =>
-                dbgPrint("delta", delta)
-                dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
+                errorPrint("delta", delta)
+                errorPrint("vdelta", [vdelta etadelta, u]$List(Q))
                 error "QEtaSeriesExpansion: denominator does not vanish"
             px := px * eulerFunctionPower(u, asN numer v, expo)
 
@@ -895,7 +895,7 @@ $q^{1/w)}$, \ie, the series from
             -- exponent for mx-th root of unity
             h: Q := mx*g1(1,2)*g/delta -- is made smaller in xipow
             not one? denom h => -- mx should be such that h is integral
-                dbgPrint("mx*h'/delta", h)
+                errorPrint("mx*h'/delta", h)
                 error "QEtaSeriesExpansion: denom for xi does not vanish"
             jac ==> jacobiFunction $ QFunctions(CX, LX)
             -- See \eqref{eq:mimimalRootOfUnity-g_rtilde-m-lambda}.
@@ -908,7 +908,7 @@ $q^{1/w)}$, \ie, the series from
             v: Q := vdelta(ygeg)
             vbeta: Q := mx * v * (1/beta)
             not one? denom vbeta =>
-                dbgPrint("vbeta", vbeta)
+                errorPrint("vbeta", vbeta)
                 error "QEtaSeriesExpansion: denom for xi does not vanish"
             px := px * substitute(lx, (1/beta)*u, asP numer vbeta)
         return px
@@ -967,7 +967,7 @@ without the $(c\tau+d)$-part.
 
         uexp: Q := mx * (lambda(y)*ue + unityExponent y)
         not one? denom uexp =>
-            dbgPrint("mx * unityExponent y", uexp)
+            errorPrint("mx * unityExponent y", uexp)
             error "QEtaSeriesExpansion: denominator for xi does not vanish"
 
         -- leading coefficient
@@ -1029,7 +1029,7 @@ without the $(c\tau+d)$-part.
         -- check whether the exponent vectors (rdelta) lead to a
         -- modular function.
         if not modularGamma1?(nn, exponents y)$QETAAUX then
-            dbgPrint("QEtaSeriesExpansion: not a modular function", exponents y)
+            warnPrint("QEtaSeriesExpansion: not a modular function", exponents y)
         hser: QLX := empty()
         for cusp in cusps y repeat
             w: P := WIDTH1(nn, cusp) -- width of cusp
