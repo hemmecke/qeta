@@ -220,7 +220,7 @@ QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
         zero? e => 1$CX
         power!(xic, asP e)$CachedPower(CX)
 
-    xiPower(v: N): (Z -> CX) == (e: Z): CX +-> xipow(v*e)
+    xiPower(v: Z): (Z -> CX) == (e: Z): CX +-> xipow(v*e)
 
     -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
     substitute(s: LX, u: P, v: N): LX ==
@@ -881,6 +881,7 @@ $q^{1/w)}$, \ie, the series from
                 dbgPrint("delta", delta)
                 dbgPrint("vdelta", [vdelta etadelta, u]$List(Q))
                 error "QEtaSeriesExpansion: denominator does not vanish"
+            dbgPrint("qpochG delta-u-v", [delta::Q,u,v,expo::Q]$List(Q))
             px := px * eulerFunctionPower(u, asN numer v, expo)
 
         -- Now the jacobiFunction part.
@@ -899,7 +900,7 @@ $q^{1/w)}$, \ie, the series from
             jac ==> jacobiFunction $ QFunctions(CX, LX)
             -- See \eqref{eq:mimimalRootOfUnity-g_rtilde-m-lambda}.
             nh: Z := numer h
-            lx: LX := jac(xiPower nh, beta::P, alpha::P)^rdg
+            lx: LX := jac(xiPower nh, beta::P, alpha::N)^rdg
             u: Q := udelta(ygeg)
             v: Q := vdelta(ygeg)
             vbeta: Q := mx * v * (1/beta)
@@ -974,8 +975,7 @@ without the $(c\tau+d)$-part.
         ypg: SymbolicProperGeneralizedEtaQuotientLambdaGamma :=
             properGeneralizedEtaQuotient y
         cx := cx * alphaSchoenemannProperGeneralized ypg
-        px := monomial(cx, qExponent y)$PX * qPochhammerGeneralized y
-        px
+        monomial(cx, qExponent y)$PX * qPochhammerGeneralized y
 
 
 
