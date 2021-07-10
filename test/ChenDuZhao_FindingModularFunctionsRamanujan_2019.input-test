@@ -3,9 +3,6 @@
 
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input
 
-)compile /home/hemmecke/g/qeta/src/qetacofactorspace.spad
-)set output algebra on
-
 -- # Problem formulation
 
 
@@ -57,8 +54,10 @@
 -------------------------------------------------------------------
 --setup
 -------------------------------------------------------------------
--- -
 
+-- +
+)set mess type off
+)set mess time off
 C ==> Q
 
 GEP ==> generalizedEtaPower $ EQI(C)
@@ -66,6 +65,16 @@ GEQ ==> generalizedEtaQuotient $ EQI(C)
 EQ ==> etaQuotient $ EQI(C)
 EE ==> eulerExpansion $ EQI(C)
 EX ==> expansion $ EQI(C)
+
+QF ==> QFunctions(Q, L1 Q)
+QFX ==> QFunctions(CX, L1 CX)
+jf ==> jacobiFunction $ QF
+ef ==> eulerFunction $ QF
+gep ==> generalizedEulerProduct $ QF
+one(n: Z): Q == 1
+
+ygeq ==> generalizedEtaQuotient $ YGEQ
+ym1geq ==> generalizedEtaQuotient $ YM1GEQ
 
 L ==> L1 C
 TX ==> T1 CX
@@ -76,12 +85,15 @@ LZ ==> List Z
 LLZ ==> List LZ
 GEQSPLIT ==> Record(pure: LZ, properGeneralized: LLZ)
 
-ps := partitionSeries(1)$QFunctions(Q, L1(Q))
+PUIEX ==> puiseuxExpansion $ QESX(C, CX)
+LAUEX ==> laurentExpansion $ QESX(C, CX)
+LAUEXs ==> laurentExpansions $ QESX(C, CX)
+LAUEX1 ==> laurentExpansionsGamma1 $ QESX(C, CX)
 
-QPX ==> puiseuxExpansion $ QESX(C, CX)
-QLX ==> laurentExpansion $ QESX(C, CX)
-QLXs ==> laurentExpansions $ QESX(C, CX)
-QLX1 ==> laurentExpansionsGamma1 $ QESX(C, CX)
+oo ==> infinity()$Cusp
+-- -
+
+ps := partitionSeries(1)$QFunctions(Q, L1(Q))
 
 )set mess type on
 )set mess time on
@@ -92,72 +104,61 @@ QLX1 ==> laurentExpansionsGamma1 $ QESX(C, CX)
 -------------------------------------------------------------------
 -- -
 
--- # Garvan stuff
-
--- +
-y := generalizedEtaQuotient(4, [[4,1,16],[4,2,-4]])$YGEQ;
-xiord := minimalRootOfUnity(y)::P
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-spitzen := cusps(y)
-
-cusp := normalizeCusp(4,1,2)$GAMMA1
--- -
-
-QPX(y(cusp))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- +
--------------------------------------------------------------------
---test:p5n0
--------------------------------------------------------------------
--- -
 -- # $p(5n)$
 
 -- See Formula (1.4) of
 -- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+-- \begin{align}
+-- \sum_{n=0}^\infty p(5n)
+-- &=
+-- \frac{(q^5;q^5)_\infty}{(q;q)_\infty^2 (q,q^4;q^5)_\infty^8}
+-- -
+-- 3 q \frac{(q^5;q^5)_\infty^6 (q,q^4;q^5)_\infty^2}{(q;q)_\infty^7}
+-- \tag{1.4}
+-- \end{align}
+
+-- We can easily verify this identity up to order 100.
 
 mm := m := 5; t := 0;
-rbar := [[1,-1]]
-nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)
+rbar := [[1,-1]];
+nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)$QEtaCofactorSpace
 
-f := p5n0 := choose(m, t, ps)
+-- As can be seen that is done in level 5.
+
+f := p5n0 := choose(m, t, ps);
 rbar1 := [[1,-2],[5,1],[5,1,-8]];
 rbar2 := [[1,-7],[5,6],[5,1,2]];
-f1 := EE GEQ rbar1
-f2 := EE GEQ rbar2
-g := f1 - monomial(3, 1)$L1(C)*f2
+f1 := EE GEQ rbar1;
+f2 := EE GEQ rbar2;
+g := f1 - monomial(3, 1)$L1(C)*f2;
 assertEquals(order(f - g,100), 100)
 
-f/f1, 1 - monomial(3,1)$L1(C)*f2/f1
-
-
-
-modularGamma1?(nn,[],mm,rbar,m,t)
-
--- Let us compute the cofactor ourselves.
-
-n := lengthOfGeneralizedEtaQuotientSpecification nn
-ecs := etaCofactorSpace1(nn,mm,rbar,m,t)
-sbar := toEtaQuotientSpecification(nn, (ecs.particular)(1..n))
+-- Let us do a first step into the direction of finding
+-- the above identity. In order to do this, we have to
+-- multiply the left-hand side of (1.4) by a generalized
+-- eta-quotient so that the product will be a modular
+-- function for $\Gamma_1(5)$ with poles only at infinity.
+--
+-- This cofactor can be computed as follows.
 
 sbar := etaCofactorInfinity(nn,mm,rbar,m,t)$QEtaModularGamma1
 
--- Is the cofactor and the basis modular for $\Gamma_1(N)$.
+-- Interestingly, it is just the invers of the first summand
+-- of the right-hand side. So we will show:
+-- \begin{align}
+-- \frac
+-- {(q;q)_\infty^2 (q,q^4;q^5)_\infty^8}
+-- {(q^5;q^5)_\infty}
+-- \sum_{n=0}^\infty p(5n)
+-- &=
+-- 1
+-- -
+-- 3 q \frac{(q^5;q^5)_\infty^5 (q,q^4;q^5)_\infty^10}{(q;q)_\infty^5}
+-- \end{align}
 
-modularGamma1?(nn,sbar,mm,rbar,m,t)
+assertTrue(modularGamma1?(nn,sbar,mm,rbar,m,t))
+
+-- Is the cofactor and the basis modular for $\Gamma_1(N)$.
 
 rbart := [[1,-5],[5,5],[5,1,10]]
 
@@ -167,85 +168,14 @@ xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(yf)
 
-hf := QLXs(yf)
+af := LAUEXs(yf)::An(CX); qetaGrades(af)
 
-ht := QLX1(yt)
+at := LAUEX1(yt)::An(CX); qetaGrades(at)
 
-mf := hf :: ModularFunctionExpansionsAtCusps(CX, spitzen)
+-- We check the identity at all cusps of
+-- $\Gamma_1(5)$.
 
-mt := ht :: An CX
-
-mf + 3*mt - 1$An(CX)
-
-x1 := hf(1/5)
-x2 := f/f1, 1 - monomial(3,1)$L1(C)*f2/f1;
-x1-x2
-
-ht(1/5), GEQ [[5,1,1]]
-
-)set stream calc 500
-yt := generalizedEtaQuotient(nn,[[5,1,1]]);
-ht := QPX(yt(1/5))
-ht := monomial(1/(xi^10-xi^30),-(1/60))$PX*QPX(yt(1/5))
-)set stream calc 10
-=============================================
-
--- +
-rbas := [toEtaQuotientSpecification(nn, x(1..n)) for x in ecs.basis]
-
-
-b: LVZ := [x(1..n) for x in ecs.basis]
-[modularGamma1?(nn, basbar) for basbar in rbas]
-[modularGamma1?(nn,[],mm,basbar,1,0) for basbar in rbas]
--- -
-
-modularGamma1?(5,[[5,2,60]],5,[],1,0)
-
--- ## Try to compute the (1.4) eta-quotients
-
-etaCofactorSpace1(5,5,[[1,-2],[5,1]],5,0)
-
-etaCofactorSpace1(5,5,[],1,0)
-
-etaCofactorSpace1(5,5,[[1,-1]],5,0)
-
-
-
-
-
-x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t);
-xiord := minimalRootOfUnity(x)::P
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-spitzen := cusps(x)
-
-fx := vector [QPX(x(cusp)) for cusp in spitzen];
-xbas := [generalizedEtaQuotient(nn,rbasbar) for rbasbar in rbas];
-pxbas := [vector [QPX(x(cusp)) for cusp in spitzen] for x in xbas];
-
-for rr in rbas repeat print rr
-
-rrbas := [[]]
-
-)set stream calc 400
-h1 := fx.3 * (pxbas.1.3)^4
-)set stream calc 3
-
-h2 := (pxbas.2.3)*(pxbas.1.3)
-
-)set stream calc 400
-h1 - h2
-)set stream calc 3
-
-rationalPower(px)
-lx := qetaLaurentRep(px)
-order lx
-)set stream calc 200
-qetaTaylorRep lx
-)set stream calc 4
-
-QLX(y(1/5))
-
-)displLay op puiseuxExpansion
+assertTrue(zero?(mf + 3*mt - 1$An(CX)))
 
 -- +
 -------------------------------------------------------------------
@@ -297,25 +227,24 @@ assertEquals(order(zz, 100), 100)
 
 sbar := rbarz0
 modularGamma1?(nn,sbar,mm,rbar,m,t)
-x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$YM1GEQ;
+x := ym1geq(nn,sbar,mm,rbar,m,t);
 spitzen := cusps x
 xiord := minimalRootOfUnity(x)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 )set stream calc 2
-[order QPX(x(cusp)) for cusp in spitzen]
+pgrds := [-order PUIEX(x(cusp)) for cusp in spitzen]
+ax := LAUEXs(x)::An(CX);
+assertEquals(pgrds, qetaGrades ax)
 
-xz0 := generalizedEtaQuotient(nn,rbarz0)$YGEQ;
-[order QPX(xz0(cusp)) for cusp in spitzen]
+xz0 := ygeq(nn,rbarz0);
 
-xz := generalizedEtaQuotient(nn,rbarz)$YGEQ;
-[order QPX(xz(cusp)) for cusp in spitzen]
-qetaGrades(xz)
+xz := ygeq(nn,rbarz);
+pgrds := [- order PUIEX(xz(cusp)) for cusp in spitzen]
+assertEquals(pgrds, qetaGrades(xz))
 
-xe := generalizedEtaQuotient(nn,rbare)$YGEQ;
-[order QPX(xe(cusp)) for cusp in spitzen]
-qetaGrades(xe)
-
-
+xe := ygeq(nn,rbare);
+pgrds := [-order PUIEX(xe(cusp)) for cusp in spitzen]
+assertEquals(pgrds, qetaGrades(xe))
 
 -- ## Check modularity of basis
 
@@ -328,20 +257,64 @@ rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
 r: LZ := rrec.pure
 rtilde: LLZ := rrec.properGeneralized
 [nn,mm,m,t,sigmaInfinity(mm,r,rtilde)]
+sbarf := [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]]
+modularGamma1?(nn,sbarf,mm,rbar,m,t)
+yf := ym1geq(nn,sbarf,mm,rbar,m,t);
+f := LAUEXs(yf)::An(CX); qetaGrades f
 
-ecs := etaCofactorSpace1(nn,mm,rbar,m,t)
-sbarx := etaCofactorInfinity(nn,mm,rbar,m,t)$QEtaModularGamma1
+-- Check the cofactor from CDZ.
+-- This cofactor looks smaller. 
 
-modularGamma1?(nn,sbarx,mm,rbar,m,t)
+sbarc := [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]]
+modularGamma1?(nn,sbarc,mm,rbar,m,t)
+yc := ym1geq(nn,sbarc,mm,rbar,m,t);
+c := LAUEXs(yc)::An(CX); qetaGrades c
 
-x := generalizedEtaQuotient(nn,sbarx,mm,rbar,m,t);
+)set stream calc 2
+h := series(f-c,10)::A1(C)
 
-y := x(1/11);
-cusps(x)
+xf := toX1(C, series(f,10), 'F)
 
-QLX(y)
+-- # Compute generalized eta-quotient basis
+
+-- +
+ggens := generalizedEtaQuotientMonoidExponentVectors(nn);
+rbargens := [toEtaQuotientSpecification(nn,x) for x in ggens];
+ygens := [ygeq(nn,x) for x in rbargens];
+egens := [LAUEX1(x)::An(CX) for x in ygens];
+[qetaGrades x for x in egens]
+
+msyms := indexedSymbols("M", #egens)
+xgens := [toX1(C, series(x,10), msym) for msym in msyms for x in egens];
+[qetaGrade x for x in xgens]
+-- -
+
+xt := xgens.2
+
+abx13 := samba(xgens.1, [xgens.3])$QXTOPSAMBA1(C)
+xr13 := reduce(xf,abx13)$QXTOPRED1(C)
+#monomials(second(xr13)::Pol(C))
+
+abx14 := samba(xgens.1, [xgens.4])$QXTOPSAMBA1(C)
+xr14 := reduce(xf,abx14)$QXTOPRED1(C)
+#monomials(second(xr14)::Pol(C))
+
+)set mess type off
+)set mess time off
+
+)set mess type on
+)set mess time on
+
+)set output formatted on
+)set output algebra off
+
+-- # ==============================================
+
+a^b
 
 
+
+==========================================================
 
 
 
@@ -599,3 +572,7 @@ setFormat!(FormatMathJax)$JFriCASSupport
 
 )compile /home/hemmecke/g/qeta/src/qetaquotsymb
 setFormat!(FormatMathJax)$JFriCASSupport
+
+n := lengthOfGeneralizedEtaQuotientSpecification nn
+ecs := etaCofactorSpace1(nn,mm,rbar,m,t)
+sbar := toEtaQuotientSpecification(nn, (ecs.particular)(1..n))
