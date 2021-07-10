@@ -81,6 +81,7 @@ LZ ==> List Z
 LLZ ==> List LZ
 VZ ==> Vector Z
 GAMMA0 ==> CongruenceSubgroupGamma0
+GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage
 
 asN x ==> x pretend N
@@ -496,7 +497,7 @@ QEtaModularGamma1: Exports == Implementation where
         sbar: LLZ := toEtaQuotientSpecification(nn, members sinitial)$QETAAUX
         g: XHashTable(Cusp, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
         -- Exclude order at the cusp infinity.
-        cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA0 _
+        cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA1 _
                              | not infinity? cusp]
         rhs: LZ := [g.cusp for cusp in cusps]
 
@@ -520,7 +521,10 @@ QEtaModularGamma1: Exports == Implementation where
         sinitial: VZ := ((ecs.particular)::VZ)(1..n)
         b: LVZ := [x(1..n) for x in ecs.basis]
         mg: LZ := minimizeGrades(nn, mm, rbar, m, t, sinitial, b)
-        toEtaQuotientSpecification(nn, mg)
+        sbar := toEtaQuotientSpecification(nn, mg)
+        g: XHashTable(Cusp, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
+        sbar
+
 
 
 

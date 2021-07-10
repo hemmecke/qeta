@@ -503,8 +503,7 @@ QEtaCofactorSpace: Exports == Implementation where
             error "conditionCoEtaQuotientGamma1? not met"
 
         nndivs: List P := DIVISORS nn
-        numOfVars: N := 0 -- number of the s_d and s_{d,g} variables
-        for d in nndivs repeat numOfVars := numOfVars + asN ceiling(d/2)
+        numOfVars: N := lengthOfGeneralizedEtaQuotientSpecification(nn)$QETAAUX
 
         -- rows/cols for condition (4)
         k: N := 0 -- need k more rows and k slack variable
@@ -525,77 +524,84 @@ QEtaCofactorSpace: Exports == Implementation where
         rtilde: LLZ := rrec.properGeneralized
         n: Z := # nndivs
 
+        -----------------------------------------------------------
+        ii: Z := 1 -- the row index
         -- CDZ Condition (1), \eqref{eq:CDZ-sum=0}
-        for d in nndivs for j in 1..n repeat qsetelt!(mat, 1, j, 1)
-        v.1 := - reduce(_+, r, 0) -- fill right-hand side
+        for j in 1..n repeat qsetelt!(mat, ii, j, 1)
+        v.ii := - reduce(_+, r, 0) -- fill right-hand side
 
+        -----------------------------------------------------------
         -- CDZ Condition (3) and slack variable for mod 24
-        -- \eqref{eq:CDZ-sigma0=0}
+        -- \eqref{eq:CDZ-sigmainfinity=0}
         -- We multiply the entries and the rhs by nn to remove denominators.
+        ii := ii + 1
         jj := 0
         for d in nndivs for j in 1..n repeat
-            qsetelt!(mat, 3, j, nn*d)
+            qsetelt!(mat, ii, j, nn*d)
             for g in 1..ceiling(d/2)-1 repeat
                 jj := jj + 1
                 x: Z := numer(12*nn*d*fractionalBernoulli2(g/d)$QETAAUX)
-                qsetelt!(mat, 3, n + jj, x)
-        qsetelt!(mat, 3, numOfVars+1, 24*nn) -- slack variable for (mod 24)
+                qsetelt!(mat, ii, n + jj, x)
+        qsetelt!(mat, ii, numOfVars+1, 24*nn) -- slack variable for (mod 24)
 
-        -- fill right-hand side
         --assert(DIVISIBLEBY?(mm, nn))
+        -- fill the right-hand side
         nnrbarhat: Z := numer(nn*SIGMAINFINITY(mm, r, rtilde)) -- is integral
-        nnalpha: Z := nnrbarhat + 24*t*nn -- nn*alphaAux(mm, r, rtilde, t)
-        q: Q := nnalpha*(m^2-1)/m -- intermediate
+        q:Q := (nnrbarhat + 24*t*(1-m^2)*nn)/m -- is integral
         -- Security check. Should never fail because of Condition 8 on page 37
         -- of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
         not one? denom q =>
-            error "etaCofactorSpace1: nnalpha not divisible by m"
-        v.3 := - (m*nnrbarhat - numer q)
+            error "etaCofactorSpace1: not divisible by m"
+        v.ii := - numer q
 
+        -----------------------------------------------------------
         -- CDZ Condition (2) and slack variable for mod 24
-        -- \eqref{eq:CDZ-sigmainfinity=0}
+        -- \eqref{eq:CDZ-sigma0=0}
+        ii := ii + 1
         jj: Z := 0
         for d in nndivs for j in 1..n repeat
             nnd := numer(nn/d)
-            qsetelt!(mat, 2, j, nnd)
+            qsetelt!(mat, ii, j, nnd)
             for g in 1..ceiling(d/2)-1 repeat
                 jj := jj + 1
-                qsetelt!(mat, 2, n + jj, 2*nnd)
-        qsetelt!(mat, 2, numOfVars+2, 24) -- slack variable for (mod 24)
-        v.2 := - m * SIGMA0(mm, r, rtilde) -- fill right-hand side
+                qsetelt!(mat, ii, n + jj, 2*nnd)
+        qsetelt!(mat, ii, numOfVars+2, 24) -- slack variable for (mod 24)
+        v.ii := - m * SIGMA0(mm, r, rtilde) -- fill right-hand side
 
+        -----------------------------------------------------------
         -- Condition (4) and slack variable for mod 2 for all a
         -- \eqref{eq:CDZ-productsquare}
-        ii: Z := 3
         mmdivs: List P := DIVISORS mm
         for i in 1..11 repeat
             a: Z := nn*i+1
             one? gcd(a,6) =>
-                ii := ii+1
+                ii := ii + 1
                 -- setEntries!(mat, v, n, ii, ...)
-                expo: Q := 0
-                for l in rtilde repeat --assert(#l=3) -- l=[d,g,e]
-                    not DIVISIBLEBY?(l.1, mm) =>
-                        error "etaCofactorSpace1: delta is not a divisor"
-                    expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
-                expo := (a-1)*expo
-                not one? denom expo =>
-                    error "etaCofactorSpace1: exponent not integral"
-                isOdd?: Boolean := odd? numer expo
-                for d in mmdivs for rd in r | odd? rd repeat
-                    if jacobi(m*d, a) < 0 then isOdd? := not isOdd?
-                if isOdd? then v.ii := 1 -- fill right-hand side
-
-                qsetelt!(mat, ii, n+ii+1, 2) -- slack variable for (mod 2)
                 jj := 0
                 for d in nndivs for j in 1..n repeat
                     if jacobi(d, a) < 0 then qsetelt!(mat, ii, j, 1)
                     for g in 1..ceiling(d/2)-1 repeat
                         jj := jj + 1
-                        q := (a-1)*(g/d-1/2)
+                        q := (a-1) * (g/d-1/2)
                         not one? denom q =>
                             error "etaCofactorSpace1: e exponent not integral"
                         if odd? numer q then qsetelt!(mat, ii, n + jj, 1)
+                -- slack variable for (mod 2)
+                qsetelt!(mat, ii, numOfVars+ii-1, 2)
+
+                -- fill right-hand side
+                expo: Q := 0
+                for l in rtilde repeat --assert(#l=3) -- l=[d,g,e]
+                    not DIVISIBLEBY?(l.1, mm) =>
+                        error "etaCofactorSpace1: delta is not a divisor"
+                    expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
+                expo := (a-1) * expo
+                not one? denom expo =>
+                    error "etaCofactorSpace1: exponent not integral"
+                isOdd?: Boolean := odd? numer expo
+                for d in mmdivs for rd in r | odd? rd repeat
+                    if jacobi(m*d, a) < 0 then isOdd? := not isOdd?
+                if isOdd? then v.ii := 1 -- else v.ii := 0
 
         -- We have to solve mat*z=v for some integer vector z.
         diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
