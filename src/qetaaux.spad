@@ -133,31 +133,42 @@ QEtaAuxiliaryPackage: with
       ++ See definition in specification of
       ++ generalizedEtaPower $ EtaQuotientInfinity for how each element
       ++ of rbar is interpreted.
-    lengthOfGeneralizedEtaQuotientSpecification: P -> N
-      ++ lengthOfGeneralizedEtaQuotientSpecification(nn) returns
-      ++ # toEtaQuotientSpecification(nn,[]) without ever
+    generalizedEtaFunctionIndices: P -> LLZ
+      ++ generalizedEtaFunctionIndices(nn) returns all the indices of
+      ++ a generalized eta-quotient of level nn (without exponents),
+      ++ i.e., it return the list in \eqref{eq:sorted-indices} where
+      ++ the 0 in the second argument is removed. To be precise, it
+      ++ returns
+      ++ [[d1],[d2],...,[dn],[d2,1],...,[d2,f2],...,[dn,1],...,[dn,fn]]
+      ++ where di is the i-th positive divisor of nn and
+      ++ fi=ceiling(di/2)-1.
+    lengthOfGeneralizedEtaFunctionIndices: P -> N
+      ++ lengthOfGeneralizedEtaFunctionIndices(nn) returns
+      ++ #generalizedEtaQuotientSpecification(nn) without ever
       ++ computing the specification list explicitly.
-    toEtaQuotientSpecification: (P, LZ) -> LLZ
-      ++ toEtaQuotientSpecification(nn, exponentList) returns a
+    toGeneralizedEtaQuotientSpecification: (LLZ, LZ) -> LLZ
+      ++ toGeneralizedEtaQuotientSpecification(li,le) returns
+      ++ [concat(i,e) for e in le for i in li] without the entries whose
+      ++ corresponding exponent e is zero.
+    toGeneralizedEtaQuotientSpecification: (P, LZ) -> LLZ
+      ++ toGeneralizedEtaQuotientSpecification(nn, exponentList)
+      ++ returns
+      ++ toGeneralizedEtaQuotientSpecification(nn,exponentList,idxs)
+      ++ where idxs=generalizedEtaFunctionIndices(nn), i.e., a
       ++ specification for a generalized eta-quotient where
       ++ exponentList is considered to be a list of exponents for the
       ++ (generalized) eta-functions listed in the following order.
       ++ [eta(d\tau) for d in divsors(nn)]
       ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)].
 
-      ++ This function basically adds the index part d and (d,g) part
+      ++ This function basically adds the index part d and (d,g)
       ++ to the exponents. If the exponentList is too long an error is
       ++ signalled. If the exponentList is too short, that is no
       ++ problem.
 
       ++ For the special case that the exponentList is empty,
-      ++ toEtaQuotientSpecification(nn, []) returns all the indices
-      ++ (without exponents), i.e., it return the list in
-      ++ \eqref{eq:sorted-indices} where the 0 in the second argument
-      ++ is removed. To be precise, it returns
-      ++ [[d1],[d2],...,[dn],[d2,1],...,[d2,f2],...,[dn,1],...,[dn,fn]]
-      ++ where di is the i-th positive divisor of nn and
-      ++ fi=ceiling(di/2)-1.
+      ++ toGeneralizedEtaQuotientSpecification(nn, []) returns
+      ++ generalizedEtaFunctionIndices(nn).
 
     sigmaInfinity: (P, List Z) -> Z
       ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
@@ -335,7 +346,7 @@ QEtaAuxiliaryPackage: with
       ++ not met, and 3 if condition \eqref{eq:generalized-sigma0}
       ++ does not hold. It is equivalent to check whether there is an
       ++ extension v of rbar such that matrixModularGamma1(nn)*v is 0
-      ++ where for we sort rbar according to the order given by
+      ++ where we sort rbar according to the order given by
       ++ \eqref{eq:sorted-indices}.
     modularGamma1?: (P, List List Z) -> Boolean
       ++ modularGamma1(nn, rbar) returns true iff the generalized
@@ -723,34 +734,34 @@ $a\in X_c$.
             gds := gds + s1*s2
         return gds
 
-    lengthOfGeneralizedEtaQuotientSpecification(nn: P): N ==
+    generalizedEtaFunctionIndices(nn: P): LLZ ==
+        nndivs: List P := DIVISORS nn
+        indices: List List Z := empty()
+        for d in nndivs repeat indices := cons([d], indices)
+        for d in nndivs repeat
+            for g in 1..ceiling(d/2)$Q-1 repeat indices := cons([d, g], indices)
+        reverse! indices
+
+    lengthOfGeneralizedEtaFunctionIndices(nn: P): N ==
         nndivs: List P := DIVISORS nn
         len: N := 0
         for d in nndivs repeat len := len + asN(ceiling(d/2)$Q)
         return len
 
-    toEtaQuotientSpecification(nn: P, exponentList: List Z): List List Z ==
-        nndivs: List P := DIVISORS nn
-        n: Z := # nndivs
-        -- number of the r_d and r_{d,g} variables
-        numOfVars: N := lengthOfGeneralizedEtaQuotientSpecification nn
-        #exponentList > numOfVars =>
-            error "toEtaQuotientSpecification: exponentList too long"
+    toGeneralizedEtaQuotientSpecification(idxs: LLZ, exponentList: LZ): LLZ ==
+        #idxs < #exponentList =>
+            error "toGeneralizedEtaQuotientSpecification: exponentList too long"
+        spec: LLZ := empty()
+        for e in exponentList for i in idxs repeat
+            if not zero? e then spec := cons(concat(i, e), spec)
+        return reverse! spec
 
-        indices: List List Z := empty()
-        for d in nndivs repeat indices := cons([d], indices)
-        for d in nndivs repeat
-            for g in 1..ceiling(d/2)$Q-1 repeat indices := cons([d, g], indices)
-        indices := reverse! indices
-
+    toGeneralizedEtaQuotientSpecification(nn: P, exponentList: LZ): LLZ ==
+        indices := generalizedEtaFunctionIndices nn
         -- Now we have all indices and just need to append the exponent
         -- entry to every element list.
         empty? exponentList => return indices
-
-        spec: List List Z := empty()
-        for i in indices for e in exponentList repeat
-            if not zero? e then spec := cons(concat(i, e), spec)
-        return reverse! spec
+        toGeneralizedEtaQuotientSpecification(indices, exponentList)
 
     sigmaInfinity(mm: P, rtilde: List List Z): Q ==
         res: Q := 0
@@ -796,7 +807,7 @@ $a\in X_c$.
         nndivs: List P := DIVISORS nn
         n: Z := # nndivs
         -- number of the r_d and r_{d,g} variables
-        numOfVars: N := lengthOfGeneralizedEtaQuotientSpecification nn
+        numOfVars: N := lengthOfGeneralizedEtaFunctionIndices nn
         mat: MQ := new(3, numOfVars+2, 0) -- 2 more for "mod 24" rows
         jj := 0
         -- We run over the coulumns of the matrix.
@@ -808,11 +819,11 @@ $a\in X_c$.
             -- corresponding to the cusps 1/nn (infinity) and 1/1 (0).
             -- Thus, we use the same code as in matrixEtaOrder(nn).
             qsetelt!(mat, 2, j, matrixEtaOrder(nn, infinity(), d, -1))
-            qsetelt!(mat, 3, j, matrixEtaOrder(nn, cusp(0,1),  d, -1))
+            qsetelt!(mat, 3, j, matrixEtaOrder(nn, cusp(0, 1), d, -1))
             for g in 1..ceiling(d/2)-1 repeat
                 jj := jj + 1
-                qsetelt!(mat, 2, n + jj, matrixEtaOrder(nn, infinity, d, g))
-                qsetelt!(mat, 3, n + jj, matrixEtaOrder(nn, cusp(0, 1),  d, g))
+                qsetelt!(mat, 2, n + jj, matrixEtaOrder(nn, infinity(), d, g))
+                qsetelt!(mat, 3, n + jj, matrixEtaOrder(nn, cusp(0, 1), d, g))
 
         -- make sure that row 2 and 3 must be integers
         qsetelt!(mat, 2, numOfVars+1, 1)
@@ -871,7 +882,7 @@ $a\in X_c$.
         nndivs: List P := DIVISORS nn
         n: Z := # nndivs
         -- number of the r_d and r_{d,g} variables
-        numOfVars: N := lengthOfGeneralizedEtaQuotientSpecification nn
+        numOfVars: N := lengthOfGeneralizedEtaFunctionIndices nn
         numrows: N := # spitzen
         mat: MQ := new(numrows, numOfVars, 0)
         for cusp in spitzen for i in 1..numrows repeat
