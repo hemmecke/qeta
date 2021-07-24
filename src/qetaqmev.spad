@@ -102,6 +102,7 @@ display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
 tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+errorPrint(x,y) ==> tracePrint(x,y)
 
 )if LiterateDoc
 These two technical macros are necessary to distinguish between Rep
@@ -526,23 +527,27 @@ QEtaQuotientExponentVectors4ti2: with
       ++ See in the specification of matrixLigozatModularGamma0 about
       ++ the meaning of the other rows of the matrix.
 
-    generalizedEtaQuotientMonoidExponentVectors: P -> List List Z
-      ++ generalizedEtaQuotientMonoidExponentVectors(nn) returns a
-      ++ list of list of exponents for generalized eta-quotients that
-      ++ (together with the zero-vector) generate the (multiplicative)
-      ++ monoid of all generalized eta-quotients that are modular
+    generalizedEtaQuotientMonoidExponentVectors: (P, List List Z) -> List List Z
+      ++ generalizedEtaQuotientMonoidExponentVectors(nn, idxs) returns
+      ++ a list of list of exponents for generalized eta-quotients
+      ++ that (together with the zero-vector) generate the
+      ++ (multiplicative) monoid of all generalized eta-quotients
+      ++ (corresponding to the indices given by idxs) that are modular
       ++ functions for $\Gamma_1(nn)$ and have at most a pole at
       ++ infinity.
-      ++ An element of this list is a collection $r$ of exponents for
-      ++ a generalized eta-quotient.
-      ++ As in the discription of matrixEtaOrder $ QEtaAuxiliaryPackage,
-      ++ the exponent correspond to
-      ++ [eta(d\tau) for d in divsors(nn)]
-      ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)]
-      ++ in this order.
+      ++ An element of this list is a specifiction$rbar$ of
+      ++ exponents for a generalized eta-quotient.
+      ++ If idxs=[], then it is equivalent to the indices
+      ++ generalizedEtaFunctionIndices(nn).
+
+    generalizedEtaQuotientMonoidExponentVectors: P -> List List Z
+      ++ generalizedEtaQuotientMonoidExponentVectors(nn) returns
+      ++ generalizedEtaQuotientMonoidExponentVectors(nn, []).
+
 
   == add
     QEVAux ==> QEtaQuotientExponentVectorsAux
+    LLZ ==> List List Z
 
     -- For matrix A_N^\infty of formula (9) in
     -- \cite{Hemmecke+Radu:EtaRelations:2018}, the variable idivs
@@ -607,14 +612,37 @@ QEtaQuotientExponentVectors4ti2: with
         for j in 1..cols repeat
             qsetelt!(matZ, i, j, numer(den*qelt(matQ, i, j)))
 
-    generalizedEtaQuotientMonoidExponentVectors(nn: P): List List Z ==
+    generalizedEtaQuotientMonoidExponentVectors(nn: P, idxs: LLZ): LLZ ==
         spitzen: List Cusp := cusps(nn)$CongruenceSubgroupGamma1
         -- At the cusp infinity (=1/nn) the order must be an integer.
         -- That, however, is already taken care of in the
         -- matrixModularGamma1(nn) part of the matrix. Therefore, we
         -- remove this cusp.
         spitzen := remove!(infinity(), spitzen)
-        matQ: MQ := matrixEtaOrderModularGamma1(nn, spitzen)$QETAAUX
+        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen)$QETAAUX
+
+        allIndices := generalizedEtaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then
+            idxs := allIndices
+            matQ: MQ := mat
+          else
+            -- The first columns of the above matrix are sorted like
+            -- allIndices. We build a new matrix that consists of all
+            -- columns with index > #allIndices prepended by the columns
+            -- corresponding to idxs.
+            -- It is an error if idxs is not a subset of allIndices.
+            lcols: List Z := [i for i in #allIndices+1 .. ncols(mat)]
+
+            h: XHashTable(List Z, Z) := table()
+            for idx in reverse idxs repeat
+                c := position(idx, allIndices)
+                zero? c =>
+                    errorPrint("forbidden", idx)
+                    errorPrint("allowed", allIndices)
+                    error "generalizedEtaQuotientMonoidExponentVectors: forbidden index"
+                lcols := cons(c, lcols)
+            matQ: MQ := mat(1..nrows(mat), lcols)
+
         n: N := # spitzen
         rows: N := nrows matQ
         cols: N := ncols matQ
@@ -638,6 +666,8 @@ QEtaQuotientExponentVectors4ti2: with
         sres: List VZ := sort((x:VZ,y:VZ):Boolean +-> (x.c<y.c), res.zhom)
         [members g(1..cols-2) for g in sres]
 
+    generalizedEtaQuotientMonoidExponentVectors(nn: P): List List Z ==
+        generalizedEtaQuotientMonoidExponentVectors(nn, [])
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
