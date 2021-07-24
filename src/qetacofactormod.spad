@@ -17,6 +17,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------
+
 OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
@@ -33,15 +34,14 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
-\title{Expanding (sifted) Dedekind Eta Functions into $q$-series at
-  various cusps}
+\title{Finding co-factors for sifted (generalized) Eta-Quotients with cusps only at infinity}
 \author{Ralf Hemmecke}
 \date{26-Jan-2018}
 \maketitle
 \begin{abstract}
   The code in this file deals the computation of a cofactor to a
   sifted (generalized) eta-quotient such that the result is a modular
-  function.
+  function with a cusp at most at infinity.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -57,6 +57,7 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Helper macros}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Let us start with a few common macros.
 
 These two technical macros are necessary to distinguish between Rep
@@ -74,22 +75,25 @@ P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
+VZ ==> Vector Z
 MZ ==> Matrix Z -- consider only 2x2 matricies
-SL2Z ==> MZ -- matrices with determinant = 1
 LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
-VZ ==> Vector Z
-GAMMA0 ==> CongruenceSubgroupGamma0
-GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage
 
 asN x ==> x pretend N
 asP x ==> x pretend P
-WIDTH0(nn, c) ==> asP(width(nn, c)$GAMMA0)
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
+
+ECS ==> Record(indices: LLZ, particular: Union(VZ, "failed"), basis: List VZ)
+
+WIDTH0(nn, c) ==> asP(width(nn, c)$GAMMA0)
+GAMMA0 ==> CongruenceSubgroupGamma0
+GAMMA1 ==> CongruenceSubgroupGamma1
+
 
 
 
@@ -136,7 +140,6 @@ QEtaModularGamma0: Exports == Implementation where
   Implementation ==> add
     LVZ ==> List VZ
     ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
-    ECFS ==> Record(particular: Union(VZ, "failed"), basis: List VZ)
     C ==> Q
     lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
     SUPC ==> SparseUnivariatePolynomial C
@@ -250,11 +253,11 @@ QEtaModularGamma0: Exports == Implementation where
 
         v: VZ := row(tmat, i)
         i := i + 1
-        CCG ==> Record(coef1: Z, coef2: Z, generator: Z)
+        EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
         while i <= n and not one? z repeat
-            ccg: CCG := extendedEuclidean(z, tmat(i, 1))
-            v := ccg(coef1) * v + ccg(coef2) * row(tmat, i)
-            z := ccg.generator
+            exgcd: EXGCD := extendedEuclidean(z, tmat(i, 1))
+            v := exgcd(coef1) * v + exgcd(coef2) * row(tmat, i)
+            z := exgcd.generator
             i := i + 1
         one? z => v*mat
         rinitial
@@ -321,10 +324,10 @@ QEtaModularGamma0: Exports == Implementation where
         return s
 
     etaCofactorInfinity(nn: P, mm: P, r: LZ, m: P, t: N): LZ ==
-        ecfs: ECFS := etaCofactorSpace0(nn, mm, r, m, t)$QEtaCofactorSpace
+        ecs: ECS := etaCofactorSpace0(nn, mm, r, m, t)$QEtaCofactorSpace
         n: Z := numberOfDivisors(nn)$INTF
-        sinitial: VZ := ((ecfs.particular)::VZ)(1..n)
-        b: LVZ := [x(1..n) for x in ecfs.basis]
+        sinitial: VZ := ((ecs.particular)::VZ)(1..n)
+        b: LVZ := [x(1..n) for x in ecs.basis]
         minimizeGrades(nn, mm, r, m, t, sinitial, b)
 
 
@@ -445,17 +448,22 @@ QEtaModularGamma1: Exports == Implementation where
       ++ qetaGrades(nn, sbar, mm, rbar, m, t) returns
       ++ qetaGrades(y) where
       ++ y=etaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularSiftedEtaQuotient.
-    etaCofactorInfinity: (P, P, LLZ, P, N) -> LLZ
-      ++ etaCofactorInfinity(nn,mm,rbar,m,t) returns a specification
-      ++ sbar such that
+    etaCofactorInfinity: (P, P, LLZ, P, N, LLZ) -> LLZ
+      ++ etaCofactorInfinity(nn,mm,rbar,m,t,idxs) returns a
+      ++ specification sbar such that
+      ++ sbar has only indices from idxs,
       ++ modularGamma1?(nn,sbar,mm,rbar,m,t)$QEtaCofactorSpace and
       ++ generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1SiftedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
+      ++ If idxs=[], then it is equivalent to the indices
+      ++ generalizedEtaFunctionIndices(nn).
+    etaCofactorInfinity: (P, P, LLZ, P, N) -> LLZ
+      ++ etaCofactorInfinity(nn,mm,rbar,m,t) returns
+      ++ etaCofactorInfinity(nn,mm,rbar,m,t,[])
   Implementation ==> add
     LVZ ==> List VZ
     ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
-    ECS ==>  Record(particular: Union(VZ, "failed"), basis: List VZ)
     C ==> Q
     lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
     SUPC ==> SparseUnivariatePolynomial C
@@ -490,11 +498,12 @@ QEtaModularGamma1: Exports == Implementation where
     -- expansion of the respective eta-quotient at all cusps. So we
     -- shouldn't have too high exponents.
     minimizeGrades(nn: P, mm: P, rbar: LLZ, m: P, t: N,
-                   rinitial: VZ, b: LVZ): LZ ==
+                   rinitial: VZ, b: LVZ, idxs: LLZ): LZ ==
         sinitial: VZ := minimizeVector(rinitial, b)$QEtaModularGamma0
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution rinitial.
-        sbar: LLZ := toGeneralizedEtaQuotientSpecification(nn, members sinitial)$QETAAUX
+        le := members sinitial -- exponents
+        sbar: LLZ := toGeneralizedEtaQuotientSpecification(idxs, le)$QETAAUX
         g: XHashTable(Cusp, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
         -- Exclude order at the cusp infinity.
         cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA1 _
@@ -505,9 +514,7 @@ QEtaModularGamma1: Exports == Implementation where
         -- series explicitly, since these vectors correspond to
         -- modular eta quotients and thus we can use the matrixEtaOrder
         -- to compute the order vectors.
-        n := lengthOfGeneralizedEtaFunctionIndices nn
-
-        rbas := [toGeneralizedEtaQuotientSpecification(nn, members x(1..n))$QETAAUX for x in b]
+        rbas := [toGeneralizedEtaQuotientSpecification(nn, parts x) for x in b]
         ybas: List YGEQ := [generalizedEtaQuotient(nn, r, cusps) for r in rbas]
         bas: LLZ := [qetaGrades y for y in ybas]
         mat: MZ := transpose matrix bas
@@ -516,16 +523,17 @@ QEtaModularGamma1: Exports == Implementation where
         adjustment := members first zresult.zinhom
         members(sinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
 
-    etaCofactorInfinity(nn: P, mm: P, rbar: LLZ, m: P, t: N): LLZ ==
-        ecs: ECS := etaCofactorSpace1(nn, mm, rbar, m, t)$QEtaCofactorSpace
-        n: Z := lengthOfGeneralizedEtaFunctionIndices(nn)$QETAAUX
-        sinitial: VZ := ((ecs.particular)::VZ)(1..n)
-        b: LVZ := [x(1..n) for x in ecs.basis]
-        mg: LZ := minimizeGrades(nn, mm, rbar, m, t, sinitial, b)
-        sbar := toGeneralizedEtaQuotientSpecification(nn, mg)
-        g: XHashTable(Cusp, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
-        sbar
+    etaCofactorInfinity(nn: P, mm: P, rbar: LLZ, m: P, t: N, idxs: LLZ): LLZ ==
+        ecs: ECS := etaCofactorSpace1(nn, mm, rbar, m, t, idxs)$QEtaCofactorSpace
+        ecs.particular case "failed" =>
+            error "etaCofactorInfinity: cannot find cofactor"
+        sinitial: VZ := (ecs.particular)::VZ
+        idxs := ecs.indices
+        mg: LZ := minimizeGrades(nn, mm, rbar, m, t, sinitial, ecs.basis, idxs)
+        toGeneralizedEtaQuotientSpecification(idxs, mg)$QETAAUX
 
+    etaCofactorInfinity(nn: P, mm: P, rbar: LLZ, m: P, t: N): LLZ ==
+        etaCofactorInfinity(nn, mm, rbar, m, t, [])
 
 
 
