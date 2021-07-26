@@ -86,7 +86,7 @@ TPROJECT=${TMP}/${PROJECT}
 all: compile-spad
 SPADFILES=4ti2 qfunct cachedpow \
   qetacusp qetagamma0 qetagamma1 \
-  qetaalg qetasqrt qetaaux qetaqmev qetaser qetaquotinf qetatool \
+  qetaalg qetasqrt qetaaux qetaspec qetaqmev qetaser qetaquotinf qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
   qetapowersamba qetacofactorspace \

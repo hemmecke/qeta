@@ -1,0 +1,349 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2018-2021  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\externaldocument{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Common interface to specify (generalized) eta-quotients}
+\author{Ralf Hemmecke}
+\date{26-Jul-2021}
+\maketitle
+\begin{abstract}
+  The domain \code{QEtaSpecification} contains functions to specify an
+  eta-quotient or a generalized eta-quotient. The emphasis here is on
+  allowing for a simple user interface and a common API to use that
+  data for the algorithms.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Indroduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The domains \code{QEtaSpecification} does not do any serious
+computations. Rather it transforms various kinds of user input into a
+common format that is easy to use for the other algorithms of the QEta
+package.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+First of all for debugging.
+)endif
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+errorPrint(x,y) ==> tracePrint(x,y)
+
+)if LiterateDoc
+%$
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+LZ ==> List Z
+LLZ ==> List LZ
+QETAAUX ==> QEtaAuxiliaryPackage
+
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D QEtaSoecification}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev package QETASPEC QEtaSpecification
+++ QEtaSpecification helps translate various formats of user date
+++ into a common format that specifies a (generalized) eta-quotient.
+QEtaSpecification: Exports == Implementation where
+  Exports ==> SetCategory with
+    -- creation functions
+    etaQuotientSpecification: (P, LZ) -> %
+      ++ etaQuotientSpecification(mm, r) returns the specification for
+      ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where d runs
+      ++ over all divisors of mm.
+    etaQuotientSpecification: (List P, LZ) -> %
+      ++ etaQuotientSpecification(divs, r) returns the specification for
+      ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where d runs
+      ++ over divs.
+      ++ The two input lists are supposed to be of the same length.
+    generalizedEtaQuotientSpecification: (P, LLZ) -> %
+      ++ generalizedEtaQuotientSpecification(mm, rbar) returns the
+      ++ specification of a generalized eta-quotient given by a list
+      ++ of (index, exponent) pairs where an index can be either a
+      ++ divisor of mm or a pair (d,g) of a divisor d and a number g
+      ++ (0<g<d/2).
+      ++ In more detail an element l of rbar can have the following form:
+      ++ a) [d[     -- this is equivalent to [d,1],
+      ++ b) [d,e]   -- stands for $\eta(d*\tau)^e$,
+      ++ c) [d,g,e] -- stands for $\eta_{d,g}^{[R]}(\tau)^e$.
+    generalizedEtaQuotientSpecification: (LLZ) -> %
+      ++ generalizedEtaQuotientSpecification(rbar) returns
+      ++ generalizedEtaQuotientSpecification(mm, rbar) for
+      ++ mm=lcm[first l for l in rbar].
+      ++ mm is 1 if rbar is empty.
+    generalizedEtaQuotientSpecification: (P, LLZ, LZ) -> %
+      ++ generalizedEtaQuotientSpecification(mm,idxs,le) returns
+      ++ generalizedEtaQuotientSpecification(mm, rbar) where rbar is
+      ++ [concat(i,e) for e in le for i in idxs] without the entries
+      ++ whose corresponding exponent e is zero.
+
+    -- accessor functions
+    level: % -> P
+      ++ level(x) returns either the level that was given at
+      ++ specification time or the lcm of all the indices.
+    divisors: % -> List P
+      ++ divisors(x) returns divisors(level(x)). This data is
+      ++ precomputed and stored inside the structure.
+    pureExponents: % -> LZ
+      ++ pureExponents returns the exponents of the pure eta-quotient
+      ++ part of the specification.
+    properGeneralizedPart: % -> LLZ
+      ++ properGeneralizedPart(x) returns the list of indicies and
+      ++ exponents of the proper generalized part of the (generalized)
+      ++ eta-quotient. Each element is a 3-element list of the form
+      ++ [d, g, e] that stands for $\eta_{d,g}^{[R]}(\tau)^e$.
+
+    -- extracting other information from the data
+    pure?: % -> Boolean
+      ++ pure?(x) returns true if x contains no proper generalized
+      ++ eta-functions, i.e., if empty?(generalizedPart(x)).
+    purePart: % -> LLZ
+      ++ purePart(x) returns the part of the (generalized)
+      ++ eta-quotient that corresponds to pure eta-functions. Each
+      ++ element of the result is a two-element list [d,e] that stands
+      ++ for $\eta(d*\tau)^e$.
+
+    sigmaInfinity: % -> Q
+      ++ sigmaInfinity(x) returns the value corresponding to
+      ++ \eqref{eq:sigmainftybar} in qeta.tex or to
+      ++ \eqref{eq:sigmainfty} for the pure eta-quotient case.
+    sigma0: % -> Z
+      ++ sigma0(x) returns the value corresponding to
+      ++ \eqref{eq:sigmazerobar} in qeta.tex or to
+      ++ \eqref{eq:sigmazero} for the pure eta-quotient case.
+
+    modularGamma0: % -> Z
+      ++ modularGamma0(x) returns 0 if all conditions are fulfilled
+      ++ that x specifies a modular function for Gamma0(level(x)).
+      ++ Otherwise it returns a positive number in the range 1 to 4
+      ++ that corresponds to the condition that is not met. This
+      ++ corresponds to the conditions given for R(N,i,j,k,l) on page
+      ++ 226 of \cite{Radu:RamanujanKolberg:2015} and to the
+      ++ conditions \eqref{eq:sum=0}, \eqref{eq:sigmainfinity},
+      ++ \eqref{eq:sigma0}, and \eqref{eq:productsquare} in qeta.tex.
+      ++ It is an error if pure?(x) is false.
+    modularGamma0?: % -> Boolean
+      ++ modularGamma0?(x) returns true iff x corresponds to a
+      ++ eta-quotient that is a modular function for
+      ++ Gamma_0(level(x)). It is equivalent to
+      ++ zero?(modularGamma0(x)).
+    modularGamma1: % -> Z
+      ++ modularGamma1(x) returns 0 if the parameters specify a
+      ++ generalized eta-quotient that is modular for
+      ++ Gamma1(level(x)). It returns 1, if condition
+      ++ \eqref{eq:generalized-weight} is not met, 2, if condition
+      ++ \eqref{eq:generalized-sigmaInfinity} is not met, and 3 if
+      ++ condition \eqref{eq:generalized-sigma0} does not hold.
+    modularGamma1?: % -> Boolean
+      ++ modularGamma1?(x) returns true iff the generalized
+      ++ eta-quotient corresponding to x is a modular function for
+      ++ Gamma_1(level(x)). It is equivalent to
+      ++ zero?(modularGamma1(x)).
+
+
+
+
+
+  Implementation ==> add
+    -- Note that the list of exponents of the pure part can be shorter
+    -- than the number of divisors, i.e., trailing zeros are removed.
+    Rep ==> Record(flevel: P, fdivisors: List P,
+                   fpure: LZ, fproperGeneralized: LLZ)
+    xx ==> rep x
+    yy ==> rep y
+    DIVISIBLEBY?(k, z) ==> zero?(z rem k)
+
+    -- creation functions
+    etaQuotientSpecification(divs: List P, r: LZ): % ==
+        mm: P := asP lcm [d::Z for d in divs]
+        mmdivs: List P := DIVISORS mm
+        s: LZ := empty()
+        for d in mmdivs repeat
+            p := position(d, divs)
+            zero? p => cons(0, s)
+            cons(r.p, s)
+        -- remove trailing zeros
+        while not empty? s and zero? first s repeat s := rest s
+        per [mm, mmdivs, reverse! s, []]
+
+    etaQuotientSpecification(mm: P, r: LZ): % ==
+        divs: List P := DIVISORS mm
+        -- remove trailing zeros
+        r := reverse r
+        while not empty? r and zero? first r repeat r := rest r
+        #divs < #r => error "exponent list longer than number of divisors"
+        per [mm, divs, reverse! r, []]
+
+    generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
+        hr: XHashTable(Z, Z) := table() -- to compute r
+        rtilde: LLZ := empty() -- specify all generalized eta-quotients
+        for l in rbar | not empty? l repeat
+            d: Z := first l
+            d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
+            #l = 1 or #l = 2 =>
+                not zero? elt(hr, d, 0) =>
+                    errorPrint("[delta, e]", [d, elt(hr, d, 0)])
+                    error "(delta, exponent) specified twice"
+                if #l = 1 then hr.d := 1 else hr.d := l.2
+            #l = 3 => rtilde := cons(l, rtilde)
+            error "generalizedEtaQuotientSpecification: list length > 3"
+        divs := DIVISORS mm
+        r: List Z := reverse! [elt(hr, d, 0) for d in divs]
+        while not empty? r and zero? first r repeat r := rest r
+        per [mm, divs, reverse! r, reverse! rtilde]
+
+    generalizedEtaQuotientSpecification(rbar: LLZ): % ==
+        empty? rbar => per [1, [1], [], []]
+        mm: P := asP lcm [(first l)::Z for l in rbar]
+        generalizedEtaQuotientSpecification(mm, rbar)
+
+    generalizedEtaQuotientSpecification(mm: P, idxs: LLZ, le: LZ): % ==
+        #idxs < #le => --
+            error "generalizedEtaQuotientSpecification: exponent list too long"
+        rbar: LLZ := empty()
+        for e in le for i in idxs repeat
+            if not zero? e then rbar := cons(concat(i, e), rbar)
+        generalizedEtaQuotientSpecification(mm, rbar)
+
+
+    -- accessor functions
+    level(x: %): P == xx.flevel
+    divisors(x: %): List P == xx.fdivisors
+    pureExponents(x: %): List Z == xx.fpure
+    properGeneralizedPart(x: %): LLZ == xx.fproperGeneralized
+
+    -- SetCategory functions
+    coerce(x: %): OutputForm == rep(x)::OutputForm
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.flevel)
+        h := hashUpdate!(h, xx.fpure)
+        h := hashUpdate!(h, xx.fproperGeneralized)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.flevel ~= yy.flevel => false
+        xx.fpure ~= yy.fpure => false
+        xx.fproperGeneralized = yy.fproperGeneralized
+
+    -- extracting other information from the data
+    pure?(x: %): Boolean == empty? properGeneralizedPart x
+    purePart(x: %): LLZ ==
+        [[d, e] for d in divisors x for e in pureExponents x | not zero? e]
+
+    sigmaInfinity(x: %): Q ==
+        import from QETAAUX
+        mm: P := level x
+        r: LZ := pureExponents x
+        rtilde: LLZ := properGeneralizedPart x
+        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, rtilde)
+
+    sigma0(x: %): Z ==
+        import from QETAAUX
+        mm: P := level x
+        sigma0(mm, pureExponents x) + 2*sigma0(mm, properGeneralizedPart x)
+
+    -- These are the conditions (1) to (4) of
+    -- \cite{Hemmecke+Radu:EtaRelations:2018} that have to be fulfilled
+    -- by a vector r to lie in R^*(N).
+    modularGamma0(x: %): Z ==
+        not pure? x => error "specification is not for a pure eta-quotient"
+        -- conditions in modularGamma1 are identical
+        z: Z := modularGamma1 x
+        not zero? z => z
+        -- Test condition (4) or \eqref{eq:productsquare}
+        c: Factored Z := 1
+        for rd in pureExponents x for d in divisors x repeat
+            c := c * factor(d)^asN(abs rd)
+        for fe in factors c repeat if odd?(fe.exponent) then return 4
+        return 0
+
+    modularGamma0?(x: %): Boolean == zero? modularGamma0 x
+
+    modularGamma1(x: %): Z ==
+        not zero? reduce(_+, pureExponents x, 0)$List(Z) => 1 -- non-zero weight
+        -- order at inifinity is an integer
+        rhat: Q := sigmaInfinity x
+        not one? denom rhat or not DIVISIBLEBY?(24, numer rhat) => 2
+        -- order at 0 is an integer
+        not DIVISIBLEBY?(24, sigma0 x) => 3
+        return 0 -- modular function for Gamma1(nn)
+
+    modularGamma1?(x: %): Boolean == zero? modularGamma1 x
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+\bibliography{qeta}
+\end{document}
+)endif
