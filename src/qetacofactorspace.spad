@@ -117,6 +117,7 @@ LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
 QETAAUX ==> QEtaAuxiliaryPackage
+SPEC ==> QEtaSpecification
 
 asN x ==> x pretend N
 asP x ==> x pretend P
@@ -292,6 +293,11 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ the conditions of Theorem~\ref{thm:RaduConditions} are
       ++ fulfilled.
       ++ Compare with modularGamma0? from QEtaAuxiliaryPackage.
+    modularGamma0?: (SPEC, SPEC, P, N) -> Boolean
+      ++ modularGamma0?(sspec, rspec, m, t) returns true iff all
+      ++ the conditions of Theorem~\ref{thm:RaduConditions} are
+      ++ fulfilled.
+      ++ Compare with modularGamma0? from QEtaAuxiliaryPackage.
 
     modularGamma1?: (P, LLZ, P, LLZ, P, N) -> Boolean
       ++ modularGamma1?(nn, sbar, mm, rbar, m, t) returns true iff all the
@@ -338,6 +344,15 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ etaCofactorSpace0(nn,mm,r,m,t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
       ++ modularGamma0?(nn,members(s),mm,r m,t) is true for any
+      ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
+      ++ and any sufficiently long list z of integers.
+      ++ The function fails, if there is no such solution.
+      ++ The indices part of the result is a list of divisors of
+      ++ nn where each divisor is represented as a one-element list.
+    etaCofactorSpace0: (P, SPEC, P, N) -> ECS
+      ++ etaCofactorSpace0(nn,rspec,m,t) returns a vector v and the
+      ++ basis of a space such that #v=#divisors(nn) and
+      ++ modularGamma0?(nn,members(s),rspec,m,t) is true for any
       ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
@@ -535,6 +550,10 @@ QEtaCofactorSpace: Exports == Implementation where
         part: VZ := ((sol.particular)::VZ)(1..n)
         bas: List VZ := [x(1..n) for x in sol.basis]
         [idxs, part, bas]
+
+    etaCofactorSpace0(nn: P, rspec: SPEC, m: P, t: N): ECS ==
+        not pure? rspec => error "specification is not for a pure eta-quotient"
+        etaCofactorSpace0(nn, level rspec, pureExponents rspec, m, t)
 
     etaCofactorSpace1System(nn: P, mm: P, rbar: LLZ, m: P, t: N): ECSS ==
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
@@ -899,6 +918,11 @@ QEtaCofactorSpace: Exports == Implementation where
             false
 
         true
+
+    modularGamma0?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
+        nn: P := level sspec; s: LZ := pureExponents sspec
+        mm: P := level rspec; r: LZ := pureExponents rspec
+        modularGamma0?(nn, s, mm, r, m, t)
 
     modularGamma1?(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N): Boolean ==
         not conditionCoEtaQuotientGamma1?(nn, mm, rbar, m, t) => false

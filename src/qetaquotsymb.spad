@@ -84,8 +84,8 @@ LSL2Z ==> List SL2Z
 GAMMA0 ==> CongruenceSubgroupGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage
+SPEC ==> QEtaSpecification
 
-asN x ==> x pretend N
 asP x ==> x pretend P
 WIDTH0(nn, c) ==> asP(width(nn, c)$GAMMA0)
 WIDTH1(nn, c) ==> asP(width(nn, c)$GAMMA1)
@@ -336,6 +336,12 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
       ++ $x = \exp(2 \pi i \tau/w)$ where w=width(nn, c) and
       ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c.
       ++ $r$ is indexed by the divisors of $mm$.
+    etaQuotient: (SPEC, P, N, SL2Z) -> %
+      ++ etaQuotient(rspec, m, lambda, gamma) represents the
+      ++ expansion of $g_{r,m,\lambda}(\gamma \tau)$ in terms of
+      ++ $x = \exp(2 \pi i \tau/w)$ where w=width(nn, c) and
+      ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c.
+      ++ $r$ is given by rspec.
     level: % -> P
       ++ level(x) returns the level of the eta-quotient.
       -- Returns mm.
@@ -392,6 +398,7 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
+    -- local
     etaquot(mm: P, divs: LP, r: LZ, m: P, lambda: N, gamma: SL2Z, eta: HT): % ==
         import from QETAAUX
         rat: Q := 1
@@ -419,6 +426,10 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
         for delta in divs repeat
             eta.delta := eta(mm, delta, m, lambda, gamma)$SymbolicEtaGamma
         etaquot(mm, divs, r, m, lambda, gamma, eta)
+
+    etaQuotient(rspec: SPEC, m: P, lambda: N, gamma: SL2Z): % ==
+        not pure? rspec => error "specification is not for a pure eta-quotient"
+        etaQuotient(level rspec, pureExponents rspec, m, lambda, gamma)
 
     level(x: %): P == xx.flevel
     divisors(x: %): LP == xx.fdivs
@@ -492,6 +503,15 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
       ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c. $r$ is
       ++ indexed by the divisors of $mm$.
+    etaQuotient: (SPEC, P, Z, SL2Z) -> %
+      ++ etaQuotient(rspec, m, t, gamma) represents the expansion of
+      ++ $p_{r,m,t}(\gamma \tau)$ where $r$ is given by rspec.
+    etaQuotient: (SPEC, SL2Z) -> %
+      ++ etaQuotient(rspec, gamma) returns
+      ++ etaQuotient(rspec,1,0,gamma) and represents the expansion of
+      ++ $p_r(\gamma \tau)$ in terms of x = \exp(2 \pi i \tau/w) where
+      ++ w=width(m, c) and gamma=matrix[[a,b],[c,d]] represents the
+      ++ cusp a/c. $r$ is given by rspec.
     level: % -> P
       ++ level(x) returns the level of the eta-quotient.
       -- Returns mm.
@@ -573,6 +593,21 @@ SymbolicEtaQuotientGamma: SetCategory with
     etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
         etaQuotient(mm, r, 1, 0, gamma)
 
+    etaQuotient(rspec: SPEC, m: P, t: Z, gamma: SL2Z): % ==
+        not pure? rspec => error "specification is not for a pure eta-quotient"
+        rhat: Z := numer sigmaInfinity rspec -- know that it is integral
+        uexponent: Q := fractionalPart(-(24*t + rhat)/(24*m))$QETAAUX
+        y: SymbolicEtaQuotientLambdaGamma := etaQuotient(rspec, m, 0, gamma)
+        minroot: Z := minRootOfUnity(y, uexponent)
+        eta: A := new(m, y) -- fill with dummy values
+        for lambda in 1..m-1 repeat -- can start with 1.
+            eta.lambda := y := etaQuotient(rspec, m, lambda, gamma)
+            minroot := lcm(minroot, minRootOfUnity(y, uexponent))
+        per [eta, t, uexponent, asP minroot]
+
+    etaQuotient(rspec: SPEC, gamma: SL2Z): % ==
+        etaQuotient(rspec, 1, 0, gamma)
+
     elt(x: %, lambda: N): SymbolicEtaQuotientLambdaGamma ==
         rep(x).feta.lambda
     level(x: %): P == level(x.0)
@@ -643,6 +678,10 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
       ++ etaQuotient(mm, r, m, t, gamma) represents the expansion
       ++ of $P_{r, m, t}(\gamma \tau)$.
       ++ $r$ is indexed by the divisors of $mm$.
+    etaQuotient: (SPEC, P, N, SL2Z) -> %
+      ++ etaQuotient(rspec, m, t, gamma) represents the expansion
+      ++ of $P_{r, m, t}(\gamma \tau)$.
+      ++ $r$ is given by rspec.
     level: % -> P
       ++ level(x) returns the level of the eta-quotient.
       -- Returns mm.
@@ -674,9 +713,7 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
     YEQG ==> SymbolicEtaQuotientGamma
     HT ==> XHashTable(N, YEQG)
     Rep ==> Record(
-              flevel: P,     -- level \Gamma_0(lev)
-              fdivs: LP,     -- all divisors of level that are given at creation
-              fexponents: LZ,-- the r vector
+              fspec: SPEC,   -- spec part of the eta-quotient
               fmultiplier: P,-- the multiplier m
               foffset: N,    -- the offset t \in 0..(m-1)
               fgamma: SL2Z,  -- gamma
@@ -688,23 +725,26 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
-        divs: LP := DIVISORS mm
-        rhat: Z := 0 -- sigmaInfty
-        for delta in divs for rdelta in r repeat rhat := rhat + delta * rdelta
+    etaQuotient(rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
+        not pure? rspec => error "specification is not for a pure eta-quotient"
+        rhat: Z := numer sigmaInfinity rspec -- we know this is integral
         orb: List N := orbit(rhat, m, t)$QEtaCofactorSpace
         h: HT := empty()
         minroot: Z := 1
         for tt in orb repeat
-            e: YEQG := etaQuotient(mm, r, m, tt, gamma)
+            e: YEQG := etaQuotient(rspec, m, tt, gamma)
             minroot := lcm(minroot, minimalRootOfUnity e)
             h.tt := e
-        per [mm, divs, r, m, t, gamma, orb, h, asP minroot]
+        per [rspec, m, t, gamma, orb, h, asP minroot]
+
+    etaQuotient(mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        etaQuotient(rspec, m, t, gamma)
 
     elt(x: %, tt: N): YEQG == rep(x).fdata.tt
-    level(x: %): P == xx.flevel
-    divisors(x: %): LP == xx.fdivs
-    exponents(x: %): LZ == xx.fexponents
+    level(x: %): P == level(xx.fspec)
+    divisors(x: %): LP == divisors(xx.fspec)
+    exponents(x: %): LZ == pureExponents(xx.fspec)
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
     gamma(x: %): SL2Z == xx.fgamma
@@ -713,18 +753,14 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fdivs)
-        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fspec)
         h := hashUpdate!(h, xx.fmultiplier)
         h := hashUpdate!(h, xx.foffset)
         h := hashUpdate!(h, xx.fgamma)
         h
 
     ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fdivs ~= yy.fdivs => false
-        xx.fexponents ~= yy.fexponents => false
+        xx.fspec ~= yy.fspec => false
         xx.fmultiplier ~= yy.fmultiplier => false
         xx.foffset ~= yy.foffset => false
         xx.fgamma = yy.fgamma
@@ -768,9 +804,16 @@ computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 ++ See \eqref{eq:F_s-r-m-t(gamma*tau)}.
 SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     etaQuotient: (P, LZ, P, LZ, P, N, SL2Z) -> %
-      ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the expansion
-      ++ of $F_{s,r,m,t}(\gamma \tau)$.
-      ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
+      ++ etaQuotient(nn, s, mm, r, m, t, gamma) represents the
+      ++ expansion of $F_{s,r,m,t}(\gamma \tau)$. $r$ and $s$ are
+      ++ indexed by the divisors of $mm$ and $nn$, repectively.
+    etaQuotient: (SPEC, SPEC, P, N, SL2Z) -> %
+      ++ etaQuotient(sspec, rspec, m, t, gamma) represents the
+      ++ expansion of $F_{s,r,m,t}(\gamma \tau)$. $r$ and $s$ are
+      ++ given by rspec and sspec, repectively.
+    etaQuotient: (SPEC, SPEC, P, N) -> %
+      ++ etaQuotient(sspec, rspec, m, t) returns
+      ++ etaQuotient(sspec, rspec, m, t, matrix [[1,0],[0,1]]).
     cofactor: % -> SymbolicEtaQuotientGamma
       ++ cofactor(x) returns the cofactor part to make $F_{s,r,m,t}$ a
       ++ modular function.
@@ -802,6 +845,19 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
         minR1: P := minimalRootOfUnity coetaqg
         minR2: P := minimalRootOfUnity yeqopg
         per [coetaqg, yeqopg, asP lcm(minR1, minR2)]
+
+    etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
+        not modularGamma0?(sspec, rspec, m, t)$QEtaCofactorSpace =>
+            error "modular conditions are not fulfilled"
+        coetaqg: SymbolicEtaQuotientGamma := etaQuotient(sspec, 1, 0, gamma)
+        yeqopg: SymbolicEtaQuotientOrbitProductGamma :=
+            etaQuotient(rspec, m, t, gamma)
+        minR1: P := minimalRootOfUnity coetaqg
+        minR2: P := minimalRootOfUnity yeqopg
+        per [coetaqg, yeqopg, asP lcm(minR1, minR2)]
+
+    etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
+        etaQuotient(sspec, rspec, m, t, matrix [[1,0],[0,1]])
 
     cofactor(x: %): SymbolicEtaQuotientGamma == xx.fcoetaqg
     orbitProduct(x: %): SymbolicEtaQuotientOrbitProductGamma == xx.fyeqopg
