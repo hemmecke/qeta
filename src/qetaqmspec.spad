@@ -1,0 +1,289 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2015-2021  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Monoid basis for (generalized) eta-quotients}
+\author{Ralf Hemmecke}
+\date{10-Dec-2015}
+\maketitle
+\begin{abstract}
+  We compute a monoid basis for the set of eta-quotients of level $N$
+  that are modular functions for $\Gamma_0(N)$ or generalized
+  eta-quotients that are modular function for $\Gamma_1(N)$.
+
+  We compute specifications for (generalized) eta-quotients having
+  poles at any cusp as well as those having a (multiple) pole, if any,
+  at infinity only.
+
+  The code implements
+  \begin{itemize}
+  \item an algorithm due to Radu \cite{Radu:RamanujanKolberg:2015}.
+  \item another version as described in
+    \cite{Hemmecke+Radu:EtaRelations:2018}, \ie, it builds the
+    respective matrices of an integer problem and then lets the
+    program \algo{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}} solve that
+    system.
+  \item similar algorithms for generalized eta-quotients.
+  \end{itemize}
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us start with a few common macros.
+
+First of all for debugging.
+)endif
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+errorPrint(x,y) ==> tracePrint(x,y)
+
+)if LiterateDoc
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+SQ ==> Matrix Q -- SquareMatrix(n, Q)
+MZ ==> Matrix Z
+MQ ==> Matrix Q
+VZ ==> Vector Z
+VQ ==> Vector Q
+LVZ ==> List VZ
+ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
+SPEC ==> QEtaSpecification
+LSPEC ==> List SPEC
+INDICES ==> List List Z
+
+QETAAUX ==> QEtaAuxiliaryPackage
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Monoid of eta-quotients with poles only at infinity using
+  4ti2}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev package QES4TI2 QEtaQuotientSpecifications4ti2
+++ QEtaQuotientSpecificationss4ti2 computes a monoid basis of
+++ (specifications for) eta-quotients.
+QEtaQuotientSpecifications4ti2: with
+    etaQuotientMonoidSpecifications: P -> LSPEC
+      ++ etaQuotientMonoidSpecification(m) returns specifications of
+      ++ eta-quotients that correspond to the formula (16) from
+      ++ \cite{Radu:RamanujanKolberg:2015}, i.e. (together with 1)
+      ++ they describe the monoid E^\infty(m). Same as
+      ++ etaQuotientsMonoidSpecifications(m, [1..n-1]) where n is the
+      ++ number of divisors of n.
+    etaQuotientMonoidSpecifications: (P, List Z) -> LSPEC
+      ++ etaQuotientMonoidSpecifications(m, idivs) computes the
+      ++ matrixLigozatModularGamma0(m, idivs)$QEtaAuxiliaryPackage
+      ++ and finds a basis of the solution space.
+      ++ It computes the same as etaQuotientSpecifications(m, idivs, 0).
+    etaQuotientSpecifications: (P, List Z, Z) -> LSPEC
+      ++ etaQuotientSpecifications(m, idivs, weight) computes
+      ++ etaQuotientSpecifications(m, idivs, rhs, weight) for
+      ++ rhs := [0 for i in idivs].
+    etaQuotientSpecifications: (P, List Z, List Z, Z) -> LSPEC
+      ++ etaQuotientSpecifications(m, idivs, rhs, weight) computes
+      ++ zsolve4ti2(m, idivs, concat(rhs, [weight]) and chooses one
+      ++ particular solution and adds it to all homogeneous and free
+      ++ solution vectors. The opposite vectors of the free solutions
+      ++ are also taken into account.
+    zsolve4ti2: (P, List Z, List Z) -> ZRESULT
+      ++ zsolve4ti2(m, idivs, rhs) computes n:=#idivs,
+      ++ mat:=matrixLigozatModularGamma0(m,idivs)$QEtaAuxiliaryPackage
+      ++ and the column vector b whose first entries are given by rhs.
+      ++ Note that the (n+1)-th entry corresponds to the weight.
+      ++ See in the specification of matrixLigozatModularGamma0 about
+      ++ the meaning of the other rows of the matrix.
+
+    generalizedEtaQuotientMonoidSpecifications: (P, INDICES) -> LSPEC
+      ++ generalizedEtaQuotientMonoidSpecifications(nn, idxs) returns
+      ++ specifications of generalized eta-quotients that (together
+      ++ with 1) generate the (multiplicative) monoid of all
+      ++ generalized eta-quotients (corresponding to the indices given
+      ++ by idxs) that are modular functions for $\Gamma_1(nn)$ and
+      ++ have at most a pole at infinity. If idxs=[], then it is
+      ++ equivalent to the indices generalizedEtaFunctionIndices(nn).
+    generalizedEtaQuotientMonoidSpecifications: P -> LSPEC
+      ++ generalizedEtaQuotientMonoidExponentVectors(nn) returns
+      ++ generalizedEtaQuotientMonoidExponentVectors(nn, []).
+
+
+  == add
+    QEVAux ==> QEtaQuotientExponentVectorsAux
+    LLZ ==> List List Z
+
+    -- For matrix A_N^\infty of formula (9) in
+    -- \cite{Hemmecke+Radu:EtaRelations:2018}, the variable idivs
+    -- should be [i for i in 1..n-1].
+    zsolve4ti2(nn: P, idivs: List Z, rhs: List Z): ZRESULT ==
+        mat: MZ := matrixLigozatModularGamma0(nn, idivs)$QETAAUX
+        rows := nrows mat
+        nidivs: N := #idivs
+        --assert(#rhs=nidivs)
+        b: VZ := new(rows, 0) -- the right hand side vector
+        rels: VZ := new(rows, 0) -- all equations
+        -- However the first nidivs entries are inequations A x >= b.
+        for i in 1..nidivs repeat rels.i := 1
+        for bi in rhs for i in 1..min(#rhs, rows) repeat b.i := bi
+        zsolve(mat, rels, b)$X4ti2
+
+    -- local
+    generatorsWithWeight(nn: P, idivs: List Z, weight: Z): List VZ ==
+        rhs: List Z := concat([0 for i in idivs], weight)
+        res: ZRESULT := zsolve4ti2(nn, idivs, rhs)
+        result: List VZ := res.zhom
+        for x in res.zfree repeat result := cons(x, cons(-x, result))
+        -- We only need the zhom and zfree part, since the zinhom part
+        -- should contain only zeros if weight = 0.
+        zero? weight => result
+        -- Otherwise, we have to add the vector that comes from the *one*
+        -- inhomogeneous solution.
+        -- Sort by the entry in position #idivs+1.
+        n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
+        -- Sort according to the order of the expansion at infinity.
+        tracePrint("number of inhomogeneous solutions", #(res.zinhom))
+        -- Note that the (n+1)th entry corresponds to the pole order
+        -- at infinity (first slack variable).
+        sort((x:VZ,y:VZ):Boolean +-> (x(n+1) < y(n+1)), res.zinhom)
+
+    -- exported functions
+    etaQuotientSpecifications(nn: P, idivs: List Z, w: Z): LSPEC ==
+        gens: List VZ := generatorsWithWeight(nn, idivs, w)
+        n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
+        gens := [g(1..n) for g in gens]
+        -- The resulting vectors correspond to the exponents of
+        -- eta-quotients. We sort these generators by the corresponding
+        -- orders of their expansions. This is done by means
+        -- of the Ligozat matrix.
+        -- Negative orders are considered first, tie breaking is done
+        -- by positive orders (which we actually don't care about)
+        rgens := sortByComponentGrade(nn, gens) $ QEVAux
+        [etaQuotientSpecification(nn, r) for r in rgens]
+
+    etaQuotientMonoidSpecifications(nn: P, idivs: List Z): LSPEC ==
+        etaQuotientSpecifications(nn, idivs, 0)
+
+    etaQuotientMonoidSpecifications(nn: P): LSPEC ==
+        -- generators for R^\infty(nn)
+        n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
+        idivs: List Z := [i for i in 1..n-1]
+        etaQuotientMonoidSpecifications(nn, idivs)
+
+    -- local auxiliary function
+    copyRow!(i: N, matQ: MQ, matZ: MZ): Void ==
+        cols := ncols matQ
+        den: Z := 1
+        for j in 1..cols repeat den := lcm(den, denom qelt(matQ, i, j))
+        for j in 1..cols repeat
+            qsetelt!(matZ, i, j, numer(den*qelt(matQ, i, j)))
+
+    generalizedEtaQuotientMonoidSpecifications(nn: P, idxs: INDICES): LSPEC ==
+        spitzen: List Cusp := cusps(nn)$CongruenceSubgroupGamma1
+        -- At the cusp infinity (=1/nn) the order must be an integer.
+        -- That, however, is already taken care of in the
+        -- matrixModularGamma1(nn) part of the matrix. Therefore, we
+        -- remove this cusp.
+        spitzen := remove!(infinity(), spitzen)
+        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen)$QETAAUX
+
+        allIndices := generalizedEtaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then
+            idxs := allIndices
+            matQ: MQ := mat
+          else
+            -- The first columns of the above matrix are sorted like
+            -- allIndices. We build a new matrix that consists of all
+            -- columns with index > #allIndices prepended by the columns
+            -- corresponding to idxs.
+            -- It is an error if idxs is not a subset of allIndices.
+            lcols: List Z := [i for i in #allIndices+1 .. ncols(mat)]
+
+            h: XHashTable(List Z, Z) := table()
+            for idx in reverse idxs repeat
+                c := position(idx, allIndices)
+                zero? c =>
+                    errorPrint("forbidden", idx)
+                    errorPrint("allowed", allIndices)
+                    error "generalizedEtaQuotientMonoidExponentVectors: forbidden index"
+                lcols := cons(c, lcols)
+            matQ: MQ := mat(1..nrows(mat), lcols)
+
+        n: N := # spitzen
+        rows: N := nrows matQ
+        cols: N := ncols matQ
+        b: VZ := new(rows, 0) -- the right hand side vector
+        rels: VZ := new(rows, 0) -- all equations
+        -- However the first n entries are inequations A x >= b.
+        for i in 1..n repeat rels.i := 1 -- non-negative order
+        -- zsolve needs an integer matrix, so we multiply the lines
+        -- by the respective common denominator.
+        matZ: MZ := new(rows, cols, 0)
+        for i in 1..rows repeat copyRow!(i, matQ, matZ)
+        res: ZRESULT := zsolve(matZ, rels, b)$X4ti2
+        -- We sort the result vectors for the homogeneous system by
+        -- the pole-order of the respective generalized eta-quotient.
+        -- Since the last-but-one line of matQ corresponds to the
+        -- order of the expansion at the cusp infinity and there is an
+        -- entry 1 in the last-but-one column, we only need to sort
+        -- the vectors by the last-but-one column in order to sort
+        -- them by the order of the respective expansion.
+        c: Z := cols-1
+        sres: List VZ := sort((x:VZ,y:VZ):Boolean +-> (x.c<y.c), res.zhom)
+        lle: LLZ := [members g(1..cols-2) for g in sres] -- list of exponents
+        [generalizedEtaQuotientSpecification(nn, idxs, le) for le in lle]
+
+    generalizedEtaQuotientMonoidSpecifications(nn: P): LSPEC ==
+        generalizedEtaQuotientMonoidSpecifications(nn, empty()$INDICES)
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
