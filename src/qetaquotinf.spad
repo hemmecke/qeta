@@ -88,10 +88,16 @@ N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
 OF ==> OutputForm
+LZ ==> List Z
+LLZ ==> List LZ
+SPEC ==> QEtaSpecification
 
 asN x ==> x pretend N
 asP x ==> x pretend P
 asZ x ==> x pretend Z
+
+INTF ==> IntegerNumberTheoryFunctions
+DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
 )if LiterateDoc
 %$
@@ -141,7 +147,7 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ coefficient 1) that results from just considering the product
       ++ of Euler function powers (q-Pochhammer symbols) connected to
       ++ the creation the (generalized) eta-quotient.
-    eulerExpansion: (List Z, List Z) -> L
+    eulerExpansion: (List P, List Z) -> L
       ++ eulerExpansion(divs, r) returns the product over all elements
       ++ d of divs of eulerFunction(d)^{rd} where rd is the respective
       ++ entry of r corresponding to d and eulerFunction is defined in
@@ -163,15 +169,18 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ (\prod_{k=1}^\infty(1-q^{kn}))^e.
     etaPower: (P, Z) -> %
       ++ etaPower(d, e) returns eta(d)^e.
-    etaQuotient: (List Z, List Z) -> %
+    etaQuotient: (List P, List Z) -> %
       ++ etaQuotient(divs, r) returns the eta-quotient
       ++ product(eta(divs.i)^(r.i),i=1..#divs).
-      ++ It is assumed that the lengths of the input lists are equal.
+      ++ It is assumed that #divs >= #r.
     etaQuotient: (P, List Z) -> %
       ++ etaQuotient(mm, r) returns the eta-quotient
       ++ product(eta(divs.i)^(r.i),i=1..#divs) where divs=divisors(mm).
       ++ It returns etaQuotient(divisors mm, r).
-      ++ It is assumed that #r = #divisors(mm).
+      ++ It is assumed that #r <= #divisors(mm).
+    etaQuotient: SPEC -> %
+      ++ etaQuotient(rspec) returns the eta-quotient given by the
+      ++ specification rspec.
     generalizedEtaPower: (P, P, Q) -> %
       ++ generalizedEtaPower(d,g,e) returns the generalized
       ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
@@ -202,9 +211,9 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ A one-element list l=[d] is equivalent to [d,1]. The empty
       ++ list returns 1. All other cases are errors. It is also an
       ++ error if the conditions 0<d and 0<g<d/2 do not hold.
-    generalizedEtaQuotient: List List Z -> %
-      ++ generalizedEtaQuotient(rbar) returns the product (generalized)
-      ++ eta-powers for each list l in rbar.
+    generalizedEtaQuotient: SPEC -> %
+      ++ generalizedEtaQuotient(rspec) returns the product (generalized)
+      ++ eta-powers for each list l in rspec.
       ++ See generalizedEtaPower for the format of the parameter l.
 
 --    new: (Q, L) -> %
@@ -290,13 +299,14 @@ EtaQuotientInfinity(C): Exports == Implementation where
     eta(n: P): % == new(n/24, eulerFunctionPower(n, 1))
     etaPower(n: P, e: Z): % == new(n*e/24, eulerFunctionPower(n, e))
 
-    etaQuotient(divs: List Z, r: List Z): % ==
+    etaQuotient(divs: List P, r: List Z): % ==
         import from List %
-        reduce(_*, [etaPower(d::P, e) for d in divs for e in r], 1)
-    etaQuotient(level: P, r: List Z): % ==
-        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        etaQuotient(divs, r)
-    eulerExpansion(divs: List Z, r: List Z): L ==
+        reduce(_*, [etaPower(d, e) for d in divs for e in r], 1)
+    etaQuotient(level: P, r: List Z): % == etaQuotient(DIVISORS level, r)
+    etaQuotient(rspec: SPEC): % ==
+        not pure? rspec => error "specification is not for a pure eta-quotient"
+        etaQuotient(divisors rspec, pureExponents rspec)
+    eulerExpansion(divs: List P, r: List Z): L ==
         eulerExpansion etaQuotient(divs, r)
     eulerExpansion(level: P, r: List Z): L ==
         eulerExpansion etaQuotient(level, r)
@@ -381,26 +391,35 @@ EtaQuotientInfinity(C): Exports == Implementation where
             error "generalizedEtaPower: only lists of lenght <= 3 allowed"
         generalizedEtaPower(asP d, asP g, e::Q)
 
-    generalizedEtaQuotient(rbar: List List Z): % ==
-        empty? rbar => 1
+    generalizedEtaQuotient(rspec: SPEC): % ==
+        r: LZ := pureExponents rspec
+        rtilde := properGeneralizedPart rspec
+        zpure: % := etaQuotient(divisors rspec, r)
+        empty? rtilde => zpure
         -- We want to avoid multiple recip computations, so we compute
         -- numerator and denominator separately and invert at the end.
-        -- Exceptions are if an list element describes an etaPower,
-        -- because then no inversion is needed.
         num?: Boolean := den? := false
         num: % := den := 1
-        for l in rbar repeat
-            #l < 3 or l.3 > 0 =>
+        -- All elements in rtilde are lists of length exactly 3.
+        for l in rtilde repeat
+            l.3 > 0 =>
                 z: % := generalizedEtaPower l
                 if num? then num := num * z else (num := z; num? := true)
             l.3 < 0 =>
                 z: % := generalizedEtaPower([l.1, l.2, - l.3])
                 if den? then den := den * z else (den := z; den? := true)
         -- If the denominator is set, we must invert it.
+        -- Avoid multiplication with 1.
+        not empty? r => -- pure part is non-trivial
+            den? =>
+                num? => zpure * num * inv den
+                zpure * inv den
+            zpure * num -- since not empty? rtilde, there must be a denominator
         den? =>
             num? => num * inv den
             inv den
-        num -- There is no denominator and if not num? then num=1 anyway.
+        num -- since not empty? rtilde, there must be a denominator
+
 
 )if LiterateDoc
 
