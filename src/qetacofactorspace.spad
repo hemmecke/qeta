@@ -172,17 +172,19 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ first condition on page~241 of
       ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
 
-    conditionGSigma0?: (P, P, LLZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, rtilde, m) returns true if
-      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in rtilde) = 0 mod 2.
-      ++ This corresponds to condition 3 on page 37 of Chapter 10 of
-      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
     conditionSigma0?: (P, P, LLZ, P) -> Boolean
       ++ conditionSigma0?(nn, mm, rtilde, m) returns true if
       ++ (kappa(m)*m*nn^2)*sum(e/d for [d,g,e] in rtilde) = 0 mod 12.
       ++ This corresponds to condition 5 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+      ++ See \eqref{eq:conditionSigma0?(nn,mm,rtilde,m)}
+
+    conditionGSigma0?: (P, P, LLZ, P) -> Boolean
+      ++ conditionGSigma0?(nn, mm, rtilde, m) returns true if
+      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in rtilde) = 0 mod 2.
+      ++ This corresponds to condition 3 on page 37 of Chapter 10 of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+      ++ See \eqref{eq:conditionGSigma0?(nn,mm,rtilde,m)}
 
     conditionSumExponents?: (P, LZ, P) -> Boolean
       ++ conditionSumExponents?(nn, r, m) returns true if the sum of
@@ -197,6 +199,7 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ by kappa(m)*nn is divisible by 4.
       ++ This corresponds to condition 4 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+      ++ See \eqref{eq:conditionSumExponents?(nn,rtilde,m)}.
 
     conditionNDivisor?: (P, P, LZ, P, N) -> Boolean
       ++ conditionNDivisor?(nn, mm, r, m, t) returns true if the
@@ -213,6 +216,7 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ alpha=sigmaInfinity(mm,r,rtilde) + 24*t.
       ++ This corresponds to condition 8 on page 37 of Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+      ++ See \eqref{eq:conditionNDivosor?(nn,mm,r,rtilde,m,t)}.
 
     conditionEvenMultiplier?: (P, P, LZ, P) -> Boolean
       ++ conditionEvenMultiplier?(nn, mm, r, m) returns true if
@@ -220,9 +224,12 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ This corresponds to \eqref{eq:even-m} in
       ++ qeta.tex fourth condition on page~241 of
       ++ \cite{Radu:RamanujanKolberg:2015} (Definition 35).
+      ++ Same as condition 9 on page 37 of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+      ++ See \eqref{eq:conditionEvenMultiplier?(nn,mm,r,m)}.
 
-    conditionCoEtaQuotientGamma0?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) returns
+    conditionCoEtaQuotientGamma0?: (P, SPEC, P, N) -> Boolean
+      ++ conditionCoEtaQuotientGamma0?(nn, rspec, m, t) returns
       ++ true iff all the conditions for the parameters are fulfilled.
       ++ This checks whether (nn, mm, r, m, t) is in \Delta^* as
       ++ defined in
@@ -237,9 +244,9 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ just before Theorem 2.1 are fulfilled. These are slight
       ++ modifications of conditions appearing in Definition 35 of
       ++ \cite{Radu:RamanujanKolberg:2015}.
-
-    conditionCoEtaQuotientGamma1?: (P, P, LLZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma01?(nn, mm, rbar, m, t) returns
+      ++ In case the defining eta-quotient is not a generalized one.
+    conditionCoEtaQuotientGamma1?: (P, SPEC, P, N) -> Boolean
+      ++ conditionCoEtaQuotientGamma1?(nn, rspec, m, t) returns
       ++ true iff the conditions in Chapter 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
       ++ just before Theorem 10.1 are fulfilled. See
@@ -264,26 +271,25 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ The parameters r and rtilde specify the defining eta-quotient and
       ++ generalized eta-quotient part.
 
-    minimalLevelCoEtaQuotientGamma0: (P, LZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma0(mm, r, m, t) returns the
-      ++ smallest nn such that conditionCoEtaQuotientGamma0?(nn, mm,
-      ++ r, m, t) is true, i.e. that (nn, mm, r, m, t) is an element
-      ++ of \Delta^* as defined in
-      ++ Definition~\ref{def:condition-co-eta-quotient-gamma0}.
-
+    minimalLevelCoEtaQuotientGamma0: (SPEC, P, N) -> P
+      ++ minimalLevelCoEtaQuotientGamma0(rspec, m, t) returns the
+      ++ smallest nn such that
+      ++ conditionCoEtaQuotientGamma0?(nn,rspec,m,t) is true, i.e.
+      ++ that (nn, mm, r, m, t) is an element of \Delta^* as defined
+      ++ in Definition~\ref{def:condition-co-eta-quotient-gamma0}.
     minimalLevelCoEtaQuotientGamma1: (P, LZ, P, N) -> P
       ++ minimalLevelCoEtaQuotientGamma1(mm, r, m, t) returns the
-      ++ smallest nn such that conditionCoEtaQuotientGamma1?(nn, mm,
-      ++ r, m, t) is true, i.e. that (nn, mm, r, m, t) fulfills the 7
-      ++ conditions as defined in Section 2 of
-      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
-    minimalLevelCoEtaQuotientGamma1: (P, LLZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t) returns the
       ++ smallest nn such that
-      ++ conditionCoEtaQuotientGamma1?(nn,mm,rbar,m,t) is true, i.e.
-      ++ that (nn,mm,rbar m,t) fulfills the 10 conditions as defined in
-      ++ Section 10 of
+      ++ conditionCoEtaQuotientGamma1?(nn,mm,r,m,t) is true, i.e. that
+      ++ (nn,mm,r,m,t) fulfills the 7 conditions as defined in Section
+      ++ 2 of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+    minimalLevelCoEtaQuotientGamma1: (SPEC, P, N) -> P
+      ++ minimalLevelCoEtaQuotientGamma1(rspec, m, t) returns the
+      ++ smallest nn such that
+      ++ conditionCoEtaQuotientGamma1?(nn,rspec,m,t) is true, i.e.
+      ++ that (nn,mm,rbar m,t) fulfills the 10 conditions as defined
+      ++ in Section 10 of
       ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
       ++ The parameter rbar specifies the generalized eta-quotient via
       ++ generalizedEtaQuotient(rbar).
@@ -306,6 +312,13 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ are fulfilled. Here the parameter sbar stands for the exponents
       ++ $a_\delta$ and $a_{\delta,g}$.
       ++ See also Theorem~\ref{thm:condition-co-eta-quotient-gamma1}.
+    modularGamma1?: (SPEC, SPEC, P, N) -> Boolean
+      ++ modularGamma1?(sspec, rspec, m, t) returns true iff all the
+      ++ conditions of Theorem~10.1 of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+      ++ are fulfilled. Here the parameter sspec stands for the exponents
+      ++ $a_\delta$ and $a_{\delta,g}$.
+      ++ See also Theorem~\ref{thm:condition-co-eta-quotient-gamma1}.
 
     orbit: (Z, P, N) -> List N
       ++ orbit(sigmaInfty, m, t) computes the elements of
@@ -321,6 +334,13 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ orbit(r, m, t) returns the same as
       ++ orbit(sigmaInfinity(mm, r), m, t).
       ++ We assume $sigmaInfty = \sum_{\delta|M} \delta r_\delta$.
+    orbit: (SPEC, P, N) -> List N
+      ++ orbit(rspec, m, t) computes the elements of
+      ++ $\modularOrbit{r,m,t)$ as defined in qeta.tex,
+      ++ \cite[Def.~42]{Radu:RamanujanKolberg:2015} and
+      ++ \cite[Lemma 4.35]{Radu:PhD:2010}.
+      ++ orbit(rspec, m, t) returns the same as
+      ++ orbit(sigmaInfinity(rspec),m,t).
     chiExponent: (Z, P, List N) -> Z
       ++ chiExponent(sigmaInfty, m, orb) computes e such that
       ++ $\exp(2\pi i e / 24) = \chi_{r,m,t)$.
@@ -333,13 +353,13 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ equation mat*s=v it holds
       ++ modularGamma0?(nn,sl,mm,r,m,t) where sl is the list of the
       ++ first #divisors(nn) entries of s.
-    etaCofactorSpace1System: (P, P, LLZ, P, N) -> ECSS
-      ++ etaCofactorSpace1System(nn, mm, rbar, m, t) returns a matrix
+    etaCofactorSpace1System: (P, SPEC, P, N) -> ECSS
+      ++ etaCofactorSpace1System(nn, rspec, m, t) returns a matrix
       ++ mat and a vector v such that for the integer solutions s of
       ++ the equation mat*s=v it holds
-      ++ modularGamma1?(nn,sbar,mm,rbar,m,t) where sbar is the
+      ++ modularGamma1?(sspec,rspec,m,t) where sbar is the
       ++ translation of s into a generalized eta-quotient
-      ++ specification, see toGeneralizedEtaQuotientSpecification.
+      ++ specification, see generalizedEtaQuotientSpecification.
     etaCofactorSpace0: (P, P, List Z, P, N) -> ECS
       ++ etaCofactorSpace0(nn,mm,r,m,t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
@@ -358,10 +378,10 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ The function fails, if there is no such solution.
       ++ The indices part of the result is a list of divisors of
       ++ nn where each divisor is represented as a one-element list.
-    etaCofactorSpace1: (P, P, LLZ, P, N, LLZ) -> ECS
-      ++ etaCofactorSpace1(nn,mm,rbar,m,t,idxs) returns a vector v and
+    etaCofactorSpace1: (P, SPEC, P, N, LLZ) -> ECS
+      ++ etaCofactorSpace1(nn,rspec,m,t,idxs) returns a vector v and
       ++ the basis of a space such that #v=#idxs and
-      ++ modularGamma1?(nn,sbar,mm,rbar,m,t) is true for any
+      ++ modularGamma1?(ssepc,rspec,m,t) is true for any
       ++ sbar = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
@@ -369,18 +389,22 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ corresponds to the entries of the solution vectors.
       ++ If idxs=[] then the computation is done for
       ++ idxs=generalizedEtaFunctionIndices(nn)$QETAAUX..
-    etaCofactorSpace1: (P, P, LLZ, P, N) -> ECS
-      ++ etaCofactorSpace1(nn,mm,rbar,m,t) returns
-      ++ etaCofactorSpace1(nn,mm,rbar,m,t,idxs) for
+    etaCofactorSpace1: (P, SPEC, P, N) -> ECS
+      ++ etaCofactorSpace1(nn,rspec,m,t) returns
+      ++ etaCofactorSpace1(nn,rspec,m,t,idxs) for
       ++ idxs=generalizedEtaFunctionIndices(nn)$QETAAUX.
-    alphaInfinity: (P, LZ, P, LZ, P, N) -> Z
-      ++ If modularGamma0?(nn, s, mm, r, m, t) then
-      ++ alphaInfinity(nn, s, mm, r, m, t) computes the order of the
-      ++ q-expansion of $F_{s, r, m, t}$ as defined in qeta.tex,
-      ++ see~\eqref{eq:alphaInfinity}. It is the same as the \alpha as
-      ++ defined in the abstract of \cite{Radu:RamanujanKolberg:2015},
+    alphaInfinity: (SPEC, SPEC, P, List N) -> Z
+      ++ alphaInfinity(sspec,rspec,m,orb) implements the definition
+      ++ \eqref{eq:alphabarInfinity} and \eqref{eq:alphaInfinity},
+      ++ i.e., the definition of Radu in
+      ++ \cite{Radu:RamanujanKolberg:2015},
       ++ DOI=10.1016/j.jsc.2017.02.001,
-      ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf.
+      ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+      ++ and can also be extracted from from formula (10.4) of
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+      ++ when the respective cofactor part is taken into account. Note
+      ++ that it does not agree with \alpha(t) as defined in
+      ++ \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
@@ -432,24 +456,18 @@ QEtaCofactorSpace: Exports == Implementation where
     -- \cite[Thm~10.1(4)]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
     -- or in \eqref{eq:CDZ-productsquare}
     -- the condition is true.
-    checkSquare1?(nn: P, s: LZ, stilde: LLZ, mm: P, r: LZ, rtilde: LLZ, m: P,
-                 a: Z): Boolean ==
+    checkSquare1?(sspec: SPEC, rspec: SPEC, m: P, a: Z): Boolean ==
         --assert(one? gcd(a, d)) for every divisor of nn (and of mm).
+        import from INTF
         z: Z := 1
-        nndivs: List P := DIVISORS nn
-        mmdivs: List P := DIVISORS mm
-        for d in nndivs for sd in s | odd? sd repeat z := z * jacobi(d, a)
-        for d in mmdivs for rd in r | odd? rd repeat z := z * jacobi(m*d, a)
+        for l in purePart sspec | odd? l.2 repeat z := z * jacobi(l.1, a)
+        for l in purePart rspec | odd? l.2 repeat z := z * jacobi(m*l.1, a)
         zero? z => error "checkSquare1?: zero jacobi symbol"
 
         expo: Q := 0
-        for l in rtilde repeat --assert(#l=3) -- l=[d,g,e]
-            not DIVISIBLEBY?(l.1, mm) =>
-                error "checkSquare1?: delta is not a divisor"
+        for l in properGeneralizedPart rspec repeat --assert(#l=3) -- l=[d,g,e]
             expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
-        for l in stilde repeat --assert(#l=3) -- l=[d,g,e]
-            not DIVISIBLEBY?(l.1, nn) =>
-                error "checkSquare1?: delta is not a divisor"
+        for l in properGeneralizedPart sspec repeat --assert(#l=3) -- l=[d,g,e]
             expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
         expo := (a-1) * expo -- this should give an integer
         not one? denom expo => error "checkSquare1?: expo not integral"
@@ -485,13 +503,18 @@ QEtaCofactorSpace: Exports == Implementation where
 
     orbit(mm: P, r: List Z, m: P, t: N): List N ==
         orbit(SIGMAINFINITY(mm, r), m, t)
+    orbit(rspec: SPEC, m: P, t: N): List N ==
+        not pure? rspec => error "orbit computation only for pure eta-quotients"
+        --assert(one?(denom sigmaInfinity rspec)), because it is a pure EQ
+        orbit(numer sigmaInfinity rspec, m, t)
 
     chiExponent(sigmaInfty: Z, m: P, orb: List N): Z ==
         x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
         positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
 
     etaCofactorSpace0System(nn: P, mm: P, r: List Z, m: P, t: N): ECSS ==
-        not conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) =>
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        not conditionCoEtaQuotientGamma0?(nn, rspec, m, t) =>
             error "conditionCoEtaQuotientGamma0 not met"
 
         -- Setup matrix.
@@ -555,10 +578,9 @@ QEtaCofactorSpace: Exports == Implementation where
         not pure? rspec => error "specification is not for a pure eta-quotient"
         etaCofactorSpace0(nn, level rspec, pureExponents rspec, m, t)
 
-    etaCofactorSpace1System(nn: P, mm: P, rbar: LLZ, m: P, t: N): ECSS ==
+    etaCofactorSpace1System(nn: P, rspec: SPEC, m: P, t: N): ECSS ==
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
-
-        not conditionCoEtaQuotientGamma1?(nn, mm, rbar, m, t) =>
+        not conditionCoEtaQuotientGamma1?(nn, rspec, m, t) =>
             error "conditionCoEtaQuotientGamma1? not met"
 
         nndivs: List P := DIVISORS nn
@@ -577,10 +599,8 @@ QEtaCofactorSpace: Exports == Implementation where
         mat: MZ := new(rows, cols, 0)
         v: VZ := new(rows, 0)
 
-        rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-        r: LZ := rrec.pure
-        rtilde: LLZ := rrec.properGeneralized
+        r: LZ := pureExponents rspec
+        rtilde: LLZ := properGeneralizedPart rspec
         n: Z := # nndivs
 
         -----------------------------------------------------------
@@ -605,7 +625,7 @@ QEtaCofactorSpace: Exports == Implementation where
 
         --assert(DIVISIBLEBY?(mm, nn))
         -- fill the right-hand side
-        nnrbarhat: Z := numer(nn*SIGMAINFINITY(mm, r, rtilde)) -- is integral
+        nnrbarhat: Z := numer(nn*sigmaInfinity(rspec)) -- is integral
         q:Q := (nnrbarhat + 24*t*(1-m^2)*nn)/m -- is integral
         -- Security check. Should never fail because of Condition 8 on page 37
         -- of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
@@ -625,12 +645,12 @@ QEtaCofactorSpace: Exports == Implementation where
                 jj := jj + 1
                 qsetelt!(mat, ii, n + jj, 2*nnd)
         qsetelt!(mat, ii, numOfVars+2, 24) -- slack variable for (mod 24)
-        v.ii := - m * SIGMA0(mm, r, rtilde) -- fill right-hand side
+        v.ii := - m * sigma0(rspec) -- fill right-hand side
 
         -----------------------------------------------------------
         -- Condition (4) and slack variable for mod 2 for all a
         -- \eqref{eq:CDZ-productsquare}
-        mmdivs: List P := DIVISORS mm
+        mmdivs: List P := divisors rspec
         for i in 1..11 repeat
             a: Z := nn*i+1
             one? gcd(a,6) =>
@@ -651,8 +671,6 @@ QEtaCofactorSpace: Exports == Implementation where
                 -- fill right-hand side
                 expo: Q := 0
                 for l in rtilde repeat --assert(#l=3) -- l=[d,g,e]
-                    not DIVISIBLEBY?(l.1, mm) =>
-                        error "etaCofactorSpace1System: delta is not a divisor"
                     expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
                 expo := (a-1) * expo
                 not one? denom expo =>
@@ -663,8 +681,8 @@ QEtaCofactorSpace: Exports == Implementation where
                 if isOdd? then v.ii := 1 -- else v.ii := 0
         return [mat, v]$ECSS
 
-    etaCofactorSpace1(nn: P, mm: P, rbar: LLZ, m: P, t: N, idxs: LLZ): ECS ==
-        ecss: ECSS := etaCofactorSpace1System(nn, mm, rbar, m, t)
+    etaCofactorSpace1(nn: P, rspec: SPEC, m: P, t: N, idxs: LLZ): ECS ==
+        ecss: ECSS := etaCofactorSpace1System(nn, rspec, m, t)
         v := ecss.rhs
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
@@ -697,8 +715,8 @@ QEtaCofactorSpace: Exports == Implementation where
         bas: List VZ := [x(1..n) for x in sol.basis]
         [idxs, part, bas]
 
-    etaCofactorSpace1(nn: P, mm: P, rbar: LLZ, m: P, t: N): ECS ==
-        etaCofactorSpace1(nn, mm, rbar, m, t, [])
+    etaCofactorSpace1(nn: P, rspec: SPEC, m: P, t: N): ECS ==
+        etaCofactorSpace1(nn, rspec, m, t, [])
 
     conditionPrimeDivisors?(nn: P, m: P): Boolean ==
         fm: Factored Z := factor m
@@ -710,7 +728,6 @@ QEtaCofactorSpace: Exports == Implementation where
 
     conditionMmN?(nn: P, mm: P, r: LZ, m: P): Boolean ==
         mmdivs: LP := DIVISORS mm
-        #mmdivs ~= #r =>  false
 
         divs: LP := DIVISORS(m*nn)
         for delta in mmdivs for rdelta in r | not zero? rdelta repeat
@@ -760,7 +777,9 @@ QEtaCofactorSpace: Exports == Implementation where
                not zero?((((j^2 - 1) quo 24)*(rhat+24*t)) rem m) => return false
         return true
 
-    conditionCoEtaQuotientGamma0?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
+    conditionCoEtaQuotientGamma0?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
+        mm: P := level rspec
+        r: LZ := pureExponents rspec
         t >= m => error "0<=t<m is a necessary condition"
         conditionPrimeDivisors?(nn, m) -- \eqref{eq:p|m=>p|N}
          and conditionMmN?(nn, mm, r, m) -- \eqref{eq:delta|M=>delta|mN}
@@ -824,16 +843,11 @@ QEtaCofactorSpace: Exports == Implementation where
         return true
 
     -- condition for the disection of mixed-generalized eta-quotients
-    conditionCoEtaQuotientGamma1?(
-      nn: P, mm: P, rbar: LLZ, m: P, t: N): Boolean ==
+    conditionCoEtaQuotientGamma1?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
-        -- separate the true eta-quotient part from the generalized part
-        -- i.e. extract an r-vector and a rtilde list.
-        rec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-        r: LZ := rec.pure
-        rtilde: LLZ := rec.properGeneralized
-
+        mm: P := level rspec
+        r: LZ := pureExponents rspec
+        rtilde: LLZ := properGeneralizedPart rspec
         zero?(nn rem mm) -- M|N
          and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
           and conditionGSigma0?(nn, mm, rtilde, m) -- CDZ condition 3 (p. 37)
@@ -849,9 +863,9 @@ QEtaCofactorSpace: Exports == Implementation where
 -- use of conditions from above
 -------------------------------------------------------------------
 
-    minimalLevelCoEtaQuotientGamma0(mm: P, r: LZ, m: P, t: N): P ==
-        for nn in 1..24*m*mm repeat
-            conditionCoEtaQuotientGamma0?(asP nn, mm, r, m, t) => return asP nn
+    minimalLevelCoEtaQuotientGamma0(rspec: SPEC, m: P, t: N): P ==
+        for nn in 1..24*m*level(rspec) repeat
+            conditionCoEtaQuotientGamma0?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
     minimalLevelCoEtaQuotientGamma1(mm: P, r: LZ, m: P, t: N): P ==
@@ -859,14 +873,14 @@ QEtaCofactorSpace: Exports == Implementation where
             conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma1: should not be here"
 
-    minimalLevelCoEtaQuotientGamma1(mm: P, rbar: LLZ, m: P, t: N): P ==
-        for nn in 1..24*m*mm repeat
-            conditionCoEtaQuotientGamma1?(asP nn, mm, rbar, m, t) =>
-                return asP nn
+    minimalLevelCoEtaQuotientGamma1(rspec: SPEC, m: P, t: N): P ==
+        for nn in 1..24*m*level(rspec) repeat
+            conditionCoEtaQuotientGamma1?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma1: should not be here"
 
     modularGamma0?(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Boolean ==
-        not conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) => false
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        not conditionCoEtaQuotientGamma0?(nn, rspec, m, t) => false
 
         nndivs: LP := DIVISORS nn
         #nndivs ~= #s =>
@@ -924,53 +938,40 @@ QEtaCofactorSpace: Exports == Implementation where
         mm: P := level rspec; r: LZ := pureExponents rspec
         modularGamma0?(nn, s, mm, r, m, t)
 
-    modularGamma1?(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N): Boolean ==
-        not conditionCoEtaQuotientGamma1?(nn, mm, rbar, m, t) => false
-
+    modularGamma1?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
+        not conditionCoEtaQuotientGamma1?(level sspec, rspec, m, t) => false
         -- \cite[Thm~10.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
-        rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-        r: LZ := rrec.pure
-        rtilde: LLZ := rrec.properGeneralized
-
-        srec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(nn, sbar)$QETAAUX
-        s: LZ := srec.pure
-        stilde: LLZ := srec.properGeneralized
-
         -- Condition (1)
         -- Condition \eqref{eq:CDZ-sum=0}
-        not zero?(reduce(_+, s, 0) + reduce(_+, r, 0)) =>
-            warnPrint("Chen: Theorem 10.1(1) nn", nn)
-            warnPrint("Chen: Theorem 10.1(1) sbar", sbar)
-            warnPrint("Chen: Theorem 10.1(1) mm", mm)
-            warnPrint("Chen: Theorem 10.1(1) rbar", rbar)
+        ws: Z := reduce(_+, pureExponents sspec, 0)$LZ
+        wr: Z := reduce(_+, pureExponents rspec, 0)$LZ
+        not zero?(ws + wr) =>
+            warnPrint("Chen: Theorem 10.1(1) sspec", sspec)
+            warnPrint("Chen: Theorem 10.1(1) rspec", rspec)
             false
 
         -- Condition (2)
         -- Condition \eqref{eq:CDZ-sigma0=0}
-        rbarv: Z := SIGMA0(mm, r, rtilde)
-        sbarv: Z := SIGMA0(nn, s, stilde)
+        rbarv: Z := sigma0 rspec
+        sbarv: Z := sigma0 sspec
+        nn: P := level sspec
+        mm: P := level rspec
         z: Z := sbarv + numer(nn/mm)*m*rbarv -- Note that mm divides nn.
         not DIVISIBLEBY?(24, z) =>
-            warnPrint("Chen: Theorem 10.1(2) nn", nn)
-            warnPrint("Chen: Theorem 10.1(2) sbar", sbar)
-            warnPrint("Chen: Theorem 10.1(2) mm", mm)
-            warnPrint("Chen: Theorem 10.1(2) rbar", rbar)
+            warnPrint("Chen: Theorem 10.1(2) sspec", sspec)
+            warnPrint("Chen: Theorem 10.1(2) rspec", rspec)
             warnPrint("Chen: Theorem 10.1(2) z", z)
             false
 
         -- Condition (3)
         -- Condition \eqref{eq:CDZ-sigmainfinity=0}
-        rbarhat: Q := SIGMAINFINITY(mm, r, rtilde)
-        sbarhat: Q := SIGMAINFINITY(nn, s, stilde)
+        rbarhat: Q := sigmaInfinity rspec
+        sbarhat: Q := sigmaInfinity sspec
         alpha: Q := rbarhat + (24*t)::Q -- alphaAux(mm, r, rtilde, t)
         q: Q := sbarhat + m*rbarhat - ((m^2-1)/m)*alpha
         not one? denom q or not DIVISIBLEBY?(24, z) => --shouldn't happen
-            warnPrint("Chen: Theorem 10.1(3) nn", nn)
-            warnPrint("Chen: Theorem 10.1(3) sbar", sbar)
-            warnPrint("Chen: Theorem 10.1(3) mm", mm)
-            warnPrint("Chen: Theorem 10.1(3) rbar", rbar)
+            warnPrint("Chen: Theorem 10.1(3) sspec", sspec)
+            warnPrint("Chen: Theorem 10.1(3) rspec", rspec)
             warnPrint("Chen: Theorem 10.1(3) q", q)
             false
 
@@ -978,23 +979,25 @@ QEtaCofactorSpace: Exports == Implementation where
         -- Condition \eqref{eq:CDZ-productsquare}
         for i in 1..11 repeat
             a: Z := nn*i+1
-            one? gcd(a,6) and not checkSquare1?(nn,s,stilde,mm,r,rtilde,m,a) =>
-                warnPrint("Chen: Theorem 10.1(4) nn", nn)
-                warnPrint("Chen: Theorem 10.1(4) sbar", sbar)
-                warnPrint("Chen: Theorem 10.1(4) mm", mm)
-                warnPrint("Chen: Theorem 10.1(4) rbar", rbar)
+            one? gcd(a,6) and not checkSquare1?(sspec, rspec, m, a) =>
+                warnPrint("Chen: Theorem 10.1(4) sspec", sspec)
+                warnPrint("Chen: Theorem 10.1(4) rspec", rspec)
                 warnPrint("Chen: Theorem 10.1(4) a", a)
                 return false
 
         true
 
-    alphaInfinity(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): Z ==
-        not modularGamma0?(nn, s, mm, r, m, t) =>
-            error "input does not correspond to a modular function"
-        shat: Z := SIGMAINFINITY(nn, s)
-        rhat: Z := SIGMAINFINITY(mm, r)
-        orb: List N := orbit(rhat, m, t)
-        alpha: Q := shat/24 + reduce(_+, [24*k+rhat for k in orb], 0)/(24*m)
+    modularGamma1?(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N): Boolean ==
+        sspec: SPEC := generalizedEtaQuotientSpecification(nn, sbar)
+        rspec: SPEC := generalizedEtaQuotientSpecification(mm, rbar)
+        modularGamma1?(sspec, rspec, m, t)
+
+    alphaInfinity(sspec: SPEC, rspec: SPEC, m: P, orb: List N): Z ==
+        sbarhat: Q := sigmaInfinity sspec
+        rbarhat: Q := sigmaInfinity rspec
+        l: List Q := [24*k::Q + rbarhat for k in orb]
+        orbsumrbarhat: Q := reduce(_+, l, 0)
+        alpha: Q := (1/24)*(sbarhat + (1/m)*orbsumrbarhat)
         not one? denom alpha => error "alpha not an integer"
         return numer alpha
 

@@ -889,7 +889,9 @@ $q^{1/w)}$, \ie, the series from
           -- \eqref{eq:p_rbar-m-lambda(gamma*tau)}.
           -- Compare also with implementation of qPochhammerPure
           px: PX := 1
-          for delta in divisors ypure for rd in exponents ypure _
+          divs: List P := divisors ypure
+          r: LZ := concat(exponents ypure, [0 for i in divs]) -- fill r with 0's
+          for delta in divs for rd in r _
                   | not zero?(expo := rd - rtilde(delta, ypg)) repeat
               etadelta: SymbolicEtaGamma := ypure.delta
               u: Q := udelta etadelta
@@ -1051,11 +1053,9 @@ without the $(c\tau+d)$-part.
       -- $g_{\bar{r}}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
       --assert(CX has Field)
       laurentExpansionsGamma1(y: SymbolicGeneralizedEtaQuotient): QLX ==
-          nn: P := level y
-          -- check whether the exponent vectors (rdelta) lead to a
-          -- modular function.
-          if not modularGamma1?(nn, exponents y)$QETAAUX then
-              warnPrint("QEtaSeriesExpansion: not a modular function", exponents y)
+          if not modularGamma1?(spec := specification y) then
+              warnPrint("QEtaSeriesExpansion: not a modular function", spec)
+          nn := level y
           hser: QLX := empty()
           for cusp in cusps y repeat
               w: P := WIDTH1(nn, cusp) -- width of cusp

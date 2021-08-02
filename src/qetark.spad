@@ -139,10 +139,14 @@ P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
+LZ ==> List Z
+LLZ ==> List LZ
 
 Pol ==> Polynomial
 SUP ==> SparseUnivariatePolynomial
 QETAAUX ==> QEtaAuxiliaryPackage;
+
+asP x ==> x pretend P
 
 T1 C  ==> QEtaTaylorSeries C
 L1 C  ==> QEtaLaurentSeries C
@@ -158,7 +162,9 @@ QXTOPRED1 C ==> QEtaTopReduction(C, X1 C, QXAB1 C)
 QXTOPCOMP1 C ==> QEtaComputation(C, X1 C, QXAB1 C, QXTOPRED1 C)
 QXTOPSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXTOPCOMP1 C)
 
-QEQEV ==> QEtaQuotientExponentVectors4ti2
+SPEC ==> QEtaSpecification
+SPECS ==> List SPEC
+QES4TI2 ==> QEtaQuotientSpecifications4ti2
 
 
 )if LiterateDoc
@@ -187,62 +193,45 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
   L ==> List
   EX ==> Expression Z
   Exports ==> CoercibleTo OutputForm with
-    identity: (P, List Z, P, L Z, P, N, L L Z, Pol C) -> %
-      ++ identity(nn, mm, r, m, t, c, rel, rgens) returns a
-      ++ structure that represents all information about the (the q)
-      ++ expansion of $F_{s,r,m,t}$ at infinity, see Definition of
+    -- constructor
+    identity: (SPEC, SPEC, P, List N, SPECS, Pol C) -> %
+      ++ identity(sspec, rspec, m, orb, rspecss, rel) returns a
+      ++ structure that represents all information about the
+      ++ q-expansion of $F_{s,r,m,t}$ at infinity, see Definition of
       ++ $F_{s,r,m,t}$ in qeta.tex,
       ++ Equation~\eqref{eq:F_s-r-m-t(tau)}. The relations is then
-      ++ c*F=sum_{i}(rel(i)*etaQuotient(nn,rgens(i))) where F
+      ++ c*F=sum_{i}(rel(i)*etaQuotient(rspecs(i))) where F
       ++ corresponds to the modular function $F_{s,r,m,t}$ in
-      ++ question.
-    alphaInfinity: % -> Z
-      ++ alphaInfinity(x) returns the q exponent that corresponds to
-      ++ the orbit product and the respective co-exponent in order to
-      ++ make the whole produce a modular function. It is defined
-      ++ already in the abstract of \cite{Radu:RamanujanKolberg:2015}.
-    orbit: % -> List N
-      ++ orbit(x) returns the orbit of the sifted series.
-    level: % -> P
-      ++ level(x) returns nn if x represents a modular function for
-      ++ Gamma_0(nn).
-    definingLevel: % -> P
-      ++ definingLevel(x) returns mm. This is the level of the
-      ++ eta-quotient from which the sifted version is taken.
-    definingExponents: % -> List Z
-      ++ definingExponents(x) returns the exponents
-      ++ $r=(r_\delta)_{\delta|M}$ (where $M$ is the defining level)
-      ++ for the defining series of the coefficients a(n), i.e.,
-      ++ \sum_{n=0}^\infty a(n)q^n = \prod_{\delta|M} (q^{\delta},
-      ++ q^{\delta})_\infty^{r_\delta}$.
+      ++ question. t is an element of orb.
+      ++ At the same time this data structure serves as a container
+      ++ for a generalized eta-quotient identity for
+      ++ $F_{\bar{s},\bar{r},m,t}(\tau)$.
+
+    -- accessor functions
+    coSpecification: % -> SPEC
+      ++ coExponent(x) returns the specification for the cofactor
+      ++ (generalized) eta-quotient that must be muliplied to the
+      ++ orbit product in order to obtain a modular function.
+    definingSpecification: % -> SPEC
+      ++ definingSpecification(x) returns the specification of
+      ++ (generalized) eta-quotient that forms the generating series
+      ++ of the coefficients a(n), i.e., \sum_{n=0}^\infty a(n)q^n =
+      ++
     multiplier: % -> P
       ++ multiplier(x) returns factor m to select a certain
       ++ subsequence a(m*n+k) of the defining series (where k is one
       ++ number out of orbit(x).
-    offset: % -> N
-      ++ offset(x) returns the offset t to select a certain
-      ++ subsequence a(m*n+t) of the defining series (where t was the
-      ++ value used during creation of x via a call to the identity
-      ++ function, i.e., offset(x) is a member of orbit(x).
-    coefficient: % -> C
-      ++ coefficient(x) is the coefficient that results from a
-      ++ reduction process in case it cannot be inverted. For a
-      ++ coefficient field, it will give 1.
-    coExponents: % -> List Z
-      ++ coExponent(x) returns the exponent vector r of an eta
-      ++ quotient that must be muliplied to the orbit product in order
-      ++ to obtain a modular function.
-    moduleCoefficients: % -> List SUP C
-      ++ moduleCoefficients(x) gives the list of coefficients that
-      ++ correspond to the eta-quotients given by
-      ++ etaQuotientMonoidExponentVectors(x). And form the relation
-      ++ that that was computed. note that the first entry of
-      ++ etaQuotientMonoidExponentVectors(x) must be replaced by 0 in
-      ++ order to make this relation a true relation.
-    etaQuotientMonoidExponentVectors: % -> List List Z
-      ++ etaQuotientMonoidExponentVectors(%) returns the exponent
-      ++ vectors of the eta-quotients that generate the monoid of all
-      ++ eta-quotients.
+    orbit: % -> List N
+      ++ orbit(x) returns the orbit, i.e., only a product of the
+      ++ generating series for $a(m*n+k)$ for all k in the orbit can
+      ++ be turned into a modular function (for Gamma0) by multiplying
+      ++ it with an eta-quotient.
+    basisSpecifications: % -> SPECS
+      ++ basisSpecifications(x) returns the specifications of the
+      ++ (generalized) eta-quotients that form the combination of the
+      ++ identity. The first of this basis is the special element t so
+      ++ that the relation is actually formed by the module over C[t]
+      ++ generated by 1 and rest basisSpecifications(x).
     identityPolynomial: % -> Pol C
       ++ identityPolynomial(x) gives the representation of the
       ++ identity as a polynomial (which equates to zero. This
@@ -251,6 +240,23 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ turn this orbit product into a modular function and the Mi
       ++ correspond to eta-quotients given by
       ++ etaQuotientMonoidExponentVectors(x).
+    coefficient: % -> C
+      ++ coefficient(x) is the coefficient that results from a
+      ++ reduction process in case it cannot be inverted. For a
+      ++ coefficient field, it will give 1.
+    moduleCoefficients: % -> List SUP C
+      ++ moduleCoefficients(x) gives the list of coefficients that
+      ++ correspond to the (generalized) eta-quotients given by
+      ++ basisSpecifications(x) and form the relation that that was
+      ++ computed. Note that the first entry of basisSpecification(x)
+      ++ must be replaced by 1 in order to make this relation a true
+      ++ relation.
+
+    alphaInfinity: % -> Z
+      ++ alphaInfinity(x) returns the q exponent that corresponds to
+      ++ the orbit product and the respective co-exponent in order to
+      ++ make the whole produce a modular function. It is defined
+      ++ already in the abstract of \cite{Radu:RamanujanKolberg:2015}.
     orbitProduct: % -> OutputForm
       ++ orbitProduct(x) returns the orbit product as an OutputForm.
 
@@ -258,47 +264,45 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     -- The var-functions are helper functions for printing etaQuotients.
     -- They print the i-th variable.
-    var: Symbol -> Z -> OutputForm
-    varsub: Symbol -> Z -> OutputForm
-    varEta: Z -> OutputForm
-    varPochhammer: Z -> OutputForm
+    var: Symbol -> (Z, Z) -> OutputForm
+    varsub: Symbol -> (Z, Z) -> OutputForm
+    varEta: (Z, Z) -> OutputForm
+    varPochhammer: (Z, Z) -> OutputForm
 
-    varPower: (Z, Z, Z -> OutputForm) -> OutputForm
-    monomial: (List Z, List Z, Z -> OutputForm) -> OutputForm
-    monomialQuotient: (List Z, List Z, Z -> OutputForm) -> OutputForm
+    varPower: (Z, Z, Z, (Z, Z) -> OutputForm) -> OutputForm
+    monomial: (SPEC, (Z, Z) -> OutputForm) -> OutputForm
+    monomialQuotient: (SPEC,  (Z, Z) -> OutputForm) -> OutputForm
 
-    etaQuotient: (P, List Z, Z -> OutputForm) -> OutputForm
-      ++ etaQuotient(mm, r, v) returns the eta-quotient of level mm
-      ++ connected to the exponent vector r where each part is
+    etaQuotient: (SPEC, (Z, Z) -> OutputForm) -> OutputForm
+      ++ etaQuotient(rspec, v, e) returns the generalized eta-quotient
+      ++ given by rspec where each part is
       ++ formatted by the function v.
-    qQuotient: (P, List Z, Z -> OutputForm, Q) -> OutputForm
-      ++ qQuotient(mm, r, v, e) returns the eta-quotient of level mm
-      ++ connected to the exponent vector r where each part is
+    qQuotient: (SPEC, (Z, Z) -> OutputForm, Q) -> OutputForm
+      ++ qQuotient(rspec, v, e) returns the generalized eta-quotient
+      ++ given by rspec where each part is
       ++ formatted by the function v. The whole eta-quatient comes
       ++ multiplied with a q power with exponent e.
-    qEtaQuotient: (P, List Z, Z -> OutputForm) -> OutputForm
-      ++ qEtauotient(n, r, v) returns qQuotient(n, r, v, e) with
-      ++ e=(sigmaInfinity(n, r)$QEtaAuxiliaryPackage)/24.
+    qEtaQuotient: (SPEC, (Z, Z) -> OutputForm) -> OutputForm
+      ++ qEtauotient(rspec, v) returns qQuotient(rspec, v, e) with
+      ++ e=sigmaInfinity(rspec)/24.
 
-    f:  (%, Z, Z -> OutputForm, C, Q, List Z) -> OutputForm
+    f:  (%, Z, (Z, Z) -> OutputForm, C, Q, SPEC) -> OutputForm
 
-    etaRelationMonomial: (P, SUP C, L Z, Z, Z -> OutputForm, Q) -> OutputForm
-      ++ etaRelationMonomial(mm, ci, ri, fmt, v, e) return an
-      ++ eta-quoatient of level mm with exponent vector ri and
-      ++ coefficient ci which is multiplied by q^e with variables
-      ++ given through v and in a form given by fmt.
+    etaRelationMonomial: (SUP C, SPEC, Z, (Z, Z) -> OF, Q) -> OF
+      ++ etaRelationMonomial(ci, rspec, fmt, v, e) return an
+      ++ eta-quoatient given by rspec and coefficient ci which is
+      ++ multiplied by q^e with variables given through v and in a
+      ++ form given by fmt.
 
-    etaRelation: (P, List SUP C, List List Z, Z, Z -> OutputForm, C, Q, List Z)
-        -> OutputForm
-      ++ etaRelation(mm, cis, bas, fmt, v, c, e, r) returns the
-      ++ eta-relation part multiplied by c*q^e*etaQuotient(mm,r).
+    etaRelation: (List SUP C, SPECS, Z, (Z, Z) -> OF, C, Q, SPEC) -> OutputForm
+      ++ etaRelation(cis, bas, fmt, v, c, e, sspec) returns the
+      ++ eta-relation part multiplied by c*q^e*etaQuotient(sspec).
 
-    pretty: (%, Z, Z -> OutputForm, C, Q, List Z) -> OutputForm
-      ++ pretty(x, fmt, v, c, e, r) outputs x as computed in
-      ++ eta-quotients, but multiplied by c*q^e*etaQuotient(nn,r) where
-      ++ nn=level(x).
+    pretty: (%, Z, (Z, Z) -> OF, C, Q, SPEC) -> OutputForm
+      ++ pretty(x, fmt, v, c, e, sspec) outputs x as computed in
+      ++ eta-quotients, but multiplied by c*q^e*etaQuotient(sspec).
 
-    pretty: (%, Z, Z -> OutputForm) -> OutputForm
+    pretty: (%, Z, (Z, Z) -> OutputForm) -> OutputForm
       ++ pretty(x, fmt, v) outputs x as computed with respect to a
       ++ style given by the fmt parameter. If the lowest bit is set
       ++ in fmt then, the q factor is shown. If the bit 1 is
@@ -322,26 +326,25 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     sumX: (BasicOperator, Symbol, P, N) -> EX
     orbitProductX: % -> EX
-    monomialX: (List Symbol, List Z) -> Pol C
-    monomialQuotientX: (List Symbol, List Z) -> Fraction Pol C
-    etaQuotientX: (P, List Z, String) -> Fraction Pol C
+    monomialX: (SPEC, Symbol) -> Pol C
+    monomialQuotientX: (SPEC, Symbol) -> Fraction Pol C
+    etaQuotientX: (SPEC, Symbol) -> Fraction Pol C
     cofactorX: % -> Fraction Pol C
     qcofactorX:% -> Fraction Pol C
 
   Implementation ==> add
-    Rep ==> Record(fnn: P,_
-                   fs: List Z,_
-                   fmm: P,_
-                   fr: List Z,_
+    Rep ==> Record(fsspec: SPEC,_
+                   frspec: SPEC,_
                    fmultiplier: P,_
-                   foffset: N,_
-                   frgens: List List Z,_
+                   forbit: List N,_
+                   fbasis: SPECS,_
                    fpol: Pol C,_
                    fcf: C,_
                    fcis: List SUP C)
 
     xx ==> rep x
 
+    -- local for the implementation of "identity"
     pol2sup(pol: Pol C, sym: Symbol): SUP C ==
         z: SUP C := 0
         for m in reverse monomials pol repeat
@@ -349,11 +352,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             z := mon + z
         z
 
-    identity(nn: P, s: List Z, mm: P, r: List Z, m: P, t: N, _
-             rgens: List List Z, pol: Pol C): % ==
+    -- constructor
+    identity(sspec: SPEC, rspec: SPEC, m: P, orb: List N, _
+             rspecs: SPECS, pol: Pol C): % ==
 
         fsym: Symbol := "F"::Symbol
-        msyms: List Symbol := indexedSymbols("M", #rgens)$QAuxiliaryTools
+        msyms: List Symbol := indexedSymbols("M", #rspecs)$QAuxiliaryTools
 
         cf: C := ground coefficient(pol, fsym, 1)
         modrel: Pol C := coefficient(pol, fsym, 0)
@@ -365,55 +369,54 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         tsym: Symbol := first msyms
         rel: List SUP C := [pol2sup(c, tsym) for c in cis]
 
-        per [nn, s, mm, r, m, t, rgens, pol, cf, rel]
+        per [sspec, rspec, m, orb, rspecs, pol, cf, rel]
 
-    level(x: %): P == xx.fnn
-    definingLevel(x: %): P == xx.fmm
-    definingExponents(x: %): List Z == xx.fr
-    coExponents(x: %): List Z == xx.fs
+    -- accessor functions
+    coSpecification(x: %): SPEC == xx.fsspec
+    definingSpecification(x: %): SPEC == xx.frspec
     multiplier(x: %): P == xx.fmultiplier
-    offset(x: %): N == xx.foffset
+    orbit(x: %): List N == xx.forbit
+    basisSpecifications(x: %): SPECS == xx.fbasis
+    identityPolynomial(x: %): Pol C == xx.fpol
     coefficient(x: %): C == xx.fcf
     moduleCoefficients(x: %): List SUP C == xx.fcis
-    etaQuotientMonoidExponentVectors(x: %): List List Z == xx.frgens
-    identityPolynomial(x: %): Pol C == xx.fpol
 
+    -- auxiliary stuff
     alphaInfinity(x: %): Z ==
         m: P := multiplier x
-        k: N := offset x
-        mm: P := definingLevel x
-        s: List Z := definingExponents x
-        alphaInfinity(level x, coExponents x, mm, s, m, k)$QEtaCofactorSpace
+        orb: List N := orbit x
+        rspec: SPEC := definingSpecification x
+        alphaInfinity(coSpecification x, rspec, m, orb)$QEtaCofactorSpace
 
+    -- local
+    -- exponent without the cofactor
     alphaEtaInfinity(x: %): Q ==
-        rhat: Z := sigmaInfinity(level x, coExponents x)$QETAAUX
-        alphaInfinity(x)::Q - rhat/24
+        sbarhat: Q := sigmaInfinity coSpecification x
+        alphaInfinity(x)::Q - (1/24)*sbarhat
 
-    orbit(x: %): List N == orbit(definingLevel x, definingExponents x,
-                                 multiplier x, offset x)$QEtaCofactorSpace
-
+    -- output stuff
     oeq(x, y) ==> ((concat(x,"(x)")$String)::Symbol::OF) = (y::OF)
     coerce(x: %): OutputForm ==
-        lvl: OF := oeq("level", level x)
-        deflvl: OF := oeq("definingLevel", definingLevel x)
-        defex: OF := oeq("definingExponents", definingExponents x)
-        coex: OF := oeq("coExponents", coExponents x)
+        cospec: OF := oeq("coSpecification", coSpecification x)
+        defspec: OF := oeq("definingSpecification", definingSpecification x)
         m: OF := oeq("multiplier", multiplier x)
         orb: OF := oeq("orbit", orbit x)
-        cf: OF := oeq("coefficient", coefficient x)
-        alpha: OF := oeq("alphaInfinity", alphaInfinity x)
-        rgens: OF :=  oeq("etaQuotientMonoidExponentVectors",
-                          etaQuotientMonoidExponentVectors x)
+        bas: OF :=  oeq("basis", basisSpecifications x)
         idpol: OF := oeq("identityPolynomial", identityPolynomial x)
-        vconcat [lvl, coex, deflvl, defex, m, orb, cf, alpha, rgens, idpol]
+        cf: OF := oeq("coefficient", coefficient x)
+        alpha: OF := oeq("alpha", alphaInfinity x)
+        vconcat [cospec, defspec, m, orb, bas, idpol, cf, alpha]
 
+    -- local
+    -- sum_{n=0}^\infty a(mn+t) q^n
     sum(a: OF, n: OF, m: P, t: N): OF ==
         out: OF := m::OF * n
         if not zero? t then out := out + t::OF
         q: OF := "q"::Symbol::OF
         out := prefix(a, [out]) -- builds a(m*n+t)
-        sum(out*q^n, n=0::OF, "infinity"::Symbol::OF)
+        sum(out*q^n, n=0::OF, "%Infinity"::Symbol::OF)
 
+    -- \prod_{k\in orb} {sum_{n=0}^\infty a(mn+k) q^n
     orbitProduct(x: %): OF ==
         n: OF := "n"::Symbol::OF
         a: OF := "a"::Symbol::OF
@@ -425,53 +428,71 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
 -------------------------------------------------------------------
 
-    var(sy: Symbol): Z -> OF == (d: Z): OF +->
-        concat(string sy, convert(d)@String)::Symbol::OF
+    -- generalized case
+    var(sy: Symbol): (Z, Z) -> OF == (d: Z, g: Z): OF +->
+        s: String := concat(string sy, convert(d)@String)
+        g = -1 => s::Symbol::OF
+        concat([s, "__", convert(g)@String])::Symbol::OF
 
-    varsub(sy: Symbol): Z -> OF == (d: Z): OF +-> sub(sy::OF, d::OF)$OF
+    varsub(sy: Symbol): (Z, Z) -> OF == (d: Z, g: Z): OF +->
+        g = -1 => sub(sy::OF, d::OF)$OF
+        sub(sy::OF, commaSeparate[d::OF,g::OF])$OF
 
-    varEta(d: Z): OF ==
+    varEta(d: Z, g: Z): OF ==
         tau := "τ"::Symbol::OF
         eta := "η"::Symbol::OF
-        one? d => prefix(eta, [tau])$OF
-        prefix(eta, [(d::OF)*tau])$OF
+        g = -1 =>
+            one? d => prefix(eta, [tau]$List(OF))$OF
+            prefix(eta, [(d::OF)*tau])$OF
+        prefix(sub(eta, commaSeparate[d::OF,g::OF])$OF, [tau])$OF
 
-    varPochhammer(d: Z): OF ==
+    varPochhammer(d: Z, g: Z): OF ==
         q := "q"::Symbol::OF
-        one? d => sub(paren([q, q]$List(OF)), "%Infinity"::Symbol::OF)
-        l := [q^(d::OF), q^(d::OF)]$List(OF)
-        sub(paren l, "%Infinity"::Symbol::OF)
+        g = -1 =>
+            one? d => sub(paren([q, q]$List(OF)), "%Infinity"::Symbol::OF)
+            l := semicolonSeparate[q^(d::OF), q^(d::OF)]$List(OF)
+            sub(paren l, "%Infinity"::Symbol::OF)
+        o := commaSeparate([q^(g::OF), q^((d-g)::OF)]$List(OF))
+        o := semicolonSeparate[o, q^(d::OF)]
+        sub(paren o, "%Infinity"::Symbol::OF)
 
-    varPower(d: Z, rd: Z, v: Z -> OF): OF ==
+    varPower(d: Z, g: Z, rd: Z, v: (Z, Z) -> OF): OF ==
         --assert(not zero? rd)
-        one? rd => v(d)
-        v(d)^(rd::OF)
+        one? rd => v(d, g)
+        v(d, g)^(rd::OF)
 
-    monomial(divs: List Z, r: List Z, v: Z -> OF): OF ==
-        zero?(vector(r)$Vector(Z)) => (1$Z)::OF
-        l := [varPower(d,rd,v) for d in divs for rd in r|not zero? rd]$List(OF)
+    monomial(rspec: SPEC, v: (Z, Z) -> OF): OF ==
+        r: LLZ := purePart rspec
+        rtilde: LLZ := properGeneralizedPart rspec
+        empty? rspec => (1$Z)::OF
+        l: List OF := [varPower(x.1, x.2, x.3, v) for x in rtilde]
+        for x in reverse r repeat l := cons(varPower(x.1, -1, x.2, v), l)
         reduce(_*, l)$List(OF)
 
-    monomialQuotient(divs: List Z, r: List Z, v: Z -> OF): OF ==
-        num: OF := monomial(divs, [max(0,  rd) for rd in r], v)
-        neg: List Z := [max(0, -rd) for rd in r]
-        zero?(vector(neg)$Vector(Z)) => num
-        num / monomial(divs, neg, v)
+    monomialQuotient(rspec: SPEC, v: (Z, Z) -> OF): OF ==
+        rbar := concat(purePart rspec, properGeneralizedPart rspec)
+        rbarpos := [x for x in rbar | last x > 0]
+        rbarneg := [reverse! cons(-t, rest z)
+                    for x in rbar | (z := reverse x; t := first z; t < 0)]
+        mm: P := level rspec
+        num: OF := monomial(generalizedEtaQuotientSpecification(mm, rbarpos), v)
+        empty? rbarneg => num
+        num / monomial(generalizedEtaQuotientSpecification(mm, rbarneg), v)
 
-    etaQuotient(mm: P, r: List Z, v: Z -> OF): OF ==
-        divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
-        monomialQuotient(divs, r, v)
+    etaQuotient(rspec: SPEC, v: (Z, Z) -> OF): OF ==
+        monomialQuotient(rspec, v)
 
-    qQuotient(mm: P, r: List Z, v: Z -> OF, e: Q): OF ==
-        eq := etaQuotient(mm, r, v)
+    qQuotient(rspec: SPEC, v: (Z, Z) -> OF, e: Q): OF ==
+        eq := etaQuotient(rspec, v)
         zero? e => eq
         q: OF := "q"::Symbol::OF
         one? e => q * eq
         q^(e::OF) * eq
 
-    qEtaQuotient(n: P, r: List Z, v: Z -> OF): OF ==
-        e := (sigmaInfinity(n, r)$QETAAUX)/24
-        qQuotient(n, r, v, e)
+    qEtaQuotient(rspec: SPEC, v: (Z, Z) -> OF): OF ==
+        qQuotient(rspec, v, (1/24)*sigmaInfinity(rspec))
+
+
 
 -------------------------------------------------------------------
     -- local function
@@ -481,28 +502,47 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     asExpression?(fmt: Z): Boolean == bit?(fmt, 3)
     varsubscript?(fmt: Z): Boolean == bit?(fmt, 4)
 
-    plus(la: List Z, lb: List Z): List Z == [a + b for a in la for b in lb]
-    times(z: Z, r: List Z): List Z == [z*rd for rd in r]
+    -- local
+    plus(a: SPEC, b: SPEC): SPEC ==
+        nn: P := asP lcm(level a, level b)
+        h: XHashTable(Z, Z) := empty()
+        for l in purePart a repeat h(nn*l.1) := l.2
+        for l in purePart b repeat h(nn*l.1) := l.2 + elt(h, nn*l.1, 0)
+        for l in properGeneralizedPart a repeat h(nn*l.1 + l.2) := l.3
+        for l in properGeneralizedPart b repeat
+            n: Z := nn*l.1 + l.2
+            h.n := l.3 + elt(h, n, 0)
+        rbar: LLZ := empty()
+        for k in keys h repeat
+            e: Z := h.k
+            g: Z := positiveRemainder(k, nn)
+            d: Z := numer((k-g)/nn) -- assert(denom=1)
+            zero? g => rbar := cons([d, h.k], rbar) -- pure part
+            cons([d, g, h.k], rbar) -- rtilde part
+        generalizedEtaQuotientSpecification(nn, rbar)
 
-    zeroExponents(nn: P): List Z ==
-        n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
-        [0 for i in 1..n]
+    -- local
+    times(z: Z, rspec: SPEC): SPEC ==
+        rpure := [[x.1, z*x.2] for x in purePart rspec]
+        rtilde := [[x.1, x.2, z*x.3] for x in properGeneralizedPart rspec]
+        generalizedEtaQuotientSpecification(level rspec, concat(rpure,rtilde))
 
-    -- replace first exponent vector by 0 (basis of the module)
-    basis(x: %): List List Z ==
-        rgens: List List Z := etaQuotientMonoidExponentVectors x
-        cons([0 for rd in first rgens], rest rgens)
+    -- local
+    -- replace first element 1 (basis of the module)
+    moduleBasis(x: %): SPECS ==
+        bas: SPECS := basisSpecifications x
+        mm: P := level first bas
+        cons(generalizedEtaQuotientSpecification(mm, empty()), rest bas)
 
 -------------------------------------------------------------------
 
-    f(x: %, fmt: Z, v: Z -> OF, c: C, e: Q, r: List Z): OF ==
+    f(x: %, fmt: Z, v: (Z, Z) -> OF, c: C, e: Q, rspec: SPEC): OF ==
         e := e + alphaEtaInfinity x
-        r := plus(r, coExponents x)
-        if withQFactor? fmt then
-            e: Q := e + (sigmaInfinity(level x, r)$QETAAUX)/24
-        cofact: OF := qQuotient(level x, r, v, e)
+        rspec := plus(rspec, coSpecification x)
+        if withQFactor? fmt then e: Q := e + (1/24)*sigmaInfinity(rspec)
+        cofact: OF := qQuotient(rspec, v, e)
         out: OF := orbitProduct x
-        if not(zero? e and every?(zero?, r)) then out := cofact * out
+        if not(zero? e and empty? rspec) then out := cofact * out
         cf: C := c * coefficient x
         one? cf => out
         one?(-cf) => - out
@@ -510,20 +550,19 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
 -------------------------------------------------------------------
 
-    etaRelationMonomial(nn: P, c: SUP C, r: List Z,
-                        fmt: Z, v: Z -> OF, e: Q): OF ==
+    etaRelationMonomial(c: SUP C, rspec: SPEC,
+                        fmt: Z, v: (Z, Z) -> OF, e: Q): OF ==
         pol: OF := outputForm(c, "t"::Symbol::OF)
-        if withQFactor? fmt then
-            e := e + (sigmaInfinity(nn, r)$QETAAUX)/24
-        eq: OF := qQuotient(nn, r, v, e)
+        if withQFactor? fmt then e := e + (1/24)*sigmaInfinity(rspec)
+        eq: OF := qQuotient(rspec, v, e)
         one? c => eq
-        zero?(vector(r)$Vector(Z)) => pol
+        empty? rspec => pol
         pol * eq
 
-    etaRelation(nn: P, cis: List SUP C, rgens: List List Z,
-                fmt: Z, v: Z -> OF, c: C, e: Q, r: List Z): OF ==
-        l := [etaRelationMonomial(nn, c*ci, plus(r, rr), fmt, v, e)
-              for ci in cis for rr in rgens | not zero? ci]
+    etaRelation(cis: List SUP C, bspecs: SPECS,
+                fmt: Z, v: (Z, Z) -> OF, c: C, e: Q, sspec: SPEC): OF ==
+        l := [etaRelationMonomial(c*ci, plus(bspec, sspec), fmt, v, e)
+              for ci in cis for bspec in bspecs | not zero? ci]
         empty? l => (0$Z)::OF
         reduce(_+, l)
 
@@ -532,31 +571,31 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- fmt is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
     -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
-    pretty(x: %, fmt: Z, v: Z -> OF, cf: C, e: Q, r: List Z): OF ==
+    pretty(x: %, fmt: Z, v: (Z, Z) -> OF, cf: C, e: Q, sspec: SPEC): OF ==
         cis: List SUP C := moduleCoefficients x
-        bas: List List Z := basis x
+        bas: SPECS := moduleBasis x
         if expand? fmt then
-            t: List Z := first etaQuotientMonoidExponentVectors x
+            t: SPEC := first basisSpecifications x
             lots: List List Record(k: N, c: C) := [listOfTerms ci for ci in cis]
             --assert(#bas=#cis)
             --assert(#bas=#lots)
             cis := concat [[(rec.c)::SUP(C) for rec in lot] for lot in lots]
             bas := concat [[plus(times(rec.k, t), b) for rec in lot]
                            for lot in lots for b in bas]
-        er: OF := etaRelation(level x, cis, bas, fmt, v, cf, e, r)
-        (f(x, fmt, v, cf, e, r) = er)$OF
+        er: OF := etaRelation(cis, bas, fmt, v, cf, e, sspec)
+        (f(x, fmt, v, cf, e, sspec) = er)$OF
 
     -- format is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
     -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
     -- bit 2: 0 = modular function identity, 1 = only orbit product on LHS
-    pretty(x: %, fmt: Z, v: Z -> OF): OF ==
+    pretty(x: %, fmt: Z, v: (Z, Z) -> OF): OF ==
         modularFunctionIdentity? fmt =>
-            pretty(x, fmt, v, 1, 0, zeroExponents level x)
+            pretty(x, fmt, v, 1, 0, etaQuotientSpecification(1,[]))
         invcf: Union(C, "failed") := 1$C exquo coefficient(x)
         icf: C := if invcf case "failed" then 1$C else invcf::C
-        r: List Z := [- rd for rd in coExponents x]
-        pretty(x, fmt, v, icf, - alphaEtaInfinity x, r)
+        sspec: SPEC := times(-1, coSpecification x)
+        pretty(x, fmt, v, icf, - alphaEtaInfinity x, sspec)
 
     -- format is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
@@ -565,12 +604,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- bit 3: 0 = variables, 1 = expression
     -- bit 4: 0 = normal indexed variables, 1 = subscripted variables
     pretty(x: %, fmt: Z): OF ==
-        v: Z -> OF :=
+        v: (Z, Z) -> OF :=
             withQFactor? fmt =>
-                asExpression? fmt => varPochhammer@(Z->OF)
+                asExpression? fmt => varPochhammer @ ((Z,Z)->OF)
                 varsubscript? fmt => varsub("u"::Symbol)
                 var("u"::Symbol)
-            asExpression? fmt => varEta@(Z->OF)
+            asExpression? fmt => varEta @ ((Z,Z)->OF)
             varsubscript? fmt => varsub("E"::Symbol)
             var("E"::Symbol)
         pretty(x, fmt, v)
@@ -593,31 +632,44 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         for k in rest orb repeat ex := ex * sumX(a, n, multiplier x, k)
         ex
 
-    monomialX(vars: List Symbol, r: List Z): Pol C ==
-        l: List Pol C := [(v::Pol(C))^(rd::N) for v in vars for rd in r]
-        reduce(_*, l, 1)
+    -- local
+    sub(v: Symbol, d: Z, g: Z): Symbol ==
+        g = -1 => subscript(v, [d::OF]$List(OF))
+        subscript(v, [d::OF, g::OF]$List(OF))
 
-    monomialQuotientX(vars: List Symbol, r: List Z): Fraction Pol C ==
-        num: Pol C := monomialX(vars, [max(0,  rd) for rd in r])
-        neg: List Z := [max(0, -rd) for rd in r]
-        den: Pol C := monomialX(vars, neg)
-        num / den
+    -- local
+    vPower(v: Symbol, d: Z, g: Z, e: N): Pol C == (sub(v, d, g)::Pol(C))^e
 
-    etaQuotientX(n: P, r: List Z, var: String): Fraction Pol C ==
-        divs: List Z := divisors(n)$IntegerNumberTheoryFunctions
-        vsyms: List Symbol := indexedSymbols(var, divs)$QAuxiliaryTools
-        monomialQuotientX(vsyms, r)
+    monomialX(rspec: SPEC, v: Symbol): Pol C ==
+        r: LLZ := purePart rspec
+        rtilde: LLZ := properGeneralizedPart rspec
+        empty? rspec => 1$Pol(C)
+        l: List Pol C := [vPower(v, x.1, x.2, (x.3)::N) for x in rtilde]
+        for x in reverse r repeat l := cons(vPower(v, x.1, -1, (x.2)::N), l)
+        reduce(_*, l)
+
+    monomialQuotientX(rspec: SPEC, v: Symbol): Fraction Pol C ==
+        rbar := concat(purePart rspec, properGeneralizedPart rspec)
+        rbarpos := [x for x in rbar | last x > 0]
+        rbarneg := [reverse! cons(-t, rest z)
+                    for x in rbar | (z := reverse x; t := first z; t < 0)]
+        mm: P := level rspec
+        rspecpos: SPEC := generalizedEtaQuotientSpecification(mm, rbarpos)
+        rspecneg: SPEC := generalizedEtaQuotientSpecification(mm, rbarneg)
+        monomialX(rspecpos, v) / monomialX(rspecneg, v)
+
+    etaQuotientX(rspec: SPEC, v: Symbol): Fraction Pol C ==
+        monomialQuotientX(rspec, v)
 
     cofactorX(x: %): Fraction Pol C ==
-        nn: P := level x
-        eq: Fraction Pol C := etaQuotientX(nn, coExponents x, "E")
+        eq: Fraction Pol C := etaQuotientX(coSpecification x, "E"::Symbol)
         e: Z := numer(24*alphaEtaInfinity(x))
         zero? e => eq
         xvar: Fraction Pol(C) := "x"::Symbol::Pol(C)::Fraction(Pol C)
         xvar^e * eq
 
     qcofactorX(x: %): Fraction Pol C ==
-        eq: Fraction Pol C := etaQuotientX(level x, coExponents x, "u")
+        eq: Fraction Pol C := etaQuotientX(coSpecification x, "u"::Symbol)
         alpha: Z := alphaInfinity x
         zero? alpha => eq
         q: Fraction Pol(C) := "q"::Symbol::Pol(C)::Fraction(Pol C)
@@ -654,34 +706,35 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain
   IDENTITY ==> QEtaRamanujanKolbergIdentity C
   Exports ==> with
-    findIdentity: (P, List Z, P, List Z, P, N, List List Z) -> IDENTITY
-      ++ findIdentity(nn, s, mm, r, m, k, rgens) returns all data for a
+    findIdentity: (SPEC, SPEC, P, N, SPECS) -> IDENTITY
+      ++ findIdentity(sspec, rspec, m, k, bspecs) returns all data for
+      ++ a Ramanujan-Kolberg identity.
+    findIdentity: (SPEC, SPEC, P, N) -> IDENTITY
+      ++ findIdentity(sspec, rspec, m, k) returns all data for a
       ++ Ramanujan-Kolberg identity.
-    findIdentity: (P, List Z, P, List Z, P, N) -> IDENTITY
-      ++ findIdentity(nn, s, mm, r, m, k) returns all data for a
+    findIdentity: (P, SPEC, P, N, SPECS) -> IDENTITY
+      ++ findIdentity(nn, rspec, m, k, bgens) returns all data for a
       ++ Ramanujan-Kolberg identity.
-    findIdentity: (P, P, List Z, P, N, List List Z) -> IDENTITY
-      ++ findIdentity(nn, mm, r, m, k, rgens) returns all data for a
-      ++ Ramanujan-Kolberg identity.
-    findIdentity: (P, P, List Z, P, N) -> IDENTITY
-      ++ findIdentity(nn, mm, r, m, k) returns all data for a
+    findIdentity: (P, SPEC, P, N) -> IDENTITY
+      ++ findIdentity(nn, rspec, m, k) returns all data for a
       ++ Ramanujan-Kolberg identity.
   Implementation ==> add
-    findIdentity(nn: P, s: List Z, mm: P, r: List Z, m: P, t: N,_
-                 rgens: List List Z): IDENTITY ==
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
+                 bspecs: SPECS): IDENTITY ==
         import from QEtaModularGamma0Infinity(C)
-        f: A1 C := modularEtaQuotientInfinity(nn, s, mm, r, m, t)
+
+        f: A1 C := modularEtaQuotientInfinity(sspec, rspec, m, t)
 
         -- For the following computation we attach a marker to the
         -- series.
         fsym: Symbol := "F"::Symbol
         xf: X1 C := toX1(C, f, fsym::Pol(C))
 
-        eqgens: List EQI(C) := [etaQuotient(nn, rv)$EQI(C) for rv in rgens]
-        egens: List A1(C) := [expansion(e)::A1(C) for e in eqgens]
+        SPECA1C spec ==> expansion(etaQuotient(spec)$EQI(C))::A1(C)
+        egens: List A1(C) := [SPECA1C bspec for bspec in bspecs]
 
         -- We attach some identifiers also to those eta-quotients.
-        msyms: List Symbol := indexedSymbols("M", #rgens)$QAuxiliaryTools
+        msyms: List Symbol := indexedSymbols("M", #bspecs)$QAuxiliaryTools
         xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms]
 
         -- Eventualle, we apply the samba algorithm to obtain an
@@ -695,27 +748,23 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
 
         -- If xz is non-zero, then no relation has been found.
-        not zero? xz => identity(nn, s, mm, r, m, t, rgens, 0$Pol(C))
+        orb: List N := orbit(rspec, m, t)$QEtaCofactorSpace
+        not zero? xz => identity(sspec, rspec, m, orb, bspecs, 0$Pol(C))
 
-        pol := second(xz)::Pol(C)
+        identity(sspec, rspec, m, orb, bspecs, second(xz)::Pol(C))
 
-        identity(nn, s, mm, r, m, t, rgens, pol)
-
-    findIdentity(nn: P, s: List Z, mm: P, r: List Z, m: P, t: N): IDENTITY ==
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N): IDENTITY ==
         -- We compute the basis for the modular eta-quotients of level nn.
-        rgens: List List Z := etaQuotientMonoidExponentVectors(nn)$QEQEV
-        findIdentity(nn, s, mm, r, m, t, rgens)
+        bspecs: SPECS := etaQuotientMonoidSpecifications(level sspec)$QES4TI2
+        findIdentity(sspec, rspec, m, t, bspecs)
 
-    findIdentity(nn: P, mm: P, r: List Z, m: P, t: N,
-                 rgens: List List Z): IDENTITY ==
-        import from QEtaModularGamma0
-        s: List Z := etaCofactorInfinity(nn, mm, r, m, t)
-        findIdentity(nn, s, mm, r, m, t, rgens)
+    findIdentity(nn: P, rspec: SPEC, m: P, t: N, bspecs: SPECS): IDENTITY ==
+        sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
+        findIdentity(sspec, rspec, m, t, bspecs)
 
-    findIdentity(nn: P, mm: P, r: List Z, m: P, t: N): IDENTITY ==
-        import from QEtaModularGamma0
-        s: List Z := etaCofactorInfinity(nn, mm, r, m, t)
-        findIdentity(nn, s, mm, r, m, t)
+    findIdentity(nn: P, rspec: SPEC, m: P, t: N): IDENTITY ==
+        sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
+        findIdentity(sspec, rspec, m, t)
 
 
 

@@ -134,9 +134,10 @@ QEtaModularGamma0: Exports == Implementation where
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
     etaCofactorInfinity: (P, SPEC, P, N) -> SPEC
-      ++ etaCofactorInfinity(nn,rspec,m,t) returns a list s such that
-      ++ modularGamma0?(nn,s,mm,r,m,t)$QEtaCofactorSpace and
-      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0EtaQuotient
+      ++ etaCofactorInfinity(nn,rspec,m,t) returns a specification
+      ++ sspec such that
+      ++ modularGamma0?(sspec,rspec,m,t)$QEtaCofactorSpace and
+      ++ etaQuotient(sspec,rspe,m,t)$SymbolicModularGamma0EtaQuotient
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
 
@@ -306,7 +307,6 @@ QEtaModularGamma0: Exports == Implementation where
         -- qetaGrade (big order) at infinity. So we compute the series
         -- expansion at infinity for each of the inhomogeneous
         -- solutions and take the minimal qetaGrade.
-        s: LZ := empty()
         adjustments := zresult.zinhom
         v: VZ := first adjustments
         sadjust:VZ := reduce(_+, [x*bb for x in members v for bb in b])
@@ -319,15 +319,18 @@ QEtaModularGamma0: Exports == Implementation where
         -- numbers n, alphaInfinity can be used to determine which of
         -- the possible inhomogeneous candidates gives a minimal
         -- grade. Note that grade = -order.
-        grd: Z := - alphaInfinity(nn, s, mm, r, m, t)$QEtaCofactorSpace
+        -- Since in the computation of alphaInfinity only the cofactor
+        -- part changes, it is sufficient if we try to maximize
+        -- sigmaInfinity(nn, s).
+        sinf: Z := sigmaInfinity(nn, s)$QETAAUX
         while not empty?(adjustments := rest adjustments) repeat
             v := first adjustments
-            sadjust:VZ := reduce(_+, [x*bb for x in members v for bb in b])
+            sadjust: VZ := reduce(_+, [x*bb for x in members v for bb in b])
             stest := members(sinitial - sadjust)
-            gi := - alphaInfinity(nn, stest, mm, r, m, t)$QEtaCofactorSpace
-            if gi < grd then
+            si := sigmaInfinity(nn, stest)$QETAAUX
+            if si > sinf then
                 s := stest
-                grd := gi
+                sinf := si
         return s
 
     etaCofactorInfinity(nn: P, mm: P, r: LZ, m: P, t: N): LZ ==
@@ -380,6 +383,10 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
   EQI C  ==> EtaQuotientInfinity C
   YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
   Exports ==> with
+    modularEtaQuotientInfinity: SPEC -> A1 C
+      ++ modularEtaQuotientInfinity(rspec) checks whether rspec
+      ++ specifices a Gamma_0-modular (pure) eta-quotient and returns
+      ++ (expansion(etaQuotient(rspec)$EQI(C))$EQI(C))::A1(C).
     modularEtaQuotientInfinity: (P, LZ, P, LZ, P, N) -> A1 C
       ++ modularEtaQuotientInfinity(nn, s, mm, r, m, t) returns
       ++ the series expansion of
@@ -399,6 +406,10 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
       ++ modularEtaQuotientInfinity(sspec, rspec, m, t) for sspec
       ++ equal to etaCofactorInfinity(nn, rspec, m, t).
   Implementation ==> add
+
+    modularEtaQuotientInfinity(rspec: SPEC): A1 C ==
+      (expansion(etaQuotient(rspec)$EQI(C))$EQI(C))::A1(C)
+
     -- generating series for a(m*n+t) with cofactor eta-quotient and
     -- the fractional q power where \sum_{k=0}^\infty a(k)q^k is
     -- defined by an eta-quotient with exponent vector r.
@@ -423,7 +434,9 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
 
         -- We have to multiply by some q-power to get the expansion of
         -- a modular function f.
-        alpha: Z := alphaInfinity(nn, s, mm, r, m, t)$QEtaCofactorSpace
+        sspec: SPEC := etaQuotientSpecification(nn, s)
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        alpha: Z := alphaInfinity(sspec, rspec, m, orb)$QEtaCofactorSpace
         laurent(alpha, tf)$A1(C)
 
     modularEtaQuotientInfinity(nn: P, mm: P, r: LZ, m: P, t: N): A1 C ==
@@ -484,23 +497,21 @@ QEtaModularGamma1: Exports == Implementation where
     qetaGrades: SymbolicModularGamma1GeneralizedEtaQuotient -> XHashTable(Cusp, Z)
       ++ qetaGrades(y) returns the qetaGrades of the modular
       ++ function corresponding to y.
-    qetaGrades: (P, List LZ, P, List LZ, P, N) -> XHashTable(Cusp, Z)
-      ++ qetaGrades(nn, sbar, mm, rbar, m, t) returns
+    qetaGrades: (SPEC, SPEC, P, N) -> XHashTable(Cusp, Z)
+      ++ qetaGrades(sspec, rspec, m, t) returns
       ++ qetaGrades(y) where
-      ++ y=etaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularSiftedEtaQuotient.
-    etaCofactorInfinity: (P, P, LLZ, P, N, LLZ) -> LLZ
-      ++ etaCofactorInfinity(nn,mm,rbar,m,t,idxs) returns a
-      ++ specification sbar such that
-      ++ sbar has only indices from idxs,
-      ++ modularGamma1?(nn,sbar,mm,rbar,m,t)$QEtaCofactorSpace and
-      ++ generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1SiftedEtaQuotient
+      ++ y=etaQuotient(sspec,rspec,m,t)$SymbolicModularSiftedEtaQuotient.
+    etaCofactorInfinity: (P, SPEC, P, N, LLZ) -> SPEC
+      ++ etaCofactorInfinity(nn,rspec,m,t,idxs) returns a
+      ++ specification sspec such that sspec has only indices from
+      ++ idxs, modularGamma1?(sspec,rspec,m,t)$QEtaCofactorSpace and
+      ++ generalizedEtaQuotient(sspec,rspec,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient
       ++ corresponds to a modular function with poles only at infinity
-      ++ and with smallest pole order.
-      ++ If idxs=[], then it is equivalent to the indices
-      ++ generalizedEtaFunctionIndices(nn).
-    etaCofactorInfinity: (P, P, LLZ, P, N) -> LLZ
-      ++ etaCofactorInfinity(nn,mm,rbar,m,t) returns
-      ++ etaCofactorInfinity(nn,mm,rbar,m,t,[])
+      ++ and with smallest pole order. If idxs=[], then it is
+      ++ equivalent to the indices generalizedEtaFunctionIndices(nn).
+    etaCofactorInfinity: (P, SPEC, P, N) -> SPEC
+      ++ etaCofactorInfinity(nn,rspec,m,t) returns
+      ++ etaCofactorInfinity(nn,rspec,m,t,[])
   Implementation ==> add
     LVZ ==> List VZ
     ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
@@ -524,9 +535,8 @@ QEtaModularGamma1: Exports == Implementation where
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
 
-    qetaGrades(nn: P, sbar: LLZ,
-               mm: P, rbar: LLZ, m: P, t: N): XHashTable(Cusp, Z) ==
-        y: YM1GEQ := generalizedEtaQuotient(nn, sbar, mm, rbar, m, t);
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): XHashTable(Cusp, Z) ==
+        y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t);
         qetaGrades y
 
 
@@ -537,14 +547,14 @@ QEtaModularGamma1: Exports == Implementation where
     -- qetaGrades involves the actual computation of the Laurent series
     -- expansion of the respective eta-quotient at all cusps. So we
     -- shouldn't have too high exponents.
-    minimizeGrades(nn: P, mm: P, rbar: LLZ, m: P, t: N,
+    minimizeGrades(nn: P, rspec: SPEC, m: P, t: N,
                    rinitial: VZ, b: LVZ, idxs: LLZ): LZ ==
         sinitial: VZ := minimizeVector(rinitial, b)$QEtaModularGamma0
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution rinitial.
         le := members sinitial -- exponents
-        sbar: LLZ := toGeneralizedEtaQuotientSpecification(idxs, le)$QETAAUX
-        g: XHashTable(Cusp, Z) := qetaGrades(nn, sbar, mm, rbar, m, t);
+        sspec: SPEC := generalizedEtaQuotientSpecification(nn, idxs, le)
+        g: XHashTable(Cusp, Z) := qetaGrades(sspec, rspec, m, t);
         -- Exclude order at the cusp infinity.
         cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA1 _
                              | not infinity? cusp]
@@ -552,28 +562,66 @@ QEtaModularGamma1: Exports == Implementation where
 
         -- For the vectors in the basis, we don't need to compute the
         -- series explicitly, since these vectors correspond to
-        -- modular eta quotients and thus we can use the matrixEtaOrder
-        -- to compute the order vectors.
-        rbas := [toGeneralizedEtaQuotientSpecification(nn, parts x) for x in b]
-        ybas: List YGEQ := [generalizedEtaQuotient(nn, r, cusps) for r in rbas]
+        -- modular (generalized) eta quotients and thus we can use the
+        -- matrixEtaOrder to compute the order vectors.
+        rspecs := [generalizedEtaQuotientSpecification(nn, idxs, members x)
+                   for x in b]
+        ybas: List YGEQ := [generalizedEtaQuotient(rspec, cusps)
+                            for rspec in rspecs]
         bas: LLZ := [qetaGrades y for y in ybas]
         mat: MZ := transpose matrix bas
         rels: VZ := vector [1 for x in 1..#cusps]
         zresult: ZRESULT := zsolve(mat, rels, vector rhs)$X4ti2
-        adjustment := members first zresult.zinhom
-        members(sinitial - reduce(_+, [x*bb for x in adjustment for bb in b]))
+        -- We are interested in the inhomogeneous solutions, since
+        -- they yield an adjustment such that the resulting cofactor
+        -- vector sbar leads to an element in M^\infty(nn) for the
+        -- generalizedEtaQuotient(sspec,rspec,m,t).
+        --
+        -- There can be several inhomogeneous solutions. Any of them
+        -- is fine, but we want the resulting series to be of a small
+        -- qetaGrade (big order) at infinity. So we compute the series
+        -- expansion at infinity for each of the inhomogeneous
+        -- solutions and take the minimal qetaGrade.
+        adjustments := zresult.zinhom
+        v: VZ := first adjustments
+        sadjust:VZ := reduce(_+, [x*bb for x in members v for bb in b])
+        s: LZ := members(sinitial - sadjust)
+        -- The order of the expansion at infinity of the modular
+        -- function given by (sspec, rspec, m, t) can be approximated
+        -- by alphabarInfinity. See its definition in QEtaCofactorSpace.
+        -- Even though it might not be the correct order since
+        -- a(m*n+t) can be zero for an initial segment of natural
+        -- numbers n, alphabarInfinity can be used to determine which of
+        -- the possible inhomogeneous candidates gives a minimal
+        -- grade. Note that grade = -order.
+        -- Since in the computation of alphabarInfinity only the cofactor
+        -- part changes, it is sufficient if we try to maximize
+        -- sigmaInfinity(sspec) where sspec is given through s via
+        -- sbar:=generalizedEtaQuotientSpecification(nn,idxs,s)
+        sspec: SPEC := generalizedEtaQuotientSpecification(nn, idxs, s)
+        sinf: Q := sigmaInfinity sspec
+        while not empty?(adjustments := rest adjustments) repeat
+            v := first adjustments
+            sadjust: VZ := reduce(_+, [x*bb for x in members v for bb in b])
+            stest := members(sinitial - sadjust)
+            sspec: SPEC := generalizedEtaQuotientSpecification(nn, idxs, stest)
+            si: Q := sigmaInfinity sspec
+            if si > sinf then
+                s := stest
+                sinf := si
+        return s
 
-    etaCofactorInfinity(nn: P, mm: P, rbar: LLZ, m: P, t: N, idxs: LLZ): LLZ ==
-        ecs: ECS := etaCofactorSpace1(nn, mm, rbar, m, t, idxs)$QEtaCofactorSpace
+    etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N, idxs: LLZ): SPEC ==
+        ecs: ECS := etaCofactorSpace1(nn, rspec, m, t, idxs)$QEtaCofactorSpace
         ecs.particular case "failed" =>
             error "etaCofactorInfinity: cannot find cofactor"
         sinitial: VZ := (ecs.particular)::VZ
-        idxs := ecs.indices
-        mg: LZ := minimizeGrades(nn, mm, rbar, m, t, sinitial, ecs.basis, idxs)
-        toGeneralizedEtaQuotientSpecification(idxs, mg)$QETAAUX
+        idxs := ecs.indices -- because idxs can be empty initially
+        mg: LZ := minimizeGrades(nn, rspec, m, t, sinitial, ecs.basis, idxs)
+        generalizedEtaQuotientSpecification(nn, idxs, mg)
 
-    etaCofactorInfinity(nn: P, mm: P, rbar: LLZ, m: P, t: N): LLZ ==
-        etaCofactorInfinity(nn, mm, rbar, m, t, [])
+    etaCofactorInfinity(nn: P, rspec, m: P, t: N): SPEC ==
+        etaCofactorInfinity(nn, rspec, m, t, [])
 
 
 

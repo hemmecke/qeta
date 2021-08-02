@@ -120,6 +120,10 @@ QEtaSpecification: Exports == Implementation where
       ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where d runs
       ++ over divs.
       ++ The two input lists are supposed to be of the same length.
+    etaQuotientSpecification: (LLZ) -> %
+      ++ etaQuotientSpecification(rbar) returns the specification for
+      ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where [d,rd]
+      ++ are the elements of rbar.
     generalizedEtaQuotientSpecification: (P, LLZ) -> %
       ++ generalizedEtaQuotientSpecification(mm, rbar) returns the
       ++ specification of a generalized eta-quotient given by a list
@@ -166,6 +170,11 @@ QEtaSpecification: Exports == Implementation where
       ++ eta-quotient that corresponds to pure eta-functions. Each
       ++ element of the result is a two-element list [d,e] that stands
       ++ for $\eta(d*\tau)^e$.
+
+    empty?: % -> Boolean
+      ++ empty?(x) returns true iff the (generalized) eta-quotient has
+      ++ in fact no entry, i.e., represents 1. It is the same as
+      ++ pure?(x) and empty?(pureExponents x).
 
     sigmaInfinity: % -> Q
       ++ sigmaInfinity(x) returns the value corresponding to
@@ -238,6 +247,11 @@ QEtaSpecification: Exports == Implementation where
         #divs < #r => error "exponent list longer than number of divisors"
         per [mm, divs, reverse! r, []]
 
+    etaQuotientSpecification(rpure: LLZ): % ==
+        rspec: % := generalizedEtaQuotientSpecification rpure
+        not pure? rspec => error "not a pure eta-quotient specification"
+        rspec
+
     generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
         hr: XHashTable(Z, Z) := table() -- to compute r
         rtilde: LLZ := empty() -- specify all generalized eta-quotients
@@ -258,7 +272,7 @@ QEtaSpecification: Exports == Implementation where
 
     generalizedEtaQuotientSpecification(rbar: LLZ): % ==
         empty? rbar => per [1, [1], [], []]
-        mm: P := asP lcm [(first l)::Z for l in rbar]
+        mm: P := asP lcm [first l for l in rbar]
         generalizedEtaQuotientSpecification(mm, rbar)
 
     generalizedEtaQuotientSpecification(mm: P, idxs: LLZ, le: LZ): % ==
@@ -293,6 +307,7 @@ QEtaSpecification: Exports == Implementation where
     pure?(x: %): Boolean == empty? properGeneralizedPart x
     purePart(x: %): LLZ ==
         [[d, e] for d in divisors x for e in pureExponents x | not zero? e]
+    empty?(x: %): Boolean == pure? x and empty? pureExponents x
 
     sigmaInfinity(x: %): Q ==
         import from QETAAUX
@@ -312,7 +327,7 @@ QEtaSpecification: Exports == Implementation where
     modularGamma0(x: %): Z ==
         not pure? x => error "specification is not for a pure eta-quotient"
         -- conditions in modularGamma1 are identical
-        z: Z := modularGamma1 x
+        z: Z := modularGamma1 x -- sic!
         not zero? z => z
         -- Test condition (4) or \eqref{eq:productsquare}
         c: Factored Z := 1

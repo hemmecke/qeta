@@ -383,9 +383,7 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
     HT ==> XHashTable(P, SymbolicEtaGamma)
       -- mapping delta to \eta_{\delta,m,\lambda}
     Rep ==> Record(
-              flevel: P,     -- level \Gamma_0(lev)
-              fdivs: LP,     -- all divisors of level that are given at creation
-              fexponents: LZ,-- the r vector
+              fspec: SPEC,   -- thes specification of the eta-quotient
               fmultiplier: P,-- the multiplier m
               flambda: N,    -- lambda \in 0..(m-1)
               fgamma: SL2Z,  -- gamma
@@ -399,12 +397,13 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
     yy ==> rep y
 
     -- local
-    etaquot(mm: P, divs: LP, r: LZ, m: P, lambda: N, gamma: SL2Z, eta: HT): % ==
+    etaquot(rspec: SPEC, m: P, lambda: N, gamma: SL2Z, eta: HT): % ==
         import from QETAAUX
         rat: Q := 1
         uexponent: Q := 0 -- unityExponent
         qexponent: Q := 0
-        for delta in divs for rdelta in r | not zero? rdelta repeat
+        r: LZ := pureExponents rspec
+        for delta in divisors rspec for rdelta in r | not zero? rdelta repeat
             e := eta(delta)
             rat := rat * rationalPrefactor(e)^rdelta
             rd := rdelta/24
@@ -414,27 +413,26 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
 
         -- Now make the numerator small.
         uexponent: Q := fractionalPart(uexponent)$QETAAUX
-
-        per [mm, divs, r, m, lambda, gamma,
-             eta, rat, uexponent, qexponent]
-
-    etaQuotient(mm: P, r: LZ, m: P, lambda: N, gamma: SL2Z): % ==
-        divs: LP := DIVISORS mm
-        eta: HT := empty()
-        -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
-        if gamma(2,1) < 0 then gamma := -gamma
-        for delta in divs repeat
-            eta.delta := eta(mm, delta, m, lambda, gamma)$SymbolicEtaGamma
-        etaquot(mm, divs, r, m, lambda, gamma, eta)
+        per [rspec, m, lambda, gamma, eta, rat, uexponent, qexponent]
 
     etaQuotient(rspec: SPEC, m: P, lambda: N, gamma: SL2Z): % ==
         not pure? rspec => error "specification is not for a pure eta-quotient"
-        etaQuotient(level rspec, pureExponents rspec, m, lambda, gamma)
+        eta: HT := empty()
+        -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
+        if gamma(2,1) < 0 then gamma := -gamma
+        mm: P := level rspec
+        for delta in divisors rspec repeat
+            eta.delta := eta(mm, delta, m, lambda, gamma)$SymbolicEtaGamma
+        etaquot(rspec, m, lambda, gamma, eta)
 
-    level(x: %): P == xx.flevel
-    divisors(x: %): LP == xx.fdivs
+    etaQuotient(mm: P, r: LZ, m: P, lambda: N, gamma: SL2Z): % ==
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        etaQuotient(rspec, m, lambda, gamma)
+
+    level(x: %): P == level(xx.fspec)
+    divisors(x: %): LP == divisors(xx.fspec)
     elt(x: %, delta: P): SymbolicEtaGamma == xx.feta.delta
-    exponents(x: %): LZ == xx.fexponents
+    exponents(x: %): LZ == pureExponents(xx.fspec)
     multiplier(x: %): P == xx.fmultiplier
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
@@ -445,18 +443,14 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
     hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fdivs)
-        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fspec)
         h := hashUpdate!(h, xx.fmultiplier)
         h := hashUpdate!(h, xx.flambda)
         h := hashUpdate!(h, xx.fgamma)
         h
 
     ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fdivs ~= yy.fdivs => false
-        xx.fexponents ~= yy.fexponents => false
+        xx.fspec ~= yy.fspec => false
         xx.fmultiplier ~= yy.fmultiplier => false
         xx.flambda ~= yy.flambda => false
         xx.fgamma = yy.fgamma
@@ -538,10 +532,10 @@ SymbolicEtaQuotientGamma: SetCategory with
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function
-      ++ $p_{r,m,t}(\gamma\tau)$ corresponding to x=etaQuotient(mm,
-      ++ divs, r, m, t, gamma) (neglecting the (c \tau+d)^* factor)
-      ++ lives in Q[w][[z]] where w is a n-th root of unity and z a
-      ++ fractional q power.
+      ++ $p_{r,m,t}(\gamma\tau)$ corresponding to
+      ++ x=etaQuotient(mm,divs,r,m,t,gamma) (neglecting the
+      ++ (c*\tau+d)^* factor) lives in Q[w][[z]] where w is a n-th
+      ++ root of unity and z a fractional q power.
     elt: (%, N) -> SymbolicEtaQuotientLambdaGamma
       ++ x.lambda returns the data corresponding to the respective
       ++ lambda.
@@ -580,15 +574,8 @@ SymbolicEtaQuotientGamma: SetCategory with
         asP minroot
 
     etaQuotient(mm: P, r: LZ, m: P, t: Z, gamma: SL2Z): % ==
-        rhat := sigmaInfinity(mm, r)$QETAAUX
-        uexponent: Q := fractionalPart(-(24*t + rhat)/(24*m))
-        y: SymbolicEtaQuotientLambdaGamma := etaQuotient(mm, r, m, 0, gamma)
-        minroot: Z := minRootOfUnity(y, uexponent)
-        eta: A := new(m, y) -- fill with dummy values
-        for lambda in 1..m-1 repeat -- can start with 1.
-            eta.lambda := y := etaQuotient(mm, r, m, lambda, gamma)
-            minroot := lcm(minroot, minRootOfUnity(y, uexponent))
-        per [eta, t, uexponent, asP minroot]
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        etaQuotient(rspec, m, t, gamma)
 
     etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
         etaQuotient(mm, r, 1, 0, gamma)
@@ -834,17 +821,9 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     yy ==> rep y
 
     etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
-        not modularGamma0?(nn, s, mm, r, m, t)$QEtaCofactorSpace =>
-            error "modular conditions are not fulfilled"
-        nndivs: LP := DIVISORS nn
-        mmdivs: LP := DIVISORS mm
-        coetaqg: SymbolicEtaQuotientGamma :=
-            etaQuotient(nn, s, 1, 0, gamma)
-        yeqopg: SymbolicEtaQuotientOrbitProductGamma :=
-            etaQuotient(mm, r, m, t, gamma)
-        minR1: P := minimalRootOfUnity coetaqg
-        minR2: P := minimalRootOfUnity yeqopg
-        per [coetaqg, yeqopg, asP lcm(minR1, minR2)]
+        sspec: SPEC := etaQuotientSpecification(nn, s)
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        etaQuotient(sspec, rspec, m, t, gamma)
 
     etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
         not modularGamma0?(sspec, rspec, m, t)$QEtaCofactorSpace =>
@@ -927,6 +906,21 @@ SymbolicEtaQuotient: SetCategory with
       ++ etaQuotient(mm, r, cusps(mm)$CongruenceSubgroupGamma0).
       ++ $r$ is indexed by the divisors of $mm$.
       ++ See \eqref{eq:g_r(tau)}.
+    etaQuotient: (SPEC, List Cusp) -> %
+      ++ etaQuotient(rspec, cusps) represents the expansion of
+      ++ g_r(\tau) at the given cusps a/c of Gamma0(mm)
+      ++ in terms of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
+      ++ gamma=cuspToMatrix(m, a/c).
+      ++ $r$ and $mm$ are given by rspec.
+      ++ See \eqref{eq:g_r(tau)}.
+    etaQuotient: SPEC -> %
+      ++ etaQuotient(rspec) represents the expansion of g_r(\tau) at
+      ++ all cusps a/c of Gamma0(mm) in terms of x = \exp(2 \pi i \tau/w)
+      ++ where w=width(m, c) and gamma=cuspToMatrix(mm, a/c).
+      ++ It is the same as
+      ++ etaQuotient(rspec, cusps(mm)$CongruenceSubgroupGamma0).
+      ++ $r$ and $mm$ are given by rspec.
+      ++ See \eqref{eq:g_r(tau)}.
     level: % -> P
       ++ If x=etaQuotient(mm, r) then level(x) returns the level of
       ++ the eta-quotient, i.e., level(x)=mm.
@@ -954,8 +948,7 @@ SymbolicEtaQuotient: SetCategory with
  == add
     HT ==> XHashTable(Cusp, SymbolicEtaQuotientGamma)
     Rep ==> Record(
-              flevel: P,     -- level \Gamma_0(level)
-              fexponents: LZ,-- the r vector
+              fspec: SPEC,
               fcusps: List Cusp,
               feta: HT,      -- mapping delta to \eta_\delta
               fminroot: P    -- minimal root of unity needed for coefficients
@@ -972,21 +965,25 @@ SymbolicEtaQuotient: SetCategory with
         numer xe
     qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
 
-    etaQuotient(mm: P, r: LZ, cusps: List Cusp): % ==
-        divs: LP := DIVISORS mm
+    etaQuotient(rspec: SPEC, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
+        mm: P := level rspec
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA0
-            y: SymbolicEtaQuotientGamma := etaQuotient(mm, r, gamma)
+            y: SymbolicEtaQuotientGamma := etaQuotient(rspec, gamma)
             h.cusp := y
             minroot := lcm(minroot, minimalRootOfUnity y)
-        per [mm, r, cusps, h, asP minroot]
+        per [rspec, cusps, h, asP minroot]
+    etaQuotient(rspec: SPEC): % ==
+        etaQuotient(rspec, cusps(level rspec)$GAMMA0)
+    etaQuotient(mm: P, r: LZ, cusps: List Cusp): % ==
+        etaQuotient(etaQuotientSpecification(mm, r),  cusps)
+    etaQuotient(mm: P, r: LZ): % ==
+        etaQuotient(mm, r, cusps(mm)$GAMMA0)
 
-    etaQuotient(mm: P, r: LZ): % == etaQuotient(mm, r, cusps(mm)$GAMMA0)
-
-    level(x: %): P == xx.flevel
-    exponents(x: %): LZ == xx.fexponents
+    level(x: %): P == level(xx.fspec)
+    exponents(x: %): LZ == pureExponents(xx.fspec)
     cusps(x: %): List Cusp == xx.fcusps
     elt(x: %, cusp: Cusp): SymbolicEtaQuotientGamma == xx.feta.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
@@ -994,13 +991,13 @@ SymbolicEtaQuotient: SetCategory with
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
     hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fspec)
+        h := hashUpdate!(h, xx.fcusps)
         h
 
     ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fexponents = yy.fexponents
+        xx.fspec ~= yy.fspec => false
+        xx.fcusps = yy.fcusps
 
 
 
@@ -1042,6 +1039,16 @@ it computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 ++ quotient expansions of $F_{s, r, m, t}(\gamma \tau)$ at all cusps
 ++ of $Gamma_0(N)$. See \eqref{eq:F_s-r-m-t(gamma*tau)}.
 SymbolicModularGamma0EtaQuotient: SetCategory with
+    etaQuotient: (SPEC, SPEC, P, N, List Cusp) -> %
+      ++ etaQuotient(sspec, rspec, m, t, cusps) represents the expansion
+      ++ of $F_{s,r,m,t}(\gamma \tau)$ for all gamma corresponding to
+      ++ the given cusps.
+      ++ $r$ and $s$ are given by rspec and sspec, repectively.
+    etaQuotient: (SPEC, SPEC, P, N) -> %
+      ++ etaQuotient(sspec, rspec, m, t) represents the expansion of
+      ++ $F_{r,s,m,t}(\gamma \tau)$ for all gamma corresponding to the
+      ++ cusps of $\Gamma_0(nn)$.
+      ++ $r$ and $s$ are given by rspec and sspec, repectively.
     etaQuotient: (P, LZ, P, LZ, P, N, List Cusp) -> %
       ++ etaQuotient(nn, s, mm, r, m, t, cusps) represents the expansion
       ++ of $F_{s,r,m,t}(\gamma \tau)$ for all gamma corresponding to
@@ -1055,6 +1062,12 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_0(nn).
+    multiplier: % -> P
+      ++ multiplier(x) returns the subsequence multiplier.
+      ++ Returns m.
+    offset: % -> N
+      ++ offset(x) returns the subsequence offset.
+      ++ Returns t.
     cusps: % -> List Cusp
       ++ cusps(x) either returns the value that was given to
       ++ etaQuotient at creation time or cusps(level
@@ -1069,7 +1082,10 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
     HT ==> XHashTable(Cusp, YM0EQG)
     Rep ==> Record(
-              flevel: P,  -- corresponds to Gamma_0(N)
+              fsspec: SPEC,
+              frspec: SPEC,
+              fmultiplier: P,-- the multiplier m
+              foffset: N,    -- the offset t \in 0..(m-1)
               fcusps: List Cusp, -- cusps of Gamma_0(N)
               fy: HT,     -- mapping gamma to YM0EQG
               fminroot: P -- minimal root of unity needed for the coefficients
@@ -1078,27 +1094,50 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, cusps: List Cusp): % ==
+    etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
+        nn: P := level sspec
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA0
-            e: YM0EQG := etaQuotient(nn, s, mm, r, m, t, gamma)
+            e: YM0EQG := etaQuotient(sspec, rspec, m, t, gamma)
             h.cusp := e
             minroot := lcm(minroot, minimalRootOfUnity e)
-        per [nn, cusps, h, asP minroot]
+        per [sspec, rspec, m, t, cusps, h, asP minroot]
+
+    etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
+        etaQuotient(sspec, rspec, m, t, cusps(level sspec)$GAMMA0)
+
+    etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, cusps: List Cusp): % ==
+        sspec: SPEC := etaQuotientSpecification(nn, s)
+        rspec: SPEC := etaQuotientSpecification(mm, r)
+        etaQuotient(sspec, rspec, m, t, cusps)
 
     etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): % ==
         etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
 
-    level(x: %): P == xx.flevel
+    level(x: %): P == level(xx.fsspec)
+    multiplier(x: %): P == xx.fmultiplier
+    offset(x: %): N == xx.foffset
     elt(x: %, cusp: Cusp): YM0EQG == xx.fy.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
     cusps(x: %): List Cusp == xx.fcusps
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
-    hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, xx.fy)
-    ((x: %) = (y: %)): Boolean == xx.fy = yy.fy
+    hashUpdate!(h: HashState, x: %): HashState ==
+        h := hashUpdate!(h, xx.fsspec)
+        h := hashUpdate!(h, xx.frspec)
+        h := hashUpdate!(h, xx.fmultiplier)
+        h := hashUpdate!(h, xx.foffset)
+        h := hashUpdate!(h, xx.fcusps)
+        h
+
+    ((x: %) = (y: %)): Boolean ==
+        xx.fsspec ~= yy.fsspec => false
+        xx.frspec ~= yy.frspec => false
+        xx.fmultiplier ~= yy.fmultiplier => false
+        xx.foffset ~= yy.foffset => false
+        xx.fcusps = yy.fcusps
 
 
 
@@ -1504,6 +1543,14 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
   YEQLG ==> SymbolicEtaQuotientLambdaGamma
   YPGEQLG ==> SymbolicProperGeneralizedEtaQuotientLambdaGamma
   Exports ==> SetCategory with
+    generalizedEtaQuotient: (SPEC, P, N, SL2Z) -> %
+      ++ generalizedEtaQuotient(rspec, m, lambda, gamma) represents
+      ++ the expansion of $g_{\bar{r},m,\lambda}(\gamma\tau)$. see
+      ++ \eqref{eq:g_rbar-m-lambda(gamma*tau)} where rbar is given by
+      ++ rspec.
+    generalizedEtaQuotient: (SPEC, SL2Z) -> %
+      ++ generalizedEtaQuotient(rspec, gamma) returns
+      ++ generalizedEtaQuotient(rspec, 1, 0, gamma).
     generalizedEtaQuotient: (P, LLZ, P, N, SL2Z) -> %
       ++ generalizedEtaQuotient(mm, rbar, m, lambda, gamma) represents
       ++ the expansion of $g_{\bar{r},m,\lambda}(\gamma\tau)$. see
@@ -1518,33 +1565,32 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
       ++ properGeneralizedEtaQuotient(x) returns the part of x that
       ++ corresponds to the proper generalized eta-quotient part of x.
     level: % -> P
-      ++ If x=generalizedEtaQuotient(nn,rbar,m,lambda,gamma), then
-      ++ level(x) returns nn.
-    exponents: % -> LLZ
-      ++ If x=generalizedEtaQuotient(nn,rbar,m,lambda,gamma), then
-      ++ exponents(x) returns rbar.
+      ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
+      ++ level(x) returns level(rspec).
+    specification: % -> SPEC
+      ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
+      ++ specification(x) returns rspec.
     multiplier: % -> P
-      ++ If x=generalizedEtaQuotient(nn,rbar,m,lambda,gamma), then
+      ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ multiplier(x) returns m.
     lambda: % -> N
-      ++ If x=generalizedEtaQuotient(nn,rbar,m,lambda,gamma), then
+      ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ lambda(x) returns lambda.
     gamma: % -> SL2Z
-      ++ If x=generalizedEtaQuotient(nn,rbar,m,lambda,gamma), then
+      ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ gamma(x) returns gamma.
     unityExponent: % -> Q
-      ++ If x=generalizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
+      ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ unityExponent(x) returns the sum of
       ++ unityExponent(pureEtaQuotient(x)) and
       ++ unityExponent(properGeneralizedEtaQuotient(x)).
     qExponent: % -> Q
-      ++ If x=generalizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
+      ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ qExponent(x) returns the sum of qExponent(pureEtaQuotient(x))
       ++ and qExponenbt(properGeneralizedEtaQuotient(x)).
   Implementation ==> add
     Rep ==> Record(
-              flevel: P,      -- level \Gamma_1(lev)
-              fexponents: LLZ,-- rbar
+              fspec: SPEC,
               fmultiplier: P, -- m
               flambda: N,     -- lambda
               fgamma: SL2Z,   -- gamma
@@ -1555,25 +1601,31 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
     xx ==> rep x
     yy ==> rep y
 
-    generalizedEtaQuotient(mm: P, rbar: LLZ, m: P, lambda: N, gamma: SL2Z): % ==
+    generalizedEtaQuotient(rspec: SPEC, m: P, lambda: N, gamma: SL2Z): % ==
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
-        rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-        r: LZ := rrec.pure
-        rtilde: LLZ := rrec.properGeneralized
+        r: LZ := pureExponents rspec
+        rtilde: LLZ := properGeneralizedPart rspec
+        mm: P := level rspec
         yeqlg := etaQuotient(mm, r, m, lambda, gamma)$YEQLG
         ypgeqlg := properGeneralizedEtaQuotient(
                      mm, rtilde, m, lambda, gamma)$YPGEQLG
-        per [mm, rbar, m, lambda, gamma, yeqlg, ypgeqlg]
+        per [rspec, m, lambda, gamma, yeqlg, ypgeqlg]
+
+    generalizedEtaQuotient(rspec: SPEC, gamma: SL2Z): % ==
+        generalizedEtaQuotient(rspec, 1, 0, gamma)
+
+    generalizedEtaQuotient(mm: P, rbar: LLZ, m: P, lambda: N, gamma: SL2Z): % ==
+        rspec: SPEC := generalizedEtaQuotientSpecification(mm, rbar)
+        generalizedEtaQuotient(rspec, m, lambda, gamma)
 
     generalizedEtaQuotient(nn: P, rbar: LLZ, gamma: SL2Z): % ==
         generalizedEtaQuotient(nn, rbar, 1, 0, gamma)
 
     pureEtaQuotient(x: %): YEQLG == xx.fpure
     properGeneralizedEtaQuotient(x: %): YPGEQLG == xx.fpropergeneralized
-    level(x: %): P == xx.flevel
-    exponents(x: %): LLZ == xx.fexponents
+    level(x: %): P == level(xx.fspec)
+    specification(x: %): SPEC == xx.fspec
     multiplier(x: %): P == xx.fmultiplier
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
@@ -1584,15 +1636,13 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
         qExponent pureEtaQuotient x + qExponent properGeneralizedEtaQuotient x
     coerce(x: %): OutputForm == xx::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fspec)
         h := hashUpdate!(h, xx.fmultiplier)
         h := hashUpdate!(h, xx.flambda)
         h := hashUpdate!(h, xx.fgamma)
         h
     ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fexponents ~= yy.fexponents => false
+        xx.fspec ~= yy.fspec => false
         xx.fmultiplier ~= yy.fmultiplier => false
         xx.flambda ~= yy.flambda => false
         xx.fgamma = yy.fgamma
@@ -1638,6 +1688,13 @@ blocks for $p_{\bar{r},m,t}(\gamma\tau)$.
 ++ quotient expansion of $p_{r,m,t}(\gamma \tau)$. See
 ++ \eqref{eq:p_rbar-m-t(gamma*tau)}.
 SymbolicGeneralizedEtaQuotientGamma: SetCategory with
+    generalizedEtaQuotient: (SPEC, P, Z, SL2Z) -> %
+      ++ etaQuotient(rspec, m, t, gamma) represents the expansion of
+      ++ $p_{\bar{r},m,t}(\gamma \tau)$ where rbar is given by rspec
+      ++ and specifies the exponents of the eta-quotient.
+    generalizedEtaQuotient: (SPEC, SL2Z) -> %
+      ++ generalizedEtaQuotient(rspec, gamma) returns
+      ++ generalizedEtaQuotient(rspec, 1, 0, gamma).
     generalizedEtaQuotient: (P, LLZ, P, Z, SL2Z) -> %
       ++ etaQuotient(mm, rbar, m, t, gamma) represents the expansion
       ++ of $p_{\bar{r},m,t}(\gamma \tau)$ where rbar specifies the
@@ -1646,31 +1703,33 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
       ++ generalizedEtaQuotient(mm, rbar, gamma) returns
       ++ generalizedEtaQuotient(mm, rbar, 1, 0, gamma).
     level: % -> P
-      ++ If x=generalizedEtaQuotient(mm,rbar,m,t,gamma), then level(x)
-      ++ returns mm.
-    exponents: % -> LLZ
-      ++ If x=generalizedEtaQuotient(mm,rbar,m,t,gamma), then
-      ++ exponents(x) returns rbar.
+      ++ If x=generalizedEtaQuotient(rspec,m,t,gamma), then level(x)
+      ++ returns level(rspec).
+    specification: % -> SPEC
+      ++ If x=generalizedEtaQuotient(rspec,m,t,gamma), then
+      ++ specification(x) returns rspec.
     multiplier: % -> P
-      ++ If x=generalizedEtaQuotient(mm,rbar,m,t,gamma), then
+      ++ If x=generalizedEtaQuotient(rspec,m,t,gamma), then
       ++ multiplier(x) returns m.
     offset: % -> Z
-      ++ If x=generalizedtaQuotient(mm,rbar,m,t,gamma), then offset(x)
+      ++ If x=generalizedtaQuotient(rspec,m,t,gamma), then offset(x)
       ++ returns t.
     gamma: % -> SL2Z
-      ++ If x=generalizedEtaQuotient(mm,rbar,m,t,g), then gamma(x)
+      ++ If x=generalizedEtaQuotient(rspec,m,t,g), then gamma(x)
       ++ returns g. gamma(x) returns the transformation corresponding
       ++ to x.
     unityExponent: % -> Q
-      ++ If x=generalizedEtaQuotient(mm,rbar,m,t,g), then
-      ++ unityExponent(x) returns -(24*t + \hat{\bar{r}})/(24*m).
+      ++ If x=generalizedEtaQuotient(rspec,m,t,g), then
+      ++ unityExponent(x) returns -(24*t + \hat{\bar{r}})/(24*m) where
+      ++ $\bar{r}$ is given through rspec.
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function
       ++ $p_{\bar{r},m,t}(\gamma\tau)$ corresponding to
-      ++ x=generalizedEtaQuotient(mm, rbar, m, t, gamma) (neglecting
-      ++ the (c \tau+d)^* factor) lives in Q[w][[z]] where w is a n-th
-      ++ root of unity and z a fractional q power.
+      ++ x=generalizedEtaQuotient(rspec, m, t, gamma) (neglecting the
+      ++ (c \tau+d)^* factor) lives in Q[w][[z]] where w is a n-th
+      ++ root of unity and z a fractional q power and rbar is given
+      ++ through rspec.
     elt: (%, N) -> SymbolicGeneralizedEtaQuotientLambdaGamma
       ++ x.lambda returns the data corresponding to the respective
       ++ lambda.
@@ -1746,29 +1805,31 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
 
         asP minroot
 
-    generalizedEtaQuotient(mm: P, rbar: LLZ, m: P, t: Z, gamma: SL2Z): % ==
-        y: YGEQLG := generalizedEtaQuotient(mm, rbar, m, 0, gamma)
+    generalizedEtaQuotient(rspec: SPEC, m: P, t: Z, gamma: SL2Z): % ==
+        y: YGEQLG := generalizedEtaQuotient(rspec, m, 0, gamma)
         eta: A := new(m, y) -- fill with dummy values
-
-        rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-        r: LZ := rrec.pure
-        rtilde: LLZ := rrec.properGeneralized
-        rbarhat: Q := sigmaInfinity(mm, r, rtilde)$QETAAUX
-        uexponent: Q := fractionalPart(-(24*t::Q + rbarhat)*(1/(24*m)))
+        rbarhat: Q := sigmaInfinity rspec
+        uexponent: Q := fractionalPart(-(24*t::Q + rbarhat)*(1/(24*m)))$QETAAUX
         minroot: Z := minRootOfUnity(y, uexponent)
         for lambda in 0..m-1 repeat -- can start with 1.
-            y :=  generalizedEtaQuotient(mm, rbar, m, lambda, gamma)
+            y :=  generalizedEtaQuotient(rspec, m, lambda, gamma)
             eta.lambda := y
             minroot := lcm(minroot, minRootOfUnity(y, uexponent))
         per [eta, t, uexponent, asP minroot]
+
+    generalizedEtaQuotient(mm: P, rbar: LLZ, m: P, t: Z, gamma: SL2Z): % ==
+        rspec: SPEC := generalizedEtaQuotientSpecification(mm, rbar)
+        generalizedEtaQuotient(rspec, m, t, gamma)
+
+    generalizedEtaQuotient(rspec: SPEC, gamma: SL2Z): % ==
+        generalizedEtaQuotient(rspec, 1, 0, gamma)
 
     generalizedEtaQuotient(mm: P, rbar: LLZ, gamma: SL2Z): % ==
         generalizedEtaQuotient(mm, rbar, 1, 0, gamma)
 
     elt(x: %, lambda: N): YGEQLG == rep(x).feta.lambda
     level(x: %): P == level(x.0)
-    exponents(x: %): LLZ == exponents(x.0)
+    specification(x: %): SPEC == specification(x.0)
     multiplier(x: %): P == multiplier(x.0)
     offset(x: %): Z == rep(x).foffset
     gamma(x: %): SL2Z == gamma(x.0)
@@ -1828,6 +1889,10 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
       ++ generalizedEtaQuotient(nn, sbar, mm, rbar, m, t, gamma)
       ++ represents the expansion of
       ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$.
+    generalizedEtaQuotient: (SPEC, SPEC, P, N, SL2Z) -> %
+      ++ generalizedEtaQuotient(spec, rspec, m, t, gamma) represents
+      ++ the expansion of $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ where
+      ++ \bar{s} and \bar{r} are given through sspec and rspec.
     cofactor: % -> SymbolicGeneralizedEtaQuotientGamma
       ++ cofactor(x) returns the cofactor part to make
       ++ $F_{\bar{s},\bar{r},m,t}$ a modular function for
@@ -1850,15 +1915,21 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N,
+    generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N,
                            gamma: SL2Z): % ==
-        not modularGamma1?(nn, sbar, mm, rbar, m, t)$QEtaCofactorSpace =>
+        not modularGamma1?(sspec, rspec, m, t)$QEtaCofactorSpace =>
             error "modular conditions are not fulfilled"
-        cofactor: YGEQG := generalizedEtaQuotient(nn, sbar, 1, 0, gamma)
-        basefactor: YGEQG := generalizedEtaQuotient(mm, rbar, m, t, gamma)
+        cofactor: YGEQG := generalizedEtaQuotient(sspec, 1, 0, gamma)
+        basefactor: YGEQG := generalizedEtaQuotient(rspec, m, t, gamma)
         minR1: P := minimalRootOfUnity cofactor
         minR2: P := minimalRootOfUnity basefactor
         per [cofactor, basefactor, asP lcm(minR1, minR2)]
+
+    generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N,
+                           gamma: SL2Z): % ==
+        sspec: SPEC := generalizedEtaQuotientSpecification(nn, sbar)
+        rspec: SPEC := generalizedEtaQuotientSpecification(mm, rbar)
+        generalizedEtaQuotient(sspec, rspec, m, t, gamma)
 
     cofactor(x: %): SymbolicGeneralizedEtaQuotientGamma == xx.fcofactor
     basefactor(x: %): SymbolicGeneralizedEtaQuotientGamma == xx.fbasefactor
@@ -1913,29 +1984,31 @@ we have \code{e.cusp} is the corresponding data from
 ++ generalized eta-quotient expansions of g_rr(\tau) at all cusps of
 ++ $\Gamma_1(N)$ or at the given cusps. See \eqref{g_rbar(tau)}
 SymbolicGeneralizedEtaQuotient: SetCategory with
-    generalizedEtaQuotient: (P, LLZ, List Cusp) -> %
-      ++ generalizedEtaQuotient(mm,rbar,cusps) represents the
+    generalizedEtaQuotient: (SPEC, List Cusp) -> %
+      ++ generalizedEtaQuotient(rspec,cusps) represents the
       ++ expansion of g_rbar(\tau) at the given cusps of
       ++ Gamma1(mm) in terms of $x = \exp(2 \pi i \tau/w)$ where
-      ++ w=width(m, cusp)$GAMMA1 and gamma=cuspToMatrix(m, cusp)$GAMMA1.
+      ++ w=width(mm,cusp)$GAMMA1 and gamma=cuspToMatrix(mm,cusp)$GAMMA1.
+      ++ mm and rbar are given through rspec, see QEtaSpecification.
       ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
-    generalizedEtaQuotient: (P, LLZ) -> %
-      ++ generalizedEtaQuotient(mm, rbar) represents the expansion of
+    generalizedEtaQuotient: SPEC -> %
+      ++ generalizedEtaQuotient(rspec) represents the expansion of
       ++ g_rbar(\tau) at all cusps of Gamma1(mm) in terms of
-      ++ $x = \exp(2 \pi i \tau/w)$ where w=width(m,cusp) and
-      ++ gamma=cuspToMatrix(mm, cusp). It is the same as
-      ++ generalizedEtaQuotient(mm,rbar,cusps(mm)$CongruenceSubgroupGamma1).
+      ++ $x = \exp(2 \pi i \tau/w)$ where w=width(mm,cusp) and
+      ++ gamma=cuspToMatrix(mm,cusp). It is the same as
+      ++ generalizedEtaQuotient(rspec,cusps(mm)$CongruenceSubgroupGamma1).
+      ++ mm and rbar are given through rspec, see QEtaSpecification.
       ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
     level: % -> P
-      ++ If x=generalizedEtaQuotient(nn,rbar) then level(x) returns nn.
-    exponents: % -> LLZ
-      ++ If x=generalizedEtaQuotient(mm, rbar) then exponents(x)
-      ++ returns the list rbar.
+      ++ If x=generalizedEtaQuotient(rspec) then level(x) returns nn.
+    specification: % -> SPEC
+      ++ If x=generalizedEtaQuotient(rspec) then specification(x)
+      ++ returns rspec.
     cusps: % -> List Cusp
-      ++ If x=generalizedEtaQuotient(mm, rbar, spitzen), then
+      ++ If x=generalizedEtaQuotient(rspec, spitzen), then
       ++ cusps(x)=spitzen.
     minimalRootOfUnity: % -> P
-      ++ If x=generalizedEtaQuotient(nn, rbar, cusps), then
+      ++ If x=generalizedEtaQuotient(rspec, cusps), then
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function g_rbar(\tau) at any
       ++ cusp of cusps (neglecting the (c\tau+d)^* factor lives in
@@ -1953,8 +2026,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
  == add
     HT ==> XHashTable(Cusp, SymbolicGeneralizedEtaQuotientGamma)
     Rep ==> Record(
-              flevel: P,
-              fexponents: LLZ,
+              fspec: SPEC,
               fcusps: List Cusp,
               feta: HT,   -- mapping delta to \eta_\delta
               fminroot: P -- minimal root of unity needed for coefficients
@@ -1971,35 +2043,34 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
         numer xe
     qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
 
-    generalizedEtaQuotient(mm: P, rbar: LLZ, cusps: List Cusp): % ==
+    generalizedEtaQuotient(rspec: SPEC, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
+        mm: P := level rspec
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA1
             import from SymbolicGeneralizedEtaQuotientGamma
-            y := generalizedEtaQuotient(mm, rbar, gamma)
+            y := generalizedEtaQuotient(rspec, gamma)
             h.cusp := y
             minroot := lcm(minroot, minimalRootOfUnity y)
-        per [mm, rbar, cusps, h, asP minroot]
+        per [rspec, cusps, h, asP minroot]
 
-    generalizedEtaQuotient(nn: P, rbar: LLZ): % ==
-        generalizedEtaQuotient(nn, rbar, cusps(nn)$GAMMA1)
+    generalizedEtaQuotient(rspec: SPEC): % ==
+        generalizedEtaQuotient(rspec, cusps(level rspec)$GAMMA1)
 
-    level(x: %): P == xx.flevel
-    exponents(x: %): LLZ == xx.fexponents
+    level(x: %): P == level(xx.fspec)
+    specification(x: %): SPEC == xx.fspec
     cusps(x: %): List Cusp == xx.fcusps
     elt(x: %, cusp: Cusp): SymbolicGeneralizedEtaQuotientGamma == xx.feta.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
 
     coerce(x: %): OutputForm == xx::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fspec)
         h := hashUpdate!(h, xx.fcusps)
         h
     ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fexponents ~= yy.fexponents => false
+        xx.fspec ~= yy.fspec => false
         xx.fcusps = yy.fcusps
 
 
@@ -2043,16 +2114,16 @@ $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
 $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$ at all cusps
 ++ of $Gamma_1(N)$. See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
 SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
-    generalizedEtaQuotient: (P, LLZ, P, LLZ, P, N, List Cusp) -> %
-      ++ generalizedEtaQuotient(nn,sbar,mm,rbar,m,t,cusps) represents
-      ++ the expansion of $F_{sbar,rbar,m,t}(\gamma \tau)$ for all gamma
-      ++ corresponding to the given cusps. $rbar$ and $sbar$ are indexed by
-      ++ the divisors of $mm$ and $nn$, repectively.
-    generalizedEtaQuotient: (P, LLZ, P, LLZ, P, N) -> %
-      ++ etaQuotient(nn,sbar,mm,rbar,m,t) represents the expansion of
+    generalizedEtaQuotient: (SPEC, SPEC, P, N, List Cusp) -> %
+      ++ generalizedEtaQuotient(sspec,rspec,m,t,cusps) represents the
+      ++ expansion of $F_{sbar,rbar,m,t}(\gamma \tau)$ for all gamma
+      ++ corresponding to the given cusps. $rbar$ and $sbar$ are given
+      ++ by rspec and sspec, repectively.
+    generalizedEtaQuotient: (SPEC, SPEC, P, N) -> %
+      ++ etaQuotient(sspec,rspec,m,t) represents the expansion of
       ++ $F_{rbar,sbar,m,t}(\gamma \tau)$ for all gamma corresponding
-      ++ to the cusps of $\Gamma_0(nn)$. $rbar$ and $sbar$ are indexed
-      ++ by the divisors of $mm$ and $nn$, repectively.
+      ++ to the cusps of $\Gamma_0(nn)$. $rbar$ and $sbar$ are given
+      ++ by rspec and sspec, respectively.
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_1(nn).
@@ -2071,8 +2142,8 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
     YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
     HT ==> XHashTable(Cusp, YM1GEQG)
     Rep ==> Record(
-              flevel: P,  -- corresponds to Gamma_0(N)
-              fcusps: List Cusp, -- cusps of Gamma_1(N)
+              flevel: P,  -- corresponds to Gamma_1(N)
+              fcusps: List Cusp, -- cusps of Gamma_1(N) or given cusps
               fy: HT,     -- mapping gamma to YM1GEQG
               fminroot: P -- minimal root of unity needed for the coefficients
             )
@@ -2080,19 +2151,20 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N,
+    generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N,
                            cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
+        nn: P := level sspec
         for cusp in cusps repeat
             gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA1
-            e: YM1GEQG := generalizedEtaQuotient(nn, sbar, mm, rbar, m, t,gamma)
+            e: YM1GEQG := generalizedEtaQuotient(sspec, rspec, m, t,gamma)
             h.cusp := e
             minroot := lcm(minroot, minimalRootOfUnity e)
         per [nn, cusps, h, asP minroot]
 
-    generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N): % ==
-        generalizedEtaQuotient(nn, sbar, mm, rbar, m, t, cusps(nn)$GAMMA1)
+    generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
+        generalizedEtaQuotient(sspec, rspec, m, t, cusps(level sspec)$GAMMA1)
 
     level(x: %): P == xx.flevel
     elt(x: %, cusp: Cusp): YM1GEQG == xx.fy.cusp
