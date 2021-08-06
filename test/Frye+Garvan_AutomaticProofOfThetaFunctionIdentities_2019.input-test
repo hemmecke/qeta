@@ -36,8 +36,6 @@
 C ==> Q
 
 GEP ==> generalizedEtaPower $ EQI(C)
-GEQ ==> generalizedEtaQuotient $ EQI(C)
-EQ ==> etaQuotient $ EQI(C)
 EE ==> eulerExpansion $ EQI(C)
 EX ==> expansion $ EQI(C)
 
@@ -48,21 +46,15 @@ ef ==> eulerFunction $ QF
 gep ==> generalizedEulerProduct $ QF
 one(n: Z): Q == 1
 
-ygeq(nn,rbar) ==> (generalizedEtaQuotient $ YGEQ) generalizedEtaQuotientSpecification(nn,rbar)
+)read convenience.input )quiet
+expandAnCX y ==> (laurentExpansions(y)$QESX(C,CX))::An(CX)
 
 L ==> L1 C
 TX ==> T1 CX
 LX ==> L1 CX
 PX ==> QEtaPuiseuxSeries CX
 
-LZ ==> List Z
-LLZ ==> List LZ
-GEQSPLIT ==> Record(pure: LZ, properGeneralized: LLZ)
-
-PUIEX ==> puiseuxExpansion $ QESX(C, CX)
-LAUEX ==> laurentExpansion $ QESX(C, CX)
-LAUEXs ==> laurentExpansions $ QESX(C, CX)
-LAUEX1 ==> laurentExpansionsGamma1 $ QESX(C, CX)
+puiex ==> puiseuxExpansion $ QESX(C, CX)
 
 oo ==> infinity()$Cusp
 
@@ -91,21 +83,21 @@ oo ==> infinity()$Cusp
 -- equation by $E_4^12$, i.e. we check
 -- $$1 - E_1^4 E_2^2 E_4^{-10} E_8^4 - 4 E_2^4 E_4^{-12} E_8^8 = 0$$.
 
-rbar1 := [];
-rbar2 := [[1,4],[2,2],[4,-10],[8,4]];
-rbar3 := [[2,4],[4,-12],[8,8]];
-
 nn := mm := 8;
-y1 := ygeq(mm, rbar1); xiord1 := minimalRootOfUnity(y1)::P;
-y2 := ygeq(mm, rbar2); xiord2 := minimalRootOfUnity(y2)::P;
-y3 := ygeq(mm, rbar3); xiord3 := minimalRootOfUnity(y3)::P;
+rspec1 := geqSPEC(mm, []);
+rspec2 := geqSPEC(mm, [[1,4],[2,2],[4,-10],[8,4]]);
+rspec3 := geqSPEC(mm, [[2,4],[4,-12],[8,8]]);
+
+y1 := specYM0EQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM0EQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
+y3 := specYM0EQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := LAUEX1(y1)::An(CX);
-a2 := LAUEX1(y2)::An(CX);
-a3 := LAUEX1(y3)::An(CX);
+a1 := expandAnCX y1;
+a2 := expandAnCX y2;
+a3 := expandAnCX y3;
 assertTrue(zero?(a1 - a2 - 4*a3))
 
 -- +
@@ -149,15 +141,15 @@ assertTrue(zero?(a1 - a2 - 4*a3))
 -- Check Pochhammer relations with eta-quotient and Jacobi function
 -- computation.
 
-z1 := expansion(GEQ(5,[1,2],[-11,-1]));
-z2 := gep(5, [1,4])^(-11)*gep(5,[2,3])^(-1);
+z1 := expansion specEQIC geqSPEC([[5,1,-11],[5,2,-1]]);
+z2 := gep(5, [1,4])^(-11) * gep(5,[2,3])^(-1);
 assertEquals(order(z1 - z2, 200), 200)
 
 
 jinvG:=jf(one,5,1);
 jinvH:=jf(one,5,2);
-pochGH := EE EQ(5, [0,12]);
-jjp := jinvG^(-11)*jinvH^(-1)*pochGH;
+pochGH := EE(etaQuotient(5, [0,12])$EQI(C));
+jjp := jinvG^(-11) *jinvH^(-1) * pochGH;
 assertEquals(order(z1 - jjp,200),200)
 
 
@@ -213,21 +205,28 @@ assertEquals(order(l1 - l2 - 1, 100), 100)
 --
 -- We check this identity at all cusps of $\Gamma_1(5)$.
 
-rbar1 := [[5,1,-11], [5,2, -1]]; assertTrue(modularGamma1?(5,rbar1));
-rbar2 := [[5,1, -1], [5,2,-11]]; assertTrue(modularGamma1?(5,rbar2));
-rbar3 := [[1,-6],[5,6]];         assertTrue(modularGamma1?(5,rbar3));
+nn := mm := 5
+rspec1 := geqSPEC([[5,1,-11], [5,2, -1]])
+assertTrue(modularGamma1? rspec1)
+rspec2 := geqSPEC([[5,1, -1], [5,2,-11]])
+assertTrue(modularGamma1? rspec2)
+rspec3 := geqSPEC([[1,-6],[5,6]])
+assertTrue(modularGamma1? rspec3)
 
-nn := mm := 5;
-y1 := ygeq(mm, rbar1); xiord1 := minimalRootOfUnity(y1)::P;
-y2 := ygeq(mm, rbar2); xiord2 := minimalRootOfUnity(y2)::P;
-y3 := ygeq(mm, rbar3); xiord3 := minimalRootOfUnity(y3)::P;
+y1 := specYM1GEQ rspec1
+xiord1 := minimalRootOfUnity(y1)::P
+y2 := specYM1GEQ rspec2
+xiord2 := minimalRootOfUnity(y2)::P
+y3 := specYM1GEQ rspec3
+xiord3 := minimalRootOfUnity(y3)::P
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := LAUEX1(y1)::An(CX);
-a2 := LAUEX1(y2)::An(CX);
-a3 := LAUEX1(y3)::An(CX);
+a1 := expandAnCX y1
+a2 := expandAnCX y2
+a3 := expandAnCX y3
+a1 - a2 - (1$An(CX) + 11 * a3)
 assertTrue(zero?(a1 - a2 - (1$An(CX) + 11 * a3)))
 
 -- +
@@ -253,17 +252,17 @@ assertTrue(zero?(a1 - a2 - (1$An(CX) + 11 * a3)))
 -- \tag{1.6}
 -- \end{align}
 
-rbareta51 := [[5,1,1]]; assertTrue(not modularGamma1?(5,rbareta51));
-rbareta52 := [[5,2,1]]; assertTrue(not modularGamma1?(5,rbareta52));
 nn := mm := 5;
-yeta51 := ygeq(mm, rbareta51); xiord1 := minimalRootOfUnity(yeta51)::P;
-yeta52 := ygeq(mm, rbareta52); xiord2 := minimalRootOfUnity(yeta52)::P;
+rspeceta51 := geqSPEC [[5,1,1]]; assertTrue(not modularGamma1? rspeceta51);
+rspeceta52 := geqSPEC [[5,2,1]]; assertTrue(not modularGamma1? rspeceta52);
+yeta51 := specYGEQ rspeceta51; xiord1 := minimalRootOfUnity(yeta51)::P;
+yeta52 := specYGEQ rspeceta52; xiord2 := minimalRootOfUnity(yeta52)::P;
 xiord := lcm[xiord1,xiord2]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(nn)$GAMMA1
 
-p1 := PUIEX(yeta51(oo)); -- eta_{5,1} -- Puiseux expansion
-p2 := PUIEX(yeta52(oo)); -- eta_{5,2}
+p1 := puiex(yeta51(oo)); -- eta_{5,1} -- Puiseux expansion
+p2 := puiex(yeta52(oo)); -- eta_{5,2}
 px1 := multiplyExponents(inv p1, 11) * inv p2;
 px2 := inv p1 * multiplyExponents(inv p2,11);
 assertEquals(order(px1-px2-1, 50),50)
@@ -292,23 +291,23 @@ assertEquals(order(px1-px2-1, 50),50)
 -- \end{align}
 
 -- +
-rbar1 := [[55,11,-1],[5,2,-1]]; assertTrue(modularGamma1?(55,rbar1))
-rbar2 := [[5,1,-1],[55,22,-1]]; assertTrue(modularGamma1?(55,rbar2))
+nn: P := 55
+rspec1 := geqSPEC [[55,11,-1],[5,2,-1]]; assertTrue(modularGamma1? rspec1)
+rspec2 := geqSPEC [[5,1,-1],[55,22,-1]]; assertTrue(modularGamma1? rspec2)
 
-nn := mm := 55
-y1 := ygeq(mm, rbar1); xiord1 := minimalRootOfUnity(y1)::P;
-y2 := ygeq(mm, rbar2); xiord2 := minimalRootOfUnity(y2)::P;
+y1 := specYM1GEQ(rspec1); xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1GEQ(rspec2); xiord2 := minimalRootOfUnity(y2)::P;
 xiord := lcm[xiord1,xiord2]
 -- -
 
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y2)
 
-a1 := LAUEX1(y1)::An(CX);
-a2 := LAUEX1(y2)::An(CX);
+a1 := expandAnCX y1
+a2 := expandAnCX y2
 assertTrue(zero?(a1-a2-1$An(CX)))
 
-pgrds := [-order PUIEX(y1 c) * WIDTH1(nn, c) for c in spitzen]
+pgrds := [-order puiex(y1 c) * WIDTH1(nn, c) for c in spitzen]
 lgrds := qetaGrades a1
 assertEquals(pgrds, lgrds)
 
@@ -338,25 +337,24 @@ assertEquals(pgrds, lgrds)
 -- We check this identity at all cusps of $\Gamma_1(13)$.
 
 -- +
-rbar1 := [[13,1,-3],[13,3,-3],[13,4,-3],[13,2,-1],[13,5,-1],[13,6,-1]];
-rbar2 := [[13,1,-1],[13,3,-1],[13,4,-1],[13,2,-3],[13,5,-3],[13,6,-3]];
-rbar3 := [[1,-2],[13,2]];
-assertTrue(modularGamma1?(13,rbar1));
-assertTrue(modularGamma1?(13,rbar2));
-assertTrue(modularGamma1?(13,rbar3));
+rspec1 := geqSPEC [[13,1,-3],[13,3,-3],[13,4,-3],[13,2,-1],[13,5,-1],[13,6,-1]];
+rspec2 := geqSPEC [[13,1,-1],[13,3,-1],[13,4,-1],[13,2,-3],[13,5,-3],[13,6,-3]];
+rspec3 := geqSPEC [[1,-2],[13,2]];
+assertTrue(modularGamma1? rspec1)
+assertTrue(modularGamma1? rspec2)
+assertTrue(modularGamma1? rspec3)
 
-nn := mm := 13;
-y1 := ygeq(mm, rbar1); xiord1 := minimalRootOfUnity(y1)::P;
-y2 := ygeq(mm, rbar2); xiord2 := minimalRootOfUnity(y2)::P;
-y3 := ygeq(mm, rbar3); xiord3 := minimalRootOfUnity(y3)::P;
+y1 := specYM1GEQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1GEQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
+y3 := specYM1GEQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 -- -
 
-a1 := LAUEX1(y1)::An(CX);
-a2 := LAUEX1(y2)::An(CX);
-a3 := LAUEX1(y3)::An(CX);
+a1 := expandAnCX y1;
+a2 := expandAnCX y2;
+a3 := expandAnCX y3;
 assertTrue(zero?(a1 - a2 - (1$An(CX) + 3 * a3)))
 
 -- +
@@ -383,24 +381,23 @@ assertTrue(zero?(a1 - a2 - (1$An(CX) + 3 * a3)))
 --
 -- We check this identity at all cusps of $\Gamma_1(39)$.
 
-rbar1 := [[39,3,-1],[39,9,-1],[39,12,-1],[13,2,-1],[13,5,-1],[13,6,-1]];
-rbar2 := [[13,1,-1],[13,3,-1],[13,4,-1],[39,6,-1],[39,15,-1],[39,18,-1]];
-rbar3 := [[1,-2],[13,2]];
-assertTrue(modularGamma1?(39,rbar1))
-assertTrue(modularGamma1?(39,rbar2))
-assertTrue(modularGamma1?(39,rbar3))
+rspec1:=geqSPEC [[39,3,-1],[39,9,-1],[39,12,-1],[13,2,-1],[13,5,-1],[13,6,-1]]
+rspec2:=geqSPEC [[13,1,-1],[13,3,-1],[13,4,-1],[39,6,-1],[39,15,-1],[39,18,-1]]
+rspec3:=geqSPEC(39, [[1,-2],[13,2]])
+assertTrue(modularGamma1? rspec1)
+assertTrue(modularGamma1? rspec2)
+assertTrue(modularGamma1? rspec3)
 
-nn := mm := 39;
-y1 := ygeq(mm, rbar1); xiord1 := minimalRootOfUnity(y1)::P;
-y2 := ygeq(mm, rbar2); xiord2 := minimalRootOfUnity(y2)::P;
-y3 := ygeq(mm, rbar3); xiord3 := minimalRootOfUnity(y3)::P;
+y1 := specYM1GEQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1GEQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
+y3 := specYM1GEQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := LAUEX1(y1)::An(CX);
-a2 := LAUEX1(y2)::An(CX);
-a3 := LAUEX1(y3)::An(CX);
+a1 := expandAnCX y1;
+a2 := expandAnCX y2;
+a3 := expandAnCX y3;
 assertTrue(zero?(a1 - a2 - 1$An(CX)))
 
 -- +
@@ -429,32 +426,31 @@ assertTrue(zero?(a1 - a2 - 1$An(CX)))
 --
 -- We check this identity at all cusps of $\Gamma_1(25)$.
 
-nn := mm := 25;
-rbar1 := [[1,1],[25,-1]];
-rbar2 := [[25,5,-1],[25,10, 1]];
-rbar3 := [[25,5, 1],[25,10,-1]];
-assertTrue(modularGamma1?(mm,rbar1))
-assertTrue(modularGamma1?(mm,rbar2))
-assertTrue(modularGamma1?(mm,rbar3))
+rspec1 := geqSPEC [[1,1],[25,-1]];
+rspec2 := geqSPEC [[25,5,-1],[25,10, 1]];
+rspec3 := geqSPEC [[25,5, 1],[25,10,-1]];
+assertTrue(modularGamma1? rspec1)
+assertTrue(modularGamma1? rspec2)
+assertTrue(modularGamma1? rspec3)
 
-y1 := ygeq(mm, rbar1); xiord1 := minimalRootOfUnity(y1)::P;
-y2 := ygeq(mm, rbar2); xiord2 := minimalRootOfUnity(y2)::P;
-y3 := ygeq(mm, rbar3); xiord3 := minimalRootOfUnity(y3)::P;
+y1 := specYM1GEQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1GEQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
+y3 := specYM1GEQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := LAUEX1(y1)::An(CX);
-a2 := LAUEX1(y2)::An(CX);
-a3 := LAUEX1(y3)::An(CX);
+a1 := expandAnCX y1;
+a2 := expandAnCX y2;
+a3 := expandAnCX y3;
 assertTrue(zero?(a1 - a2 + a3 + 1$An(CX)))
 
-for c in spitzen repeat
-  p1 := PUIEX y1 c;
-  p2 := PUIEX y2 c;
-  p3 := PUIEX y3 c;
-  px := p1 - p2 + p3 + 1
-  assertEquals(order(px,10),10)
+for c in spitzen repeat (_
+  p1 := puiex y1 c;_
+  p2 := puiex y2 c;_
+  p3 := puiex y3 c;_
+  px := p1 - p2 + p3 + 1;_
+  assertEquals(order(px,10),10))
 
 -- +
 -------------------------------------------------------------------

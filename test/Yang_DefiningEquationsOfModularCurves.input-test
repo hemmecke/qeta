@@ -50,35 +50,37 @@
 -- +
 )set mess type off
 )set mess time off
+)read convenience.input )quiet
+-- We correct a macro since oldEXPANDn does not work for YM1GEQ.
+expandAnCX y ==> (laurentExpansions(y)$QESX(C,CX))::An(CX)
+
 C ==> Q
 LZ ==> List Z
 LLZ ==> List LZ
 
-ygeq ==> generalizedEtaQuotient $ YGEQ
-LAUEX1 ==> laurentExpansionsGamma1 $ QESX(C, CX)
 oo ==> infinity()$Cusp
 
 CurveX1(nn: P, rx: LLZ, sx: C,_
                ry: LLZ, sy: C,_
                x: Symbol, y: Symbol,_
         pxy: Polynomial(C)): Boolean ==
-    rbarx := [cons(nn,r) for r in rx];
-    rbary := [cons(nn,r) for r in ry];
-    yx := ygeq(nn, rbarx); xiordx := minimalRootOfUnity(yx)::P;
-    yy := ygeq(nn, rbary); xiordy := minimalRootOfUnity(yy)::P;
+    rspecx := geqSPEC(nn, [cons(nn,r) for r in rx]);
+    rspecy := geqSPEC(nn, [cons(nn,r) for r in ry]);
+    yx := specYM1GEQ(rspecx); xiordx := minimalRootOfUnity(yx)::P;
+    yy := specYM1GEQ(rspecy); xiordy := minimalRootOfUnity(yy)::P;
     xiord := lcm(xiordx,xiordy);
     EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
     spitzen := cusps(nn)$GAMMA1;
     e := 1$An(CX);
-    ax := LAUEX1(yx)::An(CX) + sx*e;
-    ay := LAUEX1(yy)::An(CX) + sy*e;
+    ax := expandAnCX(yx) + sx*e;
+    ay := expandAnCX(yy) + sy*e;
     qetaGrades ax;
     qetaGrades ay;
     n := position(oo,spitzen)
     xx := toX1(C, series(ax,n), x); gx := qetaGrade xx;
     xy := toX1(C, series(ay,n), y); gy := qetaGrade xy;
-    abx := samba(xx, [xy])$QXTOPSAMBA1(C)
-    red := reduce(xy^gx, abx)$QXTOPRED1(C)
+    xab := samba(xx, [xy])$QXTOPSAMBA1(C)
+    red := reduce(xy^gx, xab)$QXTOPRED1(C)
     tracePrint("red", red)
     polc := second(red)::Pol(C)
     d := degree(polc, y)

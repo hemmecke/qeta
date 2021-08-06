@@ -2,8 +2,6 @@
 -- for the macros in etamacros.input have been set.
 -- In particular C, xiord, and CX, spitzen=cusps(level)$GAMMA0.
 
-QEQEV ==> QEtaQuotientExponentVectors4ti2
-
 -- The following function simply maps the integer coefficients of the
 -- series into the localized coefficient domain or into the rational
 -- number domain Q.
@@ -15,12 +13,14 @@ zcmap(x) ==> abmap(Z, C, x)
 cqmap(x) ==> abmap(C, Q, x)
 zqmap(x) ==> abmap(Z, Q, x)
 
+
+-------------------------------------------------------------------
 -- Implicit global variables:
 -- C: The coefficient ring where we consider the q-expansions.
--- level: We consider the modular group Gamma_0(level).
-YEQ1C(r) ==> etaQuotient(level, r)$EQI(C)
-EQA1C(r) ==> expansion(YEQ1C r)::A1(C) -- expansion at infinity
+specEQIC ==> specEQI C
+specM0A1C ==> specM0A1 C -- was EQA1C
 
+-------------------------------------------------------------------
 -- Implicit global variables:
 -- level:   We consider the modular group Gamma_0(level).
 -- spitzen: The cusps at which to expand.
@@ -28,10 +28,39 @@ EQA1C(r) ==> expansion(YEQ1C r)::A1(C) -- expansion at infinity
 -- xi:      A xiord-th root of unity in CX
 -- CX:      An C-Algebra containing xi.
 -- Call macro EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi).
-YEQn(r) ==> etaQuotient(level, r, spitzen)$YEQ
-EQAnCX(r) ==> EXPANDn0 YEQn r -- Gamma0-modular eta-quotients
+-------------------------------------------------------------------
+QESX(C, CX) ==> QEtaSeriesExpansion(C, xiord, CX, xi)
+QELX(C, CX) ==> QEtaLaurentExpansion(C, xiord, CX, xi)
+QEPX(C, CX) ==> QEtaPuiseuxExpansion(C, xiord, CX, xi)
+An CX ==> ModularFunctionExpansionsAtCusps(CX, spitzen)
 
-YEQG1(l, g) ==> etaQuotient(level, l, g)$YEQG
+-------------------------------------------------------------------
+-- Expansion of symbolic (generalized) eta-quotient into laurent series.
+oldEXPANDn y ==> (laurentExpansions(y)$QELX(C,CX))::An(CX)
+newEXPANDn y ==> (laurentExpansions(y)$QESX(C,CX))::An(CX)
+expandAnCX y ==> (assertTrue(zero?(newEXPANDn y - oldEXPANDn y)); newEXPANDn y)
+
+-------------------------------------------------------------------
+-- Creation of eta-quotient expansions at the cusps given by spitzen.
+specYM0EQn spec ==> specYM0EQ(spec, spitzen)
+specYM1GEQn spec ==> specYM1GEQ(spec, spitzen)
+
+-------------------------------------------------------------------
+-- Expansion of a specification int (generalized) eta-quotient into
+-- laurent series.
+specM0AnCX spec ==> expandAnCX specYM0EQn spec
+specM1AnCX spec ==> expandAnCX specYM1GEQn spec
+
+-------------------------------------------------------------------
+CAn CX ==> QEtaAlgebraCachedPower(CX, An CX) -- domain in cached version
+Xn CX ==> QEtaExtendedAlgebra(CX, CAn CX, CPol CX)
+toXn(CX, a, b) ==> embed(a, b::CPol(CX))$Xn(CX)
+
+-- Now powersamba in extended form, i.e., with attached part (all cahed powers)
+QXABn C ==> XEtaAlgebraBasis(C, Xn C)
+QXREDn C ==> XEtaReduction(C, Xn C, QXABn C)
+QXCOMPn C ==> XEtaComputation(C, Xn C, QXABn C, QXREDn C)
+QXSAMBAn C ==> XEtaSambaPackage(C, Xn C, QXABn C, QXCOMPn C)
 
 -- polyToA1C: Polynomial(C) -> A1(C)
 -- polyToA1C(E1^12*E2^6+E1^24)
@@ -39,15 +68,6 @@ YEQG1(l, g) ==> etaQuotient(level, l, g)$YEQG
 -- Error if result has fractional q powers.
 -- For fractional results use polynomialToEta(poly)$EQI(C).
 polyToA1C poly ==> expansion(polynomialToEta(poly) $ EQI(C))
-
-PolC ==> Pol C
-PolZ ==> Pol Z
-FPZ ==> Fraction PolZ
-PE ==> PolynomialEvaluation(Z, FPZ)
-EVALFPZ(vars, vals, pol) ==> (eval((c:Z):FPZ +-> c, vars, vals)$PE)(pol)
-
-asP x ==> x pretend P
-asLP x ==> x pretend List(P)
 
 -- Create a Laurent polynomial ring
 -- Implicit variable:
@@ -57,12 +77,13 @@ DZ ==> HomogeneousDirectProduct(dim, Z);
 RZ ==> PolynomialRing(C, DZ)
 toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
 
-PERZ ==> PolynomialEvaluation(C, RZ)
-EVALRZ(vars, vals, pol) ==> (eval((c:C):RZ +-> c, vars, vals)$PERZ)(pol)
+EVALRZ(vars, vals, pol) ==> _
+    (eval((c:C):RZ +-> c, vars, vals)$PolynomialEvaluation(C, RZ))(pol)
 EZ ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
 rez x ==> x pretend  PolynomialRing(C, EZ)
 
 -- monRZ(l: List Z): RZ == monomial(1, directProduct(l)$DZ)
+specMonRZ spec ==> monomial(1, directProduct(allPureExponents spec)$DZ)$RZ
 monRZ(l) ==> monomial(1, directProduct(l)$DZ)$RZ
 
 -- A "term" here is a coefficient (Integer) cons'd to a list of
@@ -74,17 +95,16 @@ termRZ(term) ==> monomial(first term, directProduct(rest term)$DZ)$RZ
 -- polyRZ(terms: List List Z): RZ == reduce(_+, [termRZ x for x in terms], 0$RZ)
 polyRZ(terms) ==> reduce(_+, [termRZ x for x in terms], 0$RZ)
 
-ALGSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
+algSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
 
 -- We assum that mon is such that degree(mon): DZ.
-monToA1C(mon) ==> leadingCoefficient(mon)*EQA1C(members degree mon)
-monToAnCX(mon) ==> leadingCoefficient(mon)*EQAnCX(members degree mon)
+monToA1C(mon) ==> _
+  leadingCoefficient(mon)*specM0A1C(eqSPEC(level, members degree mon))
+monToAnCX(mon) ==> _
+  leadingCoefficient(mon)*specM0AnCX(eqSPEC(level, members degree mon))
 
 -- rzToA1CX: RZ -> A1 C
-rzToA1C(x) ==> ALGSUM(monToA1C, x)
+rzToA1C(x) ==> algSUM(monToA1C, x)
 
 -- rzToAnCX: RZ -> An CX
-rzToAnCX(x) ==> ALGSUM(monToAnCX, x)
-
-TOMAT0(cusp) ==> cuspToMatrix(level, cusp)$GAMMA0
-IMAT(mat) ==> inverse(mat)::MZ
+rzToAnCX(x) ==> algSUM(monToAnCX, x)

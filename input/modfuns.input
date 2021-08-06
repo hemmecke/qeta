@@ -7,8 +7,12 @@ kleinJ(n: P, gamma: SL2Z, w: P): L1 CX ==
   t := splitMatrix(gamma, n).triang
   j := kleinJInvariant()$QFunctions(CX, L1 CX)
   d := t(2,2)
-  u: P := t(1,1)*w/d
-  v: N := t(1,2)*xiord/d
+  uq: Q := t(1,1)*w/d
+  vq: Q := t(1,2)*xiord/d
+  not one? denom(uq) => error "kleinJ: denominator of u should vanish"
+  not one? denom(vq) => error "kleinJ: denominator of v should vanish"
+  u: P := numer(uq)::P
+  v: N := numer(vq)::N
   substitute(j, u, v)$QEPX(C, CX)
 
 -- expansion of j(n*tau) at all cusps of Gamma0(nn).

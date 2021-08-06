@@ -27,6 +27,7 @@
 C ==> Q
 LX ==> L1 CX
 SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
+)read convenience.input )quiet
 
 -- +
 -------------------------------------------------------------------
@@ -60,7 +61,7 @@ yf := etaQuotient(nn, r, mm, s, m, t)$YM0EQ;
 xiord := minimalRootOfUnity(yf)::P
 assertEquals(xiord, minroot)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf := EXPANDn yf
+mf := expandAnCX yf
 -- compare result with formula (4) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
 -- Note that mf comes with the cofactor given by r. So we also must
@@ -105,7 +106,7 @@ assertEquals(xiord, minroot)
 CX := UnityRootExtension(C, xiord)
 xi := generator()$CX
 
-mf := EXPANDn yf;
+mf := expandAnCX yf;
 
 -- compare result with formula (5) from
 -- \cite{Hemmecke:DancingSambaRamanujan:2018}
@@ -118,7 +119,7 @@ mf := EXPANDn yf;
 y1 := etaQuotient(nn,[3,1, 3,-7],mm,[0,0],1,0)$YM0EQ;
 y2 := etaQuotient(nn,[-1,1,7,-7],mm,[0,0],1,0)$YM0EQ;
 
-rhs := 7*EXPANDn(y1) + 49*EXPANDn(y2)
+rhs := 7*expandAnCX(y1) + 49*expandAnCX(y2)
 assertTrue(zero?(mf - rhs))
 
 -- +
@@ -143,8 +144,8 @@ xi := generator()$CX
 spitzen := cusps(nn)$GAMMA0
 y1 := etaQuotient(nn,[0,0, 0,0],mm,[4,-4],1,0)$YM0EQ
 y2 := etaQuotient(nn,[4,0,-4,0],mm,[0, 0],1,0)$YM0EQ
-m1 := EXPANDn y1
-m2 := EXPANDn y2
+m1 := expandAnCX y1
+m2 := expandAnCX y2
 assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 
 -- +
@@ -178,7 +179,7 @@ yf := etaQuotient(nn, r, mm, s, m, t)$YM0EQ;
 xiord:= minimalRootOfUnity(yf) :: P
 assertEquals(xiord, minroot)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf := EXPANDn yf
+mf := expandAnCX yf
 
 
 -- compare result with formula (9) from
@@ -199,7 +200,7 @@ rgens := [_
 assertEquals(rgens, etaQuotientMonoidExponentVectors nn)
 
 ygens := [etaQuotient(nn,r,mm,[0,0],1,0)$YM0EQ for r in rgens];
-M := [EXPANDn x for x in ygens];
+M := [expandAnCX x for x in ygens];
 F ==> mf
 X n ==> n * 1$An(CX)
 
@@ -219,175 +220,3 @@ assertTrue zero? ZERO
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
-
--- +
--------------------------------------------------------------------
---test:overpartition
--------------------------------------------------------------------
--- -
-
--- See example after \cite[Thm.~2.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019} and
--- \cite[Thm.3.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
--- See ChenDuZhao_FindingModularFunctionsRamanujan_2019.input-test
-assertTrue(false)
-
-mm := 2; m := 5; t := 2
-nn := 10
-rbar := [[1,-2],[2,1]]
-sbar := [[5,18],[10,-17],[10,4,-8]]
-
--- +
-LZ ==> List Z
-LLZ ==> List LZ
-
-rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-  splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-r: LZ := rrec.pure
-rtilde: LLZ := rrec.properGeneralized
-
-srec: Record(pure: LZ, properGeneralized: LLZ) :=
-  splitEtaQuotientSpecification(nn, sbar)$QETAAUX
-s: LZ := srec.pure
-stilde: LLZ := srec.properGeneralized
-
--- -
-
-sigma0(nn,s,stilde) + numer(nn/mm)*m*sigma0(mm,r,rtilde)
-
-x := generalizedEtaQuotient(10,sbar,2,rbar,5,2)$SymbolicModularGamma1GeneralizedEtaQuotient;
-
-minimalRootOfUnity x
-cusps x
-
-y := x(1/3);
-yb := basefactor y; yc := cofactor y;
-minimalRootOfUnity yb, minimalRootOfUnity yc
-
-yc.0
-
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
-
--- +
--------------------------------------------------------------------
---test:singularoverpartition-3-1
--------------------------------------------------------------------
--- -
-
--- See ChenDuZhao_FindingModularFunctionsRamanujan_2019.input-test
-assertTrue(false)
--- See \cite[Thm.~10.3]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
-mm := 6; m := 9; t := 3
-nn := 6
-rbar := [[1,-1],[3,1],[3,1,-1],[6,2,1]]
-sbar := [[1,14],[2,-5],[3,-6],[6,-3]]
-
--- +
-LZ ==> List Z
-LLZ ==> List LZ
-
-rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-  splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-r: LZ := rrec.pure
-rtilde: LLZ := rrec.properGeneralized
-
-srec: Record(pure: LZ, properGeneralized: LLZ) :=
-  splitEtaQuotientSpecification(nn, sbar)$QETAAUX
-s: LZ := srec.pure
-stilde: LLZ := srec.properGeneralized
-sigma0(nn,s,stilde) + numer(nn/mm)*m*sigma0(mm,r,rtilde)
--- -
-
-x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient;
-minimalRootOfUnity x
-cusps x
-
-y := x(1/3);
-yb := basefactor y; yc := cofactor y;
-minimalRootOfUnity yb, minimalRootOfUnity yc
-
-yc.0
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
-
--- +
--------------------------------------------------------------------
---test:Ramanujan-2-disection
--------------------------------------------------------------------
--- -
-
--- See ChenDuZhao_FindingModularFunctionsRamanujan_2019.input-test
-assertTrue(false)
--- See \cite[Thm.~10.4]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
-mm := 5; m := 2; t := 0
-nn := 10
-rbar := [[5,1,-1],[5,2,1]]
-sbar := [[1,14],[2,-5],[3,-6],[6,-3]]
-
-matrixEtaOrder(10)
-
-matrix[[1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [10, 5, 2, 1, 20, 20, 20, 20, 10, 10, 24, 0, 0, 0, 0, 0, 0, 0, 0], [10, 20, 50, 100, 12, -132, 276, 24, -156, -264, 0, 240, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 1, 1, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 2, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0]]
-
-ecs := etaCofactorSpace1(nn,mm,[],m,t);
-bas := [x(1..10) for x in ecs.basis | not zero?(x(1..10))]
-A := transpose matrix bas
-b := [1,0,1,-2,-2,0,-1,0,0,0]
-
-solve(A,b)
-============================ CONTINUE HERE =============================
-
-generalizedEtaFunctionIndices nn
-
-
-
--- +
-LZ ==> List Z
-LLZ ==> List LZ
-
-rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-  splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-r: LZ := rrec.pure
-rtilde: LLZ := rrec.properGeneralized
-
-srec: Record(pure: LZ, properGeneralized: LLZ) :=
-  splitEtaQuotientSpecification(nn, sbar)$QETAAUX
-s: LZ := srec.pure
-stilde: LLZ := srec.properGeneralized
-sigma0(nn,s,stilde) + numer(nn/mm)*m*sigma0(mm,r,rtilde)
--- -
-
-x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient;
-minimalRootOfUnity x
-cusps x
-
-y := x(1/3);
-yb := basefactor y; yc := cofactor y;
-minimalRootOfUnity yb, minimalRootOfUnity yc
-
-yc.0
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
--- -
-
-)compile /home/hemmecke/g/qeta/src/qetacofactorspace
-setFormat!(FormatMathJax)$JFriCASSupport
-
-)compile /home/hemmecke/g/qeta/src/qetaquotsymb
-setFormat!(FormatMathJax)$JFriCASSupport
-
-s1 := series(n+->if even? n then a else b, x=0)
-s2 := series(n+->if even? n then c else d, x=0)
-
-s1*s2

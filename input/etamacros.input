@@ -23,6 +23,9 @@ LSym ==> List Symbol
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
+SPEC ==> QEtaSpecification
+eqSPEC ==> etaQuotientSpecification $ SPEC
+geqSPEC ==> generalizedEtaQuotientSpecification $ SPEC
 -------------------------------------------------------------------
 -- The following macros are parametrized by the coefficient domain C.
 -------------------------------------------------------------------
@@ -54,6 +57,33 @@ CPol C ==> QEtaAlgebraCachedPower(C, Pol C) -- computation pols in (cached)
 X1 C ==> QEtaExtendedAlgebra(C, CA1 C, CPol C)
 toX1(C, a, b) ==> embed(a::CA1(C), b::CPol(C))$X1(C)
 
+
+-------------------------------------------------------------------
+-- Symbolic modular (generalized) eta-quotients
+YM0EQ   ==> SymbolicModularGamma0EtaQuotient
+YM0EQG  ==> SymbolicModularGamma0EtaQuotientGamma
+YM1GEQ  ==> SymbolicModularGamma1GeneralizedEtaQuotient
+YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
+
+-------------------------------------------------------------------
+-- Creation of symbolic eta-quotients
+-- We consider the modular group Gamma_0(level spec).
+specYM0EQ  ==> etaQuotient $ YM0EQ
+specYM0EQG ==> etaQuotient $ YM0EQG
+-- We consider the modular group Gamma_1(level spec).
+specYM1GEQ  ==> generalizedEtaQuotient $ YM1GEQ
+specYM1GEQG ==> generalizedEtaQuotient $ YM1GEQG
+
+-------------------------------------------------------------------
+-- Creation of eta-quotient expansions from specifications
+specEQI C ==> generalizedEtaQuotient $ EQI(C)
+specM0A1 C ==> modularEtaQuotientInfinity $ QEtaModularGamma0Infinity(C)
+
+-------------------------------------------------------------------
+-- Creation of symbolic eta-quotients (non-modular)
+specYGEQ ==> generalizedEtaQuotient $ YGEQ
+
+-------------------------------------------------------------------
 -- We always use CachedPower versions
 QAB1 C ==> QEtaAlgebraBasis(C, CA1 C)
 QTOPRED1 C ==> QEtaTopReduction(C, CA1 C, QAB1 C)
@@ -105,41 +135,6 @@ UnityRootExtension(C, n) ==> _
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi) ==> (_
     if xiord < 3 then (CX := Q; xi := -(1$CX)) else _
         (CX := UnityRootExtension(C, xiord); xi := generator()$CX))
--------------------------------------------------------------------
--- TODO: The following macros must be made more parametrized.
--- Problem is that we need C, xiord, and xi, spitzen.
-YEQ ==> SymbolicEtaQuotient
-YEQG ==> SymbolicEtaQuotientGamma
-YM0EQ ==> SymbolicModularGamma0EtaQuotient
-YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
-
-YM1GEQ ==> SymbolicModularGamma1GeneralizedEtaQuotient
-YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
-
-
-
-QESX(C, CX) ==> QEtaSeriesExpansion(C, xiord, CX, xi)
-QELX(C, CX) ==> QEtaLaurentExpansion(C, xiord, CX, xi)
-QEPX(C, CX) ==> QEtaPuiseuxExpansion(C, xiord, CX, xi)
-An CX ==> ModularFunctionExpansionsAtCusps(CX, spitzen)
-oldEXPANDn y ==> (laurentExpansions(y)$QELX(C,CX))::An(CX)
-oldEXPANDn0 y ==> (laurentExpansionsGamma0(y)$QELX(C,CX))::An(CX)
-newEXPANDn y ==> (laurentExpansions(y)$QESX(C,CX))::An(CX)
-newEXPANDn0 y ==> (laurentExpansionsGamma0(y)$QESX(C,CX))::An(CX)
-EXPANDn y ==> (assertTrue(zero?(newEXPANDn y - oldEXPANDn y)); newEXPANDn y)
-EXPANDn0 y ==> (assertTrue(zero?(newEXPANDn0 y - oldEXPANDn0 y)); newEXPANDn0 y)
-
-
-CAn CX ==> QEtaAlgebraCachedPower(CX, An CX) -- domain in cached version
-Xn CX ==> QEtaExtendedAlgebra(CX, CAn CX, CPol CX)
-toXn(CX, a, b) ==> embed(a, b::CPol(CX))$Xn(CX)
-
--- Now powersamba in extended form, i.e., with attached part (all cahed powers)
-QXABn C ==> XEtaAlgebraBasis(C, Xn C)
-QXREDn C ==> XEtaReduction(C, Xn C, QXABn C)
-QXCOMPn C ==> XEtaComputation(C, Xn C, QXABn C, QXREDn C)
-QXSAMBAn C ==> XEtaSambaPackage(C, Xn C, QXABn C, QXCOMPn C)
-
 
 -------------------------------------------------------------------
 -- Auxiliary functions

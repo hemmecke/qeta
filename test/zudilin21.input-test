@@ -114,27 +114,27 @@ f21 := rzToA1C f21polzudilinRZ
 -- of $R^\infty(42)$.
 
 level := 42; divs := DIVISORS level;
-rgens42 := etaQuotientMonoidExponentVectors(level)$QEQEV;
-assertEquals(#rgens42, 1517)
+bspecs42 := etaQuotientMonoidSpecifications level;
+egens42 := [specM0A1(C) spec for spec in bspecs42]
+msyms42 := indexedSymbols("M", #bspecs42)
+xgens42 := [toX1(C, x, sym) for x in egens42 for sym in msyms42];
 
-egens42 := [EQA1C r for r in rgens42];
-msyms42 := indexedSymbols("M", #egens42);
-xgens42: List X1 C := [toX1(C, x, sy) for x in egens42 for sy in msyms42];
+assertEquals(#bspecs42, 1517)
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_{1517}]$.
 
-tx: X1 C := xgens42.1
+xt: X1 C := xgens42.1
 assertEquals(genus(level)$GAMMA0, 5)
-abx42 := samba(tx, xgens42, 5)$QXTOPSAMBA1(C)
+xab42 := samba(xt, xgens42, 5)$QXTOPSAMBA1(C)
 
 -- Interestingly, we only need to touch the first 13 entries
 -- from the generators of the monoid of eta-quotients
 -- in $M^\infty(42)$ and we show with the number of gaps
 -- that the algebra basis generates all of $M^\infty(42)$.
 
-assertEquals(numberOfGaps(abx42), 5)
+assertEquals(numberOfGaps(xab42), 5)
 
 -- From a paper of Zudilin below the table called
 -- "Hypergeometric motives for rigid Calabi–Yau manifolds".
@@ -152,28 +152,29 @@ rhs: List Z := concat([0 for i in idivs], -2*wght);
 z := zsolve4ti2(level, idivs, rhs);
 zzi := sortByComponentGrade(level, [x(1..#divs) for x in z.zinhom]);
 zzh := sortByComponentGrade(level, [x(1..#divs) for x in z.zhom]);
-assertEquals(zzi, etaQuotientExponentVectors(level, idivs, -2*wght)$QEQEV);
-assertEquals(#zzi,570);
-assertEquals(#zzh, #rgens42);
+wbspecs := etaQuotientSpecifications(level, idivs, -2*wght);
+assertEquals(zzi,[allPureExponents x for x in wbspecs])
+assertEquals(#zzi,570)
+assertEquals(#zzh, #bspecs42)
 #zzi
 
 -- The order of $f_{21}$ is 1. So we aim at a cofactor
 -- that leads to a small pole order of the resulting
 -- modular function.
 
-min [qetaGrade EQA1C r for r in zzi]
-qetaGrade EQA1C zzi.1
+min [qetaGrade specM0A1C eqSPEC(level,r) for r in zzi]
+qetaGrade specM0A1C eqSPEC(level,zzi.1)
 
 rfcofactor := zzi.1
 assertEquals(rfcofactor, [1, - 2, - 3, 6, - 3, 6, 9, - 18]);
-f := f21 * EQA1C rfcofactor
+f := f21 * specM0A1C eqSPEC(level, rfcofactor)
 assertEquals(qetaGrade f, 19);
 xf := toX1(C, f, 'F);
 
 -- Clearly, $f$ must reduce to zero
 -- modulo our algebra basis.
 
-xfr := reduce(xf, abx42)$QXTOPRED1(C);
+xfr := reduce(xf, xab42)$QXTOPRED1(C);
 assertTrue(zero? xfr)
 assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
 
@@ -182,7 +183,7 @@ assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
 -- eta-quotients of $M^\infty(42)$.
 
 ixfr := 49*xfr;
-fmpol := -second(ixfr)::PolC + F  -- This corresponds to the mod func f.
+fmpol := -second(ixfr)::Pol(C) + F  -- This corresponds to the mod func f.
 
 assertEquals(# monomials fmpol, 17)
 
@@ -221,7 +222,7 @@ matrixLigozat(42)
 
 idivs := [i for i in 1..#divs];
 rhs := concat([0 for i in idivs], 2*wght);
-zmodform := zsolve4ti2(level, idivs, rhs)$QEQEV;
+zmodform := zsolve4ti2(level, idivs, rhs)$QEtaQuotientExponentVectors4ti2;
 zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
 assertEquals(#zmodformzi, 138)
 
@@ -240,7 +241,7 @@ rmodformgens := [members x for x in vmodformgenss];
 --- CGRDS(gens, cond) ==> _
 ---  matrix [cons(i, x) for r in gens for i in 1..#gens| (x := g YEQn r; cond)]
 --- GRDS(gens) ==> CGRDS(gens, true)
-emodformgens := [EQA1C r for r in rmodformgens];
+emodformgens := [specM0A1C eqSPEC(level, r) for r in rmodformgens];
 [order x for x in emodformgens]
 
 -- Although the dimension of the space of modular forms for
@@ -305,7 +306,7 @@ assertEquals(removeDuplicates [coefficient(z0, i) for i in -10..500],[0])
 -- solution vectors that could bring down the number of terms
 -- even more.
 
-[cons(i, x) for i in 1..#zmodformszf |
+[cons(i, x) for i in 1..#zmodformszf |_
     (x:=zmodformszf.i; not zero? x.54 and x.54 + x.79 = 0)]
 
 -- Luckily, the 38th homogeneous solution is already quite appropriate,
@@ -334,7 +335,7 @@ qsyms := indexedSymbols("Q", #rmodformgens);
 xg21gens: List X1 C := [toX1(C, x, sy) for x in emodformgens for sy in qsyms];
 
 xg21 := -xg21gens.57 + 2*xg21gens.60 + xg21gens.100
-g21qpol := second(xg21)::PolC;
+g21qpol := second(xg21)::Pol(C);
 esyms := indexedSymbols("E", DIVISORS level);
 dim: N := #esyms;
 qsymsRZ := [monRZ x for x in rmodformgens];
@@ -367,7 +368,7 @@ fRZtoE(x: RZ): Pol(C) ==
   esysm := indexedSymbols("E", divs)
   mon := reduce(_*, [(esyms.i::Pol(C))^(dd.i) for i in 1..#divs])
   c*mon
-enumpol := ALGSUM(fRZtoE, g21numRZ);
+enumpol := algSUM(fRZtoE, g21numRZ);
 assertEquals(enumpol,_
       E1^2        *E6^2*E7^2          *E42^3_
   -   E1  *E2^2*E3     *E7  *E14^2*E21*E42_
@@ -379,7 +380,7 @@ assertEquals(enumpol,_
 -- eta-quotients by reduction via the algebra basis.
 
 fmpol
-msymsRZ := [monRZ x for x in rgens42];
+msymsRZ := [specMonRZ x for x in bspecs42];
 fpolRZ := EVALRZ(msyms42, msymsRZ, fmpol);
 fm := rzToA1C fpolRZ;
 z0 := fm - f
@@ -394,7 +395,7 @@ rfcofactorRZ := monRZ rfcofactor
 gpolRZ := g21polRZ * monRZ rfcofactor;
 g := rzToA1C gpolRZ;
 assertTrue(zero?(g - f))
-z0 := f - g21 * EQA1C rfcofactor;
+z0 := f - g21 * specM0A1C eqSPEC(level, rfcofactor);
 assertTrue(zero? z0)
 assertEquals(order(z0, 301), 301)
 

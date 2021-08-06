@@ -87,17 +87,18 @@ spitzen := cusps(level)$GAMMA0;
 -- eta-quotients of level `nn`.
 -- We first compute the respective exponent vectors for the
 -- eta-quotients generators.
--- The variable `rgens` corresponds to the generators of $R^\infty(121)$.
+-- The variable `bspecss` corresponds to the generators of $R^\infty(121)$.
 --
 -- The generators of the eta-quotients of level 121 having a pole only
 -- at infinity $E^\infty(121)$ are given by these exponents
 -- for the eta-functions (with arguments being the divisors of 121).
 
-eqmev ==> etaQuotientMonoidExponentVectors $ QEQEV
-rgens := eqmev nn;
-assertEquals(rgens, [[1,0,-1],[-1,12,-11]])
-ys := [YEQn r for r in rgens];
-xiord := lcm [minimalRootOfUnity x for x in ys];
+bspecs := etaQuotientMonoidSpecifications level;
+rgensExpected: List List Z := [[1,0,-1],[-1,12,-11]]
+assertEquals([pureExponents x for x in bspecs], rgensExpected)
+
+ys := [specYM0EQn spec for spec in bspecs];
+xiord := lcm [minimalRootOfUnity x for x in ys]
 assertEquals(xiord, 44)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 
@@ -108,7 +109,7 @@ EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 
 -- The corresponding series are the following.
 
-egens := [EQA1C r for r in rgens]
+egens := [specM0A1C(spec) for spec in bspecs]
 
 -- ## Naming convention
 
@@ -197,27 +198,28 @@ xabz := samba(xt, [xz], 96)$QXTOPSAMBA1(C);
 --   \in M^\infty(121).
 -- $$
 
-s: List Z := etaCofactorInfinity(121, 1, [-1], 11, 6);
-assertEquals(s, [11,1,-11])
-alpha := alphaInfinity(121, s, 1, [-1], 11, 6);
+rspec := eqSPEC(1, [-1])
+sspec := etaCofactorInfinity(121, rspec, 11, 6)
+assertEquals(pureExponents sspec, [11,1,-11])
+alpha := alphaInfinity(sspec, rspec, 11, [6])
 assertEquals(alpha, -54)
 eulerquo: T1 C := qetaTaylorRep(eulerExpansion(1, [-1])$EQI(C));
 pp: T1 C := multisect(11-6, 6, eulerquo); ---- p(11n+6)
-cofact: T1 C := qetaTaylorRep(eulerExpansion(121, s)$EQI(C));
-f: A1 C := laurent(alpha, cofact * pp)$A1(C);
+cofact: T1 C := qetaTaylorRep(eulerExpansion(121, pureExponents sspec)$EQI(C));
+f: A1 C := laurent(alpha, cofact * pp)$A1(C)
+assertTrue(zero?(f-specM0A1(C)(121,rspec,11,6)))
 xf: X1 C := toX1(C, f, 'F)
 
 -- The generating series does not reduce to zero modulo the
 -- algebra basis `xab`.
 
-xfr := reduce(xf, xab)$QXRED1(C);
+xfr := reduce(xf, xab)$QXRED1(C)
 assertTrue(not zero? xfr)
-xfr
 
 -- Load function definitions for Klein $j$ function and for the trace
 -- map connected to the Atkin-Lehner involution.
 
-)r modfuns.input )quiet
+)read modfuns.input )quiet
 
 -- In order to have a fixed order of the factors of the discriminat,
 -- we sort the factors by the size of the second coefficient.
@@ -575,7 +577,7 @@ vPrint("f2relation", second red121f)
 -- u=\frac{\eta(11\tau)^{12}}{\eta(\tau) \eta(121\tau)^{11}}.
 -- $$
 
-ms := [EQAnCX r for r in rgens];
+ms := [specM0AnCX x for x in bspecs];
 l := [qetaGrades x for x in ms];
 assertEquals(l, [_
   [-5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],_
@@ -627,7 +629,7 @@ gens := concat([xj0, xj1], xgens)
 
 cfj01ab := samba(first xt, [first x for x in gens], 31)$QSAMBA1(C)
 
-grades := [asP(qetaGrade x) for x in basis cfj01ab]
+grades := [(qetaGrade x)::P for x in basis cfj01ab]
 numberOfGaps(cfj01ab)
 
 -- <a name="xjab"></a>
@@ -736,10 +738,9 @@ w := WIDTH0(242, cusp(gamma(1,1),gamma(2,1)))
 
 gen242 := genus(242)$GAMMA0;
 assertEquals(gen242, 22)
-rgens242 := etaQuotientMonoidExponentVectors(242)$QEQEV;
-EQA1C242(r) ==> expansion(etaQuotient(242, r)$EQI(C))::A1(C)
-assertEquals(#rgens242, 94)
-egens242 := [EQA1C242 r for r in rgens242];
+bspecs242 := etaQuotientMonoidSpecifications(242)
+assertEquals(#bspecs242, 94)
+egens242 := [specM0A1C spec for spec in bspecs242];
 l := [qetaGrade(x) for x in egens242];
 assertEquals(l(1..17),_
   [15,55,55,55,55,55,55,60,60,60,60,60,65,65,65,65,66])
@@ -747,7 +748,7 @@ assertEquals(l(1..17),_
 -- For all the series we compute that we need at most a second root of
 -- unity, i.e. we continue our computation in $C=\mathbb{Q}$.
 
-rgens242(1..12)
+bspecs242(1..12)
 
 -- We have tried to compute the algebra basis for N=121 with
 -- the addition of one of the series coming from the N=242
@@ -768,8 +769,8 @@ rgens242(1..12)
 
 -- So apply the trace function from $M^\infty(242)$ to $M^\infty(121)$.
 
-xg := toX1(C, traceMap(level, 2, rgens242.1), 'G)
-xh := toX1(C, traceMap(level, 2, rgens242.4), 'H)
+xg := toX1(C, traceMap(level, 2, pureExponents bspecs242.1), 'G)
+xh := toX1(C, traceMap(level, 2, pureExponents bspecs242.4), 'H)
 
 -- +
 -------------------------------------------------------------------
