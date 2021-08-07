@@ -623,6 +623,7 @@ QEtaCofactorSpace: Exports == Implementation where
                 qsetelt!(mat, ii, n + jj, x)
         qsetelt!(mat, ii, numOfVars+1, 24*nn) -- slack variable for (mod 24)
 
+        mm: P := level rspec
         --assert(DIVISIBLEBY?(mm, nn))
         -- fill the right-hand side
         nnrbarhat: Z := numer(nn*sigmaInfinity(rspec)) -- is integral
@@ -645,7 +646,8 @@ QEtaCofactorSpace: Exports == Implementation where
                 jj := jj + 1
                 qsetelt!(mat, ii, n + jj, 2*nnd)
         qsetelt!(mat, ii, numOfVars+2, 24) -- slack variable for (mod 24)
-        v.ii := - m * sigma0(rspec) -- fill right-hand side
+        --assert(DIVISIBLEBY?(mm, nn))
+        v.ii := - m * ((nn exquo mm)::Z) * sigma0(rspec) -- fill right-hand side
 
         -----------------------------------------------------------
         -- Condition (4) and slack variable for mod 2 for all a
