@@ -342,6 +342,8 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
       ++ $x = \exp(2 \pi i \tau/w)$ where w=width(nn, c) and
       ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c.
       ++ $r$ is given by rspec.
+    specification: % -> SPEC
+      ++ If x=etaQuotient(spec,...), then specification(x) returns spec.
     level: % -> P
       ++ level(x) returns the level of the eta-quotient.
       -- Returns mm.
@@ -429,10 +431,11 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
         rspec: SPEC := etaQuotientSpecification(mm, r)
         etaQuotient(rspec, m, lambda, gamma)
 
-    level(x: %): P == level(xx.fspec)
-    divisors(x: %): LP == divisors(xx.fspec)
+    specification(x: %): SPEC == xx.fspec
+    level(x: %): P == level specification x
+    divisors(x: %): LP == divisors specification x
     elt(x: %, delta: P): SymbolicEtaGamma == xx.feta.delta
-    exponents(x: %): LZ == pureExponents(xx.fspec)
+    exponents(x: %): LZ == pureExponents specification x
     multiplier(x: %): P == xx.fmultiplier
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
@@ -506,6 +509,8 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ $p_r(\gamma \tau)$ in terms of x = \exp(2 \pi i \tau/w) where
       ++ w=width(m, c) and gamma=matrix[[a,b],[c,d]] represents the
       ++ cusp a/c. $r$ is given by rspec.
+    specification: % -> SPEC
+      ++ If x=etaQuotient(spec,...), then specification(x) returns spec.
     level: % -> P
       ++ level(x) returns the level of the eta-quotient.
       -- Returns mm.
@@ -515,7 +520,7 @@ SymbolicEtaQuotientGamma: SetCategory with
       -- Returns divs.
     exponents: % -> LZ
       ++ exponents(x) returns the list of exponents corresponding to all
-      ++ divisors.
+      ++ divisors. Zeros at the end of the list are removed.
       -- Returns r.
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
@@ -539,6 +544,9 @@ SymbolicEtaQuotientGamma: SetCategory with
     elt: (%, N) -> SymbolicEtaQuotientLambdaGamma
       ++ x.lambda returns the data corresponding to the respective
       ++ lambda.
+    one?: % -> Boolean
+      ++ one?(x) returns true if the eta-quotient corresponding to x
+      ++ represents 1. This is the case if empty?(specification(x))
  == add
     A ==> IndexedOneDimensionalArray(SymbolicEtaQuotientLambdaGamma, 0)
     Rep ==> Record(
@@ -597,6 +605,7 @@ SymbolicEtaQuotientGamma: SetCategory with
 
     elt(x: %, lambda: N): SymbolicEtaQuotientLambdaGamma ==
         rep(x).feta.lambda
+    specification(x: %): SPEC == specification(x.0)
     level(x: %): P == level(x.0)
     divisors(x: %): LP == divisors(x.0)
     exponents(x: %): LZ == exponents(x.0)
@@ -609,7 +618,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, x.0)
     ((x: %) = (y: %)): Boolean == x.0 = y.0
-
+    one?(x): Boolean == empty? specification x
 
 
 
@@ -669,12 +678,14 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
       ++ etaQuotient(rspec, m, t, gamma) represents the expansion
       ++ of $P_{r, m, t}(\gamma \tau)$.
       ++ $r$ is given by rspec.
+    specification: % -> SPEC
+      ++ If x=etaQuotient(spec,...), then specification(x) returns spec.
     level: % -> P
       ++ level(x) returns the level of the eta-quotient.
       -- Returns mm.
     exponents: % -> LZ
       ++ exponents(x) returns the list of exponents corresponding to all
-      ++ divisors.
+      ++ divisors. Zeros at the end of the list are removed.
       -- Returns r.
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
@@ -696,6 +707,10 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
     elt: (%, N) -> SymbolicEtaQuotientGamma
       ++ x.u returns the data corresponding to the respective
       ++ orbit element u.
+    one?: % -> Boolean
+      ++ one?(x) returns true if the eta-quotient orbit product
+      ++ corresponding to x represents 1. This is true if
+      ++ empty?(specification(x)).
  == add
     YEQG ==> SymbolicEtaQuotientGamma
     HT ==> XHashTable(N, YEQG)
@@ -729,9 +744,10 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
         etaQuotient(rspec, m, t, gamma)
 
     elt(x: %, tt: N): YEQG == rep(x).fdata.tt
-    level(x: %): P == level(xx.fspec)
-    divisors(x: %): LP == divisors(xx.fspec)
-    exponents(x: %): LZ == pureExponents(xx.fspec)
+    specification(x: %): SPEC == xx.fspec
+    level(x: %): P == level specification x
+    divisors(x: %): LP == divisors specification x
+    exponents(x: %): LZ == pureExponents specification x
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
     gamma(x: %): SL2Z == xx.fgamma
@@ -752,6 +768,7 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
         xx.foffset ~= yy.foffset => false
         xx.fgamma = yy.fgamma
 
+    one?(x: %): Boolean == empty? specification x
 
 
 
@@ -781,6 +798,9 @@ product a modular function.
 It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)}, \ie, it
 computes the building blocks for $F_{s, r, m, t}(\gamma\tau)$.
 
+In order to create a common user interface, we also represent
+$g_r(\gamma \tau)$ (\code{SymbolicEtaQuotientGamma}).
+
 )endif
 
 -------------------------------------------------------------------
@@ -801,6 +821,12 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     etaQuotient: (SPEC, SPEC, P, N) -> %
       ++ etaQuotient(sspec, rspec, m, t) returns
       ++ etaQuotient(sspec, rspec, m, t, matrix [[1,0],[0,1]]).
+    etaQuotient: (SPEC, SL2Z) -> %
+      ++ etaQuotient(rspec, gamma) represents the expansion of
+      ++ $g_r(\gamma \tau)$. $r$ is given by rspec.
+    etaQuotient: SPEC -> %
+      ++ etaQuotient(rspec) returns
+      ++ etaQuotient(rspec, matrix [[1,0],[0,1]]).
     cofactor: % -> SymbolicEtaQuotientGamma
       ++ cofactor(x) returns the cofactor part to make $F_{s,r,m,t}$ a
       ++ modular function.
@@ -810,6 +836,9 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
       ++ minimalRootOfUnity(x) returns the lcm of the
       ++ minimalRootUnity(cofactor(x)) and
       ++ [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
+    one?: % -> Boolean
+      ++ one?(x) returns true if the eta-quotient corresponding to x
+      ++ represents 1.
  == add
     Rep ==> Record(
               fcoetaqg: SymbolicEtaQuotientGamma,
@@ -851,6 +880,7 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     ((x: %) = (y: %)): Boolean ==
         (xx.fcoetaqg = yy.fcoetaqg) and (xx.fyeqopg = yy.fyeqopg)
 
+    one?(x: %): Boolean == one? cofactor x and one? orbitProduct x
 
 
 
@@ -921,12 +951,16 @@ SymbolicEtaQuotient: SetCategory with
       ++ etaQuotient(rspec, cusps(mm)$CongruenceSubgroupGamma0).
       ++ $r$ and $mm$ are given by rspec.
       ++ See \eqref{eq:g_r(tau)}.
+    specification: % -> SPEC
+      ++ If x=etaQuotient(spec,...), then specification(x) returns spec.
     level: % -> P
       ++ If x=etaQuotient(mm, r) then level(x) returns the level of
       ++ the eta-quotient, i.e., level(x)=mm.
     exponents: % -> LZ
       ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
       ++ exponents, i.e., exponents(x)=r.
+    specification: % -> SPEC
+      ++ If x=etaQuotient(spec), then specification(x) returns spec.
     cusps: % -> List Cusp
       ++ If x=etaQuotient(mm, r), then
       ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma0.
@@ -944,7 +978,9 @@ SymbolicEtaQuotient: SetCategory with
       ++ expansion of x at all the cusps in the canonical variables,
       ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA0
       ++ Internally, the matrix of Ligozat is employed.
-      ++
+    one?: % -> Boolean
+      ++ one?(x) returns true if the eta-quotient corresponding to x
+      ++ represents 1.
  == add
     HT ==> XHashTable(Cusp, SymbolicEtaQuotientGamma)
     Rep ==> Record(
@@ -982,8 +1018,10 @@ SymbolicEtaQuotient: SetCategory with
     etaQuotient(mm: P, r: LZ): % ==
         etaQuotient(mm, r, cusps(mm)$GAMMA0)
 
-    level(x: %): P == level(xx.fspec)
-    exponents(x: %): LZ == pureExponents(xx.fspec)
+    specification(x: %): SPEC == xx.fspec
+    level(x: %): P == level specification x
+    divisors(x: %): LP == divisors specification x
+    exponents(x: %): LZ == pureExponents specification x
     cusps(x: %): List Cusp == xx.fcusps
     elt(x: %, cusp: Cusp): SymbolicEtaQuotientGamma == xx.feta.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
@@ -998,7 +1036,7 @@ SymbolicEtaQuotient: SetCategory with
     ((x: %) = (y: %)): Boolean ==
         xx.fspec ~= yy.fspec => false
         xx.fcusps = yy.fcusps
-
+    one?(x: %): Boolean == empty? specification x
 
 
 
@@ -1078,6 +1116,9 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
+    one?: % -> Boolean
+      ++ one?(x) returns true if the eta-quotient corresponding to x
+      ++ represents 1.
  == add
     YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
     HT ==> XHashTable(Cusp, YM0EQG)
@@ -1139,7 +1180,7 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
         xx.foffset ~= yy.foffset => false
         xx.fcusps = yy.fcusps
 
-
+    one?(x: %): Boolean == empty? xx.fsspec and empty? xx.frspec
 
 
 
@@ -1564,6 +1605,9 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
     properGeneralizedEtaQuotient: % -> YPGEQLG
       ++ properGeneralizedEtaQuotient(x) returns the part of x that
       ++ corresponds to the proper generalized eta-quotient part of x.
+    specification: % -> SPEC
+      ++ If x=generalizedEtaQuotient(spec,...), then specification(x)
+      ++ returns spec.
     level: % -> P
       ++ If x=generalizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ level(x) returns level(rspec).
@@ -1624,8 +1668,8 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
 
     pureEtaQuotient(x: %): YEQLG == xx.fpure
     properGeneralizedEtaQuotient(x: %): YPGEQLG == xx.fpropergeneralized
-    level(x: %): P == level(xx.fspec)
     specification(x: %): SPEC == xx.fspec
+    level(x: %): P == level specification x
     multiplier(x: %): P == xx.fmultiplier
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
@@ -1733,6 +1777,10 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
     elt: (%, N) -> SymbolicGeneralizedEtaQuotientLambdaGamma
       ++ x.lambda returns the data corresponding to the respective
       ++ lambda.
+    one?: % -> Boolean
+      ++ one?(x) returns true if the generalized eta-quotient
+      ++ corresponding to x represents 1. This is the case if
+      ++ empty?(specification(x))
  == add
     YEQLG ==> SymbolicEtaQuotientLambdaGamma
     YPGEQLG ==> SymbolicProperGeneralizedEtaQuotientLambdaGamma
@@ -1904,6 +1952,10 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
       ++ minimalRootOfUnity(x) returns the lcm of
       ++ minimalRootOfUnity(cofactor(x)) and
       ++ minimalRootOfUnity(basefactor(x)).
+    one?: % -> Boolean
+      ++ one?(x) returns true if the generalized eta-quotient
+      ++ corresponding to x represents 1. This is the case if
+      ++ one?(basefactor(x)) and one?(cofactor(x))
  == add
     YGEQG ==> SymbolicGeneralizedEtaQuotientGamma
     Rep ==> Record(
@@ -1944,6 +1996,7 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
     ((x: %) = (y: %)): Boolean ==
         (xx.fcofactor = yy.fcofactor) and (xx.fbasefactor = yy.fbasefactor)
 
+    one?(x: %): Boolean == one? basefactor x and one? cofactor x
 
 
 
@@ -2023,6 +2076,10 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
       ++ expansion of x at all the cusps in the canonical variables.
       ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA0.
       ++ Internally, the matrixEtaOrder is used.
+    one?: % -> Boolean
+      ++ one?(x) returns true if the generalized eta-quotient
+      ++ corresponding to x represents 1. This is the case if
+      ++ empty?(specification(x))
  == add
     HT ==> XHashTable(Cusp, SymbolicGeneralizedEtaQuotientGamma)
     Rep ==> Record(
@@ -2058,8 +2115,8 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     generalizedEtaQuotient(rspec: SPEC): % ==
         generalizedEtaQuotient(rspec, cusps(level rspec)$GAMMA1)
 
-    level(x: %): P == level(xx.fspec)
     specification(x: %): SPEC == xx.fspec
+    level(x: %): P == level specification x
     cusps(x: %): List Cusp == xx.fcusps
     elt(x: %, cusp: Cusp): SymbolicGeneralizedEtaQuotientGamma == xx.feta.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
@@ -2072,7 +2129,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     ((x: %) = (y: %)): Boolean ==
         xx.fspec ~= yy.fspec => false
         xx.fcusps = yy.fcusps
-
+    one?(x: %): Boolean == empty? specification x
 
 
 
