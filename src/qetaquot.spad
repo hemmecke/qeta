@@ -575,11 +575,6 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ $F_{s,r,m,t}(\gamma\tau)$ given by y in the canonical
       ++ variables given by the width of the cusp wrt.
       ++ Gamma_0(level(y)).
-    laurentExpansionsGamma0: SymbolicEtaQuotient -> QLX
-      ++ laurentExpansions y represents the expansion of
-      ++ $p_{r,m,t}(\tau)$ in terms of x = \exp(2 \pi i \tau/w) where
-      ++ w=width(m,c)$CongruenceSubgroupGamma0 at all cusps that are
-      ++ given in y. See \eqref{eq:p_r-m-t(gamma*tau)}.
     laurentExpansions: SymbolicModularGamma0EtaQuotient -> QLX
       ++ laurentExpansions y represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ at all cusps given by y in the
@@ -613,11 +608,6 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
         ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ given by y in the
         ++ canonical variables given by the width of the cusp wrt.
         ++ Gamma_1(level(y)). See \eqref{eq:F_sbar-rbar-m-t(tau)}.
-      laurentExpansionsGamma1: SymbolicGeneralizedEtaQuotient -> QLX
-        ++ laurentExpansions y represents the expansion of
-        ++ $p_{\bar{r},m,t}(\tau)$ in terms of x = \exp(2 \pi i \tau/w) where
-        ++ w=width(m,c)$CongruenceSubgroupGamma0 at all cusps that are
-        ++ given in y. See \eqref{eq:p_rbar-m-t(gamma*tau)}.
       laurentExpansions: YM1GEQ -> QLX
         ++ laurentExpansions y represents the q-expansion of
         ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ at all cusps given by
@@ -795,18 +785,6 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         laurent(puiseuxExpansion y, w)
 
     -- $g_r(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
-    laurentExpansionsGamma0(y: SymbolicEtaQuotient): QLX ==
-        nn: P := level y
-        -- check whether the exponent vectors (rdelta) lead to a
-        -- modular function.
-        if not modularGamma0?(nn, exponents y)$QETAAUX then
-            warnPrint("QEtaSeriesExpansion: not a modular function", exponents y)
-        hser: QLX := empty()
-        for cusp in cusps y repeat
-            w: P := WIDTH0(nn, cusp) -- width of cusp
-            hser.cusp := laurent(puiseuxExpansion(y.cusp), w)
-        hser
-
     -- $F_{s,r,m,t}(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
     laurentExpansions(y: SymbolicModularGamma0EtaQuotient): QLX ==
         hser: QLX := empty()
@@ -1051,17 +1029,6 @@ without the $(c\tau+d)$-part.
           laurent(puiseuxExpansion y, w)
 
       -- $g_{\bar{r}}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
-      --assert(CX has Field)
-      laurentExpansionsGamma1(y: SymbolicGeneralizedEtaQuotient): QLX ==
-          if not modularGamma1?(spec := specification y) then
-              warnPrint("QEtaSeriesExpansion: not a modular function", spec)
-          nn := level y
-          hser: QLX := empty()
-          for cusp in cusps y repeat
-              w: P := WIDTH1(nn, cusp) -- width of cusp
-              hser.cusp := laurent(puiseuxExpansion(y.cusp), w)
-          hser
-
       -- $F_{\bar{r},m,t}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
       --assert(CX has Field)
       laurentExpansions(y: YM1GEQ): QLX ==
