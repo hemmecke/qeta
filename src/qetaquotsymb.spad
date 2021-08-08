@@ -827,6 +827,8 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     etaQuotient: SPEC -> %
       ++ etaQuotient(rspec) returns
       ++ etaQuotient(rspec, matrix [[1,0],[0,1]]).
+    coerce: SymbolicEtaQuotientGamma -> %
+      ++ coerce(x) turns x into an element of this domain.
     cofactor: % -> SymbolicEtaQuotientGamma
       ++ cofactor(x) returns the cofactor part to make $F_{s,r,m,t}$ a
       ++ modular function.
@@ -866,6 +868,15 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
 
     etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
         etaQuotient(sspec, rspec, m, t, matrix [[1,0],[0,1]])
+
+    etaQuotient(rspec: SPEC, gamma: SL2Z): % ==
+        sspec: SPEC := etaQuotientSpecification(level rspec, [])
+        etaQuotient(sspec, rspec, 1, 0, gamma)
+
+    etaQuotient(rspec: SPEC): % == etaQuotient(rspec, matrix [[1,0],[0,1]])
+
+    coerce(x: SymbolicEtaQuotientGamma): % ==
+        etaQuotient(specification x, gamma x)
 
     cofactor(x: %): SymbolicEtaQuotientGamma == xx.fcoetaqg
     orbitProduct(x: %): SymbolicEtaQuotientOrbitProductGamma == xx.fyeqopg
@@ -1011,12 +1022,10 @@ SymbolicEtaQuotient: SetCategory with
             h.cusp := y
             minroot := lcm(minroot, minimalRootOfUnity y)
         per [rspec, cusps, h, asP minroot]
-    etaQuotient(rspec: SPEC): % ==
-        etaQuotient(rspec, cusps(level rspec)$GAMMA0)
+    etaQuotient(rspec: SPEC): % == etaQuotient(rspec, cusps(level rspec)$GAMMA0)
     etaQuotient(mm: P, r: LZ, cusps: List Cusp): % ==
         etaQuotient(etaQuotientSpecification(mm, r),  cusps)
-    etaQuotient(mm: P, r: LZ): % ==
-        etaQuotient(mm, r, cusps(mm)$GAMMA0)
+    etaQuotient(mm: P, r: LZ): % == etaQuotient(mm, r, cusps(mm)$GAMMA0)
 
     specification(x: %): SPEC == xx.fspec
     level(x: %): P == level specification x
@@ -1087,6 +1096,14 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
       ++ $F_{r,s,m,t}(\gamma \tau)$ for all gamma corresponding to the
       ++ cusps of $\Gamma_0(nn)$.
       ++ $r$ and $s$ are given by rspec and sspec, repectively.
+    etaQuotient: (SPEC, List Cusp) -> %
+      ++ etaQuotient(rspec, cusps) represents the expansion of
+      ++ $g_r(\gamma \tau)$ for all gamma corresponding to the given
+      ++ cusps. $r$ is given by rspec.
+    etaQuotient: SPEC -> %
+      ++ etaQuotient(rspec) represents the expansion of $g_r(\gamma
+      ++ \tau)$ for all gamma corresponding to the cusps of
+      ++ $\Gamma_0(nn)$. $r$ is given by rspec.
     etaQuotient: (P, LZ, P, LZ, P, N, List Cusp) -> %
       ++ etaQuotient(nn, s, mm, r, m, t, cusps) represents the expansion
       ++ of $F_{s,r,m,t}(\gamma \tau)$ for all gamma corresponding to
@@ -1097,6 +1114,8 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
       ++ $F_{r,s,m,t}(\gamma \tau)$ for all gamma corresponding to the
       ++ cusps of $\Gamma_0(nn)$.
       ++ $r$ and $s$ are indexed by the divisors of $mm$ and $nn$, repectively.
+    coerce: SymbolicEtaQuotient -> %
+      ++ coerce(x) turns x into an element of this domain.
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_0(nn).
@@ -1149,6 +1168,12 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
         etaQuotient(sspec, rspec, m, t, cusps(level sspec)$GAMMA0)
 
+    etaQuotient(rspec: SPEC, cusps: List Cusp): % ==
+        sspec: SPEC := etaQuotientSpecification(level rspec, [])
+        etaQuotient(sspec, rspec, 1, 0, cusps)
+
+    etaQuotient(rspec: SPEC): % == etaQuotient(rspec, cusps(level rspec)$GAMMA0)
+
     etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, cusps: List Cusp): % ==
         sspec: SPEC := etaQuotientSpecification(nn, s)
         rspec: SPEC := etaQuotientSpecification(mm, r)
@@ -1156,6 +1181,8 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
 
     etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): % ==
         etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
+
+    coerce(x: SymbolicEtaQuotient): % == etaQuotient(specification x, cusps x)
 
     level(x: %): P == level(xx.fsspec)
     multiplier(x: %): P == xx.fmultiplier
@@ -1938,9 +1965,20 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
       ++ represents the expansion of
       ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$.
     generalizedEtaQuotient: (SPEC, SPEC, P, N, SL2Z) -> %
-      ++ generalizedEtaQuotient(spec, rspec, m, t, gamma) represents
+      ++ generalizedEtaQuotient(sspec, rspec, m, t, gamma) represents
       ++ the expansion of $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ where
       ++ \bar{s} and \bar{r} are given through sspec and rspec.
+    generalizedEtaQuotient: (SPEC, SL2Z) -> %
+      ++ generalizedEtaQuotient(rspec, gamma) represents
+      ++ the expansion of $g_{\bar{r}}(\gamma\tau)$ where
+      ++ \bar{r} is given through rspec.
+    generalizedEtaQuotient: SPEC -> %
+      ++ generalizedEtaQuotient(rspec) represents the expansion of
+      ++ $g_{\bar{r}}(\tau)$ where \bar{r} is given through rspec. It
+      ++ is the same as
+      ++ generalizedEtaQuotient(rspec,matrix[[1,0],[0,1]]).
+    coerce: SymbolicGeneralizedEtaQuotientGamma -> %
+      ++ coerce(x) turns x into an element of this domain.
     cofactor: % -> SymbolicGeneralizedEtaQuotientGamma
       ++ cofactor(x) returns the cofactor part to make
       ++ $F_{\bar{s},\bar{r},m,t}$ a modular function for
@@ -1977,11 +2015,21 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
         minR2: P := minimalRootOfUnity basefactor
         per [cofactor, basefactor, asP lcm(minR1, minR2)]
 
+    generalizedEtaQuotient(rspec: SPEC, gamma: SL2Z): % ==
+        sspec: SPEC := generalizedEtaQuotientSpecification(level rspec, [])
+        generalizedEtaQuotient(sspec, rspec, 1, 0, gamma)
+
+    generalizedEtaQuotient(rspec: SPEC): % ==
+        generalizedEtaQuotient(rspec, matrix [[1,0],[0,1]])
+
     generalizedEtaQuotient(nn: P, sbar: LLZ, mm: P, rbar: LLZ, m: P, t: N,
                            gamma: SL2Z): % ==
         sspec: SPEC := generalizedEtaQuotientSpecification(nn, sbar)
         rspec: SPEC := generalizedEtaQuotientSpecification(mm, rbar)
         generalizedEtaQuotient(sspec, rspec, m, t, gamma)
+
+    coerce(x: SymbolicGeneralizedEtaQuotientGamma): % ==
+        generalizedEtaQuotient(specification x, gamma x)
 
     cofactor(x: %): SymbolicGeneralizedEtaQuotientGamma == xx.fcofactor
     basefactor(x: %): SymbolicGeneralizedEtaQuotientGamma == xx.fbasefactor
@@ -2074,7 +2122,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     qetaGrades: % -> List Z
       ++ qetaGrades(x) returns the (negated) exponents of a series
       ++ expansion of x at all the cusps in the canonical variables.
-      ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA0.
+      ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA1.
       ++ Internally, the matrixEtaOrder is used.
     one?: % -> Boolean
       ++ one?(x) returns true if the generalized eta-quotient
@@ -2181,6 +2229,16 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
       ++ $F_{rbar,sbar,m,t}(\gamma \tau)$ for all gamma corresponding
       ++ to the cusps of $\Gamma_0(nn)$. $rbar$ and $sbar$ are given
       ++ by rspec and sspec, respectively.
+    generalizedEtaQuotient: (SPEC, List Cusp) -> %
+      ++ generalizedEtaQuotient(rspec,cusps) represents the expansion
+      ++ of $g_{rbar}(\gamma \tau)$ for all gamma corresponding to the
+      ++ given cusps. $rbar$ is given by rspec.
+    generalizedEtaQuotient: SPEC -> %
+      ++ etaQuotient(rspec) represents the expansion of
+      ++ $g_{rbar}(\gamma \tau)$ for all gamma corresponding to the
+      ++ cusps of $\Gamma_0(nn)$. $rbar$ is given by rspec.
+    coerce: SymbolicGeneralizedEtaQuotient -> %
+      ++ coerce(x) turns x into an element of this domain.
     level: % -> P
       ++ level(x) returns nn such that x corresponds to a modular
       ++ function for Gamma_1(nn).
@@ -2222,6 +2280,16 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
 
     generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
         generalizedEtaQuotient(sspec, rspec, m, t, cusps(level sspec)$GAMMA1)
+
+    generalizedEtaQuotient(rspec: SPEC, cusps: List Cusp): % ==
+        sspec: SPEC := generalizedEtaQuotientSpecification(level rspec, [])
+        generalizedEtaQuotient(sspec, rspec, 1, 0, cusps)
+
+    generalizedEtaQuotient(rspec: SPEC): % ==
+        generalizedEtaQuotient(rspec, cusps(level rspec)$GAMMA1)
+
+    coerce(x: SymbolicGeneralizedEtaQuotient): % ==
+        generalizedEtaQuotient(specification x, cusps x)
 
     level(x: %): P == xx.flevel
     elt(x: %, cusp: Cusp): YM1GEQG == xx.fy.cusp
