@@ -154,7 +154,12 @@ QEtaSpecification: Exports == Implementation where
       ++ precomputed and stored inside the structure.
     pureExponents: % -> LZ
       ++ pureExponents returns the exponents of the pure eta-quotient
-      ++ part of the specification.
+      ++ part of the specification. Zeros at the end of the list are
+      ++ removed.
+    allPureExponents: % -> LZ
+      ++ allPureExponents(x) returns the exponents of the pure
+      ++ eta-quotient part of the specification. The resulting list
+      ++ has as many entries as divisors(x).
     properGeneralizedPart: % -> LLZ
       ++ properGeneralizedPart(x) returns the list of indicies and
       ++ exponents of the proper generalized part of the (generalized)
@@ -305,6 +310,11 @@ QEtaSpecification: Exports == Implementation where
 
     -- extracting other information from the data
     pure?(x: %): Boolean == empty? properGeneralizedPart x
+    allPureExponents(x: %): List Z ==
+        le := xx.fpure
+        n := #le + 1
+        for i in n .. #divisors(x) repeat le := concat(le, 0)
+        le
     purePart(x: %): LLZ ==
         [[d, e] for d in divisors x for e in pureExponents x | not zero? e]
     empty?(x: %): Boolean == pure? x and empty? pureExponents x
