@@ -246,8 +246,10 @@ QEtaPuiseuxExpansion(C, mx, CX, xi): Exports == Implementation where
     checkedMultisect(m: P, tx: TX): TX ==
         one? m => tx
         stx: Stream CX := coefficients tx
-        for i in 1..m-1 repeat
-            stx := rest stx
+        explicitlyEmpty? stx => tx
+        i := 1 -- check the next m-1 coefficients -- they should be all 0
+        while not explicitlyEmpty?(stx := rest stx) and i < m repeat
+            i := i + 1
             if not zero? first stx then
                 errorPrint("checkedMultisect c", first stx)
                 errorPrint("Taylor representation", tx)
