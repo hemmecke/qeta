@@ -15,16 +15,17 @@ C ==> Q
 oo ==> infinity()$Cusp
 )read convenience.input )quiet
 
-tst(nn0, mm0, r0, m0, t0) ==> (_
-  nn := nn0 :: P; mm := mm0 :: P; r := r0$List(Z);_
-  m := m0 :: P; t := t0 :: N;_
-  s := etaCofactorInfinity(nn, mm, r, m, t)$QEtaModularGamma0;_
-  yf := etaQuotient(nn, s, mm, r, m, t)$YM0EQ;_
+tst(nn, mm, r, m, t) ==> (_
+  rspec: SPEC := eqSPEC(mm, r);_
+  sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0;_
+  yf := specYM0EQ(sspec, rspec, m, t);_
   xiord := minimalRootOfUnity(yf)::P;_
   EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);_
-  fn := ((laurentExpansions(yf)$QELX(C, CX))(oo))::A1(CX);_
-  f1 := modularEtaQuotientInfinity(nn, s, mm, r, m, t)$QETAMG0I(CX);_
-  assertTrue(zero?(f1 - fn)))
+  spitzen := cusps yf;_
+  n := position(oo, spitzen);_
+  fn := expandAnCX yf;_
+  f1 := specM0A1(CX)(sspec, rspec, m, t);_
+  assertTrue(zero?(f1 - series(fn,n))))
 --endsetup
 
 )set mess type on
