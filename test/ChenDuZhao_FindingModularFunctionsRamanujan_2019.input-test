@@ -61,7 +61,6 @@
 C ==> Q
 
 GEP ==> generalizedEtaPower $ EQI(C)
-GEQ ==> generalizedEtaQuotient $ EQI(C)
 EQ ==> etaQuotient $ EQI(C)
 EE ==> eulerExpansion $ EQI(C)
 EX ==> expansion $ EQI(C)
@@ -73,24 +72,15 @@ ef ==> eulerFunction $ QF
 gep ==> generalizedEulerProduct $ QF
 one(n: Z): Q == 1
 
-ygeq ==> generalizedEtaQuotient $ YGEQ
-ym1geq ==> generalizedEtaQuotient $ YM1GEQ
-
 L ==> L1 C
 TX ==> T1 CX
 LX ==> L1 CX
 PX ==> QEtaPuiseuxSeries CX
 
-LZ ==> List Z
-LLZ ==> List LZ
-GEQSPLIT ==> Record(pure: LZ, properGeneralized: LLZ)
-
-PUIEX ==> puiseuxExpansion $ QESX(C, CX)
-LAUEX ==> laurentExpansion $ QESX(C, CX)
-LAUEXs ==> laurentExpansions $ QESX(C, CX)
-LAUEX1 ==> laurentExpansionsGamma1 $ QESX(C, CX)
-
 oo ==> infinity()$Cusp
+
+)read convenience.input )quiet
+)set stream calc 2
 -- -
 
 ps := partitionSeries(1)$QFunctions(Q, L1(Q))
@@ -119,17 +109,17 @@ ps := partitionSeries(1)$QFunctions(Q, L1(Q))
 
 -- We can easily verify this identity up to order 100.
 
-mm := m := 5; t := 0;
-rbar := [[1,-1]];
-nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)$QEtaCofactorSpace
+m := 5; t := 0;
+rspec := geqSPEC [[1,-1]];
+nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
 
 -- As can be seen that is done in level 5.
 
 f := p5n0 := choose(m, t, ps);
-rbar1 := [[1,-2],[5,1],[5,1,-8]];
-rbar2 := [[1,-7],[5,6],[5,1,2]];
-f1 := EE GEQ rbar1
-f2 := EE GEQ rbar2
+rspec1 := geqSPEC [[1,-2],[5,1],[5,1,-8]];
+rspec2 := geqSPEC [[1,-7],[5,6],[5,1,2]];
+f1 := eulerExpansion specEQI(C) rspec1
+f2 := eulerExpansion specEQI(C) rspec2
 g := f1 - monomial(3, 1)$L1(C)*f2;
 assertEquals(order(f - g,100), 100)
 
@@ -143,7 +133,8 @@ assertEquals(order(f - g,100), 100)
 --
 -- This cofactor can be computed as follows.
 
-sbar := etaCofactorInfinity(nn,mm,rbar,m,t,[[1],[5],[5, 1]])$QEtaModularGamma1
+idxs := [[1],[5],[5, 1]]
+sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
 
 -- Interestingly, it is just the invers of the eta-quotient in
 -- the second summand of the right-hand side. So we will show:
@@ -173,19 +164,22 @@ sbar := etaCofactorInfinity(nn,mm,rbar,m,t,[[1],[5],[5, 1]])$QEtaModularGamma1
 -- 3.
 -- \end{align}
 
-assertTrue(modularGamma1?(nn,sbar,mm,rbar,m,t))
+assertTrue(modularGamma1?(sspec,rspec,m,t))
 
 -- Is the cofactor and the basis modular for $\Gamma_1(N)$.
 
-yf := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t);
-rbart := [[1,5], [5,-5], [5,1,-10]]
-yt := generalizedEtaQuotient(nn,rbart);
+yf := specYM1GEQ(sspec,rspec,m,t);
+rspect := geqSPEC [[1,5], [5,-5], [5,1,-10]]
+yt := specYM1GEQ(rspect);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(yf)
 
-af := LAUEXs(yf)::An(CX); qetaGrades(af)
-at := LAUEX1(yt)::An(CX); qetaGrades(at)
+newEXPANDn yf
+oldEXPANDn yf
+
+af := expandAnCX yf; qetaGrades af
+at := expandAnCX yt; qetaGrades at
 
 -- We check the identity at all cusps of
 -- $\Gamma_1(5)$.
@@ -199,25 +193,21 @@ generalizedEtaFunctionIndices(nn)
 )clear prop idxs
 idxs: List List Z := [[1],[5],[5, 2]]
 ggens := generalizedEtaQuotientMonoidExponentVectors(nn, idxs)
-rbargens := [toGeneralizedEtaQuotientSpecification(idxs,x) for x in ggens]
+baspecs := generalizedEtaQuotientMonoidSpecifications(nn, idxs)
 
-)display op generalizedEtaQuotientMonoidExponentVectors
 
-ggens := generalizedEtaQuotientMonoidExponentVectors(nn)
-rbargens := [toGeneralizedEtaQuotientSpecification(nn,x) for x in ggens]
-
-ygens := [ygeq(nn,x) for x in rbargens];
-egens := [LAUEX1(x)::An(CX) for x in ygens];
+ygens := [specYM1GEQ x for x in bspecs];
+egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
 msyms := indexedSymbols("M", #egens)
 k := position(oo, spitzen)
 xgens := [toX1(C, series(x,k), msym) for msym in msyms for x in egens];
 [qetaGrade x for x in xgens]
-abx := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
+xab := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
 
 xf := toX1(C, series(af,k), 'F)
-xr := reduce(xf,abx)$QXTOPRED1(C)
+xr := reduce(xf,xab)$QXTOPRED1(C)
 pol := second(xr)::Pol(C)
 ilcpol := -inv(coefficient(pol,'F, 1))::C
 
@@ -238,30 +228,30 @@ assertEquals(mpol, M1-3)
 -- See \cite[Thm.~1.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 -- Theorem 1.1 Equations (1.7)-(1.9)
 
-mm := m := 11; t := 6;
-rbar := [[1,-1]]
-nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)
+m := 11; t := 6;
+rspec := eqSPEC [[1,-1]]
+nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)
 
 p11n6 := choose(11,6,ps);
 z01 := EE(EQ(11,[24,-23])*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4));
 z02 := EE(EQ(11,[24,-23])*GEQ(11,[1,2,3,4],[-28,-16,-12,-4]));
 assertEquals(order(z01 - z02, 100), 100)
 
-rbarz0 := [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
-z00 := EE GEQ rbarz0;
+rspecz0 := geqSPEC [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
+z00 := EE specEQI(C) rspecz0;
 assertEquals(order(z01-z00, 100), 100)
 z0 := monomial(1,-20)$L1(C)* z00;
 
-rbarz := [[1,1],[11,-1],[11,1,-3],[11,2,-2]];
-z := EX GEQ rbarz;
+rspecz := geqSPEC [[1,1],[11,-1],[11,1,-3],[11,2,-2]];
+z := EX specEQI(C) rspecz;
 assertEquals(order(z - EX(EQ(11,[1,-1]) * GEQ(11,[1,2],[-3,-2])), 100), 100)
 
-rbare := [[1,3],[11,-3],[11,1,-5],[11,2,-5],[11,3,-4],[11,4,-1]];
-e := EX GEQ rbare;
+rspece := geqSPEC [[1,3],[11,-3],[11,1,-5],[11,2,-5],[11,3,-4],[11,4,-1]];
+e := EX specEQI(C) rspece;
 ex := EX(EQ(11,[3,-3]) * GEQ(11,[1,2,3,4],[-5,-5,-4,-1]));
 assertEquals(order(e - ex, 100), 100)
 
-ts := [z^10, z^8*e, z^9, z^7*e, z^8, z^6*e, z^7, z^5*e, z^6, z^4*e,
+ts := [z^10, z^8*e, z^9, z^7*e, z^8, z^6*e, z^7, z^5*e, z^6, z^4*e,_
        z^5, z^3*e, z^4, z^2*e, z^3, z*e, z^2, z, 1$L];
 cs := [1,11,30,-44,-90,44,72,-44,4,99,-12,-132,-41,88,68,-22,-39,7,1];
 terms := [c*t for c in cs for t in ts];
@@ -272,49 +262,50 @@ assertEquals(order(zz, 100), 100)
 
 -- ## Check modularity for cofactor
 
-sbar := rbarz0
-assertTrue(modularGamma1?(nn,sbar,mm,rbar,m,t))
+sspec := rspecz0
+assertTrue(modularGamma1?(sspec,rspec,m,t))
 
 -- ## Check Puiseux = Laurent expansion
 
 -- Check that Puiseux expansion and Laurent
 -- expansion have the same order.
 
-x := ym1geq(nn,sbar,mm,rbar,m,t);
+x := specYM1GEQ(sspec,rspec,m,t);
 spitzen := cusps x
 xiord := minimalRootOfUnity(x)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 )set stream calc 2
 PGRD(nn,x,c) ==> - WIDTH1(nn, c)*order PUIEX(x(c))
 pgrds := [PGRD(nn, x, cusp) for cusp in spitzen]
-ax := LAUEXs(x)::An(CX);
+ax := expandAnCX x;
 assertEquals(pgrds, qetaGrades ax)
-xz0 := ygeq(nn,rbarz0);
+yz0 := specYGEQ rspecz0;
+yz := specYGEQ rspecz;
+pgrds := [PGRD(nn, yz, cusp) for cusp in spitzen]
+assertEquals(pgrds, qetaGrades yz)
 
-xz := ygeq(nn,rbarz);
-pgrds := [PGRD(nn, xz, cusp) for cusp in spitzen]
-assertEquals(pgrds, qetaGrades(xz))
-
-xe := ygeq(nn,rbare);
-pgrds := [PGRD(nn, xe, cusp) for cusp in spitzen]
-assertEquals(pgrds, qetaGrades(xe))
+ye := specYGEQ rspece;
+pgrds := [PGRD(nn, ye, cusp) for cusp in spitzen]
+assertEquals(pgrds, qetaGrades ye)
 
 -- ## Check modularity of basis
 
-assertTrue(modularGamma1?(nn,[],mm,rbarz,1,0))
-assertTrue(modularGamma1?(nn,[],mm,rbare,1,0))
+assertTrue(modularGamma1? rspecz)
+assertTrue(modularGamma1? rspece)
 
 -- ## Find cofactor
 
 idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]]
-rbarz0
-sbar := etaCofactorInfinity(nn,mm,rbar,m,t,idxs)$QEtaModularGamma1
-assertTrue(modularGamma1?(nn,sbar,mm,rbar,m,t))
-yf := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t);
+assertEquals(concat(idxs, [11,5]), generalizedEtaFunctionIndices nn)
+
+rspecz0
+sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
+assertTrue(modularGamma1?(sspec,rspec,m,t))
+yf := generalizedEtaQuotient(sspec,rspec,m,t);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-spitzen := cusps(yf)
-af := LAUEXs(yf)::An(CX); qetaGrades(af)
+spitzen := cusps yf
+af := expandAnCX yf; qetaGrades af
 
 -- Obviously, our cofactor gives the same modular
 -- function as the cofactor z0 from
@@ -326,26 +317,27 @@ assertTrue(zero?(af-ax))
 -- ## Find the relation
 
 ggens := generalizedEtaQuotientMonoidExponentVectors(nn);
-rbargens := [toGeneralizedEtaQuotientSpecification(nn,x) for x in ggens]
-ygens := [ygeq(nn,x) for x in rbargens];
-egens := [LAUEX1(x)::An(CX) for x in ygens];
+gspecs := [geqSPEC(nn,toGeneralizedEtaQuotientSpecification(nn,x)) for x in ggens]
+bspecs := generalizedEtaQuotientMonoidSpecifications nn;
+assertEquals(gspecs, bspecs)
+ygens := [specYM1GEQ x for x in bspecs];
+egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
 msyms := indexedSymbols("M", #egens)
 k := position(oo, spitzen)
 xgens := [toX1(C, series(x,k), msym) for msym in msyms for x in egens];
 [qetaGrade x for x in xgens]
-abx := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
-abx := samba(xgens.3, xgens)$QXTOPSAMBA1(C)
+xab := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
 
 xf := toX1(C, series(af,k), 'F)
-xr := reduce(xf,abx)$QXTOPRED1(C)
+xr := reduce(xf, xab)$QXTOPRED1(C)
 pol := second(xr)::Pol(C);
 ilcpol := -inv(coefficient(pol,'F, 1))::C;
 
 mpol := coefficient(ilcpol*pol, 'F, 0)
 assertEquals(_
-  mpol,
+  mpol,_
   11*(M1^10 + 40*M1^9 + 11*M1^8*M5 + 225*M1^8 + 44*M1^7*M5_
       + 552*M1^7 + 44*M1^6*M5 + 718*M1^6-88*M1^5*M5_
       + 516*M1^5 - 231*M1^4*M5 + 169*M1^4 - 220*M1^3*M5_
