@@ -298,15 +298,16 @@ QEtaSpecification: Exports == Implementation where
     -- SetCategory functions
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
+        import from Z, LZ, LLZ
         h := hashUpdate!(h, xx.flevel)
         h := hashUpdate!(h, xx.fpure)
-        h := hashUpdate!(h, xx.fproperGeneralized)
+        h := hashUpdate!(h, set(xx.fproperGeneralized)$Set(LZ))
         h
 
     ((x: %) = (y: %)): Boolean ==
         xx.flevel ~= yy.flevel => false
         xx.fpure ~= yy.fpure => false
-        xx.fproperGeneralized = yy.fproperGeneralized
+        set(xx.fproperGeneralized)$Set(LZ) = set(yy.fproperGeneralized)$Set(LZ)
 
     -- extracting other information from the data
     pure?(x: %): Boolean == empty? properGeneralizedPart x
