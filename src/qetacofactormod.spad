@@ -193,35 +193,22 @@ QEtaModularGamma0: Exports == Implementation where
     -- the order at the cusps relatively small.
     -- We try to achieve small length by a simple algorithm.
     --
-    -- Let b be a vector of bas. Compute v1:=v+b, v2:=v-b. If v1 is
-    -- strictly shorter than v, then set v to v1 and iterate. Similar
-    -- if v2 is strictly shorter. If neither v1 nor v2 are not
-    -- strictly shorter than v continue with the next vector from bas.
+    -- We compute
+    -- vps := concat [w for b in bas | (w:=v+b; dot(w,w)<dot(v,v)]
+    -- vms := concat [w for b in bas | (w:=v-b; dot(w,w)<dot(v,v)]
+    -- From these vectors we take the one with minimal length as the new
+    -- v and iterate as long as concat(vps, vms) is not empty.
     minimizeVector(v: VZ, basis: LVZ): VZ ==
         empty? basis => v
-        reduced?: Boolean := true -- to start the loop
-        lv := dot(v, v)
-        while reduced? repeat
-            bas := basis
-            reduced? := false
-            while not empty? bas and not reduced? repeat
-                b := first bas
-                bas := rest bas
-                u := v + b
-                while (lu := dot(u, u)) < lv repeat
-                    lv := lu
-                    v := u
-                    u := v + b
-                    reduced? := true
-                reduced? => break
-                u := v - b
-                while (lu := dot(u, u)) < lv repeat
-                    lv := lu
-                    v := u
-                    u := v - b
-                    reduced? := true
-        v
-
+        w := v; lw := lv := dot(v, v)
+        repeat
+            for b in basis repeat -- search for a minimal w
+                t := v+b; lt := dot(t, t); if lt < lw then (w := t; lw := lt)
+                t := v-b; lt := dot(t, t); if lt < lw then (w := t; lw := lt)
+            lw = lv => break -- no change happened
+            -- otherwise lw < lv
+            v := w; lv := lw -- take this minimal w as the new v
+        w
 
     -- local function
     -- It might happen that the particular solution of etaCofactorSpace0
@@ -559,7 +546,6 @@ QEtaModularGamma1: Exports == Implementation where
         cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA1 _
                              | not infinity? cusp]
         rhs: LZ := [g.cusp for cusp in cusps]
-
         -- For the vectors in the basis, we don't need to compute the
         -- series explicitly, since these vectors correspond to
         -- modular (generalized) eta quotients and thus we can use the
@@ -583,6 +569,7 @@ QEtaModularGamma1: Exports == Implementation where
         -- expansion at infinity for each of the inhomogeneous
         -- solutions and take the minimal qetaGrade.
         adjustments := zresult.zinhom
+        empty? adjustments => error "cannot find cofactor"
         v: VZ := first adjustments
         sadjust:VZ := reduce(_+, [x*bb for x in members v for bb in b])
         s: LZ := members(sinitial - sadjust)
