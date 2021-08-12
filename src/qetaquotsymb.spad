@@ -546,7 +546,8 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ lambda.
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient corresponding to x
-      ++ represents 1. This is the case if empty?(specification(x))
+      ++ represents 1. This is the case if one?(specification(x)),
+      ++ i.e., if the representation is trivial.
  == add
     A ==> IndexedOneDimensionalArray(SymbolicEtaQuotientLambdaGamma, 0)
     Rep ==> Record(
@@ -618,7 +619,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, x.0)
     ((x: %) = (y: %)): Boolean == x.0 = y.0
-    one?(x): Boolean == empty? specification x
+    one?(x): Boolean == one? specification x
 
 
 
@@ -710,7 +711,7 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient orbit product
       ++ corresponding to x represents 1. This is true if
-      ++ empty?(specification(x)).
+      ++ one?(specification(x)), i.e., the representation is trivial.
  == add
     YEQG ==> SymbolicEtaQuotientGamma
     HT ==> XHashTable(N, YEQG)
@@ -768,7 +769,7 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
         xx.foffset ~= yy.foffset => false
         xx.fgamma = yy.fgamma
 
-    one?(x: %): Boolean == empty? specification x
+    one?(x: %): Boolean == one? specification x
 
 
 
@@ -1045,7 +1046,7 @@ SymbolicEtaQuotient: SetCategory with
     ((x: %) = (y: %)): Boolean ==
         xx.fspec ~= yy.fspec => false
         xx.fcusps = yy.fcusps
-    one?(x: %): Boolean == empty? specification x
+    one?(x: %): Boolean == one? specification x
 
 
 
@@ -1207,7 +1208,7 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
         xx.foffset ~= yy.foffset => false
         xx.fcusps = yy.fcusps
 
-    one?(x: %): Boolean == empty? xx.fsspec and empty? xx.frspec
+    one?(x: %): Boolean == one? xx.fsspec and one? xx.frspec
 
 
 
@@ -1806,8 +1807,9 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
       ++ lambda.
     one?: % -> Boolean
       ++ one?(x) returns true if the generalized eta-quotient
-      ++ corresponding to x represents 1. This is the case if
-      ++ empty?(specification(x))
+      ++ corresponding to x represents 1. Note that if this function
+      ++ returns false, due to redundancy it may still be the case
+      ++ that the actual expansion of x into a q-series is 1.
  == add
     YEQLG ==> SymbolicEtaQuotientLambdaGamma
     YPGEQLG ==> SymbolicProperGeneralizedEtaQuotientLambdaGamma
@@ -1993,7 +1995,7 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
     one?: % -> Boolean
       ++ one?(x) returns true if the generalized eta-quotient
       ++ corresponding to x represents 1. This is the case if
-      ++ one?(basefactor(x)) and one?(cofactor(x))
+      ++ one?(basefactor(x)) and one?(cofactor(x)).
  == add
     YGEQG ==> SymbolicGeneralizedEtaQuotientGamma
     Rep ==> Record(
@@ -2127,7 +2129,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     one?: % -> Boolean
       ++ one?(x) returns true if the generalized eta-quotient
       ++ corresponding to x represents 1. This is the case if
-      ++ empty?(specification(x))
+      ++ one?(specification(x)).
  == add
     HT ==> XHashTable(Cusp, SymbolicGeneralizedEtaQuotientGamma)
     Rep ==> Record(
@@ -2177,7 +2179,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     ((x: %) = (y: %)): Boolean ==
         xx.fspec ~= yy.fspec => false
         xx.fcusps = yy.fcusps
-    one?(x: %): Boolean == empty? specification x
+    one?(x: %): Boolean == one? specification x
 
 
 

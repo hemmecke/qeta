@@ -67,7 +67,7 @@ display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
 tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
-errorPrint(x,y) ==> tracePrint(x,y)
+warnPrint(x,y) ==> tracePrint(x,y)
 
 )if LiterateDoc
 %$
@@ -100,8 +100,12 @@ asP x ==> x pretend P
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{D QEtaSoecification}
+\subsection{D QEtaSpecification}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We declare \code{QEtaSpecification} to be a commutative group.
+Note, however, that there can be elements $x$ with \code{not(one?(x))}
+that lead to 1 when considered as a $q$-series.
 
 )endif
 
@@ -109,7 +113,7 @@ asP x ==> x pretend P
 ++ QEtaSpecification helps translate various formats of user date
 ++ into a common format that specifies a (generalized) eta-quotient.
 QEtaSpecification: Exports == Implementation where
-  Exports ==> SetCategory with
+  Exports ==> Join(Group, CommutativeStar) with
     -- creation functions
     etaQuotientSpecification: (P, LZ) -> %
       ++ etaQuotientSpecification(mm, r) returns the specification for
@@ -176,11 +180,6 @@ QEtaSpecification: Exports == Implementation where
       ++ element of the result is a two-element list [d,e] that stands
       ++ for $\eta(d*\tau)^e$.
 
-    empty?: % -> Boolean
-      ++ empty?(x) returns true iff the (generalized) eta-quotient has
-      ++ in fact no entry, i.e., represents 1. It is the same as
-      ++ pure?(x) and empty?(pureExponents x).
-
     sigmaInfinity: % -> Q
       ++ sigmaInfinity(x) returns the value corresponding to
       ++ \eqref{eq:sigmainftybar} in qeta.tex or to
@@ -218,9 +217,13 @@ QEtaSpecification: Exports == Implementation where
       ++ Gamma_1(level(x)). It is equivalent to
       ++ zero?(modularGamma1(x)).
 
-
-
-
+    numer: % -> %
+      ++ numer(x) returns the part of the specification that
+      ++ corresponds to positive exponents.
+    denom: % -> %
+      ++ denom(x) returns the part of the specification that
+      ++ corresponds to negative exponents. It holds:
+      ++ x=numer(x)/denom(x).
 
   Implementation ==> add
     -- Note that the list of exponents of the pure part can be shorter
@@ -257,26 +260,44 @@ QEtaSpecification: Exports == Implementation where
         not pure? rspec => error "not a pure eta-quotient specification"
         rspec
 
-    generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
-        hr: XHashTable(Z, Z) := table() -- to compute r
-        rtilde: LLZ := empty() -- specify all generalized eta-quotients
+    -- local function (allow equal indices, but may warn)
+    generalizedEtaQuotientSpecificationWarn(warn?: Boolean,
+                                            mm: P, rbar: LLZ): % ==
+        hr: XHashTable(Z, Z) := table() -- to store index,exponent pairs
         for l in rbar | not empty? l repeat
             d: Z := first l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
+            i := mm*d
             #l = 1 or #l = 2 =>
-                not zero? elt(hr, d, 0) =>
-                    errorPrint("[delta, e]", [d, elt(hr, d, 0)])
-                    error "(delta, exponent) specified twice"
-                if #l = 1 then hr.d := 1 else hr.d := l.2
-            #l = 3 => rtilde := cons(l, rtilde)
+                z: Z := elt(hr, i, 0)
+                if warn? and not zero? z then
+                    warnPrint("(delta, e) specified twice", [d, z])
+                if #l = 1 then hr.d := 1 else hr.i := l.2 + z
+            #l = 3 =>
+                g := l.2
+                i := i + g
+                z: Z := elt(hr, i, 0)
+                if warn? and not zero? z then
+                    warnPrint("(delta, g, e) specified twice", [d, g, z])
+                hr.i := l.3 + z
             error "generalizedEtaQuotientSpecification: list length > 3"
+        -- Now extract the data from the hashtable.
         divs := DIVISORS mm
-        r: List Z := reverse! [elt(hr, d, 0) for d in divs]
+        r: List Z := empty(); -- exponents of the pure part
+        rtilde: LLZ := empty() -- specify all generalized eta-quotients
+        for d in divs repeat r := cons(elt(hr, mm*d, 0), r)
         while not empty? r and zero? first r repeat r := rest r
-        per [mm, divs, reverse! r, reverse! rtilde]
+        for i in keys hr | not zero?(z := hr.i) repeat
+            qr: Record(quotient: Z, remainder: Z) := divide(i, mm)
+            if not zero? qr.remainder then
+                rtilde := cons([qr.quotient, qr.remainder, z], rtilde)
+        per [mm, divs, reverse! r, rtilde]
+
+    generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
+        generalizedEtaQuotientSpecificationWarn(true, mm, rbar) --warn
 
     generalizedEtaQuotientSpecification(rbar: LLZ): % ==
-        empty? rbar => per [1, [1], [], []]
+        empty? rbar => 1
         mm: P := asP lcm [first l for l in rbar]
         generalizedEtaQuotientSpecification(mm, rbar)
 
@@ -318,7 +339,6 @@ QEtaSpecification: Exports == Implementation where
         le
     purePart(x: %): LLZ ==
         [[d, e] for d in divisors x for e in pureExponents x | not zero? e]
-    empty?(x: %): Boolean == pure? x and empty? pureExponents x
 
     sigmaInfinity(x: %): Q ==
         import from QETAAUX
@@ -360,9 +380,29 @@ QEtaSpecification: Exports == Implementation where
 
     modularGamma1?(x: %): Boolean == zero? modularGamma1 x
 
+    -- SemiGroup functions
+    1: % == per [1, [1], [], []]
+    one?(x: %): Boolean == pure? x and empty? pureExponents x
+    inv(x: %): % ==
+        r: LZ := [-e for e in pureExponents x]
+        rtilde := [[l.1,l.2,-l.3] for l in properGeneralizedPart x]
+        per [level x, divisors x, r, rtilde]
+    ((x: %) * (y: %)): % ==
+        mm: P := asP lcm(level x, level y)
+        rbar: LLZ := concat [purePart x, properGeneralizedPart x,
+                             purePart y, properGeneralizedPart y]
+        generalizedEtaQuotientSpecificationWarn(false, mm, rbar)
 
-
-
+    numer(x: %): % ==
+        r: LZ := reverse! [max(e,0) for e in pureExponents x]
+        while not empty? r and zero? first r repeat r := rest r
+        rbar: LLZ := [l for l in properGeneralizedPart x | l.3 > 0]
+        per [level x, divisors x, reverse! r, rbar]
+    denom(x: %): % == -- numer(x)/x
+        r: LZ := reverse! [max(-e,0) for e in pureExponents x]
+        while not empty? r and zero? first r repeat r := rest r
+        rbar: LLZ := [[l.1,l.2,-l.3] for l in properGeneralizedPart x | l.3 < 0]
+        per [level x, divisors x, reverse! r, rbar]
 
 
 
