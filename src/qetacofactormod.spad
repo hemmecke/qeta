@@ -518,7 +518,21 @@ QEtaModularGamma1: Exports == Implementation where
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
         e: QLX := laurentExpansions(y)$QEtaSeriesExpansion(C, mx, CX, xi)
+        -- Check first whether e corresponds to 0, i.e., positive
+        -- order in every component. Since y corresponds to a modular
+        -- function for Gamma_1(level y), positive order of the series
+        -- expansion of every cups means the function is 0. Otherwise
+        -- we would risk running into an endless look while trying to
+        -- find the order of the zero series.
+        allPositiveOrders? := true
         ht: XHashTable(Cusp, Z) := empty()
+        isZero? := true
+        for cusp in keys e repeat
+            ht.cusp := - order(e.cusp, 1)
+             -- is a non-zero constant or has a pole at some cusp
+            if ht.cusp > -1 then isZero? := false
+        isZero? => ht
+        -- Coming here, we know that y does not correspond to the 0 function
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
 
