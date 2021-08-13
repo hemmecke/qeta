@@ -96,6 +96,13 @@ ps := partitionSeries(1)$QFunctions(Q, L1(Q))
 -------------------------------------------------------------------
 -- -
 
+-- +
+-------------------------------------------------------------------
+--test:p5n
+-------------------------------------------------------------------
+-- -
+
+
 -- # $p(5n)$
 
 -- See Formula (1.4) of
@@ -189,15 +196,12 @@ assertTrue(zero?(af-at+3*1$An(CX)))
 
 generalizedEtaFunctionIndices(nn)
 
-)clear prop idxs
-idxs: List List Z := [[1],[5],[5, 2]]
-ggens := generalizedEtaQuotientMonoidExponentVectors(nn, idxs)
+idxs := [[1],[5],[5, 2]]
 bspecs := generalizedEtaQuotientMonoidSpecifications(nn, idxs)
-
-
 ygens := [specYM1GEQ x for x in bspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
+
 
 msyms := indexedSymbols("M", #egens)
 k := position(oo, spitzen)
@@ -231,13 +235,16 @@ m := 11; t := 6;
 rspec := eqSPEC [[1,-1]]
 nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)
 
+-- Create the series from the above article in two different ways
+-- and compare the first 100 coefficients.
+
 p11n6 := choose(11,6,ps);
 z01 := EE(EQ(11,[24,-23])*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4));
 z02 := EE(EQ(11,[24,-23])*generalizedEtaQuotient(11,[1,2,3,4],[-28,-16,-12,-4])$EQI(C));
 assertEquals(order(z01 - z02, 100), 100)
 
-rspecz0 := geqSPEC [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
-z00 := EE specEQI(C) rspecz0;
+sspecz0 := geqSPEC [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
+z00 := EE specEQI(C) sspecz0;
 assertEquals(order(z01-z00, 100), 100)
 z0 := monomial(1,-20)$L1(C)* z00;
 
@@ -250,6 +257,10 @@ e := EX specEQI(C) rspece;
 ex := EX(EQ(11,[3,-3]) * generalizedEtaQuotient(11,[1,2,3,4],[-5,-5,-4,-1])$EQI(C));
 assertEquals(order(e - ex, 100), 100)
 
+-- Take the relation from the above article and check it with
+-- the above series.
+
+-- +
 ts := [z^10, z^8*e, z^9, z^7*e, z^8, z^6*e, z^7, z^5*e, z^6, z^4*e,_
        z^5, z^3*e, z^4, z^2*e, z^3, z*e, z^2, z, 1$L];
 cs := [1,11,30,-44,-90,44,72,-44,4,99,-12,-132,-41,88,68,-22,-39,7,1];
@@ -258,18 +269,18 @@ terms := [c*t for c in cs for t in ts];
 zz := z0*p11n6 - 11*reduce(_+, terms, 0$L);
 assertEquals(removeDuplicates[coefficient(zz,i) for i in -20..50],[0])
 assertEquals(order(zz, 100), 100)
+-- -
 
 -- ## Check modularity for cofactor
 
-sspec := rspecz0
-assertTrue(modularGamma1?(sspec,rspec,m,t))
+assertTrue(modularGamma1?(sspecz0,rspec,m,t))
 
 -- ## Check Puiseux = Laurent expansion
 
 -- Check that Puiseux expansion and Laurent
 -- expansion have the same order.
 
-x := specYM1GEQ(sspec,rspec,m,t);
+x := specYM1GEQ(sspecz0,rspec,m,t);
 spitzen := cusps x
 xiord := minimalRootOfUnity(x)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
@@ -278,7 +289,8 @@ PGRD(nn,x,c) ==> - WIDTH1(nn, c)*order puiex(x(c))
 pgrds := [PGRD(nn, x, cusp) for cusp in spitzen]
 ax := expandAnCX x;
 assertEquals(pgrds, qetaGrades ax)
-yz0 := specYGEQ rspecz0;
+yz0 := specYGEQ sspecz0;
+
 yz := specYGEQ rspecz;
 pgrds := [PGRD(nn, yz, cusp) for cusp in spitzen]
 assertEquals(pgrds, qetaGrades yz)
@@ -295,15 +307,16 @@ assertTrue(modularGamma1? rspece)
 -- ## Find cofactor
 
 -- If we exclued the index [11,5] from the indices, then we
--- find the same cofactor as in 
+-- find the same cofactor as in
 -- \cite[Thm.~1.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
 idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]]
 assertEquals(concat(idxs, [11,5]), generalizedEtaFunctionIndices nn)
 
-rspecz0
+sspecz0
 sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
-assertEquals(rspecz0,sspec)
+assertEquals(sspecz0,sspec)
+
 assertTrue(modularGamma1?(sspec,rspec,m,t))
 yf := generalizedEtaQuotient(sspec,rspec,m,t);
 xiord := minimalRootOfUnity(yf)::P
@@ -319,6 +332,9 @@ af := expandAnCX yf; qetaGrades af
 assertTrue(zero?(af-ax))
 
 -- ## Find the relation
+
+-- Check whether the computation of exponent vectors and specifications
+-- agrees.
 
 ggens := generalizedEtaQuotientMonoidExponentVectors(nn);
 gspecs := [geqSPEC(nn,toGeneralizedEtaQuotientSpecification(nn,x)) for x in ggens];
@@ -360,47 +376,69 @@ assertEquals(_
 -- -
 -- # $\overline{p}(5n+2)$
 --
--- \cite[p. 7]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
---
 -- $$
 -- \sum_{n=0}^\infty \overline{p}(n) q^n
 -- =
 -- \frac{(q^2;q^2)_\infty}{(q;q)_\infty^ 2}
 -- $$
+--
+-- See example in
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- after Theorem 2.1 and compare with Theorem 3.1 on page 20.
 
 m := 5; t:= 2
-
 rspec := eqSPEC [[1,-2],[2,1]]
-
 nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
 
 generalizedEtaFunctionIndices nn
 ecss := etaCofactorSpace1System(nn,rspec,m,t)$QEtaCofactorSpace
-etaCofactorSpace1(nn,rspec,m,t)$QEtaCofactorSpace
+
+-- ## Manual initial cofactor vector
+
+-- Although we will do an automatic computation below, we show
+-- here, another relatively minimal (initial) vector for the
+-- cofactor.
 
 mat := ecss.comatrix; v := ecss.rhs;
+mat * vector [0,0,18,-17,0,0,0,0,0,-8,  10,3,13,4,0,9,4,13,9]
+ecs := etaCofactorSpace1(nn,rspec,m,t)$QEtaCofactorSpace
 
-mat * vector [0,0,18,-17,0,0,0,0,0,-8,  10,6,13,4,0,9,4,13,9]
+spitzen := cusps(10)$GAMMA1
+v0 := ecs.particular;
+b := ecs.basis;
+vv := v0 +9*b.8 - 108*b.9
 
-48*2
 
+-- The vector vv does, however, not correspond to a generalized
+-- eta-quotient with poles only at infinity. It has poles at the
+-- cusps 1/3 and 2/5 or order 4 and 2, respectively.
 
+le := members vv
+idxs := ecs.indices
+sspecvv := generalizedEtaQuotientSpecification(nn, idxs, le)$QEtaSpecification
+qetaGrades(sspecvv, rspec, m, t)
 
-
+-- ## Automatic computation of cofactor
 
 sspec := etaCofactorInfinity(nn,rspec,m,t)$QEtaModularGamma1
+modularGamma1?(sspec, rspec, m, t)
 
-assertTrue(false)
-
-assertTrue(modularGamma1?(sspec,rspec,m,t))
-yf := generalizedEtaQuotient(sspec,rspec,m,t);
-xiord := minimalRootOfUnity(yf)::P
+y := specYM1GEQ(sspec, rspec, m, t);
+xiord := minimalRootOfUnity(y)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-spitzen := cusps yf
-af := expandAnCX yf; qetaGrades af
+)set stream calc 2
+
+-- The respective series for the generating series of
+-- $\overline{p}(5n+2)$ after multiplying with the cofactor
+-- is a modular function for $\Gamma_1(10)$ with only a pole
+-- of order 3 at infinity.
+
+af := expandAnCX y
+assertEquals(qetaGrades af,[0,0,0,0,0,0,0,3])
+
+-- ## Find the relation for $\overline{p}(5n+2)$
 
 bspecs := generalizedEtaQuotientMonoidSpecifications nn;
-
 ygens := [specYM1GEQ x for x in bspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
@@ -411,261 +449,244 @@ xgens := [toX1(C, series(x,k), msym) for msym in msyms for x in egens];
 [qetaGrade x for x in xgens]
 xab := samba(xgens.1, xgens)$QXTOPSAMBA1(C)
 
-xf := toX1(C, series(af,k), 'F)
-xr := reduce(xf, xab)$QXTOPRED1(C)
+-- The reduction by the algebra basis leads exactly to the
+-- relation given in Theorem 3.1 of
+-- \cite[p. 20]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+xf := toX1(C, series(af,k), 'F);
+xr := reduce(xf, xab)$QXTOPRED1(C);
 pol := second(xr)::Pol(C);
 ilcpol := -inv(coefficient(pol,'F, 1))::C;
-
 mpol := coefficient(ilcpol*pol, 'F, 0)
-assertEquals(_
-  mpol,_
-  11*(M1^10 + 40*M1^9 + 11*M1^8*M5 + 225*M1^8 + 44*M1^7*M5_
-      + 552*M1^7 + 44*M1^6*M5 + 718*M1^6-88*M1^5*M5_
-      + 516*M1^5 - 231*M1^4*M5 + 169*M1^4 - 220*M1^3*M5_
-      - 16*M1^3 - 110*M1^2*M5 - 24*M1^2 - 22*M1*M5_
-      - 3*M1+1))
+assertEquals(mpol, 4*(M1^3 + M1^2 - 8*M1 + 8))
 
+-- ## Comparison with computation from article
 
+-- We have found a relation that looks exactly like (3.6) from
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}, but
+-- with different $y$ and different $z$.
+--
+-- For our relation we have:
+-- $$
+-- \begin{align*}
+-- y &=
+--   \frac{\eta_1^{16} \eta_{10}^6
+--         \eta_{5,1}^7 \eta_{5,2}^{15}}
+--        {\eta_2^{15} \eta_5^6
+--         \eta_{10,1}^{14} \eta_{10,2}^{12} \eta_{10,3}^{20}}
+-- \\
+-- z &=
+--   \frac{\eta_5^2 \eta_{5,2} \eta_{10,4}}
+--        {\eta_{10}^2 \eta_{5,1}^2}
+-- \end{align*}
+-- $$
 
+sspec,bspecs.1
 
+-- In \cite[Thm. 3.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- the generalized eta-quotient $\eta_{10,5}(\tau)$ is used.
+-- We replace it by $\eta(5\tau)^2/\eta(10\tau)^2$ and therefore get
+-- the following specification in our notation.
 
+sspeccdz := geqSPEC [[1,11],[2,-7],[5,-1],[10,-2],[5,1,12],[10,1,-14],[10,4,-8]]
+modularGamma1?(sspeccdz, rspec, m, t)
 
+-- The respective series for the generating series of
+-- $\overline{p}(5n+2)$ after multiplying with the cofactor
+-- is a modular function for $\Gamma_1(10)$ with only a pole
+-- of order 3 at infinity.
 
+afcdz := expandAnCX specYM1GEQ(sspeccdz, rspec, m, t);
+assertEquals(qetaGrades afcdz,[0,0,0,0,0,0,0,3])
 
+-- Although the initial cofactor is different, we get the
+-- same expansion as q-series (at all cusps).
 
+assertTrue(not (sspec=sspeccdz))
+assertTrue(zero?(af - afcdz))
 
+-- So the quotient of the two cofactors must be
+-- a generalized eta-quotient that is equal to 1.
 
+spec1 := sspec/sspeccdz
+a1 := specM1AnCX spec1
+assertTrue(zero?(a1- 1$An(CX)))
 
+-- Let us investigate the difference to the $z$ of
+-- \cite[Thm. 3.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
+zspec := geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]
+modularGamma1? zspec
 
+-- Indeed, our generalized eta-quotient (given by bspecs.1)
+-- and the one from the article above have the same
+-- $q$-series expansion.
 
-
-
-
-
-pp := expansion etaQuotient([1,2],[-2,1])
-pp5n2 := choose(5, 2, pp);
-phi := GEQ[[10],[10,5,9],[10,4,-8]];
-f := EE phi * pp5n2
-
--- We list here the generators of $GE^\infty(10)$ as written the top
--- of page 20 of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
--- which is equation (3.2).
-
-x := GEQ[[1],[5],[10,-2],[5,1,-2],[10,1,-1]];
-x1 := GEQ[[1,-1],[2,2],[5],[10,-2],[5,1,2],[10,1,-4]];
-x2 := GEQ[[1,-1],[2,-1],[5,3],[10,-1],[5,1,4],[10,1,-3]];
-x3 := GEQ[[1],[2,-2],[5,-1],[10,2],[5,1,2],[10,1,-4]];
-x4 := GEQ[[1,4],[2,-3],[10,-1],[5,1,2],[10,1,-4]];
-xh := x^(-6) * x1^2 * x2^(-4) * x3^3 * x4^3;
-
--- Theorem 3.1 of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
-z := EX x;
-h := EX xh;
-zz := h*f - (4*z^3 + 4*z^2 - 32*z + 32);
-assertEquals(removeDuplicates[coefficient(zz,i) for i in -20..50],[0])
-assertEquals(order(zz, 100), 100)
-
-y := GEQ[[1,11],[2,-7],[5,-19],[10,16],[5,1,12],[10,1,-14],[10,4,-8],[10,5,9]];
-assertEquals(order(EX(xh*phi/y) - 1,100),100)
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
-
-
--- +
--------------------------------------------------------------------
---test:overpartition
--------------------------------------------------------------------
-
--- # test:overpartition
-
--- See example after
--- \cite[Thm.~2.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
--- and
--- \cite[Thm.~3.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
-mm := 2; m := 5; t := 2
-rbar := [[1,-2],[2,1]]
-nn := minimalLevelCoEtaQuotientGamma1(mm, rbar, m, t)
-assertEquals(nn, 10)
-
-sbar := [[5,18],[10,-17],[10,4,-8]]
-
--- +
-rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-r: LZ := rrec.pure
-rtilde: LLZ := rrec.properGeneralized
-
-srec: GEQSPLIT := splitEtaQuotientSpecification(nn, sbar)$QETAAUX
-s: LZ := srec.pure
-stilde: LLZ := srec.properGeneralized
--- -
-
-x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$YM1GEQ;
-
-cusps x
-xiord := minimalRootOfUnity(x)::P
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-
-)set stream calc 2
-QLX(x)
+spec1 := bspecs.1/zspec
+a1 := specM1AnCX spec1
+assertTrue(zero?(a1- 1$An(CX)))
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
 
+
 -- +
 -------------------------------------------------------------------
---test:singularoverpartition-3-1
+--test:singularoverpartition-3-1-9-3
 -------------------------------------------------------------------
 -- -
 
--- # test:singularoverpartition-3-1
+-- # $\overline{Q}_{3,1}$ --- (3,1)-singular overpartition
 
--- See \cite[Thm.~10.3]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+-- See \cite[Thm. 10.3]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- as well as (10.3) for the definition of $\overline{Q}_{3,1}$.
+-- $$
+-- \sum_{n=0}^\infty \overline{Q}_{k,i}(n) q^n
+-- =
+-- \frac{(q^k;q^k)_\infty (q^{2i},q^{2k-2i};q^{2k})_\infty}
+--       {(q;q)_\infty (q^i, q^{k-i};q^k)_\infty}
+-- $$
 
 m := 9; t := 3
-rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]]
-
+rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
 nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+idxs := generalizedEtaFunctionIndices(nn)
 sspec := etaCofactorInfinity(nn,rspec,m,t)$QEtaModularGamma1
+modularGamma1?(sspec, rspec, m, t)$QEtaCofactorSpace
+y := specYM1GEQ(sspec, rspec, m, t);
+xiord := minimalRootOfUnity(y)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(y)
+af := expandAnCX y
+assertEquals(qetaGrades af, [0,0,0,1])
+h := qetaGrades y;
+assertEquals([h.c for c in spitzen], [0,0,0,1])
 
-sspec := geqSPEC [[1,14],[2,-5],[3,-6],[6,-3]]
+-- The cofactor in
+-- \cite[Thm. 10.3]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- is a pure eta-quotient.
 
-rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-r: LZ := rrec.pure
-rtilde: LLZ := rrec.properGeneralized
+sspeccdz := geqSPEC [[1,14], [2,-5], [3,-6],[6,-3]]
 
-srec: GEQSPLIT := splitEtaQuotientSpecification(nn, sbar)$QETAAUX
-s: LZ := srec.pure
-stilde: LLZ := srec.properGeneralized
-sigma0(nn,s,stilde) + numer(nn/mm)*m*sigma0(mm,r,rtilde)
--- -
-x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient;
-cusps x
-xiord := minimalRootOfUnity(x)::P
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+-- We can find it ourselves by restricting the search space.
 
-)set stream calc 2
+idxs := [[1], [2], [3], [6]]
+sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
+assertEquals(sspeccdz, sspec)
 
-px := QPX(x(1/6))
+af := expandAnCX y
 
-rationalPower px
+-- ## Find the relation for $\overline{p}(5n+2)$
 
-lx := qetaLaurentRep px
+bspecs := generalizedEtaQuotientMonoidSpecifications nn;
+ygens := [specYM1GEQ x for x in bspecs];
+egens := [expandAnCX x for x in ygens];
+[qetaGrades x for x in egens]
 
-degree lx
+-- The basis elements only differ in a constant.
+-- The choice that corresponds to the $z$ from Theorem 10.3 is
+-- our second basis element.
 
-)set stream calc 10
-tx := qetaTaylorRep lx
+msyms := indexedSymbols("M", #egens)
+k := position(oo, spitzen)
+xgens := [toX1(C, series(x,k), msym) for msym in msyms for x in egens];
+[qetaGrade x for x in xgens]
+xab := samba(xgens.2, xgens)$QXTOPSAMBA1(C)
 
+-- The reduction by the algebra basis leads exactly to the
+-- relation given in Theorem 10.3 of
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
-
-
-
-
-
-h := QLX(x)
-
-)set stream calc 10
-
-h
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
-
--- +
--------------------------------------------------------------------
---test:Ramanujan-2-disection
--------------------------------------------------------------------
--- -
-
--- # test:Ramanujan-2-disection
-
--- See \cite[Thm.~10.4]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
-
-mm := 5; m := 2; t := 0
-nn := 10
-rbar := [[5,1,-1],[5,2,1]]
-sbar := [[1,14],[2,-5],[3,-6],[6,-3]]
-
-matrixEtaOrder(10)
-
-matrix[[1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [10, 5, 2, 1, 20, 20, 20, 20, 10, 10, 24, 0, 0, 0, 0, 0, 0, 0, 0], [10, 20, 50, 100, 12, -132, 276, 24, -156, -264, 0, 240, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 1, 1, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 2, 0, 0, 0, 0, 0, 0], [0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0]]
-
-ecs := etaCofactorSpace1(nn,mm,[],m,t);
-bas := [x(1..10) for x in ecs.basis | not zero?(x(1..10))]
-A := transpose matrix bas
-b := [1,0,1,-2,-2,0,-1,0,0,0]
-
-solve(A,b)
-============================ CONTINUE HERE =============================
-
-toEtaQuotientSpecification(nn,[])
-
-
-
-rrec: GEQSPLIT := splitEtaQuotientSpecification(mm, rbar)$QETAAUX
-r: LZ := rrec.pure
-rtilde: LLZ := rrec.properGeneralized
-
-sbar
-
-srec: GEQSPLIT := splitEtaQuotientSpecification(nn, sbar)$QETAAUX
-s: LZ := srec.pure
-stilde: LLZ := srec.properGeneralized
-
-sigma0(nn,s,stilde) + numer(nn/mm)*m*sigma0(mm,r,rtilde)
-
-mm
-
-x := generalizedEtaQuotient(nn,sbar,mm,rbar,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient;
-minimalRootOfUnity x
-cusps x
-
-y := x(1/3);
-yb := basefactor y; yc := cofactor y;
-minimalRootOfUnity yb, minimalRootOfUnity yc
-
-yc.0
+xf := toX1(C, series(af,k), 'F);
+xr := reduce(xf, xab)$QXTOPRED1(C);
+pol := second(xr)::Pol(C);
+ilcpol := -inv(coefficient(pol,'F, 1))::C;
+mpol := coefficient(ilcpol*pol, 'F, 0)
+assertEquals(mpol, 6*(M2 + 16))
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:singularoverpartition-3-1-9-6
+-------------------------------------------------------------------
 -- -
 
-)compile /home/hemmecke/g/qeta/src/qetacofactorspace
-setFormat!(FormatMathJax)$JFriCASSupport
+-- # $\overline{Q}_{3,1}$ --- (3,1)-singular overpartition
 
-)compile /home/hemmecke/g/qeta/src/qetaquotsymb
-setFormat!(FormatMathJax)$JFriCASSupport
+-- See \cite[Thm. 10.3]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- as well as (10.3) for the definition of $\overline{Q}_{3,1}$.
+-- $$
+-- \sum_{n=0}^\infty \overline{Q}_{k,i}(n) q^n
+-- =
+-- \frac{(q^k;q^k)_\infty (q^{2i},q^{2k-2i};q^{2k})_\infty}
+--       {(q;q)_\infty (q^i, q^{k-i};q^k)_\infty}
+-- $$
+--
 
-n := lengthOfGeneralizedEtaQuotientSpecification nn
-ecs := etaCofactorSpace1(nn,mm,rbar,m,t)
-sbar := toEtaQuotientSpecification(nn, (ecs.particular)(1..n))
+m := 9; t := 6
+rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
+nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+idxs := generalizedEtaFunctionIndices(nn)
+sspec := etaCofactorInfinity(nn,rspec,m,t)$QEtaModularGamma1
+modularGamma1?(sspec, rspec, m, t)$QEtaCofactorSpace
+y := specYM1GEQ(sspec, rspec, m, t);
+xiord := minimalRootOfUnity(y)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(y)
+af := expandAnCX y
+assertEquals(qetaGrades af, [0,0,0,1])
+h := qetaGrades y;
+assertEquals([h.c for c in spitzen], [0,0,0,1])
 
-dim := #msyms
-D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, N, D, msyms)
-PC ==> PolynomialConversion(C, E, msyms)
-coerce(1/11*mpol)$PC
+-- The cofactor in
+-- \cite[Thm. 10.3]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- is a pure eta-quotient.
 
--- # $\bar{p}(5n+2)$
+sspeccdz := geqSPEC [[1,13], [2,-4], [3,-3],[6,-6]]
 
--- # $\Delta_2(25n+14)$
+-- We can find it ourselves by restricting the search space.
 
--- # $\Delta_2(25n+24)$
+idxs := [[1], [2], [3], [6]]
+sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
+assertEquals(sspeccdz, sspec)
 
+af := expandAnCX y
 
+-- ## Find the relation for $\overline{p}(5n+2)$
 
+bspecs := generalizedEtaQuotientMonoidSpecifications nn;
+ygens := [specYM1GEQ x for x in bspecs];
+egens := [expandAnCX x for x in ygens];
+[qetaGrades x for x in egens]
 
+-- The basis elements only differ in a constant.
+-- The choice that corresponds to the $z$ from Theorem 10.3 is
+-- our second basis element.
 
+msyms := indexedSymbols("M", #egens)
+k := position(oo, spitzen)
+xgens := [toX1(C, series(x,k), msym) for msym in msyms for x in egens];
+[qetaGrade x for x in xgens]
+xab := samba(xgens.2, xgens)$QXTOPSAMBA1(C)
 
+-- The reduction by the algebra basis leads exactly to the
+-- relation given in Theorem 10.3 of
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+xf := toX1(C, series(af,k), 'F);
+xr := reduce(xf, xab)$QXTOPRED1(C);
+pol := second(xr)::Pol(C);
+ilcpol := -inv(coefficient(pol,'F, 1))::C;
+mpol := coefficient(ilcpol*pol, 'F, 0)
+assertEquals(mpol, 24*(M2 + 4))
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
