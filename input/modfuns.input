@@ -35,7 +35,8 @@ traceMap(nn: P, t: P, r: List Z): A1 C ==
     error "length of r must match number of divisors)"
   idgamma: SL2Z := matrix [[1,0],[0,1]]
   ye := etaQuotient(nn*t, r, idgamma)$YEQG
-  e := laurentExpansion(ye, 1)$QEtaLaurentExpansion(C, 1, C, 1)
+  p := puiseuxExpansion(ye)$QEtaSeriesExpansion(C, 1, C, 1)
+  e := laurent(p, 1)$QEtaSeriesExpansion(C, 1, C, 1)
   alw: MZ := matrixAtkinLehner(nn*t, t)
   sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
   gamma := sm.red
@@ -46,7 +47,8 @@ traceMap(nn: P, t: P, r: List Z): A1 C ==
     print("minimalRootOfUnity yeg"::Symbol::OutputForm)
     print((minimalRootOfUnity yeg)::OutputForm)
     error "traceMap: need extension by root of unity"
-  eg := laurentExpansion(yeg, t)$QEtaLaurentExpansion(C, 2, C, -1)
+  pg := puiseuxExpansion(yeg)$QEtaSeriesExpansion(C, 2, C, -1)
+  eg := laurent(pg, t)$QEtaSeriesExpansion(C, 2, C, -1)
   -- finally apply Ut operator
   uteg := choose(t, 0, eg)
   -- and add things up
