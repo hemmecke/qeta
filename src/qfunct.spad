@@ -223,6 +223,8 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
       ++ For one(n)==1, we have the identity:
       ++ jacobiFunction(one, d, g) =
       ++ generalizedEulerProduct(d, [g, d-g]) * eulerFunction d.
+    jacobiFunction: (P, N) -> L
+      ++ jacobiFunction(d, g) returns jacobiFunction(n+->1,d,g).
 
   I ==> add
     qPochhammer(): L == qPochhammer(1, 1, 1)
@@ -456,6 +458,43 @@ summand for the previous index $k$.
             series jacobiStream0(f, d, 0, empty()$S)
         d = 2*g => series cons([0,1], jacobiStream2(f, g, 1, empty()$S))
         series cons([0,1], jacobiStream(f, g, d-g, 0, empty()$S))
+
+-------------------------------------------------------------------
+    -- Below the special case where f(n)==1 for all n.
+-------------------------------------------------------------------
+    -- local
+    -- assert(d>0)
+    -- case 2*g=d
+    -- $\sum_{n=1}^\infty (-1)^n (z^n + z^(-n)) q^{g*n^2}$.
+    -- see \eqref{eq:Jacobi-2g=delta}
+    jacobi1Stream2(g: Z, n: Z, s: S): S == delay
+        cons([g*n^2, -2::R], cons([g*(n+1)^2, 2::R], jacobi1Stream2(g, n+2, s)))
+
+    -- local
+    -- see \eqref{Jacobi-g-g'}
+    jacobi1Stream(g: Z, gprime: Z, n: Z, s: S): S == delay
+        --assert(g>0)
+        --assert(gptime>0)
+        --assert(g ~= gprime)
+        m := 2*n+1
+        n1 := n+1
+        m1a := m*(n1*g      + n*gprime)
+        m1b := m*(n1*gprime + n*g)
+        m2a := n1*((m+2)*g      + m*gprime)
+        m2b := n1*((m+2)*gprime + m*g)
+
+        gprime > g =>
+            cons([m1a, -1], cons([m1b, -1], cons([m2a,1], cons([m2b, 1],
+                jacobi1Stream(g, gprime, n+1, s)))))
+
+        cons([m1b, -1], cons([m1a, -1], cons([m2b, 1], cons([m2a,1],
+            jacobi1Stream(g, gprime, n+1, s)))))
+
+    jacobiFunction(d: P, g: N): L ==
+        g >= d => error "jacobiFunction: condition 0<=g<d violated"
+        zero? g => 0 -- There is a zero factor (1-f(1)) in the product.
+        d = 2*g => series cons([0,1], jacobi1Stream2(g, 1, empty()$S))
+        series cons([0,1], jacobi1Stream(g, d-g, 0, empty()$S))
 
 
 
