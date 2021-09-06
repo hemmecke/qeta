@@ -125,14 +125,6 @@ vector to correspond to a modular eta-quotient is violated.
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta-quotients that are modular functions.
 QEtaAuxiliaryPackage: with
-    splitEtaQuotientSpecification: (P, LLZ) ->
-        Record(pure: LZ, properGeneralized: LLZ)
-      ++ splitEtaQuotientSpecification(nn, rbar) separates the
-      ++ part of rbar that specifies a pure eta-quotient from the
-      ++ part of rbar that specifies a proper generalized eta-quotient.
-      ++ See definition in specification of
-      ++ generalizedEtaPower $ EtaQuotientInfinity for how each element
-      ++ of rbar is interpreted.
     generalizedEtaFunctionIndices: P -> LLZ
       ++ generalizedEtaFunctionIndices(nn) returns all the indices of
       ++ a generalized eta-quotient of level nn (without exponents),
@@ -668,24 +660,6 @@ $a\in X_c$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
-
-    -- See definition in specification of
-    -- generalizedEtaPower $ EtaQuotientInfinity.
-    -- Here we separate the pure eta-quotient specification from the
-    -- specification of generalized eta-quotients.
-    splitEtaQuotientSpecification(mm: P, rbar: LLZ):
-      Record(pure: List Z, properGeneralized: LLZ) ==
-        hr: XHashTable(Z, Z) := table() -- to compute r
-        rtilde: LLZ := empty() -- specify all generalized eta-quotients
-        for l in rbar | not empty? l repeat
-            d: Z := first l
-            d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide mm"
-            #l = 1 => hr.d := 1
-            #l = 2 => hr.d := l.2
-            #l = 3 => rtilde := cons(l, rtilde)
-            error "splitEtaQuotientSpecification: list length > 3"
-        r: List Z := [elt(hr, d, 0) for d in divisors(mm)$INTF]
-        [r, reverse! rtilde]
 
     fractionalPart(x: Q): Q == -- local function
         d: Z := denom x
