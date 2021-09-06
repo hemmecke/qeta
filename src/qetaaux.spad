@@ -338,20 +338,6 @@ QEtaAuxiliaryPackage: with
       ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
       ++ highest power e such that p^e is a factor of d.
 
-    modularGamma1: (P, List List Z) -> Z
-      ++ modularGamma1(nn, rbar) returns 0 if the parameters specify a
-      ++ generalized eta-quotient that is modular for Gamma1(nn). It
-      ++ returns 1, if condition \eqref{eq:generalized-weight} is not
-      ++ met, 2, if condition \eqref{eq:generalized-sigmaInfinity} is
-      ++ not met, and 3 if condition \eqref{eq:generalized-sigma0}
-      ++ does not hold. It is equivalent to check whether there is an
-      ++ extension v of rbar such that matrixModularGamma1(nn)*v is 0
-      ++ where we sort rbar according to the order given by
-      ++ \eqref{eq:sorted-indices}.
-    modularGamma1?: (P, List List Z) -> Boolean
-      ++ modularGamma1(nn, rbar) returns true iff the generalized
-      ++ eta-quotient corresponding to rbar is a modular function for
-      ++ Gamma_1(nn). It is equivalent to zero?(modularGamma1(nn, rbar)).
     matrixModularGamma1: P -> MQ
       ++ matrixModularGamma(nn) returns a matrix mat with 3 rows and
       ++ n+2 colums (where n=lengthOfGeneralizedEtaFunctionIndices(nn)
@@ -359,7 +345,7 @@ QEtaAuxiliaryPackage: with
       ++ exponents correspond to generalizedEtaFunctionIndices(nn).
       ++ mat*v=0 encodes the conditions \eqref{eq:generalized-weight},
       ++ \eqref{eq:generalized-sigmaInfinity}, and
-      ++ \eqref{eq:generalized-sigma0}. See also modulrGamm1 and
+      ++ \eqref{eq:generalized-sigma0}. See also modularGamm1 and
       ++ modularGamma1?.
 
     matrixEtaOrder: (P, Cusp, P, Z) -> Q
@@ -778,26 +764,6 @@ $a\in X_c$.
 
     sigma0(mm: P, r: List Z, rtilde: List List Z): Z ==
         sigma0(mm, r) + 2*sigma0(mm, rtilde)
-
-    modularGamma1(nn: P, rbar: List List Z): Z ==
-        rrec: Record(pure: LZ, properGeneralized: LLZ) :=
-            splitEtaQuotientSpecification(nn, rbar)
-        r: LZ := rrec.pure
-        rtilde: LLZ := rrec.properGeneralized
-        not zero? reduce(_+, r) => 1 -- non-zero weight
-
-        -- order at inifinity is an integer
-        shat: Q := sigmaInfinity(nn, r, rtilde)
-        not one? denom shat => 2
-        not zero? positiveRemainder(numer shat, 24) => 2
-
-        -- order at 0 is an integer
-        not zero? positiveRemainder(sigma0(nn, r, rtilde), 24) => 3
-
-        return 0 -- modular function for Gamma1(nn)
-
-    modularGamma1?(nn: P, rbar: List List Z): Boolean ==
-        zero? modularGamma1(nn, rbar)
 
     matrixModularGamma1(nn: P): MQ ==
         nndivs: List P := DIVISORS nn
