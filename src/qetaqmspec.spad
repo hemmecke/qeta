@@ -95,7 +95,7 @@ VQ ==> Vector Q
 LVZ ==> List VZ
 ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
 SPEC ==> QEtaSpecification
-LSPEC ==> List SPEC
+SPECS ==> List SPEC
 INDICES ==> List List Z
 
 QETAAUX ==> QEtaAuxiliaryPackage
@@ -113,23 +113,23 @@ QETAAUX ==> QEtaAuxiliaryPackage
 ++ QEtaQuotientSpecificationss4ti2 computes a monoid basis of
 ++ (specifications for) eta-quotients.
 QEtaQuotientSpecifications4ti2: with
-    etaQuotientMonoidSpecifications: P -> LSPEC
+    etaQuotientMonoidSpecifications: P -> SPECS
       ++ etaQuotientMonoidSpecification(m) returns specifications of
       ++ eta-quotients that correspond to the formula (16) from
       ++ \cite{Radu:RamanujanKolberg:2015}, i.e. (together with 1)
       ++ they describe the monoid E^\infty(m). Same as
       ++ etaQuotientsMonoidSpecifications(m, [1..n-1]) where n is the
       ++ number of divisors of n.
-    etaQuotientMonoidSpecifications: (P, List Z) -> LSPEC
+    etaQuotientMonoidSpecifications: (P, List Z) -> SPECS
       ++ etaQuotientMonoidSpecifications(m, idivs) computes the
       ++ matrixLigozatModularGamma0(m, idivs)$QEtaAuxiliaryPackage
       ++ and finds a basis of the solution space.
       ++ It computes the same as etaQuotientSpecifications(m, idivs, 0).
-    etaQuotientSpecifications: (P, List Z, Z) -> LSPEC
+    etaQuotientSpecifications: (P, List Z, Z) -> SPECS
       ++ etaQuotientSpecifications(m, idivs, weight) computes
       ++ etaQuotientSpecifications(m, idivs, rhs, weight) for
       ++ rhs := [0 for i in idivs].
-    etaQuotientSpecifications: (P, List Z, List Z, Z) -> LSPEC
+    etaQuotientSpecifications: (P, List Z, List Z, Z) -> SPECS
       ++ etaQuotientSpecifications(m, idivs, rhs, weight) computes
       ++ zsolve4ti2(m, idivs, concat(rhs, [weight]) and chooses one
       ++ particular solution and adds it to all homogeneous and free
@@ -143,7 +143,7 @@ QEtaQuotientSpecifications4ti2: with
       ++ See in the specification of matrixLigozatModularGamma0 about
       ++ the meaning of the other rows of the matrix.
 
-    generalizedEtaQuotientMonoidSpecifications: (P, INDICES) -> LSPEC
+    generalizedEtaQuotientMonoidSpecifications: (P, INDICES) -> SPECS
       ++ generalizedEtaQuotientMonoidSpecifications(nn, idxs) returns
       ++ specifications of generalized eta-quotients that (together
       ++ with 1) generate the (multiplicative) monoid of all
@@ -151,7 +151,7 @@ QEtaQuotientSpecifications4ti2: with
       ++ by idxs) that are modular functions for $\Gamma_1(nn)$ and
       ++ have at most a pole at infinity. If idxs=[], then it is
       ++ equivalent to the indices generalizedEtaFunctionIndices(nn).
-    generalizedEtaQuotientMonoidSpecifications: P -> LSPEC
+    generalizedEtaQuotientMonoidSpecifications: P -> SPECS
       ++ generalizedEtaQuotientMonoidExponentVectors(nn) returns
       ++ generalizedEtaQuotientMonoidExponentVectors(nn, []).
 
@@ -195,7 +195,7 @@ QEtaQuotientSpecifications4ti2: with
         sort((x:VZ,y:VZ):Boolean +-> (x(n+1) < y(n+1)), res.zinhom)
 
     -- exported functions
-    etaQuotientSpecifications(nn: P, idivs: List Z, w: Z): LSPEC ==
+    etaQuotientSpecifications(nn: P, idivs: List Z, w: Z): SPECS ==
         gens: List VZ := generatorsWithWeight(nn, idivs, w)
         n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
         gens := [g(1..n) for g in gens]
@@ -208,10 +208,10 @@ QEtaQuotientSpecifications4ti2: with
         rgens := sortByComponentGrade(nn, gens) $ QEVAux
         [etaQuotientSpecification(nn, r) for r in rgens]
 
-    etaQuotientMonoidSpecifications(nn: P, idivs: List Z): LSPEC ==
+    etaQuotientMonoidSpecifications(nn: P, idivs: List Z): SPECS ==
         etaQuotientSpecifications(nn, idivs, 0)
 
-    etaQuotientMonoidSpecifications(nn: P): LSPEC ==
+    etaQuotientMonoidSpecifications(nn: P): SPECS ==
         -- generators for R^\infty(nn)
         n: Z := numberOfDivisors(nn)$IntegerNumberTheoryFunctions
         idivs: List Z := [i for i in 1..n-1]
@@ -225,7 +225,7 @@ QEtaQuotientSpecifications4ti2: with
         for j in 1..cols repeat
             qsetelt!(matZ, i, j, numer(den*qelt(matQ, i, j)))
 
-    generalizedEtaQuotientMonoidSpecifications(nn: P, idxs: INDICES): LSPEC ==
+    generalizedEtaQuotientMonoidSpecifications(nn: P, idxs: INDICES): SPECS ==
         spitzen: List Cusp := cusps(nn)$CongruenceSubgroupGamma1
         -- At the cusp infinity (=1/nn) the order must be an integer.
         -- That, however, is already taken care of in the
@@ -280,7 +280,7 @@ QEtaQuotientSpecifications4ti2: with
         lle: LLZ := [members g(1..cols-2) for g in sres] -- list of exponents
         [generalizedEtaQuotientSpecification(nn, idxs, le) for le in lle]
 
-    generalizedEtaQuotientMonoidSpecifications(nn: P): LSPEC ==
+    generalizedEtaQuotientMonoidSpecifications(nn: P): SPECS ==
         generalizedEtaQuotientMonoidSpecifications(nn, empty()$INDICES)
 
 )if LiterateDoc
