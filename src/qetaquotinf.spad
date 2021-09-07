@@ -200,10 +200,6 @@ EtaQuotientInfinity(C): Exports == Implementation where
 --      ++ generalizedEtaQuotient(delta,0,e):=$\eta(\delta\tau)^e$ and
 --      ++ generalizedEtaQuotient(delta,g,e):=
 --      ++ $\frac{\eta(g\tau)^e}{\eta(2g\tau)^e}}$ if $g=\delta/2$.
-    generalizedEtaQuotient: (P, List P, List Q) -> %
-      ++ generalizedEtaQuotient(d, gs, es) returns the product of
-      ++ generalized eta-quotients for each g in gs and e in es.
-      ++ Half-integer values are allowed for g=0 and g=d/2.
     generalizedEtaPower: List Z -> %
       ++ generalizedEtaPower(l) returns a (generalized) eta-power.
       ++ If l is either a list [d,e] then it returns etaPower(d, e),
@@ -272,9 +268,9 @@ EtaQuotientInfinity(C): Exports == Implementation where
     ps1: C := coefficient(ps, 1) -- avoid null pointer by expansion
     psc: CachedPower L := ps :: CachedPower(L)
 -------------------------------------------------------------------
-    -- We maintain a cache of expansions of powers of the generalized
-    -- Euler functions. One cache for each delta and each 0<g<delta/2.
-    gef: XHashTable(P, XHashTable(P, CachedPower T)) := empty()
+    -- We maintain a cache of expansions of powers of the Jacobi
+    -- functions. One cache for each delta and each 0<g<delta/2.
+    gjf: XHashTable(P, XHashTable(P, CachedPower L)) := empty()
 -------------------------------------------------------------------
 
     prefactor(x: %): Q ==
@@ -312,25 +308,25 @@ EtaQuotientInfinity(C): Exports == Implementation where
         eulerExpansion etaQuotient(level, r)
 
 -------------------------------------------------------------------
-    -- local function
-    generalizedEulerFunctionPower(d: P, g: P, e: Z): T ==
+    -- local
+    jacobiFunctionPower(d: P, g: P, e: Z): L ==
         --assert(not zero? e)
         --assert(not zero? g)
         -- => qetaTaylorRep eulerFunctionPower(d, 2*e)
         --assert(2*g ~= d)
         -- => qetaTaylorRep eulerExpansion etaQuotient([g, d], [2*e, 2*e])
         if 2*g > d then g := asP(d-g)
-        -- First make sure that the initial entry gef.d.g exists.
-        gefd := elt(gef, d, empty()$XHashTable(P, CachedPower T))
-        if not key?(g, gefd) then
-            import from QFunctions(C, L)
-            l: L := qPochhammer(1, g, d) * qPochhammer(1, d-g, d)
-            --      (q^g, q^d)_\infty    * (q^{(d-g)}, q^d)_\infty
-            t: T := qetaTaylorRep l
-            gefd.g := t::CachedPower(T)
-        cachedPower := gefd.g
-        t: T := power!(cachedPower, abs e)$CachedPower(T)
-        if e > 0 then t else recip(t)::T
+        -- First make sure that the initial entry gjf.d.g exists.
+        gjfd := elt(gjf, d, empty()$XHashTable(P, CachedPower L))
+        if not key?(g, gjfd) then
+            l: L := jacobiFunction(d, g)$QFunctions(C, L)
+            gjfd.g := l::CachedPower(L)
+        l: L := power!(gjfd.g, abs e)$CachedPower(L)
+        if e > 0 then l else recip(l)::L
+
+    -- local
+    generalizedEulerFunctionPower(d: P, g: P, e: Z): L ==
+        eulerFunctionPower(d, -e) * jacobiFunctionPower(d, g, e)
 
     generalizedEtaPower(d: P, g: P, e: Q): % ==
         zero? e => 1
@@ -347,34 +343,10 @@ EtaQuotientInfinity(C): Exports == Implementation where
         not one? denom e =>
             error "generalizedEtaQuotient: only accepting integer powers"
 
-        t: T := generalizedEulerFunctionPower(d, g, numer e)
+        l: L := generalizedEulerFunctionPower(d, g, numer e)
         -- Since 0<g<d, g/d is already the fractional part.
         q: Q := g^2/(2*d) - g/2 + d/12 --=d/2*((g/d)^2-g/d+1/6)
-        new(e*q, laurent(0, t)$L)
-
-    generalizedEtaQuotient(d: P, gs: List P, r: List Q): % ==
-        --assert(#gs=#r)
-        empty? gs => 1
-        -- We want to avoid multiple recip computations, so we compute
-        -- numerator and denominator separately and invert at the end.
-        -- Exceptions are if g=0 or g=d/2.
-        num?: Boolean := den? := false
-        num: % := den := 1
-        for g in gs for rd in r repeat
-            zero? g or 2*g = d =>
-                z: % := generalizedEtaPower(d, g, rd)
-                if num? then num := num * z else (num := z; num? := true)
-            rd > 0 =>
-                z: % := generalizedEtaPower(d, g, rd)
-                if num? then num := num * z else (num := z; num? := true)
-            rd < 0 =>
-                z: % := generalizedEtaPower(d, g, - rd)
-                if den? then den := den * z else (den := z; den? := true)
-        -- If the denominator is set, we must invert it.
-        den? =>
-            num? => num * inv den
-            inv den
-        num -- There is no denominator and if not num? then num=1 anyway.
+        new(e*q, l)
 
     generalizedEtaPower(l: List Z): % ==
         empty? l => 1
@@ -392,33 +364,56 @@ EtaQuotientInfinity(C): Exports == Implementation where
         generalizedEtaPower(asP d, asP g, e::Q)
 
     generalizedEtaQuotient(rspec: SPEC): % ==
+        -- see \eqref{eq:eta_delta-g^[R](tau)} and \eqref{eq:g_rbar(tau)}
+        pure? rspec => etaQuotient rspec
+        rpure: XHashTable(P, Z) := empty()
+        divs: List P := divisors rspec
         r: LZ := pureExponents rspec
         rtilde := properGeneralizedPart rspec
-        zpure: % := etaQuotient(divisors rspec, r)
-        empty? rtilde => zpure
+        --assert(not empty? rtilde)
+        for rd in r for delta in divs repeat rpure.delta := rd
         -- We want to avoid multiple recip computations, so we compute
         -- numerator and denominator separately and invert at the end.
+        -- While walking through we collect the respective powers of
+        -- eta-quotients that adjust the Jacobi triple product to
+        -- become a generalized eta-quotient.
         num?: Boolean := den? := false
-        num: % := den := 1
+        num: L := den := 1
         -- All elements in rtilde are lists of length exactly 3.
         for l in rtilde repeat
+            d: P := asP(l.1) -- it comes form rspec, so we know it is positive
+            g: P := asP(l.2)
+            rpure.d := elt(rpure, d, 0) - l.3
             l.3 > 0 =>
-                z: % := generalizedEtaPower l
+                z: L := jacobiFunctionPower(d, g, l.3)
                 if num? then num := num * z else (num := z; num? := true)
             l.3 < 0 =>
-                z: % := generalizedEtaPower([l.1, l.2, - l.3])
+                z: L := jacobiFunctionPower(d, g, - l.3)
                 if den? then den := den * z else (den := z; den? := true)
+
+        -- Now we can compute the pure part.
+        zpure: L := 1
+        nonTrivialPurePart? := false
+        for d in keys rpure | not zero? rpure.d repeat
+            zpure := zpure * eulerFunctionPower(d, rpure.d)
+            nonTrivialPurePart? := true
+
         -- If the denominator is set, we must invert it.
-        -- Avoid multiplication with 1.
-        not empty? r => -- pure part is non-trivial
-            den? =>
-                num? => zpure * num * inv den
-                zpure * inv den
-            zpure * num -- since not empty? rtilde, there must be a denominator
-        den? =>
-            num? => num * inv den
-            inv den
-        num -- since not empty? rtilde, there must be a denominator
+        -- The following if-construction computes zpure*num/den but avoids
+        -- multiplication with 1.
+        if nonTrivialPurePart? then -- pure part is non-trivial
+            z := zpure
+            if den? then
+                z := z * recip(den)::L
+                if num? then z := z * num
+              else
+                z := z * num -- not empty? rtilde --> num~=1
+          else
+            if den? then
+                z := recip(den)::L
+                if num? then z := z * num
+              else z := num
+        return new((1/24)*sigmaInfinity(rspec), z)
 
 
 )if LiterateDoc
