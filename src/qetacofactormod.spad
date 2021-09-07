@@ -370,9 +370,9 @@ QEtaModularGamma0: Exports == Implementation where
 \label{sec:QEtaModularGamma0Infinity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Compute a vector that must be multiplied to the (sifted) eta-quotient
-in order to make it a modular function having a pole only at infinity
-or to make the (positive) orders at all cusps (\code{qetaGrades})
-small in total sum.
+in order to make it a modular function for $\Gamma_0(N)$ having a pole
+only at infinity or to make the (positive) orders at all cusps
+(\code{qetaGrades}) small in total sum.
 
 )endif
 
@@ -426,7 +426,7 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
         for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
 
         -- The expansion of the cofactor is here.
-        -- We take care of the right q-order through alphaInfinity.
+        -- We take care of the correct q-order through alphaInfinity.
         cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, s)$EQI(C))
 
         -- We multiply both things together to get (nearly) a modular
@@ -637,6 +637,102 @@ QEtaModularGamma1: Exports == Implementation where
 
     etaCofactorInfinity(nn: P, rspec, m: P, t: N): SPEC ==
         etaCofactorInfinity(nn, rspec, m, t, [])
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaModularGamma1Infinity}
+\label{sec:QEtaModularGamma1Infinity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Compute a vector that must be multiplied to the (sifted) eta-quotient
+in order to make it a modular function for $\Gamma_1(N)$ having a pole
+only at infinity or to make the (positive) orders at all cusps
+(\code{qetaGrades}) small in total sum.
+
+)endif
+
+)abbrev package QETAMG1I QEtaModularGamma1Infinity
+QEtaModularGamma1Infinity(C: IntegralDomain): Exports == Implementation where
+  T1 C  ==> QEtaTaylorSeries C
+  L1 C  ==> QEtaLaurentSeries C
+  A1 C ==> Finite0Series C
+  EQI C  ==> EtaQuotientInfinity C
+  YM1EQG ==> SymbolicModularGamma1EtaQuotientGamma
+  Exports ==> with
+    modularGeneralizedEtaQuotientInfinity: SPEC -> A1 C
+      ++ modularGeneralizedEtaQuotientInfinity(rspec) checks whether
+      ++ rspec specifices a Gamma_1-modular generalized eta-quotient
+      ++ and returns
+      ++ (expansion(generalizedEtaQuotient(rspec)$EQI(C))$EQI(C))::A1(C).
+    modularGeneralizedEtaQuotientInfinity: (SPEC, SPEC, P, N) -> A1 C
+      ++ modularGeneralizedEtaQuotientInfinity(sspec,rspec,m,t)
+      ++ returns the series expansion of
+      ++ generalizedEtaQuotient(sspec,rspec,m,t)
+      ++ from SymbolicModularGamma1GeneralizedEtaQuotient at the cusp
+      ++ infinity.
+    modularGeneralizedEtaQuotientInfinity: (P, SPEC, P, N, LLZ) -> A1 C
+      ++ modularGeneralizedEtaQuotientInfinity(nn,rspec,m,t,idxs) returns
+      ++ modularGeneralizedEtaQuotientInfinity(sspec,rspec,m,t,idxs) for
+      ++ sspec equal to etaCofactorInfinity(nn,rspec,m,t,idxs).
+    modularGeneralizedEtaQuotientInfinity: (P, SPEC, P, N) -> A1 C
+      ++ modularGeneralizedEtaQuotientInfinity(nn,rspec,m,t) returns
+      ++ modularGeneralizedEtaQuotientInfinity(nn,rspec,m,t,[])
+  Implementation ==> add
+
+    modularGeneralizedEtaQuotientInfinity(rspec: SPEC): A1 C ==
+      (expansion(generalizedEtaQuotient(rspec)$EQI(C))$EQI(C))::A1(C)
+
+    -- generating series for a(m*n+t) with cofactor (generalized)
+    -- eta-quotient and the fractional q power where
+    -- \sum_{k=0}^\infty a(k)q^k is defined by a (generalized)
+    -- eta-quotient given by rspec.
+
+    modularGeneralizedEtaQuotientInfinity(
+      sspec: SPEC, rspec: SPEC, m: P, t: N): A1 C ==
+        rgeq: EQI(C) := generalizedEtaQuotient(rspec)$EQI(C)
+        eulerquo: T1 C := qetaTaylorRep eulerExpansion rgeq
+        p: T1 C := multisect(m-t, t, eulerquo)
+
+        -- The expansion of the cofactor is here.
+        -- We take care of the correct q-order through alphaInfinity.
+        sgeq: EQI(C) := generalizedEtaQuotient(sspec)$EQI(C)
+        cofact: T1 C := qetaTaylorRep eulerExpansion sgeq
+
+        -- We multiply both things together to get (nearly) a modular
+        -- function.
+        tf: T1 C := cofact * p
+
+        -- We have to multiply by some q-power to get the expansion of
+        -- a modular function f.
+        alpha: Z := alphaInfinity(sspec, rspec, m, [t])$QEtaCofactorSpace
+        laurent(alpha, tf)$A1(C)
+
+    modularGeneralizedEtaQuotientInfinity(
+      nn: P, rspec: SPEC, m: P, t: N, idxs: LLZ): A1 C ==
+        sspec := etaCofactorInfinity(nn, rspec, m, t, idxs)$QEtaModularGamma1
+        modularGeneralizedEtaQuotientInfinity(sspec, rspec, m, t)
+
+    modularGeneralizedEtaQuotientInfinity(nn:P, rspec:SPEC, m:P, t:N): A1(C) ==
+        modularGeneralizedEtaQuotientInfinity(nn, rspec, m, t, [])
+
+
+
+
+
+
+
+
+
 
 
 
