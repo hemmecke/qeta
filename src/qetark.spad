@@ -498,31 +498,6 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     varsubscript?(fmt: Z): Boolean == bit?(fmt, 4)
 
     -- local
-    plus(a: SPEC, b: SPEC): SPEC ==
-        nn: P := asP lcm(level a, level b)
-        h: XHashTable(Z, Z) := empty()
-        for l in purePart a repeat h(nn*l.1) := l.2
-        for l in purePart b repeat h(nn*l.1) := l.2 + elt(h, nn*l.1, 0)
-        for l in properGeneralizedPart a repeat h(nn*l.1 + l.2) := l.3
-        for l in properGeneralizedPart b repeat
-            n: Z := nn*l.1 + l.2
-            h.n := l.3 + elt(h, n, 0)
-        rbar: LLZ := empty()
-        for k in keys h repeat
-            e: Z := h.k
-            g: Z := positiveRemainder(k, nn)
-            d: Z := numer((k-g)/nn) -- assert(denom=1)
-            zero? g => rbar := cons([d, h.k], rbar) -- pure part
-            rbar := cons([d, g, e], rbar) -- rtilde part
-        generalizedEtaQuotientSpecification(nn, rbar)
-
-    -- local
-    times(z: Z, rspec: SPEC): SPEC ==
-        rpure := [[x.1, z*x.2] for x in purePart rspec]
-        rtilde := [[x.1, x.2, z*x.3] for x in properGeneralizedPart rspec]
-        generalizedEtaQuotientSpecification(level rspec, concat(rpure,rtilde))
-
-    -- local
     -- replace first element 1 (basis of the module)
     moduleBasis(x: %): SPECS ==
         bas: SPECS := basisSpecifications x
@@ -533,7 +508,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     f(x: %, fmt: Z, v: (Z, Z) -> OF, c: C, e: Q, rspec: SPEC): OF ==
         e := e + alphaEtaInfinity x
-        rspec := plus(rspec, coSpecification x)
+        rspec := rspec * coSpecification x
         if withQFactor? fmt then e: Q := e + (1/24)*sigmaInfinity(rspec)
         cofact: OF := qQuotient(rspec, v, e)
         out: OF := orbitProduct x
@@ -556,7 +531,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     etaRelation(cis: List SUP C, bspecs: SPECS,
                 fmt: Z, v: (Z, Z) -> OF, c: C, e: Q, sspec: SPEC): OF ==
-        l := [etaRelationMonomial(c*ci, plus(bspec, sspec), fmt, v, e)
+        l := [etaRelationMonomial(c*ci, bspec * sspec, fmt, v, e)
               for ci in cis for bspec in bspecs | not zero? ci]
         empty? l => (0$Z)::OF
         reduce(_+, l)
@@ -575,7 +550,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             --assert(#bas=#cis)
             --assert(#bas=#lots)
             cis := concat [[(rec.c)::SUP(C) for rec in lot] for lot in lots]
-            bas := concat [[plus(times(rec.k, t), b) for rec in lot]
+            bas := concat [[b * t^(rec.k) for rec in lot]
                            for lot in lots for b in bas]
         er: OF := etaRelation(cis, bas, fmt, v, cf, e, sspec)
         (f(x, fmt, v, cf, e, sspec) = er)$OF
@@ -589,8 +564,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             pretty(x, fmt, v, 1, 0, etaQuotientSpecification(1,[]))
         invcf: Union(C, "failed") := 1$C exquo coefficient(x)
         icf: C := if invcf case "failed" then 1$C else invcf::C
-        sspec: SPEC := times(-1, coSpecification x)
-        pretty(x, fmt, v, icf, - alphaEtaInfinity x, sspec)
+        pretty(x, fmt, v, icf, - alphaEtaInfinity x, inv coSpecification x)
 
     -- format is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
