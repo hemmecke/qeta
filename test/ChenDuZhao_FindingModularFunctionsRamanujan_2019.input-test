@@ -70,7 +70,6 @@ QFX ==> QFunctions(CX, L1 CX)
 jf ==> jacobiFunction $ QF
 ef ==> eulerFunction $ QF
 gep ==> generalizedEulerProduct $ QF
-one(n: Z): Q == 1
 
 L ==> L1 C
 TX ==> T1 CX
@@ -81,11 +80,23 @@ puiex ==> puiseuxExpansion $ QESX(C, CX)
 
 oo ==> infinity()$Cusp
 
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+
 )read convenience.input )quiet
 )set stream calc 2
 -- -
 
-ps := partitionSeries(1)$QFunctions(Q, L1(Q))
+-- Produce nicer output of formulas (avoid some parentheses).
+
+OH ==> OperatorHandlers((Integer, List OutputForm) -> OutputBox)
+h := operatorHandlers()$FormatMathJax;
+MAX ==> maxPrecedence()$FormatMathJax
+MIN ==> minPrecedence()$FormatMathJax
+setHandler!(h, 2 , "SUB", subscript(MAX)$FormatMathJax)$OH;
 
 )set mess type on
 )set mess time on
@@ -94,7 +105,6 @@ ps := partitionSeries(1)$QFunctions(Q, L1(Q))
 -------------------------------------------------------------------
 --endsetup
 -------------------------------------------------------------------
--- -
 
 -- +
 -------------------------------------------------------------------
@@ -124,7 +134,8 @@ nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
 
 -- As can be seen that is done in level 5.
 
-f := p5n0 := choose(m, t, ps);
+ps := partitionSeries(1)$QFunctions(Q, L1(Q))
+f := p5n0 := choose(m, t, ps)$L1(C);
 rspec1 := geqSPEC [[1,-2],[5,1],[5,1,-8]];
 rspec2 := geqSPEC [[1,-7],[5,6],[5,1,2]];
 f1 := eulerExpansion specEQI(C) rspec1
@@ -196,7 +207,7 @@ assertTrue(zero?(af-at+3*1$An(CX)))
 
 generalizedEtaFunctionIndices(nn)
 
-idxs := [[1],[5],[5, 2]]
+idxs := [[1],[5],[5, 1]]
 bspecs := generalizedEtaQuotientMonoidSpecifications(nn, idxs)
 ygens := [specYM1GEQ x for x in bspecs];
 egens := [expandAnCX x for x in ygens];
@@ -216,6 +227,40 @@ ilcpol := -inv(coefficient(pol,'F, 1))::C
 
 mpol := coefficient(ilcpol*pol, 'F, 0)
 assertEquals(mpol, M1-3)
+
+-- ## Find the relation by just one function
+
+-- There is also a package that puts the above steps together.
+
+m := 5; t := 0;
+rspec := geqSPEC [[1,-1]];
+nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
+idxs := [[1],[5],[5, 1]];
+
+fid ==> findIdentity $ QEtaGeneralizedRamanujan(C)
+id := fid(nn, idxs, rspec, m, t, idxs)
+pretty(id, qIdentity + asExpression + expand + 16)
+
+assertEquals(coSpecification id, sspec)
+idpol := identityPolynomial(id)
+ilcpol := -inv(coefficient(idpol,'F, 1))::C
+assertEquals(ilcpol*coefficient(idpol,'F,0), M1-3)
+
+idxs := [[1],[5],[5, 1]];
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + 16)
+idxs := [[1],[5],[5, 2]];
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + 16)
+
+idxs := [[1],[5],[5, 1]];
+id := fid(nn, idxs, rspec, m, 1, idxs);
+pretty(id, qIdentity + expand + nonModular + 16)
+idxs := [[1],[5],[5, 1]];
+id := fid(nn, idxs, rspec, m, 2, idxs);
+pretty(id, qIdentity + expand + nonModular + 16)
+id := fid(nn, idxs, rspec, m, 4, idxs);
+pretty(id, qIdentity + expand + nonModular + 16)
 
 -- +
 -------------------------------------------------------------------
@@ -238,6 +283,7 @@ nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)
 -- Create the series from the above article in two different ways
 -- and compare the first 100 coefficients.
 
+ps := partitionSeries(1)$QFunctions(Q, L1(Q));
 p11n6 := choose(11,6,ps);
 z01 := EE(EQ(11,[24,-23])*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4));
 sspecz0 := geqSPEC [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
@@ -361,6 +407,17 @@ assertEquals(_
       + 516*M1^5 - 231*M1^4*M5 + 169*M1^4 - 220*M1^3*M5_
       - 16*M1^3 - 110*M1^2*M5 - 24*M1^2 - 22*M1*M5_
       - 3*M1+1))
+
+-- ## Find the relation by just one function
+
+idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]];
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+
+pol := 11*(11*(M1^8-4*M1^7+4*M1^6-4*M1^5+9*M1^4-12*M1^3+8*M1^2-2*M1)*M5_
+           + M1^10+19*M1^9-35*M1^8-16*M1^7+92*M1^6-155*M1^5_
+           + 190*M1^4-152*M1^3+71*M1^2-15*M1+1) - F;
+assertEquals(-11*identityPolynomial id, pol)
 
 -- +
 -------------------------------------------------------------------
@@ -523,6 +580,18 @@ spec1 := bspecs.1/zspec
 a1 := specM1AnCX spec1
 assertTrue(zero?(a1- 1$An(CX)))
 
+-- ## Find a relation by just one function
+
+-- By our implementation, we are able to find a relation with
+-- only one generalized eta-function.
+
+idxs := [[1],[2],[5],[10],[10,1]]
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+
+pol := 4*((M1-2)*M3 + (3*M1+2)*M1) - F;
+assertEquals(-8*identityPolynomial id, pol)
+
 -- +
 -------------------------------------------------------------------
 --endtest
@@ -575,9 +644,9 @@ assertEquals(sspeccdz, sspec)
 
 af := expandAnCX y
 
--- ## Find the relation for $\overline{p}(5n+2)$
+-- ## Find the relation for $\overline{Q}_{3,1}(9n+3)$
 
-bspecs := generalizedEtaQuotientMonoidSpecifications nn;
+bspecs := generalizedEtaQuotientMonoidSpecifications nn
 ygens := [specYM1GEQ x for x in bspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
@@ -602,6 +671,15 @@ pol := second(xr)::Pol(C);
 ilcpol := -inv(coefficient(pol,'F, 1))::C;
 mpol := coefficient(ilcpol*pol, 'F, 0)
 assertEquals(mpol, 6*(M2 + 16))
+
+-- ## Find the relation for $\overline{Q}_{3,1}(9n+3)$ in one step
+
+idxs := [[1],[2],[3],[6]]
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+
+pol := 6*(M1+15) - F;
+assertEquals(-90*identityPolynomial id, pol)
 
 -- +
 -------------------------------------------------------------------
@@ -655,7 +733,7 @@ assertEquals(sspeccdz, sspec)
 
 af := expandAnCX y
 
--- ## Find the relation for $\overline{p}(5n+2)$
+-- ## Find the relation for $\overline{Q}_{3,1}(9n+6)$
 
 bspecs := generalizedEtaQuotientMonoidSpecifications nn;
 ygens := [specYM1GEQ x for x in bspecs];
@@ -682,6 +760,64 @@ pol := second(xr)::Pol(C);
 ilcpol := -inv(coefficient(pol,'F, 1))::C;
 mpol := coefficient(ilcpol*pol, 'F, 0)
 assertEquals(mpol, 24*(M2 + 4))
+
+-- ## Find the relation for $\overline{Q}_{3,1}(9n+6)$ in one step
+
+idxs := [[1],[2],[3],[6]]
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+
+pol := 24*(M1+3)- F;
+assertEquals(-72*identityPolynomial id, pol)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:Delta2-25-14
+-------------------------------------------------------------------
+-- -
+-- # $\Delta_2(25n+14)$
+
+-- Investigate the identities of Theorem 9.1 of
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+m := 25; t := 14
+rspec := geqSPEC [[1,2],[2,1],[10,-1]]
+nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+idxs := [[1],[2],[5],[10],[10,1]]
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+
+pol := 5*((M1+4)*M1-2*M3) - F;
+assertEquals(-20*identityPolynomial id, pol)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- +
+-------------------------------------------------------------------
+--test:Delta2-25-24
+-------------------------------------------------------------------
+-- -
+-- # $\Delta_2(25n+24)$
+
+-- Investigate the identities of Theorem 9.1 of
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
+
+m := 25; t := 24
+rspec := geqSPEC [[1,2],[2,1],[10,-1]]
+nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+idxs := [[1],[2],[5],[10],[10,1]]
+id := fid(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+
+pol := 5*((2*M1+1)*M3 - (4*M1+1)*M1) - F;
+assertEquals(5*identityPolynomial id, pol)
 
 -- +
 -------------------------------------------------------------------
