@@ -98,6 +98,9 @@ MAX ==> maxPrecedence()$FormatMathJax
 MIN ==> minPrecedence()$FormatMathJax
 setHandler!(h, 2 , "SUB", subscript(MAX)$FormatMathJax)$OH;
 
+findID0 ==> findIdentity $ QEtaRamanujanKolberg(C)
+findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
+
 )set mess type on
 )set mess time on
 
@@ -237,8 +240,7 @@ rspec := geqSPEC [[1,-1]];
 nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
 idxs := [[1],[5],[5, 1]];
 
-fid ==> findIdentity $ QEtaGeneralizedRamanujan(C)
-id := fid(nn, idxs, rspec, m, t, idxs)
+id := findID1(nn, idxs, rspec, m, t, idxs)
 pretty(id, qIdentity + asExpression + expand + 16)
 
 assertEquals(coSpecification id, sspec)
@@ -247,19 +249,19 @@ ilcpol := -inv(coefficient(idpol,'F, 1))::C
 assertEquals(ilcpol*coefficient(idpol,'F,0), M1-3)
 
 idxs := [[1],[5],[5, 1]];
-id := fid(nn, idxs, rspec, m, t, idxs);
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + 16)
 idxs := [[1],[5],[5, 2]];
-id := fid(nn, idxs, rspec, m, t, idxs);
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + 16)
 
 idxs := [[1],[5],[5, 1]];
-id := fid(nn, idxs, rspec, m, 1, idxs);
+id := findID1(nn, idxs, rspec, m, 1, idxs);
 pretty(id, qIdentity + expand + nonModular + 16)
 idxs := [[1],[5],[5, 1]];
-id := fid(nn, idxs, rspec, m, 2, idxs);
+id := findID1(nn, idxs, rspec, m, 2, idxs);
 pretty(id, qIdentity + expand + nonModular + 16)
-id := fid(nn, idxs, rspec, m, 4, idxs);
+id := findID1(nn, idxs, rspec, m, 4, idxs);
 pretty(id, qIdentity + expand + nonModular + 16)
 
 -- +
@@ -411,7 +413,7 @@ assertEquals(_
 -- ## Find the relation by just one function
 
 idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]];
-id := fid(nn, idxs, rspec, m, t, idxs);
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 11*(11*(M1^8-4*M1^7+4*M1^6-4*M1^5+9*M1^4-12*M1^3+8*M1^2-2*M1)*M5_
@@ -586,7 +588,7 @@ assertTrue(zero?(a1- 1$An(CX)))
 -- only one generalized eta-function.
 
 idxs := [[1],[2],[5],[10],[10,1]]
-id := fid(nn, idxs, rspec, m, t, idxs);
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 4*((M1-2)*M3 + (3*M1+2)*M1) - F;
@@ -675,7 +677,7 @@ assertEquals(mpol, 6*(M2 + 16))
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+3)$ in one step
 
 idxs := [[1],[2],[3],[6]]
-id := fid(nn, idxs, rspec, m, t, idxs);
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 6*(M1+15) - F;
@@ -764,7 +766,7 @@ assertEquals(mpol, 24*(M2 + 4))
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+6)$ in one step
 
 idxs := [[1],[2],[3],[6]]
-id := fid(nn, idxs, rspec, m, t, idxs);
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 24*(M1+3)- F;
@@ -785,15 +787,107 @@ assertEquals(-72*identityPolynomial id, pol)
 -- Investigate the identities of Theorem 9.1 of
 -- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
+-- Let
+-- \begin{align*}
+-- \sum_{n=0}^\infty \Delta_k(n) q^n
+-- &=
+-- \frac{
+--       (q^2;q^2)_\infty (q^{2k+1};q^{2k+1})_\infty
+--      }{
+--       (q;q)_\infty^5 (q^{4k+2};q^{4k+2})_\infty
+--      }.
+-- \end{align*}
+-- In \cite{Andrews+Paule:MacMahonsPartitionAnalysisXI:2007}
+-- it is conjectured that
+-- $$
+-- \Delta_2(25n+14) \equiv 0 \pmod{5}.
+-- $$
+-- We show that by a witness identity.
+
 m := 25; t := 14
-rspec := geqSPEC [[1,2],[2,1],[10,-1]]
+rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
-idxs := [[1],[2],[5],[10],[10,1]]
-id := fid(nn, idxs, rspec, m, t, idxs);
+idxs := [[1],[2],[5],[10],[10,1],[10,2]]
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
-pol := 5*((M1+4)*M1-2*M3) - F;
-assertEquals(-20*identityPolynomial id, pol)
+-- We find that when we multiply the polynomial by
+-- the inverse of the leading coefficient of F and
+-- then subtract F, every coefficient is an integer
+-- and is divisible by 5.
+
+ipol := identityPolynomial id;
+assertEquals(# monomials ipol, 59)
+c := inv coefficient(id)
+mons := monomials(c * ipol - F);
+l := removeDuplicates [denom m for m in mons];
+assertEquals(l, [1])
+assertEquals(gcd [numer m for m in mons],5)
+
+-- The `findIdentity` function takes the first
+-- basis specification. By using the second, we
+-- arrive at a relation with smaller denominator
+-- and also smaller coefficients.
+
+bspecs := basisSpecifications id
+bas := [specEQI(C) bspecs.i for i in 1..#bspecs]
+
+-- +
+--id1 := findID1(sspec, rspec, m, t, [bspecs.1]);
+--pol1 := 6192449487634432 * identityPolynomial id1
+-- -
+
+-- We get a relation with slightly smaller
+-- coefficients, if we take the second basis element.
+
+id2 := findID1(sspec, rspec, m, t, [bspecs.2]);
+c := -(1/5)*inv coefficient(id2)
+pol2 := c * identityPolynomial id2
+
+-- ## Redo computation from the article
+
+-- In \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}
+-- another cofactor is used. For
+-- \begin{gather}
+-- \frac{(q;q)_\infty^{92}
+--       (q^5;q^5)_\infty^{14}
+--       (q,q^4;q^5)_\infty^{52}
+--       (q^4,q^6;q^{10})_\infty^4
+--      }{q^{57}
+--       (q^2;q^2)_\infty^{58}
+--       (q^{10};q^{10})_\infty^{46}
+--       (q,q^9;q^{10})_\infty^{109}
+--       (q^5;q^{10})_\infty^{10}
+--      }
+-- \sum_{n=0}^\infty \Delta_2(25n+14)q^n
+-- \end{gather}
+-- they find a 58-term representation
+-- as a sum of powers of
+-- \begin{gather}
+-- z =
+-- \frac{(q;q)_\infty
+--       (q^5;q^5)_\infty
+--      }{q
+--       (q,q^4;q^5)_\infty^2
+--       (q^{10};q^{10})_\infty^2
+--       (q,q^9;q^{10})_\infty
+--      }
+-- \end{gather}
+-- with coefficients divisible by 5.
+--
+-- With the same parameters as on page 34 of
+-- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019},
+-- we get exactly the right-hand side presented on page 35.
+
+m := 25; t := 14
+rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]];
+nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+sspec := geqSPEC [[1,92],[2,-58],[5,14],[10,-46],_
+                  [5,1,52],[10,1,-109],[10,4,4],[10,5,-5]];
+bspecs := [geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]];
+specEQI(C) bspecs.1
+id := findID1(sspec, rspec, m, t, bspecs);
+pretty(id, qIdentity + nonModular + withSubscript)
 
 -- +
 -------------------------------------------------------------------
@@ -809,11 +903,60 @@ assertEquals(-20*identityPolynomial id, pol)
 -- Investigate the identities of Theorem 9.1 of
 -- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
+-- Let
+-- \begin{align*}
+-- \sum_{n=0}^\infty \Delta_k(n) q^n
+-- &=
+-- \frac{
+--       (q^2;q^2)_\infty (q^{2k+1};q^{2k+1})_\infty
+--      }{
+--       (q;q)_\infty^5 (q^{4k+2};q^{4k+2})_\infty
+--      }.
+-- \end{align*}
+-- In \cite{Andrews+Paule:MacMahonsPartitionAnalysisXI:2007}
+-- it is conjectured that
+-- $$
+-- \Delta_2(25n+24) \equiv 0 \pmod{5}.
+-- $$
+-- We show that by a witness identity.
+
 m := 25; t := 24
+rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+idxs := [[1],[2],[5],[10],[5,1],[10,1]]
+id := findID1(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(# monomials identityPolynomial id, 59)
+
+-- Let
+-- \begin{align*}
+-- \sum_{n=0}^\infty a(n) q^n
+-- &=
+-- \frac{
+--       (q;q)_\infty^2 (q^2;q^2)_\infty
+--      }{
+--       (q^{10};q^{10})_\infty
+--      }.
+-- \end{align*}
+-- Then, because of $(1-q^n)^5\equiv 1-q^{5n} \pmod{5}$,
+-- we have
+-- $\Delta_2(n)\equiv a(n) \pmod{5}$ for all natural $n$.
+--
+-- In \cite{Andrews+Paule:MacMahonsPartitionAnalysisXI:2007}
+-- it is conjectured that
+-- $$
+-- \Delta_2(25n+24) -\equiv 0 \pmod{5}.
+-- $$
+
+-- A relation for the series $a(n)$ is much smaller than
+-- the one for $\Delta_2(n)$.
+
+m := 25; t := 24
+--rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 rspec := geqSPEC [[1,2],[2,1],[10,-1]]
 nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
 idxs := [[1],[2],[5],[10],[10,1]]
-id := fid(nn, idxs, rspec, m, t, idxs);
+id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 5*((2*M1+1)*M3 - (4*M1+1)*M1) - F;
