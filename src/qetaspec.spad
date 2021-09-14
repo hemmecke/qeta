@@ -67,7 +67,6 @@ display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
 tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
-warnPrint(x,y) ==> tracePrint(x,y)
 
 )if LiterateDoc
 %$
@@ -138,6 +137,8 @@ QEtaSpecification: Exports == Implementation where
       ++ a) [d[     -- this is equivalent to [d,1],
       ++ b) [d,e]   -- stands for $\eta(d*\tau)^e$,
       ++ c) [d,g,e] -- stands for $\eta_{d,g}^{[R]}(\tau)^e$.
+      ++ In order to ease specifications, we automatically translate
+      ++ [2*g,g,e] into the pair [[g,2*e],[2*g,-2*e]].
     generalizedEtaQuotientSpecification: LLZ -> %
       ++ generalizedEtaQuotientSpecification(rbar) returns
       ++ generalizedEtaQuotientSpecification(mm, rbar) for
@@ -260,9 +261,7 @@ QEtaSpecification: Exports == Implementation where
         not pure? rspec => error "not a pure eta-quotient specification"
         rspec
 
-    -- local function (allow equal indices, but may warn)
-    generalizedEtaQuotientSpecificationWarn(warn?: Boolean,
-                                            mm: P, rbar: LLZ): % ==
+    generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
         hr: XHashTable(Z, Z) := table() -- to store index,exponent pairs
         for l in rbar | not empty? l repeat
             d: Z := first l
@@ -270,16 +269,19 @@ QEtaSpecification: Exports == Implementation where
             i := mm*d
             #l = 1 or #l = 2 =>
                 z: Z := elt(hr, i, 0)
-                if warn? and not zero? z then
-                    warnPrint("(delta, e) specified twice", [d, z])
-                if #l = 1 then hr.i := 1 + z else hr.i := l.2 + z
+                if #l = 1 then hr.i := z + 1 else hr.i := z + l.2
             #l = 3 =>
                 g := l.2
+                e := l.3
+                --Note that \eta_{2g,g}(t)=\eta(g*t)^2/\eta(2*g*t)^2.
+                d = 2*g =>
+                    hr.i := elt(hr, i, 0) - 2*e
+                    i := mm*g
+                    hr.i := elt(hr, i, 0) + 2*e
+                -- Note that \eta_{\delta,0}(\tau)=\eta(\delta\tau)^2.
+                if zero? g then e := 2*e
                 i := i + g
-                z: Z := elt(hr, i, 0)
-                if warn? and not zero? z then
-                    warnPrint("(delta, g, e) specified twice", [d, g, z])
-                hr.i := l.3 + z
+                hr.i := elt(hr, i, 0) + e
             error "generalizedEtaQuotientSpecification: list length > 3"
         -- Now extract the data from the hashtable.
         divs := DIVISORS mm
@@ -292,9 +294,6 @@ QEtaSpecification: Exports == Implementation where
             if not zero? qr.remainder then
                 rtilde := cons([qr.quotient, qr.remainder, z], rtilde)
         per [mm, divs, reverse! r, rtilde]
-
-    generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
-        generalizedEtaQuotientSpecificationWarn(true, mm, rbar) --warn
 
     generalizedEtaQuotientSpecification(rbar: LLZ): % ==
         empty? rbar => 1
@@ -391,7 +390,7 @@ QEtaSpecification: Exports == Implementation where
         mm: P := asP lcm(level x, level y)
         rbar: LLZ := concat [purePart x, properGeneralizedPart x,
                              purePart y, properGeneralizedPart y]
-        generalizedEtaQuotientSpecificationWarn(false, mm, rbar)
+        generalizedEtaQuotientSpecification(mm, rbar)
     ((x: %) ^ (z: Z)): % ==
         r: LZ := [z*rd for rd in pureExponents x]
         rtilde: LLZ := [[l.1, l.2, z*l.3] for l in properGeneralizedPart x]
