@@ -299,11 +299,11 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ etaRelation(cis, bas, fmt, v, c, e, sspec) returns the
       ++ eta-relation part multiplied by c*q^e*etaQuotient(sspec).
 
-    pretty: (%, Z, (Z, Z) -> OF, C, Q, SPEC) -> OutputForm
+    pretty: (%, Z, (Z, Z) -> OF, C, Q, SPEC) -> Equation OutputForm
       ++ pretty(x, fmt, v, c, e, sspec) outputs x as computed in
       ++ eta-quotients, but multiplied by c*q^e*etaQuotient(sspec).
 
-    pretty: (%, Z, (Z, Z) -> OutputForm) -> OutputForm
+    pretty: (%, Z, (Z, Z) -> OutputForm) -> Equation OutputForm
       ++ pretty(x, fmt, v) outputs x as computed with respect to a
       ++ style given by the fmt parameter. If the lowest bit is set
       ++ in fmt then, the q factor is shown. If the bit 1 is
@@ -311,7 +311,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ eta-quotient, so that the coefficients will just be elements
       ++ of the coefficient domain.
 
-    pretty: (%, Z) -> OutputForm
+    pretty: (%, Z) -> Equation OutputForm
       ++ pretty(x, fmt) returns pretty(x, fmt, v) where v is a
       ++ variable indexing function chosen by bit 3 and 4 of fmt
       ++ according to the rules. If bit3=0, then variables are used.
@@ -543,7 +543,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- fmt is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
     -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
-    pretty(x: %, fmt: Z, v: (Z, Z) -> OF, cf: C, e: Q, sspec: SPEC): OF ==
+    pretty(x: %, fmt: Z, v: (Z,Z)->OF, cf: C, e: Q, sspec: SPEC): Equation OF ==
         cis: List SUP C := moduleCoefficients x
         bas: SPECS := moduleBasis x
         if expand? fmt then
@@ -555,13 +555,13 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             bas := concat [[b * t^(rec.k) for rec in lot]
                            for lot in lots for b in bas]
         er: OF := etaRelation(cis, bas, fmt, v, cf, e, sspec)
-        (f(x, fmt, v, cf, e, sspec) = er)$OF
+        (f(x, fmt, v, cf, e, sspec) = er)$Equation(OF)
 
     -- format is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
     -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
     -- bit 2: 0 = modular function identity, 1 = only orbit product on LHS
-    pretty(x: %, fmt: Z, v: (Z, Z) -> OF): OF ==
+    pretty(x: %, fmt: Z, v: (Z, Z) -> OF): Equation OF ==
         modularFunctionIdentity? fmt =>
             pretty(x, fmt, v, 1, 0, etaQuotientSpecification(1,[]))
         invcf: Union(C, "failed") := 1$C exquo coefficient(x)
@@ -574,7 +574,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- bit 2: 0 = modular function identity, 1 = only orbit product on LHS
     -- bit 3: 0 = variables, 1 = expression
     -- bit 4: 0 = normal indexed variables, 1 = subscripted variables
-    pretty(x: %, fmt: Z): OF ==
+    pretty(x: %, fmt: Z): Equation OF ==
         v: (Z, Z) -> OF :=
             withQFactor? fmt =>
                 asExpression? fmt => varPochhammer @ ((Z,Z)->OF)
