@@ -25,6 +25,10 @@ DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
 
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
+
+-- rspec := eqSPEC(nn, r)
+-- rspec := eqSPEC(divs, r)
+-- rspec := geqSPEC([[5,1,-11], [5,2, -1]])
 eqSPEC ==> etaQuotientSpecification $ SPEC
 geqSPEC ==> generalizedEtaQuotientSpecification $ SPEC
 -------------------------------------------------------------------
@@ -77,12 +81,58 @@ specYM1GEQG ==> generalizedEtaQuotient $ YM1GEQG
 
 -------------------------------------------------------------------
 -- Creation of eta-quotient expansions from specifications
+-- a1 := modularEtaQuotientInfinity(rspec)
+-- a1 := modularEtaQuotientInfinity(sspec,rspec,m,t)
+-- a1 := modularEtaQuotientInfinity(nn,rspec,m,t,sidxs)
 specEQI C ==> generalizedEtaQuotient $ EQI(C)
 specM0A1 C ==> modularEtaQuotientInfinity $ QEtaModularGamma0Infinity(C)
+specM1A1 C ==> modularGeneralizedEtaQuotientInfinity $ QEtaModularGamma1Infinity(C)
 
 -------------------------------------------------------------------
 -- Creation of symbolic eta-quotients (non-modular)
 specYGEQ ==> generalizedEtaQuotient $ YGEQ
+
+-------------------------------------------------------------------
+-- Creation of eta-quotient monoid
+-- bspecs := etaQuotientMonoidSpecifications nn;
+-- bspecs := generalizedEtaQuotientMonoidSpecifications(nn, idxs)
+monoidSPECS0 ==> etaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
+monoidSPECS1 ==> generalizedEtaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
+
+
+-------------------------------------------------------------------
+-- In which level must we compute?
+-- nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
+minLevel0 ==> minimalLevelCoEtaQuotientGamma0 $ QEtaCofactorSpace
+minLevel1 ==> minimalLevelCoEtaQuotientGamma1 $ QEtaCofactorSpace
+
+-------------------------------------------------------------------
+-- What is the cofactor for Gamma0/1?
+-- sspec := etacofactorInfinity(nn, rspec, m, t) -- Gamma0
+-- sspec := etacofactorInfinity(nn, rspec, m, t, sidxs) -- Gamma1
+cofactI0 ==> etaCofactorInfinity $ QEtaModularGamma0
+cofactI1 ==> etaCofactorInfinity $ QEtaModularGamma1
+
+-- ecs := etacofactorSpace0(nn, rspec, m, t) -- Gamma0
+-- ecs := etacofactorSpace0(nn, rspec, m, t, sidx) -- Gamma1
+-- s := members minimizeVector(ecs.particular, ecs.basis) $ QEtaModularGamma0
+cofactSpace0 ==> etaCofactorSpace0 $ QEtaCofactorSpace
+cofactSpace1 ==> etaCofactorSpace1 $ QEtaCofactorSpace
+
+-------------------------------------------------------------------
+-- Given nn, rsoec, m, t, find an identity.
+-- id := findID0(nn, rspec, m, t)
+-- id := findID1(nn, sidxs, rspec, m, t, bidxs)
+-- qIdentity ==> 1
+-- expand ==> 2
+-- nonModular ==> 4
+-- asExpression ==> 8
+-- withSubscript ==> 16
+-- pretty(id, qIdentity + expand + nonModular + withSubscript)
+findID0 ==> findIdentity $ QEtaRamanujanKolberg(C)
+findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
+
+
 
 -------------------------------------------------------------------
 -- We always use CachedPower versions
