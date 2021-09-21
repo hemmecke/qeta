@@ -578,10 +578,10 @@ QEtaModularGamma1: Exports == Implementation where
         -- series explicitly, since these vectors correspond to
         -- modular (generalized) eta quotients and thus we can use the
         -- matrixEtaOrder to compute the order vectors.
-        rspecs := [generalizedEtaQuotientSpecification(nn, idxs, members x)
+        bspecs := [generalizedEtaQuotientSpecification(nn, idxs, members x)
                    for x in b]
-        ybas: List YGEQ := [generalizedEtaQuotient(rspec, cusps)
-                            for rspec in rspecs]
+        ybas: List YGEQ := [generalizedEtaQuotient(bspec, cusps)
+                            for bspec in bspecs]
         bas: LLZ := [qetaGrades y for y in ybas]
         mat: MZ := transpose matrix bas
         rels: VZ := vector [1 for x in 1..#cusps]
@@ -593,9 +593,9 @@ QEtaModularGamma1: Exports == Implementation where
         --
         -- There can be several inhomogeneous solutions. Any of them
         -- is fine, but we want the resulting series to be of a small
-        -- qetaGrade (big order) at infinity. So we compute the series
-        -- expansion at infinity for each of the inhomogeneous
-        -- solutions and take the minimal qetaGrade.
+        -- qetaGrade (= small poleorder = big order) at infinity. So we
+        -- compute the series expansion at infinity for each of the
+        -- inhomogeneous solutions and take the minimal qetaGrade.
         adjustments := zresult.zinhom
         empty? adjustments => error "cannot find cofactor"
         v: VZ := first adjustments
