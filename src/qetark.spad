@@ -23,6 +23,7 @@ display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
 tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+errorPrint(x,y) ==> tracePrint(x,y)
 
 )if LiterateDoc
 \documentclass{article}
@@ -190,13 +191,13 @@ for easier manipulation.
 
 )abbrev domain QETARKI QEtaRamanujanKolbergIdentity
 QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
-  C: EntireRing -- basic coefficient domain
+  C: EuclideanDomain -- basic coefficient domain (EntireRing if without xab)
   L ==> List
   EX ==> Expression Z
   Exports ==> CoercibleTo OutputForm with
     -- constructor
-    identity: (SPEC, SPEC, P, List N, SPECS, Pol C) -> %
-      ++ identity(sspec, rspec, m, orb, rspecss, rel) returns a
+    identity: (SPEC, SPEC, P, List N, SPECS, Pol C, QXAB1(C)) -> %
+      ++ identity(sspec, rspec, m, orb, rspecss, rel, xab) returns a
       ++ structure that represents all information about the
       ++ q-expansion of $F_{s,r,m,t}$ at infinity, see Definition of
       ++ $F_{s,r,m,t}$ in qeta.tex,
@@ -260,6 +261,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ already in the abstract of \cite{Radu:RamanujanKolberg:2015}.
     orbitProduct: % -> OutputForm
       ++ orbitProduct(x) returns the orbit product as an OutputForm.
+
+    algebraBasis: % -> QXAB1(C)
+      ++ algebraBasis(x) returns the algebra basis that was given at
+      ++ creation time.
 
 -------------------------------------------------------------------
 
@@ -341,7 +346,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
                    fbasis: SPECS,_
                    fpol: Pol C,_
                    fcf: C,_
-                   fcis: List SUP C)
+                   fcis: List SUP C,
+                   fab: QXAB1 C)
 
     xx ==> rep x
 
@@ -355,7 +361,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     -- constructor
     identity(sspec: SPEC, rspec: SPEC, m: P, orb: List N, _
-             rspecs: SPECS, pol: Pol C): % ==
+             rspecs: SPECS, pol: Pol C, xab: QXAB1 C): % ==
 
         fsym: Symbol := "F"::Symbol
         msyms: List Symbol := indexedSymbols("M", #rspecs)$QAuxiliaryTools
@@ -370,7 +376,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         tsym: Symbol := first msyms
         rel: List SUP C := [pol2sup(c, tsym) for c in cis]
 
-        per [sspec, rspec, m, orb, rspecs, pol, cf, rel]
+        per [sspec, rspec, m, orb, rspecs, pol, cf, rel, xab]
 
     -- accessor functions
     coSpecification(x: %): SPEC == xx.fsspec
@@ -381,6 +387,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     identityPolynomial(x: %): Pol C == xx.fpol
     coefficient(x: %): C == xx.fcf
     moduleCoefficients(x: %): List SUP C == xx.fcis
+    algebraBasis(x: %): QXAB1(C) == xx.fab
 
     -- auxiliary stuff
     alphaInfinity(x: %): Z ==
@@ -677,58 +684,71 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain
   IDENTITY ==> QEtaRamanujanKolbergIdentity C
   Exports ==> with
+    findIdentity: (SPEC, SPEC, P, N, SPECS, QXAB1 C) -> IDENTITY
+      ++ findIdentity(sspec, rspec, m, k, bspecs, xab) returns all
+      ++ data for a Ramanujan-Kolberg identity. We assume that xab
+      ++ is an algebra basis corresponding to bspecs.
     findIdentity: (SPEC, SPEC, P, N, SPECS) -> IDENTITY
       ++ findIdentity(sspec, rspec, m, k, bspecs) returns all data for
       ++ a Ramanujan-Kolberg identity.
     findIdentity: (SPEC, SPEC, P, N) -> IDENTITY
       ++ findIdentity(sspec, rspec, m, k) returns all data for a
       ++ Ramanujan-Kolberg identity.
+    findIdentity: (SPEC, SPEC, P, N, IDENTITY) -> IDENTITY
+      ++ findIdentity(sspec, rspec, m, k, id) returns all data for a
+      ++ Ramanujan-Kolberg identity. If possible take data from a
+      ++ previously computed identity.
     findIdentity: (P, SPEC, P, N, SPECS) -> IDENTITY
       ++ findIdentity(nn, rspec, m, k, bgens) returns all data for a
-      ++ Ramanujan-Kolberg identity.
+      ++ Ramanujan-Kolberg identity. The monoid basis elements are
+      ++ given by bspecs.
     findIdentity: (P, SPEC, P, N) -> IDENTITY
       ++ findIdentity(nn, rspec, m, k) returns all data for a
       ++ Ramanujan-Kolberg identity.
+    findIdentity: (P, SPEC, P, N, IDENTITY) -> IDENTITY
+      ++ findIdentity(nn, rspec, m, k, id) returns all data for a
+      ++ Ramanujan-Kolberg identity.
   Implementation ==> add
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
-                 bspecs: SPECS): IDENTITY ==
+                 bspecs: SPECS, xab: QXAB1 C): IDENTITY ==
         import from QEtaModularGamma0Infinity(C)
-
         f: A1 C := modularEtaQuotientInfinity(sspec, rspec, m, t)
+        -- For the following computation we attach a marker to the series.
+        xf: X1 C := toX1(C, f, "F"::Symbol::Pol(C))
+        -- We look of a representation of our original modular function f in
+        -- the respective module of eta-quotients that is represented by
+        -- the algebra-basis xab.
+        xz: X1 C := reduce(xf, xab)$QXTOPRED1(C)
+        -- If xz is non-zero, then no relation has been found.
+        orb: List N := orbit(rspec, m, t)$QEtaCofactorSpace
+        not zero? xz => identity(sspec, rspec, m, orb, bspecs, 0$Pol(C), xab)
+        identity(sspec, rspec, m, orb, bspecs, second(xz)::Pol(C), xab)
 
-        -- For the following computation we attach a marker to the
-        -- series.
-        fsym: Symbol := "F"::Symbol
-        xf: X1 C := toX1(C, f, fsym::Pol(C))
-
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
+                 bspecs: SPECS): IDENTITY ==
         specM0A1C spec ==> expansion(etaQuotient(spec)$EQI(C))::A1(C)
         egens: List A1(C) := [specM0A1C bspec for bspec in bspecs]
-
         -- We attach some identifiers also to those eta-quotients.
         msyms: List Symbol := indexedSymbols("M", #bspecs)$QAuxiliaryTools
         xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms]
-
         -- Eventualle, we apply the samba algorithm to obtain an
         -- order-complete basis.
         gen := genus(level sspec)$CongruenceSubgroupGamma0
         import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
         xab: QXAB1(C) := samba(xgens.1, xgens, gen)$QXTOPSAMBA1(C)
-
-        -- We look of a representation of our original modular function f in
-        -- the respective module of eta-quotients that is represented by
-        -- the algebra-basis xab.
-        xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
-
-        -- If xz is non-zero, then no relation has been found.
-        orb: List N := orbit(rspec, m, t)$QEtaCofactorSpace
-        not zero? xz => identity(sspec, rspec, m, orb, bspecs, 0$Pol(C))
-
-        identity(sspec, rspec, m, orb, bspecs, second(xz)::Pol(C))
+        findIdentity(sspec, rspec, m, t, bspecs, xab)
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N): IDENTITY ==
         -- We compute the basis for the modular eta-quotients of level nn.
         bspecs: SPECS := etaQuotientMonoidSpecifications(level sspec)$QES4TI2
         findIdentity(sspec, rspec, m, t, bspecs)
+
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
+                 id: IDENTITY): IDENTITY ==
+        level sspec = level coSpecification id =>
+            findIdentity(sspec, rspec, m, t,_
+                         basisSpecifications id, algebraBasis id)
+        findIdentity(sspec, rspec, m, t)
 
     findIdentity(nn: P, rspec: SPEC, m: P, t: N, bspecs: SPECS): IDENTITY ==
         sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
@@ -737,6 +757,10 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
     findIdentity(nn: P, rspec: SPEC, m: P, t: N): IDENTITY ==
         sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
         findIdentity(sspec, rspec, m, t)
+
+    findIdentity(nn: P, rspec: SPEC, m: P, t: N, id: IDENTITY): IDENTITY ==
+        sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
+        findIdentity(sspec, rspec, m, t, id)
 
 
 
@@ -774,6 +798,9 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain
   IDENTITY ==> QEtaRamanujanKolbergIdentity C
   Exports ==> with
+    findIdentity: (SPEC, SPEC, P, N, SPECS, QXAB1 C) -> IDENTITY
+      ++ findIdentity(sspec, rspec, m, k, bspecs, xab) returns all
+      ++ data for a generalized Ramanujan identity.
     findIdentity: (SPEC, SPEC, P, N, SPECS) -> IDENTITY
       ++ findIdentity(sspec, rspec, m, k, bspecs) returns all data for
       ++ a generalized Ramanujan identity.
@@ -782,6 +809,10 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
       ++ generalized Ramanujan identity where the right-hand side may
       ++ only involve generalized eta-quotients that are given through
       ++ the indices idxs.
+    findIdentity: (SPEC, SPEC, P, N, IDENTITY) -> IDENTITY
+      ++ findIdentity(sspec, rspec, m, k, id) returns all data for a
+      ++ generalized Ramanujan identity. The basis elements are taken
+      ++ from a previously computed identity, if possible.
     findIdentity: (P, INDICES, SPEC, P, N, SPECS) -> IDENTITY
       ++ findIdentity(nn, idxs, rspec, m, k, bgens) returns all data
       ++ for a generalized Ramanujan identity where the cofactor may
@@ -792,52 +823,58 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
       ++ for a generalized Ramanujan identity where the indices for
       ++ the cofactor and the generalized eta-quotients on the
       ++ right-hand side are given by sidxs and bidxs, respectively.
+    findIdentity: (P, INDICES, SPEC, P, N, IDENTITY) -> IDENTITY
+      ++ findIdentity(nn, sidxs, rspec, m, k, id) returns all data for
+      ++ a generalized Ramanujan identity. The basis elements are
+      ++ taken from a previously computed identity, if possible.
   Implementation ==> add
     COFACTOR ==> etaCofactorInfinity $ QEtaModularGamma1
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
-                 bspecs: SPECS): IDENTITY ==
+                 bspecs: SPECS, xab: QXAB1 C): IDENTITY ==
         import from QEtaModularGamma1Infinity(C)
-
         f: A1 C := modularGeneralizedEtaQuotientInfinity(sspec, rspec, m, t)
+        -- For the following computation we attach a marker to the series.
+        xf: X1 C := toX1(C, f, "F"::Symbol::Pol(C))
+        -- We look of a representation of our original modular function f in
+        -- the respective module of eta-quotients that is represented by
+        -- the algebra-basis xab.
+        xz: X1 C := reduce(xf, xab)$QXTOPRED1(C)
+        -- If xz is non-zero, then no relation has been found.
+        orb: List N := [t]
+        not zero? xz => identity(sspec, rspec, m, orb, bspecs, 0$Pol(C), xab)
+        identity(sspec, rspec, m, orb, bspecs, second(xz)::Pol(C), xab)
 
-        -- For the following computation we attach a marker to the
-        -- series.
-        fsym: Symbol := "F"::Symbol
-        xf: X1 C := toX1(C, f, fsym::Pol(C))
-
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
+                 bspecs: SPECS): IDENTITY ==
         specM1A1C spec ==> expansion(generalizedEtaQuotient(spec)$EQI(C))::A1(C)
         egens: List A1(C) := [specM1A1C bspec for bspec in bspecs]
-
         -- We attach some identifiers also to those eta-quotients.
         msyms: List Symbol := indexedSymbols("M", #bspecs)$QAuxiliaryTools
         xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms]
-
         -- Eventualle, we apply the samba algorithm to obtain an
         -- order-complete basis.
         gen := genus(level sspec)$CongruenceSubgroupGamma1
         import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
         xab: QXAB1(C) := samba(xgens.1, xgens, gen)$QXTOPSAMBA1(C)
+        findIdentity(sspec, rspec, m, t, bspecs, xab)
 
-        -- We look of a representation of our original modular function f in
-        -- the respective module of eta-quotients that is represented by
-        -- the algebra-basis xab.
-        xz: X1(C) := reduce(xf, xab)$QXTOPRED1(C)
-
-        -- If xz is non-zero, then no relation has been found.
-        orb: List N := [t]
-        not zero? xz => identity(sspec, rspec, m, orb, bspecs, 0$Pol(C))
-
-        identity(sspec, rspec, m, orb, bspecs, second(xz)::Pol(C))
-
-    findIdentity(
-      sspec: SPEC, rspec: SPEC, m: P, t: N, bidxs: INDICES): IDENTITY ==
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,
+                 bidxs: INDICES): IDENTITY ==
         -- We compute the basis for the modular generalized
         -- eta-quotients of level nn.
         nn: P := level sspec
         import from QES4TI2
         bspecs: SPECS := generalizedEtaQuotientMonoidSpecifications(nn, bidxs)
         findIdentity(sspec, rspec, m, t, bspecs)
+
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,
+                 id: IDENTITY): IDENTITY ==
+        (nn := level sspec) ~= (lvl := level coSpecification id) =>
+            errorPrint("cannot use previous identity", [nn, lvl]$LZ)
+            error "specify selected indices instead"
+        findIdentity(sspec, rspec, m, t,_
+                     basisSpecifications id, algebraBasis id)
 
     findIdentity(nn: P, sidxs: INDICES, rspec: SPEC, m: P, t: N,
                  bspecs: SPECS): IDENTITY ==
@@ -849,7 +886,15 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
         sspec: SPEC := COFACTOR(nn, rspec, m, t, sidxs)
         findIdentity(sspec, rspec, m, t, bidxs)
 
-
+    findIdentity(nn: P, sidxs: INDICES, rspec: SPEC, m: P, t: N,
+                 id: IDENTITY): IDENTITY ==
+        lvl := level coSpecification id
+        nn ~= lvl =>
+            errorPrint("cannot use previous identity", [nn, lvl]$LZ)
+            error "specify selected indices instead"
+        sspec: SPEC := COFACTOR(nn, rspec, m, t, sidxs)
+        findIdentity(sspec, rspec, m, t,_
+                     basisSpecifications id, algebraBasis id)
 
 
 )if LiterateDoc
