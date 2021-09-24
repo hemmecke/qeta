@@ -537,7 +537,8 @@ QEtaCofactorSpace: Exports == Implementation where
         nu: Z := chiExponent(sigmaInfty, m, orb)
         v: Vector Z := new(nr, 0)
         v.1 := - orbitSize * w                   -- \ref{eq:Radu-sum=0}
-        v.2 := - nu - orbitSize * m * sigmaInfty -- \ref{eq:Radu-sigmainfinity}
+        v2 := - nu - orbitSize * m * sigmaInfty  -- \ref{eq:Radu-sigmainfinity}
+        v.2 := positiveRemainder(v2, 24)
         x: Z := orbitSize * m * nn * sigma0
         v.3 := - ((x exquo mm)::Z)               -- \ref{eq:Radu-sigma0}
         fl: FL := factorList factor nn
@@ -631,7 +632,7 @@ QEtaCofactorSpace: Exports == Implementation where
         -- of \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
         not one? denom q =>
             error "etaCofactorSpace1System: not divisible by m"
-        v.ii := - numer q
+        v.ii := positiveRemainder(- numer q, 24*nn)
 
         -----------------------------------------------------------
         -- CDZ Condition (2) and slack variable for mod 24
