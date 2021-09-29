@@ -108,6 +108,9 @@ findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
 -------------------------------------------------------------------
 --endsetup
 -------------------------------------------------------------------
+-- -
+
+-- # $p(5n)$
 
 -- +
 -------------------------------------------------------------------
@@ -115,8 +118,6 @@ findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
 -------------------------------------------------------------------
 -- -
 
-
--- # $p(5n)$
 
 -- See Formula (1.4) of
 -- \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
@@ -136,6 +137,8 @@ rspec := geqSPEC [[1,-1]];
 nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
 
 -- As can be seen that is done in level 5.
+
+-- Now we check the relation above up to order 100.
 
 ps := partitionSeries(1)$QFunctions(Q, L1(Q))
 f := p5n0 := choose(m, t, ps)$L1(C);
@@ -198,8 +201,17 @@ xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(yf)
 
+-- The variables `af` and `at` correspond to the lefthand side
+-- and the (generalized) eta-quotient on the righthand side,
+-- expanded at all cusps
+-- where $\xi$ is a 120-th primitive root of unity.
+
 af := expandAnCX yf; qetaGrades af
 at := expandAnCX yt; qetaGrades at
+
+)set stream calc 3
+af
+at
 
 -- We check the identity at all cusps of
 -- $\Gamma_1(5)$.
@@ -207,6 +219,12 @@ at := expandAnCX yt; qetaGrades at
 assertTrue(zero?(af-at+3*1$An(CX)))
 
 -- ## Find the relation
+
+-- Potentially, we can use the generalized eta-functions
+-- $\eta_1(\tau) := \eta(\tau)$,
+-- $\eta_5(\tau) := \eta(5\tau)$,
+-- $\eta_{5,1}(\tau)$, and
+-- $\eta_{5,2}(\tau)$.
 
 generalizedEtaFunctionIndices(nn)
 
@@ -250,7 +268,7 @@ assertEquals(ilcpol*coefficient(idpol,'F,0), M1-3)
 
 idxs := [[1],[5],[5, 1]];
 id := findID1(nn, idxs, rspec, m, t, idxs);
-pretty(id, qIdentity + expand + nonModular + 16)
+pretty(id, qIdentity + expand + nonModular + 16 + asExpression)
 idxs := [[1],[5],[5, 2]];
 id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + 16)
@@ -431,7 +449,7 @@ assertEquals(-11*identityPolynomial id, pol)
 -------------------------------------------------------------------
 -- -
 -- # $\overline{p}(5n+2)$
---
+
 -- $$
 -- \sum_{n=0}^\infty \overline{p}(n) q^n
 -- =
