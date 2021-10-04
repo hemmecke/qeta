@@ -217,13 +217,28 @@ QEtaQuotientSpecifications4ti2: with
         idivs: List Z := [i for i in 1..n-1]
         etaQuotientMonoidSpecifications(nn, idivs)
 
-    -- local auxiliary function
+    -- local
     copyRow!(i: N, matQ: MQ, matZ: MZ): Void ==
         cols := ncols matQ
         den: Z := 1
         for j in 1..cols repeat den := lcm(den, denom qelt(matQ, i, j))
         for j in 1..cols repeat
             qsetelt!(matZ, i, j, numer(den*qelt(matQ, i, j)))
+
+    -- local
+    -- positions([c,b,d,e], [a,b,c,d,e,f]) returns [3,2,4,5], i.e., the
+    -- positions of the elements of the first list in the second list.
+    -- It is an error if an element of subidxs is not in idxs.
+    positions(idxs: INDICES, aidxs: INDICES): List Z ==
+        l: List Z := empty()
+        for idx in reverse idxs repeat
+            p := position(idx, aidxs)
+            zero? p =>
+                errorPrint("forbidden", idx)
+                errorPrint("allowed", aidxs)
+                error "forbidden index"
+            l := cons(p, l)
+        return l
 
     generalizedEtaQuotientMonoidSpecifications(nn: P, idxs: INDICES): SPECS ==
         spitzen: List Cusp := cusps(nn)$CongruenceSubgroupGamma1
@@ -232,29 +247,20 @@ QEtaQuotientSpecifications4ti2: with
         -- matrixModularGamma1(nn) part of the matrix. Therefore, we
         -- remove this cusp.
         spitzen := remove!(infinity(), spitzen)
-        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen)$QETAAUX
+        matQ: MQ := matrixEtaOrderModularGamma1(nn, spitzen)$QETAAUX
 
         allIndices := generalizedEtaFunctionIndices(nn)$QETAAUX
         if empty? idxs then
             idxs := allIndices
-            matQ: MQ := mat
           else
             -- The first columns of the above matrix are sorted like
             -- allIndices. We build a new matrix that consists of all
             -- columns with index > #allIndices prepended by the columns
             -- corresponding to idxs.
             -- It is an error if idxs is not a subset of allIndices.
-            lcols: List Z := [i for i in #allIndices+1 .. ncols(mat)]
-
-            h: XHashTable(List Z, Z) := table()
-            for idx in reverse idxs repeat
-                c := position(idx, allIndices)
-                zero? c =>
-                    errorPrint("forbidden", idx)
-                    errorPrint("allowed", allIndices)
-                    error "generalizedEtaQuotientMonoidExponentVectors: forbidden index"
-                lcols := cons(c, lcols)
-            matQ: MQ := mat(1..nrows(mat), lcols)
+            lcols: List Z := [i for i in #allIndices+1 .. ncols(matQ)]
+            lcols := concat(positions(idxs, allIndices), lcols)
+            matQ: MQ := matQ(1..nrows(matQ), lcols)
 
         n: N := # spitzen
         rows: N := nrows matQ
