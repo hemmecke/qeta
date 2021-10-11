@@ -176,8 +176,8 @@ s1 := choose(24, 0, e::A1(CX))
 C ==> Q
 nn: P := 13;
 m: P := 13; mm: P := m; s: List Z := [-1, 0];
-shat: Z := SIGMAINFINITY(mm, s)
-orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+sspec := etaQuotientSpecification(mm, s)
+orbs := [orb for tt in 0..m-1 | (orb := ORBIT(sspec,m,tt); one? # orb)]
 t := first first orbs
 gamma: SL2Z := matrix [[1,0],[0,1]]
 y: YEQG := etaQuotient(nn, mm, s, m, t, gamma);
@@ -236,15 +236,15 @@ s1
 -- ## $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- SymbolicModularGamma0EtaQuotientGamma
 
 nn: P := 26; -- level N
-m: P := 13; mm: P := m; s: List Z := [-1, 0];
-shat: Z := SIGMAINFINITY(mm, s)
-orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+m: P := 13;
+rspec := eqSPEC [[1,-1]];
+orbs := [orb for tt in 0..m-1 | (orb := ORBIT(sspec,m,tt); one? # orb)]
 t := first first orbs
 
--- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $\infty$
+-- ### $F_{s,r,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $\infty$
 
 cusp := 1/nn; gamma := cuspToMatrix(nn, cusp)$GAMA0; w := WIDTH0(nn, denom cusp)
-r := etaCofactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
+sspec := (nn, eqSPEC(mm, r), m, t)$QEtaModularGamma0
 )clear prop y
 y := etaQuotient(nn, r, mm, s, m, t, gamma)$YM0EQG;
 xiord: P := minimalRootOfUnity y
@@ -254,8 +254,8 @@ puiseux(y, w)$EQG(C, CX)
 -- ### $F_{r,s,m,t}(\gamma\tau) \in M^\infty(N)$ --- Expansion at cusp $1$
 
 cusp := 1; gamma := cuspToMatrix(nn, cusp)$GAMMA0; w := WIDTH0(nn, denom cusp)
-r: List Z := etaCofactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
-y := etaQuotient(nn, r, mm, s, m, t, gamma)$YM0EQG;
+sspec: List Z := cofactI0(nn, eqSPEC(mm, s), m, t)
+y := eqYM0EQ(sspec, rspec, m, t, gamma);
 xiord: P := minimalRootOfUnity y
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 puiseux(y, w)$EQG(C, CX)
@@ -465,8 +465,8 @@ setFormat!(FormatMathJax)$JFriCASSupport
 
 nn: P := 13; -- level
 m: P := 13; mm: P := m; s: List Z := [-1, 0];
-shat: Z := SIGMAINFINITY(mm, s)
-orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+sspec := etaQuotientSpecification(mm, s)
+orbs := [orb for tt in 0..m-1 | (orb := ORBIT(sspec,m,tt); one? # orb)]
 t: N := first first orbs
 
 -- Let's compute the expansion (at $\infty$) of

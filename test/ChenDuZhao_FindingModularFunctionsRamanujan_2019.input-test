@@ -134,7 +134,7 @@ findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
 
 m := 5; t := 0;
 rspec := geqSPEC [[1,-1]];
-nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
+nn := minLevel1(rspec, m, t)
 
 -- As can be seen that is done in level 5.
 
@@ -160,7 +160,7 @@ assertEquals(order(f - g,100), 100)
 -- This cofactor can be computed as follows.
 
 idxs := [[1],[5],[5, 1]]
-sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
+sspec := cofactI1(nn,rspec,m,t,idxs)
 
 -- Interestingly, it is just the invers of the eta-quotient in
 -- the second summand of the right-hand side. So we will show:
@@ -255,7 +255,7 @@ assertEquals(mpol, M1-3)
 
 m := 5; t := 0;
 rspec := geqSPEC [[1,-1]];
-nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorSpace
+nn := minLevel1(rspec, m, t)
 idxs := [[1],[5],[5, 1]];
 
 id := findID1(nn, idxs, rspec, m, t, idxs)
@@ -298,7 +298,7 @@ pretty(id, qIdentity + expand + nonModular + 16)
 
 m := 11; t := 6;
 rspec := eqSPEC [[1,-1]]
-nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)
+nn := minLevel1(rspec, m, t)
 
 -- Create the series from the above article in two different ways
 -- and compare the first 100 coefficients.
@@ -377,7 +377,7 @@ idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]]
 assertEquals(concat(idxs, [11,5]), generalizedEtaFunctionIndices nn)
 
 sspecz0
-sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
+sspec := cofactI1(nn,rspec,m,t,idxs)
 assertEquals(sspecz0,sspec)
 
 assertTrue(modularGamma1?(sspec,rspec,m,t))
@@ -462,7 +462,7 @@ assertEquals(-11*identityPolynomial id, pol)
 
 m := 5; t:= 2
 rspec := eqSPEC [[1,-2],[2,1]]
-nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+nn := minLevel1(rspec,m,t)
 
 generalizedEtaFunctionIndices nn
 ecss := etaCofactorSpace1System(nn,rspec,m,t)$QEtaCofactorSpace
@@ -475,6 +475,7 @@ ecss := etaCofactorSpace1System(nn,rspec,m,t)$QEtaCofactorSpace
 
 mat := ecss.comatrix; v := ecss.rhs;
 mat * vector [0,0,18,-17,0,0,0,0,0,-8,  10,3,13,4,0,9,4,13,9]
+
 ecs := etaCofactorSpace1(nn,rspec,m,t)$QEtaCofactorSpace
 
 spitzen := cusps(10)$GAMMA1
@@ -490,11 +491,11 @@ vv := v0 +9*b.8 - 108*b.9
 le := members vv
 idxs := ecs.indices
 sspecvv := generalizedEtaQuotientSpecification(nn, idxs, le)$QEtaSpecification
-qetaGrades(sspecvv, rspec, m, t)
+qetaGrades(sspecvv, rspec, m, t)$QEtaModularGamma1
 
 -- ## Automatic computation of cofactor
 
-sspec := etaCofactorInfinity(nn,rspec,m,t)$QEtaModularGamma1
+sspec := cofactI1(nn,rspec,m,t)
 modularGamma1?(sspec, rspec, m, t)
 
 y := specYM1GEQ(sspec, rspec, m, t);
@@ -563,7 +564,7 @@ sspec,bspecs.1
 -- the following specification in our notation.
 
 sspeccdz := geqSPEC [[1,11],[2,-7],[5,-1],[10,-2],[5,1,12],[10,1,-14],[10,4,-8]]
-modularGamma1?(sspeccdz, rspec, m, t)
+assertTrue(modularGamma1?(sspeccdz, rspec, m, t))
 
 -- The respective series for the generating series of
 -- $\overline{p}(5n+2)$ after multiplying with the cofactor
@@ -584,13 +585,13 @@ assertTrue(zero?(af - afcdz))
 
 spec1 := sspec/sspeccdz
 a1 := specM1AnCX spec1
-assertTrue(zero?(a1- 1$An(CX)))
+assertTrue(zero?(a1 - 1$An(CX)))
 
 -- Let us investigate the difference to the $z$ of
 -- \cite[Thm. 3.1]{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 
 zspec := geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]
-modularGamma1? zspec
+assertTrue(modularGamma1? zspec)
 
 -- Indeed, our generalized eta-quotient (given by bspecs.1)
 -- and the one from the article above have the same
@@ -598,7 +599,7 @@ modularGamma1? zspec
 
 spec1 := bspecs.1/zspec
 a1 := specM1AnCX spec1
-assertTrue(zero?(a1- 1$An(CX)))
+assertTrue(zero?(a1 - 1$An(CX)))
 
 -- ## Find a relation by just one function
 
@@ -637,10 +638,10 @@ assertEquals(-8*identityPolynomial id, pol)
 
 m := 9; t := 3
 rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
-nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+nn := minLevel1(rspec,m,t)
 idxs := generalizedEtaFunctionIndices(nn)
-sspec := etaCofactorInfinity(nn,rspec,m,t)$QEtaModularGamma1
-modularGamma1?(sspec, rspec, m, t)$QEtaCofactorSpace
+sspec := cofactI1(nn,rspec,m,t)
+modularGamma1?(sspec, rspec, m, t)$QEtaCofactorConditions
 y := specYM1GEQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(y)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
@@ -659,7 +660,7 @@ sspeccdz := geqSPEC [[1,14], [2,-5], [3,-6],[6,-3]]
 -- We can find it ourselves by restricting the search space.
 
 idxs := [[1], [2], [3], [6]]
-sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
+sspec := cofactI1(nn,rspec,m,t,idxs)
 assertEquals(sspeccdz, sspec)
 
 af := expandAnCX y
@@ -726,10 +727,10 @@ assertEquals(-90*identityPolynomial id, pol)
 
 m := 9; t := 6
 rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
-nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+nn := minLevel1(rspec,m,t)
 idxs := generalizedEtaFunctionIndices(nn)
-sspec := etaCofactorInfinity(nn,rspec,m,t)$QEtaModularGamma1
-modularGamma1?(sspec, rspec, m, t)$QEtaCofactorSpace
+sspec := cofactI1(nn,rspec,m,t)
+modularGamma1?(sspec, rspec, m, t)$QEtaCofactorConditions
 y := specYM1GEQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(y)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
@@ -748,7 +749,7 @@ sspeccdz := geqSPEC [[1,13], [2,-4], [3,-3],[6,-6]]
 -- We can find it ourselves by restricting the search space.
 
 idxs := [[1], [2], [3], [6]]
-sspec := etaCofactorInfinity(nn,rspec,m,t,idxs)$QEtaModularGamma1
+sspec := cofactI1(nn,rspec,m,t,idxs)
 assertEquals(sspeccdz, sspec)
 
 af := expandAnCX y
@@ -824,7 +825,7 @@ assertEquals(-72*identityPolynomial id, pol)
 
 m := 25; t := 14
 rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1],[10,2]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
@@ -858,6 +859,7 @@ bas := [specEQI(C) bspecs.i for i in 1..#bspecs]
 -- We get a relation with slightly smaller
 -- coefficients, if we take the second basis element.
 
+sspec := coSpecification id
 id2 := findID1(sspec, rspec, m, t, [bspecs.2]);
 c := -(1/5)*inv coefficient(id2)
 pol2 := c * identityPolynomial id2
@@ -899,7 +901,7 @@ pol2 := c * identityPolynomial id2
 
 m := 25; t := 14
 rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]];
-nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+nn := minLevel1(rspec,m,t)
 sspec := geqSPEC [[1,92],[2,-58],[5,14],[10,-46],_
                   [5,1,52],[10,1,-109],[10,4,4],[10,5,-5]];
 bspecs := [geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]];
@@ -940,7 +942,7 @@ pretty(id, qIdentity + nonModular + withSubscript)
 
 m := 25; t := 24
 rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[5,1],[10,1]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
@@ -972,7 +974,7 @@ assertEquals(# monomials identityPolynomial id, 59)
 m := 25; t := 24
 --rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 rspec := geqSPEC [[1,2],[2,1],[10,-1]]
-nn := minimalLevelCoEtaQuotientGamma1(rspec,m,t)$QEtaCofactorSpace
+nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)

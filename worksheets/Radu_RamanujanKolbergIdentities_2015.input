@@ -107,29 +107,37 @@ SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
 
 -- # Demonstration of available functions
 
-mm := m := 5; k := 4; nn := 2*mm; C ==> Q
-rgens := etaQuotientMonoidExponentVectors(nn)$QEQEV;
-r1 := first rgens;
-id := findIdentity(nn,m,[-1,0],m,k)$QEtaRamanujanKolberg(C)
+m := 5; k := 4; nn := 2*m; C ==> Q
+bspecs := etaQuotientMonoidSpecifications(nn)
+b1 := first bspecs;
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C)
 
 -- We can print the $r$ vectors in various formats.
 
-etaQuotient(nn, r1, varEta$RKI)$RKI
+etaQuotient(b1, varEta$RKI)$RKI
 
-etaQuotient(nn, r1, var("E")$RKI)$RKI
+etaQuotient(b1, var("E")$RKI)$RKI
 
-etaQuotient(nn, r1, varsub("E")$RKI)$RKI
+etaQuotient(b1, varsub("E")$RKI)$RKI
 
-etaQuotient(nn, r1, varPochhammer$RKI)$RKI
+etaQuotient(b1, varPochhammer$RKI)$RKI
 
 -- # Beautify output
 
--- We don't want extra parentheses around the sunscripted variables and the Pochhammer symbol. So we change the resprective formatter setting. To find out what operater is responsible for these extra parentheses (they could even be hardcoded in the underlying s-expression), one would have to turn the expression into OutputForm and then use ``pretend SExpression`` to look at it as if it were an ``SExpression``.
+-- We don't want extra parentheses around the sunscripted variables
+-- and the Pochhammer symbol. So we change the resprective formatter
+-- setting. To find out what operater is responsible for these extra
+-- parentheses (they could even be hardcoded in the underlying
+-- s-expression), one would have to turn the expression into
+-- OutputForm and then use ``pretend SExpression`` to look at it as if
+-- it were an ``SExpression``.
 
 C==>Q
-etaQuotient(1, [1], varPochhammer$RKI)$RKI pretend SExpression
+etaQuotient(eqSPEC(1, [1]), varPochhammer$RKI)$RKI pretend SExpression
 
--- Here it is obviously the ``SUB`` operator that seems to trigger another pair of parentheses. So we increase the precedence of the subscript binding.
+-- Here it is obviously the ``SUB`` operator that seems to trigger
+-- another pair of parentheses. So we increase the precedence of the
+-- subscript binding.
 
 )set mess type off
 F ==> FormatMathJax
@@ -140,14 +148,14 @@ MAX ==> maxPrecedence()$F
 MIN ==> minPrecedence()$F
 setHandler!(h, 2 , "SUB", subscript(MAX)$F)$H
 
-[etaQuotient(nn, r1, varsub("E")$RKI)$RKI, etaQuotient(nn, r1, varPochhammer$RKI)$RKI]
+[etaQuotient(b1, varsub("E")$RKI)$RKI, etaQuotient(b1, varPochhammer$RKI)$RKI]
 
 -- # Relation for $p(5n+4)$
 
 -- ## Level 5 eta-quotients
 
-mm := m := 5; k := 4; nn := mm;
-id := findIdentity(nn,m,[-1,0],m,k)$QEtaRamanujanKolberg(C)
+m := 5; k := 4; nn := m;
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C)
 
 -- The identity in terms of modular functions and eta-quotients is this.
 
@@ -169,9 +177,9 @@ pretty(id, nonModular + qIdentity + withSubscript)
 
 -- ## Level 25 eta-quotients
 
-mm := m := 5; k := 4; nn := 5*mm;
+m := 5; k := 4; nn := 5*m;
 C ==> IntegerLocalizedAtPrime 5
-id := findIdentity(nn,m,[-1,0],m,k)$QEtaRamanujanKolberg(C)
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C)
 pretty(id, qIdentity + asExpression)
 
 -- # Identity for $p(7n+6)$
@@ -203,9 +211,9 @@ pretty(id, qIdentity+asExpression+nonModular+expand)
 
 -- ## Level 49 eta-quotients
 
-mm := m := 7; k := 5; nn := 7*mm;
+m := 7; k := 5; nn := 7*m;
 C ==> IntegerLocalizedAtPrime 7
-id := findIdentity(nn,m,[-1,0],m,k)$QEtaRamanujanKolberg(C);
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript)
 pretty(id, qIdentity + withSubscript + nonModular)
 
@@ -220,66 +228,77 @@ gcd [leadingCoefficient(x)::Z for x in mons]
 
 -- ## Level 11 eta-quotients
 
-mm := m := 11; k := 6; nn := mm; C ==> Q
-id := findIdentity(nn,m,[-1,0],m,k)$QEtaRamanujanKolberg(C)
+m := 11; k := 6; nn := m; C ==> Q
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C)
 
--- The `identityPolynomial` that is returned is equal to zero. That must be interpreted as the fact that there is no relation in level 11.
+-- The `identityPolynomial` that is returned is equal to zero. That
+-- must be interpreted as the fact that there is no relation in level
+-- 11.
 
 -- ## Level 22 eta-quotients
 
 -- We try to find a relation in level 22.
 
-mm := m := 11; k := 6; nn := 2*mm; C ==> Q
-id := findIdentity(nn,m,[-1,0],m,k)$QEtaRamanujanKolberg(C);
+m := 11; k := 6; nn := 2*m; C ==> Q
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C)
 pretty(id, nonModular + withSubscript)
 
 pretty(id, nonModular + withSubscript + qIdentity)
 
--- Unfortunately, this does not show that $p(11n+6)$ is for every $n$ divisible by 11.
--- We, therefore, chose another coefficient domain that leads to a slightly different reduction process.
+-- Unfortunately, this does not show that $p(11n+6)$ is for every $n$
+-- divisible by 11. We, therefore, chose another coefficient domain
+-- that leads to a slightly different reduction process.
 
 C==>IntegerLocalizedAtPrime(11)
-id := findIdentity(nn,m,[-1,0],m,k)$QEtaRamanujanKolberg(C);
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C)
 pretty(id, qIdentity + nonModular, varsub("u")$RKI)
 
--- Unfortunately, the computation does not deliver a result that shows that the left-hand side is divisible by 11. Above the value for $t$ is given by the first entry in ``rgens``, i.e. by the exponent vector $(−1,1,11,−11)$.
+-- Unfortunately, the computation does not deliver a result that shows
+-- that the left-hand side is divisible by 11. Above the value for $t$
+-- is given by the first entry in ``rgens``, i.e. by the exponent
+-- vector $(−1,1,11,−11)$.
 
 pol := identityPolynomial id
 mons := monomials(4*1024*coefficient(pol, 'F, 0))
 gcd [leadingCoefficient(x)::Z for x in mons]
 
-rgens := etaQuotientMonoidExponentVectors(id)
-r1 := first rgens
-etaQuotient(nn, r1, varEta$RKI)$RKI =
- qQuotient(nn, r1, varPochhammer$RKI,SIGMAINFINITY(nn,r1) / 24)$RKI
+bspecs := basisSpecifications(id)
+b1 := first bspecs
+etaQuotient(b1, varEta$RKI)$RKI = _
+ qQuotient(b1, varPochhammer$RKI,SIGMAINFINITY(nn,r1) / 24)$RKI
 
 -- Of course, we also can choose this vector ourselves, by handing the
 -- `rgens` to the `findIdentity` function. We simply exchange the
 -- first two entries in the `rgens` variable and then pass it to
 -- `findInfinity`.
 
-rgensnew := concat([rgens.2, rgens.1],rest rest rgens)
+bspecsnew := concat([bspecs.2, bspecs.1],rest rest bspecs)
 
-id := findIdentity(nn,m,[-1,0],m,k, rgensnew)$QEtaRamanujanKolberg(C);
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k, bspecsnew)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity+nonModular, varsub("u")$RKI)
 
 -- The expression $t$ from above is this:
 
-rnew1 := first rgensnew;
-shat := SIGMAINFINITY(nn,rnew1)
-qQuotient(nn, rnew1, varPochhammer$RKI, shat/24)$RKI
+bnew1 := first bspecsnew;
+shat := sigmaInfinity(bnew1)
+qQuotient(bnew1, varPochhammer$RKI, shat/24)$RKI
 
 pol := identityPolynomial id
 mons := monomials(8*coefficient(pol, 'F, 0))
 gcd [leadingCoefficient(x)::Z for x in mons]
 
--- Above we show the actually computed polynomial where the $M_i$ corresponds to the eta-quotients given by the exponents of `rgensnew` and $F$ corresponds to
+-- Above we show the actually computed polynomial where the $M_i$
+-- corresponds to the eta-quotients given by the exponents of
+-- `bspecsnew` and $F$ corresponds to
 
 f(id, 0, varEta$RKI, 1, 0, [0,0,0,0])
 
 -- In terms of $q$-Pochhammer symbols it looks like this:
 
 f(id, qIdentity, varPochhammer$RKI, 1, 0, [0,0,0,0])
+
+
+======== CONTINUE HERE TO TRANSLATE TO SPEC ===========
 
 -- # Identity for $p(13n+6)$
 
@@ -318,10 +337,10 @@ pretty(id, nonModular + qIdentity, varsub("u")$RKI)
 -- # Identity for $p(3n+1)$
 
 C==>Q
-mm:=1, s:=[-1]; m:=3; k:=1
-nn := minimalLevelCoEtaQuotientGamma0(mm,s,m,k)
-r := etaCofactorInfinity(nn,mm,s,m,k)$QEtaModularGamma0;
-id := findIdentity(nn,r,mm,s,m,k)$QEtaRamanujanKolberg(C);
+rspec := [[1,-1]]; m:=3; k:=1
+nn := minLevel0(rspec,m,k)
+sspec := cofactI0(nn,rspec,m,k)
+id := findIdentity(sspec,rspec,m,k)$QEtaRamanujanKolberg(C);
 pretty(id, nonModular + qIdentity, varsub("u")$RKI)
 
 -- # Identity for $p(2n)$
@@ -356,10 +375,12 @@ C==>Q
 id := findIdentity(6,6,[-2,1,1,-1],3,2)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript)
 
-r := etaCofactorInfinity(6,6,[-2,1,1,-1],27,26)$QEtaModularGamma0
+sspec := cofactI0(6,eqSPEC(6,[-2,1,1,-1]),27,26)
 
 C==>Q
-id := findIdentity(6,[43, - 3, 6, - 45],6,[-2,1,1,-1],27,26)$QEtaRamanujanKolberg(C);
+rspec := eqSPEC(6,[-2,1,1,-1])
+sspec := eqSPEC(6,[43, - 3, 6, - 45])
+id := findIdentity(eqSPEC(sspec,rspec,27,26)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
 pol := identityPolynomial id;
@@ -367,9 +388,9 @@ cs := coefficients(-coefficient(pol, 'F, 0)/coefficient(pol,'F, 1));
 [c/12 for c in cs]
 
 C==>Q
-r := etaCofactorInfinity(6,18,[-2,1,0,0,1,-1],27,24)$QEtaModularGamma0
-
-id := findIdentity(6,r,18,[-2,1,0,0,1,-1],27,24)$QEtaRamanujanKolberg(C);
+rspec := eqSPEC(18,[-2,1,0,0,1,-1])
+sspec := cofactI0(6,rspec,27,24)$QEtaModularGamma0
+id := findIdentity(sspec,rspec,27,24)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
 -- # Identities by Baruah and Sarmah
@@ -388,7 +409,7 @@ C==>Q
 id := findIdentity(8,1,[-4],4,3)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
-minimalLevelCoEtaQuotientGamma0(1,[-8],2,1)
+minLevel0(eqSPEC[[1,-8]],2,1)
 C==>Q
 id := findIdentity(2,1,[-8],2,1)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
@@ -435,48 +456,52 @@ cs := coefficients(-coefficient(pol, 'F, 0)/coefficient(pol,'F, 1));
 
 -- # 5-Regular Bipartitions (Wang)
 
-minimalLevelCoEtaQuotientGamma0(5,[-2,2],4,3)
+minLevel0(5,[-2,2],4,3)
 
 C==>Q
-etaCofactorInfinity(10,5,[-2,2],4,3)$QEtaModularGamma0
+rspec := eqSPEC(5,[-2,2])
+sspec := cofactI0(10,rspec,4,3)
 
 -- A cofactor in level 10 could not be found. Try level 20.
 
-id := findIdentity(20,5,[-2,2],4,3)$QEtaRamanujanKolberg(C);
+id := findIdentity(20,rspec,4,3)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
-id := findIdentity(5,5,[-2,2],5,2)$QEtaRamanujanKolberg(C);
+id := findIdentity(5,rspec,5,2)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
-id := findIdentity(5,5,[-2,2],5,3)$QEtaRamanujanKolberg(C);
+id := findIdentity(5,rspec,5,3)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
-etaCofactorInfinity(10,5,[-2,2],20,7)$QEtaModularGamma0
+sspec := cofactI0(10,rspec,20,7)
+assertEquals(sspec, eqSPEC(10,[77,-21,31,-87])
 
 C==>Q
-id := findIdentity(10,[77,-21,31,-87], 5,[-2,2],20,7)$QEtaRamanujanKolberg(C)
-pretty(id, qIdentity + withSubscript + nonModular)
-
-C==>Q
-id := findIdentity(10,[85, - 35, 15, - 65],5,[-2,2],20,7)$QEtaRamanujanKolberg(C)
+id := findIdentity(sspec,rspec,20,7)$QEtaRamanujanKolberg(C)
 pretty(id, qIdentity + withSubscript + nonModular)
 
 C==>Q
-id := findIdentity(10,5,[-2,2],20,7)$QEtaRamanujanKolberg(C)
+sspec := eqSPEC(10,[85, - 35, 15, - 65])
+id := findIdentity(sspec,rspec,20,7)$QEtaRamanujanKolberg(C)
+pretty(id, qIdentity + withSubscript + nonModular)
+
+C==>Q
+id := findIdentity(10,rspec,20,7)$QEtaRamanujanKolberg(C)
 pretty(id, qIdentity + withSubscript + nonModular)
 
 -- # Ramanujan's $\tau$ function
 
-r := etaCofactorInfinity(7,1,[24],7,6)$QEtaModularGamma0
+rspec := eqSOEC(1,[24])
+sspec := cofactI0(7,rspec,7,6)$QEtaModularGamma0
 
 C==>Q
-id := findIdentity(7,1,[24],7,6)$QEtaRamanujanKolberg(C)
+id := findIdentity(7,rspec,7,6)$QEtaRamanujanKolberg(C)
 pretty(id, qIdentity + withSubscript + nonModular)
 
-nn:=minimalLevelCoEtaQuotientGamma0(1,[24],112,55)
-r := etaCofactorInfinity(nn,1,[24],112,55)$QEtaModularGamma0
+nn:=minLevel0(rspec,112,55)
+sspec := cofactI0(nn,rspec,112,55)
 C==>Q
-id := findIdentity(nn,r,1,[24],112,55)$QEtaRamanujanKolberg(C);
+id := findIdentity(sspec,rspec,112,55)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
 pol := identityPolynomial id;
@@ -490,21 +515,21 @@ factor gcd [c::Z for c in cs]
 -- We work over $N=20$.
 -- Notice the witness identity for divisibility by 5, as discovered by Choi, Kim, and Lovejoy.
 
-mm:=4; s:=[-3, 5, -2]; m:=25; k:=24
-nn := minimalLevelCoEtaQuotientGamma0(mm,s,m,k)
-r := etaCofactorInfinity(nn,mm,s,m,k)$QEtaModularGamma0
+rspec := eqSPEC(4,[-3, 5, -2]); m:=25; k:=24
+nn := minLevel0(rspec,m,k)
+sspec := cofactI0(nn,rspec,m,k)
 
-id := findIdentity(nn,r,mm,s,m,k)$QEtaRamanujanKolberg(C);
+id := findIdentity(sspec,rspec,m,k)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
 -- # Testing additional procedures
 
 C==>Q
-mm:=5; s:=[-2,2]; m:=4; k:=3
+rspec := eqSPEC(5,[-2,2]); m:=4; k:=3
 nn := 20
-r := etaCofactorInfinity(nn,mm,s,m,k)$QEtaModularGamma0
+sspec := cofactI0(nn,rspec,m,k)
 
-id := findIdentity(nn,r,mm,s,m,k)$QEtaRamanujanKolberg(C);
+id := findIdentity(sspec,rspec,m,k)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity + withSubscript + nonModular)
 
 pol := identityPolynomial id;
@@ -515,24 +540,24 @@ factor gcd [c::Z for c in cs]
 -- # Identities on the progressions 80n+j
 
 C==>Q
-mm:=2, s:=[-2,1]; m:=80; k:=8
-nn := minimalLevelCoEtaQuotientGamma0(mm,s,m,k)
+rspec := eqSPEC(2, [-2,1]); m:=80; k:=8
+nn := minLevel0(rspec,m,k)
 
 
-r := etaCofactorInfinity(nn,mm,s,m,k)$QEtaModularGamma0;
+sspec := cofactI0(nn,rspec,m,k);
 
 
-id := findIdentity(nn,r,mm,s,m,k)$QEtaRamanujanKolberg(C);
+id := findIdentity(sspec,rspec,m,k)$QEtaRamanujanKolberg(C);
 
 
 pretty(id, qIdentity + withSubscript + nonModular)
 
 
 C==>Q
-mm:=2, s:=[-2,1]; m:=80; k:=72
-nn := minimalLevelCoEtaQuotientGamma0(mm,s,m,k)
+rspec := eqSPEC(2,[-2,1]); m:=80; k:=72
+nn := minLevel0(rspec,m,k)
 
-r := etaCofactorInfinity(nn,mm,s,m,k)$QEtaModularGamma0;
+sspec := cofactI0(nn,rspec,m,k);
 
 id := findIdentity(nn,r,mm,s,m,k)$QEtaRamanujanKolberg(C);
 
@@ -551,10 +576,10 @@ pretty(id, qIdentity + withSubscript + nonModular)
 
 
 C==>Q
-mm:=1, s:=[-1]; m:=5; k:=4
-nn := minimalLevelCoEtaQuotientGamma0(mm,s,m,k)
-r := etaCofactorInfinity(nn,mm,s,m,k)$QEtaModularGamma0;
-id := findIdentity(nn,r,mm,s,m,k)$QEtaRamanujanKolberg(C);
+rspec := eqSPEC[[1,-1]]; m:=5; k:=4
+nn := minLevel0(rspec,m,k)
+sspec := cofactI0(nn,rspec,m,k);
+id := findIdentity(sspec,rspec,m,k)$QEtaRamanujanKolberg(C);
 nice(id, varsub("u")$RKI, 1)
 
 
@@ -571,8 +596,8 @@ nice(id, varsub("u")$RKI, 1)
 
 C==>Q
 mm:=4, s:=[-3, 5, -2], m:=25, k:=24
-nn := minimalLevelCoEtaQuotientGamma0(mm,s,m,k)
-r := etaCofactorInfinity(nn,mm,s,m,k)$QEtaModularGamma0;
+nn := minLevle0(mm,s,m,k)
+r := cofactI0(nn,mm,s,m,k);
 id := findIdentity(nn,r,mm,s,m,k)$QEtaRamanujanKolberg(C);
 qnice(id, varsub("u")$RKI)
 pol := identityPolynomial id;

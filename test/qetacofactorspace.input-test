@@ -31,8 +31,8 @@ C ==> Q
 nn := 5; spitzen := cusps(nn)$GAMMA0;
 m := 5; t := 4
 rspec := eqSPEC(1, [-1]);
-assertEquals(orbit(rspec, m, t), [t])
-assertEquals(sort orbit(rspec, m, 0), [0, 3])
+assertEquals(ORBIT(rspec, m, t), [t])
+assertEquals(sort ORBIT(rspec, m, 0), [0, 3])
 rec := etaCofactorSpace0(nn, rspec, m, t)
 n := numberOfDivisors(nn)
 s := (rec.particular)(1..n)
@@ -50,7 +50,7 @@ rec := etaCofactorSpace1(nn, rspec, m, t)
 
 -- Should not fail, because there is a solution for Gamma1(nn).
 
-assertEquals(rec.particular, [1, 0, 1150, 0])
+assertEquals(rec.particular, [1, 0, 10, 0])
 assertEquals(rec.basis, [[- 1, 1, - 10, 0], [0, 0, 11, 1], [0, 0, - 60, 0]])
 
 -- +
@@ -68,8 +68,8 @@ assertEquals(rec.basis, [[- 1, 1, - 10, 0], [0, 0, 11, 1], [0, 0, - 60, 0]])
 nn := 7; spitzen := cusps(nn)$GAMMA0;
 rspec := eqSPEC(1,[-1]);
 m := 7; t := 5
-assertEquals(orbit(rspec, m, t), [t])
-assertEquals(sort orbit(rspec, m, 0), [0, 2, 6])
+assertEquals(ORBIT(rspec, m, t), [t])
+assertEquals(sort ORBIT(rspec, m, 0), [0, 2, 6])
 rec := etaCofactorSpace0(nn, rspec, m, t)
 n := numberOfDivisors(nn)
 s := (rec.particular)(1..n)
@@ -83,12 +83,22 @@ assertEquals(qetaGrades(mf), [2, -1])
 
 -- And now for $\Gamma_1(5)$.
 
-rec := etaCofactorSpace1(nn, rspec, m, t)
+spitzen := cusps(nn)$GAMMA1
+rec1 := etaCofactorSpace1(nn, rspec, m, t)
 
 -- Should not fail, because there is a solution for Gamma1(nn).
 
-assertEquals(rec.particular, [1428, - 1427, 0, 0, - 1428])
-assertEquals(# rec.basis, 4)
+assertEquals(rec1.particular, [0,1,0,0,0])
+assertEquals(# rec1.basis, 4)
+
+sspec1 := geqSPEC(nn, rec1.indices, rec1.particular)
+yf1 := specYM1GEQ(sspec1, rspec, m, t);
+xiord := minimalRootOfUnity(yf1)::P
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+mf1 := expandAnCX yf1
+assertEquals(qetaGrades(mf1), [2, -1, 2, -1, 2, -1])
+
+
 
 -- +
 -------------------------------------------------------------------
@@ -105,8 +115,8 @@ assertEquals(# rec.basis, 4)
 nn := 11; spitzen := cusps(nn)$GAMMA0;
 m := 11; t := 6
 rspec := eqSPEC(1,[-1]);
-assertEquals(orbit(rspec, m, t), [t])
-assertEquals(sort orbit(rspec, m, 0), [0, 4, 7, 9, 10])
+assertEquals(ORBIT(rspec, m, t), [t])
+assertEquals(sort ORBIT(rspec, m, 0), [0, 4, 7, 9, 10])
 rec := etaCofactorSpace0(nn, rspec, m, t)
 n := numberOfDivisors(nn)
 s := (rec.particular)(1..n)
@@ -124,7 +134,7 @@ rec := etaCofactorSpace1(nn, rspec, m, t)
 
 -- Should not fail, because there is a solution for Gamma1(nn).
 
-assertEquals(rec.particular, [2040, - 2039, 0, 0, 0, 0, - 1980])
+assertEquals(rec.particular, [- 105, 106, 0, 0, 0, 0, 165])
 assertEquals(# rec.basis, 6)
 
 

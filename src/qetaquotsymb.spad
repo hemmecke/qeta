@@ -703,7 +703,7 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
       ++ See definition of orbit in qetacofactorspace.spad
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns
-      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)]
+      ++ lcm [minimalRootOfUnity(x.u) for u in orbit(x)]
       ++ where $rhat = \sum_\delta \delta r_\delta$
     elt: (%, N) -> SymbolicEtaQuotientGamma
       ++ x.u returns the data corresponding to the respective
@@ -730,8 +730,7 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
 
     etaQuotient(rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
         not pure? rspec => error "specification is not for a pure eta-quotient"
-        rhat: Z := numer sigmaInfinity rspec -- we know this is integral
-        orb: List N := orbit(rhat, m, t)$QEtaCofactorSpace
+        orb: List N := modularGamma0Orbit(rspec, m, t)$QEtaCofactorConditions
         h: HT := empty()
         minroot: Z := 1
         for tt in orb repeat
@@ -838,7 +837,7 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns the lcm of the
       ++ minimalRootUnity(cofactor(x)) and
-      ++ [minimalRootOfUnity(x.u) for u in orbit(rhat,m,t)].
+      ++ [minimalRootOfUnity(x.u) for u in modularGamma0Orbit(rspec,m,t)].
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient corresponding to x
       ++ represents 1.
@@ -858,7 +857,7 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
         etaQuotient(sspec, rspec, m, t, gamma)
 
     etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
-        not modularGamma0?(sspec, rspec, m, t)$QEtaCofactorSpace =>
+        not modularGamma0?(sspec, rspec, m, t)$QEtaCofactorConditions =>
             error "modular conditions are not fulfilled"
         coetaqg: SymbolicEtaQuotientGamma := etaQuotient(sspec, 1, 0, gamma)
         yeqopg: SymbolicEtaQuotientOrbitProductGamma :=
@@ -2009,7 +2008,7 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
 
     generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N,
                            gamma: SL2Z): % ==
-        not modularGamma1?(sspec, rspec, m, t)$QEtaCofactorSpace =>
+        not modularGamma1?(sspec, rspec, m, t)$QEtaCofactorConditions =>
             error "modular conditions are not fulfilled"
         cofactor: YGEQG := generalizedEtaQuotient(sspec, 1, 0, gamma)
         basefactor: YGEQG := generalizedEtaQuotient(rspec, m, t, gamma)

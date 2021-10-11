@@ -123,16 +123,10 @@ QEtaModularGamma0: Exports == Implementation where
     qetaGrades: SymbolicModularGamma0EtaQuotient -> XHashTable(Cusp, Z)
       ++ qetaGrades(y) returns the qetaGrades of the modular
       ++ function corresponding to y.
-    qetaGrades: (P, LZ, P, LZ, P, N) -> XHashTable(Cusp, Z)
-      ++ qetaGrades(nn, s, mm, r, m, t) returns
+    qetaGrades: (SPEC, SPEC, P, N) -> XHashTable(Cusp, Z)
+      ++ qetaGrades(sspec,rspec,m,t) returns
       ++ qetaGrades(y) where
-      ++ y=etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0EtaQuotient.
-    etaCofactorInfinity: (P, P, LZ, P, N) -> LZ
-      ++ etaCofactorInfinity(nn,mm,r,m,t) returns a list s such that
-      ++ modularGamma0?(nn,s,mm,r,m,t)$QEtaCofactorSpace and
-      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0EtaQuotient
-      ++ corresponds to a modular function with poles only at infinity
-      ++ and with smallest pole order.
+      ++ y=etaQuotient(ssoec,rspec,m,t)$SymbolicModularGamma0EtaQuotient.
     etaCofactorInfinity: (P, SPEC, P, N) -> SPEC
       ++ etaCofactorInfinity(nn,rspec,m,t) returns a specification
       ++ sspec such that
@@ -140,7 +134,6 @@ QEtaModularGamma0: Exports == Implementation where
       ++ etaQuotient(sspec,rspe,m,t)$SymbolicModularGamma0EtaQuotient
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
-
 
     -- temporarily exported
     minimizeVector: (VZ, List VZ) -> VZ
@@ -194,10 +187,8 @@ QEtaModularGamma0: Exports == Implementation where
         for cusp in keys e repeat ht.cusp := -order(e.cusp)
         ht
 
-    qetaGrades(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): XHashTable(Cusp, Z) ==
-        y: YM0EQ := etaQuotient(nn, s, mm, r, m, t);
-        qetaGrades y
-
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): XHashTable(Cusp, Z) ==
+        qetaGrades(etaQuotient(sspec, rspec, m, t)$YM0EQ);
 
     -- local function
     -- By adding interger multiples of elements of b we try to
@@ -279,11 +270,13 @@ QEtaModularGamma0: Exports == Implementation where
     -- qetaGrades involves the actual computation of the Laurent series
     -- expansion of the respective eta-quotient at all cusps. So we
     -- shouldn't have too high exponents.
-    minimizeGrades(nn: P, mm: P, r: LZ, m: P, t: N, rinitial: VZ, b: LVZ): LZ ==
+    minimizeGradesSpecification(nn: P, rspec: SPEC, m: P, t: N,
+                                rinitial: VZ, b: LVZ): SPEC ==
         sinitial: VZ := minimizeVector(rinitial, b)
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution rinitial.
-        g: XHashTable(Cusp, Z) := qetaGrades(nn, members sinitial, mm, r, m, t);
+        sspec: SPEC := etaQuotientSpecification(nn, members sinitial)
+        g: XHashTable(Cusp, Z) := qetaGrades(sspec, rspec, m, t);
         -- Exclude order at the cusp infinity.
         cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA0 _
                              | not infinity? cusp]
@@ -301,7 +294,7 @@ QEtaModularGamma0: Exports == Implementation where
         -- We are interested in the inhomogeneous solutions, since
         -- they yield an adjustment such that the resulting cofactor
         -- vector s leads to an element in M^\infty(nn) for the
-        -- etaQuotient(nn,s,mm,r,m,t).
+        -- etaQuotient(sspec,rspec,m,t).
         --
         -- There can be several inhomogeneous solutions. Any of them
         -- is fine, but we want the resulting series to be of a small
@@ -312,8 +305,9 @@ QEtaModularGamma0: Exports == Implementation where
         v: VZ := first adjustments
         sadjust:VZ := reduce(_+, [x*bb for x in members v for bb in b])
         s: LZ := members(sinitial - sadjust)
+        -- Let sspec=etaSpecification(nn,s).
         -- The order of the expansion at infinity of the modular
-        -- function given by (nn, s, mm, r, m, t) can be approximated
+        -- function given by (sspec,rspec,m,t) can be approximated
         -- by alphaInfinity. See its definition in QEtaCofactorSpace.
         -- Even though it might not be the correct order since
         -- a(m*n+t) can be zero for an initial segment of natural
@@ -332,21 +326,7 @@ QEtaModularGamma0: Exports == Implementation where
             if si > sinf then
                 s := stest
                 sinf := si
-        return s
-
-    etaCofactorInfinity(nn: P, mm: P, r: LZ, m: P, t: N): LZ ==
-        ecs: ECS := etaCofactorSpace0(nn, mm, r, m, t)$QEtaCofactorSpace
-        n: Z := numberOfDivisors(nn)$INTF
-        sinitial: VZ := ((ecs.particular)::VZ)(1..n)
-        b: LVZ := [x(1..n) for x in ecs.basis]
-        minimizeGrades(nn, mm, r, m, t, sinitial, b)
-
-    minimizeGradesSpecification(nn: P, rspec: SPEC, m: P, t: N,
-                                rinitial: VZ, b: LVZ): SPEC ==
-        mm: P := level rspec
-        r: LZ := pureExponents rspec
-        mg: LZ := minimizeGrades(nn, mm, r, m, t, rinitial, b)
-        etaQuotientSpecification(nn, mg)
+        etaQuotientSpecification(nn, s)
 
     etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N): SPEC ==
         ecs: ECS := etaCofactorSpace0(nn, rspec, m, t)$QEtaCofactorSpace
@@ -388,15 +368,6 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
       ++ modularEtaQuotientInfinity(rspec) checks whether rspec
       ++ specifices a Gamma_0-modular (pure) eta-quotient and returns
       ++ (expansion(etaQuotient(rspec)$EQI(C))$EQI(C))::A1(C).
-    modularEtaQuotientInfinity: (P, LZ, P, LZ, P, N) -> A1 C
-      ++ modularEtaQuotientInfinity(nn, s, mm, r, m, t) returns
-      ++ the series expansion of
-      ++ etaQuotient(nn,s,mm,r,m,t)$SymbolicModularGamma0EtaQuotient
-      ++ at the cusp infinity.
-    modularEtaQuotientInfinity: (P, P, LZ, P, N) -> A1 C
-      ++ modularEtaQuotientInfinity(nn, mm, r, m, t) returns
-      ++ modularEtaQuotientInfinity(nn, s, mm, r, m, t) for s
-      ++ equal to etaCofactorInfinity(nn, mm, r, m, t).
     modularEtaQuotientInfinity: (SPEC, SPEC, P, N) -> A1 C
       ++ modularEtaQuotientInfinity(sspec, rspec, m, t) returns
       ++ the series expansion of
@@ -407,19 +378,23 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
       ++ modularEtaQuotientInfinity(sspec, rspec, m, t) for sspec
       ++ equal to etaCofactorInfinity(nn, rspec, m, t).
   Implementation ==> add
+    specEQI C ==> etaQuotient $ EQI(C)
 
     modularEtaQuotientInfinity(rspec: SPEC): A1 C ==
-      (expansion(etaQuotient(rspec)$EQI(C))$EQI(C))::A1(C)
+      (expansion(specEQI(C) rspec)$EQI(C))::A1(C)
 
     -- generating series for a(m*n+t) with cofactor eta-quotient and
     -- the fractional q power where \sum_{k=0}^\infty a(k)q^k is
     -- defined by an eta-quotient with exponent vector r.
 
-    modularEtaQuotientInfinity(nn:P, s:LZ, mm:P, r:LZ, m:P, t:N): A1 C ==
-        -- First compute the expansion of the orbit product.
-        eulerquo: T1 C := qetaTaylorRep(eulerExpansion(mm, r)$EQI(C))
+    modularEtaQuotientInfinity(sspec:SPEC, rspec:SPEC, m:P, t:N): A1 C ==
+        not pure? rspec or not pure? rspec =>
+            error "eta-quotient specification is not a pure eta-quotient"
 
-        orb: List N := orbit(mm, r, m, t)$QEtaCofactorSpace
+        -- First compute the expansion of the orbit product.
+        eulerquo: T1 C := qetaTaylorRep(eulerExpansion specEQI(C) rspec)
+
+        orb: List N := modularGamma0Orbit(rspec, m, t)$QEtaCofactorConditions
         tt := first orb
         p: T1 C := multisect(m-tt, tt, eulerquo)
         -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
@@ -427,7 +402,7 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
 
         -- The expansion of the cofactor is here.
         -- We take care of the correct q-order through alphaInfinity.
-        cofact: T1 C := qetaTaylorRep(eulerExpansion(nn, s)$EQI(C))
+        cofact: T1 C := qetaTaylorRep(eulerExpansion specEQI(C) sspec)
 
         -- We multiply both things together to get (nearly) a modular
         -- function.
@@ -435,24 +410,8 @@ QEtaModularGamma0Infinity(C: IntegralDomain): Exports == Implementation where
 
         -- We have to multiply by some q-power to get the expansion of
         -- a modular function f.
-        sspec: SPEC := etaQuotientSpecification(nn, s)
-        rspec: SPEC := etaQuotientSpecification(mm, r)
         alpha: Z := alphaInfinity(sspec, rspec, m, orb)$QEtaCofactorSpace
         laurent(alpha, tf)$A1(C)
-
-    modularEtaQuotientInfinity(nn: P, mm: P, r: LZ, m: P, t: N): A1 C ==
-        orb: List N := orbit(mm, r, m, t)$QEtaCofactorSpace
-        tracePrint("orbit", sort orb)
-        s: List Z := etaCofactorInfinity(nn, mm, r, m, t)$QEtaModularGamma0
-        tracePrint("cofactor", s)
-        modularEtaQuotientInfinity(nn, s, mm, r, m, t)
-
-    modularEtaQuotientInfinity(sspec:SPEC, rspec:SPEC, m:P, t:N): A1 C ==
-        not pure? rspec or not pure? rspec =>
-            error "eta-quotient specification is not a pure eta-quotient"
-        nn: P := level sspec; s: LZ := pureExponents sspec
-        mm: P := level rspec; r: LZ := pureExponents rspec
-        modularEtaQuotientInfinity(nn, s, mm, r, m, t)
 
     modularEtaQuotientInfinity(nn: P, rspec: SPEC, m: P, t: N): A1 C ==
         sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0

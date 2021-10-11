@@ -79,12 +79,11 @@ xabb := samba(xt, xabbasis, genus)$QXTOPSAMBA1(C);
 -- Now we consider an additional series. Here we take the series
 -- corresponding to the $p(11n+6)$ problem.
 
-mm: P := 11; s: List Z := [-1, 0]; m: P := 11;
-mmdivs: List P := DIVISORS mm
-shat: Z := sigmaInfinity(mmdivs, s)
-orbs := [orb for tt in 0..m-1 | (orb := orbit(shat,m,tt); one? # orb)]
+rspec := [[1,-1]]; m: P := 11;
+sspec := etaQuotientSpecification(mm, s)
+orbs := [orb for tt in 0..m-1 | (orb := ORBIT(sspec,m,tt); one? # orb)]
 t: N := first first orbs
-r: List Z := etaCofactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
+sspec := cofactI0(nn, rspec, m, t)
 
 -- Let's compute the expansion of
 -- $$
@@ -97,10 +96,9 @@ r: List Z := etaCofactorInfinity(nn, mm, s, m, t)$QEtaModularGamma0
 )set output algebra off
 xiord: P := 2; -- order of the root of unity
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-)read ../input/convenience )quiet
+)read convenience )quiet
 spitzen := cusps(121)$GAMMA0;
-)read ../input/modfuns.input
-)r ../input/modfuns.input
+)read modfuns.input
 
 ff := modularSiftedPartitionSeries(11, m, t);
 xf := toX1(C, ff, F)
