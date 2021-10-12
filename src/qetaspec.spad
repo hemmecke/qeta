@@ -123,7 +123,12 @@ QEtaSpecification: Exports == Implementation where
       ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where d runs
       ++ over divs.
       ++ The two input lists are supposed to be of the same length.
-    etaQuotientSpecification: (LLZ) -> %
+    etaQuotientSpecification: (P, LLZ) -> %
+      ++ etaQuotientSpecification(mm, rbar) returns the specification for
+      ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where [d,rd]
+      ++ are the elements of rbar.
+      ++ The eta-quotient is considered to belong to level mm.
+    etaQuotientSpecification: LLZ -> %
       ++ etaQuotientSpecification(rbar) returns the specification for
       ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where [d,rd]
       ++ are the elements of rbar.
@@ -255,6 +260,11 @@ QEtaSpecification: Exports == Implementation where
         while not empty? r and zero? first r repeat r := rest r
         #divs < #r => error "exponent list longer than number of divisors"
         per [mm, divs, reverse! r, []]
+
+    etaQuotientSpecification(mm: P, rpure: LLZ): % ==
+        rspec: % := generalizedEtaQuotientSpecification(mm, rpure)
+        not pure? rspec => error "not a pure eta-quotient specification"
+        rspec
 
     etaQuotientSpecification(rpure: LLZ): % ==
         rspec: % := generalizedEtaQuotientSpecification rpure
