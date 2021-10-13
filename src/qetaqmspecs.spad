@@ -40,16 +40,12 @@
   poles at any cusp as well as those having a (multiple) pole, if any,
   at infinity only.
 
-  The code implements
-  \begin{itemize}
-  \item an algorithm due to Radu \cite{Radu:RamanujanKolberg:2015}.
-  \item another version as described in
-    \cite{Hemmecke+Radu:EtaRelations:2018}, \ie, it builds the
-    respective matrices of an integer problem and then lets the
-    program \algo{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}} solve that
-    system.
-  \item similar algorithms for generalized eta-quotients.
-  \end{itemize}
+  The code build a integer-linear problem, see
+  \cite{Hemmecke+Radu:EtaRelations:2018}, \ie, it builds the
+  respective matrices of an integer problem and then lets the program
+  \algo{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}} solve that system. A
+  Similar algorithms for generalized eta-quotients is used, see
+  \cite{Chen+Du+Zhao:FindingModularFunctionsRamanujan:2019}.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -99,6 +95,64 @@ SPECS ==> List SPEC
 INDICES ==> List List Z
 
 QETAAUX ==> QEtaAuxiliaryPackage
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Collection of auxiliary functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+)endif
+
+)abbrev package QEVAUX QEtaQuotientExponentVectorsAux
+++ QEtaQuotientExponentVectorsAux provides a number of
+++ auxiliary functions for the use in the variants to compute
+++ etaQuotientExponentVectors.
+QEtaQuotientExponentVectorsAux: with
+    smallerGrade?: (List List Z, List List Z) -> Boolean
+      ++ smallerGrade?(l1, l2) takes two lists as input and sorts them
+      ++ (basically) lexicographically. It is supposed that li is a
+      ++ list of the form [[[g1,i1], [g2,i2], ..., [gn,in]] where gk
+      ++ is the grade of a powerseries and ik the index of that
+      ++ powerseries in a vector. Furthermore, we assume that l1 and
+      ++ l2 have equal lengths and are themselves sorted descendingly.
+    sortByComponentGrade: (P, List VZ) -> List List Z
+      ++ rs := sortByComponentGrade(m, gens) sorts gens such that if
+      ++ ri:=vector(rs.i), rj:=vector(rs.j), and i<j then
+      ++ smallerGrade?(toG(ri, t).sgi, toG(rj, t).sgi) holds where
+      ++ t:=transpose(matrixLigozat(m)$QETAAUX) and toG computes
+      ++ the respective sorted grades.
+      ++ Informally, since the gens correspond to exponent vectors of
+      ++ eta-quotients and t to the transpose of the Ligozat matrix,
+      ++ v*t corresponds to the orders of the q-expansions at the
+      ++ respective cusps. This function orders the gens in such a way
+      ++ that the vector whose maximum grade (maximum taken over all
+      ++ cusps) is minimal comes first.
+  == add
+    G ==> Record(sgi: List List Z, rvec: VZ)
+        -- sgi = sorted grade and index list
+
+    smallerGrade?(l1: List List Z, l2: List List Z): Boolean ==
+        --assert(#(g1.sgi = #g2.sgi)
+        for x1 in l1 for x2 in l2 repeat
+           first x1 < first x2 => return true
+           first x1 > first x2 => return false
+           first rest x1 < first rest x2 => return true
+           first rest x1 > first rest x2 => return false
+        -- arriving here says that l1 = l2
+        false
+    toG(v: VZ, t: MZ): G ==
+        o: VZ := v*t
+        sgilist: List List Z := sort(_>, [[-o.i, i] for i in 1..#o])
+        [sgilist, v]
+
+    smallerGradeG?(g1: G, g2: G): Boolean == smallerGrade?(g1.sgi, g2.sgi)
+
+    sortByComponentGrade(m: P, gens: List VZ): List List Z ==
+        empty? gens => empty()
+        t: MZ := transpose(matrixLigozat(m)$QETAAUX)
+        ggens: List G := [toG(v, t) for v in gens]
+        z := [members(g.rvec) for g in sort!(smallerGradeG?, ggens)]
+
+
 
 )if LiterateDoc
 %$
@@ -152,8 +206,8 @@ QEtaQuotientSpecifications4ti2: with
       ++ have at most a pole at infinity. If idxs=[], then it is
       ++ equivalent to the indices generalizedEtaFunctionIndices(nn).
     generalizedEtaQuotientMonoidSpecifications: P -> SPECS
-      ++ generalizedEtaQuotientMonoidExponentVectors(nn) returns
-      ++ generalizedEtaQuotientMonoidExponentVectors(nn, []).
+      ++ generalizedEtaQuotientMonoidSpecifications(nn) returns
+      ++ generalizedEtaQuotientMonoidSpecifications(nn, []).
 
 
   == add
@@ -288,6 +342,141 @@ QEtaQuotientSpecifications4ti2: with
 
     generalizedEtaQuotientMonoidSpecifications(nn: P): SPECS ==
         generalizedEtaQuotientMonoidSpecifications(nn, empty()$INDICES)
+
+
+
+
+)if LiterateDoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Compute a basis for $R^*(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A description of which data has to be fed to the program
+\textsf{4ti2}\footnote{4ti2~1.6.7~\cite{4ti2}} is described in
+\cite{Hemmecke+Radu:EtaRelations:2018}, in particular in Section~6 and
+Section~8.
+
+In the following, we compute just a basis for $R^*(N)$ (not
+$R^\infty(N)$). In fact, it is sufficient to compute a basis for the
+nullspace for the matrix $B_N$ (see
+\cite[Section~6]{Hemmecke+Radu:EtaRelations:2018}).
+
+)endif
+
+)abbrev package QMEVSTAR QEtaQuotientMonoidExponentVectorsStar
+++ QEtaQuotientMonoidExponentVectorsStar helps to do computations with
+++ eta-functions and quotients of eta-functions expressed in terms of
+++ the q-series.
+QEtaQuotientMonoidExponentVectorsStar: with
+    etaQuotientMonoidExponentVectors: P -> List List Z
+    etaQuotientMonoidExponentVectorsX: P -> List List Z
+      ++ etaQuotientMonoidExponentVectors(m) returns Z-vectors $r$ (of
+      ++ dimension n, where n=#(divisors m)). These vectors form a
+      ++ Z-basis of $R^*(N)$ as defined in
+      ++ \cite{Hemmecke+Radu:EtaRelations:2018}).
+      ++ The version with X at the end tries to make the resulting
+      ++ vector of the orders of the series small in absolute value.
+    basisReduction: (List VZ, Vector Z) -> List VZ
+      ++ basisReduction(basis, ix) assumes that for each
+      ++ vector b in basis and each i in 1..#ix:
+      ++ If ix.i > 0, then b.i > 0, if ix.i < 0, then b.i <= 0,
+      ++ if ix.i = 0, then this entry is ignored.
+      ++ It returns another basis bas such that with the same property
+      ++ as the input basis and additionally, for each i in 1..ix,
+      ++ length(bas.i)^2 <= length(basis.i).
+    extendedBasisReduction: (List VZ, Vector Z) -> List VZ
+      ++ extendedBasisRedcution(basis, ix) returns the same as
+      ++ basisReduction(basis, ix) except that before calling
+      ++ basisReduction, each vector from basis gets extended by the
+      ++ respective unit vector.
+  == add
+    QEVAux ==> QEtaQuotientExponentVectorsAux
+
+    integerNullSpace(mat: MZ): List VZ ==
+        v: VZ := new(nrows mat, 0)
+        sol := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+        sol.basis
+
+    -- exported functions
+    etaQuotientMonoidExponentVectors(m: P): List List Z ==
+        matmod0: MZ := matrixModularGamma0(m)$QETAAUX
+        gens: List VZ := integerNullSpace matmod0
+        mat: MZ := matrix [entries v for v in gens]
+        lat: MZ := LLL(mat)$LLLReduction
+        ll: List List Z := listOfLists lat
+        ll2: List List Z := [[-x for x in l] for l in ll]
+        sortByComponentGrade(m, [vector l for l in concat(ll, ll2)]) $ QEVAux
+
+    etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
+        divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
+        matmod0: MZ := matrixModularGamma0(m)$QETAAUX
+        gens: List VZ := integerNullSpace matmod0
+        mat: MZ := matrix [[x for x in entries v for d in divs] for v in gens]
+        ligozat: MZ := matrixLigozat(m)$QETAAUX
+        ligozat := transpose ligozat
+        ords := mat * ligozat
+        rec: Record(lll: MZ, trf: MZ) := extendedLLL(ords)$LLLReduction
+        t: MZ := rec.trf
+        lat: MZ := t*mat
+        ll: List List Z := listOfLists lat
+        ll2: List List Z := [[-x for x in l] for l in ll]
+        sortByComponentGrade(m, [vector l for l in concat(ll, ll2)]) $ QEVAux
+
+    good?(v: VZ, ix: VZ): Boolean ==
+        for i in 1..#ix repeat if ix.i < 0 and v.i > 0 then return false
+        true
+
+    greater?(x: VZ, y: VZ, ix: VZ): Boolean ==
+        for i in 1..#ix repeat
+            if ix.i < 0 and x.i > y.i then return false
+        true
+
+    length2(v: VZ, ix: VZ): Z ==
+        len := 0
+        for i in 1..#ix repeat if ix.i > 0 and v.i > 0 then
+            len := len + (v.i)^2
+        len
+
+    basisReduction(basis: List VZ, ix: VZ): List VZ ==
+        for b in basis repeat if not good?(b, ix) then
+            tracePrint("b", b)
+            tracePrint("ix", ix)
+            error "basis does not fulfil input condition"
+        red? := true
+        n: Z := #ix
+        bas: Vector VZ := vector basis
+        while zero? ix.n repeat n := n - 1
+        while red? repeat
+            red? := false
+            for i in 1..#bas repeat
+                b := bas.i
+                lb := length2(b, ix)
+                tracePrint("i,lb,b", [vector [i, lb], b]@List VZ)
+                for k in 1..#bas | k ~= i repeat
+                    v := bas.k
+                    while greater?(b, v, ix) and
+                          (r: VZ := b - v; lr: Z := length2(r, ix);  lr < lb)
+                      repeat
+                        b := r
+                        lb := lr
+                        red? := true -- one reduction happened
+                bas.i := b
+        return members bas
+
+    extendedBasisReduction(basis: List VZ, ix: VZ): List VZ ==
+        empty? basis => return empty()
+        l: N := # first basis
+        n: N := # basis
+        e: N := l + n
+        bas: List VZ := empty()
+        for b in basis for i in l+1.. repeat
+           v: VZ := new(e, 0)
+           copyInto!(v, b, 1)
+           qsetelt!(v, i, 1) -- construct attached unit matrix
+           bas := cons(v, bas)
+        bas := reverse!(bas)
+        red := basisReduction(bas, ix)
+
 
 )if LiterateDoc
 \bibliography{qeta}

@@ -57,20 +57,18 @@ qetagamma0.compile: qetacusp.compile
 qetagamma1.compile: qetacusp.compile
 qetaaux.compile: qetagamma1.compile
 qetaspec.compile: qetaaux.compile
-qetaqmev.compile: 4ti2.compile qetaaux.compile
-qetaqmspec.compile: qetaqmev.compile
+qetaqmspecs.compile: 4ti2.compile qetaaux.compile
 qetatool.compile: qetaquotinf.compile
 qetasamba.compile: qetaquotinf.compile qetaaux.compile
-qetaicat.compile: qetatool.compile qetaqmev.compile
-qetaih.compile: qetaicat.compile qetasamba.compile
 qetasomos.compile: qetaquotinf.compile qetatool.compile
-qetacofactorconditions.compile: qetaqmspec.compile
+qetacofactorconditions.compile: qetaqmspecs.compile
 qetaquotsymb.compile: qetagamma0.compile qetacofactorconditions.compile
 qetacofactorspace.compile: qetacofactorconditions.compile
 qetaquot.compile: qetaquotinf.compile qetaquotsymb.compile \
   qetasqrt.compile
-qetacofactormod.compile: qetaquot.compile 4ti2.compile
-modfunexp.compile: qetaquot.compile qetapowersamba.compile
+qetacofactormod.compile: qetaquot.compile 4ti2.compile qetacofactorspace.compile
+qetaicat.compile: qetatool.compile qetaqmspecs.compile qetacofactormod.compile
+qetaih.compile: qetaicat.compile qetasamba.compile
 qetark: qetacofactormod.compile
 iffts.compile: ivar.compile
 ffalgclos.compile: iffts.compile
@@ -121,9 +119,9 @@ LEVELS= 4 6 8 9 10 12 14 15 16 18 20 21 22 24 25 26 27 28 30 \
     81 82 84 85 86 87 88 90 91 92 93 94 95 96 98 99 100 \
     121 169 289 361 529 841 961
 
-CRASHLEVELS_etaQuotientMonoidExponentVectors=
+CRASHLEVELS_etaQuotientMonoidSpecifications=
 CRASHLEVELS_etaQuotientIdealGenerators=\
-    ${CRASHLEVELS_etaQuotientMonoidExponentVectors} \
+    ${CRASHLEVELS_etaQuotientMonoidSpecifications} \
     # still crashing
 CRASHLEVELS_etaLaurentIdealGenerator=\
     ${CRASHLEVELS_etaQuotientIdealGenerators} \
@@ -132,18 +130,18 @@ CRASHLEVELS_etaRelations= 48 52\
     ${CRASHLEVELS_etaLaurentIdealGenerators} \
     # Takes too long (with slimgb).
 
-LEVELS_EQMEV= \
-    ${filter-out ${CRASHLEVELS_etaQuotientMonoidExponentVectors}, ${LEVELS}}
+LEVELS_EQMSPECS= \
+    ${filter-out ${CRASHLEVELS_etaQuotientMonoidSpecifications}, ${LEVELS}}
 LEVELS_EQIG= \
-    ${filter-out ${CRASHLEVELS_etaQuotientIdealGenerators}, ${LEVELS_EQMEV}}
+    ${filter-out ${CRASHLEVELS_etaQuotientIdealGenerators}, ${LEVELS_EQMSPECS}}
 LEVELS_ELIG= \
     ${filter-out ${CRASHLEVELS_etaLaurentIdealGenerators}, ${LEVELS_EQIG}}
 LEVELS_ER=${filter-out ${CRASHLEVELS_etaRelations}, ${LEVELS_ELIG}}
 
 # The exponent vectors that generate the monoid of eta-quotients.
-EQMEV=etaQuotientMonoidExponentVectors
-EQMEVINPUT=$(patsubst %, ${DV}/${EQMEV}%.input,${LEVELS_EQMEV})
-EQMEVOUT=  $(patsubst %, ${DV}/${EQMEV}%.out,  ${LEVELS_EQMEV})
+EQMSPECS=etaQuotientMonoidSpecifications
+EQMSPECSINPUT=$(patsubst %, ${DV}/${EQMSPECS}%.input,${LEVELS_EQMSPECS})
+EQMSPECSOUT=  $(patsubst %, ${DV}/${EQMSPECS}%.out,  ${LEVELS_EQMSPECS})
 
 # Relations via an algebra basis in terms of eta-quotients.
 EQIG=etaQuotientIdealGenerators
@@ -161,12 +159,12 @@ ER=etaRelations
 ERINPUT=$(patsubst %, ${DV}/${ER}%.input,${LEVELS_ER})
 EROUT=  $(patsubst %, ${DV}/${ER}%.out,  ${LEVELS_ER})
 
-ALLINPUT= ${EQMEVINPUT} ${EQIGINPUT} ${ELIGINPUT} ${ERINPUT}
-ALLOUT=   ${EQMEVOUT}   ${EQIGOUT}   ${ELIGOUT}   ${EROUT}
+ALLINPUT= ${EQMSPECSINPUT} ${EQIGINPUT} ${ELIGINPUT} ${ERINPUT}
+ALLOUT=   ${EQMSPECSOUT}   ${EQIGOUT}   ${ELIGOUT}   ${EROUT}
 ALLTMP=${patsubst %.out,%.tmp,${ALLOUT}}
 
 compute-all: ${ALLINPUT}
-eqmev: ${EQMEVINPUT}
+eqmspecs: ${EQMSPECSINPUT}
 eqig: ${EQIGINPUT}
 elig: ${ELIGINPUT}
 er: ${ERINPUT}
@@ -189,13 +187,13 @@ define COMPUTE_OUT
 endef
 
 #.PRECIOUS: %.out
-${DV}/${EQMEV}%.out: compile-spad
+${DV}/${EQMSPECS}%.out: compile-spad
 	${COMPUTE_OUT}
-${DV}/${EQIG}%.out: ${DV}/${EQMEV}%.input
+${DV}/${EQIG}%.out: ${DV}/${EQMSPECS}%.input
 	${COMPUTE_OUT}
 ${DV}/${ELIG}%.out: ${DV}/${EQIG}%.input
 	${COMPUTE_OUT}
-${DV}/${ER}%.out: ${DV}/${ELIG}%.input ${DV}/${EQMEV}%.input
+${DV}/${ER}%.out: ${DV}/${ELIG}%.input ${DV}/${EQMSPECS}%.input
 	${COMPUTE_OUT}
 
 ###################################################################

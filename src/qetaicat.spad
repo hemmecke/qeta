@@ -138,11 +138,13 @@ DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 ++ having a pole at most at infinity.
 QEtaIdealCategory(C): Category == Exports where
   C: EuclideanDomain
-  L ==> Finite0Series C --: Join(QEtaLaurentSeriesCategory C, QEtaAlgebra C)
+  A1 C ==> Finite0Series C --: Join(QEtaLaurentSeriesCategory C, QEtaAlgebra C)
   Pol ==> Polynomial C
   LPol ==> List Pol
+  SPEC ==> QEtaSpecification
+  SPECS ==> List SPEC
   Exports ==> with
-    relationsIdealGenerators: List L -> LPol
+    relationsIdealGenerators: List A1 C -> LPol
         ++ relationsIdealGenerators(qseries) returns
         ++ a set of generators in the variables M_i of the ideal
         ++ of all relations among the given qseries.
@@ -159,39 +161,37 @@ QEtaIdealCategory(C): Category == Exports where
         ++ Journal of Symbolic Computation, 84, 2018.
         ++ See Hemmecke+Radu:EtaRelations:2018 for more detail
         ++ and the package \spadtype{QEtaIdealHemmecke}.
-    etaQuotientIdealGenerators: (P, List List Z) -> LPol
-        ++ etaQuotientIdealGenerators(level, rgens) returns polynomials
-        ++ in the variables M_i (where i runs from 1 to #rgens)
-        ++ that generate the ideal of all relations
-        ++ of the eta-quotients of the given level
-        ++ where rgens is assumed to be the exponents of the eta-quotients
-        ++ given by etaQuotientMonoidExponentVectors(level) from the package
-        ++ \spadtype{QEtaQuotientMonoidExponentVectors}.
-        ++ It is assumed that each entry in rgens has length equal to
-        ++ the number of divisors of level.
+    etaQuotientIdealGenerators: (P, SPECS) -> LPol
+        ++ etaQuotientIdealGenerators(level, bspecs) returns
+        ++ polynomials in the variables M_i (where i runs from 1 to
+        ++ #bspecs) that generate the ideal of all relations of the
+        ++ eta-quotients of the given level where bspecs is assumed to
+        ++ be the specifications of the eta-quotients given by
+        ++ etaQuotientMonoidSpecifications(level) from the package
+        ++ \spadtype{QEtaQuotientSpecifications4ti2}.
         ++ This function just sets up a the q-series and then calls
         ++ relationsIdealGenerators on these series.
     etaQuotientIdealGenerators: P -> LPol
         ++ etaQuotientIdealGenerators(level) returns
-        ++ etaQuotientIdealGenerators(level, rgens) where rgens is given by
-        ++ rgens := etaQuotientMonoidExponentVectors(level) from the package
-        ++ \spadtype{QEtaQuotientMonoidExponentVectors}.
-    etaLaurentIdealGenerators: (P, List List Z, LPol) -> LPol
-        ++ etaLaurentIdealGenerators(level, rgens, eqigens) assumes
+        ++ etaQuotientIdealGenerators(level, bspecs) where bspecs is given by
+        ++ bspecs := etaQuotientMonoidSpecifications(level) from the package
+        ++ \spadtype{QEtaQuotientSpecifications4ti2}.
+    etaLaurentIdealGenerators: (P, SPECS, LPol) -> LPol
+        ++ etaLaurentIdealGenerators(level, bspecs, eqigens) assumes
         ++ that epigens is a list of polynomials in the variables M_i,
-        ++ for example, eqigens = etaQuotientIdealGenerators(level, rgens)
+        ++ for example, eqigens = etaQuotientIdealGenerators(level, bspecs)
         ++ and replaces each of the M_i by the corresponding
-        ++ product of E_d and Y_d variables given by rgens.i. Positive
-        ++ entries in rgens.i correspond to E variables and negative
+        ++ product of E_d and Y_d variables given by bspecs.i. Positive
+        ++ entries in bspecs.i correspond to E variables and negative
         ++ entries to Y variables, the Y variables correspond to
         ++ inverses of eta-functions. The generators E_d*Y_d-1 for
         ++ each divisor of level are also added to the resulting
         ++ polynomials from above.
     etaLaurentIdealGenerators: P -> LPol
         ++ etaLaurentIdealGenerators(level) returns
-        ++ etaLaurentIdealGenerators(level, rgens, eqigens) for
-        ++ rgens := etaQuotientMonoidExponentVectors(level) and
-        ++ eqigens := etaQuotientIdealGenerators(level, rgens)
+        ++ etaLaurentIdealGenerators(level, bspecs, eqigens) for
+        ++ bspecs := etaQuotientMonoidSpecifications(level) and
+        ++ eqigens := etaQuotientIdealGenerators(level, bspecs)
     etaRelations: (P, LPol) -> LPol
         ++ etaRelations(level, eligens) eliminates the Y variables from the
         ++ input and returns the resulting Groebner basis.
@@ -209,14 +209,15 @@ QEtaIdealCategory(C): Category == Exports where
         ++ laurentRelations(esyms, ysyms) returns
         ++ [e*y-1 for e in esyms for y in ysyms].
    add
-    RGENS ==> etaQuotientMonoidExponentVectors$QEtaQuotientMonoidExponentVectors
+    BSPECS ==> etaQuotientMonoidSpecifications$QEtaQuotientSpecifications4ti2
+    specM0A1 C ==> modularEtaQuotientInfinity $ QEtaModularGamma0Infinity(C)
 
     -- auxiliary functions
     -- Return the "quotient" for the respective r vector where "quotient"
     -- is to be understood as using E for positive and Y for negative r entries.
-    etaQuotientMonomial(esyms: LSym, ysyms:LSym, r: List Z): Pol ==
+    etaQuotientMonomial(esyms: LSym, ysyms: LSym, bspec: SPEC): Pol ==
         p: Pol := 1
-        for e in esyms for y in ysyms for expo in r repeat
+        for e in esyms for y in ysyms for expo in pureExponents bspec repeat
             expo > 0 => p := p * monomial(1$Pol, e, asN expo)
             expo < 0 => p := p * monomial(1$Pol, y, asN abs expo)
         return p
@@ -234,30 +235,22 @@ QEtaIdealCategory(C): Category == Exports where
         laurentRelations(esyms, ysyms)
 
     -- exported functions
-    etaQuotientIdealGenerators(level: P, rgens: List List Z): LPol ==
-        divs: List P := DIVISORS level
-        etaquotgens: List EtaQuotientInfinity C := [etaQuotient(divs, r) for r in rgens]
-        -- Build in some safety check.
-        for x in etaquotgens repeat
-            if not one? denom eulerExponent x then
-                error "rational prefactor exponent"
-        -- We know that 'expansion' will not fail, so we get Laurent series.
-        eqgens: List L := [expansion(x)::L for x in etaquotgens]
-        relationsIdealGenerators eqgens
+    etaQuotientIdealGenerators(level: P, bspecs: SPECS): LPol ==
+        egens: List A1 C := [specM0A1(C) spec for spec in bspecs]
+        relationsIdealGenerators egens
 
     etaQuotientIdealGenerators(level: P): LPol ==
-        rgens: List List Z := RGENS(level)
-        etaQuotientIdealGenerators(level, rgens)
+        etaQuotientIdealGenerators(level, BSPECS level)
 
-    etaLaurentIdealGenerators(level: P, rgens: List List Z, eqigens: LPol): LPol ==
+    etaLaurentIdealGenerators(level: P, bspecs: SPECS, eqigens: LPol): LPol ==
         -- substitute the yemPolynomial for the respective M_i variable
         PE ==> PolynomialEvaluation(C, Pol)
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        msyms: LSym := indexedSymbols("M", #rgens)$QAuxiliaryTools
+        msyms: LSym := indexedSymbols("M", #bspecs)$QAuxiliaryTools
         ysyms: LSym := indexedSymbols("Y", divs)$QAuxiliaryTools
         esyms: LSym := indexedSymbols("E", divs)$QAuxiliaryTools
         etaQuotientMonomials := _
-            [etaQuotientMonomial(esyms, ysyms, r) for r in rgens]
+            [etaQuotientMonomial(esyms, ysyms, bspec) for bspec in bspecs]
         fc(c: C): Pol == c::Pol
         gens: LPol := _
             [eval(x, fc, msyms, etaQuotientMonomials)$PE for x in eqigens]
@@ -271,9 +264,9 @@ QEtaIdealCategory(C): Category == Exports where
         concat(yerels, nfs)
 
     etaLaurentIdealGenerators(level: P): LPol ==
-        rgens: List List Z := RGENS(level)
-        eqigens: LPol := etaQuotientIdealGenerators(level, rgens)
-        etaLaurentIdealGenerators(level, rgens, eqigens)
+        bspecs: SPECS := BSPECS(level)
+        eqigens: LPol := etaQuotientIdealGenerators(level, bspecs)
+        etaLaurentIdealGenerators(level, bspecs, eqigens)
 
     etaRelations(level: P, eligens: LPol): LPol ==
         -- We only need to eliminate the Y_d variables from the

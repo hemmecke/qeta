@@ -30,8 +30,8 @@ In the article
 
 [Ralf Hemmecke, Peter Paule, and Silviu Radu: Construction of Modular
 Function Bases for $Gamma_0(121)$ related to
-$p(11n+6)$](https://www.risc.jku.at/publications/download/risc_5983/integralbasis.pdf)
-(to appear in "Special Issue of "Integeral Transforms and Special
+$p(11n+6)$](https://doi.org/10.1080/10652469.2020.1806261)
+(appeared in "Special Issue of "Integeral Transforms and Special
 Functions", Taylor and Franzis, 2021)
 [10.1080/10652469.2020.1806261](https://doi.org/10.1080/10652469.2020.1806261)
 
@@ -67,12 +67,9 @@ export PATH
 into your `.bashrc` in order to call `fricas` from anywhere on the
 bash prompt.
 
-The QEta package contains code to compute eta relations completely
-done in FriCAS, but for efficiency reasons, some computations are done
-by external programs.
-
-For example, by default, `QEtaQuotientExponentVectors4ti2` is
-used by `make eqmev` and requires [4ti2].
+The QEta package requires [4ti2] for efficiency reasons. For example,
+it solves a integer-linear problem to obtain modular eta-quotients
+with a pole only at infinity.
 
 The Gröbner basis computation during `make er` is done by calling
 `slimgb` from [Singular]. However, we do not call [Singular] directly,

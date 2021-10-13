@@ -86,7 +86,7 @@ TPROJECT=${TMP}/${PROJECT}
 all: compile-spad
 SPADFILES=4ti2 qfunct cachedpow \
   qetacusp qetagamma0 qetagamma1 \
-  qetaalg qetasqrt qetaaux qetaspec qetaqmev qetaqmspec \
+  qetaalg qetasqrt qetaaux qetaspec qetaqmspecs \
   qetacofactorconditions \
   qetaser qetaquotinf qetatool \
   qetasamba \
@@ -117,7 +117,7 @@ distclean: clean
 	rm -f qeta.pdf project.pdf
 
 recompile-spad compile-spad doc localdoc github.io-local\
-    compute-all eqmev eqig elig er checksomos runfricassomos seg slg ceg clg:
+    compute-all eqmspecs eqig elig er checksomos runfricassomos seg slg ceg clg:
 	${MAKE} prerequisites
 	cd ${TMP} && ${MAKE} ROOT="${ROOT}" SPADFILES="${SPADFILES}" $@
 

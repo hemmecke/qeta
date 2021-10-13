@@ -38,10 +38,8 @@ CX := Q;
 )set output algebra on
 )set stream calculate 2
 
-QEQEV ==> QEtaQuotientExponentVectors4ti2
-eqmev ==> etaQuotientMonoidExponentVectors $ QEQEV
-rgens := eqmev nn;
-eqgens := [expansion(etaQuotient(nn, r)$EQI(C)) for r in rgens]
+bspecs := etaQuotientMonoidSpecifications nn;
+egens := [specM0A1(C) spec for spec in bspecs]
 
 -- ## `xab`=samba($t, \{\}$) --- Samba with T
 
@@ -50,7 +48,7 @@ eqgens := [expansion(etaQuotient(nn, r)$EQI(C)) for r in rgens]
 -- divisors of 121). The variable `rgens` corresponds to the
 -- generators of $R^\infty(11)$.
 
-xgens := [toX1(C, eqgens.1, 'T)]
+xgens := [toX1(C, egens.1, 'T)]
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special.b Then we compute an algebra basis
@@ -115,7 +113,7 @@ xfrb := reduce(xf, xabb)$QXTOPRED1(C)
 -- # xfab=samba($t$, $\{dt\}$)
 
 q := monomial(1,1)$A1(C) -- d/d(tau) q(tau) = 2*pi*i*exp(2*pi*i*tau) = 2*pi*i*q
-dt := q*D(eqgens.1)/polyToA1C(E1^2*E11^2)
+dt := q*D(egens.1)/polyToA1C(E1^2*E11^2)
 xdt := toX1(C, dt, 'T1)
 xdgens := [xt, xdt]
 xdab := samba(xt, xdgens, 1, onet1Step!)$QXTOPSAMBA1(C);
@@ -164,12 +162,10 @@ xdfab := samba(xt, xdfgens, 1, onet1Step!)$QXTOPSAMBA1(C);
 
 -- First expand $j(\tau)$ and $j(11\tau)$ at every cusp of $\Gamma_0(11)$.
 
-rgens := etaQuotientMonoidExponentVectors(nn)$QEtaQuotientExponentVectors4ti2
-ys := [etaQuotient(nn, r, 1, [0], 1, 0) for r in rgens];
-xiord := max [minimalRootOfUnity x for x in ys]
-
-CX := Q
-xi := 1
+bspecs := etaQuotientSpecifications(nn)$QEtaQuotientSpecifications4ti2
+ys := [specYM0EQn spec for spec in bspecs];
+xiord := lcm [minimalRootOfUnity x for x in ys]
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 
 ms := [EXPAND y for y in ys];
 [qetaGrades x for x in ms]

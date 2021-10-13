@@ -22,25 +22,25 @@ function usageVARIANT {
 }
 
 ###################################################################
-function usageQuotientMonoidExponentVectors {
+function usageQuotientMonoidSpecifications {
     echo "Usage:"
-    echo "  eta QuotientMonoidExponentVectors N [DIR=etafiles]"
-    echo "where N is a positive integer computes the exponent vectors"
+    echo "  eta QuotientMonoidSpecifications N [DIR=etafiles]"
+    echo "where N is a positive integer computes the specifications"
     echo "for the monoid of eta-quotients of level N that are modular functions"
     echo "and have at most a pole at infinity."
     usageDIR
 }
 
-function QuotientMonoidExponentVectors {
+function QuotientMonoidSpecifications {
     cat <<EOF
 )read etacompute.input )quiet
 )set message type off
 )set message time on
-QEQEV ==> QEtaQuotientExponentVectors4ti2
-eqmev ==> etaQuotientMonoidExponentVectors \$ QEQEV
-result := eqmev $1;
+QEQSPECS ==> QEtaQuotientSpecifications4ti2
+eqmspecs ==> etaQuotientMonoidSpecifications \$ QEQSPECS
+result := eqmspecs $1];
 )set message time off
-vPrint("etaQuotientMonoidExponentVectors$1", result)
+vPrint("etaQuotientMonoidSpecifications$1", result)
 EOF
 }
 
@@ -55,7 +55,7 @@ function usageQuotientIdealGenerators {
 }
 
 function QuotientIdealGenerators {
-    DEP=etaQuotientMonoidExponentVectors$1
+    DEP=etaQuotientMonoidSpecifications$1
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
@@ -90,14 +90,14 @@ function usageLaurentIdealGenerators {
 }
 
 function LaurentIdealGenerators {
-    DEPQMEV=etaQuotientMonoidExponentVectors$1
+    DEPQMSPECS=etaQuotientMonoidSpecifications$1
     DEPQIG=etaQuotientIdealGenerators$1
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C)
-$DEPQMEV: List(List Z) := [];
-)read $2/$3/$DEPQMEV.input )quiet
+$DEPQMSPECS: SPECS := [];
+)read $2/$3/$DEPQMSPECS.input )quiet
 $DEPQIG: LPol C :=[];
 )read $2/$3/$DEPQIG.input )quiet
 divs: List Z := DIVISORS($1)
@@ -112,7 +112,7 @@ PC ==> PolynomialConversion(C, E, syms)
 )set message type off
 )set message time on
 elig ==> etaLaurentIdealGenerators \$ QEtaIdeal
-result := elig($1, $DEPQMEV, $DEPQIG)
+result := elig($1, $DEPQMSPECS, $DEPQIG)
 )set message time off
 rs: List R := [coerce(x) \$ PC for x in result];
 vPrint("etaLaurentIdealGenerators$1", rs)
@@ -156,7 +156,7 @@ EOF
 }
 
 function usage {
-   usageQuotientMonoidExponentVectors; echo;
+   usageQuotientMonoidSpecifications; echo;
    usageQuotientIdealGenerators; echo;
    usageLaurentIdealGenerators; echo;
    usageRelations; echo;
