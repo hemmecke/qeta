@@ -70,6 +70,7 @@ display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
 dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
 tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+errorPrint(x,y) ==> tracePrint(x,y)
 
 )if LiterateDoc
 %$
@@ -96,6 +97,7 @@ Rec ==> Record(red: SL2Z, triang: MZ)
 Pol ==> SparseUnivariatePolynomial Z
 LZ ==> List Z
 LLZ ==> List LZ
+INDICES ==> LLZ
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
@@ -125,7 +127,7 @@ vector to correspond to a modular eta-quotient is violated.
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta-quotients that are modular functions.
 QEtaAuxiliaryPackage: with
-    generalizedEtaFunctionIndices: P -> LLZ
+    generalizedEtaFunctionIndices: P -> INDICES
       ++ generalizedEtaFunctionIndices(nn) returns all the indices of
       ++ a generalized eta-quotient of level nn (without exponents),
       ++ i.e., it return the list in \eqref{eq:sorted-indices} where
@@ -138,30 +140,6 @@ QEtaAuxiliaryPackage: with
       ++ lengthOfGeneralizedEtaFunctionIndices(nn) returns
       ++ #generalizedEtaQuotientSpecification(nn) without ever
       ++ computing the specification list explicitly.
-    toGeneralizedEtaQuotientSpecification: (LLZ, LZ) -> LLZ
-      ++ toGeneralizedEtaQuotientSpecification(li,le) returns
-      ++ [concat(i,e) for e in le for i in li] without the entries whose
-      ++ corresponding exponent e is zero.
-    toGeneralizedEtaQuotientSpecification: (P, LZ) -> LLZ
-      ++ toGeneralizedEtaQuotientSpecification(nn, exponentList)
-      ++ returns
-      ++ toGeneralizedEtaQuotientSpecification(nn,exponentList,idxs)
-      ++ where idxs=generalizedEtaFunctionIndices(nn), i.e., a
-      ++ specification for a generalized eta-quotient where
-      ++ exponentList is considered to be a list of exponents for the
-      ++ (generalized) eta-functions listed in the following order.
-      ++ [eta(d\tau) for d in divsors(nn)]
-      ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)].
-
-      ++ This function basically adds the index part d and (d,g)
-      ++ to the exponents. If the exponentList is too long an error is
-      ++ signalled. If the exponentList is too short, that is no
-      ++ problem.
-
-      ++ For the special case that the exponentList is empty,
-      ++ toGeneralizedEtaQuotientSpecification(nn, []) returns
-      ++ generalizedEtaFunctionIndices(nn).
-
     sigmaInfinity: (P, List Z) -> Z
       ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
       ++ it is assumed that the entries of r correspond to the divisors
@@ -330,58 +308,86 @@ QEtaAuxiliaryPackage: with
       ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
       ++ highest power e such that p^e is a factor of d.
 
-    matrixModularGamma1: P -> MQ
-      ++ matrixModularGamma(nn) returns a matrix mat with 3 rows and
-      ++ n+2 colums (where n=lengthOfGeneralizedEtaFunctionIndices(nn)
-      ++ such that mat*v=0 for an (extended) exponent vector where the
-      ++ exponents correspond to generalizedEtaFunctionIndices(nn).
-      ++ mat*v=0 encodes the conditions \eqref{eq:generalized-weight},
+    matrixModularGamma1: (P, INDICES) -> MQ
+      ++ matrixModularGamma1(nn, idxs) returns a matrix mat with 3
+      ++ rows and n+2 colums (where n=#idxs such that mat*v=0 for an
+      ++ (extended) exponent vector where the exponents correspond to
+      ++ generalizedEtaFunctionIndices(nn). mat*v=0 encodes the
+      ++ conditions \eqref{eq:generalized-weight},
       ++ \eqref{eq:generalized-sigmaInfinity}, and
-      ++ \eqref{eq:generalized-sigma0}. See also modularGamm1 and
-      ++ modularGamma1?.
+      ++ \eqref{eq:generalized-sigma0}, but corresponding to the given
+      ++ indices idxs.. See also modularGamm1 and modularGamma1?. The
+      ++ first row encodes that the some of the exponents of the pure
+      ++ part must be zero. The second row encodes that order at
+      ++ infinity must be an integer. The third row encodes that the
+      ++ order at 0 must be an integer. For the last two rows, the
+      ++ "is-an-integer" property is encoded by a 1 in the (n+1)-th
+      ++ and (n+2)-th column, respectively. All other entries are 0.
 
-    matrixEtaOrder: (P, Cusp, P, Z) -> Q
-      ++ For g in the range 0..delta matrixEtaOrder(nn,cusp,delta,g)
-      ++ returns the coefficient of r_{delta,g} in
+    matrixModularGamma1: P -> MQ
+      ++ matrixModularGamma1(nn) returns a matrixModularGamma1(nn, idxs) for
+      ++ idxs:=generalizedEtaFunctionIndices(nn).
+
+    matrixEtaOrderElement: (P, Cusp, LZ) -> Q
+      ++ z:=matrixEtaOrderElement(nn,cusp,idx). The parameter
+      ++ corresponds to the index of a (generalized) eta-quotient,
+      ++ i.e., it can be of the form idx=[delta,g] or of the form
+      ++ idx=[delta] with g in the range 0..delta. Then z is the
+      ++ coefficient of r_{delta,g} in
       ++ \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994},
       ++ except for the case nn=4, gcd(denom(cusp),nn)=2 (or
       ++ Gamma1(4)-equivalent) where we return half of this
-      ++ coefficient.
-      ++ matrixEtaOrder(nn,cusp,delta,-1)=matrixEtaOrder(nn,cusp,delta,0)/2,
-      ++ thus for g=-1 corresponds to the coefficient of $r_\delta$ in
+      ++ coefficient. If idx=[delta] then
+      ++ z=1/2*matrixEtaOrderElement(nn,cusp,[delta,0])/2. and thus
+      ++ corresponds to the coefficient of $r_\delta$ in
       ++ \eqref{eq:order-rbar-non-adjusted} in
-      ++ Theorem~\ref{thm:matrixEtaOrderRobins}.
-      ++ Note that Robins refers to an expansion in the uniformizing
-      ++ variable q^(gcd(c,nn)/nn) (where cusp=a/c). That is equal to
+      ++ Theorem~\ref{thm:matrixEtaOrderRobins}. Note that Robins
+      ++ refers to an expansion in the uniformizing variable
+      ++ q^(gcd(c,nn)/nn) (where cusp=a/c). That is equal to
       ++ q^(1/width(nn,c)$CongruenceSubgroupGamma1) except for the
       ++ case nn=4 and gcd(nn,c)=2. In that case the width of the cusp
       ++ 1/2 is 1 and not 2=4/gcd(4.2). For this case, we deviate from
       ++ Robins' coefficients and adapt to an expansion in q rather
       ++ than an expansion in q^(1/2).
 
-    matrixEtaOrder: (P, List Cusp) -> MQ
-      ++ matrixEtaOrder(nn, spitzen) returns a matrix that is similar
+    matrixEtaOrderRow: (P, Cusp, INDICES) -> List Q
+      ++ matrixEtaOrderRow(nn, cusp, idxs) returns
+      ++ [matrixEtaOrderElement(nn,cusp,idx) for idx in idxs].
+
+    matrixEtaOrder: (P, List Cusp, INDICES) -> MQ
+      ++ matrixEtaOrder(nn, spitzen,idxs) returns a matrix that is similar
       ++ to matrixLigozat(nn). It allows the compution of the order of
       ++ generalized eta-quotients at the cusps of Gamma1(nn) given by
       ++ the parameter spitzen. The rows of the matrix are sorted
       ++ according to spitzen. The matrix columns correspond to the
-      ++ following generalized eta-functions (in this order).
-      ++ [eta(d\tau) for d in divsors(nn)]
-      ++ [[eta_{d,g}(\tau) for g in 1..ceiling(d/2)-1] for d in divisors(nn)].
+      ++ given indices.
       ++ It gives the coefficients of $r_\delta$ and $r_{\delta,g}$ in
       ++ the sense of Theorem~\ref{thm:matrixEtaOrderRobins}, in
       ++ particular to the coefficients in
       ++ \eqref{eq:order-rbar-non-adjusted}.
+      ++ It returns
+      ++ matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen].
+
+    matrixEtaOrder: (P, List Cusp) -> MQ
+      ++ matrixEtaOrder(nn, spitzen) returns
+      ++ matrixEtaOrder(nn,spitzen,idxs) where
+      ++ idxs:=generalizedEtaFunctionIndices(nn).
 
     matrixEtaOrder: P -> MQ
       ++ matrixEtaOrder(nn) returns matrixEtaOrder(nn, spitzen) where
       ++ spitzen := cusps(nn)$CongruenceSubgroupGamma1.
 
+    matrixEtaOrderModularGamma1: (P, List Cusp, INDICES) -> MQ
+      ++ matrixEtaOrderModularGamma1(nn,spitzen,idxs) returns the
+      ++ vertical concatenation of matrixEtaOrder(nn,spitzen,idxs) and
+      ++ matrixModularGamma1(nn,idxs) so that there will be #spitzen+3
+      ++ rows and ncols(matrixModularGamma1 nn) columns.
+
     matrixEtaOrderModularGamma1: (P, List Cusp) -> MQ
-      ++ matrixEtaOrderModularGamma1(nn, spitzen) returns the
-      ++ vertical concatenation of matrixEtaOrder(nn, spitzen) and
-      ++ matrixModularGamma1(nn) so that there will be #spitzen+3 rows
-      ++ and ncols(matrixModularGamma1 nn) columns.
+      ++ matrixEtaOrderModularGamma1(nn, spitzen) returns
+      ++ matrixEtaOrderModularGamma1(nn, spitzen, idxs) where
+      ++ idxs:=generalizedEtaFunctionIndices(nn).
+
 
 -------------------------------------------------------------------
 -- Temporarily exported
@@ -704,21 +710,6 @@ $a\in X_c$.
         for d in nndivs repeat len := len + asN(ceiling(d/2)$Q)
         return len
 
-    toGeneralizedEtaQuotientSpecification(idxs: LLZ, exponentList: LZ): LLZ ==
-        #idxs < #exponentList =>
-            error "toGeneralizedEtaQuotientSpecification: exponentList too long"
-        spec: LLZ := empty()
-        for e in exponentList for i in idxs repeat
-            if not zero? e then spec := cons(concat(i, e), spec)
-        return reverse! spec
-
-    toGeneralizedEtaQuotientSpecification(nn: P, exponentList: LZ): LLZ ==
-        indices := generalizedEtaFunctionIndices nn
-        -- Now we have all indices and just need to append the exponent
-        -- entry to every element list.
-        empty? exponentList => return indices
-        toGeneralizedEtaQuotientSpecification(indices, exponentList)
-
     sigmaInfinity(mm: P, rtilde: List List Z): Q ==
         res: Q := 0
         for l in rtilde repeat --assert(#l=3)
@@ -739,34 +730,23 @@ $a\in X_c$.
     sigma0(mm: P, r: List Z, rtilde: List List Z): Z ==
         sigma0(mm, r) + 2*sigma0(mm, rtilde)
 
-    matrixModularGamma1(nn: P): MQ ==
-        nndivs: List P := DIVISORS nn
-        n: Z := # nndivs
-        -- number of the r_d and r_{d,g} variables
-        numOfVars: N := lengthOfGeneralizedEtaFunctionIndices nn
-        mat: MQ := new(3, numOfVars+2, 0) -- 2 more for "mod 24" rows
-        jj := 0
-        -- We run over the coulumns of the matrix.
-        for d in nndivs for j in 1..n repeat
-            -- sum exponents of pure eta-quotient part
-            -- \eqref{eq:generalized-weight}
-            qsetelt!(mat, 1, j, 1)
-            -- row 2 and 3 correspond to the rows of matrixEtaOrder(nn)
-            -- corresponding to the cusps 1/nn (infinity) and 1/1 (0).
-            -- Thus, we use the same code as in matrixEtaOrder(nn).
-            qsetelt!(mat, 2, j, matrixEtaOrder(nn, infinity(), d, -1))
-            qsetelt!(mat, 3, j, matrixEtaOrder(nn, cusp(0, 1), d, -1))
-            for g in 1..ceiling(d/2)-1 repeat
-                jj := jj + 1
-                qsetelt!(mat, 2, n + jj, matrixEtaOrder(nn, infinity(), d, g))
-                qsetelt!(mat, 3, n + jj, matrixEtaOrder(nn, cusp(0, 1), d, g))
-
-        -- make sure that row 2 and 3 must be integers
-        qsetelt!(mat, 2, numOfVars+1, 1)
-        qsetelt!(mat, 3, numOfVars+2, 1)
+    matrixModularGamma1(nn: P, idxs: INDICES): MQ ==
+        spitzen: List Cusp := [infinity(), cusp(0,1)]
+        rows: List List Q := [matrixEtaOrderRow(nn, c, idxs) for c in spitzen]
+        s: List Q := [(#idx=1=>1;0) for idx in idxs]
+        rows := cons(s, rows)
+        n: N := #idxs
+        mat: MQ := new(3, n+2, 0) -- 2 more for "is-an-integer" columns
+        for i in 1..3 for row in rows repeat
+            for j in 1..n for e in row repeat mat(i, j) := e
+        qsetelt!(mat, 2, n+1, 1)
+        qsetelt!(mat, 3, n+2, 1)
         return mat
 
-    -- matrixEtaOrder(nn, cusp, delta, g) returns the coefficient of
+    matrixModularGamma1(nn: P): MQ ==
+        matrixModularGamma1(nn, generalizedEtaFunctionIndices nn)
+
+    -- matrixEtaOrderElement(nn, cusp, delta, g) returns the coefficient of
     -- r_{delta.g} in
     -- \cite[Thm.~4]{Robins:GeneralizedDedekindEtaProducts:1994}. See
     -- also Theorem~\ref{thm:matrixEtaOrderRobins}. Since we always
@@ -776,17 +756,21 @@ $a\in X_c$.
     -- result of \code{matrixEtaOrder}$(N)$, then $A \bar{r}$ gives
     -- the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
     -- $q^{1/w_\gamma}$.
-    matrixEtaOrder(nn: P, cusp: Cusp, delta: P, g: Z): Q ==
+    matrixEtaOrderElement(nn: P, cusp: Cusp, idx: LZ): Q ==
         --assert(cusp>0) -- comes from cusps(nn)$CongruenceSubgroupGamma1
-        g > delta => error "matrixEtaOrder: no such g allowed"
+        empty? idx =>
+            errorPrint("idx", idx)
+            error "matrixEtaOrderElement: index not allowed"
         entryFactor: Q := 1
-        if g < 0 then
-            entryFactor := 1/2 -- for proper eta-functions
-            g := 0
+        delta: Z := idx.1
+        g: Z := 0
+        if #idx=1 then entryFactor := 1/2 else g := idx.2
         -- If cusp=a/c=lambda/(mu*epsilon), then we must have the
         -- condition: gcd(lambda,nn)=gcd(lambda,mu)=gcd(mu,nn)=1. So
         -- we try to find an equivalent cusp with this property.
         -- See function normalize in CongruenceSubgroupGamma1.
+        delta <= 0 => error "matrixEtaOrderElement: delta not positive"
+        g > delta => error "matrixEtaOrderElement: no such g allowed"
         c: Z := denom cusp
         l: Z := numer cusp -- \lambda
         -- Make cusp (0:1)=infinity a special case, i.e. treat it like
@@ -805,7 +789,7 @@ $a\in X_c$.
         while not one? gcd(l, m) or not one? gcd(nn, l) repeat
             l := l + e
             if l >= nn then -- safety check -- should actually not happen
-               tracePrint("[nn, numer cusp, denom cusp, c, m, e]",
+               errorPrint("[nn, numer cusp, denom cusp, c, m, e]",
                            [nn, numer cusp, denom cusp, c, m, e]$List(Z))
                error "matrixEtaOrder: lambda too big"
 
@@ -814,38 +798,36 @@ $a\in X_c$.
         nn = 4 and e = 2 => 1/2*z
         z
 
+    matrixEtaOrderRow(nn: P, cusp: Cusp, idxs: INDICES): List Q ==
+        [matrixEtaOrderElement(nn, cusp, idx) for idx in idxs]
+
+    matrixEtaOrder(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+        matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
+
     matrixEtaOrder(nn: P, spitzen: List Cusp): MQ ==
-        nndivs: List P := DIVISORS nn
-        n: Z := # nndivs
-        -- number of the r_d and r_{d,g} variables
-        numOfVars: N := lengthOfGeneralizedEtaFunctionIndices nn
-        numrows: N := # spitzen
-        mat: MQ := new(numrows, numOfVars, 0)
-        for cusp in spitzen for i in 1..numrows repeat
-            jj := 0
-            for d in nndivs for j in 1..n repeat
-                qsetelt!(mat, i, j, matrixEtaOrder(nn, cusp, d, -1))
-                for g in 1..ceiling(d/2)-1 repeat
-                    jj := jj + 1
-                    qsetelt!(mat, i, n + jj, matrixEtaOrder(nn, cusp, d, g))
-        return mat
+        matrixEtaOrder(nn, spitzen, generalizedEtaFunctionIndices nn)
 
     matrixEtaOrder(nn: P): MQ ==
         matrixEtaOrder(nn, cusps(nn)$CongruenceSubgroupGamma1)
 
-    matrixEtaOrderModularGamma1(nn: P, spitzen: List Cusp): MQ ==
-        matmod1 := matrixModularGamma1(nn)
-        matord := matrixEtaOrder(nn, spitzen)
-        mat: MQ := new(#spitzen+3, ncols matmod1, 0)
+    matrixEtaOrderModularGamma1(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+        matmod1 := matrixModularGamma1(nn, idxs)
+        matord := matrixEtaOrder(nn, spitzen, idxs)
+        m := nrows matord
+        mat: MQ := new(m+3, ncols matmod1, 0)
+        --assert(nrows(matmod1)=3)
         --assert(ncols matord + 2 = ncols matmod1)
-        n := # spitzen
-        for i in 1..n repeat
+        for i in 1..m repeat
             for j in 1..ncols matord repeat
                 qsetelt!(mat, i, j, matord(i, j))
         for i in 1..3 repeat
             for j in 1..ncols matmod1 repeat
-                qsetelt!(mat, n+i, j, matmod1(i, j))
+                qsetelt!(mat, m+i, j, matmod1(i, j))
         return mat
+
+    matrixEtaOrderModularGamma1(nn: P, spitzen: List Cusp): MQ ==
+        idxs:=generalizedEtaFunctionIndices(nn)
+        matrixEtaOrderModularGamma1(nn, spitzen, idxs)
 
     kappaSchoeneberg(nn: P, g: Z, h: Z, a: Z, b: Z, c: Z, d: Z): Q ==
         zero? c => fractionalPart(b/(2*d)*fractionalBernoulli2(g/nn))
