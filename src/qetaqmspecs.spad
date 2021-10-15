@@ -209,6 +209,10 @@ QEtaQuotientSpecifications4ti2: with
       ++ generalizedEtaQuotientMonoidSpecifications(nn) returns
       ++ generalizedEtaQuotientMonoidSpecifications(nn, []).
 
+    generalizedEtaQuotientSpecifications: (P, INDICES, Z) -> SPECS
+      ++ generalizedEtaQuotientSpecifications(nn, idxs, grd) returns
+      ++ specifications for generatilzed eta-quotients with a pole of
+      ++ pole-order grd>0 at infinity and no pole at any other cusp.
 
   == add
     QEVAux ==> QEtaQuotientExponentVectorsAux
@@ -321,6 +325,37 @@ QEtaQuotientSpecifications4ti2: with
         generalizedEtaQuotientMonoidSpecifications(nn, empty()$INDICES)
 
 
+    -- Below we try to compute generalized eta-quotients that have only
+    -- a pole at infinity of order poleorder>0.
+    generalizedEtaQuotientSpecifications(_
+      nn: P, idxs: INDICES, poleorder: Z): SPECS ==
+        -- At the cusp infinity (=1/nn) the order must be an integer.
+        -- That, however, is already taken care of in the
+        -- matrixModularGamma1(nn) part of the matrix. Therefore, we
+        -- remove this cusp.
+        oo: Cusp := infinity()
+        spitzen: List Cusp := remove!(oo,cusps(nn)$CongruenceSubgroupGamma1)
+        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen, idxs)$QETAAUX
+        m := nrows mat
+        b: VZ := new(m, 0) -- the right hand side vector
+        rels: VZ := new(m, 0) -- all equations
+        -- Except the last 3 rows, we have inequations A x >= b.
+        for i in 1..m-3 repeat rels.i := 1 -- non-negative order
+        -- zsolve needs an integer matrix.
+        matZ: MZ := clearDenominatorsPerRow mat
+        n: N := ncols matZ
+        -- matZ has size mxn. At position (m-1,n-1) is the denominator
+        -- of the (m-1)-th row of mat. That entry is relevant to
+        -- ensure that the order at infinity is an integer. We move
+        -- that entry to the rhs and expect not any integer, but a
+        -- concrete one, namely poleorder.
+        den: Z := matZ(m-1, n-1); matZ(m-1, n-1) := 0
+        b(m-1) := - den * poleorder
+        -- We can delete the last-but-one row since it consists only of zeros.
+        matZ := swapColumns!(matZ, n, n-1)
+        res: ZRESULT := zsolve(matZ(1..m,1..n-1), rels, b)$X4ti2;
+        lle: LLZ := [members g(1..n-2) for g in res.zinhom]
+        [generalizedEtaQuotientSpecification(nn, idxs, le) for le in lle]
 
 
 )if LiterateDoc
