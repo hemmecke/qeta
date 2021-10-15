@@ -354,19 +354,23 @@ QEtaAuxiliaryPackage: with
       ++ matrixEtaOrderRow(nn, cusp, idxs) returns
       ++ [matrixEtaOrderElement(nn,cusp,idx) for idx in idxs].
 
-    matrixEtaOrder: (P, List Cusp, INDICES) -> MQ
-      ++ matrixEtaOrder(nn, spitzen,idxs) returns a matrix that is similar
-      ++ to matrixLigozat(nn). It allows the compution of the order of
-      ++ generalized eta-quotients at the cusps of Gamma1(nn) given by
-      ++ the parameter spitzen. The rows of the matrix are sorted
-      ++ according to spitzen. The matrix columns correspond to the
-      ++ given indices.
-      ++ It gives the coefficients of $r_\delta$ and $r_{\delta,g}$ in
-      ++ the sense of Theorem~\ref{thm:matrixEtaOrderRobins}, in
-      ++ particular to the coefficients in
-      ++ \eqref{eq:order-rbar-non-adjusted}.
+    matrixEtaOrderFull: (P, List Cusp, INDICES) -> MQ
+      ++ matrixEtaOrder(nn,spitzen,idxs) returns a matrix that is
+      ++ similar to matrixLigozat(nn). It allows the compution of the
+      ++ order of generalized eta-quotients at the cusps of Gamma1(nn)
+      ++ given by the parameter spitzen. The rows of the matrix are
+      ++ sorted according to spitzen. The matrix columns correspond to
+      ++ the given indices. It gives the coefficients of $r_\delta$
+      ++ and $r_{\delta,g}$ in the sense of
+      ++ Theorem~\ref{thm:matrixEtaOrderRobins}, in particular to the
+      ++ coefficients in \eqref{eq:order-rbar-non-adjusted}.
       ++ It returns
       ++ matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen].
+
+    matrixEtaOrder: (P, List Cusp, INDICES) -> MQ
+      ++ matrixEtaOrder(nn,spitzen,idxs) returns the matrix given by
+      ++ [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen] with
+      ++ duplicate rows removed.
 
     matrixEtaOrder: (P, List Cusp) -> MQ
       ++ matrixEtaOrder(nn, spitzen) returns
@@ -801,8 +805,12 @@ $a\in X_c$.
     matrixEtaOrderRow(nn: P, cusp: Cusp, idxs: INDICES): List Q ==
         [matrixEtaOrderElement(nn, cusp, idx) for idx in idxs]
 
-    matrixEtaOrder(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+    matrixEtaOrderFull(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
         matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
+
+    matrixEtaOrder(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+        ll := [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
+        matrix removeDuplicates! ll
 
     matrixEtaOrder(nn: P, spitzen: List Cusp): MQ ==
         matrixEtaOrder(nn, spitzen, generalizedEtaFunctionIndices nn)
