@@ -38,7 +38,7 @@ function QuotientMonoidSpecifications {
 )set message time on
 QEQSPECS ==> QEtaQuotientSpecifications4ti2
 eqmspecs ==> etaQuotientMonoidSpecifications \$ QEQSPECS
-result := eqmspecs $1];
+result := eqmspecs $1;
 )set message time off
 vPrint("etaQuotientMonoidSpecifications$1", result)
 EOF
@@ -60,7 +60,7 @@ function QuotientIdealGenerators {
 )read etacompute.input )quiet
 C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C)
-$DEP: List(List Z) := [];
+$DEP: List(List List Z) := [];
 )read $2/$3/$DEP.input )quiet
 dim: N := # $DEP
 syms: LSym := indexedSymbols("M", dim) \$ QAuxiliaryTools
@@ -71,7 +71,7 @@ PC ==> PolynomialConversion(C, E, syms)
 )set message type off
 )set message time on
 eqig ==> etaQuotientIdealGenerators \$ QEtaIdeal
-result := eqig($1, $DEP);
+result := eqig($1, [geqSPEC x for x in $DEP]);
 )set message time off
 rs: List R := [coerce(x)\$PC for x in result];
 vPrint("etaQuotientIdealGenerators$1", rs)
@@ -96,7 +96,7 @@ function LaurentIdealGenerators {
 )read etacompute.input )quiet
 C ==> Z
 QEtaIdeal ==> QEtaIdeal$VARIANT(C)
-$DEPQMSPECS: SPECS := [];
+$DEPQMSPECS: List(List List Z) := [];
 )read $2/$3/$DEPQMSPECS.input )quiet
 $DEPQIG: LPol C :=[];
 )read $2/$3/$DEPQIG.input )quiet
@@ -112,7 +112,7 @@ PC ==> PolynomialConversion(C, E, syms)
 )set message type off
 )set message time on
 elig ==> etaLaurentIdealGenerators \$ QEtaIdeal
-result := elig($1, $DEPQMSPECS, $DEPQIG)
+result := elig($1, [geqSPEC x for x in $DEPQMSPECS], $DEPQIG)
 )set message time off
 rs: List R := [coerce(x) \$ PC for x in result];
 vPrint("etaLaurentIdealGenerators$1", rs)
@@ -204,7 +204,8 @@ if [ $CMD = "Relations" ]; then
         | sed 's/ //g;s/,/, /g;s/Time:/ Time: /;s/sec$/ sec/' \
         | tee $FILE.tmp
 else
-    $CMD $N $DIR $VARIANT | FRICAS_INITFILE='' fricas -nosman 2>&1 \
+    echo ======== $FILE ==============
+    $CMD $N $DIR $VARIANT | tee $FILE.fricas.input | FRICAS_INITFILE='' fricas -nosman 2>&1 \
         | tee $FILE.tmp
 fi
 
