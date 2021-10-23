@@ -3,12 +3,6 @@
 
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input
 
--- +
--------------------------------------------------------------------
---setup
--------------------------------------------------------------------
--- -
-
 -- This notebook contains supplement material to the article
 --
 -- # Construction of Bases for Modular Functions for $\Gamma_0(121)$ related to $p(11n+6)$
@@ -93,6 +87,12 @@
 
 -- <a name="preparatory-steps"></a>
 -- # Preparatory steps
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
 
 -- First we locate the **QEta** package and load it together
 -- with some useful macros into a
@@ -279,15 +279,16 @@ smallerSecondCoefficient?(x, y) == (_
 
 setFormat!(FormatMathJax)$JFriCASSupport
 
+
+-- <a name="denominator-polynomial-for-f"></a>
+-- # Denominator polynomial $d(T)$ corresponding to $f$
+
 -- +
 -------------------------------------------------------------------
 --test:dc
 -------------------------------------------------------------------
 -- -
 
-
--- <a name="denominator-polynomial-for-f"></a>
--- # Denominator polynomial $d(T)$ corresponding to $f$
 
 -- We compute a polynomial $d(T)$ such that
 -- $d(t)f \in \mathbb{Q}[t, u]$.
@@ -477,14 +478,14 @@ assertTrue(zero? xdfred)
 --endtest
 -------------------------------------------------------------------
 
+-- <a name="xfab"></a>
+-- ## xfab=samba($t$, $\{u, f\}$)
+
 -- +
 -------------------------------------------------------------------
 --test:bf
 -------------------------------------------------------------------
 -- -
-
--- <a name="xfab"></a>
--- ## xfab=samba($t$, $\{u, f\}$)
 
 -- We know that
 -- $$
@@ -534,14 +535,14 @@ for x in xfabtopbas for i in 1.. repeat (print(""::Symbol); _
 --endtest
 -------------------------------------------------------------------
 
+-- <a name="xfab"></a>
+-- ## xfab=samba($t$, $\{u, f\}$)
+
 -- +
 -------------------------------------------------------------------
 --test:f2
 -------------------------------------------------------------------
 -- -
-
--- <a name="xfab"></a>
--- ## xfab=samba($t$, $\{u, f\}$)
 
 xfgens := [xt, xu, xf]
 
@@ -589,15 +590,14 @@ vPrint("f2relation", second red121f)
 --endtest
 -------------------------------------------------------------------
 
+-- <a name="method-klein"></a>
+-- # Method 1: integral basis by using the Klein $j$-function
+
 -- +
 -------------------------------------------------------------------
 --test:fj
 -------------------------------------------------------------------
 -- -
-
--- <a name="method-klein"></a>
--- # Method 1: integral basis by using the Klein $j$-function
-
 
 -- First expand $t$, $u$,
 -- $j(\tau)$, $j(11\tau)$, and $j(11^2\tau)$
@@ -715,6 +715,9 @@ vPrint("fjrelation", second redfj)
 -- <a name="method-trace"></a>
 -- # Method 2: integral basis obtained with the trace map
 
+
+-- ## Preperatory steps
+
 -- +
 -------------------------------------------------------------------
 --setup
@@ -724,7 +727,7 @@ vPrint("fjrelation", second redfj)
 -- We can generate a new modular function by applying the trace to
 -- a modular function from $M^\infty(242)$.
 
--- ## Atkin-Lehner involution $W_2^{242}$
+-- ### Atkin-Lehner involution $W_2^{242}$
 
 -- The trace
 -- $\mathrm{tr}_{121}^{242}: M^\infty(242) \to M^\infty(121)$
@@ -767,7 +770,7 @@ w := WIDTH0(242, cusp(gamma(1,1),gamma(2,1)))
 -- the resulting series as a series in $q$.
 
 -- <a name="monoid-E242"></a>
--- ## Monoid basis for $E^\infty(242)$
+-- ### Monoid basis for $E^\infty(242)$
 
 -- Since we can only compute with series coming from eta-quotients, we
 -- temporarily switch to level 242 and take the trace of a series from
@@ -814,14 +817,14 @@ xh := toX1(C, traceMap(level, 2, pureExponents bspecs242.4), 'H)
 --endsetup
 -------------------------------------------------------------------
 
+-- <a name="xgab"></a>
+-- ## `xgab`=samba($t, \{u, g\}$)
+
 -- +
 -------------------------------------------------------------------
 --test:bg
 -------------------------------------------------------------------
 -- -
-
--- <a name="xgab"></a>
--- ## `xgab`=samba($t, \{u, g\}$)
 
 -- Now we can add this element to the algebra basis computed earlier
 -- and hope that we end with a algebra basis for all modular functions
@@ -865,14 +868,14 @@ assertEquals(qetaGrade xr, 8)
 --endtest
 -------------------------------------------------------------------
 
+-- ## xfgab=samba($t, \{u,f,g\}$)
+-- <a name="xfgab"></a>
+
 -- +
 -------------------------------------------------------------------
 --test:bfg
 -------------------------------------------------------------------
 -- -
-
--- ## xfgab=samba($t, \{u,f,g\}$)
--- <a name="xfgab"></a>
 
 -- By adding the generating series $f$ for $p(11n+6)$ we indeed
 -- arrive at an integral basis.
@@ -914,14 +917,14 @@ fgrelslc := [[leadingCoefficient m for m in monomials x] for x in fgrels];
 --endtest
 -------------------------------------------------------------------
 
+-- <a name="xghab"></a>
+-- ## xghab=samba($t, \{u,g,h\}$)
+
 -- +
 -------------------------------------------------------------------
 --test:bgh
 -------------------------------------------------------------------
 -- -
-
--- <a name="xghab"></a>
--- ## xghab=samba($t, \{u,g,h\}$)
 
 -- We also arrive at an integral basis if we add both of the series
 -- $g$ and $h$ coming from computing the trace of functions from
@@ -982,14 +985,14 @@ assertTrue(one? content coefficient(xrpol, 'F, 0))
 --endtest
 -------------------------------------------------------------------
 
+-- <a name="xhab"></a>
+-- ## xhab=samba($t, \{u,h\}$)
+
 -- +
 -------------------------------------------------------------------
 --test:bh
 -------------------------------------------------------------------
 -- -
-
--- <a name="xhab"></a>
--- ## xhab=samba($t, \{u,h\}$)
 
 -- It is sufficient to add only $h$ to the generators
 -- in order to get an integral basis for $M^\infty(121)$.
@@ -1061,17 +1064,19 @@ assertEquals(# monomials(xrpol), 367)
 --endtest
 -------------------------------------------------------------------
 
+-- ## Denominator polynomial $d^*$ for $h$ with respect to `xab`
+
 -- +
 -------------------------------------------------------------------
 --test:ds
 -------------------------------------------------------------------
 -- -
 
--- ## Denominator polynomial $d^*$ for $h$ with respect to `xab`
-
 -- We compute a polynomial $d^*(T)$ such that
 -- $d^*(t)h \in \mathbb{Q}[t, u]$.
 -- (Takes about 3 min.)
+
+-- ### Multiply with powers of $t$
 
 e1:=39; e2:=129
 rhs := [reduce(xt^e1*xh, xab)$QXRED1(C)];
@@ -1115,7 +1120,7 @@ dh := (second lch)::Pol C;
 assertEquals(variables dh, ['U,'T,'H])
 assertEquals([degree(dh, x) for x in variables dh],[4,140,1])
 
--- ## Computation of the corresponding polynomials $c_0,..,c_4$
+-- ### Computation of the corresponding polynomials $c_0,..,c_4$
 
 -- In order to find the respective cofactors to the $c_1$
 -- from above, we must do the whole computation with
@@ -1136,7 +1141,7 @@ l := cons(degree(ch1, 'T), [degree(x, 'T) for x in ch0s]);
 assertEquals(l, [129,140,130,120,110,100])
 assertEquals(gcd cons(ch1,ch0s), T^39)
 
--- ## Factors of $d^*(T)$
+-- ### Factors of $d^*(T)$
 
 -- <a name="denominator-polynomial-for-h"></a>
 -- Apart from the $t^{39}$ factor, we get other factors.
@@ -1230,14 +1235,14 @@ assertEquals(z, 11^4)
 --endtest
 -------------------------------------------------------------------
 
+-- <a name="method-algcurves"></a>
+-- # Method 3: integral basis by using Maple's algcurves
+
 -- +
 -------------------------------------------------------------------
 --test:bv
 -------------------------------------------------------------------
 -- -
-
--- <a name="method-algcurves"></a>
--- # Method 3: integral basis by using Maple's algcurves
 
 -- ## Minimal polynomial and discriminant
 
@@ -1543,3 +1548,8 @@ assertEquals(den*pv, clearDenominator(pv))
 -- all the $p_{i,j}(T)$.
 
 (1/leadingCoefficient(pv))*pv
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
