@@ -172,6 +172,13 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         ++ https://en.wikipedia.org/wiki/Pentagonal_number_theorem
         ++ eulerFunction(s) =
         ++   1 + \sum_{n>0} (-1)^n (q^(s*n*(3*n+1)/2) + q^(s*n*(3*n-1)/2))
+    eulerFunctionPower3: P -> L
+        ++ eulerFunctionPower3(x) returns eulerFunction(x)^3, but uses
+        ++ the formula
+        ++ $\sum_{n=0}^\infty (-1)^n (2n+1) q^{\frac{1}{2}(n^2 + n)}$
+        ++ to compute the result more efficiently.
+        ++ See \cite{Hirschhorn+Hunt:SimpleProofOfTheRamanujanConjecture:1981}.
+        ++ http://eudml.org/doc/152366
     partitionSeries: P -> L
         ++ partitionSeries(s) returns the partition generating series, i.e.,
         ++ the coefficient of $q^(s*n)$ is the number of partitions of $n$
@@ -386,6 +393,16 @@ summand for the previous index $k$.
         r: R := if even? n then 1 else -1
         cons([s*m, r], cons([s*(2*n+1+m), -r], eulerStream2(s, n+1, m+3*n+2, z)))
     eulerFunction2(s: P): L == series eulerStream2(s, 0, 0, empty()$S)
+
+    ++ $\sum_{n=0}^\infty (-1)^n (2n+1) q^{\frac{1}{2}(n^2 + n)}$
+    ++ $\sum_{m=0}^\infty (4m+1) q^{m(2m+1)} - (4m+3) q^{(m+1)(2m+1)$
+    eulerPower3Stream(s: P, r: R, p: Z, n: Z, z: S): S == delay
+        pn := p+n
+        cons([s*p, r], cons([s*pn, -(r+(2::R))],_
+            eulerPower3Stream(s, r+(4::R), pn+n+1, n+2, z)))
+
+    eulerFunctionPower3(s: P): L ==
+        series(eulerPower3Stream(s, 1$R, 0$Z, 1$Z, empty()$S))
 
     -- first an auxiliary function
     eisensteinStream(c: R, k: N, n: P): Stream R == delay

@@ -548,6 +548,12 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ one?(x) returns true if the eta-quotient corresponding to x
       ++ represents 1. This is the case if one?(specification(x)),
       ++ i.e., if the representation is trivial.
+    qExponent: % -> Q
+      ++ qExponent(x) returns the order of the q-expansion in terms
+      ++ of the original q.
+      ++ Note that this exponent is only a lower bound for the
+      ++ q-expansion. The coefficient corresponding to this q-power
+      ++ may be zero.
  == add
     A ==> IndexedOneDimensionalArray(SymbolicEtaQuotientLambdaGamma, 0)
     Rep ==> Record(
@@ -620,6 +626,14 @@ SymbolicEtaQuotientGamma: SetCategory with
     hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, x.0)
     ((x: %) = (y: %)): Boolean == x.0 = y.0
     one?(x): Boolean == one? specification x
+    qExponent(x: %): Q ==
+        m: P := multiplier x
+        e: Q := qExponent(x.0)
+        lambda: N := 1
+        while lambda < m repeat
+            e := min(e, qExponent(x.lambda))
+            lambda := lambda + 1
+        return e
 
 
 
@@ -712,6 +726,12 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
       ++ one?(x) returns true if the eta-quotient orbit product
       ++ corresponding to x represents 1. This is true if
       ++ one?(specification(x)), i.e., the representation is trivial.
+    qExponent: % -> Q
+      ++ qExponent(x) returns
+      ++ reduce(_+, [qExponent(x.k) for k in orbit(x)])
+      ++ Note that this exponent is only a lower bound for the
+      ++ q-expansion. The coefficient corresponding to this q-power
+      ++ may be zero.
  == add
     YEQG ==> SymbolicEtaQuotientGamma
     HT ==> XHashTable(N, YEQG)
@@ -769,6 +789,11 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
         xx.fgamma = yy.fgamma
 
     one?(x: %): Boolean == one? specification x
+    qExponent(x: %): Q ==
+        orb := orbit x
+        e: Q := qExponent(x(first orb))
+        for k in rest orb repeat e := e + qExponent(x.k)
+        return e
 
 
 
@@ -841,6 +866,20 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient corresponding to x
       ++ represents 1.
+    qExponent: % -> Q
+      ++ qExponent(x) returns the order of the q-expansion in terms
+      ++ of the original q.
+      ++ Note that this exponent is only a lower bound for the
+      ++ q-expansion. The coefficient corresponding to this q-power
+      ++ may be zero.
+    qetaGradeEstimate: % -> Q
+      ++ qetaGradeEstimate(x) returns the expected pole order of the
+      ++ x-expansion in terms of x=q^(1/w) where w is the widths of the
+      ++ cussp of Gamma0(level(x)) corresponding to gamma(x).
+      ++ Note that this is an upper bound of the pole order. The
+      ++ coefficient corresponding to this grade may be zero.
+      ++ Further note that due to estimation it does not necessarily
+      ++ return an integer, but a rational number.
  == add
     Rep ==> Record(
               fcoetaqg: SymbolicEtaQuotientGamma,
@@ -893,7 +932,14 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
 
     one?(x: %): Boolean == one? cofactor x and one? orbitProduct x
 
+    qExponent(x: %): Q == qExponent cofactor x + qExponent orbitProduct x
 
+    qetaGradeEstimate(x: %): Q ==
+        qe: Q := qExponent x
+        cf: SymbolicEtaQuotientGamma := cofactor x
+        g: SL2Z := gamma cf
+        c: Cusp := cusp(g(1,1),g(2,1))
+        - WIDTH0(level cf, c) * qe
 
 
 
@@ -987,7 +1033,7 @@ SymbolicEtaQuotient: SetCategory with
     qetaGrades: % -> List Z
       ++ qetaGrades(x) returns the (negated) exponents of a series
       ++ expansion of x at all the cusps in the canonical variables,
-      ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA0
+      ++ i.e. in x=q^(1/w) where w=width(level x, denom cusp)$GAMMA0
       ++ Internally, the matrix of Ligozat is employed.
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient corresponding to x
@@ -1139,6 +1185,14 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient corresponding to x
       ++ represents 1.
+    qetaGradesEstimate: % -> List Q
+      ++ qetaGradesEstimate(x) returns an estimate for the grades at
+      ++ all cusps without computing the explicit series expansion at
+      ++ any cusp.
+      ++ Note that due to estimation it does not necessarily
+      ++ return an integer, but a rational number.
+      ++ The result is [qetaGradeEstimate(x.c) for c in cusps x].
+
  == add
     YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
     HT ==> XHashTable(Cusp, YM0EQG)
@@ -1210,6 +1264,8 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
 
     one?(x: %): Boolean == one? xx.fsspec and one? xx.frspec
 
+    qetaGradesEstimate(x: %): List Q ==
+        [qetaGradeEstimate(x.c) for c in cusps x]
 
 
 
