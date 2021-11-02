@@ -242,22 +242,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
     xx ==> rep x
 
     -- Cache for frequently used objects
-    ef: LX := eulerFunction(1)$QFunctions(CX, LX)
-    ef1: CX := coefficient(ef, 1) -- avoid null pointer by expansion
-    efc: CachedPower LX := ef :: CachedPower(LX)
-    ps: LX := partitionSeries(1)$QFunctions(CX, LX)
-    ps1: CX := coefficient(ps, 1) -- avoid null pointer by expansion
-    psc: CachedPower LX := ps :: CachedPower(LX)
     xic: CachedPower CX := xi :: CachedPower(CX)
-
-    SUPF2 ==> SparseUnivariatePolynomialFunctions2
-    SUP ==> SparseUnivariatePolynomial
-    -- Note that cycZ is the same polynomial as in MINROOTPOL
-    -- in etamacros.input.
-    cycZ: SUP Z := cyclotomic(mx)$CyclotomicPolynomialPackage
-    cycQ: SUP Q := map(coerce, cycZ)$SUPF2(Z, Q)
-    Qxi ==> SimpleAlgebraicExtension(Q, SUP Q, cycQ)
-    qxi := generator()$Qxi
 
 -------------------------------------------------------------------
 -- local functions
@@ -276,8 +261,8 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
 
     eulerFunctionPower(u: Q, v: N, rd: Z): PX ==
         zero? rd => 1$PX
-        rd < 0 => substitute(power!(psc, -rd)$CachedPower(LX), u, v)
-        substitute(power!(efc, rd)$CachedPower(LX), u, v)
+        efp: LX := eulerFunctionPower(1, rd)$CachedQPochhammerPower(CX, LX)
+        substitute(efp, u, v)
 
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.

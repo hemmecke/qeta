@@ -242,6 +242,7 @@ EtaQuotientInfinity(C): Exports == Implementation where
     -- eulerexpo must be divided by 24 to get the correct fractional
     -- exponent of q.
     Rep ==> Record(eulerexpo: Q, eulerquot: L)
+    jacobiFunctionPow ==> jacobiFunctionPower $ CachedQPochhammerPower(C, L)
 
     new(e: Q, s: L): % == per [e, s]
     eulerExponent(x: %): Q == rep(x).eulerexpo
@@ -261,18 +262,6 @@ EtaQuotientInfinity(C): Exports == Implementation where
         q^e * (eulerExpansion x)::OutputForm
 
 -------------------------------------------------------------------
-    -- We maintain a cache of expansions of powers of the Euler function.
-    ef: L := eulerFunction(1)$QFunctions(C, L)
-    ef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
-    efc: CachedPower L := ef :: CachedPower(L)
-    ps: L := partitionSeries(1)$QFunctions(C, L)
-    ps1: C := coefficient(ps, 1) -- avoid null pointer by expansion
-    psc: CachedPower L := ps :: CachedPower(L)
--------------------------------------------------------------------
-    -- We maintain a cache of expansions of powers of the Jacobi
-    -- functions. One cache for each delta and each 0<g<delta/2.
-    gjf: XHashTable(P, XHashTable(P, CachedPower L)) := empty()
--------------------------------------------------------------------
 
     prefactor(x: %): Q ==
         e: Q := eulerExponent x
@@ -280,13 +269,8 @@ EtaQuotientInfinity(C): Exports == Implementation where
     seriesPart(x: %): L ==
         laurent(floor eulerExponent x, qetaTaylorRep eulerExpansion x)
 
-    -- eulerFunctionPower(u, rd) returns eulerFunction(u)^rd. Internally,
-    -- it is, however implemented via CachedPower(L) using only
-    -- expansions of eulerFunction(1) and partitionSeries(1).
     eulerFunctionPower(d: P, rd: Z): L ==
-        zero? rd => 1$L
-        rd < 0 => multiplyExponents(power!(psc, -rd)$CachedPower(L), d)
-        multiplyExponents(power!(efc, rd)$CachedPower(L), d)
+        eulerFunctionPower(d, rd)$CachedQPochhammerPower(C, L)
 
     expansion(x: %): L ==
         e: Q := eulerExponent x
@@ -310,24 +294,8 @@ EtaQuotientInfinity(C): Exports == Implementation where
 
 -------------------------------------------------------------------
     -- local
-    jacobiFunctionPower(d: P, g: P, e: Z): L ==
-        --assert(not zero? e)
-        --assert(not zero? g)
-        -- => qetaTaylorRep eulerFunctionPower(d, 2*e)
-        --assert(2*g ~= d)
-        -- => qetaTaylorRep eulerExpansion etaQuotient([g, d], [2*e, 2*e])
-        if 2*g > d then g := asP(d-g)
-        -- First make sure that the initial entry gjf.d.g exists.
-        gjfd := elt(gjf, d, empty()$XHashTable(P, CachedPower L))
-        if not key?(g, gjfd) then
-            l: L := jacobiFunction(d, g)$QFunctions(C, L)
-            gjfd.g := l::CachedPower(L)
-        l: L := power!(gjfd.g, abs e)$CachedPower(L)
-        if e > 0 then l else recip(l)::L
-
-    -- local
     generalizedEulerFunctionPower(d: P, g: P, e: Z): L ==
-        eulerFunctionPower(d, -e) * jacobiFunctionPower(d, g, e)
+        eulerFunctionPower(d, -e) * jacobiFunctionPow(d, g, e)
 
     generalizedEtaPower(d: P, g: P, e: Q): % ==
         zero? e => 1
@@ -386,10 +354,10 @@ EtaQuotientInfinity(C): Exports == Implementation where
             g: P := asP(l.2)
             rpure.d := elt(rpure, d, 0) - l.3
             l.3 > 0 =>
-                z: L := jacobiFunctionPower(d, g, l.3)
+                z: L := jacobiFunctionPow(d, g, l.3)
                 if num? then num := num * z else (num := z; num? := true)
             l.3 < 0 =>
-                z: L := jacobiFunctionPower(d, g, - l.3)
+                z: L := jacobiFunctionPow(d, g, - l.3)
                 if den? then den := den * z else (den := z; den? := true)
 
         -- Now we can compute the pure part.

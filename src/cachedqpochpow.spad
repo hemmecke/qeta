@@ -1,0 +1,176 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2021  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\externaldocument{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Computing and caching integer powers of the Euler function}
+\author{Ralf Hemmecke}
+\date{02-Nov-2021}
+\maketitle
+\begin{abstract}
+  Implement integer powers of the Euler function ($q$-Pochhammer
+  symbol) by employing the formula
+  $ \qPochhammer{q}{q}^3 = \sum_{n=0}^\infty (-1)^n (2n+1)
+  q^{\frac{n}{2}(n + 1)} $, a recurrence for the partition function
+  and caching the resulting series so that an already computed
+  expansion need not be computed again.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+Z ==> Integer
+asP x ==> x pretend P
+
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P CachedQPochhammerPower }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+
+)abbrev package CQPPOW CachedQPochhammerPower
+++ CachedQPochhammerPower implements a cache for powers of
+++ the Euler function ($q$-Pochhammer symbol $(q;q)_\infty$.
+++ and the Jacobi function (
+CachedQPochhammerPower(C, L): Exports == Implementation where
+  C: Ring
+  L: UnivariateLaurentSeriesCategory C
+  Exports ==> Join(Monoid, CoercibleTo OutputForm) with
+    eulerFunctionPower: (P, Z) -> L
+      ++ eulerFunctionPower(n, e) computes
+      ++ (\prod_{k=1}^\infty(1-q^{kn}))^e.
+    jacobiFunctionPower: (P, P, Z) -> L
+      ++ jacobiFunctionPower(d,g,e) computes and caches
+      ++ jacobiFunction(d,g)^e from QFunctions(C,L).
+  Implementation ==> add
+-------------------------------------------------------------------
+    -- We maintain a cache of expansions of powers of the Euler function.
+    -- In fact, we maintain 3 caches.
+    ef: L := eulerFunction(1)$QFunctions(C, L)
+    cef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
+    ef2: L := ef^2
+    cef2: C := coefficient(ef2, 1) -- avoid null pointer by expansion
+    efc: XHashTable(Z, L) := table()
+    -- The expansion of ef3:=ef(1)^3 is very sparse. We use this fact,
+    -- by computing and caching powers of ef3 and perhaps additionally
+    -- multiplying by ef(1) or ef(1)^2.
+    ef3: L := eulerFunctionPower3(1)$QFunctions(C, L)
+    cef3: C := coefficient(ef3, 1) -- avoid null pointer by expansion
+
+    efc.1 := ef
+    efc.2 := ef2
+    efc.3 := ef3
+
+    ef3c: CachedPower L := ef3 :: CachedPower(L)
+
+    -- We avoid computing inverses by direct computation of the
+    -- partition series.
+    ps: L := partitionSeries(1)$QFunctions(C, L)
+    ps1: C := coefficient(ps, 1) -- avoid null pointer by expansion
+    psc: CachedPower L := ps :: CachedPower(L)
+-------------------------------------------------------------------
+    -- We maintain a cache of expansions of powers of the Jacobi
+    -- functions. One cache for each delta and each 0<g<delta/2.
+    jfc: XHashTable(P, XHashTable(P, CachedPower L)) := empty()
+-------------------------------------------------------------------
+
+    -- eulerFunctionPower(u, rd) returns eulerFunction(u)^rd. Internally,
+    -- it is, however implemented via CachedPower(L) using only
+    -- expansions of eulerFunction(1) and partitionSeries(1).
+    eulerFunction1Power(rd: Z): L == -- eulerFunction(1)^rd
+        zero? rd => 1$L
+        rd < 0 => power!(psc, -rd)$CachedPower(L)
+        key?(rd, efc) => efc.rd
+        qr: Record(quotient: Z, remainder: Z) := divide(rd, 3)
+        q := qr.quotient
+        if key?(3*q, efc) then
+            l := efc(3*q)
+          else
+            l: L := power!(ef3c, q)$CachedPower(L)
+            efc(3*q) := l
+        zero?(qr.remainder) => l
+        l * efc(qr.remainder)
+
+    eulerFunctionPower(d: P, rd: Z): L ==
+        zero? rd => 1$L
+        l: L := eulerFunction1Power rd
+        if one? d then l else multiplyExponents(l, d)
+
+-------------------------------------------------------------------
+    jacobiFunctionPower(d: P, g: P, e: Z): L ==
+        --assert(not zero? e)
+        --assert(not zero? g)
+        -- => qetaTaylorRep eulerFunctionPower(d, 2*e)
+        --assert(2*g ~= d)
+        -- => qetaTaylorRep eulerExpansion etaQuotient([g, d], [2*e, 2*e])
+        if 2*g > d then g := asP(d-g)
+        -- First make sure that the initial entry jfc.d.g exists.
+        jfcd := elt(jfc, d, empty()$XHashTable(P, CachedPower L))
+        if not key?(g, jfcd) then
+            l: L := jacobiFunction(d, g)$QFunctions(C, L)
+            jfcd.g := l::CachedPower(L)
+        l: L := power!(jfcd.g, abs e)$CachedPower(L)
+        if e > 0 then l else recip(l)::L
+
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif
