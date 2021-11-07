@@ -193,7 +193,7 @@ for easier manipulation.
 QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain (EntireRing if without xab)
   L ==> List
-  EX ==> Expression Z
+  EX ==> Expression C
   Exports ==> CoercibleTo OutputForm with
     -- constructor
     identity: (SPEC, SPEC, P, List N, SPECS, Pol C, QXAB1(C)) -> %
@@ -260,6 +260,9 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ the orbit product and the respective co-exponent in order to
       ++ make the whole product a modular function. It is defined
       ++ already in the abstract of \cite{Radu:RamanujanKolberg:2015}.
+    alphaOrbitInifity: % -> Q
+      ++ alphaOrbitInfinity(x)=
+      ++ alphaInfinity-(1/24)*sigmaInfinity(coSpecification(x))
     orbitProduct: % -> OutputForm
       ++ orbitProduct(x) returns the orbit product as an OutputForm.
 
@@ -331,13 +334,19 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- Functions with X at their end give expressions or polynomial
     -- representations of the data.
 
-    sumX: (BasicOperator, Symbol, P, N) -> EX
-    orbitProductX: % -> EX
-    monomialX: (SPEC, Symbol) -> Pol C
-    monomialQuotientX: (SPEC, Symbol) -> Fraction Pol C
-    etaQuotientX: (SPEC, Symbol) -> Fraction Pol C
-    cofactorX: % -> Fraction Pol C
-    qcofactorX:% -> Fraction Pol C
+    if C has Comparable then
+        monomialX: (SPEC, Symbol) -> EX
+        monomialQuotientX: (SPEC, Symbol) -> EX
+        etaQuotientX: (SPEC, Symbol) -> EX
+        sumX: (BasicOperator, Symbol, P, N) -> EX
+        orbitProductX: % -> EX
+        orbitProductX: (%, Symbol) -> EX
+        cofactorX: % -> EX
+        qcofactorX: % -> EX
+        equationX: (%, Symbol) -> Equation EX
+        equationX: % -> Equation EX
+        qequationX: (%, Symbol) -> Equation EX
+        qequationX: % -> Equation EX
 
   Implementation ==> add
     Rep ==> Record(fsspec: SPEC,_
@@ -395,9 +404,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         ai ==> alphaInfinity $ QEtaCofactorSpace
         ai(coSpecification x, definingSpecification x, multiplier x, orbit x)
 
-    -- local
     -- exponent without the cofactor
-    alphaEtaInfinity(x: %): Q ==
+    alphaOrbitInfinity(x: %): Q ==
         sbarhat: Q := sigmaInfinity coSpecification x
         alphaInfinity(x)::Q - (1/24)*sbarhat
 
@@ -517,7 +525,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 -------------------------------------------------------------------
 
     f(x: %, fmt: Z, v: (Z, Z) -> OF, c: C, e: Q, rspec: SPEC): OF ==
-        e := e + alphaEtaInfinity x
+        e := e + alphaOrbitInfinity x
         rspec := rspec * coSpecification x
         if withQFactor? fmt then e: Q := e + (1/24)*sigmaInfinity(rspec)
         cofact: OF := qQuotient(rspec, v, e)
@@ -574,7 +582,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             pretty(x, fmt, v, 1, 0, etaQuotientSpecification(1,[]))
         invcf: Union(C, "failed") := 1$C exquo coefficient(x)
         icf: C := if invcf case "failed" then 1$C else invcf::C
-        pretty(x, fmt, v, icf, - alphaEtaInfinity x, inv coSpecification x)
+        pretty(x, fmt, v, icf, - alphaOrbitInfinity x, inv coSpecification x)
 
     -- format is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
@@ -596,63 +604,78 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 -------------------------------------------------------------------
 -- Return parts as expressions, polynomial, or rational functions.
 
-    sumX(a: BasicOperator, n: Symbol, m: P, t: N): EX ==
-        ex: EX := m * (n::EX)
-        if not zero? t then ex := ex + t::EX
-        ex := a(ex) -- builds a(m*n+t)
-        infty: EX := "%Infinity"::Symbol::EX
-        summation(ex, equation(n, segment(0, infty)))$EX
+    if C has Comparable then
 
-    orbitProductX(x: %): EX ==
-        n: Symbol := "n"::Symbol
-        a: BasicOperator := operator("a"::Symbol)
-        orb: List N := sort orbit x
-        ex: EX := sumX(a, n, multiplier x, first orb)
-        for k in rest orb repeat ex := ex * sumX(a, n, multiplier x, k)
-        ex
+        -- local
+        sub(v: Symbol, d: Z, g: Z): Symbol ==
+            g = -1 => subscript(v, [d::OF]$List(OF))
+            subscript(v, [d::OF, g::OF]$List(OF))
 
-    -- local
-    sub(v: Symbol, d: Z, g: Z): Symbol ==
-        g = -1 => subscript(v, [d::OF]$List(OF))
-        subscript(v, [d::OF, g::OF]$List(OF))
+        -- local
+        vPower(v: Symbol, d: Z, g: Z, e: N): Pol C == (sub(v, d, g)::Pol(C))^e
 
-    -- local
-    vPower(v: Symbol, d: Z, g: Z, e: N): Pol C == (sub(v, d, g)::Pol(C))^e
+        monomialX(rspec: SPEC, v: Symbol): EX ==
+            r: LLZ := purePart rspec
+            rtilde: LLZ := sort(_<$LZ, properGeneralizedPart rspec)
+            one? rspec => 1$EX
+            l: List Pol C := [vPower(v, x.1, x.2, (x.3)::N) for x in rtilde]
+            for x in reverse r repeat l := cons(vPower(v, x.1, -1, (x.2)::N), l)
+            reduce(_*, l)::EX
 
-    monomialX(rspec: SPEC, v: Symbol): Pol C ==
-        r: LLZ := purePart rspec
-        rtilde: LLZ := sort(_<$LZ, properGeneralizedPart rspec)
-        one? rspec => 1$Pol(C)
-        l: List Pol C := [vPower(v, x.1, x.2, (x.3)::N) for x in rtilde]
-        for x in reverse r repeat l := cons(vPower(v, x.1, -1, (x.2)::N), l)
-        reduce(_*, l)
+        monomialQuotientX(rspec: SPEC, v: Symbol): EX ==
+            rbar := concat(purePart rspec, properGeneralizedPart rspec)
+            rbarpos := [x for x in rbar | last x > 0]
+            rbarneg := [reverse! cons(-t, rest z)
+                        for x in rbar | (z := reverse x; t := first z; t < 0)]
+            mm: P := level rspec
+            rspecpos: SPEC := generalizedEtaQuotientSpecification(mm, rbarpos)
+            rspecneg: SPEC := generalizedEtaQuotientSpecification(mm, rbarneg)
+            monomialX(rspecpos, v) / monomialX(rspecneg, v)
 
-    monomialQuotientX(rspec: SPEC, v: Symbol): Fraction Pol C ==
-        rbar := concat(purePart rspec, properGeneralizedPart rspec)
-        rbarpos := [x for x in rbar | last x > 0]
-        rbarneg := [reverse! cons(-t, rest z)
-                    for x in rbar | (z := reverse x; t := first z; t < 0)]
-        mm: P := level rspec
-        rspecpos: SPEC := generalizedEtaQuotientSpecification(mm, rbarpos)
-        rspecneg: SPEC := generalizedEtaQuotientSpecification(mm, rbarneg)
-        monomialX(rspecpos, v) / monomialX(rspecneg, v)
+        etaQuotientX(rspec: SPEC, v: Symbol): EX ==
+            monomialQuotientX(rspec, v)
 
-    etaQuotientX(rspec: SPEC, v: Symbol): Fraction Pol C ==
-        monomialQuotientX(rspec, v)
+        sumX(a: BasicOperator, n: Symbol, m: P, t: N): EX ==
+            ex: EX := m * (n::EX)
+            if not zero? t then ex := ex + t::EX
+            ex := a(ex) -- builds a(m*n+t)
+            infty: EX := "%Infinity"::Symbol::EX
+            summation(ex, equation(n, segment(0, infty)))$EX
 
-    cofactorX(x: %): Fraction Pol C ==
-        eq: Fraction Pol C := etaQuotientX(coSpecification x, "E"::Symbol)
-        e: Z := numer(24*alphaEtaInfinity(x))
-        zero? e => eq
-        xvar: Fraction Pol(C) := "x"::Symbol::Pol(C)::Fraction(Pol C)
-        xvar^e * eq
+        orbitProductX(x: %, s: Symbol): EX ==
+            n: Symbol := "n"::Symbol
+            a: BasicOperator := operator(s)
+            orb: List N := sort orbit x
+            ex: EX := sumX(a, n, multiplier x, first orb)
+            for k in rest orb repeat ex := ex * sumX(a, n, multiplier x, k)
+            ex
+        orbitProductX(x: %): EX == orbitProductX(x, "a"::Symbol)
 
-    qcofactorX(x: %): Fraction Pol C ==
-        eq: Fraction Pol C := etaQuotientX(coSpecification x, "u"::Symbol)
-        alpha: Z := alphaInfinity x
-        zero? alpha => eq
-        q: Fraction Pol(C) := "q"::Symbol::Pol(C)::Fraction(Pol C)
-        q^alpha * eq
+        cofactorX(x: %): EX ==
+            eq: EX := etaQuotientX(coSpecification x, "E"::Symbol)
+            e: Q := alphaOrbitInfinity(x)
+            zero? e => eq
+            qvar: EX := "q"::Symbol::EX
+            qvar^e * eq
+
+        qcofactorX(x: %): EX ==
+            eq: EX := etaQuotientX(coSpecification x, "u"::Symbol)
+            alpha: Z := alphaInfinity x
+            zero? alpha => eq
+            q: EX := "q"::Symbol::EX
+            q^alpha * eq
+
+        equationX(x: %, s: Symbol): Equation EX ==
+            l := coefficient(x)::EX * cofactorX(x)::EX * orbitProductX(x, s)
+            l = - coefficient(identityPolynomial(x), 'F, 0)::EX
+
+        equationX(x: %): Equation EX == equationX(x, "a"::Symbol)
+
+        qequationX(x: %, s: Symbol): Equation EX ==
+            l := coefficient(x)::EX * qcofactorX(x)::EX * orbitProductX(x, s)
+            l = - coefficient(identityPolynomial(x), 'F, 0)::EX
+
+        qequationX(x: %): Equation EX == qequationX(x, "a"::Symbol)
 
 
 )if LiterateDoc
