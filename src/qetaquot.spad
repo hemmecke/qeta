@@ -159,7 +159,9 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
   LX ==> QEtaLaurentSeries CX
   PX ==> QEtaPuiseuxSeries CX
   QLX ==> XHashTable(Cusp, LX)
+  YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
   YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
+  YM0EQ ==> SymbolicModularGamma0EtaQuotient
   YM1GEQ ==> SymbolicModularGamma1GeneralizedEtaQuotient
 
   -- building block for series expansions
@@ -178,7 +180,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ puiseuxExpansion(x) computes the PuiseuX expansion of
       ++ P_{r,m,t}(\gamma\tau), see \eqref{eq:P_r-m-t(gamma*tau)}.
       ++ The $(c\tau+d)$ factor is missing.
-    puiseuxExpansion: SymbolicModularGamma0EtaQuotientGamma -> PX
+    puiseuxExpansion: YM0EQG -> PX
       ++ puiseuxExpansion(y) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma \tau)$, see
       ++ \eqref{eq:F_s-r-m-t(gamma*tau)}.
@@ -193,12 +195,18 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ r=s/t, then we take only every t-th term and check that the
       ++ intermediate terms come indeed with a zero coefficient.
 
-    laurentExpansion: SymbolicModularGamma0EtaQuotientGamma -> LX
+    laurentExpansion: YM0EQG -> LX
       ++ laurentExpansion y represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ given by y in the canonical
       ++ variables given by the width of the cusp wrt.
       ++ Gamma_0(level(y)).
-    laurentExpansions: SymbolicModularGamma0EtaQuotient -> QLX
+    laurentExpansions: (YM0EQ, List Cusp) -> QLX
+      ++ laurentExpansions(y, cusps) represents the q-expansion of
+      ++ $F_{s,r,m,t}(\gamma\tau)$ at the given cusps
+      ++ (which should be a subset of the cusps given by y) in the
+      ++ canonical variables given by the width of the cusp wrt.
+      ++ Gamma_0(level y).
+    laurentExpansions: YM0EQ -> QLX
       ++ laurentExpansions y represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ at all cusps given by y in the
       ++ canonical variables given by the width of the cusp wrt.
@@ -231,6 +239,12 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
         ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ given by y in the
         ++ canonical variables given by the width of the cusp wrt.
         ++ Gamma_1(level(y)). See \eqref{eq:F_sbar-rbar-m-t(tau)}.
+      laurentExpansions: (YM1GEQ, List Cusp) -> QLX
+        ++ laurentExpansions(y, cusps) represents the q-expansion of
+        ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ at the given cusps
+        ++ (which should be a subset of the cusps given by y) in the
+        ++ canonical variables given by the width of the cusp wrt.
+        ++ Gamma_1(level y).
       laurentExpansions: YM1GEQ -> QLX
         ++ laurentExpansions y represents the q-expansion of
         ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ at all cusps given by
@@ -381,23 +395,25 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         px
 
     -- $f_{s,r,m,t}(\gamma\tau)$
-    puiseuxExpansion(y: SymbolicModularGamma0EtaQuotientGamma): PX ==
+    puiseuxExpansion(y: YM0EQG): PX ==
         puiseuxExpansion cofactor y * puiseuxExpansion orbitProduct y
 
     -- $F_{s,r,m,t}(\gamma\tau)$
-    laurentExpansion(y: SymbolicModularGamma0EtaQuotientGamma): LX ==
+    laurentExpansion(y: YM0EQG): LX ==
         cy: SymbolicEtaQuotientGamma := cofactor y
         nn: P := level cy
         g: SL2Z := gamma cy
         w: P := WIDTH0(nn, cusp(g(1,1),g(2,1)))
         laurent(puiseuxExpansion y, w)
 
+    laurentExpansions(y: YM0EQ, spitzen: List Cusp): QLX ==
+        hser: QLX := empty()
+        for cusp in spitzen repeat hser.cusp := laurentExpansion(y.cusp)
+        hser
+
     -- $g_r(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
     -- $F_{s,r,m,t}(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
-    laurentExpansions(y: SymbolicModularGamma0EtaQuotient): QLX ==
-        hser: QLX := empty()
-        for cusp in cusps y repeat hser.cusp := laurentExpansion(y.cusp)
-        hser
+    laurentExpansions(y: YM0EQ): QLX == laurentExpansions(y, cusps y)
 
 
 
@@ -636,14 +652,15 @@ without the $(c\tau+d)$-part.
           w: P := WIDTH1(nn, cusp(g(1,1),g(2,1)))
           laurent(puiseuxExpansion y, w)
 
+      laurentExpansions(y: YM1GEQ, spitzen: List Cusp): QLX ==
+          hser: QLX := empty()
+          for cusp in spitzen repeat hser.cusp := laurentExpansion(y.cusp)
+          hser
+
       -- $g_{\bar{r}}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
       -- $F_{\bar{r},m,t}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$
       --assert(CX has Field)
-      laurentExpansions(y: YM1GEQ): QLX ==
-          hser: QLX := empty()
-          for cusp in cusps y repeat hser.cusp := laurentExpansion(y.cusp)
-          hser
-
+      laurentExpansions(y: YM1GEQ): QLX == laurentExpansions(y, cusps y)
 
 
 
