@@ -196,10 +196,14 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
       ++ intermediate terms come indeed with a zero coefficient.
 
     laurentExpansion: YM0EQG -> LX
-      ++ laurentExpansion y represents the q-expansion of
+      ++ laurentExpansion(y) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ given by y in the canonical
       ++ variables given by the width of the cusp wrt.
       ++ Gamma_0(level(y)).
+    laurentExpansionInfinity: YM0EQG -> LX
+      ++ laurentExpansionInfinity(y) represents the q-expansion of
+      ++ $F_{s,r,m,t}(\tau)$ given by y wrt.
+      ++ Gamma_0(level(y)). See \eqref{eq:F_s-r-m-t(tau)}.
     laurentExpansions: (YM0EQ, List Cusp) -> QLX
       ++ laurentExpansions(y, cusps) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ at the given cusps
@@ -235,9 +239,13 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
         ++ $F_{\bar{s},\bar{r},m,t}(\gamma \tau)$, see
         ++ \eqref{eq:F_sbar-rbar-m-t(tau)}.
       laurentExpansion: YM1GEQG -> LX
-        ++ laurentExpansion y represents the q-expansion of
+        ++ laurentExpansion(y) represents the q-expansion of
         ++ $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ given by y in the
         ++ canonical variables given by the width of the cusp wrt.
+        ++ Gamma_1(level(y)). See \eqref{eq:F_sbar-rbar-m-t(tau)}.
+      laurentExpansionInfinity: YM1GEQG -> LX
+        ++ laurentExpansionInfinity(y) represents the q-expansion of
+        ++ $F_{\bar{s},\bar{r},m,t}(\tau)$ given by y wrt.
         ++ Gamma_1(level(y)). See \eqref{eq:F_sbar-rbar-m-t(tau)}.
       laurentExpansions: (YM1GEQ, List Cusp) -> QLX
         ++ laurentExpansions(y, cusps) represents the q-expansion of
@@ -254,6 +262,7 @@ QEtaSeriesExpansion(C, mx, CX, xi): Exports == Implementation where
   Implementation ==> PX add
     Rep ==> PX
     xx ==> rep x
+    SPEC ==> QEtaSpecification
 
     -- Cache for frequently used objects
     xic: CachedPower CX := xi :: CachedPower(CX)
@@ -406,9 +415,22 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         w: P := WIDTH0(nn, cusp(g(1,1),g(2,1)))
         laurent(puiseuxExpansion y, w)
 
+    laurentExpansionInfinity(y: YM0EQG): LX ==
+        import from QEtaModularGamma0Infinity CX
+        rspec: SPEC := definingSpecification y
+        sspec: SPEC := coSpecification y
+        yop: SymbolicEtaQuotientOrbitProductGamma := orbitProduct y
+        m: P := multiplier yop
+        t: N := offset yop
+        laurentExpansionInfinity(sspec, rspec, m, t)
+
     laurentExpansions(y: YM0EQ, spitzen: List Cusp): QLX ==
         hser: QLX := empty()
-        for cusp in spitzen repeat hser.cusp := laurentExpansion(y.cusp)
+        for cusp in spitzen repeat
+            if infinity? cusp then
+                hser.cusp := laurentExpansionInfinity(y.cusp)
+              else
+                hser.cusp := laurentExpansion(y.cusp)
         hser
 
     -- $g_r(\gamma\tau)$ for all cusps of $\Gamma_0(N)$
@@ -652,9 +674,22 @@ without the $(c\tau+d)$-part.
           w: P := WIDTH1(nn, cusp(g(1,1),g(2,1)))
           laurent(puiseuxExpansion y, w)
 
+      laurentExpansionInfinity(y: YM1GEQG): LX ==
+          import from QEtaModularGamma1Infinity CX
+          yb: SymbolicGeneralizedEtaQuotientGamma := basefactor y
+          rspec: SPEC := definingSpecification yb
+          sspec: SPEC := definingSpecification cofactor y
+          m: P := multiplier yb
+          t: N := offset yb
+          laurentExpansionInfinity(sspec, rspec, m, t)
+
       laurentExpansions(y: YM1GEQ, spitzen: List Cusp): QLX ==
           hser: QLX := empty()
-          for cusp in spitzen repeat hser.cusp := laurentExpansion(y.cusp)
+          for cusp in spitzen repeat
+              if infinity? cusp then
+                  hser.cusp := laurentExpansionInfinity(y.cusp)
+                else
+                  hser.cusp := laurentExpansion(y.cusp)
           hser
 
       -- $g_{\bar{r}}(\gamma\tau)$ for all cusps of $\Gamma_1(N)$

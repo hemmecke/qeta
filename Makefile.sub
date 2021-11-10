@@ -53,22 +53,23 @@ FRICAS=FRICAS_INITFILE='' fricas -nosman
 cachedqpochpow.compile: cachedpow.compile
 qetaalg.compile: cachedpow.compile
 qetaser.compile: qetaalg.compile
-qetaquotinf.compile: qfunct.compile qetaser.compile cachedqpochpow.compile
 qetagamma0.compile: qetacusp.compile
 qetagamma1.compile: qetacusp.compile
 qetaaux.compile: qetagamma1.compile
 qetaspec.compile: qetaaux.compile
 qetaqmspecs.compile: 4ti2.compile qetaaux.compile
+qetacofactorconditions.compile: qetaqmspecs.compile
+qetacofactorspace.compile: qetacofactorconditions.compile
+qetaquotinf.compile: qfunct.compile qetaser.compile cachedqpochpow.compile \
+  qetacofactorspace.compile
 qetatool.compile: qetaquotinf.compile
 qetasamba.compile: qetaquotinf.compile qetaaux.compile
 qetasomos.compile: qetaquotinf.compile qetatool.compile
-qetacofactorconditions.compile: qetaqmspecs.compile
 qetaquotsymb.compile: qetagamma0.compile qetacofactorconditions.compile
-qetacofactorspace.compile: qetacofactorconditions.compile
 qetaquot.compile: qetaquotinf.compile qetaquotsymb.compile \
   qetasqrt.compile
-qetacofactormod.compile: qetaquot.compile 4ti2.compile qetacofactorspace.compile
-qetaicat.compile: qetatool.compile qetaqmspecs.compile qetacofactormod.compile
+qetamodgamma.compile: qetaquot.compile 4ti2.compile qetacofactorspace.compile
+qetaicat.compile: qetatool.compile qetaqmspecs.compile qetamodgamma.compile
 qetaih.compile: qetaicat.compile qetasamba.compile
 qetark: qetacofactormod.compile
 iffts.compile: ivar.compile
@@ -439,7 +440,7 @@ clean-html:
 
 # Update the gh-pages branch.
 GHPAGES=/tmp/qeta_gh-pages
-github.io-local: html
+github.io-local:
 	git worktree add ${GHPAGES} gh-pages
 	cp -r sphinx/build/html/* ${GHPAGES}
 	(cd ${GHPAGES} && git add -u && git add . \

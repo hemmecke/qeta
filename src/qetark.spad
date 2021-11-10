@@ -733,6 +733,8 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
       ++ findIdentity(nn, rspec, m, k, id) returns all data for a
       ++ Ramanujan-Kolberg identity.
   Implementation ==> add
+    cofactI0 ==> etaCofactorInfinity $ QEtaModularGamma0Package
+
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
                  bspecs: SPECS, xab: QXAB1 C): IDENTITY ==
         import from QEtaModularGamma0Infinity(C)
@@ -775,15 +777,15 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         findIdentity(sspec, rspec, m, t)
 
     findIdentity(nn: P, rspec: SPEC, m: P, t: N, bspecs: SPECS): IDENTITY ==
-        sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
+        sspec: SPEC := cofactI0(nn, rspec, m, t)
         findIdentity(sspec, rspec, m, t, bspecs)
 
     findIdentity(nn: P, rspec: SPEC, m: P, t: N): IDENTITY ==
-        sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
+        sspec: SPEC := cofactI0(nn, rspec, m, t)
         findIdentity(sspec, rspec, m, t)
 
     findIdentity(nn: P, rspec: SPEC, m: P, t: N, id: IDENTITY): IDENTITY ==
-        sspec: SPEC := etaCofactorInfinity(nn, rspec, m, t)$QEtaModularGamma0
+        sspec: SPEC := cofactI0(nn, rspec, m, t)
         findIdentity(sspec, rspec, m, t, id)
 
 
@@ -852,7 +854,7 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
       ++ a generalized Ramanujan identity. The basis elements are
       ++ taken from a previously computed identity, if possible.
   Implementation ==> add
-    COFACTOR ==> etaCofactorInfinity $ QEtaModularGamma1
+    cofactI1 ==> etaCofactorInfinity $ QEtaModularGamma1Package
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
                  bspecs: SPECS, xab: QXAB1 C): IDENTITY ==
@@ -902,12 +904,12 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
 
     findIdentity(nn: P, sidxs: INDICES, rspec: SPEC, m: P, t: N,
                  bspecs: SPECS): IDENTITY ==
-        sspec: SPEC := COFACTOR(nn, rspec, m, t, sidxs)
+        sspec: SPEC := cofactI1(nn, rspec, m, t, sidxs)
         findIdentity(sspec, rspec, m, t, bspecs)
 
     findIdentity(nn: P, sidxs: INDICES, rspec: SPEC, m: P, t: N,
                  bidxs: INDICES): IDENTITY ==
-        sspec: SPEC := COFACTOR(nn, rspec, m, t, sidxs)
+        sspec: SPEC := cofactI1(nn, rspec, m, t, sidxs)
         findIdentity(sspec, rspec, m, t, bidxs)
 
     findIdentity(nn: P, sidxs: INDICES, rspec: SPEC, m: P, t: N,
@@ -916,7 +918,7 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
         nn ~= lvl =>
             errorPrint("cannot use previous identity", [nn, lvl]$LZ)
             error "specify selected indices instead"
-        sspec: SPEC := COFACTOR(nn, rspec, m, t, sidxs)
+        sspec: SPEC := cofactI1(nn, rspec, m, t, sidxs)
         findIdentity(sspec, rspec, m, t,_
                      basisSpecifications id, algebraBasis id)
 

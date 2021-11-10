@@ -455,6 +455,184 @@ know in advance that summands have the same prefactor.
 
 
 
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaModularGamma0Infinity}
+\label{sec:QEtaModularGamma0Infinity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Compute a vector that must be multiplied to the (sifted) eta-quotient
+in order to make it a modular function for $\Gamma_0(N)$ having a pole
+only at infinity or to make the (positive) orders at all cusps
+(\code{qetaGrades}) small in total sum.
+
+)endif
+
+)abbrev package QETAMG0I QEtaModularGamma0Infinity
+QEtaModularGamma0Infinity(C: Ring): Exports == Implementation where
+  T1 C  ==> QEtaTaylorSeries C
+  L1 C  ==> QEtaLaurentSeries C
+  A1 C ==> Finite0Series C
+  EQI C  ==> EtaQuotientInfinity C
+  YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
+  Exports ==> with
+    laurentExpansionInfinity: SPEC -> L1 C
+    laurentExpansionInfinity: (SPEC, SPEC, P, N) -> L1 C
+
+    if C has CommutativeRing then
+        modularEtaQuotientInfinity: SPEC -> A1 C
+          ++ modularEtaQuotientInfinity(rspec) checks whether rspec
+          ++ specifices a Gamma_0-modular (pure) eta-quotient and returns
+          ++ (expansion(etaQuotient(rspec)$EQI(C))$EQI(C))::A1(C).
+        modularEtaQuotientInfinity: (SPEC, SPEC, P, N) -> A1 C
+          ++ modularEtaQuotientInfinity(sspec, rspec, m, t) returns
+          ++ the series expansion of
+          ++ etaQuotient(sspec,rspec,m,t)$SymbolicModularGamma0EtaQuotient
+          ++ at the cusp infinity.
+  Implementation ==> add
+    specEQI C ==> etaQuotient $ EQI(C)
+
+    laurentExpansionInfinity(rspec: SPEC): L1 C ==
+      (expansion(specEQI(C) rspec)$EQI(C))
+
+    -- generating series for a(m*n+t) with cofactor eta-quotient and
+    -- the fractional q power where \sum_{k=0}^\infty a(k)q^k is
+    -- defined by an eta-quotient with exponent vector r.
+
+    laurentExpansionInfinity(sspec:SPEC, rspec:SPEC, m:P, t:N): L1 C ==
+        not pure? rspec or not pure? rspec =>
+            error "eta-quotient specification is not a pure eta-quotient"
+
+        -- First compute the expansion of the orbit product.
+        eulerquo: T1 C := qetaTaylorRep(eulerExpansion specEQI(C) rspec)
+
+        orb: List N := modularGamma0Orbit(rspec, m, t)$QEtaCofactorConditions
+        tt := first orb
+        p: T1 C := multisect(m-tt, tt, eulerquo)
+        -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
+        for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
+
+        -- The expansion of the cofactor is here.
+        -- We take care of the correct q-order through alphaInfinity.
+        cofact: T1 C := qetaTaylorRep(eulerExpansion specEQI(C) sspec)
+
+        -- We multiply both things together to get (nearly) a modular
+        -- function.
+        tf: T1 C := cofact * p
+
+        -- We have to multiply by some q-power to get the expansion of
+        -- a modular function f.
+        alpha: Z := alphaInfinity(sspec, rspec, m, orb)$QEtaCofactorSpace
+        laurent(alpha, tf)$L1(C)
+
+    if C has CommutativeRing then
+        modularEtaQuotientInfinity(rspec: SPEC): A1 C ==
+            laurentExpansionInfinity(rspec) :: A1(C)
+
+        modularEtaQuotientInfinity(sspec:SPEC, rspec:SPEC, m:P, t:N): A1 C ==
+            laurentExpansionInfinity(sspec, rspec, m, t) :: A1(C)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaModularGamma1Infinity}
+\label{sec:QEtaModularGamma1Infinity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Compute a vector that must be multiplied to the (sifted) eta-quotient
+in order to make it a modular function for $\Gamma_1(N)$ having a pole
+only at infinity or to make the (positive) orders at all cusps
+(\code{qetaGrades}) small in total sum.
+
+)endif
+
+)abbrev package QETAMG1I QEtaModularGamma1Infinity
+QEtaModularGamma1Infinity(C: Ring): Exports == Implementation where
+  T1 C  ==> QEtaTaylorSeries C
+  L1 C  ==> QEtaLaurentSeries C
+  A1 C ==> Finite0Series C
+  EQI C  ==> EtaQuotientInfinity C
+  YM1EQG ==> SymbolicModularGamma1EtaQuotientGamma
+  Exports ==> with
+    laurentExpansionInfinity: SPEC -> L1 C
+    laurentExpansionInfinity: (SPEC, SPEC, P, N) -> L1 C
+
+    if C has CommutativeRing then
+        modularGeneralizedEtaQuotientInfinity: SPEC -> A1 C
+          ++ modularGeneralizedEtaQuotientInfinity(rspec) checks whether
+          ++ rspec specifices a Gamma_1-modular generalized eta-quotient
+          ++ and returns
+          ++ (expansion(generalizedEtaQuotient(rspec)$EQI(C))$EQI(C))::A1(C).
+        modularGeneralizedEtaQuotientInfinity: (SPEC, SPEC, P, N) -> A1 C
+          ++ modularGeneralizedEtaQuotientInfinity(sspec,rspec,m,t)
+          ++ returns the series expansion of
+          ++ generalizedEtaQuotient(sspec,rspec,m,t)
+          ++ from SymbolicModularGamma1GeneralizedEtaQuotient at the cusp
+          ++ infinity.
+  Implementation ==> add
+
+    laurentExpansionInfinity(rspec: SPEC): L1 C ==
+        expansion(generalizedEtaQuotient(rspec)$EQI(C))$EQI(C)
+
+    -- generating series for a(m*n+t) with cofactor (generalized)
+    -- eta-quotient and the fractional q power where
+    -- \sum_{k=0}^\infty a(k)q^k is defined by a (generalized)
+    -- eta-quotient given by rspec.
+
+    laurentExpansionInfinity(
+      sspec: SPEC, rspec: SPEC, m: P, t: N): L1 C ==
+        rgeq: EQI(C) := generalizedEtaQuotient(rspec)$EQI(C)
+        eulerquo: T1 C := qetaTaylorRep eulerExpansion rgeq
+        p: T1 C := multisect(m-t, t, eulerquo)
+
+        -- The expansion of the cofactor is here.
+        -- We take care of the correct q-order through alphaInfinity.
+        sgeq: EQI(C) := generalizedEtaQuotient(sspec)$EQI(C)
+        cofact: T1 C := qetaTaylorRep eulerExpansion sgeq
+
+        -- We multiply both things together to get (nearly) a modular
+        -- function.
+        tf: T1 C := cofact * p
+
+        -- We have to multiply by some q-power to get the expansion of
+        -- a modular function f.
+        alpha: Z := alphaInfinity(sspec, rspec, m, [t])$QEtaCofactorSpace
+        laurent(alpha, tf)$L1(C)
+
+    if C has CommutativeRing then
+        modularGeneralizedEtaQuotientInfinity(rspec: SPEC): A1 C ==
+            laurentExpansionInfinity(rspec) :: A1(C)
+
+        modularGeneralizedEtaQuotientInfinity(
+          sspec: SPEC, rspec: SPEC, m: P, t: N): A1 C ==
+            laurentExpansionInfinity(sspec,rspec,m,t) :: A1(C)
+
 
 
 
