@@ -116,10 +116,12 @@ Z ==> Integer
 LSym ==> List Symbol
 
 asN x ==> x pretend N
-asP x ==> x pretend P
 
-INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
+bSPECS0 ==> etaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
+bSPECS1 ==> generalizedEtaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
+
+specM0A1 C ==> modularEtaQuotientInfinity $ QEtaModularGamma0Infinity(C)
+specM1A1 C ==> modularGeneralizedEtaQuotientInfinity $ QEtaModularGamma1Infinity
 
 
 )if LiterateDoc
@@ -209,9 +211,6 @@ QEtaIdealCategory(C): Category == Exports where
         ++ laurentRelations(esyms, ysyms) returns
         ++ [e*y-1 for e in esyms for y in ysyms].
    add
-    BSPECS ==> etaQuotientMonoidSpecifications$QEtaQuotientSpecifications4ti2
-    specM0A1 C ==> modularEtaQuotientInfinity $ QEtaModularGamma0Infinity(C)
-
     -- auxiliary functions
     -- Return the "quotient" for the respective r vector where "quotient"
     -- is to be understood as using E for positive and Y for negative r entries.
@@ -240,7 +239,7 @@ QEtaIdealCategory(C): Category == Exports where
         relationsIdealGenerators egens
 
     etaQuotientIdealGenerators(level: P): LPol ==
-        etaQuotientIdealGenerators(level, BSPECS level)
+        etaQuotientIdealGenerators(level, bSPECS0 level)
 
     etaLaurentIdealGenerators(level: P, bspecs: SPECS, eqigens: LPol): LPol ==
         -- substitute the yemPolynomial for the respective M_i variable
@@ -264,7 +263,7 @@ QEtaIdealCategory(C): Category == Exports where
         concat(yerels, nfs)
 
     etaLaurentIdealGenerators(level: P): LPol ==
-        bspecs: SPECS := BSPECS(level)
+        bspecs: SPECS := bSPECS0(level)
         eqigens: LPol := etaQuotientIdealGenerators(level, bspecs)
         etaLaurentIdealGenerators(level, bspecs, eqigens)
 
