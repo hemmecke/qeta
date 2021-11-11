@@ -488,7 +488,7 @@ blocks for $p_{r,m,t}(\gamma\tau)$.
 ++ quotient expansion of $p_{r,m,t}(\gamma \tau)$.
 ++ See \eqref{eq:p_r-m-t(gamma*tau)}.
 SymbolicEtaQuotientGamma: SetCategory with
-    etaQuotient: (P, LZ, P, Z, SL2Z) -> %
+    etaQuotient: (P, LZ, P, N, SL2Z) -> %
       ++ etaQuotient(mm, r, m, t, gamma) represents the
       ++ expansion of $p_{r,m,t}(\gamma \tau)$ where $r$ is indexed
       ++ by the divisors of $mm$.
@@ -498,7 +498,7 @@ SymbolicEtaQuotientGamma: SetCategory with
       ++ of x = \exp(2 \pi i \tau/w) where w=width(m, c) and
       ++ gamma=matrix[[a,b],[c,d]] represents the cusp a/c. $r$ is
       ++ indexed by the divisors of $mm$.
-    etaQuotient: (SPEC, P, Z, SL2Z) -> %
+    etaQuotient: (SPEC, P, N, SL2Z) -> %
       ++ etaQuotient(rspec, m, t, gamma) represents the expansion of
       ++ $p_{r,m,t}(\gamma \tau)$ where $r$ is given by rspec.
     etaQuotient: (SPEC, SL2Z) -> %
@@ -524,7 +524,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
       ++ Returns m.
-    offset: % -> Z
+    offset: % -> N
       ++ offset(x) returns the subsequence offset.
       ++ Returns t.
     gamma: % -> SL2Z
@@ -557,7 +557,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     A ==> IndexedOneDimensionalArray(SymbolicEtaQuotientLambdaGamma, 0)
     Rep ==> Record(
               feta: A,    -- mapping lambda to \eta_{\delta,m,lambda}
-              foffset: Z, -- the subsequence offset
+              foffset: N, -- the subsequence offset
               funityExponent: Q, -- (24 t + \hat{r})/(24 m)
               fminroot: P -- minimal root of unity needed for coefficients
             )
@@ -587,14 +587,14 @@ SymbolicEtaQuotientGamma: SetCategory with
         for delta in divs repeat minroot := lcm(minroot, denom vdelta(y.delta))
         asP minroot
 
-    etaQuotient(mm: P, r: LZ, m: P, t: Z, gamma: SL2Z): % ==
+    etaQuotient(mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
         rspec: SPEC := etaQuotientSpecification(mm, r)
         etaQuotient(rspec, m, t, gamma)
 
     etaQuotient(mm: P, r: LZ, gamma: SL2Z): % ==
         etaQuotient(mm, r, 1, 0, gamma)
 
-    etaQuotient(rspec: SPEC, m: P, t: Z, gamma: SL2Z): % ==
+    etaQuotient(rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
         not pure? rspec => error "specification is not for a pure eta-quotient"
         rhat: Z := numer sigmaInfinity rspec -- know that it is integral
         uexponent: Q := fractionalPart(-(24*t + rhat)/(24*m))$QETAAUX
@@ -616,7 +616,7 @@ SymbolicEtaQuotientGamma: SetCategory with
     divisors(x: %): LP == divisors(x.0)
     exponents(x: %): LZ == exponents(x.0)
     multiplier(x: %): P == multiplier(x.0)
-    offset(x: %): Z == rep(x).foffset
+    offset(x: %): N == rep(x).foffset
     gamma(x: %): SL2Z == gamma(x.0)
     unityExponent(x: %): Q == rep(x).funityExponent
     minimalRootOfUnity(x: %): P == rep(x).fminroot
@@ -1831,14 +1831,14 @@ blocks for $p_{\bar{r},m,t}(\gamma\tau)$.
 ++ quotient expansion of $p_{r,m,t}(\gamma \tau)$. See
 ++ \eqref{eq:p_rbar-m-t(gamma*tau)}.
 SymbolicGeneralizedEtaQuotientGamma: SetCategory with
-    generalizedEtaQuotient: (SPEC, P, Z, SL2Z) -> %
+    generalizedEtaQuotient: (SPEC, P, N, SL2Z) -> %
       ++ etaQuotient(rspec, m, t, gamma) represents the expansion of
       ++ $p_{\bar{r},m,t}(\gamma \tau)$ where rbar is given by rspec
       ++ and specifies the exponents of the eta-quotient.
     generalizedEtaQuotient: (SPEC, SL2Z) -> %
       ++ generalizedEtaQuotient(rspec, gamma) returns
       ++ generalizedEtaQuotient(rspec, 1, 0, gamma).
-    generalizedEtaQuotient: (P, LLZ, P, Z, SL2Z) -> %
+    generalizedEtaQuotient: (P, LLZ, P, N, SL2Z) -> %
       ++ etaQuotient(mm, rbar, m, t, gamma) represents the expansion
       ++ of $p_{\bar{r},m,t}(\gamma \tau)$ where rbar specifies the
       ++ exponents of the eta-quotient.
@@ -1854,7 +1854,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
     multiplier: % -> P
       ++ If x=generalizedEtaQuotient(rspec,m,t,gamma), then
       ++ multiplier(x) returns m.
-    offset: % -> Z
+    offset: % -> N
       ++ If x=generalizedtaQuotient(rspec,m,t,gamma), then offset(x)
       ++ returns t.
     gamma: % -> SL2Z
@@ -1894,7 +1894,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
     A ==> IndexedOneDimensionalArray(YGEQLG, 0)
     Rep ==> Record(
               feta: A,           -- mapping lambda to \eta_{\delta,m,lambda}
-              foffset: Z,        -- the subsequence offset
+              foffset: N,        -- the subsequence offset
               funityExponent: Q, -- (24 t + \hat{\bar{r}})/(24 m)
               fminroot: P -- minimal root of unity needed for coefficients
             )
@@ -1959,7 +1959,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
 
         asP minroot
 
-    generalizedEtaQuotient(rspec: SPEC, m: P, t: Z, gamma: SL2Z): % ==
+    generalizedEtaQuotient(rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
         y: YGEQLG := generalizedEtaQuotient(rspec, m, 0, gamma)
         eta: A := new(m, y) -- fill with dummy values
         rbarhat: Q := sigmaInfinity rspec
@@ -1971,7 +1971,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
             minroot := lcm(minroot, minRootOfUnity(y, uexponent))
         per [eta, t, uexponent, asP minroot]
 
-    generalizedEtaQuotient(mm: P, rbar: LLZ, m: P, t: Z, gamma: SL2Z): % ==
+    generalizedEtaQuotient(mm: P, rbar: LLZ, m: P, t: N, gamma: SL2Z): % ==
         rspec: SPEC := generalizedEtaQuotientSpecification(mm, rbar)
         generalizedEtaQuotient(rspec, m, t, gamma)
 
@@ -1985,7 +1985,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
     level(x: %): P == level(x.0)
     definingSpecification(x: %): SPEC == definingSpecification(x.0)
     multiplier(x: %): P == multiplier(x.0)
-    offset(x: %): Z == rep(x).foffset
+    offset(x: %): N == rep(x).foffset
     gamma(x: %): SL2Z == gamma(x.0)
     unityExponent(x: %): Q == rep(x).funityExponent
     minimalRootOfUnity(x: %): P == rep(x).fminroot
