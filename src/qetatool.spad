@@ -120,21 +120,34 @@ We want variables that are easy to parse when written to a file.
 )abbrev package QAUXTOOL QAuxiliaryTools
 ++ Miscellaneous tools to deal with polynomials.
 QAuxiliaryTools(): with
+    indexedSymbol: (String, List Z) -> Symbol
+        ++ indexedSymbol(s, l) returns a symbol with a name that
+        ++ starts with the string s and is directly followed by the
+        ++ numbers of l separated by underscores ("__").
     indexedSymbols: (String, N) ->  List Symbol
         ++ indexedSymbols(s, n) returns indexedSymbols(s, [i for i in 1..n])
     indexedSymbols: (String, List Z) ->  List Symbol
-        ++ indexedSymbols(s, l) creates a list of symbols of the form
-        ++ [sx for x in l] where sx denotes the symbol with a name that
-        ++ starts with the string s and ends with the number x.
+        ++ indexedSymbols(s, l) returns indexedSymbols(s, [[n] for n in l]).
+    indexedSymbols: (String, List List Z) ->  List Symbol
+        ++ indexedSymbols(s, ll) returns [indexedSymbol(s,l) for l in ll].
     clearDenominator: Polynomial Q -> Polynomial Z
         ++ clearDenominator(p) multiplies the polynomial p over rational numbers
         ++ with the least common multiple of all its coefficients and
         ++ returns the result as a polynomial over the integers.
   == add
+    indexedSymbol(s: String, l: List Z): Symbol ==
+        empty? l => s :: Symbol
+        str: String := concat(s, convert(first l)@String)
+        for i in rest l repeat
+            a: String := concat("__", convert(i)@String)
+            str := concat(str, a)
+        str :: Symbol
     indexedSymbols(s: String, n: N): List Symbol ==
-        [concat(s, convert(i)@String)::Symbol for i in 1..n]
+        [indexedSymbol(s, [i]) for i in 1..n]
     indexedSymbols(s: String, l: List Z): List Symbol ==
-        [concat(s, convert(i)@String)::Symbol for i in l]
+        [indexedSymbol(s, [i]) for i in l]
+    indexedSymbols(s: String, ll: List List Z): List Symbol ==
+        [indexedSymbol(s, l) for l in ll]
     clearDenominator(p: Polynomial Q): Polynomial Z ==
         zero? p => 0$Polynomial(Z)
         c: Z := lcm [denom x for x in coefficients p]
