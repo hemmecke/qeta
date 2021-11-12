@@ -91,13 +91,9 @@ OF ==> OutputForm
 LZ ==> List Z
 LLZ ==> List LZ
 SPEC ==> QEtaSpecification
+eqSPEC ==> etaQuotientSpecification $ SPEC
 
-asN x ==> x pretend N
 asP x ==> x pretend P
-asZ x ==> x pretend Z
-
-INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
 )if LiterateDoc
 %$
@@ -148,16 +144,6 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ coefficient 1) that results from just considering the product
       ++ of Euler function powers (q-Pochhammer symbols) connected to
       ++ the creation the (generalized) eta-quotient.
-    eulerExpansion: (List P, List Z) -> L
-      ++ eulerExpansion(divs, r) returns the product over all elements
-      ++ d of divs of eulerFunction(d)^{rd} where rd is the respective
-      ++ entry of r corresponding to d and eulerFunction is defined in
-      ++ QFunctions in the file qfunct.spad. See also
-      ++ https://en.wikipedia.org/wiki/Euler_function .
-      ++ eulerExpansion(divs, r) == eulerExpansion etaQuotient(divs, r).
-    eulerExpansion: (P, List Z) -> L
-      ++ eulerExpansion(mm, r) returns eulerExpansion(divisors mm, r)
-      ++ which is also the same as eulerExpansion(etaQuotient(mm, r)).
     expansion: % -> L
       ++ expansion(x) aborts with error if eulerExponent(x) is not am
       ++ integer. Otherwise it returns q^r*seriesPart(x) where
@@ -170,18 +156,12 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ (\prod_{k=1}^\infty(1-q^{kn}))^e.
     etaPower: (P, Z) -> %
       ++ etaPower(d, e) returns eta(d)^e.
-    etaQuotient: (List P, List Z) -> %
-      ++ etaQuotient(divs, r) returns the eta-quotient
-      ++ product(eta(divs.i)^(r.i),i=1..#divs).
-      ++ It is assumed that #divs >= #r.
-    etaQuotient: (P, List Z) -> %
-      ++ etaQuotient(mm, r) returns the eta-quotient
-      ++ product(eta(divs.i)^(r.i),i=1..#divs) where divs=divisors(mm).
-      ++ It returns etaQuotient(divisors mm, r).
-      ++ It is assumed that #r <= #divisors(mm).
     etaQuotient: SPEC -> %
       ++ etaQuotient(rspec) returns the eta-quotient given by the
       ++ specification rspec.
+      ++ This is the same as the product over etaPower(d,e) over all
+      ++ elements in the purePort(rspec).
+      ++ It is an error if properGeneralizedPart(rspec) is not 1.
     generalizedEtaPower: (P, P, Q) -> %
       ++ generalizedEtaPower(d,g,e) returns the generalized
       ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
@@ -213,11 +193,8 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ eta-powers for each list l in rspec.
       ++ See generalizedEtaPower for the format of the parameter l.
 
---    new: (Q, L) -> %
-      ++ Only for internal use.
-
-    -- This function (toEta) is for checking and actually does not
-    -- necessarily yield an element of %.
+    -- This function (polynomialToEta) is for checking and actually
+    -- does not necessarily yield an element of %.
     -- For example, E2 + E3 would mean to add Laurent series with different
     -- prefactors which is not supported by our "+" function and also not
     -- by the chosen representation of the domain. We expect the polynomial
@@ -280,17 +257,9 @@ EtaQuotientInfinity(C): Exports == Implementation where
     eta(n: P): % == new(n/24, eulerFunctionPower(n, 1))
     etaPower(n: P, e: Z): % == new(n*e/24, eulerFunctionPower(n, e))
 
-    etaQuotient(divs: List P, r: List Z): % ==
-        import from List %
-        reduce(_*, [etaPower(d, e) for d in divs for e in r], 1)
-    etaQuotient(level: P, r: List Z): % == etaQuotient(DIVISORS level, r)
     etaQuotient(rspec: SPEC): % ==
         not pure? rspec => error "specification is not for a pure eta-quotient"
-        etaQuotient(divisors rspec, pureExponents rspec)
-    eulerExpansion(divs: List P, r: List Z): L ==
-        eulerExpansion etaQuotient(divs, r)
-    eulerExpansion(level: P, r: List Z): L ==
-        eulerExpansion etaQuotient(level, r)
+        generalizedEtaQuotient rspec
 
 -------------------------------------------------------------------
     -- local
@@ -306,7 +275,7 @@ EtaQuotientInfinity(C): Exports == Implementation where
 
         2*g = d =>
             e := 2*e
-            one? denom e => etaQuotient([g, d], [numer e, - numer e])
+            one? denom e => etaQuotient eqSPEC([g, d], [numer e, - numer e])
             error "generalizedEtaQuotient: only accepting half-integer powers"
 
         not one? denom e =>
@@ -334,7 +303,6 @@ EtaQuotientInfinity(C): Exports == Implementation where
 
     generalizedEtaQuotient(rspec: SPEC): % ==
         -- see \eqref{eq:eta_delta-g^[R](tau)} and \eqref{eq:g_rbar(tau)}
-        pure? rspec => etaQuotient rspec
         rpure: XHashTable(P, Z) := empty()
         divs: List P := divisors rspec
         r: LZ := pureExponents rspec
@@ -372,11 +340,8 @@ EtaQuotientInfinity(C): Exports == Implementation where
         -- multiplication with 1.
         if nonTrivialPurePart? then -- pure part is non-trivial
             z := zpure
-            if den? then
-                z := z * recip(den)::L
-                if num? then z := z * num
-              else
-                z := z * num -- not empty? rtilde --> num~=1
+            if den? then z := z * recip(den)::L
+            if num? then z := z * num
           else
             if den? then
                 z := recip(den)::L
