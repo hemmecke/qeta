@@ -2369,6 +2369,18 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in cusps x].
+    one?: % -> Boolean
+      ++ one?(x) returns true if the generalized eta-quotient
+      ++ corresponding to x represents 1. This is the case if
+      ++ one?(basefactor(x.c)) and one?(cofactor(x.c)) for
+      ++ one of the cusps of cusps(x).
+    qetaGradesEstimate: % -> List Q
+      ++ qetaGradesEstimate(x) returns an estimate for the grades at
+      ++ all cusps without computing the explicit series expansion at
+      ++ any cusp.
+      ++ Note that due to estimation it does not necessarily
+      ++ return an integer, but a rational number.
+      ++ The result is [qetaGradeEstimate(x.c) for c in cusps x].
  == add
     YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
     HT ==> XHashTable(Cusp, YM1GEQG)
@@ -2433,7 +2445,9 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
         xx.foffset ~= yy.foffset => false
         xx.fcusps = yy.fcusps
 
-    one?(x: %): Boolean == one? xx.fsspec and one? xx.frspec
+    one?(x: %): Boolean ==
+        c := first cusps x
+        one? basefactor(x.c) and one? cofactor(x.c)
 
     qetaGradesEstimate(x: %): List Q ==
         [qetaGradeEstimate(x.c) for c in cusps x]
