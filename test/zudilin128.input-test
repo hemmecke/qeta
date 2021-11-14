@@ -95,7 +95,7 @@ f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
 -- ### Find monoid basis for all eta-quotients modular for $\Gamma_0(128)$
 
 level := 128;
-bspecs := bSPECS0(level)
+mspecs := mSPECS0(level)
 rgensExpected: List List Z := [_
     [0, 0, 0, 0, - 1, 2, 1, - 2], [0, 0, 0, 0, 0, - 2, 6, - 4],_
     [0, 0, 0, - 2, 5, - 2, 1, - 2], [0, 0, 0, 2, - 1, 0, 1, - 2],_
@@ -111,9 +111,9 @@ rgensExpected: List List Z := [_
     [2, - 1, - 2, 5, - 2, 0, 2, - 4], [0, 0, - 4, 10, - 4, 0, 2, - 4],_
     [- 2, 5, 0, - 1, 0, 0, 2, - 4], [2, - 1, 2, - 1, 0, 0, 2, - 4],_
     [- 4, 10, - 4, 0, 0, 0, 2, - 4], [4, - 2, 0, 0, 0, 0, 2, - 4]];
-assertEquals([pureExponents x for x in bspecs], rgensExpected)
+assertEquals([pureExponents x for x in mspecs], rgensExpected)
 
-egens := [specM0A1C spec for spec in bspecs]
+egens := [specM0A1C spec for spec in mspecs]
 assertEquals([qetaGrade x for x in egens],_
   [6, 8, 8, 8, 8, 8, 11, 12, 12, 12, 12, 15, 15, 15, 15, 15, _
   16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16])
@@ -152,13 +152,13 @@ assertEquals(numberOfGaps(xab), 9)
 divs := DIVISORS level;
 idivs := [i for i in 1.. #divs-1];
 wght := 4
-wbspecs := etaQuotientSpecifications(level, idivs, -2*wght)
+wmspecs := etaQuotientSpecifications(level, idivs, -2*wght)
 
-rfcofactorspec := wbspecs.1;
+rfcofactorspec := wmspecs.1;
 assertEquals(pureExponents rfcofactorspec,[0, 0, 0, 0, 0, 0, 8, - 16])
 fcofactor := specM0A1C rfcofactorspec -- not modular!!!
 
-fcofactors := [specM0A1C spec for spec in wbspecs];
+fcofactors := [specM0A1C spec for spec in wmspecs];
 assertEquals([qetaGrade x for x in fcofactors], [64])
 
 -- ### Express $f$ in terms of algebra basis
@@ -194,7 +194,7 @@ esyms := indexedSymbols("E", divs)
 dim: N := #esyms   -- needed for RZ
 
 m0symsRZ := cons(monRZ NEGATE pureExponents rfcofactorspec,_
-                 [monRZ pureExponents x for x in bspecs]);
+                 [monRZ pureExponents x for x in mspecs]);
 m0syms := cons('M0, msyms);
 
 -- The following gives $f_{128}$ in terms of eta-quotients
@@ -452,8 +452,8 @@ h := abfmap(CX, C, retract, hx)::A1(C)
 -- ### Find monoid basis for all eta-quotients modular for $\Gamma_0(64)$
 
 level := 64;
-bspecs64 := bSPECS0 level;
-assertEquals([allPureExponents x for x in bspecs64], [_
+mspecs64 := mSPECS0 level;
+assertEquals([allPureExponents x for x in mspecs64], [_
   [0, 0, 0, -1, 2, 1, -2], [0, 0, 0, 0, -2, 6, -4],_
   [0, 0, -2, 5, -2, 1, -2], [0, 0, 2, -1, 0, 1, -2],_
   [-2, 5, -2, 0, 0, 1, -2], [2, -1, 0, 0, 0, 1, -2],_
@@ -461,12 +461,12 @@ assertEquals([allPureExponents x for x in bspecs64], [_
   [0, -2, 5, -4, 5, 0, -4], [0, 2, -1, -2, 5, 0, -4],_
   [0, 0, 0, -4, 10, -2, -4], [0, -4, 10, -4, 0, 2, -4]])
 
-egens64 := [specM0A1C(spec) for spec in bspecs64]
+egens64 := [specM0A1C(spec) for spec in mspecs64]
 [qetaGrade x for x in egens64]
 
 -- ### Compute algebra basis
 
-usyms64 := indexedSymbols("U", #bspecs64)
+usyms64 := indexedSymbols("U", #mspecs64)
 xgens64 := [toX1(C, x, sy) for x in egens64 for sy in usyms64]
 
 xt64 := first xgens64
@@ -518,10 +518,10 @@ rhcofactor
 -- We must append a zero to the rgens64 vectors, because we do evaluation
 -- into a domain that contains an entry for E128.
 
-bspecs64x := [eqSPEC(128,pureExponents x) for x in bspecs64];
+mspecs64x := [eqSPEC(128,pureExponents x) for x in mspecs64];
 u0syms64 := cons('U0, usyms64)
 u0syms64RZ := cons(monRZ NEGATE rhcofactor,_
-                   [specMonRZ x for x in bspecs64x]);
+                   [specMonRZ x for x in mspecs64x]);
 
 hapolRZ := EVALRZ(u0syms64, u0syms64RZ, haupol);
 rez hapolRZ
@@ -565,7 +565,7 @@ hapolRZ
 -- $M^\infty(64)$ given by `hapolRZ`.
 
 level := 64; spitzen := sort(smallerCusp, cusps(level)$GAMMA0);
-egens64n := [specM0AnCX x for x in bspecs64];
+egens64n := [specM0AnCX x for x in mspecs64];
 xgens64n := [toXn(CX, x, sy) for x in egens64n for sy in usyms64];
 u := egens64n;
 assertEquals(level, 64)
@@ -601,7 +601,7 @@ spitzen
 -- Let us keep track of the cofactor to $f_{128}$ so that
 -- $k\in M(64)$ (with poles at any cusp).
 
-v := vgens64x := [vector allPureExponents x for x in bspecs64x];
+v := vgens64x := [vector allPureExponents x for x in mspecs64x];
 rkcofactor := members(vector rhcofactor - v.4 - v.3 - 2*v.1);
 assertEquals(rkcofactor, [0,0,0,1,-6,7,-10,0])
 
@@ -674,8 +674,8 @@ assertEquals(removeDuplicates cxk3r, [0])
 k3upol := -1472*second(reduce(xk3, xab64)$QXTOPRED1(C))::Pol(C) + 'K3
 assertEquals(# monomials k3upol, 9)
 
-vsyms64 := indexedSymbols("V", #bspecs64);
-vsyms64RZ := [monRZ NEGATE allPureExponents x for x in bspecs64x];
+vsyms64 := indexedSymbols("V", #mspecs64);
+vsyms64RZ := [monRZ NEGATE allPureExponents x for x in mspecs64x];
 EV64RZ x ==> EVALRZ(concat[u0syms64,   vsyms64],_
                     concat(u0syms64RZ, vsyms64RZ), x)
 
@@ -905,7 +905,7 @@ EXZ ==> Expression Z
 kcupol := eval((U1^2*U3*kaupol)::EXZ, [V1::EXZ=(1/U1)::EXZ, V3::EXZ=(1/U3)::EXZ])::Pol(Z);
 monomials kcupol
 
-v := [vector allPureExponents x for x in bspecs64x];
+v := [vector allPureExponents x for x in mspecs64x];
 ricofactor := members(vector rkcofactor + 2*v.1 + v.3)
 
 )set stream calc 2
@@ -1011,8 +1011,8 @@ wght
 setFormats!([FormatMathJax])$JFriCASSupport
 
 level:=32; spitzen:=cusps(level)$GAMMA0;
-bspecs32 := bSPECS0 level;
-egens32 := [specM0A1C(spec) for spec in bspecs32]
+mspecs32 := mSPECS0 level;
+egens32 := [specM0A1C(spec) for spec in mspecs32]
 rsyms32 := indexedSymbols("R", #egens32)
 
 xgens32: List X1 C := [toX1(C, x, sy) for x in egens32 for sy in rsyms32]
@@ -1094,8 +1094,8 @@ ords := [order(series(z, i), 100) for i in 1 .. maxIndex()$An(CX)];
 assertEquals(removeDuplicates ords, [100])
 
 level := 2;
-bspecs2 := bSPECS0 level;
-egens2 := [specM0A1C(spec) for spec in bspecs2]
+mspecs2 := mSPECS0 level;
+egens2 := [specM0A1C(spec) for spec in mspecs2]
 msyms2 := indexedSymbols("M", #egens2)
 
 xgens2: List X1 C := [toX1(C, x, s) for x in egens2 for s in msyms];

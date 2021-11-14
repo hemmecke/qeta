@@ -114,12 +114,12 @@ f21 := rzToA1C f21polzudilinRZ
 -- of $R^\infty(42)$.
 
 level := 42; divs := DIVISORS level;
-bspecs42 := bSPECS0 level;
-egens42 := [specM0A1(C) spec for spec in bspecs42]
-msyms42 := indexedSymbols("M", #bspecs42)
+mspecs42 := mSPECS0 level;
+egens42 := [specM0A1(C) spec for spec in mspecs42]
+msyms42 := indexedSymbols("M", #mspecs42)
 xgens42 := [toX1(C, x, sym) for x in egens42 for sym in msyms42];
 
-assertEquals(#bspecs42, 1517)
+assertEquals(#mspecs42, 1517)
 
 -- We take a minimal (in terms the order in q) element from the
 -- generators and make it special. Then we compute an algebra basis
@@ -152,10 +152,10 @@ rhs: List Z := concat([0 for i in idivs], -2*wght);
 z := zsolve4ti2(level, idivs, rhs);
 zzi := sortByComponentGrade(level, [x(1..#divs) for x in z.zinhom]);
 zzh := sortByComponentGrade(level, [x(1..#divs) for x in z.zhom]);
-wbspecs := etaQuotientSpecifications(level, idivs, -2*wght);
-assertEquals(zzi,[allPureExponents x for x in wbspecs])
+wmspecs := etaQuotientSpecifications(level, idivs, -2*wght);
+assertEquals(zzi,[allPureExponents x for x in wmspecs])
 assertEquals(#zzi,570)
-assertEquals(#zzh, #bspecs42)
+assertEquals(#zzh, #mspecs42)
 #zzi
 
 -- The order of $f_{21}$ is 1. So we aim at a cofactor
@@ -380,7 +380,7 @@ assertEquals(enumpol,_
 -- eta-quotients by reduction via the algebra basis.
 
 fmpol
-msymsRZ := [specMonRZ x for x in bspecs42];
+msymsRZ := [specMonRZ x for x in mspecs42];
 fpolRZ := EVALRZ(msyms42, msymsRZ, fmpol);
 fm := rzToA1C fpolRZ;
 z0 := fm - f
