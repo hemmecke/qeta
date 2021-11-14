@@ -136,8 +136,9 @@ QEtaIdealHemmecke(C): Exports == Implementation where
 
         msyms: LSym := indexedSymbols("M", #mgens)$QAuxiliaryTools
         xmgens: List X := [xembed(x, m) for x in mgens for m in msyms]
-        xt: X := first xmgens
-        ab: AB := samba(xt, rest xmgens)$QSAMBA
+        ncxgens := [x for x in xmgens | not zero? qetaGrade x] -- non-constant
+        xt: X := first ncxgens
+        ab: AB := samba(xt, rest ncxgens)$QSAMBA
         -- Now we have the algebra basis together with how it relates to the
         -- originally given elements.
         xzgens: List X := concat entries basisElements ab
