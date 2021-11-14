@@ -107,8 +107,8 @@ SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
 -- # Demonstration of available functions
 
 m := 5; k := 4; nn := 2*m; C ==> Q
-bspecs := bSPECS0(nn)
-b1 := first bspecs;
+mspecs := mSPECS0(nn)
+b1 := first mspecs;
 id := findIdentity(nn,eqSPEC[[1,-1]],m,k)$QEtaRamanujanKolberg(C)
 
 -- We can print the $r$ vectors in various formats.
@@ -195,7 +195,7 @@ pretty(id, asExpression + qIdentity)
 
 -- The expression $t$ above stands for the eta-quotient:
 
-r := pureExponents first bSPECS0(nn);
+r := pureExponents first mSPECS0(nn);
 etaRelationMonomial(nn, 1, r, 0, varEta$RKI, 0)
   = etaRelationMonomial(nn, 1, r, 1, varPochhammer$RKI, 0)
 
@@ -261,8 +261,8 @@ pol := identityPolynomial id
 mons := monomials(4*1024*coefficient(pol, 'F, 0))
 gcd [leadingCoefficient(x)::Z for x in mons]
 
-bspecs := basisSpecifications(id)
-b1 := first bspecs
+mspecs := monoidSpecifications(id)
+b1 := first mspecs
 etaQuotient(b1, varEta$RKI)$RKI = _
  qQuotient(b1, varPochhammer$RKI,SIGMAINFINITY(nn,r1) / 24)$RKI
 
@@ -271,14 +271,14 @@ etaQuotient(b1, varEta$RKI)$RKI = _
 -- first two entries in the `rgens` variable and then pass it to
 -- `findInfinity`.
 
-bspecsnew := concat([bspecs.2, bspecs.1],rest rest bspecs)
+mspecsnew := concat([mspecs.2, mspecs.1],rest rest mspecs)
 
-id := findIdentity(nn,eqSPEC[[1,-1]],m,k, bspecsnew)$QEtaRamanujanKolberg(C);
+id := findIdentity(nn,eqSPEC[[1,-1]],m,k, mspecsnew)$QEtaRamanujanKolberg(C);
 pretty(id, qIdentity+nonModular, varsub("u")$RKI)
 
 -- The expression $t$ from above is this:
 
-bnew1 := first bspecsnew;
+bnew1 := first mspecsnew;
 shat := sigmaInfinity(bnew1)
 qQuotient(bnew1, varPochhammer$RKI, shat/24)$RKI
 
@@ -288,7 +288,7 @@ gcd [leadingCoefficient(x)::Z for x in mons]
 
 -- Above we show the actually computed polynomial where the $M_i$
 -- corresponds to the eta-quotients given by the exponents of
--- `bspecsnew` and $F$ corresponds to
+-- `mspecsnew` and $F$ corresponds to
 
 f(id, 0, varEta$RKI, 1, 0, [0,0,0,0])
 
