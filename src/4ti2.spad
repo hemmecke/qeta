@@ -132,6 +132,7 @@ MZ ==> Matrix Z
 VZ ==> Vector Z
 RELS ==> VZ -- only entries from {-1, 0, 1} are allowed with meaning {<=,=,>=}
 LVZ ==> List VZ
+ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
 ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
 
 )if LiterateDoc
@@ -161,6 +162,8 @@ X4ti2: with
       ++ and from 4ti2. These files will be written to the current
       ++ directory and start with the prefix "4ti2-" followed by a
       ++ random number. They will be removed after the computation.
+    zsolve: ZINPUT -> ZRESULT
+      ++ zsolve(z) returns zsolve(z.zmat, z.zrels, z.zrhs).
     setExecutable: S -> S
       ++ setExecutable(path) sets a path for an executable that is
       ++ called during the zsolve function call.
@@ -240,6 +243,9 @@ X4ti2: with
             not exists? fn => return localzsolve(mat, rels, b, dir, base)
         -- We should never come here.
         error "zsolve: could not create temporary filename"
+
+    zsolve(z: ZINPUT): ZRESULT == zsolve(z.zmat, z.zrels, z.zrhs)
+
 )if LiterateDoc
 \bibliography{qeta}
 \end{document}
