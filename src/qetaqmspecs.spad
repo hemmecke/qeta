@@ -89,6 +89,8 @@ MQ ==> Matrix Q
 VZ ==> Vector Z
 VQ ==> Vector Q
 LVZ ==> List VZ
+RELS ==> VZ -- only entries from {-1, 0, 1} are allowed with meaning {<=,=,>=}
+ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
 ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
@@ -165,7 +167,8 @@ QEtaQuotientExponentVectorsAux: with
 
 )abbrev package QES4TI2 QEtaQuotientSpecifications4ti2
 ++ QEtaQuotientSpecificationss4ti2 computes a monoid basis of
-++ (specifications for) eta-quotients.
+++ (specifications for) (generalized) eta-quotients with a pole at
+++ most at infinity.
 QEtaQuotientSpecifications4ti2: with
     etaQuotientMonoidSpecifications: P -> SPECS
       ++ etaQuotientMonoidSpecification(m) returns specifications of
@@ -197,6 +200,13 @@ QEtaQuotientSpecifications4ti2: with
       ++ See in the specification of matrixLigozatModularGamma0 about
       ++ the meaning of the other rows of the matrix.
 
+    generalizedEtaQuotientMonoidSystem: (P, INDICES) -> ZINPUT
+      ++ generalizedEtaQuotientMonoidSystem(nn, idxs) returns a record
+      ++ that can be given to zsolve$X4ti2 in order to find the
+      ++ generators of the monois of generalized eta-quotients.
+    generalizedEtaQuotientMonoidSolutions: (P, INDICES) -> ZRESULT
+      ++ generalizedEtaQuotientMonoidSolutions(nn, idxs) returns
+      ++ zsolve(generalizedEtaQuotientMonoidSystem(nn,idxs)).
     generalizedEtaQuotientMonoidSpecifications: (P, INDICES) -> SPECS
       ++ generalizedEtaQuotientMonoidSpecifications(nn, idxs) returns
       ++ specifications of generalized eta-quotients that (together
@@ -205,9 +215,29 @@ QEtaQuotientSpecifications4ti2: with
       ++ by idxs) that are modular functions for $\Gamma_1(nn)$ and
       ++ have at most a pole at infinity. If idxs=[], then it is
       ++ equivalent to the indices generalizedEtaFunctionIndices(nn).
+      ++ Specifications s that are known to represent constant modular
+      ++ function, are included in the result as s and inv(s).
+    nonConstantGeneralizedEtaQuotientMonoidSpecifications: (P, INDICES) -> SPECS
+      ++ nonConstantGeneralizedEtaQuotientMonoidSpecifications(nn,idxs)
+      ++ returns those elements from
+      ++ generalizedEtaQuotientMonoidSpecifications(nn,idxs) that do
+      ++ not represent a constant modular functions.
+
     generalizedEtaQuotientMonoidSpecifications: P -> SPECS
       ++ generalizedEtaQuotientMonoidSpecifications(nn) returns
       ++ generalizedEtaQuotientMonoidSpecifications(nn, []).
+    nonConstantGeneralizedEtaQuotientMonoidSpecifications: P -> SPECS
+      ++ nonConstantGeneralizedEtaQuotientMonoidSpecifications(nn)
+      ++ returns
+      ++ nonConstandGeneralizedEtaQuotientMonoidSpecifications(nn, []).
+    homogeneousSpecifications: (P, INDICES, ZRESULT) -> SPECS
+      ++ homogeneousSpecifications(nn, idxs, zres) extracts the
+      ++ specifications corresponding to generalized eta-quotients
+      ++ that are not constant modular functions.
+    freeSpecifications: (P, INDICES, ZRESULT) -> SPECS
+      ++ freeSpecifications(nn, idxs, zres) extracts  the
+      ++ specifications corresponding to generalized eta-quotients
+      ++ that are constant modular functions.
 
     generalizedEtaQuotientSpecifications: (P, INDICES, Z) -> SPECS
       ++ generalizedEtaQuotientSpecifications(nn, idxs, grd) returns
@@ -292,7 +322,7 @@ QEtaQuotientSpecifications4ti2: with
         for i in 1..nrows matQ repeat copyRow!(i, matQ, matZ)
         matZ
 
-    generalizedEtaQuotientMonoidSpecifications(nn: P, idxs: INDICES): SPECS ==
+    generalizedEtaQuotientMonoidSystem(nn: P, idxs: INDICES): ZINPUT ==
         if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
         -- At the cusp infinity (=1/nn) the order must be an integer.
         -- That, however, is already taken care of in the
@@ -307,30 +337,63 @@ QEtaQuotientSpecifications4ti2: with
         for i in 1..nrows(mat)-3 repeat rels.i := 1 -- non-negative order
         -- zsolve needs an integer matrix.
         matZ: MZ := clearDenominatorsPerRow mat
-        res: ZRESULT := zsolve(matZ, rels, b)$X4ti2
+        [matZ, rels, b]$ZINPUT
+
+    generalizedEtaQuotientMonoidSolutions(nn: P, idxs: INDICES): ZRESULT ==
+        zsolve(generalizedEtaQuotientMonoidSystem(nn, idxs))$X4ti2
+
+    -- local
+    sortedSpecifications(nn: P, idxs: INDICES, sols: LVZ): SPECS ==
         -- We sort the result vectors for the homogeneous system by
         -- the pole-order of the respective generalized eta-quotient.
-        -- Since the last-but-one line of matZ corresponds to the
-        -- order of the expansion at the cusp infinity and there is an
-        -- entry 1 (multiplied by the common denominator of the row)
-        -- in the last-but-one column, we only need to sort the
-        -- vectors by the last-but-one column in order to sort them by
-        -- the order of the respective expansion.
-        c: Z := ncols(mat)-1
-        zres: LVZ := concat [[s, -s] for s in res.zfree]
-        zres := concat(zres, res.zhom)
-        sres: LVZ := sort((x:VZ,y:VZ):Boolean +-> (x.c<y.c), zres)
-        lle: LLZ := [members g(1..ncols(mat)-2) for g in sres]
+        -- Let z: ZINPUT :=
+        -- generalizedEtaQuotientMonoidSystem(nn,idxs). We assume that
+        -- sols=zsolve(z).zinhom. Since the last-but-one line of
+        -- z.zmat corresponds to the order of the expansion at the
+        -- cusp infinity and there is an entry 1 (multiplied by the
+        -- common denominator of the row) in the last-but-one entry,
+        -- we only need to sort the vectors (given by sols) by the
+        -- last-but-one column in order to sort them by the order of
+        -- the respective expansion.
+        empty? sols => empty()$SPECS
+        n: Z := # (sols.1) - 2
+        ssols: LVZ := sort((x:VZ,y:VZ):Boolean +-> (x(n+1)<y(n+1)), sols)
+        lle: LLZ := [members g(1..n) for g in ssols]
         [generalizedEtaQuotientSpecification(nn, idxs, le) for le in lle]
 
-    generalizedEtaQuotientMonoidSpecifications(nn: P): SPECS ==
-        generalizedEtaQuotientMonoidSpecifications(nn, empty()$INDICES)
+    homogeneousSpecifications(nn: P, idxs: INDICES, zres: ZRESULT): SPECS ==
+        sortedSpecifications(nn, idxs, zres.zhom)
+    freeSpecifications(nn: P, idxs: INDICES, zres: ZRESULT): SPECS ==
+        sortedSpecifications(nn, idxs, zres.zfree)
 
+    nonConstantGeneralizedEtaQuotientMonoidSpecifications(
+      nn: P, idxs: INDICES): SPECS ==
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        z: ZINPUT := generalizedEtaQuotientMonoidSystem(nn, idxs)
+        zres: ZRESULT := zsolve(z)$X4ti2
+        homogeneousSpecifications(nn, idxs, zres)
+
+    generalizedEtaQuotientMonoidSpecifications(
+      nn: P, idxs: INDICES): SPECS ==
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        z: ZINPUT := generalizedEtaQuotientMonoidSystem(nn, idxs)
+        zres: ZRESULT := zsolve(z)$X4ti2
+        fspecs0: SPECS := freeSpecifications(nn, idxs, zres)
+        fspecs: SPECS := concat [[s, inv s] for s in fspecs0]
+        hspecs: SPECS := homogeneousSpecifications(nn, idxs, zres)
+        concat(fspecs, hspecs)
+
+    nonConstantGeneralizedEtaQuotientMonoidSpecifications(nn: P): SPECS ==
+        nonConstantGeneralizedEtaQuotientMonoidSpecifications(nn, [])
+
+    generalizedEtaQuotientMonoidSpecifications(nn: P): SPECS ==
+        generalizedEtaQuotientMonoidSpecifications(nn, [])
 
     -- Below we try to compute generalized eta-quotients that have only
     -- a pole at infinity of order poleorder>0.
     generalizedEtaQuotientSpecifications(_
       nn: P, idxs: INDICES, poleorder: Z): SPECS ==
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
         -- At the cusp infinity (=1/nn) the order must be an integer.
         -- That, however, is already taken care of in the
         -- matrixModularGamma1(nn) part of the matrix. Therefore, we
