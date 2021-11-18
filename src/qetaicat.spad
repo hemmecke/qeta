@@ -148,6 +148,17 @@ QEtaIdealCategory(C): Category == Exports where
   SPEC ==> QEtaSpecification
   SPECS ==> List SPEC
   Exports ==> with
+    generalizedEtaQuotientMonomial: (SPEC, Character, Character) -> Pol
+        ++ generalizedEtaQuotientMonomial(spec, e, y) translates the
+        ++ specification of a generalized eta-quotient to a monomial.
+        ++ The indices i are translated into a variable via
+        ++ indexedSymbol(e,i) if the exponent is positive and to
+        ++ indexedSymbol(y,i) if the exponent is negative. All those
+        ++ variables with their (absolute) value of) the exponent are
+        ++ multiplied together to give the resulting monomial.
+    generalizedEtaQuotientMonomial: SPEC -> Pol
+        ++ generalizedEtaQuotientMonomial(spec) returns
+        ++ generalizedEtaQuotientMonomial(spec, char "E", char "Y").
     relationsIdealGenerators: List A1 C -> LPol
         ++ relationsIdealGenerators(qseries) returns
         ++ a set of generators in the variables M_i of the ideal
@@ -183,7 +194,7 @@ QEtaIdealCategory(C): Category == Exports where
     etaLaurentIdealGenerators: (P, SPECS, LPol) -> LPol
         ++ etaLaurentIdealGenerators(level, mspecs, eqigens) assumes
         ++ that epigens is a list of polynomials in the variables M_i,
-        ++ for example, eqigens = etaQuotientIdealGenerators(level, mspecs)
+        ++ for example, eqigens = etaQuotientIdealGenerators(mspecs)
         ++ and replaces each of the M_i by the corresponding
         ++ product of E_d and Y_d variables given by mspecs.i. Positive
         ++ entries in mspecs.i correspond to E variables and negative
@@ -217,20 +228,28 @@ QEtaIdealCategory(C): Category == Exports where
     generalizedEtaRelations: (P, INDICES) -> LPol
     generalizedEtaRelations: P -> LPol
 
+    generalizedAlgebraicRelations: (P, INDICES, LPol, Character) -> LPol
+        ++ generalizedAlgebraicRelations(nn, idxs, geqrels, c) returns
+        ++ relations among the variables in geqrels that start with
+        ++ the character c. Here geqrels is supposed to be a list of
+        ++ polynomial in Ei, Yi, and Mi variables.
+
+
    add
-    -- auxiliary functions
-    -- Return the "quotient" for the respective r vector where "quotient"
-    -- is to be understood as using E for positive and Y for negative r entries.
-    etaQuotientMonomial(mspec: SPEC): Pol ==
-        iSY ==> indexedSymbol $ QAuxiliaryTools
+    generalizedEtaQuotientMonomial(_
+      mspec: SPEC, pv: Character, nv: Character): Pol ==
+        iSY(c,i) ==> indexedSymbol(c::String, i) $ QAuxiliaryTools
         p: Pol := 1
         for l in concat(purePart mspec, properGeneralizedPart mspec) repeat
             r := reverse l
             e := first r
             i: List Z := reverse rest r
-            e > 0 => p := p * monomial(1$Pol, iSY("E", i), asN e)
-            e < 0 => p := p * monomial(1$Pol, iSY("Y", i), asN abs e)
+            e > 0 => p := p * monomial(1$Pol, iSY(pv, i), asN e)
+            e < 0 => p := p * monomial(1$Pol, iSY(nv, i), asN abs e)
         return p
+
+    generalizedEtaQuotientMonomial(mspec: SPEC): Pol ==
+        generalizedEtaQuotientMonomial(mspec, char "E", char "Y")
 
     laurentRelations(esyms: LSym, ysyms: LSym): LPol ==
         [monomial(1$Pol, [e, y], [1, 1]) - 1$Pol for e in esyms for y in ysyms]
@@ -240,8 +259,8 @@ QEtaIdealCategory(C): Category == Exports where
         egens: List A1 C := [specM0A1(C) spec for spec in mspecs]
         relationsIdealGenerators egens
 
-    etaQuotientIdealGenerators(level: P): LPol ==
-        etaQuotientIdealGenerators(level, mSPECS0 level)
+    etaQuotientIdealGenerators(nn: P): LPol ==
+        etaQuotientIdealGenerators mSPECS0 nn
 
     etaLaurentIdealGenerators(nn: P, mspecs: SPECS, eqigens: LPol): LPol ==
         divs: List Z := divisors(nn)$IntegerNumberTheoryFunctions
@@ -288,11 +307,11 @@ QEtaIdealCategory(C): Category == Exports where
       idxs: INDICES, mspecs: SPECS, eqigens: LPol): LPol ==
         -- substitute the yemPolynomial for the respective M_i variable
         PE ==> PolynomialEvaluation(C, Pol)
-        etaQuotientMonomials := [etaQuotientMonomial mspec for mspec in mspecs]
+        geqMonomials :=
+            [generalizedEtaQuotientMonomial mspec for mspec in mspecs]
         msyms: LSym := indexedSymbols("M", #mspecs)$QAuxiliaryTools
         fc(c: C): Pol == c::Pol
-        gens: LPol := _
-            [eval(x, fc, msyms, etaQuotientMonomials)$PE for x in eqigens]
+        gens: LPol := [eval(x, fc, msyms, geqMonomials)$PE for x in eqigens]
         -- now reduce modulo E*Y=1.
         ysyms: LSym := indexedSymbols("Y", idxs)$QAuxiliaryTools
         esyms: LSym := indexedSymbols("E", idxs)$QAuxiliaryTools
