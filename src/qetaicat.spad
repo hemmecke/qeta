@@ -165,21 +165,21 @@ QEtaIdealCategory(C): Category == Exports where
         ++ Journal of Symbolic Computation, 84, 2018.
         ++ See \cite{Hemmecke+Radu:EtaRelations:2019} for more detail
         ++ and the package \spadtype{QEtaIdealHemmecke}.
-    etaQuotientIdealGenerators: (P, SPECS) -> LPol
-        ++ etaQuotientIdealGenerators(level, mspecs) returns
-        ++ polynomials in the variables M_i (where i runs from 1 to
-        ++ #mspecs) that generate the ideal of all relations of the
-        ++ eta-quotients of the given level where mspecs is assumed to
-        ++ be the specifications of the eta-quotients given by
+    etaQuotientIdealGenerators: SPECS -> LPol
+        ++ etaQuotientIdealGenerators(mspecs) returns polynomials in
+        ++ the variables M_i (where i runs from 1 to #mspecs) that
+        ++ generate the ideal of all relations of the eta-quotients
+        ++ given by mspecs. Originally it was intended that mspecs is
+        ++ the specifications of the eta-quotients given by
         ++ etaQuotientMonoidSpecifications(level) from the package
-        ++ \spadtype{QEtaQuotientSpecifications4ti2}.
-        ++ This function just sets up a the q-series and then calls
+        ++ \spadtype{QEtaQuotientSpecifications4ti2}. This function
+        ++ just sets up a the q-series and then calls
         ++ relationsIdealGenerators on these series.
     etaQuotientIdealGenerators: P -> LPol
         ++ etaQuotientIdealGenerators(level) returns
-        ++ etaQuotientIdealGenerators(level, mspecs) where mspecs is given by
-        ++ mspecs := etaQuotientMonoidSpecifications(level) from the package
-        ++ \spadtype{QEtaQuotientSpecifications4ti2}.
+        ++ etaQuotientIdealGenerators(mspecs) where mspecs is given by
+        ++ mspecs := etaQuotientMonoidSpecifications(level) from the
+        ++ package \spadtype{QEtaQuotientSpecifications4ti2}.
     etaLaurentIdealGenerators: (P, SPECS, LPol) -> LPol
         ++ etaLaurentIdealGenerators(level, mspecs, eqigens) assumes
         ++ that epigens is a list of polynomials in the variables M_i,
@@ -195,7 +195,7 @@ QEtaIdealCategory(C): Category == Exports where
         ++ etaLaurentIdealGenerators(level) returns
         ++ etaLaurentIdealGenerators(level, mspecs, eqigens) for
         ++ mspecs := etaQuotientMonoidSpecifications(level) and
-        ++ eqigens := etaQuotientIdealGenerators(level, mspecs)
+        ++ eqigens := etaQuotientIdealGenerators(mspecs)
     etaRelations: (P, LPol) -> LPol
         ++ etaRelations(level, eligens) eliminates the Y variables from the
         ++ input and returns the resulting Groebner basis.
@@ -236,7 +236,7 @@ QEtaIdealCategory(C): Category == Exports where
         [monomial(1$Pol, [e, y], [1, 1]) - 1$Pol for e in esyms for y in ysyms]
 
     -- exported functions
-    etaQuotientIdealGenerators(level: P, mspecs: SPECS): LPol ==
+    etaQuotientIdealGenerators(mspecs: SPECS): LPol ==
         egens: List A1 C := [specM0A1(C) spec for spec in mspecs]
         relationsIdealGenerators egens
 
@@ -248,10 +248,10 @@ QEtaIdealCategory(C): Category == Exports where
         idxs: INDICES := [[d] for d in  divs]
         generalizedEtaLaurentIdealGenerators(idxs, mspecs, eqigens)
 
-    etaLaurentIdealGenerators(level: P): LPol ==
-        mspecs: SPECS := mSPECS0(level)
-        eqigens: LPol := etaQuotientIdealGenerators(level, mspecs)
-        etaLaurentIdealGenerators(level, mspecs, eqigens)
+    etaLaurentIdealGenerators(nn: P): LPol ==
+        mspecs: SPECS := mSPECS0 nn
+        eqigens: LPol := etaQuotientIdealGenerators mspecs
+        etaLaurentIdealGenerators(nn, mspecs, eqigens)
 
     etaRelations(level: P, eligens: LPol): LPol ==
         -- We only need to eliminate the Y_d variables from the

@@ -69,7 +69,7 @@ PC ==> PolynomialConversion(C, E, syms)
 )set message type off
 )set message time on
 eqig ==> etaQuotientIdealGenerators \$ QEtaIdeal
-result := eqig($1, [geqSPEC x for x in $DEP]);
+result := eqig([geqSPEC x for x in $DEP]);
 )set message time off
 rs: List R := [coerce(x)\$PC for x in result];
 vPrint("etaQuotientIdealGenerators$1", rs)
