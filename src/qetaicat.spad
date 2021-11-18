@@ -243,25 +243,10 @@ QEtaIdealCategory(C): Category == Exports where
     etaQuotientIdealGenerators(level: P): LPol ==
         etaQuotientIdealGenerators(level, mSPECS0 level)
 
-    etaLaurentIdealGenerators(level: P, mspecs: SPECS, eqigens: LPol): LPol ==
-        -- substitute the yemPolynomial for the respective M_i variable
-        PE ==> PolynomialEvaluation(C, Pol)
-        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        msyms: LSym := indexedSymbols("M", #mspecs)$QAuxiliaryTools
-        ysyms: LSym := indexedSymbols("Y", divs)$QAuxiliaryTools
-        esyms: LSym := indexedSymbols("E", divs)$QAuxiliaryTools
-        etaQuotientMonomials := [etaQuotientMonomial mspec for mspec in mspecs]
-        fc(c: C): Pol == c::Pol
-        gens: LPol := _
-            [eval(x, fc, msyms, etaQuotientMonomials)$PE for x in eqigens]
-        -- now reduce modulo E*Y=1.
-        yerels: LPol := laurentRelations(esyms, ysyms)
-        syms: LSym := concat(ysyms, esyms)
-        dim: N := # syms
-        dim1: N := # ysyms
-        E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
-        nfs: LPol := normalForms(gens, yerels, syms)$QEtaGroebner(C, E)
-        concat(yerels, nfs)
+    etaLaurentIdealGenerators(nn: P, mspecs: SPECS, eqigens: LPol): LPol ==
+        divs: List Z := divisors(nn)$IntegerNumberTheoryFunctions
+        idxs: INDICES := [[d] for d in  divs]
+        generalizedEtaLaurentIdealGenerators(idxs, mspecs, eqigens)
 
     etaLaurentIdealGenerators(level: P): LPol ==
         mspecs: SPECS := mSPECS0(level)
