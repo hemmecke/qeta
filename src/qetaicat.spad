@@ -18,6 +18,12 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------
 
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+
 )if LiterateDoc
 \documentclass{article}
 \usepackage{qeta}
@@ -222,6 +228,7 @@ QEtaIdealCategory(C): Category == Exports where
 
     generalizedEtaQuotientIdealGenerators: SPECS -> LPol
     generalizedEtaQuotientIdealGenerators: P -> LPol
+    generalizedEtaLaurentIdealLists: (INDICES, SPECS, LPol) -> List LPol
     generalizedEtaLaurentIdealGenerators: (INDICES, SPECS, LPol) -> LPol
     generalizedEtaLaurentIdealGenerators: (P, INDICES) -> LPol
     generalizedEtaRelations: (INDICES, LPol) -> LPol
@@ -303,25 +310,38 @@ QEtaIdealCategory(C): Category == Exports where
         mspecs: SPECS := mSPECS1 nn
         generalizedEtaQuotientIdealGenerators mSPECS1 nn
 
-    generalizedEtaLaurentIdealGenerators(_
-      idxs: INDICES, mspecs: SPECS, eqigens: LPol): LPol ==
-        -- substitute the yemPolynomial for the respective M_i variable
+    generalizedEtaLaurentIdealLists(_
+      idxs: INDICES, mspecs: SPECS, igens: LPol): List LPol ==
+        -- Substitute the polynomials given by mspecs for the
+        -- respective Mi variables. Leave other variables as they are.
         PE ==> PolynomialEvaluation(C, Pol)
         geqMonomials :=
             [generalizedEtaQuotientMonomial mspec for mspec in mspecs]
         msyms: LSym := indexedSymbols("M", #mspecs)$QAuxiliaryTools
+        vars: LSym := concat [variables x for x in igens]
+        -- As an extension we allow a polynomial in igens to contain
+        -- other variables than just the Mi
+        fsyms: LSym := setDifference(vars, msyms) -- remove the Mi
         fc(c: C): Pol == c::Pol
-        gens: LPol := [eval(x, fc, msyms, geqMonomials)$PE for x in eqigens]
+        vals: LPol := concat([f::Pol for f in fsyms], geqMonomials)
+        syms := concat(fsyms, msyms)
+        gens: LPol := [eval(x, fc, syms, vals)$PE for x in igens]
         -- now reduce modulo E*Y=1.
         ysyms: LSym := indexedSymbols("Y", idxs)$QAuxiliaryTools
         esyms: LSym := indexedSymbols("E", idxs)$QAuxiliaryTools
         yerels: LPol := laurentRelations(esyms, ysyms)
-        syms: LSym := concat(ysyms, esyms)
+        -- make sure that there are no Ei and Yi in fsyms
+        yesyms := concat(ysyms, esyms)
+        syms := concat(yesyms, setDifference(fsyms, yesyms))
         dim: N := # syms
         dim1: N := # ysyms
         E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
         nfs: LPol := normalForms(gens, yerels, syms)$QEtaGroebner(C, E)
-        concat(yerels, nfs)
+        [yerels, nfs]
+
+    generalizedEtaLaurentIdealGenerators(_
+      idxs: INDICES, mspecs: SPECS, eqigens: LPol): LPol ==
+        concat generalizedEtaLaurentIdealLists(idxs, mspecs, eqigens)
 
     generalizedEtaLaurentIdealGenerators(nn: P, idxs: INDICES): LPol ==
         mspecs: SPECS := mSPECS1(nn, idxs)
@@ -340,6 +360,26 @@ QEtaIdealCategory(C): Category == Exports where
         gb := groebner(eligens, syms)$QEtaGroebner(C, E)
         -- take only the polys that do not invole any Y variable
         xPolynomials(gb, char "E")$PolynomialTool(C)
+
+    -- geqrels are polynomials in fi and Ei, Yi, Mj. Here we assume
+    -- that Fi=fi*cofactor(Ei,Yi) and the Mj represent eta-quotients.
+    generalizedAlgebraicRelations(_
+      nn: P, idxs: INDICES, geqrels: LPol, c: Character): LPol ==
+        mspecs: SPECS := mSPECS1(nn, idxs)
+        eqigens: LPol := generalizedEtaQuotientIdealGenerators mspecs
+        igens := concat(eqigens, geqrels)
+        gens := generalizedEtaLaurentIdealGenerators(idxs, mspecs, igens)
+        ysyms: LSym := indexedSymbols("Y", idxs)$QAuxiliaryTools
+        esyms: LSym := indexedSymbols("E", idxs)$QAuxiliaryTools
+        fvars := [[x for x in variables p | (string x).1 = c] for p in geqrels]
+        fsyms: LSym := removeDuplicates concat fvars
+        syms: LSym := concat [ysyms, esyms, fsyms]
+        dim: N := # syms
+        dim1: N := # esyms + # ysyms -- want to eliminate those
+        E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
+        gb := groebner(gens, syms)$QEtaGroebner(C, E)
+        -- take only the polys that do not invole any Y variable
+        xPolynomials(gb, c)$PolynomialTool(C)
 
     generalizedEtaRelations(nn: P, idxs: INDICES): LPol ==
         eligens: LPol := generalizedEtaLaurentIdealGenerators(nn, idxs)
