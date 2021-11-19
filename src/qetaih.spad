@@ -142,13 +142,11 @@ QEtaIdealHemmecke(C): Exports == Implementation where
         -- Now we have the algebra basis together with how it relates to the
         -- originally given elements.
         xzgens: List X := concat entries basisElements ab
-        tracePrint("xzgens", xzgens)
         -- Each of the original given elements must be representable in
         -- the algebra basis.
         xmpols: List X := [xreduce(xx, ab) for xx in xmgens]
         -- So this reduction should result in 0 in the first component
         -- and a relation among the initially given elements.
-        tracePrint("xmpols", xmpols)
         -- Safety check
         for x in xmpols | not zero? x repeat
             error "polynomialRelations: non-zero-reduction"
@@ -172,8 +170,6 @@ QEtaIdealHemmecke(C): Exports == Implementation where
                 xpgens := cons(p, xpgens)
             l := rest l
 
-        tracePrint("xpgens", xpgens)
-
         mpgens: LPol := lpol concat(xmpols, xpgens)
         -- Now we already have all the relations.
         -- To make them look nicer, we can compute a degrevlex
@@ -181,23 +177,15 @@ QEtaIdealHemmecke(C): Exports == Implementation where
         -- Groebner basis, but rather in a set of generators of the
         -- respective ideal, it is enough to return these generators.
 
-        tracePrint("mpgens", mpgens)
-
         -- We build in a safety check, ie., plug in the respective series
         -- and check whether the result is zero.
         fc(c: C): L == c::L
         PE ==> PolynomialEvaluation(C, L)
-        tracePrint("mysyms", msyms)
         evalmpgens: List L := [eval(x, fc, msyms, mgens)$PE for x in mpgens]
-        tracePrint("evalmpgens", evalmpgens)
-        tracePrint("zerompgens", [zero? x for x in evalmpgens])
         dim: P := asP(#mgens)
         -- There is no need to compute a Groebner basis.
         -- mrels: LPol := groebner(dim, msyms, mpgens)
         mrels: LPol := [x for x in mpgens | not zero? x]
-        tracePrint("mrels", mrels)
-        tracePrint("lenmrels", #mrels)
-        tracePrint("totaldegmrels", [totalDegree x for x in mrels])
         return mrels
 
 )if LiterateDoc
