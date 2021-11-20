@@ -197,12 +197,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
   Exports ==> CoercibleTo OutputForm with
     -- constructor
     identity: (SPEC, SPEC, P, List N, SPECS, Pol C, QXAB1(C)) -> %
-      ++ identity(sspec, rspec, m, orb, rspecss, rel, xab) returns a
+      ++ identity(sspec, rspec, m, orb, bspecss, rel, xab) returns a
       ++ structure that represents all information about the
       ++ q-expansion of $F_{s,r,m,t}$ at infinity, see Definition of
       ++ $F_{s,r,m,t}$ in qeta.tex,
       ++ Equation~\eqref{eq:F_s-r-m-t(tau)}. The relations is then
-      ++ c*F=sum_{i}(rel(i)*etaQuotient(rspecs(i))) where F
+      ++ c*F=sum_{i}(rel(i)*etaQuotient(bspecs(i))) where F
       ++ corresponds to the modular function $F_{s,r,m,t}$ in
       ++ question. t is an element of orb.
       ++ At the same time this data structure serves as a container
@@ -386,10 +386,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     -- constructor
     identity(sspec: SPEC, rspec: SPEC, m: P, orb: List N, _
-             rspecs: SPECS, pol: Pol C, xab: QXAB1 C): % ==
+             bspecs: SPECS, pol: Pol C, xab: QXAB1 C): % ==
 
         fsym: Symbol := "F"::Symbol
-        msyms: List Symbol := indexedSymbols("M", #rspecs)$QAuxiliaryTools
+        msyms: List Symbol := indexedSymbols("M", #bspecs)$QAuxiliaryTools
 
         cf: C := ground coefficient(pol, fsym, 1)
         modrel: Pol C := coefficient(pol, fsym, 0)
@@ -401,7 +401,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         tsym: Symbol := first msyms
         rel: List SUP C := [pol2sup(c, tsym) for c in cis]
 
-        per [sspec, rspec, m, orb, rspecs, pol, cf, rel, xab]
+        per [sspec, rspec, m, orb, bspecs, pol, cf, rel, xab]
 
     -- accessor functions
     coSpecification(x: %): SPEC == xx.fsspec
@@ -856,9 +856,13 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
     findIdentity: (SPEC, SPEC, P, N, SPECS, QXAB1 C) -> IDENTITY
       ++ findIdentity(sspec, rspec, m, k, mspecs, xab) returns all
       ++ data for a generalized Ramanujan identity.
+      ++ It is assumed that mspecs describe the Mi variables in xab
+      ++ in the same order.
     findIdentity: (SPEC, SPEC, P, N, SPECS) -> IDENTITY
       ++ findIdentity(sspec, rspec, m, k, mspecs) returns all data for
       ++ a generalized Ramanujan identity.
+      ++ Note that elements from mspecs that specify constant
+      ++ generalized eta-quotients will be removed.
     findIdentity: (SPEC, SPEC, P, N, INDICES) -> IDENTITY
       ++ findIdentity(sspec, rspec, m, k, idxs) returns all data for a
       ++ generalized Ramanujan identity where the right-hand side may
@@ -869,10 +873,12 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
       ++ generalized Ramanujan identity. The basis elements are taken
       ++ from a previously computed identity, if possible.
     findIdentity: (P, INDICES, SPEC, P, N, SPECS) -> IDENTITY
-      ++ findIdentity(nn, idxs, rspec, m, k, bgens) returns all data
+      ++ findIdentity(nn, idxs, rspec, m, k, mgens) returns all data
       ++ for a generalized Ramanujan identity where the cofactor may
       ++ only involve generalized eta-functions given through the
       ++ indices idxs.
+      ++ Note that elements from mspecs that specify constant
+      ++ generalized eta-quotients will be removed.
     findIdentity: (P, INDICES, SPEC, P, N, INDICES) -> IDENTITY
       ++ findIdentity(nn, sidxs, rspec, m, k, bidxs) returns all data
       ++ for a generalized Ramanujan identity where the indices for
@@ -906,25 +912,24 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
         -- For finding an algebra basis we must remove the
         -- specifications, that represent constant modular functions.
         egens: List A1(C) := [specM1A1C mspec for mspec in mspecs]
+        ncegens := [x for x in egens | not zero? qetaGrade x]
         -- We attach some identifiers also to those eta-quotients.
-        msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools
-        xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms]
+        msyms: List Symbol := indexedSymbols("M", #ncegens)$QAuxiliaryTools
+        xgens := [toX1(C, x, sym::Pol(C)) for x in ncegens for sym in msyms]
         -- Eventualle, we apply the samba algorithm to obtain an
         -- order-complete basis.
         gen := genus(level sspec)$CongruenceSubgroupGamma1
-        ncxgens := [x for x in xgens | not zero? qetaGrade x]
         import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
-        xab: QXAB1(C) := samba(ncxgens.1, ncxgens, gen)$QXTOPSAMBA1(C)
+        xab: QXAB1(C) := samba(xgens.1, xgens, gen)$QXTOPSAMBA1(C)
         findIdentity(sspec, rspec, m, t, mspecs, xab)
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,
                  bidxs: INDICES): IDENTITY ==
         -- We compute the basis for the modular generalized
-        -- eta-quotients of level nn.
-        nn: P := level sspec
+        -- eta-quotients and take only the non-constants eta-quotients.
         import from QES4TI2
-        mspecs: SPECS := generalizedEtaQuotientMonoidSpecifications(nn, bidxs)
-        findIdentity(sspec, rspec, m, t, mspecs)
+        ncmSPECS1 ==> nonConstantGeneralizedEtaQuotientMonoidSpecifications
+        findIdentity(sspec, rspec, m, t, ncmSPECS1(level sspec, bidxs))
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,
                  id: IDENTITY): IDENTITY ==
