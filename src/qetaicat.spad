@@ -125,6 +125,7 @@ LLZ ==> List LZ
 INDICES ==> LLZ
 
 asN x ==> x pretend N
+asP x ==> x pretend P
 
 mSPECS0 ==> etaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
 mSPECS1 ==> generalizedEtaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
@@ -214,8 +215,8 @@ QEtaIdealCategory(C): Category == Exports where
         ++ mspecs := etaQuotientMonoidSpecifications(level) and
         ++ eqigens := etaQuotientIdealGenerators(mspecs)
     etaRelations: (P, LPol) -> LPol
-        ++ etaRelations(level, eligens) eliminates the Y variables from the
-        ++ input and returns the resulting Groebner basis.
+        ++ etaRelations(level, eligens) eliminates the Y variables
+        ++ from the input and returns the resulting Groebner basis.
     etaRelations: P -> LPol
         ++ etaRelations(n) returns
         ++ etaRelations(n, etaLaurentIdealGenerators(n)).
@@ -227,16 +228,57 @@ QEtaIdealCategory(C): Category == Exports where
         ++ [e*y-1 for e in esyms for y in ysyms].
 
     generalizedEtaQuotientIdealGenerators: SPECS -> LPol
+        ++ generalizedEtaQuotientIdealGenerators(mspecs) returns
+        ++ generators of the ideal of generalized eta-quotients given
+        ++ by the specifications mspecs. The i-th entry of mspecs
+        ++ should be represented in the result by the variable Mi.
     generalizedEtaQuotientIdealGenerators: P -> LPol
+        ++ etaLaurentIdealGenerators(level) returns
+        ++ etaLaurentIdealGenerators(level, mspecs, eqigens) for
+        ++ mspecs := etaQuotientMonoidSpecifications(level) and
+        ++ eqigens := etaQuotientIdealGenerators(mspecs)
     generalizedEtaLaurentIdealLists: (INDICES, SPECS, LPol) -> List LPol
+        ++ generalizedEtaLaurentIdealLists(idxs,mspecs,eqigens)
+        ++ assumes that eqigens are generators for the ideal of all
+        ++ relations among the generalized eta-quotients given by
+        ++ mspecs. The i-th entry of mspecs should be represented in
+        ++ eqigens by the variable Mi. The function simplifies Ei*Yi
+        ++ to 1 for any index i appearing in idxs. In that sense the
+        ++ function returns the generators of the ideal of all
+        ++ relations among generalized eta-functions and their
+        ++ inverses. The result is a two element list where the first
+        ++ entry is given by the trivial relations Ei*Yi-1 and the
+        ++ second list are the polynomials as described above.
     generalizedEtaLaurentIdealGenerators: (INDICES, SPECS, LPol) -> LPol
+        ++ generalizedEtaLaurentIdealGenerators(idxs,mspecs,eqigens)
+        ++ returns the concatenation of the lists returned by
+        ++ generalizedEtaLaurentIdealLists(idxs,mspecs,eqigens).
     generalizedEtaLaurentIdealGenerators: (P, INDICES) -> LPol
+        ++ generalizedEtaLaurentIdealGenerators(nn,idxs) computes
+        ++ generators for the ideal of generalized eta-functions and
+        ++ their inverses given by the indices having no poles at the
+        ++ cusps of $\Gamma_1(nn)$ except at infinity. These
+        ++ generalized eta-quotient generators are then expressed in
+        ++ Ei and Yi variables where Ei stands for the eta-function
+        ++ with index i and Yi for its inverse. Additionally relations
+        ++ of the form Ei*Yi-1 are added to include the relations
+        ++ among the Ei and Yi variables.
     generalizedEtaRelations: (INDICES, LPol) -> LPol
-    generalizedEtaRelations: (P, INDICES) -> LPol
+        ++ generalizedEtaRelations(idxs,eligens) eliminates the Y
+        ++ variables from the input and returns the resulting Groebner
+        ++ basis. It is assumed that eligens is a list of polynomials
+        ++ in Ei and Yi variables where the indices i are given by
+        ++ idxs.
+    generalizedEtaRelations: INDICES -> LPol
+        ++ generalizedEtaRelations(idxs) returns algebraic relations
+        ++ among the generalized eta-function given by the indices
+        ++ idxs.
     generalizedEtaRelations: P -> LPol
+        ++ generalizedEtaRelations(nn) returns
+        ++ generalizedEtaRelations(generalizedEtaFunctionIndices(nn)).
 
-    generalizedAlgebraicRelations: (P, INDICES, LPol, Character) -> LPol
-        ++ generalizedAlgebraicRelations(nn, idxs, geqrels, c) returns
+    generalizedAlgebraicRelations: (INDICES, LPol, Character) -> LPol
+        ++ generalizedAlgebraicRelations(idxs, geqrels, c) returns
         ++ relations among the variables in geqrels that start with
         ++ the character c. Here geqrels is supposed to be a list of
         ++ polynomial in Ei, Yi, and Mi variables.
@@ -361,10 +403,20 @@ QEtaIdealCategory(C): Category == Exports where
         -- take only the polys that do not invole any Y variable
         xPolynomials(gb, char "E")$PolynomialTool(C)
 
+    generalizedEtaRelations(idxs: INDICES): LPol ==
+        nn: P := asP lcm [first x for x in idxs]
+        eligens: LPol := generalizedEtaLaurentIdealGenerators(nn, idxs)
+        generalizedEtaRelations(idxs, eligens)
+
+    generalizedEtaRelations(nn: P): LPol ==
+        aidxs: INDICES := generalizedEtaFunctionIndices(nn)$QEtaAuxiliaryPackage
+        generalizedEtaRelations aidxs
+
     -- geqrels are polynomials in fi and Ei, Yi, Mj. Here we assume
     -- that Fi=fi*cofactor(Ei,Yi) and the Mj represent eta-quotients.
     generalizedAlgebraicRelations(_
-      nn: P, idxs: INDICES, geqrels: LPol, c: Character): LPol ==
+      idxs: INDICES, geqrels: LPol, c: Character): LPol ==
+        nn: P := asP lcm [first x for x in idxs]
         mspecs: SPECS := mSPECS1(nn, idxs)
         eqigens: LPol := generalizedEtaQuotientIdealGenerators mspecs
         igens := concat(eqigens, geqrels)
@@ -380,14 +432,6 @@ QEtaIdealCategory(C): Category == Exports where
         gb := groebner(gens, syms)$QEtaGroebner(C, E)
         -- take only the polys that do not invole any Y variable
         xPolynomials(gb, c)$PolynomialTool(C)
-
-    generalizedEtaRelations(nn: P, idxs: INDICES): LPol ==
-        eligens: LPol := generalizedEtaLaurentIdealGenerators(nn, idxs)
-        generalizedEtaRelations(idxs, eligens)
-
-    generalizedEtaRelations(nn: P): LPol ==
-        aidxs: INDICES := generalizedEtaFunctionIndices(nn)$QEtaAuxiliaryPackage
-        generalizedEtaRelations(nn, aidxs)
 
 )if LiterateDoc
 \bibliography{qeta}
