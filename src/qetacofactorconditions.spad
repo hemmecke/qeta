@@ -267,32 +267,46 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ The parameters r and rtilde specify the defining eta-quotient and
       ++ generalized eta-quotient part.
 
+    candidateLevelsCoEtaQuotientGamma0: (SPEC, P, N) -> List P
+      ++ candidateLevelsCoEtaQuotientGamma0(rspec,m,t) returns an
+      ++ ascendingly sorted list of the nn up to 24*m*level(rspec)
+      ++ such that conditionCoEtaQuotientGamma0?(nn,rspec,m,t) is
+      ++ true, i.e. that (nn, mm, r, m, t) is an element of \Delta^*
+      ++ as defined in
+      ++ Definition~\ref{def:condition-co-eta-quotient-gamma0}.
     minimalLevelCoEtaQuotientGamma0: (SPEC, P, N) -> P
       ++ minimalLevelCoEtaQuotientGamma0(rspec, m, t) returns the
-      ++ smallest nn such that
-      ++ conditionCoEtaQuotientGamma0?(nn,rspec,m,t) is true, i.e.
-      ++ that (nn, mm, r, m, t) is an element of \Delta^* as defined
-      ++ in Definition~\ref{def:condition-co-eta-quotient-gamma0}.
+      ++ smallest nn of candidateLevalsCoEtaQuotientGamma0(rspec,m,t).
       ++ Note that one might have to use a bigger nn, because the
       ++ level might still be too small to find a cofactor an example
       ++ is for rspec=[[1,-1],[7,1]], m=9, t=5 where this function
       ++ returns 21, but one would have to use 42.
-    minimalLevelCoEtaQuotientGamma1: (P, LZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma1(mm, r, m, t) returns the
-      ++ smallest nn such that
+    candidateLevelsCoEtaQuotientGamma1: (P, LZ, P, N) -> List P
+      ++ candidateLevelsCoEtaQuotientGamma1(mm,r,m,t) returns an
+      ++ ascendingly sorted list of the nn up to 24*m*mm such that
       ++ conditionCoEtaQuotientGamma1?(nn,mm,r,m,t) is true, i.e. that
       ++ (nn,mm,r,m,t) fulfills the 7 conditions as defined in Section
-      ++ 2 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+      ++ 2 of \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+    minimalLevelCoEtaQuotientGamma1: (P, LZ, P, N) -> P
+      ++ minimalLevelCoEtaQuotientGamma1(mm,r,m,t) returns the
+      ++ smallest nn of
+      ++ candidateLevelsCoEtaQuotientGamma1(nn,mm,r,m,t).
+    candidateLevelsCoEtaQuotientGamma1: (SPEC, P, N) -> List P
+      ++ minimalLevelCoEtaQuotientGamma1(rspec,m,t) returns an
+      ++ ascendingly sorted list of the nn up to 24*m*level(rspec)
+      ++ such that conditionCoEtaQuotientGamma1?(nn,rspec,m,t) is
+      ++ true, i.e. that (nn,mm,rbar m,t) fulfills the 10 conditions
+      ++ as defined in Section 10 of
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. The
+      ++ parameter rbar specifies the generalized eta-quotient via
+      ++ generalizedEtaQuotient(rbar). In case rspec specifies a pure
+      ++ eta-quotient in level mm given by the exponent vector r, the
+      ++ function returns
+      ++ candidateLevelsCoEtaQuotientGamma1(mm,r,m,t).
     minimalLevelCoEtaQuotientGamma1: (SPEC, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma1(rspec, m, t) returns the
-      ++ smallest nn such that
-      ++ conditionCoEtaQuotientGamma1?(nn,rspec,m,t) is true, i.e.
-      ++ that (nn,mm,rbar m,t) fulfills the 10 conditions as defined
-      ++ in Section 10 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-      ++ The parameter rbar specifies the generalized eta-quotient via
-      ++ generalizedEtaQuotient(rbar).
+      ++ minimalLevelCoEtaQuotientGamma1(rspec,m,t) returns the
+      ++ smallest nn of
+      ++ candidateLevelsCoEtaQuotientGamma1(nn,rspec,m,t).
 
     modularGamma0?: (SPEC, SPEC, P, N) -> Boolean
       ++ modularGamma0?(sspec, rspec, m, t) returns true iff all
@@ -569,17 +583,35 @@ QEtaCofactorConditions: Exports == Implementation where
 -- use of conditions from above
 -------------------------------------------------------------------
 
+    candidateLevelsCoEtaQuotientGamma0(rspec: SPEC, m: P, t: N): List P ==
+        [asP nn for nn in 1..24*m*level(rspec) | _
+            conditionCoEtaQuotientGamma0?(asP nn, rspec, m, t)]
+
     minimalLevelCoEtaQuotientGamma0(rspec: SPEC, m: P, t: N): P ==
         for nn in 1..24*m*level(rspec) repeat
             conditionCoEtaQuotientGamma0?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
+
+    candidateLevelsCoEtaQuotientGamma1(mm: P, r: LZ, m: P, t: N): List P ==
+        [asP nn for nn in 1..24*m*mm | _
+            conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t)]
 
     minimalLevelCoEtaQuotientGamma1(mm: P, r: LZ, m: P, t: N): P ==
         for nn in 1..24*m*mm repeat
             conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma1: should not be here"
 
+    candidateLevelsCoEtaQuotientGamma1(rspec: SPEC, m: P, t: N): List P ==
+        pure? rspec =>
+            r: LZ := pureExponents rspec
+            candidateLevelsCoEtaQuotientGamma1(level rspec, r, m, t)
+        [asP nn for nn in 1..24*m*level(rspec) | _
+            conditionCoEtaQuotientGamma0?(asP nn, rspec, m, t)]
+
     minimalLevelCoEtaQuotientGamma1(rspec: SPEC, m: P, t: N): P ==
+        pure? rspec =>
+            r: LZ := pureExponents rspec
+            minimalLevelCoEtaQuotientGamma1(level rspec, r, m, t)
         for nn in 1..24*m*level(rspec) repeat
             conditionCoEtaQuotientGamma1?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma1: should not be here"
