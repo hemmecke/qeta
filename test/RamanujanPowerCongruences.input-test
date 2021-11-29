@@ -1,0 +1,394 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Witness identities for Ramanujan congruences of small powers of 5, 7, and 11
+
+
+-- We compute witness identities for Ramanujan congruences for
+-- small powers of 5, 7, and 11.
+--
+-- $p(5^2 n + 24)$, $p(5^3 n +  99)$, $p(5^4 n + 599)$, $p(5^5 n + 2474)$
+--
+-- $p(7^2 n + 47)$, $p(7^3 n + 243)$, $p(7^4 n + 2301)$
+--
+-- $p(11^2 n + 116)$, $p(11^3 n + 721)$
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
+
+)set mess type off
+)set mess time off
+C ==> Q
+oo ==> infinity()$Cusp
+
+)set stream calc 2
+
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+
+commonFactor id ==> (_
+  pol := inv coefficient id * identityPolynomial id - 'F;_
+  cs := [leadingCoefficient x for x in monomials pol];_
+  den := lcm [denom x for x in cs];_
+  num := gcd [numer(den*x) for x in cs];_
+  num/den)
+
+-- Compute inverse of 24 modulo m.
+
+lambda(m) ==> positiveRemainder(extendedEuclidean(24,m).coef1,m)
+
+-- Check witness identity for $p(a^b n + \lambda(a^b))$
+-- where $24 \lambda(x) \equiv 1 \pmod{x}$.
+
+check0(a, b, c) ==> (_
+  rspec := geqSPEC [[1,-1]]; m := a^b; t := lambda(m);_
+  nn := minLevel0(rspec, m, t);_
+  assertEquals(nn, a);_
+  orb := ORBIT(rspec, m, t);_
+  assertEquals(orb, [t]);_
+  sspec := cofactI0(nn, rspec, m, t);_
+  tracePrint("sspec", sspec);_
+  alpha := alphaInfinity(sspec, rspec, m, [t]) $ QEtaCofactorSpace;_
+  tracePrint("alphaInfinity", alpha);_
+  mspecs := mSPECS0 nn;_
+  tracePrint("mspecs", mspecs);_
+  id:=findID0(sspec,rspec,m,t,mspecs);_
+  assertEquals(commonFactor id, c);_
+  ipol := inv coefficient id * identityPolynomial id;_
+  tracePrint("pol0",eval(1/c * ipol,'F,'Z)$Pol(C)))
+
+check1(a, b, c, lidxs) ==> (_
+  rspec := geqSPEC [[1,-1]]; m := a^b; t := lambda(m);_
+  nn := minLevel0(rspec, m, t);_
+  assertEquals(nn, a);_
+  aidxs := generalizedEtaFunctionIndices nn;_
+  idxs := concat [aidxs(i) for i in lidxs];_
+  sspec := cofactI1(nn, rspec, m, t, idxs);_
+  tracePrint("sspec", sspec);_
+  alpha := alphaInfinity(sspec, rspec, m, [t]) $ QEtaCofactorSpace;_
+  tracePrint("alphaInfinity", alpha);_
+  mspecs := mSPECS1(nn, idxs);_
+  tracePrint("mspecs", mspecs);_
+  id:=findID1(sspec,rspec,m,t,mspecs);_
+  assertEquals(commonFactor id, m);_
+  ipol := inv coefficient id * identityPolynomial id;_
+  tracePrint("pol1",eval(1/c * ipol,'F,'Z)$Pol(C)))
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+)set output algebra on
+)set output formatted off
+
+-- # Power of 5
+
+-- ## $p(5^2 n + 24)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p25n24
+-------------------------------------------------------------------
+-- -
+
+-- The following takes 0.18 sec.
+
+check0(5,2,5^2)
+
+pretty(id, qIdentity + expand + asExpression + nonModular)
+
+check1(5,2,5^2,[1..4])
+pretty(id, qIdentity + expand + asExpression + nonModular)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p(5^3 n + 99)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p125n99
+-------------------------------------------------------------------
+-- -
+
+-- The follwoing takes 0.23 sec.
+
+check0(5,3,5^3)
+
+-- The following takes 0.84 sec.
+
+check1(5,3,5^3,[1..3])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p(5^4 n + 599)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p625n599-gamma0
+-------------------------------------------------------------------
+-- -
+
+-- The following takes 4.86 sec.
+
+check0(5,4,5^4)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--notest:p625n599-gamma1
+-------------------------------------------------------------------
+-- -
+
+-- The following takes 41.63 sec.
+
+check1(5,4,5^4,[1..3])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p(5^5 n + 2474)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p3125n2474
+-------------------------------------------------------------------
+-- -
+
+-- The following takes 1482.22 sec.
+-- It involves the evaluation of the partition function at
+-- $p(650\cdot 5^5+2474)=p(2033724)$.
+
+check0(5,5,5^5)
+
+-- +
+--check1(5,5,5^5,[1..3])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Powers of 7
+
+-- ## $p(7^2 n + 47)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p49n47
+-------------------------------------------------------------------
+-- -
+
+-- The following takes 0.17 sec.
+
+check0(7,2,7^2)
+
+-- The following takes 0.24 sec.
+
+check1(7,2,7^2,[1..4])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p(7^3 n + 243)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p343n243
+-------------------------------------------------------------------
+-- -
+
+-- The following takes 1.78 sec.
+
+check0(7,3,7^2)
+
+-- +
+--check1(7,3,7^2[1..3])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p(7^4 n + 2301)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p2401n2301
+-------------------------------------------------------------------
+-- -
+
+-- The following takes 1068.64 sec.
+-- It involves the evaluation of the partition function at
+-- $p(7^4\cdot 699 + 2301) = p(1680600)$.
+
+check0(7,4,7^3)
+
+-- +
+--check1(7,4,7^3[1..4])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Powers of 11
+
+-- ## $p(11^2 n + 116)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p121n116
+-------------------------------------------------------------------
+-- -
+
+-- Note that here we actually must work in level 22,
+-- because there are not enough $\Gamma_0(11)$-modular
+-- eta-quotients with poles only at infinity.
+
+-- The following takes 1.21 sec.
+
+a := 11; b := 2;
+rspec := geqSPEC [[1,-1]]; m := a^b; t := lambda(m);
+nn := 2*minLevel0(rspec, m, t);
+assertEquals(nn, 2*a);
+orb := ORBIT(rspec, m, t);
+assertEquals(orb, [t]);
+sspec := cofactI0(nn, rspec, m, t);
+tracePrint("sspec", sspec);
+alpha := alphaInfinity(sspec, rspec, m, [t]) $ QEtaCofactorSpace;_
+tracePrint("alphaInfinity", alpha);_
+mspecs := mSPECS0 nn;
+-- exchange first and second mspec
+mspecs2 := concat([mspecs.2,mspecs.1], rest rest mspecs)
+tracePrint("mspecs2", mspecs2)
+-- The following will also work, but with commonFactor = 121/1024.
+--mspecs3 := concat([mspecs.3,mspecs.1,mspecs.3], rest rest rest mspecs)
+id:=findID0(sspec,rspec,m,t,mspecs2);
+assertEquals(commonFactor id, a^b/8)
+ipol := inv coefficient id * identityPolynomial id;
+tracePrint("pol0",eval(8/m * ipol,'F,'Z)$Pol(C))
+
+-- The following takes 5.83 sec.
+
+check1(11,2,11^2,[1..6])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p(11^3 n + 721)$
+
+
+-- +
+-------------------------------------------------------------------
+--test:p1331n721-gamma0
+-------------------------------------------------------------------
+-- -
+
+-- Note that here we actually must work in level 22,
+-- because there are not enough $\Gamma_0(11)$-modular
+-- eta-quotients with poles only at infinity.
+
+a := 11; b := 3;
+rspec := geqSPEC [[1,-1]]; m := a^b; t := lambda(m);
+nn := 2*minLevel0(rspec, m, t);
+assertEquals(nn, 2*a);
+orb := ORBIT(rspec, m, t);
+assertEquals(orb, [t]);
+
+-- The following takes 98.14 sec.
+
+sspec := cofactI0(nn, rspec, m, t);
+tracePrint("sspec", sspec);
+
+alpha := alphaInfinity(sspec, rspec, m, [t]) $ QEtaCofactorSpace;
+tracePrint("alphaInfinity", alpha);
+
+-- The left-hand side has a pole of order 1829.
+-- That means that we have to compute
+-- $p(1331 \cdot 1829 + 721) = p(2435120)$
+-- which by itself takes 1477 sec.
+-- $p(2435120)$ has 1732 decimal digits.
+
+mspecs := mSPECS0 nn;
+-- exchange first and second mspec
+mspecs2 := concat([mspecs.2,mspecs.1], rest rest mspecs)
+tracePrint("mspecs2", mspecs2)
+-- The following will also work, but with commonFactor = 121/1024.
+--mspecs3 := concat([mspecs.3,mspecs.1,mspecs.3], rest rest rest mspecs)
+
+-- The following takes 2668.28 sec.
+
+id:=findID0(sspec,rspec,m,t,mspecs2);
+
+assertEquals(commonFactor id, a^b/8)
+ipol := inv coefficient id * identityPolynomial id;
+tracePrint("pol0",eval(8/m * ipol,'F,'Z)$Pol(C))
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--notest:p1331n721-gamma1
+-------------------------------------------------------------------
+-- -
+
+-- The test did not finish after more than 6 hours and consumed
+-- more than 16GB RAM.
+
+check1(11,3,11^3,[1..6])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
