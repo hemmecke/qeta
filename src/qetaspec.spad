@@ -142,8 +142,6 @@ QEtaSpecification: Exports == Implementation where
       ++ a) [d[     -- this is equivalent to [d,1],
       ++ b) [d,e]   -- stands for $\eta(d*\tau)^e$,
       ++ c) [d,g,e] -- stands for $\eta_{d,g}^{[R]}(\tau)^e$.
-      ++ In order to ease specifications, we automatically translate
-      ++ [2*g,g,e] into the pair [[g,2*e],[2*g,-2*e]].
     generalizedEtaQuotientSpecification: LLZ -> %
       ++ generalizedEtaQuotientSpecification(rbar) returns
       ++ generalizedEtaQuotientSpecification(mm, rbar) for
@@ -154,6 +152,12 @@ QEtaSpecification: Exports == Implementation where
       ++ generalizedEtaQuotientSpecification(mm, rbar) where rbar is
       ++ [concat(i,e) for e in le for i in idxs] without the entries
       ++ whose corresponding exponent e is zero.
+
+    purify: % -> %
+      ++ Some generalized eta-functions can be expressed as pure
+      ++ eta-quotients. This function translates
+      ++ [2*g,g,e] into the pair [[g,2*e],[2*g,-2*e]]
+      ++ and [d,0,e] int [d,2*e].
 
     -- accessor functions
     level: % -> P
@@ -272,6 +276,34 @@ QEtaSpecification: Exports == Implementation where
         rspec
 
     generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
+        hr: XHashTable(List Z, Z) := table() -- to store index,exponent pairs
+        for l in rbar | not empty? l repeat
+            d: Z := first l
+            d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
+            if #l>3 then
+                error "generalizedEtaQuotientSpecification: list length > 3"
+            e: Z := 1
+            g: Z := -1
+            if #l=2 then e := l.2
+            if #l=3 then (g := l.2; e := l.3)
+            if 2*g>d then g := d-g
+            setelt!(hr, [d, g], e + elt(hr, [d, g], 0))
+        -- Now extract the data from the hashtable.
+        divs := DIVISORS mm
+        r: List Z := empty(); -- exponents of the pure part
+        rtilde: LLZ := empty() -- specify all generalized eta-quotients
+        for d in divs repeat r := cons(elt(hr, [d,-1], 0), r)
+        while not empty? r and zero? first r repeat r := rest r
+        for key in keys hr | not zero?(z := hr.key) repeat
+            d := key.1
+            g := key.2
+            if g ~= -1 then rtilde := cons([d, g, z], rtilde)
+        rtilde := sort((x:LZ,y:LZ):Boolean +-> x<y, rtilde)
+        per [asP mm, divs, reverse! r, rtilde]
+
+    purify(x: %): % ==
+        mm: P := level x
+        rbar: LLZ := concat(purePart x, properGeneralizedPart x)
         hr: XHashTable(Z, Z) := table() -- to store index,exponent pairs
         for l in rbar | not empty? l repeat
             d: Z := first l
@@ -306,6 +338,7 @@ QEtaSpecification: Exports == Implementation where
             qr: Record(quotient: Z, remainder: Z) := divide(i, mm)
             if not zero? qr.remainder then
                 rtilde := cons([qr.quotient, qr.remainder, z], rtilde)
+        rtilde := sort((u:LZ,v:LZ):Boolean +-> u<v, rtilde)
         per [mm, divs, reverse! r, rtilde]
 
     generalizedEtaQuotientSpecification(rbar: LLZ): % ==

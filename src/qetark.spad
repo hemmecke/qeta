@@ -492,11 +492,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     varPochhammer(d: Z, g: Z): OF ==
         q := "q"::Symbol::OF
+        if 2*g>=d then g = d-g
+        zero? g => varPochhammer(d,-1)^(2::OF)
         g = -1 =>
             one? d => sub(paren([q, q]$List(OF)), "%Infinity"::Symbol::OF)
             l := semicolonSeparate[q^(d::OF), q^(d::OF)]$List(OF)
             sub(paren l, "%Infinity"::Symbol::OF)
-        zero? g or 2*g>=d => error "only 0<2*g<d allowed"
         a := if one? g then q else q^(g::OF)
         o := commaSeparate([a, q^((d-g)::OF)]$List(OF))
         o := semicolonSeparate[o, q^(d::OF)]
