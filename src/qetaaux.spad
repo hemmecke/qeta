@@ -127,6 +127,20 @@ vector to correspond to a modular eta-quotient is violated.
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta-quotients that are modular functions.
 QEtaAuxiliaryPackage: with
+    etaFunctionIndices: P -> INDICES
+      ++ etaFunctionIndices(nn) returns the divisors of n as
+      ++ indices in the form [[d] for d in divisors nn].
+    properGeneralizedEtaFunctionIndices: P -> INDICES
+      ++ properGeneralizedEtaFunctionIndices(nn) returns the indices
+      ++ of a proper generalized eta-quotient of level nn. The first
+      ++ entries of the indices are always nn, i.e, it returns
+      ++ [[nn,1],...,[nn,floor(nn/2)]].
+    allGeneralizedEtaFunctionIndices: P -> INDICES
+      ++ allGeneralizedEtaFunctionIndices(nn) returns all indices that
+      ++ can be used. In fact it is the union of
+      ++ etaFunctionIndices(nn) and
+      ++ properGeneralizedEtaFunctionIndices(d) where d runs over all
+      ++ divisors of nn.
     generalizedEtaFunctionIndices: P -> INDICES
       ++ generalizedEtaFunctionIndices(nn) returns all the indices of
       ++ a generalized eta-quotient of level nn (without exponents),
@@ -699,6 +713,13 @@ $a\in X_c$.
             s2: Q := sawTooth((gg+a*i*nn)/cn)
             gds := gds + s1*s2
         return gds
+
+    etaFunctionIndices(nn: P): INDICES == [[d] for d in divisors(nn)$INTF]
+    properGeneralizedEtaFunctionIndices(nn: P): INDICES ==
+        [[nn,i] for i in 0.. floor(nn /$Q 2)]
+    allGeneralizedEtaFunctionIndices(nn: P): INDICES ==
+        ll := [properGeneralizedEtaFunctionIndices d for d in DIVISORS nn]
+        concat cons(etaFunctionIndices nn, ll)
 
     generalizedEtaFunctionIndices(nn: P): LLZ ==
         nndivs: List P := DIVISORS nn
