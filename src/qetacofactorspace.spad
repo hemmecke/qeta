@@ -113,9 +113,11 @@ Z ==> Integer
 Q ==> Fraction Z
 VZ ==> Vector Z
 MZ ==> Matrix Z -- consider only 2x2 matricies
+MQ ==> Matrix Q
 LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
+INDICES ==> LLZ
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
 
@@ -125,7 +127,7 @@ asP x ==> x pretend P
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
-ECS ==> Record(indices: LLZ, particular: Union(VZ, "failed"), basis: List VZ)
+ECS ==> Record(indices:INDICES, particular:Union(VZ,"failed"), basis:List VZ)
 ECSS ==> Record(comatrix: MZ, rhs: VZ)
 SOL ==> Record(particular: Union(VZ, "failed"), basis: List VZ)
 
@@ -159,12 +161,14 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ modularGamma0?(ssoec,rspec,m,t) where sspec results from
       ++ the list of the first #divisors(nn) entries of s.
     etaCofactorSpace1System: (P, SPEC, P, N) -> ECSS
-      ++ etaCofactorSpace1System(nn, rspec, m, t) returns a matrix
-      ++ mat and a vector v such that for the integer solutions s of
-      ++ the equation mat*s=v it holds
-      ++ modularGamma1?(sspec,rspec,m,t) where sbar is the
-      ++ translation of s into a generalized eta-quotient
-      ++ specification, see generalizedEtaQuotientSpecification.
+    etaCofactorSpace1System: (P, SPEC, P, N, INDICES) -> ECSS
+      ++ etaCofactorSpace1System(nn, rspec, m, t, idxs) returns a
+      ++ matrix mat and a vector v such that for the integer solutions
+      ++ s of the equation mat*s=v it holds
+      ++ modularGamma1?(sspec,rspec,m,t) where sbar is the translation
+      ++ of s into a generalized eta-quotient specification, see
+      ++ generalizedEtaQuotientSpecification. With the idxs one can
+      ++ specify what indexes should be allowed in the solution space.
     etaCofactorSpace0: (P, SPEC, P, N) -> ECS
       ++ etaCofactorSpace0(nn,rspec,m,t) returns a vector v and the
       ++ basis of a space such that #v=#divisors(nn) and
@@ -174,7 +178,7 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ The function fails, if there is no such solution.
       ++ The indices part of the result is a list of divisors of
       ++ nn where each divisor is represented as a one-element list.
-    etaCofactorSpace1: (P, SPEC, P, N, LLZ) -> ECS
+    etaCofactorSpace1: (P, SPEC, P, N, INDICES) -> ECS
       ++ etaCofactorSpace1(nn,rspec,m,t,idxs) returns a vector v and
       ++ the basis of a space such that #v=#idxs and
       ++ modularGamma1?(ssepc,rspec,m,t) is true for any
@@ -254,10 +258,9 @@ QEtaCofactorSpace: Exports == Implementation where
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
         sol: SOL := diophantineSystem(matmod0, v)$SmithNormalForm(Z, VZ, VZ, MZ)
-        nndivs := DIVISORS nn
-        idxs: LLZ := [[d] for d in nndivs]
+        idxs: INDICES := etaFunctionIndices(nn)$QETAAUX
         sol.particular case "failed" => [idxs, "failed", []]
-        n := #nndivs
+        n := #idxs
         part: VZ := ((sol.particular)::VZ)(1..n)
         bas: List VZ := [x(1..n) for x in sol.basis]
         [idxs, part, bas]
@@ -273,7 +276,7 @@ QEtaCofactorSpace: Exports == Implementation where
 
         -- rows/cols for condition (4)
         k: N := 0 -- need k more rows and k slack variable
-        for i in 1..11 repeat if one? gcd(i*nn+1, 6) then k := k + 1
+        for i in 0..11 repeat if one? gcd(i*nn+1, 6) then k := k + 1
 
         cols: N := numOfVars+k+2 -- the 2 is for mod 24 slack variables
         rows: N := k+3 -- for conditions (4) + conditions (1), (2), (3)
@@ -337,7 +340,7 @@ QEtaCofactorSpace: Exports == Implementation where
         -- Condition (4) and slack variable for mod 2 for all a
         -- \eqref{eq:CDZ-productsquare}
         mmdivs: List P := divisors rspec
-        for i in 1..11 repeat
+        for i in 0..11 repeat
             a: Z := nn*i+1
             one? gcd(a,6) =>
                 ii := ii + 1
@@ -367,33 +370,108 @@ QEtaCofactorSpace: Exports == Implementation where
                 if isOdd? then v.ii := 1 -- else v.ii := 0
         return [mat, v]$ECSS
 
-    etaCofactorSpace1(nn: P, rspec: SPEC, m: P, t: N, idxs: LLZ): ECS ==
-        ecss: ECSS := etaCofactorSpace1System(nn, rspec, m, t)
+    -- Compute the common denominator den of the rowidx-th row of mat1
+    -- and the value rval intended for the right-hand side. Then
+    -- multiply the rowidx-th row of mat1 and copy it into the
+    -- rowidx-th row of mat. Set also v.rowidx to rval*den.
+    -- local
+    copyRowAndSetRhs!(mat: MZ, v: VZ, nn: P, rowidx: Z,
+                      mat1: MQ, rval: Q): Void ==
+        den: Z := lcm [denom mat1(rowidx, j) for j in 1..ncols mat1]
+        den := lcm(denom rval, den)
+        for j in 1..ncols mat1 repeat mat(rowidx,j) := numer(den*mat1(rowidx,j))
+        v.rowidx := numer(den * fractionalPart(rval)$QETAAUX)
+
+    -- loccal
+    productSquareElement(idx: LZ, a: Z): Z ==
+        empty? idx => error "etaCofactorSpace1System: idx is empty"
+        d := idx.1
+        #idx=1 => if jacobi(d, a)$INTF < 0 then 1 else 0
+        q := (a-1) * fractionalBernoulli1(idx.2/d)$QETAAUX
+        not one? denom q =>
+            error "etaCofactorSpace1System: e exponent not integral"
+        if odd? numer q then 1 else 0
+
+    -- compute the row (condisiont) for the respective a
+    -- The result is a list that consists of n row elements prepended
+    -- by the respective element for the right-hand side.
+    -- This corresponds to condition (4) in
+    -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+    -- See also \eqref{eq:CDZ-productsquare}.
+    -- local
+    productSquareRhsRow(rspec: SPEC, m: N, idxs: INDICES, a: Z): LZ ==
+        row: LZ := [productSquareElement(idx, a) for idx in idxs]
+        -- prepend the entry for the right-hand side
+        expo: Q := 0
+        for l in properGeneralizedPart rspec repeat --assert(#l=3) l=[d,g,e]
+            expo := expo + l.3 * fractionalBernoulli1(l.2/l.1)$QETAAUX
+        expo := (a-1) * expo
+        not one? denom expo =>
+            error "etaCofactorSpace1System: exponent not integral"
+        isOdd?: Boolean := odd? numer expo
+        for l in purePart rspec | odd? l.2 and jacobi(m*l.1,a)$INTF < 0 repeat
+            isOdd? := not isOdd?
+        if isOdd? then cons(1, row) else cons(0, row)
+
+    -- Extend the matrix by the product rows (with slack variable conditions).
+    -- local
+    extendByProductSquareRows(mat: MZ, v: VZ,
+                              nn: P, rspec: SPEC, m: N, idxs: INDICES): ECSS ==
+        rows: LLZ := [productSquareRhsRow(rspec, m, idxs, a) _
+                      for a in 1..11*nn+1 by nn | one? gcd(a, 6)]
+        -- remove duplicate lines to reduce slack variables
+        rows := [row for row in removeDuplicates rows | not every?(zero?, row)]
+        n := #rows
+        nr := nrows mat
+        nc := ncols mat
+        --assert(#v=nr)
+        emat: MZ := new(nr + n, nc + n, 0)
+        for i in 1..nr repeat for j in 1..nc repeat emat(i,j) := mat(i,j)
+        for i in 1..n for row in rows repeat
+            v := concat(v, first row)
+            for e in rest row for j in 1..nc repeat emat(nr+i,j) := e
+            emat(nr + i, nc + i) := 2 -- for slack variable
+        return [emat, v]$ECSS
+
+    etaCofactorSpace1System(nn:P, rspec:SPEC, m:P, t:N, idxs:INDICES): ECSS ==
+        -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+        import from QEtaCofactorConditions
+        not conditionCoEtaQuotientGamma1?(nn, rspec, m, t) =>
+            error "conditionCoEtaQuotientGamma1? not met"
+        mat1: MQ := matrixModularGamma1(nn, idxs)$QETAAUX
+        mat: MZ := new(nrows mat1, ncols mat1, 0)
+        v: VZ := new(nrows mat1, 0)
+        nspec: SPEC := purify rspec -- we must normalize!!!
+        -----------------------------------------------------------
+        -- CDZ Condition (1), \eqref{eq:CDZ-sum=0}
+        for j in 1..ncols mat1 repeat mat(1,j) := numer(mat1(1,j))
+        v.1 := - reduce(_+, pureExponents nspec, 0) -- fill right-hand side
+        -----------------------------------------------------------
+        -- For the following two lines:
+        -- Since matrixModularGamma1 refers to mod 1 instead of mod 24,
+        -- we must divide the sigma-expression by 24.
+        -----------------------------------------------------------
+        -- CDZ Condition (3), \eqref{eq:CDZ-sigmainfinity=0}
+        -- We transform \eqref{eq:CDZ-sigmainfinity=0} into
+        -- 1/m * (m^2 sigma + (1 - m^2)*24*t + (1-m^2) * sigma)
+        -- = 1/m * (24*t*(1-m^2) + sigma)
+        rval: Q := - (1/(24*m))*((24*t*(1-m^2))::Q + sigmaInfinity(nspec))
+        copyRowAndSetRhs!(mat, v, nn, 2, mat1, rval)
+        -----------------------------------------------------------
+        -- CDZ Condition (2), \eqref{eq:CDZ-sigma0=0}
+        rval := - nn * m * sigma0(nspec) / (24 * level(nspec))
+        copyRowAndSetRhs!(mat, v, nn, 3, mat1, rval)
+        -----------------------------------------------------------
+        -- CDZ condition (4), \eqref{eq:CDZ-productsquare}
+        extendByProductSquareRows(mat, v, nn, rspec, m, idxs)
+
+    etaCofactorSpace1(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): ECS ==
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        ecss: ECSS := etaCofactorSpace1System(nn, rspec, m, t, idxs)
+        mat: MZ := ecss.comatrix
         v := ecss.rhs
         -- Now we have a matrix mat and a right-hand side v and need to
         -- solve mat*x=v for x.
-        allIndices := generalizedEtaFunctionIndices(nn)$QETAAUX
-        if empty? idxs then
-            idxs := allIndices
-            mat: MZ := ecss.comatrix
-          else
-            -- The first columns of the above matrix are sorted like
-            -- allIndices. We build a new matrix that consists of all
-            -- columns with index > #allIndices prepended by the columns
-            -- corresponding to idxs.
-            -- It is an error if idxs is not a subset of allIndices.
-            lcols: LZ := [i for i in #allIndices+1 .. ncols(ecss.comatrix)]
-
-            h: XHashTable(LZ, Z) := table()
-            for idx in reverse idxs repeat
-                c := position(idx, allIndices)
-                zero? c =>
-                    errorPrint("forbidden", idx)
-                    errorPrint("allowed", allIndices)
-                    error "etaCofactorSpace1: forbidden index"
-                lcols := cons(c, lcols)
-            mat: MZ := (ecss.comatrix)(1..nrows(ecss.comatrix), lcols)
-
         sol: SOL := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
         n := #idxs
         sol.particular case "failed" => [idxs, "failed", []]
