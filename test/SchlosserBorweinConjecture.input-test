@@ -1,0 +1,418 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+-- This notebook deals with the Borwein conjecture or rather
+-- a generalization of Michael Schlosser,  i.e.
+-- \begin{gather*}
+-- \qPochhammer{q,q^2}{q^3}^\delta =
+--   A_0^{(\delta)}(q^3) - q A_1^{(\delta)}(q^3) - q^2 A_2^{(\delta)}(q^3)
+-- \end{gather*}
+-- where the $A_i^{(\delta)}(q)$ are power series in $q$ with non-negative
+-- real coefficients.
+--
+-- Can prove conjecture for $\delta=1$, but not for $\delta=2$.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+-- +
+C ==> Q
+RKI ==> QEtaRamanujanKolbergIdentity C
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+)set mess type off
+
+)read convenience.input )quiet
+findID1a(nn,rspec,m,t)==> _
+  findIdM1(nn, rspec,m,t, generalizedEtaFunctionIndices nn)
+
+FINDID1(m,t)==>(_
+  ids(t+1) := findIdM1(nn, idxs, rspec, m, t, id0); _
+  pretty(ids(t+1), asExpression + qIdentity + nonModular + expand))
+
+MOD ==> MOD1
+QEtaIdeal ==> QEtaIdealHemmeckeCached
+QI ==> QEtaIdeal(C,MOD)
+eqSPECS ==> etaQuotientSpecifications $ QEtaQuotientSpecifications4ti2(MOD)
+
+idpol(id: RKI, f: Symbol): Pol C == (_
+  sspec := coSpecification id;_
+  mon: Pol(C) := f * etaQuotientMonomial(sspec, char"E", char"Y")$QI;_
+  ipol: Pol(C) := inv coefficient id * identityPolynomial id - 'F::Pol(C);_
+  mon+ipol)
+
+)set stream calc 4
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+)set output algebra on
+)set output formatted off
+
+-- # 3-dissection conjecture
+
+-- ## 3-dissection for $\delta=1$
+
+-- +
+-------------------------------------------------------------------
+--test:Schlosser-Infinity3delta1
+-------------------------------------------------------------------
+-- -
+
+rspec := eqSPEC [[3,1,1]]; m:=3; t:=0;
+nn := minLevelM1(rspec, m, t)
+assertEquals(nn,9)
+
+s1 := eulerExpansion specEQI(C) rspec;
+s10 := choose(3,0, s1)
+s11 := - choose(3,1, s1)
+s12 := - choose(3,2, s1)
+
+idxs := rest properGeneralizedEtaFunctionIndices nn;
+mspecs := mSPECSInfM1(nn,idxs);
+[qetaGrade specM1A1(C) x for x in mspecs]
+
+
+id0 := findIdM1(nn, rspec, m, 0, idxs);
+ids := [id0 for i in 0..2];
+
+FINDID1(3,0)
+assertEquals(idpol(ids.1, 'f), E9_1*E9_2*E9_3*f-1)
+
+FINDID1(3,1)
+assertEquals(idpol(ids.2, 'f), E9_1*E9_3*E9_4*f+1)
+
+FINDID1(3,2)
+assertEquals(idpol(ids.3, 'f), E9_2*E9_3*E9_4*f+1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## 3-dissection for $\delta=2$
+
+-- +
+-------------------------------------------------------------------
+--test:Schlosser-Infinity3delta2
+-------------------------------------------------------------------
+-- -
+
+rspec := eqSPEC [[3,1,2]]; m:=3; t:=2;
+nn := minLevelM1(rspec, m, t)
+
+-- ### Direct way
+
+s2 := eulerExpansion specEQI(C) rspec;
+s20 := choose(3,0, s2)
+s21 := - choose(3,1, s2)
+s22 := - choose(3,2, s2)
+
+idxs := rest properGeneralizedEtaFunctionIndices nn;
+mspecs := mSPECSInfM1(nn,idxs);
+[qetaGrade specM1A1(C) x for x in mspecs]
+
+
+id0 := findIdM1(nn, rspec, m, 0, idxs);
+ids := [id0 for i in 0..2];
+
+FINDID1(3,0)
+assertEquals(idpol(ids.1, 'f), E9_1*E9_2*E9_3^2*E9_4^2*f-(M1+1))
+
+FINDID1(3,1)
+assertEquals(idpol(ids.2, 'f), E9_2^2*E9_3^2*E9_4^2*f+2*M1-1)
+
+FINDID1(3,2)
+assertEquals(idpol(ids.3, 'f), E9_2*E9_3^2*E9_4^3*f+M1-2)
+
+-- The representation for $a(3n+1)$ and $a(3n+2)$ do not obviously
+-- prove the conjecture for $\delta=2$.
+
+-- ### Try negative coefficients for $a(3n+1)$
+
+-- Let us try with the other possible eta-quotient candidate from
+-- the monoid generators that also has pole order 1.
+
+id := findIdM1(nn, idxs, rspec, m, 1, [mspecs.2]);
+pretty(id, asExpression + expand + nonModular + qIdentity)
+assertEquals(idpol(id,f),E9_2^2*E9_3^2*E9_4^2*f + (2*M1+1))
+
+-- We have obviously found a good representation for showing the
+-- minus sign of the conjecture for the $q$ powers congruent to
+-- 1 modulo 3.
+
+-- ### Try to get negative coefficients for $a(3n+2)$
+
+-- The case $a(3n+1)$ worked, because `mspecs.1` and `mspecs.2`
+-- specify modular functions that differ by just 1.
+--
+-- Unfortunately, the trick of using just another representation
+-- of the algebra basis as above does not work for $a(3n+2)$.
+
+id := findIdM1(nn, idxs, rspec, m, 2, [mspecs.2]);
+pretty(id, asExpression + expand + qIdentity)
+assertEquals(idpol(id,f),E9_2*E9_3^2*E9_4^3*f + M1-1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # 5-dissection conjecture
+
+-- ## 5-dissection for $\delta=1$
+
+-- Here we show that for $\delta=1$
+-- \begin{gather*}
+-- \qPochhammer{q,q^4}{q^5}^\delta \qPochhammer{q^2,q^3}{q^5}^\delta =
+--   A_0^{(\delta)}(q^5)
+--   - q A_1^{(\delta)}(q^5)
+--   - q^2 A_2^{(\delta)}(q^5)
+--   + 0 \cdot q^3 A_3^{(\delta)}(q^5)
+--   + 0 \cdot q^4 A_4^{(\delta)}(q^5)
+-- \end{gather*}
+-- where the $A_i^{(\delta)}(q)$ are power series in $q$ with non-negative
+-- real coefficients.
+
+-- +
+-------------------------------------------------------------------
+--test:Schlosser511-521-delta1
+-------------------------------------------------------------------
+-- -
+
+rspec := eqSPEC [[5,1,1],[5,2,1]]; m:=5; t:=0;
+nn := minLevelM1(rspec, m, t)
+
+s1 := eulerExpansion specEQI(C) rspec
+s10 :=   choose(5,0, s1)
+s11 := - choose(5,1, s1)
+s12 := - choose(5,2, s1)
+s13 :=   choose(5,3, s1)
+s14 :=   choose(5,4, s1)
+
+idxs := rest properGeneralizedEtaFunctionIndices nn
+mspecs := mSPECSInfM1(nn,idxs);
+[qetaGrade specM1A1(C) x for x in mspecs]
+
+
+id0 := findIdM1(nn, rspec, m, 0, idxs);
+ids := [id0 for i in 0..4];
+
+FINDID1(5,0)
+assertEquals(idpol(ids.1,f), E5_1^2*f - 1)
+
+FINDID1(5,1)
+assertEquals(idpol(ids.2,f), E5_1*E5_2*f + 1)
+
+FINDID1(5,2)
+assertEquals(idpol(ids.3,f), E5_2^2*f + 1)
+
+FINDID1(5,3)
+assertEquals(identityPolynomial(ids.4), F)
+
+FINDID1(5,4)
+assertEquals(identityPolynomial(ids.5), F)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## 5-dissection for $\delta=2$
+
+-- Here we show that for $\delta=2$
+-- \begin{gather*}
+-- \qPochhammer{q,q^4}{q^5}^\delta \qPochhammer{q^2,q^3}{q^5}^\delta =
+--   A_0^{(\delta)}(q^5)
+--   - 2 q A_1^{(\delta)}(q^5)
+--   - q^2 A_2^{(\delta)}(q^5)
+--   + 2 q^3 A_3^{(\delta)}(q^5)
+--   + q^4 A_4^{(\delta)}(q^5)
+-- \end{gather*}
+-- where the $A_i^{(\delta)}(q)$ are power series in $q$ with non-negative
+-- real coefficients.
+
+-- +
+-------------------------------------------------------------------
+--test:Schlosser511-521-delta2
+-------------------------------------------------------------------
+-- -
+
+rspec := eqSPEC [[5,1,2],[5,2,2]]; m:=5; t:=0;
+nn := minLevelM1(rspec, m, t)
+
+s1 := eulerExpansion specEQI(C) rspec
+s10 :=   choose(5,0, s1)
+s11 := - choose(5,1, s1)
+s12 := - choose(5,2, s1)
+s13 :=   choose(5,3, s1)
+s14 :=   choose(5,4, s1)
+
+idxs := rest properGeneralizedEtaFunctionIndices nn
+mspecs := mSPECSInfM1(nn,idxs);
+[qetaGrade specM1A1(C) x for x in mspecs]
+
+
+id0 := findIdM1(nn, rspec, m, 0, idxs);
+ids := [id0 for i in 0..4];
+
+FINDID1(5,0)
+assertEquals(idpol(ids.1,f), E5_1^4*f - 1)
+
+FINDID1(5,1)
+assertEquals(idpol(ids.2,f), E5_1^3*E5_2*f + 2)
+
+FINDID1(5,2)
+assertEquals(idpol(ids.3,f), E5_1^2*E5_2^2*f + 1)
+
+FINDID1(5,3)
+assertEquals(identityPolynomial(ids.4), F-2)
+
+FINDID1(5,4)
+assertEquals(identityPolynomial(ids.5), F-1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## 5-dissection for $\delta=1$
+
+-- Here we show that for $\delta=1$
+-- \begin{gather*}
+-- \qPochhammer{q,q^4}{q^5}^\delta \qPochhammer{q^2,q^3}{q^5}^{-\delta} =
+--   A_0^{(\delta)}(q^5)
+--   - q A_1^{(\delta)}(q^5)
+--   - q^2 A_2^{(\delta)}(q^5)
+--   + 0 \cdot q^3 A_3^{(\delta)}(q^5)
+--   + 0 \cdot q^4 A_4^{(\delta)}(q^5)
+-- \end{gather*}
+-- where the $A_i^{(\delta)}(q)$ are power series in $q$ with non-negative
+-- real coefficients.
+
+-- +
+-------------------------------------------------------------------
+--TODOtest:Schlosser511-52-1-delta1
+-------------------------------------------------------------------
+-- -
+
+setOptions("-q -p 64")$X4ti2
+
+rspec := eqSPEC [[5,1,1],[5,2,-1]]; m:=5; t:=0;
+nn := minLevelM1(rspec, m, t)
+
+s1 := eulerExpansion specEQI(C) rspec
+s10 :=   choose(5,0, s1)
+s11 := - choose(5,1, s1)
+s12 :=   choose(5,2, s1)
+s13 := - choose(5,3, s1)
+s14 := - choose(5,4, s1)
+
+idxs := rest properGeneralizedEtaFunctionIndices nn
+mspecs := mSPECSInfM1(nn,idxs);
+[qetaGrade specM1A1(C) x for x in mspecs]
+
+
+id0 := findIdM1(nn, rspec, m, 0, idxs);
+ids := [id0 for i in 0..4];
+
+FINDID1(5,0)
+assertEquals(idpol(ids.1,f), E5_1^2*f - 1)
+
+FINDID1(5,1)
+assertEquals(idpol(ids.2,f), E5_1*E5_2*f + 1)
+
+FINDID1(5,2)
+assertEquals(idpol(ids.3,f), E5_2^2*f + 1)
+
+FINDID1(5,3)
+assertEquals(identityPolynomial(ids.4), F)
+
+FINDID1(5,4)
+assertEquals(identityPolynomial(ids.5), F)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # 7-dissection conjecture
+
+-- ## 7-dissection for $\delta=1$
+
+-- +
+-------------------------------------------------------------------
+--test:Schlosser11-7-1-delta1
+-------------------------------------------------------------------
+-- -
+
+-- Conjecture 20 of https://doi.org/10.1007/s11139-021-00519-3
+-- https://link.springer.com/article/10.1007%2Fs11139-021-00519-3
+
+rspec := eqSPEC [[1,1],[7,-1]]; m:=7; t:=0;
+nn := minLevelM1(rspec, m, t)
+
+)set stream calc 10
+s1 := eulerExpansion specEQI(C) rspec
+s10 :=   choose(7,0, s1)
+s11 := - choose(7,1, s1)
+s12 := - choose(7,2, s1)
+s13 :=   choose(7,3, s1)
+s14 :=   choose(7,4, s1)
+s15 :=   choose(7,5, s1)
+s16 :=   choose(7,6, s1)
+
+aidxs := generalizedEtaFunctionIndices nn
+idxs := aidxs(3..5)
+mspecs := mSPECSInfM1(nn,idxs);
+[qetaGrade specM1A1(C) x for x in mspecs]
+
+id0 := findIdM1(nn, rspec, m, 0, idxs);
+ids := [id0 for i in 0..m];
+
+rhs FINDID1(7,0)
+assertEquals(idpol(ids.1,f), E7_1^2*E7_3*f - 1)
+
+rhs FINDID1(7,1)
+assertEquals(idpol(ids.2,f), E7_1*E7_2^2*f + 1)
+
+rhs FINDID1(7,2)
+assertEquals(idpol(ids.3,f), E7_1*E7_2*E7_3*f + 1)
+
+rhs FINDID1(7,3)
+assertEquals(identityPolynomial(ids.4),'F)
+
+rhs FINDID1(7,4)
+assertEquals(identityPolynomial(ids.5),'F)
+
+rhs FINDID1(7,5)
+assertEquals(idpol(ids.6,f), E7_2*E7_3^2*f-1)
+
+rhs FINDID1(7,6)
+assertEquals(identityPolynomial(ids.7),'F)
+
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
