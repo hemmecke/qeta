@@ -235,6 +235,11 @@ QEtaSpecification: Exports == Implementation where
       ++ corresponds to negative exponents. It holds:
       ++ x=numer(x)/denom(x).
 
+    dilate: (%, P) -> %
+      ++ dilate(x,n) is the respective operation of replacing q by
+      ++ q^n. At the same time the level of the specification in
+      ++ multiplied by n.
+
   Implementation ==> add
     -- Note that the list of exponents of the pure part can be shorter
     -- than the number of divisors, i.e., trailing zeros are removed.
@@ -453,6 +458,11 @@ QEtaSpecification: Exports == Implementation where
         while not empty? r and zero? first r repeat r := rest r
         rbar: LLZ := [[l.1,l.2,-l.3] for l in properGeneralizedPart x | l.3 < 0]
         per [level x, divisors x, reverse! r, rbar]
+
+    dilate(x: %, n: P): % ==
+        rpure: LLZ := [[n*l.1, l.2] for l in purePart x]
+        rtilde: LLZ := [[n*l.1, n*l.2, l.3] for l in properGeneralizedPart x]
+        generalizedEtaQuotientSpecification(n*level x, concat(rpure, rtilde))
 
 
 
