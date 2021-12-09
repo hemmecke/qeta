@@ -1,7 +1,7 @@
 -- -*- coding: utf-8 -*-
 -- Via jupytext this file can be shown as a jupyter notebook.
 
-)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
 
 -- This is a testfile for `src/qetacofactorspace.spad`.
 
@@ -11,16 +11,20 @@
 -------------------------------------------------------------------
 -- -
 
--- X ==> QEtaCofactorSpace
 C ==> Q
 )read convenience.input )quiet
+
+)set mess type on
+)set mess type on
+
 -- +
 -------------------------------------------------------------------
 --endsetup
 -------------------------------------------------------------------
 -- -
 
-)set mess type on
+)set output algebra on
+)set output formatted off
 
 -- +
 -------------------------------------------------------------------
@@ -134,24 +138,23 @@ rec := etaCofactorSpace1(nn, rspec, m, t)
 
 -- Should not fail, because there is a solution for Gamma1(nn).
 
-assertEquals(rec.particular, [- 105, 106, 0, 0, 0, 0, 165])
+assertEquals(rec.particular, [0, 1, 0, 0, 0, 0, 0])
 assertEquals(# rec.basis, 6)
 
+sspec := geqSPEC(nn, rec.indices, rec.particular)
+modularGamma1?(sspec, rspec, m, t)
 
+idxs := cons([nn], rest properGeneralizedEtaFunctionIndices nn)
+rec := etaCofactorSpace1(nn, rspec, m, t, idxs)
+assertEquals(rec.particular, [1, 0, 0, 0, 0, 0])
+
+bspecs := [geqSPEC(nn,idxs, b) for b in rec.basis]
+l := removeDuplicates [modularGamma1?(spec) for spec in bspecs]
+assertEquals(l, [true])
+-- [qetaGradesEstimate specYM1GEQ spec for spec in bspecs]
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
 -- -
-
--- +
--------------------------------------------------------------------
---test:etacofactorspace-XXX
--------------------------------------------------------------------
--- -
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
