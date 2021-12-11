@@ -1,0 +1,451 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
+
+C ==> Q
+RKI ==> QEtaRamanujanKolbergIdentity C
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+)set mess type off
+
+)read /home/hemmecke/g/qeta/input/convenience.input )quiet
+findID1a(nn,rspec,m,t)==> _
+  findID1(nn,generalizedEtaFunctionIndices nn, rspec,m,t,_
+             generalizedEtaFunctionIndices nn)
+
+RKI==>QEtaRamanujanKolbergIdentity(C)
+idxSPEC idx ==> if #idx=3 then geqSPEC[idx] else geqSPEC[concat(idx,1)]
+ERMp(spec) ==> etaRelationMonomial(1,spec,0,varPochhammer $ RKI,0)$RKI
+ERMe(spec) ==> etaRelationMonomial(1,spec,0,varEta$RKI,0)$RKI
+printSPEC spec ==> _
+  qEtaQuotient(spec, varPochhammer$RKI) = etaQuotient(spec, varEta$RKI)
+REL1(id) ==> ERMp definingSpecification id = (_
+  if fpol = 'fpol then fpol := 1;_
+  idpol := identityPolynomial(id);_
+  rpol := F - (inv(coefficient(idpol,'F, 1))::C) * idpol;_
+  assertEquals(rpol,fpol);_
+  rspec := definingSpecification id;_
+  sspec := coSpecification id;_
+  mspecs := monoidSpecifications id;_
+  msyms := indexedSymbols("M", #mspecs);_
+  m := multiplier id;_
+  f := specM1A1(C)(sspec,rspec,m,first orbit id);_
+  egens := [specM1A1(C) mspec for mspec in mspecs];_
+  zser := eval(idpol, c+->c::A1(C), cons('F,msyms), cons(f,egens))$_
+            PolynomialEvaluation(C, A1 C);_
+  assertTrue(zero? zser);_
+  if one? rpol then _
+     ERMp inv coSpecification id _
+  else _
+     rhs pretty(id, qIdentity + expand + nonModular + withSubscript + asExpression))
+findREL1(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,idxs);REL1 id)
+findREL1ID(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,id);REL1 id)
+findREL1x(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1(nn,idx,idxs))
+findREL1IDx(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1ID(nn,idx,idxs))
+commonFactor id ==> (_
+  pol := inv coefficient id * identityPolynomial id - 'F;_
+  cs := [leadingCoefficient x for x in monomials pol];_
+  den := lcm [denom x for x in cs];_
+  num := gcd [numer(den*x) for x in cs];_
+  num/den)
+findID1a(nn,rspec,m,t)==> _
+  findID1(nn,generalizedEtaFunctionIndices nn, rspec,m,t,_
+             generalizedEtaFunctionIndices nn)
+
+)set stream calc 4
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+OH ==> OperatorHandlers((Integer, List OutputForm) -> OutputBox)
+h := operatorHandlers()$FormatMathJax;
+MAX ==> maxPrecedence()$FormatMathJax
+MIN ==> minPrecedence()$FormatMathJax
+setHandler!(h, 2 , "SUB", subscript(MAX)$FormatMathJax)$OH;
+
+)set mess type on
+)set mess time on
+
+)set output algebra on
+)set output formatted off
+
+-- # Rogers-Ramanujan functions $G$, $H$, $R$
+
+-- \cite{FryeGarvan_AutomaticProofOfThetaFunctionIdentities_2019}
+
+-- \begin{align}
+-- G(q)
+-- &=
+-- \sum_{n=0}^\infty \frac{q^{n^2}}{(q;q)_n}
+-- =
+-- \prod_{n=0}^\infty \frac{1}{(1-q^{5n+1})(1-q^{5n+4})}
+-- =
+-- \frac{1}{\qPochhammer{q,q^4}{q^5}}
+-- \\
+-- H(q)
+-- &=
+-- \sum_{n=0}^\infty \frac{q^{n(n+1)}}{(q;q)_n}
+-- =
+-- \prod_{n=0}^\infty \frac{1}{(1-q^{5n+2})(1-q^{5n+3})}
+-- =
+-- \frac{1}{\qPochhammer{q^2,q^3}{q^5}}
+-- \end{align}
+
+-- +
+-------------------------------------------------------------------
+--test:Rogers-Ramanujan-1-5
+-------------------------------------------------------------------
+-- -
+
+-- ## Verify Ramanujan identity
+
+-- \begin{align}
+-- H(q) G(q)^{11}-q^2 G(q) H(q)^{11}
+-- &=
+-- 1 + 11 G(q)^6 H(q)^6
+-- %\tag{1.2}
+-- \end{align}
+--
+-- \begin{align}
+-- \frac{1}{\eta_{5;1}(\tau)^{11} \eta_{5;2}(\tau)}
+-- -
+-- \frac{1}{\eta_{5;1}(\tau) \eta_{5;2}(\tau)^{11}}
+-- &=
+-- 1 + 11 \frac{\eta(5\tau)^6}{\eta(\tau)^6}
+-- %\tag{1.5}
+-- \end{align}
+
+rspecs := [geqSPEC([[5,1,-11], [5,2, -1]]),_
+           geqSPEC([[5,1, -1], [5,2,-11]]),_
+           geqSPEC([[1,-6],[5,6]])];
+[assertTrue(modularGamma1? x) for x in rspecs]
+
+ys := [specYM1GEQ x for x in rspecs];
+xiord := lcm [minimalRootOfUnity(y)::P for y in ys]
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(ys.1)
+
+-- To the cusps belong the following transformation matrices.
+
+[cuspToMatrix(5,c)$GAMMA1 for c in spitzen]
+
+[qetaGrades y for y in ys]
+
+-- Since the terms have poles not only at infinity,
+-- we must look at all cusps.
+
+)set stream calc 2
+as := [expandAnCX y for y in ys]
+
+z := as.1 - as.2 - (1$An(CX) + 11 * as.3)
+assertTrue(zero? z)
+
+-- ## Congruences for $G$ and $H$
+
+-- ### Divisibility property of $H(q) G(q)^{11} = \frac{1}{\eta_{5;1}(\tau)^{11} \eta_{5;2}(\tau)}$
+
+-- We can prove by the following witness identity
+-- that $a(5n+4) \equiv 0 \pmod{5}$ for
+-- \begin{gather*}
+-- A_1(q) = \sum_{n=0}^\infty a_1(n) q^n = H(q)G(q)^{11}.
+-- \end{gather*}
+
+)set stream calc 20
+s1 := series(as.1,4)
+
+t := 4
+idxs := [[5,1],[5,2]]
+id1 := findID1(5,idxs,rspecs.1,5,t,idxs);
+--pretty(id1, qIdentity + withSubscript)
+eq1 := inv(coefficient id1)*equationX(id1,a[1])
+commonFactor id1
+
+-- ### Divisibility property of $G(q) H(q)^{11} = q^{-2} \frac{1}{\eta_{5;1}(\tau) \eta_{5;2}(\tau)^{11}}$
+
+-- We can prove by the following witness identity
+-- that $a(5n+4) \equiv 0 \pmod{5}$ for
+-- \begin{gather*}
+-- A_2(q) = \sum_{n=0}^\infty a_2(n) q^n = G(q)H(q)^{11}.
+-- \end{gather*}
+
+)set stream calc 20
+s2 := monomial(1,-2)$L1(C)*series(as.2,4)
+
+idxs := [[5,1],[5,2]]
+id2 := findID1(5,idxs,rspecs.2,5,t,idxs);
+--pretty(id2, qIdentity + withSubscript)
+eq2 := inv(coefficient id2)*equationX(id2,a[2])
+commonFactor id2
+
+-- ### Curious divisibility by $5^3$
+
+-- Since there is an equation involving
+-- $G(q)H^{11}$ and $H(q)G(q)^{11}$, we can try the difference
+-- of the representations that we got above.
+--
+-- Note that the $M_1$ corresponds to the same generalized
+-- eta-quotient.
+
+monoidSpecifications(id1)
+monoidSpecifications(id2)
+M[1] = ERMe(monoidSpecifications(id1).1)
+
+equ := 5^(-3)*(eq1 - eq2)
+
+-- Written in a more summetric form this gives
+-- \begin{align*}
+-- \frac{\qPochhammer{q,q^4}{q^5}}{\qPochhammer{q^2,q^3}{q^5}} A_1(5n+4)
+-- -
+-- \frac{\qPochhammer{q^2,q^2}{q^5}}{\qPochhammer{q,q^4}{q^5}} A_2(5n+4)
+-- &\equiv 0 \pmod{5^3}
+-- \end{align*}
+-- for
+-- $A_1(q) = H(q)G(q)^{11}$ and $A_2(q) = G(q)H(q)^{11}$.
+
+-- ## Rogers-Ramanujan R function
+
+-- Rogers-Ramanujan continued fraction.
+-- \begin{gather*}
+--   R(q)
+--     =
+--   q^{\frac15}
+--   \dfrac{1}{1+\dfrac{q}{1+\dfrac{q^2}{1+\dfrac{q^3}{1+\ddots}}}}
+--     =
+--   q^{\frac15}
+--   \frac{\qPochhammer{q,q^4}{q^5}}
+--        {\qPochhammer{q^2,q^3}{q^5}}
+--     =
+--   \frac{\eta_{5,1}(\tau)}{\eta_{5,2}(\tau)}
+-- \end{gather*}
+--
+
+-- \begin{align}
+-- \frac{1}{R(q)^5} - R(q)^5
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- %\tag{1.2}
+-- \end{align}
+--
+-- \begin{align}
+-- \frac{\eta_{5;2}(\tau)^5}{\eta_{5;1}(\tau)^5}
+-- -
+-- \frac{\eta_{5;1}(\tau)^5}{\eta_{5;2}(\tau)^5}
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- %\tag{1.5}
+-- \end{align}
+--
+-- Compare with
+-- \begin{align}
+-- \frac{1}{\eta_{5;1}(\tau)^{11} \eta_{5;2}(\tau)}
+-- -
+-- \frac{1}{\eta_{5;1}(\tau) \eta_{5;2}(\tau)^{11}}
+-- &=
+-- 1 + 11 \frac{\eta(5\tau)^6}{\eta(\tau)^6}
+-- %\tag{1.5}
+-- \end{align}
+-- and note that we have 
+-- \begin{align}
+-- \eta_{5;1}(\tau) \, \eta_{5;2}(\tau)
+-- &=
+-- \frac{\eta(\tau)}{\eta(5\tau)}.
+-- \end{align}
+
+findREL1(5,[5,2,-1],[[1],[5],[5,1]])
+
+--
+-- ### Divisibility property of $\frac{\eta(5\tau)^6}{q\cdot\eta(\tau)^{6}}=\frac{\qPochhammer{q^5}{q^5}}{\qPochhammer{q}{q}}$
+
+idxs := [[5,1],[5,2]]
+id3 := findID1(5,idxs,rspecs.3,5,4,idxs);
+pretty(id3, qIdentity + withSubscript)
+'t=ERMe(monoidSpecifications(id3).1) = 1/('R(q)^5)
+-- qEtaQuotient(rspecs.3,varPochhammer$RKI)
+
+commonFactor(id3)
+
+-- ### Divisibility for $(5n+t)$-disection ($t=1,2,3,4$) of $\frac{R(q)^5}{q} = \frac{\qPochhammer{q,q^4}{q^5}^5}{\qPochhammer{q^2,q^3}{q^5}^5}$ and $\frac{q}{R(q)^5}$
+
+-- It is perhaps not so surprising that these disections give rise
+-- to a divisibility by 5.
+
+-- +
+t := 1
+idxs := [[5,1],[5,2]]
+rrspec := geqSPEC [[5,1,1],[5,2,-1]];
+r5spec := rrspec^5;
+idrp := findID1(5,idxs,r5spec,5,t,idxs);
+--pretty(idrp, qIdentity + withSubscript);
+e1 := inv(coefficient idrp)*qequationX(idrp,a[1])
+
+idrn := findID1(5,idxs,inv r5spec,5,t,idxs);
+--pretty(idrn, qIdentity + withSubscript);
+e2 := inv(coefficient idrn)*qequationX(idrn,a[2])
+-- -
+
+-- However, the sum of both is divisible by 25.
+
+e1+e2
+
+m1spec := monoidSpecifications(idrp).1
+M1 = printSPEC m1spec
+m1 := specEQI(Q)(monoidSpecifications(idrp).1)
+
+-- ### Check relation $e1+e2$ for $5n+4$
+
+sspecp := coSpecification(idrp)
+sspecn := coSpecification(idrn)
+y1 := specYM1GEQ(sspecp,r5spec,5,t);
+y2 := specYM1GEQ(sspecn,inv r5spec,5,t);
+xiord := lcm(minimalRootOfUnity y1, minimalRootOfUnity y2)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(y1)
+)set stream calc 2
+a1 := expandAnCX y1
+a2 := expandAnCX y2
+qetaGrades a1, qetaGrades a2
+
+a1 + a2
+
+-- +
+-- a1 + a2 - 25 * specM1AnCX(m1spec)
+-- -
+
+-- ### Divisibility for $(5n)$-disection of $\frac{R(q)^5}{q} = \frac{\qPochhammer{q,q^4}{q^5}^5}{\qPochhammer{q^2,q^3}{q^5}^5}$ and $\frac{q}{R(q)^5}$
+
+-- We have an exception when $t=0$. There is no divisibility by 5.
+-- However, the 5-disections of $\frac{R(q)^5}{q}$ and $\frac{q}{R(q)^5}$
+-- are equal.
+
+-- +
+t := 0;
+idxs := [[5,1],[5,2]]
+rrspec := geqSPEC [[5,1,1],[5,2,-1]];
+r5spec := rrspec^5;
+idrp := findID1(5,idxs,r5spec,5,t,idxs);
+--pretty(idrp, qIdentity + withSubscript);
+e1 := inv(coefficient idrp)*qequationX(idrp,a[1])
+
+idrn := findID1(5,idxs,inv r5spec,5,t,idxs);
+--pretty(idrn, qIdentity + withSubscript);
+e2 := inv(coefficient idrn)*qequationX(idrn,a[2])
+-- -
+
+e1+e2
+e1-e2
+
+-- It says for
+-- \begin{gather*}
+-- r(q) = q^{-1/5} R(q) = \frac{H(q)}{G(q)} =
+--      \frac{\qPochhammer{q,q^4}{q^5}}{\qPochhammer{q^2,q^3}{q^5}}
+-- \end{gather*}
+-- that
+-- \begin{align*}
+-- \frac{1}{r(q)} \, U_5(r(q)^5)
+-- &=
+-- r(q) \, U_5\!\left(\frac{1}{r(q)^5}\right)
+-- \end{align*}
+-- or
+-- \begin{align*}
+-- \frac{G(q)}{H(q)} \, U_5\!\left(\frac{H(q)^5}{G(q)^5}\right)
+-- &=
+-- \frac{H(q)}{G(q)} \, U_5\!\left(\frac{G(q)^5}{H(q)^5}\right)
+-- \end{align*}
+-- or
+-- \begin{align*}
+-- U_5\!\left(\frac{R(q)^5}{R(q^5)}\right)
+-- &=
+-- U_5\!\left(\frac{R(q^5)}{R(q^5)}\right)
+-- \end{align*}
+--
+-- where $U_5$ is the operator that acts as follows:
+-- \begin{gather*}
+-- U_5\left(\sum_{n=0}^\infty a(n)q^n\right) = \sum_{n=0}^\infty a(5n)q^n
+-- \end{gather*}
+
+-- ### Check relation for $5n$
+
+sspecp := coSpecification(idrp)
+sspecn := coSpecification(idrn)
+y1 := specYM1GEQ(sspecp,r5spec,5,t);
+y2 := specYM1GEQ(sspecn,inv r5spec,5,t);
+xiord := lcm(minimalRootOfUnity y1, minimalRootOfUnity y2)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(y1)
+)set stream calc 2
+a1 := expandAnCX y1;
+a2 := expandAnCX y2;
+qetaGrades a1, qetaGrades a2
+a1 - a2
+
+-- ### Expansion at infinity gives 0 up to high order
+
+)set stream calc 10
+rrser := eulerExpansion specEQI(C)(rrspec)
+r5ser := eulerExpansion specEQI(C)(r5spec)
+r55ser := choose(5,0,r5ser)
+
+irrser := inv rrser
+ir5ser := inv r5ser
+ir55ser := choose(5,0,ir5ser)
+
+irrser*r55ser - rrser*ir55ser
+
+-- ### Check series expansion at all cusps
+
+-- Here we check that the $q$-expansion at all cusps
+-- agree in the principal part.
+-- \begin{gather*}
+-- U_5\left(\frac{R(q)^5}{R(q^5)}\right)
+--     =
+-- U_5\left(\frac{R(q^5)}{R(q)^5}\right)
+-- \end{gather*}
+
+rrspec   := geqSPEC [[ 5,1,1],[ 5, 2,-1]]
+d5rrspec := geqSPEC [[25,5,1],[25,10,-1]]
+xspec := rrspec^5 / d5rrspec
+ixspec := inv xspec
+modularGamma1? xspec
+modularGamma1? ixspec
+
+-- We do not need a cofactor to make the 5-disection
+-- modular in $\Gamma_1(25)$.
+
+(etaCofactorSpace1(25,xspec,5,0)$QEtaCofactorSpace).particular
+
+-- +
+sspec := geqSPEC(25,[])
+yx := specYM1GEQ(sspec,xspec,5,0);
+yix := specYM1GEQ(sspec,ixspec,5,0);
+
+xiord := lcm(minimalRootOfUnity yx, minimalRootOfUnity yix)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(yx)
+
+ax := expandAnCX yx;
+aix := expandAnCX yix;
+[qetaGrades ax, qetaGrades aix]
+-- -
+
+ax - aix
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
