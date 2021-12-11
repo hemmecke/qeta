@@ -1,0 +1,416 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+
+-- This notebook is connected to the papers
+-- \cite{KrattenthalerMercaRadu_InfinityProductFormulae:2019} and
+-- \cite{Koornwinder_ThetaIdentities_2014}.
+--
+-- It demonstrates that the ideal of all relations
+-- among (generalized) eta-functions is not generated
+-- by the relations resulting from substitutions in a
+-- general 3-term theta-relation (named after Weierstrass).
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+-- +
+C ==> Q
+RKI ==> QEtaRamanujanKolbergIdentity C
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+)set mess type off
+
+)read /home/hemmecke/g/qeta/input/convenience.input )quiet
+findID1a(nn,rspec,m,t)==> _
+  findID1(nn,generalizedEtaFunctionIndices nn, rspec,m,t,_
+             generalizedEtaFunctionIndices nn)
+
+ERMp(spec) ==> etaRelationMonomial(1,spec,0,varPochhammer,0)$RKI
+ERMe(spec) ==> etaRelationMonomial(1,spec,0,varEta$RKI,0)$RKI
+
+oo ==> infinity()$Cusp
+
+QEtaIdeal ==> QEtaIdealHemmeckeCached
+gEtaRels ==> generalizedEtaRelations $ QEtaIdeal(Q)
+
+)set stream calc 10
+
+nz(x) ==> not zero?(x::IntegerMod(nn))
+nznz(x,y) ==> nz(x+y) and nz(x-y)
+ses(x,y,v,u)==>[1,y+u, x+y,x-y,v+u,v-u]
+
+weierstrassCandidates(nn) ==> concat concat concat _
+  [[[[concat([x,y,u,v],l) for v in 0..nn-1 |_
+       (l := [ses(x,y, v,u), ses(x,u, y,v), ses(x,v, u,y)];_
+       nznz(u,v) and nznz(x,v) and nznz(y,v))]_
+     for u in 0..nn-1 | nznz(x,u) and nznz(y,u)]_
+    for y in 0..nn-1 | nznz(x,y) ] for x in 0..nn-1];
+-- -
+
+
+-- In the following function l is a list of the form
+-- $[sign, qExponent, g_1, g_2, g_3, g_4]$ where the
+-- $g$'s are supposed to be in the range $-N<g<2*N-1$
+-- and not divisible by $N$
+-- We bring it into the range $0<g<N$ and for that
+-- change the sign and the $q$-exponent according
+-- to the rules of the theta function
+-- $\theta_{N,g}(q) = \qPochhammer{q^g,q^{N-g}}{q^N}$
+
+
+normalizeTerm(nn: P, l: List Z): List Z == (_
+  sgn := l.1;_
+  qexpo := l.2;_
+  r := empty()$List(Z);_
+  for g in rest rest l repeat (_
+      if g <  0 then (g:=-g;   sgn:=-sgn; qexpo:=qexpo-g);_
+      if g > nn then (g:=g-nn; sgn:=-sgn; qexpo:=qexpo-g);_
+      if 2*g > nn then g := nn-g;_
+      r := cons(g, r));_
+  return concat([sgn,qexpo], sort r))
+
+
+-- +
+RecSQS ==> Record(fsgn: Z, fqexp: Z, fspec: SPEC) -- Sign, Q-expo, Spec
+
+termToSpecTerm(l: List Z): RecSQS == (_
+  spec: SPEC := 1;_
+  for g in rest rest l repeat spec := spec * geqSPEC[[nn,g,1]];_
+  return [l.1, l.2, spec]);
+
+specTermToMonomial(r: RecSQS): Pol(Q) == (_
+  purespec := purePart r.fspec;_
+  properspec := properGeneralizedPart r.fspec;_
+  p: Pol Q := r.fsgn :: Pol(Q);_
+  for l in concat(purespec, properspec) repeat (_
+      rl := reverse l;_
+      e := first rl;_
+      i := reverse! rest rl;_
+      p := p * (indexedSymbol("E", i)::Pol(Q))^(e::N));_
+  return p);
+
+specTermsToPolynomial(l: List RecSQS): Pol(Q) == _
+  reduce(+, [specTermToMonomial r for r in l]);
+
+specTermToSeries(r1: RecSQS, r2: RecSQS): L1 Q ==_
+  (r1.fsgn/r2.fsgn) * expansion specEQI(Q) (r1.fspec/r2.fspec)
+-- -
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+)set output algebra on
+)set output formatted off
+
+
+-- # Theorem 1
+
+-- +
+-------------------------------------------------------------------
+--test:theorem-1
+-------------------------------------------------------------------
+-- -
+
+-- \cite{KrattenthalerMercaRadu_InfinityProductFormulae:2019}
+
+-- We get from the righthand side of (7.2):
+
+rspec1 := geqSPEC [[105,1],[105,43,1]] -- (+)
+rspec2 := geqSPEC [[105,1],[105,22,1]] -- (+)
+rspec3 := geqSPEC [[105,1],[105,13,1]] -- (-)
+rspec4 := geqSPEC [[105,1],[105, 8,1]] -- (+)
+
+-- And Theorem 1 (Eq. (2.1)) says that this is equal to
+
+rspec5 := geqSPEC(105, [[7,1,1],[7,1],[5,1,-1]])
+level rspec5
+assertTrue(modularGamma1?(rspec5/rspec1))
+
+-- Ignore the following... it is the extended complicated form
+-- from the article.
+
+-- +
+-- rspecnumlist := [7,8,13,15,20,22,27,28,35,42,48,50];
+-- rspecdenlist := [4,9,11,16,19,24,26,31,39,44,46,51];
+-- rspecnum := geqSPEC [[105,x,1] for x in rspecnumlist]
+-- rspecden := geqSPEC [[105,x,1] for x in rspecdenlist]
+-- rspec := rspecnum / rspecden
+-- rspec0 := rspec*rspec1
+-- -
+
+rspecs := [rspec1, rspec2, rspec3, rspec4, rspec5];
+assertEquals(removeDuplicates [modularGamma1?(x/rspec1) for x in rspecs],[true])
+
+ys := [specYM1GEQ(x/rspec1) for x in rspecs];
+spitzen := cusps(105)$GAMMA1;
+#spitzen
+
+pords :=  [qetaGrades(y) for y in ys];
+cuspsoo := remove(oo,spitzen);
+reduce(+,[max [pord.c for pord in pords] for c in cuspsoo])
+
+-- Another way is to expand the series at the cusps where the expansion
+-- has cusps.
+
+cuspsWithPoles := [first l for c in cuspsoo | _
+                   not empty?(l:=[c for pord in pords | (pord.c)>0])]
+# cuspsWithPoles
+
+-- We must find the minimal extension of the coefficient field.
+
+minRoots := [[minimalRootOfUnity(y.c)::P for c in cuspsWithPoles] for y in ys];
+xiord := lcm concat minRoots
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+
+)set stream calc 2
+
+spitzen := cuspsWithPoles
+a := [expandAnCX y for y in ys];
+)set stream calc 1
+aa := a.1 + a.2 - a.3 + a.4 - a.5
+assertTrue(zero? aa)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+
+-- # Weierstrass relations
+
+-- ## No relation in level 5
+
+-- +
+-------------------------------------------------------------------
+--test:weierstrass-5
+-------------------------------------------------------------------
+-- -
+
+nn := 5;
+aidxs := generalizedEtaFunctionIndices nn
+idxs := aidxs
+
+gb := gEtaRels(idxs)
+assertEquals(#gb, 10)
+
+candidates := weierstrassCandidates nn
+
+assertEquals(candidates, [])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Relation in level 6
+
+-- +
+-------------------------------------------------------------------
+--test:weierstrass-6
+-------------------------------------------------------------------
+-- -
+
+nn := 6;
+aidxs := generalizedEtaFunctionIndices nn
+idxs := [[6,1],[6,2],[6,3]]
+
+generalizedEtaLaurentIdealGenerators(nn, idxs)$QEtaIdeal(C)
+
+gb := gEtaRels(idxs)
+assertEquals(#gb, 2)
+
+candidates := weierstrassCandidates nn;
+assertEquals(#candidates, 96)
+
+ncandidates := removeDuplicates [[normalizeTerm(nn, ct) for ct in rest c]_
+  for c in candidates]
+
+specTerms := [[termToSpecTerm t for t in terms] for terms in ncandidates];
+
+weierstrassGens1 := [specTermsToPolynomial l for l in specTerms];
+weierstrassGens2 := [inv(leadingCoefficient p)*p for p in weierstrassGens1];
+weierstrassGenerators := removeDuplicates weierstrassGens2
+
+esyms := indexedSymbols("E", idxs)
+dim := #esyms;
+D ==> HomogeneousDirectProduct(dim, N)
+E ==> Monomials(dim, N, D, esyms)
+
+l := [extendedNormalForm(h, gb, esyms, 'F, "G")$QEtaGroebner(C, E)_
+      for h in weierstrassGenerators]
+
+assertEquals(l, [G2-F])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Relation in level 7
+
+-- +
+-------------------------------------------------------------------
+--test:weierstrass-7
+-------------------------------------------------------------------
+-- -
+
+-- ### Computing the relations for all indices takes about 230 seconds
+
+nn := 7;
+aidxs := generalizedEtaFunctionIndices nn
+idxs := aidxs
+
+gb := gEtaRels(idxs)
+assertEquals(#gb, 50)
+
+-- ### Computing the relations of only the generalized part
+
+nn := 7;
+aidxs := generalizedEtaFunctionIndices nn
+idxs := aidxs(3..5)
+gb := gEtaRels(idxs)
+# gb
+
+-- ### Generate all Weierstrass triples
+
+candidates := weierstrassCandidates nn;
+assertEquals(#candidates, 192)
+
+-- ### Bring g into range $0 < g < 7$
+
+-- See formula eqref{eq:theta_delta-g}.
+
+ncandidates := removeDuplicates [[normalizeTerm(nn, ct) for ct in rest c]_
+  for c in candidates]
+
+-- ### Check vanishing of modular sum
+
+specterms := [[termToSpecTerm t for t in terms] for terms in ncandidates];
+
+specs := [[r.fspec for r in l] for l in specterms];
+modspecs := [[s.2/s.1,s.3/s.1] for s in specs]; -- make them modular
+l := [[modularGamma1? spec for spec in specs] for specs in modspecs];
+assertEquals(removeDuplicates l, [[true,true]])
+
+
+msers := [reduce(+,[specTermToSeries(x, s.1) for x in s]) for s in specterms]
+assertEquals(removeDuplicates [order(s,100) for s in msers], [100])
+
+-- ### Generators of Weierstrass ideal
+
+weierstrassGens1 := [specTermsToPolynomial l for l in specterms];
+weierstrassGens2 := [inv(leadingCoefficient p)*p for p in weierstrassGens1];
+weierstrassGenerators := removeDuplicates weierstrassGens2
+
+-- ### Reduce modulo Gröbner basis of generalized eta-relations
+
+esyms := indexedSymbols("E", idxs);
+dim := #esyms;
+D ==> HomogeneousDirectProduct(dim, N)
+E ==> Monomials(dim, N, D, esyms)
+
+l := [extendedNormalForm(h, gb, esyms, 'F, "G")$QEtaGroebner(C, E)_
+      for h in weierstrassGenerators];
+assertEquals(l, [G10-F])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Relation in level 9
+
+-- +
+-------------------------------------------------------------------
+--test:weierstrass-9
+-------------------------------------------------------------------
+-- -
+
+-- ### Computing the relations for all indices takes about ??? seconds
+
+nn := 9;
+aidxs := generalizedEtaFunctionIndices nn
+idxs := aidxs
+
+-- gb := gEtaRels(idxs)
+-- assertEquals(#gb, 10)
+
+-- ### Computing the relations of only the generalized part
+
+nn := 9;
+idxs := rest properGeneralizedEtaFunctionIndices nn
+gb := gEtaRels(idxs)
+assertEquals(# gb, 10)
+
+-- ### Generate all Weierstrass triples
+
+candidates := weierstrassCandidates nn;
+assertEquals(#candidates, 1152)
+
+-- ### Bring g into range $0 < g < 9$
+
+-- See formula eqref{eq:theta_delta-g}.
+
+ncandidates := removeDuplicates [[normalizeTerm(nn, ct) for ct in rest c]_
+  for c in candidates]
+
+-- ### Check vanishing of modular sum
+
+specterms := [[termToSpecTerm t for t in terms] for terms in ncandidates];
+
+specs := [[r.fspec for r in l] for l in specterms];
+modspecs := [[s.2/s.1,s.3/s.1] for s in specs];
+l := [[modularGamma1? spec for spec in specs] for specs in modspecs];
+assertEquals(removeDuplicates l, [[true,true]])
+
+
+msers := [reduce(+,[specTermToSeries(x, s.1) for x in s]) for s in specterms]
+assertEquals(removeDuplicates [order(s,100) for s in msers], [100])
+
+-- ### Generators of Weierstrass ideal
+
+weierstrassGens1 := [specTermsToPolynomial l for l in specterms];
+weierstrassGens2 := [inv(leadingCoefficient p)*p for p in weierstrassGens1];
+weierstrassGenerators := removeDuplicates weierstrassGens2
+
+-- ### Reduce modulo Gröbner basis of generalized eta-relations
+
+esyms := indexedSymbols("E", idxs);
+dim := #esyms;
+D ==> HomogeneousDirectProduct(dim, N)
+E ==> Monomials(dim, N, D, esyms)
+
+l := [extendedNormalForm(h, gb, esyms, 'F, "G")$QEtaGroebner(C, E)_
+      for h in weierstrassGenerators]
+assertEquals(l, [G8+F,E9_3*G9-F,E9_1*G9+E9_4*G10-F,E9_4*G9+E9_2*G10-F])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Extra stuff (can be deleted)
+
+for g in gb for i in 1.. repeat tracePrint(concat("g",string(i)),g)
