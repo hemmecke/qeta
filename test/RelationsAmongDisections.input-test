@@ -1,0 +1,262 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+-- This notebook demonstrates the computation of relations among
+-- disections (of partition functions) or rather, relations among
+-- functions that can be represented as a linear combination of
+-- (generalized) eta-quotients.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+-- +
+C ==> Q
+RKI ==> QEtaRamanujanKolbergIdentity C
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+)set mess type off
+OH ==> OperatorHandlers((Integer, List OutputForm) -> OutputBox)
+h := operatorHandlers()$FormatMathJax;
+MAX ==> maxPrecedence()$FormatMathJax
+MIN ==> minPrecedence()$FormatMathJax
+setHandler!(h, 2 , "SUB", subscript(MAX)$FormatMathJax)$OH;
+
+)read /home/hemmecke/g/qeta/input/convenience.input )quiet
+findID1a(nn,rspec,m,t)==> _
+  findID1(nn,generalizedEtaFunctionIndices nn, rspec,m,t,_
+             generalizedEtaFunctionIndices nn)
+
+FINDID1(m,t)==>(_
+  ids(t+1) := findID1(nn, idxs, rspec, m, t, id); _
+  pretty(ids(t+1), asExpression + qIdentity + nonModular + expand))
+
+oo ==> infinity()$Cusp
+
+QEtaIdeal ==> QEtaIdealHemmeckeCached
+QI ==> QEtaIdeal(C)
+etaRels ==> etaRelations $ QEtaIdeal(Q)
+gEtaRels ==> generalizedEtaRelations $ QEtaIdeal(Q)
+
+idpol(id: RKI, f:Symbol): Pol C == (_
+  sspec := coSpecification id;_
+  mon: Pol(C) := f*generalizedEtaQuotientMonomial(sspec,char"E",char"Y")$QI;_
+  ipol: Pol(C) := inv coefficient id * identityPolynomial id - 'F::Pol(C);_
+  mon+ipol)
+
+)set stream calc 4
+-- -
+
+)set mess type on
+)set mess time on
+
+)set output algebra on
+)set output formatted off
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+-- # Algebraic relations among disections
+
+-- +
+-------------------------------------------------------------------
+--test:algebraic-relations-5
+-------------------------------------------------------------------
+-- -
+
+-- ## 5-disection in $\Gamma_1(5)$
+
+-- By an extension of Radu's method for generalized
+-- eta-quotients.
+
+rspec:= eqSPEC [[1,-1]]; m:=5; t:=4;
+nn := minLevel1(rspec, m, t)
+
+aidxs := generalizedEtaFunctionIndices nn
+idxs := aidxs
+
+
+id := findID1(nn, idxs, rspec, m, 0, idxs);
+ids := [id for i in 0..4];
+
+FINDID1(5,0)
+
+FINDID1(5,1)
+
+FINDID1(5,2)
+
+FINDID1(5,3)
+
+FINDID1(5,4)
+
+-- ## Generators for relations ideal
+
+fsyms := [f0,f1,f2,f3,f4];
+mps := [idpol(id,f) for id in ids for f in fsyms]
+
+mspecs := monoidSpecifications first ids;
+geqrels := generalizedEtaLaurentIdealGenerators(idxs, mspecs, mps)$QI
+
+-- ## Eliminate generalized eta-quotients
+
+-- The following computation takes about 100 sec.
+
+)set message time on
+algrels := generalizedAlgebraicRelations(idxs, geqrels, char "f")$QI;
+)set message time off
+galgrels := [clearDenominator x for x in algrels]
+
+-- ## Selected results
+
+-- Among the relations is on that already appears in the paper of
+-- Kolberg
+-- \cite{Kolberg_SomeIdentitiesInvolvingThePartitionFunction_1957},
+-- namely equation (4.4).
+
+galgrels.5
+
+
+normLHS(id)== (_
+  eqx := equationX(id, 'p);_
+  c := 1/(coefficient(id) * cofactorX(id));_
+  e := e := c*eqx * ('q)^alphaOrbitInfinity(id);_
+  eval(e,[M3=E[1]^5*E[5]^(-5)*E[5_1]^(-10)]))
+
+qq(x)==('q)^x
+
+fvals := [lhs normLHS(id) for id in ids];
+
+simplify(eval(galgrels.5, fsyms, fvals)) * qq(-7/12)
+
+-- The above is mentioned in
+-- \cite{Kolberg_SomeIdentitiesInvolvingThePartitionFunction_1957}
+-- as formula (4.4) and can also be found by doing similar
+-- computations with just pure eta-quotients, since the pairs
+-- $(p(5n), p(5n+3))$ and $(p(5n+1), p(5n+2))$ appear together.
+
+-- The following identities involve other pairs.
+-- See congruence at bottom of page 86 in
+-- \cite{Kolberg_SomeIdentitiesInvolvingThePartitionFunction_1957}.
+
+simplify(eval(galgrels.4, fsyms, fvals)) * qq(-23/60)
+
+simplify(eval(galgrels.6, fsyms, fvals)) * qq(-47/60)
+
+simplify(eval(galgrels.3, fsyms, fvals)) * qq(-39/40)
+simplify(eval(galgrels.2, fsyms, fvals)) * qq(-31/40)
+simplify(eval(galgrels.1, fsyms, fvals)) * qq(-7/6)
+
+equationX ids.1
+
+-- ## Check relations
+
+ps := partitionSeries(1)$QFunctions(Q, L1 Q)
+g := [choose(5,i,ps) for i in 0..4]
+
+galgrels.5
+- monomial(1,1)$L1(Q)*g.5^2 + 3*g.2*g.3 - 2*g.1*g.4
+
+galgrels.6
+- g.1*g.5 - g.2*g.4 + 2*g.3^2
+
+-- ## ??? Elimination with Sage
+
+-- In SAGE:
+--
+--     R.<E1,Y1,E5,Y5,E5_1,Y5_1,E5_2,Y5_2,f0,f1,f2,f3,f4> = PolynomialRing(QQ)
+--     I=ideal(E1*Y1-1, E5*Y5-1,E5_1*Y5_1-1, E5_2*Y5_2-1,
+--       -E1^7*Y5^6*Y5_1^2*f0 + E1^5*Y5^5*Y5_1^10 - 3,
+--       -E1^7*E5_2*Y5^6*Y5_1^3*f1 + E1^5*Y5^5*Y5_1^10 + 2,
+--       E1^11*Y5^10*Y5_1^8*Y5_2^2*f2 - 2*E1^5*Y5^5*Y5_1^10 + 1,
+--       E1^11*Y5^10*Y5_1^9*Y5_2*f3 - 3*E1^5*Y5^5*Y5_1^10 - 1,
+--       E1^6*Y5^5*f4 - 5
+--     J = I.elimination_ideal([E1,Y1,E5,Y5,E5_1,Y5_1,E5_2,Y5_2])
+--     J.basis
+
+
+Jbasis := [3*f1^2*f2*f3^2 - 2*f0*f1*f3^3 - 4*f1^2*f2^2*f4 + 4*f0*f1*f2*f3*f4 - 2*f0^2*f3^2*f4 + f0^2*f2*f4^2, 81*f1^5*f2^2*f3 - 36*f0^2*f1^3*f3^3 - 207*f0*f1^4*f2^2*f4 + 216*f0^2*f1^3*f2*f3*f4 - 92*f0^3*f1^2*f3^2*f4 + 56*f0^3*f1^2*f2*f4^2 - 20*f0^4*f1*f3*f4^2 + 4*f0^5*f4^3 - 2*f4^8, 108*f1^5*f2^3 - 243*f0*f1^4*f2^2*f3 + 76*f0^3*f1^2*f3^3 + 237*f0^2*f1^3*f2^2*f4 - 226*f0^3*f1^2*f2*f3*f4 + 112*f0^4*f1*f3^2*f4 - 66*f0^4*f1*f2*f4^2 + 4*f0^5*f3*f4^2 - 2*f3*f4^7, 432*f0*f1^4*f2^3 - 1089*f0^2*f1^3*f2^2*f3 + 356*f0^4*f1*f3^3 + 1303*f0^3*f1^2*f2^2*f4 - 1348*f0^4*f1*f2*f3*f4 + 644*f0^5*f3^2*f4 - 292*f0^5*f2*f4^2 + 18*f3^2*f4^6 - 24*f2*f4^7, 576*f0^2*f1^3*f2^3*f3 + 1040*f0^4*f1*f2*f3^3 - 864*f0^5*f3^4 - 2144*f0^3*f1^2*f2^3*f4 + 1595*f0^4*f1*f2^2*f3*f4 - 976*f0^5*f2*f3^2*f4 + 779*f0^5*f2^2*f4^2 - 54*f3^4*f4^5 + 144*f2*f3^2*f4^6 - 96*f2^2*f4^7, 117*f0^2*f1^4*f2^2*f3 - 52*f0^4*f1^2*f3^3 - 355*f0^3*f1^3*f2^2*f4 + 444*f0^4*f1^2*f2*f3*f4 - 196*f0^5*f1*f3^2*f4 + 28*f0^5*f1*f2*f4^2 + 16*f0^6*f3*f4^2 - 18*f1*f3^2*f4^6 + 24*f1*f2*f4^7 - 8*f0*f3*f4^7, 495*f0^3*f1^3*f2^2*f3 - 220*f0^5*f1*f3^3 - 1721*f0^4*f1^2*f2^2*f4 + 2468*f0^5*f1*f2*f3*f4 - 2236*f0^6*f3^2*f4 + 1220*f0^6*f2*f4^2 + 648*f1*f3^3*f4^5 - 864*f1*f2*f3*f4^6 + 522*f0*f3^2*f4^6 - 312*f0*f2*f4^7, 233*f0^4*f1^2*f2^2*f3 + 2656*f0^5*f1*f2*f3^2 + 2848*f0^6*f3^3 - 4455*f0^5*f1*f2^2*f4 - 1280*f0^6*f2*f3*f4 - 2754*f1*f3^4*f4^4 + 2352*f1*f2*f3^2*f4^5 - 2576*f0*f3^3*f4^5 + 1760*f1*f2^2*f4^6 + 1216*f0*f2*f3*f4^6, 466*f0^3*f1^3*f2^3 + 17287*f0^5*f1*f2*f3^2 + 15328*f0^6*f3^3 - 26320*f0^5*f1*f2^2*f4 - 6745*f0^6*f2*f3*f4 - 15741*f1*f3^4*f4^4 + 13224*f1*f2*f3^2*f4^5 - 14783*f0*f3^3*f4^5 + 10352*f1*f2^2*f4^6 + 6932*f0*f2*f3*f4^6, 252*f0^3*f1^4*f2^2 - 594*f0^4*f1^3*f2*f3 + 284*f0^5*f1^2*f3^2 + 238*f0^5*f1^2*f2*f4 - 202*f0^6*f1*f3*f4 + 26*f0^7*f4^2 + 81*f1^2*f3^2*f4^5 - 108*f1^2*f2*f4^6 + 36*f0*f1*f3*f4^6 - 13*f0^2*f4^7, 356*f0^4*f1^3*f2^2 - 958*f0^5*f1^2*f2*f3 + 2286*f0^6*f1*f3^2 - 1790*f0^6*f1*f2*f4 + 110*f0^7*f3*f4 - 1053*f1^2*f3^3*f4^4 + 1404*f1^2*f2*f3*f4^5 - 972*f0*f1*f3^2*f4^5 + 672*f0*f1*f2*f4^6 - 55*f0^2*f3*f4^6, 432*f0^4*f1*f2*f3^4 - 288*f0^5*f3^5 + 256*f0^2*f1^3*f2^4*f4 - 800*f0^3*f1^2*f2^3*f3*f4 + 489*f0^4*f1*f2^2*f3^2*f4 - 240*f0^5*f2*f3^3*f4 - 64*f0^4*f1*f2^3*f4^2 + 217*f0^5*f2^2*f3*f4^2 - 18*f3^5*f4^5 + 48*f2*f3^3*f4^6 - 32*f2^2*f3*f4^7, 1100000*f0^6*f3^4 + 143808*f0^4*f1^2*f2^3*f4 - 464919*f0^5*f1*f2^2*f3*f4 - 1083552*f0^6*f2*f3^2*f4 + 305625*f0^6*f2^2*f4^2 - 641520*f1*f3^5*f4^4 + 928896*f1*f2*f3^3*f4^5 - 572770*f0*f3^4*f4^5 - 98048*f1*f2^2*f3*f4^6 + 517424*f0*f2*f3^2*f4^6 - 134944*f0*f2^2*f4^7, 34375*f0^5*f1*f2*f3^3 - 754*f0^4*f1^2*f2^3*f4 - 43553*f0^5*f1*f2^2*f3*f4 + 20551*f0^6*f2*f3^2*f4 - 10625*f0^6*f2^2*f4^2 - 13365*f1*f3^5*f4^4 - 648*f1*f2*f3^3*f4^5 - 13365*f0*f3^4*f4^5 + 24624*f1*f2^2*f3*f4^6 - 1512*f0*f2*f3^2*f4^6 + 4272*f0*f2^2*f4^7, 68750*f0^6*f1*f3^3 - 1508*f0^5*f1^2*f2^2*f4 - 87106*f0^6*f1*f2*f3*f4 + 41102*f0^7*f3^2*f4 - 21250*f0^7*f2*f4^2 - 40095*f1^2*f3^4*f4^4 - 19116*f0*f1*f3^3*f4^5 + 71280*f1^2*f2^2*f4^6 - 22032*f0*f1*f2*f3*f4^6 + 19251*f0^2*f3^2*f4^6 - 9276*f0^2*f2*f4^7, 576*f0^5*f1^3*f2*f3 - 9134*f0^6*f1^2*f3^2 + 10304*f0^6*f1^2*f2*f4 - 1916*f0^7*f1*f3*f4 + 178*f0^8*f4^2 + 5103*f1^3*f3^3*f4^4 - 6804*f1^3*f2*f3*f4^5 + 5265*f0*f1^2*f3^2*f4^5 - 3996*f0*f1^2*f2*f4^6 + 513*f0^2*f1*f3*f4^6 - 89*f0^3*f4^7]
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Zhu Cao: On Somos' disection identities
+
+-- +
+-------------------------------------------------------------------
+--test:algebraic-relations-3
+-------------------------------------------------------------------
+-- -
+
+-- (Journal of Mathematical Analysis and Applications, 2009)
+-- \cite{Cao_OnSomosDisectionIdentities_2009}
+--
+-- Theorem 2.1: $a(3n+2)\equiv 0 \pmod{3}$ for $a(n)$ defined by
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(n) = \qPochhammer{q}{q}^{-1} \qPochhammer{q^2}{q^2}^{-1}
+-- \end{gather*}
+
+rspec:= eqSPEC [[1,-1],[2,-1]]; m:=3; t:=2;
+nn := minLevel0(rspec, m, 2)
+
+-- We must work with $\Gamma_0(6)$.
+
+id := findID0(nn, rspec, m, t);
+pretty(id, asExpression + qIdentity + nonModular + expand)
+
+aidxs := generalizedEtaFunctionIndices 6
+idxs := aidxs(1..4)
+
+id := findID1(nn, idxs, rspec, m, 2, idxs);
+ids := [id for i in 0..2];
+
+FINDID1(3,0)
+FINDID1(3,1)
+FINDID1(3,2)
+
+ee := [inv(coefficient id)*qequationX(id,a[i]) for id in ids for i in 0..2]
+
+ee.1 - ee.2 + 2*ee.3
+
+fsyms := [f0,f1,f2];
+mps := [idpol(id,f) for id in ids for f in fsyms]
+
+mspecs := monoidSpecifications first ids;
+geqrels := generalizedEtaLaurentIdealGenerators(idxs, mspecs, mps)$QI
+
+algrels := generalizedAlgebraicRelations(idxs, geqrels, char "f")$QI;
+galgrels := [clearDenominator x for x in algrels]
+
+-- galgrels:=[2*f2^4-3*f0*f1*f2^2+(-f1^3-f0^3)*f2+3*f0^2*f1^2]
+
+
+-- In SAGE:
+--
+--     R.<E1,Y1,E2,Y2,E3,Y3,E6,Y6,f0,f1,f2> = PolynomialRing(QQ)
+--     I=ideal(E1*Y1-1, E2*Y2-1, E3*Y3-1, E6*Y6-1,
+--             -E1^3*E2^5*Y6^6*f0 + E2^8*E3^4*Y1^4*Y6^8 - 3,
+--             -E1^2*E2^6*E3^3*Y6^9*f1 + E2^8*E3^4*Y1^4*Y6^8 + 3,
+--             E1^4*E2^4*Y3^3*Y6^3*f2 - 3)
+--     J = I.elimination_ideal([E1,Y1,E2,Y2,E3,Y3,E6,Y6])
+--     J.basis
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
