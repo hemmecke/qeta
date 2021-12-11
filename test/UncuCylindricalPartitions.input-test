@@ -1,0 +1,873 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Mail Uncu 05-Oct-2021
+
+
+-- Mail Uncu 05-Oct-2021: Then the modulus 7 case comes and it is
+-- related to Theorem 1.1 in this paper:
+-- https://arxiv.org/pdf/1905.08343.pdf
+-- \cite{CorteelWelsh_A2RogersRamanujanIdentities_2021}
+
+-- We are looking for congruence properties. Uncu: "For example, for
+-- the product I just suggested: Sum a(n) q^n = 1/ (q^2,q^5;q^7)_inf /
+-- ((q^3,q^4;q^7)_inf)^2 . I experimented through the terms till
+-- O(q^1001) and it seems 3 | a(9i+5) .
+
+-- Mail Uncu 05-Oct-2021: Also the natural next step would be the
+-- modulo 8 cylindric partition identities:
+-- https://arxiv.org/pdf/2011.12828.pdf
+
+-- A2 Rogers-Ramanujan identities due to Andrews, Schilling and
+-- Warnaar \cite{}
+
+
+-- We look for congruences for the following generating functions according
+-- to Theorem 1.1 of https://arxiv.org/pdf/1905.08343.pdf.
+-- \begin{align}
+-- \sum_{n=0}^\infty a_1(n) q^n
+-- &=
+-- \qPochhammer{q^2,q^5}{q^7}^{-1}
+-- \qPochhammer{q^3,q^4}{q^7}^{-2}
+-- \\
+-- \sum_{n=0}^\infty a_2(n) q^n
+-- &=
+-- \qPochhammer{q^1,q^6}{q^7}^{-1}
+-- \qPochhammer{q^2,q^5}{q^7}^{-1}
+-- \qPochhammer{q^3,q^4}{q^7}^{-1}
+--    = \frac{\qPochhammer{q^7}{q^7}}{\qPochhammer{q}{q}}
+-- \\
+-- \sum_{n=0}^\infty a_3(n) q^n
+-- &=
+-- \qPochhammer{q^1,q^6}{q^7}^{-1}
+-- \qPochhammer{q^2,q^5}{q^7}^{-1}
+-- \qPochhammer{q^3,q^4}{q^7}^{-1}
+--    = \frac{\qPochhammer{q^7}{q^7}}{\qPochhammer{q}{q}}
+-- \\
+-- \sum_{n=0}^\infty a_4(n) q^n
+-- &=
+-- \qPochhammer{q^1,q^6}{q^7}^{-1} \qPochhammer{q^2,q^5}{q^7}^{-2}
+-- \\
+-- \sum_{n=0}^\infty a_5(n) q^n
+-- &=
+-- \qPochhammer{q^1,q^6}{q^7}^{-2} \qPochhammer{q^3,q^4}{q^7}^{-1}
+-- \end{align}
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+-- +
+)set mess type off
+)set mess time off
+C ==> Q
+
+LZ ==> List Z
+VZ ==> Vector Z
+MZ ==> Matrix Z -- consider only 2x2 matricies
+LVZ ==> List VZ
+RELS ==> VZ
+ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
+ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
+QES4TI2 ==> QEtaQuotientSpecifications4ti2
+eqSPECS1 ==> etaQuotientSpecifications $ QES4TI2(MOD1)
+
+)read convenience.input )quiet
+)set stream calc 2
+-- -
+
+-- ## Macros to beautify the output
+
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+
+ORBIT ==> modularOrbit $ MOD0
+
+usedSpecifications(id) ==> (_
+  mspecs := monoidSpecifications id;_
+  xab := algebraBasis id;_
+  bas := cons(multiplier xab, basis xab);_
+  vars := removeDuplicates! concat [variables(second(x)::Pol(C)) for x in bas];_
+  strs := [string x for x in vars];_
+  sort [parse_integer(x(2..#x))$ScanningUtilities for x in strs])
+
+checkCongruence(C, MOD, nn, rspec, m, t, idxs, cong, sspecExpected) ==> (_
+  id := findId(MOD)(nn, idxs, rspec, m, t, idxs);_
+  assertEquals(coSpecification id, sspecExpected);_
+  c := coefficient id;_
+  c := - recip(c)::C;_
+  pol := (c*identityPolynomial(id))::Pol(Z);_
+  tracePrint("cong", cnt := content(pol+F));_
+  assertEquals(cnt, cong);_
+  tracePrint("pretty",pretty(id, qIdentity));_
+  tracePrint("identityPolynomial", pol);_
+  xab := algebraBasis id;_
+  tracePrint("xab", xab);_
+  midxs := usedSpecifications id;_
+  mspecs := monoidSpecifications id;_
+  for i in midxs repeat_
+    tracePrint(concat("mspec",string(i)), mspecs.i))
+
+)if false
+
+checkCongruenceExtended(C,MOD,nn,rspec,m,t,idxs,cong,sspecExpected) ==> (_
+  gen := genus(nn)$MOD;_
+  sspec := cofactInf(MOD)(nn, rspec, m, t, idxs);_
+  assertEquals(sspec, sspecExpected);_
+  tracePrint("orbit", orb := modularOrbi(rspec,m,t)$MOD,[t]);_
+  f := specMA1(C,MOD)(sspec, rspec, m, t);_
+  fsym: Symbol := "F"::Symbol;_
+  xf := toX1(C, f, fsym::Pol(C));_
+  mspecs := ncmSPECSInf(MOD)(nn, idxs);_
+  assertEquals(removeDuplicates [modular?(x)$MOD for x in mspecs], [true]);_
+  egens := [specMA1(C,MOD) mspec for mspec in mspecs];_
+  msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools;_
+  xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];_
+  "cgens := [first x for x in xgens];";_
+  "cab := samba(cgens.1, cgens, gen, oneVerboseStep!(1,1,1,1))$QTOPSAMBA1(C)";_
+  xab := samba(xgens.1, xgens, gen, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);_
+  tracePrint("grade t", [qetaGrade multiplier xab]);_
+  tracePrint("grades bas", [qetaGrade x for x in basis xab]);_
+  xz := reduce(xf, xab)$QXTOPRED1(C);_
+  assertTrue(zero? xz);_
+  pol := second(xz)::Pol(C);_
+  c := - recip(coefficient(zpol, 'F, 1))::C;_
+  pol := (c*pol)::Pol(Z);_
+  assertEquals(content(pol+'F), cong))
+
+)endif
+
+rspec1 := eqSPEC [[7,2,-1],[7,3,-2]] -- case 1 a(9n+5) mod 3
+rspec2 := eqSPEC [[7,1,-1],[7,2,-1],[7,3,-1]] -- cases 2 and 3 a(9n+5) mod 7
+rspec3 := eqSPEC [[7,1],[1,-1]] -- same as cases 2 and 3
+rspec4 := eqSPEC [[7,1,-1],[7,2,-2]] -- case 4 a(9n+3) mod 7
+rspec5 := eqSPEC [[7,1,-2],[7,3,-1]] -- case 5 a(9n+7) mod 3
+-- -
+
+-- In the following we list possible congruences. They are listed in
+-- the form $[c, m, t, N]$ and means that for the specification
+-- rspec(i) of case i we have $c | a(m n+t)$ and we must compute in
+-- level $nn$.
+
+-- +
+-- case 1
+case1 := [_
+  [3, 9, 5, 21], [3, 27, 26, 21],_
+  [6, 18, 14, 168], [2, 50, 12, 280],_
+  [2, 50, 22, 280], [2, 50, 32, 280], [2, 50, 42, 280]]
+
+-- case 2 and 3
+case2 := [_
+  [7, 7, 5, 7], [7, 9, 5, 21], [21, 9, 8, 21],_
+  [2, 14, 7, 56], [2, 14, 9, 56], [2, 14, 13, 56],_
+  [3, 42, 3, 168], [3, 42, 8, 168],_
+  [3, 42, 11, 168], [3, 42, 15, 168], [3, 42, 17, 168], [3, 42, 18, 168],_
+  [3, 42, 24, 168], [3, 42, 29, 168], [3, 42, 32, 168], [3, 42, 36, 168],_
+  [3, 42, 38, 168], [3, 42, 39, 168], [2, 50, 21, 280], [2, 50, 41, 280],_
+  [3, 54, 11, 168], [42, 54, 17, 504], [42, 54, 35, 504], [3, 54, 38, 168],_
+  [42, 54, 53, 504]]
+
+-- case 4
+case4 := [_
+  [3, 9, 3, 21], [6, 18, 12, 168], [3, 27, 15, 21], [2, 50, 4, 280],_
+  [2, 50, 14, 280], [2, 50, 34, 280], [2, 50, 44, 280]]
+
+-- case 5
+case5 := [_
+  [3, 9, 7, 21], [6, 18, 7, 168], [3, 27, 19, 21], [2, 50, 7, 280],_
+  [2, 50, 27, 280], [2, 50, 37, 280], [2, 50, 47, 280]]
+
+rspecs := [rspec1, rspec2, rspec4, rspec5];
+cases := [case1, case2, case4, case5];
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+
+)set output algebra on
+)set output formatted off
+
+
+
+
+
+
+-- # Prove congruences for case 1
+
+-- ## Case 1 $3 | a(9n+5)$
+
+-- +
+-------------------------------------------------------------------
+--TODOtest:time6-case1-mod3-9n5
+-------------------------------------------------------------------
+-- -
+
+rspec := rspec1; m := 9; t := 5;
+assertEquals(nn := minLevelM1(rspec,m,t), 21)
+assertEquals(nn,21)
+sspecExpected := eqSPEC [[1,17],[3,-7],[7,-5],[21,-5],_
+                   [21,1,-17], [21,2,-10],[21,3,-17],[21,4,-9],[21, 5,-10]]
+idxs := [[1], [3], [7], [21], [21, 1], [21, 2], [21, 3], [21, 4], [21, 5]]
+
+)sys date
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+)sys date
+
+-------------------------------------------------------------------
+)co /home/hemmecke/g/fricas/src/algebra/vector.spad
+)co ../src/qetamodfunexp
+)co ../src/qetamodgamma
+QETAMGP ==> QEtaModularGammaPackage
+YMEQ ==> SymbolicModularEtaQuotient
+--idxs := generalizedEtaFunctionIndices(nn)
+ecs := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD1
+hbasis := ecs.basis
+rinitial := (ecs.particular)::VZ
+sinitial := minimizeVector(rinitial, hbasis)$QETAAUX
+sspec := etaQuotientSpecification(nn, idxs, sinitial)
+spitzen := cusps(nn)$MOD1
+spitzen := remove!(infinity()$Cusp, spitzen)
+y := etaQuotient(sspec, rspec, m, t, spitzen)$YMEQ(MOD1);
+ords := [-g for g in qetaGrades y]
+bspecs := [etaQuotientSpecification(nn, idxs, x) for x in hbasis]
+zin := etaCofactorInfinitySpaceSystem(bspecs, ords, spitzen)$QETAMGP(MOD1)
+zin := reduceSystem(zin)$QETAMGP(MOD1)
+mat := zin.zmat; mat := vertConcat(mat([2,2],1..8),mat([1,3,4,5,6,7,8,9,10],1..8))
+v := zin.zrhs; v := concat([0,0,v.1], rest(members v,3))
+v.1 := 0
+v.2 := -2
+rels := new(#v,1)$VZ
+rels.1 := -1
+v,rels
+)sys date
+z := zsolve([mat,rels,v]$ZINPUT)$X4ti2
+)sys date
+
+)fin
+
+rspec := eqSPEC [[7,2,-1],[7,3,-2]]; m := 9; t := 5
+nn := minLevelM1(rspec, m, t)
+aidxs := rest properGeneralizedEtaFunctionIndices(nn)
+idxs := concat(aidxs(1..4),aidxs(9..13))
+--spitzen: List Cusp := CUSPS1(nn)
+--spitzen := remove!(infinity()$Cusp, spitzen)
+idxs
+
+gen := genus()$GAMMA1(nn)
+assertEquals(gen, 5)
+
+-- The following computation takes about 1 min and gives 10441
+-- elements.
+
+)sys date
+mspecs := ncmSPECSInfM1(nn, idxs);
+)sys date
+
+assertEquals(#mspecs, 10441)
+assertEquals(removeDuplicates [modularGamma1? x for x in mspecs], [true])
+
+egens := [specM1A1(C) mspec for mspec in mspecs];
+assertEquals([qetaGrade x for x in egens(1..10)],_
+             [9, 10, 10, 12, 12, 13, 13, 13, 14, 14])
+
+-- An algebra basis is easy to compute.
+
+msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools;
+xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];
+--cgens := [first x for x in xgens];
+--cab := samba(cgens.1, cgens, gen, oneVerboseStep!(1,1,1,1))$QTOPSAMBA1(C);
+xab := samba(xgens.1, xgens, gen, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
+
+-- it is also easy to compute the cofactor eta-quotient, but it takes
+-- about 4 min.
+
+)sys date
+sspec := cofactInfM1(nn, rspec, m, t, idxs);
+)sys date
+sspecExpected := eqSPEC [[1,17],[3,-7],[7,-5],[21,-5],_
+                    [21,1,-17], [21,2,-10],[21,3,-17],[21,4,-9],[21, 5,-10]]
+
+assertEquals(sspec, sspecExpected)
+
+f := specM1A1(C)(sspec, rspec, m, t)
+fsym: Symbol := "F"::Symbol
+xf := toX1(C, f, fsym::Pol(C))
+xz := reduce(xf, xab)$QXTOPRED1(C);
+assertTrue(zero? xz)
+assertEquals(content((second(xz)::Pol(C)) - F), 3)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Case 1 $3 | a(27n+26)$
+
+-- +
+-------------------------------------------------------------------
+--test:time350-case1-mod3-27n26
+-------------------------------------------------------------------
+-- -
+rspec := rspec1; m := 27; t := 26
+nn := minLevelM1(rspec,m,t)
+assertEquals(nn,21)
+sspecExpected := eqSPEC [[1,52],[3,-19],[7,-15],[21,-18],_
+                         [21,1,-53],[21,2,-41],[21,3,-47],[21,4,-30],[21,5,-34]]
+--checkCongruence1Q(21,rspec,m,t,[1..4,9..13],3,sspecExpected)
+
+idxs := [[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5], [21,6]]
+mspecs5 := eqSPECS1(21, idxs, 5)
+--mspecs6 := eqSPECS1(21, idxs, 6)
+--mspecs7 := eqSPECS1(21, idxs, 7)
+mspecs8 := eqSPECS1(21, idxs, 8)
+mspecs9 := eqSPECS1(21, idxs, 9)
+--mspecs10 := eqSPECS1(21, idxs, 10)
+mspecs11 := eqSPECS1(21, idxs, 11)
+mspecs := concat [mspecs5,mspecs8,mspecs9,mspecs11]
+egens := [specM1A1(C) mspec for mspec in mspecs];
+msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools;
+xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];
+--cgens := [first x for x in xgens];
+--cab := samba(cgens.1, cgens, gen, oneVerboseStep!(1,1,1,1))$QTOPSAMBA1(C);
+gen := genus()$GAMMA1(nn)
+xab := samba(xgens.1, xgens, gen, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
+f := specM1A1(C)(sspecExpected, rspec, m, t)
+fsym: Symbol := "F"::Symbol
+xf := toX1(C, f, fsym::Pol(C))
+xz := reduce(xf, xab)$QXTOPRED1(C);
+pol := second(xz)::Pol(C);
+c := inv(coefficient(pol,'F, 1))::C
+mpol := (c*pol - F)::Pol(Z)
+content(mpol)
+#monomials(mpol)
+zser := eval(pol, c+->c::A1(C), cons('F,msyms), cons(f,egens))$_
+          PolynomialEvaluation(C, A1 C);
+assertTrue(zero? zser)
+bas := cons(multiplier xab, basis xab);
+vars := removeDuplicates! concat [variables(second(x)::Pol(C)) for x in bas];
+strs := [string x for x in vars];
+midxs := sort [parse_integer(x(2..#x))$ScanningUtilities for x in strs]
+for i in midxs repeat_
+  tracePrint(concat("mspec",string(i)), mspecs.i)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+
+-- # Prove congruences for case 4
+
+-- ## Case 4 $3 | a(9n+3)$
+
+-- +
+-------------------------------------------------------------------
+--test:time1600-case4-mod3-9n3
+-------------------------------------------------------------------
+-- -
+rspec := rspec4; m := 9; t := 3
+nn := minLevelM1(rspec,m,t)
+assertEquals(nn,21)
+sspecExpected := eqSPEC [[1,16],[3,-8],[7,-5],[21,-3],_
+                         [21,1,-13],[21,2,-10],[21,3,-11],[21,4,-8],[21,5,-8]]
+idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
+
+)sys date
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+)sys date
+id13 := id;
+
+sspecExpected := eqSPEC [[1,15],[3,-7],[7,-4],[21,-4],_
+                          [21,1,-10],[21,2,-9],[21,3,-10],[21,4,-7],_
+                          [21,5,-7],[21,6,-1]]
+
+idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5], [21,6]]
+)sys date
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+)sys date
+id14 := id;
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+
+-- ## Case 4 $3 | a(27n+15)$
+
+-- +
+-------------------------------------------------------------------
+--test:time1500-case4-mod3-27n26
+-------------------------------------------------------------------
+-- -
+rspec := rspec4; m := 27; t := 15
+nn := minLevelM1(rspec,m,t)
+assertEquals(nn,21)
+sspecExpected := eqSPEC [[1,55],[3,-21],[7,-12],[21,-22],_
+                    [21,1,-60],[21,2,-48],[21,3,-50],[21,4,-34],[21,5,-40]]
+idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+
+
+-- # Prove congruences for case 5
+
+-- ## Case 5 $3 | a(9n+7)$
+
+-- +
+-------------------------------------------------------------------
+--test:time550-case5-mod3-9n7
+-------------------------------------------------------------------
+-- -
+rspec := rspec5; m := 9; t := 7
+nn := minLevelM1(rspec,m,t)
+assertEquals(nn,21)
+sspecExpected := eqSPEC  [[1,16],[3,-8],[7,-4],[21,-4],_
+                    [21,1,-13],[21,2,-11],[21,3,-11],[21,4,-8],[21,5,-8]]
+idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
+checkCongruence(Q,MOD1,21,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+
+-- ## Case 5 $3 | a(27n+19)$
+
+-- +
+-------------------------------------------------------------------
+--test:time800-case5-mod3-27n19
+-------------------------------------------------------------------
+-- -
+rspec := rspec5; m := 27; t := 19
+sspecExpected := eqSPEC [[1,50],[3,-18],[7,-15],[21,-17],_
+                    [21,1,-47],[21,2,-39],[21,3,-44],[21,4,-28],[21,5,-30]]
+idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
+checkCongruence(Q,MOD1,21,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- # Prove congruences for cases 2 and 3
+
+-- ## Case 3 $7 | a(7n+5)$
+
+-- +
+-------------------------------------------------------------------
+--test:case3-mod7-7n5
+-------------------------------------------------------------------
+-- -
+rspec := rspec3; m := 7; t := 5
+sspecExpected := eqSPEC [[1, 7], [7, - 7]]
+checkCongruence(Z,MOD0,7,rspec,m,t,etaFunctionIndices 7,7,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+
+-- ## Case 3 $7 | a(9n+5)$
+
+-- +
+-------------------------------------------------------------------
+--test:time370-case3-mod7-9n5
+-------------------------------------------------------------------
+-- -
+rspec := rspec3; m := 9; t := 5
+assertEquals(nn:=minLevelM0(rspec,m,t),21)
+nn := 2*nn
+sspecExpected0 := eqSPEC [[1,9],[3,-4],[6,2],[7,-5],[14,6],[21,8],[42,-16]]
+C ==> Z
+checkCongruence(Z,MOD0,nn,rspec,m,t,etaFunctionIndices nn,7,sspecExpected0)
+
+sspecExpected1 := eqSPEC [[1,18],[3,-6],[7,-8],[21,-4],_
+                    [21,1,-21],[21,2,-13],[21,3,-16],[21,4,-11],[21,5,-12]]
+idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
+assertEquals(nn := minLevelM1(rspec,m,t),21)
+checkCongruence(Z,MOD1,21,rspec,m,t,idxs,7,sspecExpected1)
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- ## Case 3 $7 | a(9n+8)$
+
+-- +
+-------------------------------------------------------------------
+--test:case3-mod7-9n8
+-------------------------------------------------------------------
+-- -
+rspec := rspec3; m := 9; t := 8
+sspecExpected := eqSPEC [[1,10],[3,-7],[6,2],[7,-4],[14,4],[21,5],[42,-10]]
+checkCongruence(Z,MOD0,42,rspec,m,t,etaFunctionIndices 42,21,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Case 3 $2 | a(14n+7)$
+
+-- +
+-------------------------------------------------------------------
+--test:case3-mod2-14n7
+-------------------------------------------------------------------
+-- -
+rspec := rspec3; m := 14; t := 7
+nn := minLevelM0(rspec,m,t)
+assertEquals(nn,56)
+assertEquals(sort ORBIT(rspec,m,t), [7,9,13])
+sspecExpected := eqSPEC [[1,46],[2,-20],[4,4],[7,-7],[8,-1],[14,2],_
+                         [28,23],[56,-47]]
+checkCongruence(Z,MOD0,56,rspec,m,t,etaFunctionIndices 56,8,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+
+-- +
+-------------------------------------------------------------------
+--test:case1-19-Oct-2021-mod3-3n2
+-------------------------------------------------------------------
+-- -
+
+-- Mail Uncu 19-Oct-2021:
+-- Case 1: (3,0,0) :  1/(q;q)_inf / (q^2,q^3,q^3,q^4 ; q^6)_infy
+
+rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=3; t:=2;
+nn := minLevelM1(rspec, m, t)
+assertEquals(nn, 6)
+-- In level 6 it is enought to use pure eta functions.
+idxs := etaFunctionIndices nn
+sspecExpected := eqSPEC [[1, 6], [2, 1], [3, - 3], [6, - 3]]
+checkCongruence(Q,MOD1,6,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:case1-19-Oct-2021-mod3-9n3
+-------------------------------------------------------------------
+-- -
+
+-- Mail Uncu 19-Oct-2021:
+-- Case 1: (3,0,0) :  1/(q;q)_inf / (q^2,q^3,q^3,q^4 ; q^6)_infy
+
+rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=9; t:=3;
+assertEquals(nn := minLevelM1(rspec, m, t), 6)
+-- In level 6 it is enought to use pure eta functions.
+idxs := etaFunctionIndices nn
+sspecExpected := eqSPEC [[1, 14], [2, 8], [3, 3], [6, - 24]]
+checkCongruence(Q,MOD1,6,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:case1-19-Oct-2021-mod3-9n5
+-------------------------------------------------------------------
+-- -
+
+-- Mail Uncu 19-Oct-2021:
+-- Case 1: (3,0,0) :  1/(q;q)_inf / (q^2,q^3,q^3,q^4 ; q^6)_infy
+
+rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=9; t:=5;
+assertEquals(nn := minLevelM1(rspec, m, t), 18)
+sspecExpected := eqSPEC [[1,23],[2,6],[3,-20],[6,7],[9,22],[18,-37],_
+                          [18,1,-17],[18,2,-26],[18,4,-10]]
+idxs :=  [[1], [2], [3], [6], [9], [18], [18, 1], [18, 2], [18, 3], [18, 4]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:case1-19-Oct-2021-mod3-9n6
+-------------------------------------------------------------------
+-- -
+
+-- Mail Uncu 19-Oct-2021:
+-- Case 1: (3,0,0) :  1/(q;q)_inf / (q^2,q^3,q^3,q^4 ; q^6)_infy
+
+rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=9; t:=6;
+assertEquals(nn := minLevelM1(rspec, m, t), 6)
+idxs :=etaFunctionIndices nn
+sspecExpected := eqSPEC [[1, 13], [2, 9], [3, 6], [6, - 27]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:case1-19-Oct-2021-mod3-9n8
+-------------------------------------------------------------------
+-- -
+
+-- Mail Uncu 19-Oct-2021:
+-- Case 1: (3,0,0) :  1/(q;q)_inf / (q^2,q^3,q^3,q^4 ; q^6)_infy
+
+rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=9; t:=8;
+assertEquals(nn := minLevelM1(rspec, m, t), 18)
+sspecExpected := eqSPEC[[1,23], [2,5], [3,1], [6,-13], [9,1], [18,-16],_
+                        [18,1,-17], [18,2,-25], [18,3,-21], [18,4,-8]]
+idxs := [[1], [2], [3], [6], [9], [18], [18, 1], [18, 2], [18, 3], [18, 4]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+
+sspecExpected := eqSPEC[[9,21],[18,-20],_
+    [18,1,7],[18,2,8],[18,3,6],[18,4,17],_
+    [18,5,20],[18,6,15],[18,7,24],[18,8,27]]
+idxs := [[9], [18],_
+         [18,1], [18,2], [18,3], [18,4], [18,5], [18,6], [18,7], [18,8]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:case1-19-Oct-2021-mod27-27n12
+-------------------------------------------------------------------
+-- -
+
+-- Mail Uncu 19-Oct-2021:
+-- Case 1: (3,0,0) :  1/(q;q)_inf / (q^2,q^3,q^3,q^4 ; q^6)_infy
+
+rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=27; t:=12;
+assertEquals(nn := minLevelM1(rspec, m, t),6)
+idxs := etaFunctionIndices nn
+sspecExpected := eqSPEC [[1, 37], [2, 30], [3, 24], [6, - 90]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,m,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- # Mail Uncu 19-Oct-2021
+
+-- +
+-------------------------------------------------------------------
+--TODOtest:case1-19-Oct-2021-mod3-3n2
+-------------------------------------------------------------------
+
+-- Case 1: (3,0,0) :  1/(q;q)_inf / (q^2,q^3,q^3,q^4 ; q^6)_infy
+-- Case 2/3: (2,1,0) & (2,0,1) :  1/(q;q)_inf / (q,q^2,q^4,q^5 ; q^6)_infy
+-- Case 4:  (1,1,1) :  1/(q,q,q,q^3,q^3,q^3,q^5,q^5,q^5, q^6 ; q^6)_infy
+
+rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=3; t:=2;
+assertEquals(nn := minLevelM1(rspec, m, t),6)
+idxs := etaFunctionIndices nn
+sspecExpected := eqSPEC [[1,6], [2,1], [3,-3], [6,-3]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+
+es := eulerExpansion specEQI(C) rspec
+m:=2; t:=0; [coefficient(es,m*n+t) for n in 0..10]
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+
+sspecExpected := eqSPEC [[1,52],[3,-19],[7,-15],[21,-18],_
+                    [21,1,-53],[21,2,-41],[21,3,-47],[21,4,-30],[21,5,-34]]
+--checkCongruence1Q(21,rspec,m,t,[1..4,9..13],3,sspecExpected)
+
+nn := minLevelM1(rspec, m, t)
+aidxs := generalizedEtaFunctionIndices(nn)
+idxs := concat(aidxs(1..4),aidxs(9..14))
+mspecs5 := eqSPECS1(21, idxs, 5)
+--mspecs6 := eqSPECS1(21, idxs, 6)
+--mspecs7 := eqSPECS1(21, idxs, 7)
+mspecs8 := eqSPECS1(21, idxs, 8)
+mspecs9 := eqSPECS1(21, idxs, 9)
+--mspecs10 := eqSPECS1(21, idxs, 10)
+mspecs11 := eqSPECS1(21, idxs, 11)
+mspecs := concat [mspecs5,mspecs8,mspecs9,mspecs11]
+egens := [specM1A1(C) mspec for mspec in mspecs];
+msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools;
+xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];
+--cgens := [first x for x in xgens];
+--cab := samba(cgens.1, cgens, gen, oneVerboseStep!(1,1,1,1))$QTOPSAMBA1(C);
+gen := genus()$GAMMA1(nn)
+xab := samba(xgens.1, xgens, gen, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
+f := specM1A1(C)(sspecExpected, rspec, m, t)
+fsym: Symbol := "F"::Symbol
+xf := toX1(C, f, fsym::Pol(C))
+xz := reduce(xf, xab)$QXTOPRED1(C);
+pol := second(xz)::Pol(C);
+c := inv(coefficient(pol,'F, 1))::C
+mpol := (c*pol - F)::Pol(Z)
+content(mpol)
+#monomials(mpol)
+zser := eval(pol, c+->c::A1(C), cons('F,msyms), cons(f,egens))$_
+          PolynomialEvaluation(C, A1 C);
+assertTrue(zero? zser)
+bas := cons(multiplier xab, basis xab);
+vars := removeDuplicates! concat [variables(second(x)::Pol(C)) for x in bas];
+strs := [string x for x in vars];
+midxs := sort [parse_integer(x(2..#x))$ScanningUtilities for x in strs]
+for i in midxs repeat_
+  tracePrint(concat("mspec",string(i)), mspecs.i)
+
+
+
+
+-- # Mail Uncu 19-Oct-2021 p_k=(1,1,1,...)
+
+-- Can prove up to k=11.
+
+-- +
+-------------------------------------------------------------------
+--test:p2-19-Oct-2021-mod2
+-------------------------------------------------------------------
+-- -
+
+-- May you check congruences for the profile p_k = (1,1,1,1,1... )
+-- where there are k-many 1s?
+--
+-- The product for those are
+-- \begin{align}
+-- \frac{1}{(q^2k; q^2k)_\infty \prod_{i=1}^k (q^{2i-1} ;q^{2k})_\infty^k}
+-- &=
+-- \frac
+--   {\prod_{i=1}^k (q^{2i} ;q^{2k})_\infty^k}
+--   {(q^{2k}; q^{2k})_\infty
+--    \prod_{i=1}^k (q^{2i-1} ;q^{2k})_\infty^k
+--    \prod_{i=1}^k (q^{2i} ;q^{2k})_\infty^k}
+-- \\
+-- &=
+-- \frac
+--   {(q^2;q^2)_\infty^k}
+--   {(q^{2k}; q^{2k})_\infty (q;q)_\infty^k}
+-- \end{align}
+--
+-- Something tells me that there might be a congruence of the form
+-- $a(k n + (k-1)) \equiv 0 \pmod{k}$ for all k.
+
+k := 2;  rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=2; t:=(m-1)::N;
+assertEquals(nn := minLevelM1(rspec, m, t), 8)
+sspecExpected := eqSPEC [[1, 3], [2, - 1], [4, 1], [8, - 2]]
+idxs := etaFunctionIndices nn
+checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,m,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:p3-19-Oct-2021-mod3
+-------------------------------------------------------------------
+-- -
+
+-- See test:p2-19-Oct-2021-mod2.
+
+k := 3;  rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::N;
+assertEquals(nn := minLevelM1(rspec, m, t),6)
+ORBIT(rspec,m,t)
+sspecExpected := eqSPEC [[1, 7], [2, - 2], [3, - 2], [6, - 2]]
+idxs := etaFunctionIndices nn
+checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:p4-19-Oct-2021-mod4
+-------------------------------------------------------------------
+-- -
+
+-- See test:p2-19-Oct-2021-mod2.
+
+-- We first show that the generalized eta-quotient is actually a pure
+-- eta-quotient.
+
+k := 4; rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::N;
+assertEquals(nn := minLevelM1(rspec, m, t),8)
+ORBIT(rspec,m,t)
+sspecExpected := eqSPEC[[1, 13], [2, - 9], [4, 3], [8, - 6]]
+idxs := etaFunctionIndices nn
+checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:p5-19-Oct-2021-mod5
+-------------------------------------------------------------------
+-- -
+
+-- See test:p2-19-Oct-2021-mod2.
+
+k := 5; rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::N;
+assertEquals(nn := minLevelM1(rspec, m, t),10)
+assertEquals(ORBIT(rspec,m,t),[1,4])
+idxs := etaFunctionIndices nn
+sspecExpected := eqSPEC[[1, 33], [2, - 11], [5, 5], [10, - 25]]
+checkCongruence(Q,MOD0,nn,rspec,m,t,idxs, m*m,sspecExpected)
+
+nn := minLevelM1(rspec, m, t)
+assertEquals(nn, 10)
+idxs := [[1], [2], [5], [10], [10,1], [10,2], [10,3]]
+sspecExpected := eqSPEC[[1,15],[5,4],[10,-18],[10,1,-3],[10,2,-8],[10,3,6]]
+checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,m,sspecExpected)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
