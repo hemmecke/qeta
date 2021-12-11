@@ -1,0 +1,580 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Introduction
+
+-- This file is connected to the article
+-- \cite{AndrewsPaule_MacMahonsPartitionAnalysisXIII_2021},
+-- https://doi.org/10.1016/j.jnt.2021.09.008.
+
+
+-- **Definition**
+-- The generating function for 2-elongated plane partitions is
+-- \begin{gather*}
+-- D_2(q)
+-- = \sum_{n=0}^\infty d_2(n) q^n
+-- = \frac{\qPochhammer{q^2}{q^2}^2}{\qPochhammer{q}{q}^7}.
+-- \end{gather*}
+
+-- The article proves many arithmetic properties for
+-- $d_2(m n + t)$ for various $m$ and $t$ and ends with
+-- three conjectures.
+
+-- ## Conjecture 1
+--
+
+-- Let $d_2(n)$ be as defined above.
+-- Then for $n\ge0$ and $k\in \{8,35,62,71\}$
+-- \begin{gather*}
+-- d_2(3^4 n + k) \equiv 0 \pmod{3^5}
+-- \end{gather*}
+-- and
+-- \begin{gather*}
+-- d_2(3^4 n + 44) \equiv 0 \pmod{3^4}.
+-- \end{gather*}
+
+-- ## Conjecture 2
+
+-- Let $d_2(n)$ be as defined above.
+-- Then for $n\ge0$ and $k\in \{8,35,62,89,116,143,152,170,197,224,233\}$
+-- \begin{gather*}
+-- d_2(3^5 n + k) \equiv 0 \pmod{3^5}
+-- \end{gather*}
+-- and
+-- \begin{gather*}
+-- d_2(3^5 n + 71) \equiv 0 \pmod{3^6}.
+-- \end{gather*}
+
+-- ## Conjecture 3
+
+-- Let $d_2(n)$ be as defined above.
+-- Then for $n\ge0$, $s\ge 1$
+-- \begin{gather*}
+-- d_2(3^s n + k_s) \equiv 0 \pmod{3^s}
+-- \end{gather*}
+-- where $8k_s \equiv 1 \pmod{3^s}$ and $1<k_s<3^s$.
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+-- +
+
+)set mess type off
+)set mess time off
+C ==> Q
+
+)read convenience.input )quiet
+)set stream calc 2
+-- -
+
+-- ## Macros to beautify the output
+
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+
+-- ## Represent generalized eta-functions
+
+ORBIT ==> modularOrbit $ MOD0
+RKI==>QEtaRamanujanKolbergIdentity(C)
+ERMp(spec) ==> etaRelationMonomial(1,spec,0,varPochhammer $ RKI,0)$RKI
+ERM ==> ERMp
+REL1(id) ==> ERM definingSpecification id = (_
+  if fpol = 'fpol then fpol := 1;_
+  idpol := identityPolynomial(id);_
+  rpol := F - (inv(coefficient(idpol,'F, 1))::C) * idpol;_
+  assertEquals(rpol,fpol);_
+  if one? rpol then _
+     ERM inv coSpecification id _
+  else _
+     rhs pretty(id, qIdentity + expand + nonModular + withSubscript + asExpression))
+
+commonFactor id ==> (_
+  pol := inv coefficient id * identityPolynomial id - 'F;_
+  cs := [leadingCoefficient x for x in monomials pol];_
+  den := lcm [denom x for x in cs];_
+  num := gcd [numer(den*x) for x in cs];_
+  num/den)
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+
+)set output algebra on
+)set output formatted off
+
+-- # Conjecture 1 and 2 by checking the principal part
+
+-- We can prove the conjectures by finding in each case a
+-- cofactor that turns the dissected series into a
+-- modular function for $\Gamma_1(18)$ with at most a pole
+-- at infinity.
+-- We compute the order of the respective $q$-expansion of the
+-- product and derive from that up to which coefficient we must
+-- check the expansion of the original series $D_2(q)$.
+-- For checking
+-- \begin{gather*}
+-- d_2(3^5+71) \equiv 0 \pmod{3^6}
+-- \end{gather*}
+-- it means to compute $d_2(n)$ up to
+-- $n=3^5\cdot 452 + 71=109907$.
+
+rspec := eqSPEC [[1,-7],[2,2]]
+
+cases := [[3^4,8,35,44,62,71],_
+          [3^5,8,35,62,71,89,116,143,152,170,197,224,233]]
+[(m := first l; [minLevelM0(rspec,m,t) for t in rest l]) for l in cases]
+[(m := first l; [minLevelM1(rspec,m,t) for t in rest l]) for l in cases]
+
+[(m := first l; removeDuplicates [[minLevelM0(rspec,m,t), sort ORBIT(rspec,m,t)] for t in rest l])_
+ for l in cases]
+
+m := 3^7
+t := 71
+[[l,j] for j in 0..3^7-1 | (l := minLevelM0(rspec,m,j); l < 50)]
+
+idxs := etaFunctionIndices 6
+mspecs := mSPECSInfM0(6, idxs)
+[qetaGrade specM0A1(Q) spec for spec in mspecs]
+
+k := 5
+m := 3^k
+ll := [concat([l,j],ORBIT(rspec,m,j)) for j in 0..3^k-1 | (l := minLevelM0(rspec,m,j); l < 10)]
+
+[[(id:=findIdM0(6,idxs,rspec,m,l.2,[mspecs.i]); commonFactor id) for i in 1..3] for l in ll]
+
+
+candidates := [_
+ [1,2,3],_
+ [2,2,3],[2,5,9],[2,8,27],_
+ [3,8,3^5],[3,17,3^3],[3,26,3^3],_
+ [4,17,3^3],[4,44,3^4],[4,71,3^5],_
+ [5,71,3^5],[5,152,3^5],[5,233,3^5]]
+
+
+
+factor m, t
+
+ORBIT(rspec,m,t)
+
+nn :=6; m := 3^6; t:= 638
+ecs := etaCofactorSpace(nn,rspec,m,t,idxs)$MOD0
+xspec := etaQuotientSpecification(nn,ecs.indices,ecs.particular)
+
+--sspec := cofactInfM0(nn, rspec, m, t)
+y := specYM0EQ(xspec,rspec,m,t);
+ordersMin(y)
+reduce(+,%)::Float
+qetaGrades y -- takes about 30 sec
+
+1
+
+-- # Conjecture 1: $3^5|d_2(3^4n+71)$
+
+-- +
+-------------------------------------------------------------------
+--test:time90-d2-81n71
+-------------------------------------------------------------------
+-- -
+
+m := 3^4; t := 71;
+rspec := eqSPEC [[1,-7],[2,2]]
+nn := minLevelM1(rspec, m, t)
+idxs := etaFunctionIndices nn
+orb := ORBIT(rspec,m,t)
+C ==> Z
+
+ERM(rspec)
+
+-- The following computation takes about 1 min.
+
+)sys date
+id := findIdM0(nn,rspec,m,t,idxs);
+)sys date
+
+assertEquals(commonFactor id, 3^5)
+
+pol := identityPolynomial id
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Conjecture 1: $3^4|d_2(3^4n+44)$
+
+-- +
+-------------------------------------------------------------------
+--test:time90-d2-81n44
+-------------------------------------------------------------------
+-- -
+
+m := 3^4; t := 44;
+rspec := eqSPEC [[1,-7],[2,2]]
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
+orb := ORBIT(rspec,m,t)
+C ==> Q
+
+ERM(rspec)
+
+-- The following computation takes about 1 min.
+
+)sys date
+id := findIdM0(nn,rspec,m,t,idxs);
+)sys date
+
+assertEquals(commonFactor id, 3^4)
+
+pol := identityPolynomial id
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Conjecture 1 $3^5|d_2(3^4n+8)$ with $\Gamma_0(18)$
+
+-- +
+-------------------------------------------------------------------
+--test:time9100-d2-81n8-gamma0
+-------------------------------------------------------------------
+-- -
+
+m := 3^4; t := 8;
+rspec := eqSPEC [[1,-7],[2,2]]
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
+orb := ORBIT(rspec,m,t)
+C ==> Q
+
+ERM(rspec)
+
+-- None of the series in the orbit vanishes mod 3^6.
+
+f := eulerExpansion specEQI(IntegerMod(3^6))(rspec)
+f8 := choose(m,8,f)
+f35 := choose(m,35,f)
+f62 := choose(m,62,f)
+assertEquals(order(f8,10),0)
+assertEquals(order(f35,10),1)
+assertEquals(order(f62,10),0)
+
+
+-- The following computation takes about 2.5 hours.
+
+)sys date
+id := findIdM0(nn,rspec,m,t,idxs)
+)sys date
+
+assertEquals(commonFactor id, 3^15)
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # NOTYET: Paule conjecture $3^5|d_2(3^4n+8)$ with $\Gamma_1(18)$
+
+-- +
+-------------------------------------------------------------------
+--TODOtest:d2-81n8-gamma1
+-------------------------------------------------------------------
+-- -
+
+m := 3^4; t := 8;
+rspec := eqSPEC [[1,-7],[2,2]]
+nn := minLevelM1(rspec, m, t)
+C ==> Z
+
+ERM(rspec)
+
+-- The following computation takes about 1 min.
+
+)sys date
+aidxs := generalizedEtaFunctionIndices(nn:=18)
+idxs := concat(aidxs(1..6),aidxs(14..15))
+)sys date
+sspec := cofactInfM1(nn, rspec, m, t, idxs)
+)sys date
+--assertEquals("TODO", "investigate sinitial")
+
+yf := specYM0AnCX(
+qetaGradesEstimate yf
+f := specM1A1(C)(sspec, rspec, m, t)
+qetaGrade f
+
+)sys date
+id := findIdM1(nn,idxs,rspec,m,t,idxs)
+)sys date
+
+assertEquals(commonFactor id, 3^5)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Paule conjecture $3^5|d_2(3^5n+152)$
+
+-- +
+-------------------------------------------------------------------
+--test:time9300-d2-243n152
+-------------------------------------------------------------------
+-- -
+
+m := 3^5; t := 152;
+rspec := eqSPEC [[1,-7],[2,2]]
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
+orb := ORBIT(rspec,m,t)
+C ==> Z
+
+ERM(rspec)
+
+-- The following computation takes about 4 hours.
+-- Do 11 Nov 2021 10:13:35 CET
+-- Do 11 Nov 2021 14:09:41 CET
+
+)sys date
+id := findIdM0 (nn,rspec,m,t,idxs)
+)sys date
+
+assertEquals(commonFactor id, 3^5)
+dbgPrint("idpol243n152",1/3^5*identityPolynomial id);
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Paule conjecture $3^6|d_2(3^5n+71)$
+
+-- +
+-------------------------------------------------------------------
+--test:time9300-d2-243n71
+-------------------------------------------------------------------
+-- -
+
+m := 3^5; t := 71;
+rspec := eqSPEC [[1,-7],[2,2]]
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
+orb := ORBIT(rspec,m,t)
+C ==> Z
+
+ERM(rspec)
+
+-- The following computation takes about 4 hours.
+-- Do 11 Nov 2021 10:13:35 CET
+-- Do 11 Nov 2021 14:09:41 CET
+
+)sys date
+id := findIdM0(nn,rspec,m,t,idxs)
+)sys date
+
+assertEquals(commonFactor id, 3^6)
+dbgPrint("idpol243n152",1/3^6*identityPolynomial id);
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Paule conjecture $3^6|d_2(3^5n+71)$ modular
+
+-- +
+-------------------------------------------------------------------
+--test:time3900-d2-243n71-modular
+-------------------------------------------------------------------
+-- -
+
+m := 3^5; t := 71;
+rspec := eqSPEC [[1,-7],[2,2]];
+ERM(rspec)
+
+-- Now do the computations.
+
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
+C ==> IntegerMod(3^6)
+orb := ORBIT(rspec, m, t)
+
+-- The cofactor and the element that must be reduced.
+-- The following computation takes about 5 seconds.
+
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
+
+a := alphaInfinity(sspec, rspec, m, [t])
+assertEquals(a, -452)
+
+f := specM0A1(C)(sspec, rspec, m, t);
+
+-- The following computation takes about 50 min.
+-- Thu 11 Nov 2021 04:21:22 PM CET
+-- Thu 11 Nov 2021 05:07:48 PM CET
+
+)sys date
+assertTrue(zero? f)
+)sys date
+
+-- ## How can we do faster?
+
+f := specM0A1(Z)(sspec, rspec, m, t)
+
+-- Let us look more closely to the involved series.
+-- We have that
+-- \begin{gather*}
+--   f = b\, q^\alpha \sum_{n=0}^\infty a(3^5n+71) q^n
+-- \end{gather*}
+-- is a modular function for $\Gamma_0(6)$ where
+-- according to Radu $\alpha = -452$ and
+-- \begin{gather*}
+--    b
+--    =
+--    \frac{(q;q)_\infty^{1463} (q^2;q^2)_\infty^{357}
+--          (q^3;q^3)_\infty^{714}}
+--         {(q^6;q^6)_\infty^{2529}}
+-- \end{gather*}
+-- We are not actually interested in the series $b$
+-- except that it starts with 1.
+
+)set stream calc 2
+b := eulerExpansion specEQI(Z)(sspec)
+
+-- If we can show that $3^6 | a(3^5n+71)$ for $0\le n \le 453$,
+-- then every coefficient of the pricipal part of $f$ is also
+-- divisible by $3^6$.
+
+C ==> IntegerMod(3^6)
+a := eulerExpansion specEQI(C)(rspec)
+a243n71 := choose(243,71,a) -- series of order 0
+
+-- The following takes about 17 min.
+
+cs := [coefficient(a,243*n+71) for n in 0..453]
+
+assertEquals(removeDuplicates cs, [0])
+
+cs2 := [coefficient(a243n71,n) for n in 0..454]
+assertEquals(removeDuplicates cs2, [0])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+
+-- # Paule $m|d_(mn+t)$
+
+
+-- Let $d_3$ be given by
+-- \begin{align}
+--   D_3(q) = \sum_{n=0}^\infty q^m
+--   &=
+--   \frac{(q^3;q^3)_\infty^3}{(q;q)_\infty^{10}}
+-- \end{align}
+
+
+-- +
+-------------------------------------------------------------------
+--test:d3-mnt
+-------------------------------------------------------------------
+-- -
+
+rspec := eqSPEC [[1,-10],[2,3]];
+ERM(rspec)
+
+m:=5; t:=3
+nn := minLevelM0(rspec,m,t)
+idxs := etaFunctionIndices nn
+orb:=ORBIT(rspec,m,t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
+assertEquals(alphaInfinity(sspec,rspec,m,orb),-31)
+id := findIdM0(nn,rspec,m,t,idxs);
+assertEquals(commonFactor id, 25)
+1/25*(inv coefficient id * identityPolynomial id)
+
+-- And now with generalized eta-quotients
+
+nn := minLevelM1(rspec,m,t)
+aidxs := generalizedEtaFunctionIndices(nn)
+idxs := concat [aidxs(x) for x in [1..4,7..8]]
+id := findIdM1(nn,idxs,rspec,m,t,idxs);
+assertEquals(commonFactor id, 5)
+pol := 1/5 * inv coefficient id * identityPolynomial id
+
+-- Repeat for offset 4 instead of 3
+
+m:=5; t:=4
+id := findIdM1(nn,idxs,rspec,m,t,idxs);
+assertEquals(commonFactor id, 5)
+pol := 1/5 * inv coefficient id * identityPolynomial id
+
+variables identityPolynomial id
+ERM monoidSpecifications(id).1
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # NOTYET: Paule conjecture $3^5|d_2(3^5n+14)$
+
+-- +
+-------------------------------------------------------------------
+--TODOtest:d2-81n14
+-------------------------------------------------------------------
+-- -
+
+m := 3^5; t := 14;
+rspec := eqSPEC [[1,-7],[2,2]]
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
+orb := ORBIT(rspec,m,t)
+C ==> IntegerMod(3^6)
+
+assertTrue(false)
+
+ERM(rspec)
+
+-- The following computation takes about 1 min.
+
+)sys date
+id := findIdM0(nn,rspec,m,t,idxs)
+)sys date
+
+pol := identityPolynomial id;
+p := pol - 'F;
+assertEquals(content p, 3^4)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
