@@ -1,7 +1,7 @@
 -- -*- coding: utf-8 -*-
 -- Via jupytext this file can be shown as a jupyter notebook.
 
-)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
 
 -- # Problem formulation
 
@@ -60,6 +60,7 @@
 )set mess time off
 C ==> Q
 
+PEP ==> etaPower $ EQI(C)
 GEP ==> generalizedEtaPower $ EQI(C)
 EQ ==> etaQuotient $ EQI(C)
 EE ==> eulerExpansion $ EQI(C)
@@ -90,14 +91,6 @@ withSubscript ==> 16
 )set stream calc 2
 -- -
 
--- Produce nicer output of formulas (avoid some parentheses).
-
-OH ==> OperatorHandlers((Integer, List OutputForm) -> OutputBox)
-h := operatorHandlers()$FormatMathJax;
-MAX ==> maxPrecedence()$FormatMathJax
-MIN ==> minPrecedence()$FormatMathJax
-setHandler!(h, 2 , "SUB", subscript(MAX)$FormatMathJax)$OH;
-
 findID0 ==> findIdentity $ QEtaRamanujanKolberg(C)
 findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
 
@@ -109,6 +102,9 @@ findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
 --endsetup
 -------------------------------------------------------------------
 -- -
+
+)set output algebra on
+)set output formatted off
 
 -- # $p(5n)$
 
@@ -229,8 +225,8 @@ assertTrue(zero?(af-at+3*1$An(CX)))
 generalizedEtaFunctionIndices(nn)
 
 idxs := [[1],[5],[5, 1]]
-bspecs := generalizedEtaQuotientMonoidSpecifications(nn, idxs)
-ygens := [specYM1GEQ x for x in bspecs];
+mspecs := ncmSPECS1(nn, idxs)
+ygens := [specYM1GEQ x for x in mspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
@@ -259,7 +255,7 @@ nn := minLevel1(rspec, m, t)
 idxs := [[1],[5],[5, 1]];
 
 id := findID1(nn, idxs, rspec, m, t, idxs)
-pretty(id, qIdentity + asExpression + expand + 16)
+pretty(id, qIdentity + asExpression + expand + withSubscript)
 
 assertEquals(coSpecification id, sspec)
 idpol := identityPolynomial(id)
@@ -268,30 +264,33 @@ assertEquals(ilcpol*coefficient(idpol,'F,0), M1-3)
 
 idxs := [[1],[5],[5, 1]];
 id := findID1(nn, idxs, rspec, m, t, idxs);
-pretty(id, qIdentity + expand + nonModular + 16 + asExpression)
+pretty(id, qIdentity + expand + nonModular + withSubscript + asExpression)
 idxs := [[1],[5],[5, 2]];
 id := findID1(nn, idxs, rspec, m, t, idxs);
-pretty(id, qIdentity + expand + nonModular + 16)
+pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 idxs := [[1],[5],[5, 1]];
 id := findID1(nn, idxs, rspec, m, 1, idxs);
-pretty(id, qIdentity + expand + nonModular + 16)
+pretty(id, qIdentity + expand + nonModular + withSubscript)
 idxs := [[1],[5],[5, 1]];
 id := findID1(nn, idxs, rspec, m, 2, idxs);
-pretty(id, qIdentity + expand + nonModular + 16)
+pretty(id, qIdentity + expand + nonModular + withSubscript)
 id := findID1(nn, idxs, rspec, m, 4, idxs);
-pretty(id, qIdentity + expand + nonModular + 16)
+pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # $p(11n+6)$
+
 -- +
 -------------------------------------------------------------------
 --test:p11n6
 -------------------------------------------------------------------
 -- -
--- # $p(11n+6)$
 
 -- See \cite[Thm.~1.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 -- Theorem 1.1 Equations (1.7)-(1.9)
@@ -305,20 +304,21 @@ nn := minLevel1(rspec, m, t)
 
 ps := partitionSeries(1)$QFunctions(Q, L1(Q));
 p11n6 := choose(11,6,ps);
-z01 := EE(EQ(11,[24,-23])*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4));
+z01 := eulerExpansion(PEP(1,24)*PEP(11,-23)*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4));
 sspecz0 := geqSPEC [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
-z00 := EE specEQI(C) sspecz0;
+z00 := eulerExpansion specEQI(C) sspecz0;
 assertEquals(order(z01-z00, 100), 100)
 z0 := monomial(1,-20)$L1(C)* z00;
 
 rspecz := geqSPEC [[1,1],[11,-1],[11,1,-3],[11,2,-2]];
 z := EX specEQI(C) rspecz;
-assertEquals(order(z - EX(EQ(11,[1,-1])*GEP(11,1,-3)*GEP(11,2,-2)), 100), 100)
+zexp := EX(PEP(1,1)*PEP(11,-1)*GEP(11,1,-3)*GEP(11,2,-2))
+assertEquals(order(z - zexp, 100), 100)
 
 rspece := geqSPEC [[1,3],[11,-3],[11,1,-5],[11,2,-5],[11,3,-4],[11,4,-1]];
 e := EX specEQI(C) rspece;
-ex := EX(EQ(11,[3,-3])*GEP(11,1,-5)*GEP(11,2,-5)*GEP(11,3,-4)*GEP(11,4,-1));
-assertEquals(order(e - ex, 100), 100)
+eexp := EX(PEP(1,3)*PEP(11,-3)*GEP(11,1,-5)*GEP(11,2,-5)*GEP(11,3,-4)*GEP(11,4,-1));
+assertEquals(order(e - eexp, 100), 100)
 
 -- Take the relation from the above article and check it with
 -- the above series.
@@ -388,7 +388,7 @@ spitzen := cusps yf
 af := expandAnCX yf; qetaGrades af
 
 -- Obviously, our cofactor gives the same modular
--- function as the cofactor z0 from
+-- function as the cofactor $z_0$ from
 -- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 
 )set stream calc 1
@@ -399,8 +399,8 @@ assertTrue(zero?(af-ax))
 -- Check whether the computation of exponent vectors and specifications
 -- agrees.
 
-bspecs := generalizedEtaQuotientMonoidSpecifications nn;
-ygens := [specYM1GEQ x for x in bspecs];
+mspecs := ncmSPECS1 nn;
+ygens := [specYM1GEQ x for x in mspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
@@ -430,21 +430,30 @@ idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]];
 id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
+-- +
 pol := 11*(11*(M1^8-4*M1^7+4*M1^6-4*M1^5+9*M1^4-12*M1^3+8*M1^2-2*M1)*M5_
            + M1^10+19*M1^9-35*M1^8-16*M1^7+92*M1^6-155*M1^5_
            + 190*M1^4-152*M1^3+71*M1^2-15*M1+1) - F;
+
+pol := 11*((11*M1^8-44*M1^7+44*M1^6-44*M1^5+99*M1^4-132*M1^3+88*M1^2-22*M1)*M5_
+           +M1^10+19*M1^9-46*M1^8+28*M1^7+48*M1^6-111*M1^5+91*M1^4_
+           -20*M1^3-17*M1^2+7*M1+1)-F
 assertEquals(-11*identityPolynomial id, pol)
+
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # $\overline{p}(5n+2)$
+
 -- +
 -------------------------------------------------------------------
 --test:pp5n2
 -------------------------------------------------------------------
 -- -
--- # $\overline{p}(5n+2)$
 
 -- $$
 -- \sum_{n=0}^\infty \overline{p}(n) q^n
@@ -460,8 +469,8 @@ m := 5; t:= 2
 rspec := eqSPEC [[1,-2],[2,1]]
 nn := minLevel1(rspec,m,t)
 
-generalizedEtaFunctionIndices nn
-ecss := etaCofactorSpace1System(nn,rspec,m,t)$QEtaCofactorSpace
+idxs := generalizedEtaFunctionIndices nn
+ecss := etaCofactorSpace1System(nn,rspec,m,t,idxs)$QEtaCofactorSpace
 
 -- ## Manual initial cofactor vector
 
@@ -469,29 +478,36 @@ ecss := etaCofactorSpace1System(nn,rspec,m,t)$QEtaCofactorSpace
 -- here, another relatively minimal (initial) vector for the
 -- cofactor.
 
-mat := ecss.comatrix; v := ecss.rhs;
-mat * vector [0,0,18,-17,0,0,0,0,0,-8,  10,3,13,4,0,9,4,13,9]
+mat := ecss.comatrix
+v := ecss.rhs
+mat * vector [0,0,18,-17,0,0,0,0,0,-8,  1,0,13,4,9]
 
-ecs := etaCofactorSpace1(nn,rspec,m,t)$QEtaCofactorSpace
+ecs := etaCofactorSpace1(nn,rspec,m,t,idxs)$QEtaCofactorSpace
 
 spitzen := cusps(10)$GAMMA1
 v0 := ecs.particular;
 b := ecs.basis;
-vv := v0 +9*b.8 - 108*b.9
+vv := v0 - 23*b.9 + 2*b.8 + 4*b.7
 
 
 -- The vector vv does, however, not correspond to a generalized
--- eta-quotient with poles only at infinity. It has poles at the
--- cusps 1/3 and 2/5 or order 4 and 2, respectively.
+-- eta-quotient with poles only at infinity.
 
 le := members vv
 idxs := ecs.indices
 sspecvv := generalizedEtaQuotientSpecification(nn, idxs, le)$QEtaSpecification
-qetaGrades(sspecvv, rspec, m, t)$QEtaModularGamma1
+qetaGrades(sspecvv, rspec, m, t)$QEtaModularGamma1Package
 
 -- ## Automatic computation of cofactor
 
-sspec := cofactI1(nn,rspec,m,t)
+-- +
+sspec := cofactI1(nn,rspec,m,t,idxs)
+
+modularGamma1?(sspec, rspec, m, t)
+-- -
+
+idxs := cons([nn], rest properGeneralizedEtaFunctionIndices nn)
+sspec := cofactI1(nn,rspec,m,t,idxs)
 modularGamma1?(sspec, rspec, m, t)
 
 y := specYM1GEQ(sspec, rspec, m, t);
@@ -509,8 +525,8 @@ assertEquals(qetaGrades af,[0,0,0,0,0,0,0,3])
 
 -- ## Find the relation for $\overline{p}(5n+2)$
 
-bspecs := generalizedEtaQuotientMonoidSpecifications nn;
-ygens := [specYM1GEQ x for x in bspecs];
+mspecs := ncmSPECS1 nn;
+ygens := [specYM1GEQ x for x in mspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
@@ -529,30 +545,26 @@ xr := reduce(xf, xab)$QXTOPRED1(C);
 pol := second(xr)::Pol(C);
 ilcpol := -inv(coefficient(pol,'F, 1))::C;
 mpol := coefficient(ilcpol*pol, 'F, 0)
-assertEquals(mpol, 4*(M1^3 + M1^2 - 8*M1 + 8))
+assertEquals(mpol, 4*(M1^3 + 7*M1^2 + 8*M1 + 4))
+
+-- We can, however, get exactly the same relation if we use the
+-- third element of our list.
+
+xab := samba(xgens.3, xgens)$QXTOPSAMBA1(C);
+xf := toX1(C, series(af,k), 'F);
+xr := reduce(xf, xab)$QXTOPRED1(C);
+pol := second(xr)::Pol(C);
+ilcpol := -inv(coefficient(pol,'F, 1))::C;
+mpol := coefficient(ilcpol*pol, 'F, 0)
+assertEquals(mpol, 4*(M3^3 + M3^2 - 8*M3 + 8))
 
 -- ## Comparison with computation from article
 
 -- We have found a relation that looks exactly like (3.6) from
 -- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}, but
 -- with different $y$ and different $z$.
---
--- For our relation we have:
--- $$
--- \begin{align*}
--- y &=
---   \frac{\eta_1^{16} \eta_{10}^6
---         \eta_{5,1}^7 \eta_{5,2}^{15}}
---        {\eta_2^{15} \eta_5^6
---         \eta_{10,1}^{14} \eta_{10,2}^{12} \eta_{10,3}^{20}}
--- \\
--- z &=
---   \frac{\eta_5^2 \eta_{5,2} \eta_{10,4}}
---        {\eta_{10}^2 \eta_{5,1}^2}
--- \end{align*}
--- $$
 
-sspec,bspecs.1
+sspec,mspecs.3
 
 -- In \cite[Thm. 3.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
 -- the generalized eta-quotient $\eta_{10,5}(\tau)$ is used.
@@ -589,11 +601,11 @@ assertTrue(zero?(a1 - 1$An(CX)))
 zspec := geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]
 assertTrue(modularGamma1? zspec)
 
--- Indeed, our generalized eta-quotient (given by bspecs.1)
+-- Indeed, our generalized eta-quotient (given by mspecs.1)
 -- and the one from the article above have the same
 -- $q$-series expansion.
 
-spec1 := bspecs.1/zspec
+spec1 := mspecs.3/zspec
 a1 := specM1AnCX spec1
 assertTrue(zero?(a1 - 1$An(CX)))
 
@@ -602,18 +614,17 @@ assertTrue(zero?(a1 - 1$An(CX)))
 -- By our implementation, we are able to find a relation with
 -- only one generalized eta-function.
 
-idxs := [[1],[2],[5],[10],[10,1]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
-
-pol := 4*((M1-2)*M3 + (3*M1+2)*M1) - F;
-assertEquals(-8*identityPolynomial id, pol)
+assertEquals(32*identityPolynomial id, F-4*(M1^3+M1^2-8*M1+8))
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
 
+-- # $\overline{Q}_{3,1}$ &mdash; (3,1)-singular overpartition
 
 -- +
 -------------------------------------------------------------------
@@ -661,8 +672,8 @@ af := expandAnCX y
 
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+3)$
 
-bspecs := generalizedEtaQuotientMonoidSpecifications nn
-ygens := [specYM1GEQ x for x in bspecs];
+mspecs := ncmSPECS1 nn
+ygens := [specYM1GEQ x for x in mspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
@@ -700,6 +711,9 @@ assertEquals(-90*identityPolynomial id, pol)
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # $\overline{Q}_{3,1}$ &mdash; (3,1)-singular overpartition
 
 -- +
 -------------------------------------------------------------------
@@ -719,6 +733,30 @@ assertEquals(-90*identityPolynomial id, pol)
 
 m := 9; t := 6
 rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
+
+-- That is equal to https://faculty.math.illinois.edu/~reznick/2690367.pdf
+-- where it is given by (q^3;q^3)*(-q;q)/(-q^3;q^3).
+-- We can derive a representation in pure eta-quotients automatically.
+
+aidxs := generalizedEtaFunctionIndices(6)
+idxs := aidxs(1..4)
+id := findID1(6, idxs, rspec, 1, 0, idxs);
+-- pretty(id, qIdentity)
+rspec2 := inv coSpecification id
+rspec2Expected := geqSPEC [[1, - 2], [2, 1], [3, 2], [6, - 1]]
+assertEquals(rspec2, rspec2Expected)
+
+-- Now we can try to prove divisibility by Radu's original method
+-- for (pure) eta-quorients.
+
+nn := minLevel0(rspec2,m,t)
+ORBIT(rspec2,m,t)
+id := findID0(nn, rspec2, m, 3);
+pretty(id, qIdentity + nonModular + expand)
+
+-- In the following we show the same thing with the extension due to
+-- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+
 nn := minLevel1(rspec,m,t)
 idxs := generalizedEtaFunctionIndices(nn)
 sspec := cofactI1(nn,rspec,m,t)
@@ -748,8 +786,8 @@ af := expandAnCX y
 
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+6)$
 
-bspecs := generalizedEtaQuotientMonoidSpecifications nn;
-ygens := [specYM1GEQ x for x in bspecs];
+mspecs := ncmSPECS1 nn;
+ygens := [specYM1GEQ x for x in mspecs];
 egens := [expandAnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
@@ -787,13 +825,15 @@ assertEquals(-72*identityPolynomial id, pol)
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # $\Delta_2(25n+14)$
 
 -- +
 -------------------------------------------------------------------
 --test:Delta2-25-14
 -------------------------------------------------------------------
 -- -
--- # $\Delta_2(25n+14)$
 
 -- Investigate the identities of Theorem 9.1 of
 -- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
@@ -840,11 +880,11 @@ assertEquals(gcd [numer m for m in mons],5)
 -- arrive at a relation with smaller denominator
 -- and also smaller coefficients.
 
-bspecs := basisSpecifications id
-bas := [specEQI(C) bspecs.i for i in 1..#bspecs]
+mspecs := monoidSpecifications id
+bas := [specEQI(C) mspecs.i for i in 1..#mspecs]
 
 -- +
---id1 := findID1(sspec, rspec, m, t, [bspecs.1]);
+--id1 := findID1(sspec, rspec, m, t, [mspecs.1]);
 --pol1 := 6192449487634432 * identityPolynomial id1
 -- -
 
@@ -852,7 +892,7 @@ bas := [specEQI(C) bspecs.i for i in 1..#bspecs]
 -- coefficients, if we take the second basis element.
 
 sspec := coSpecification id
-id2 := findID1(sspec, rspec, m, t, [bspecs.2]);
+id2 := findID1(sspec, rspec, m, t, [mspecs.2]);
 c := -(1/5)*inv coefficient(id2)
 pol2 := c * identityPolynomial id2
 
@@ -896,21 +936,101 @@ rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]];
 nn := minLevel1(rspec,m,t)
 sspec := geqSPEC [[1,92],[2,-58],[5,14],[10,-46],_
                   [5,1,52],[10,1,-109],[10,4,4],[10,5,-5]];
-bspecs := [geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]];
-specEQI(C) bspecs.1
-id := findID1(sspec, rspec, m, t, bspecs);
+mspecs := [geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]];
+specEQI(C) mspecs.1
+id := findID1(sspec, rspec, m, t, mspecs);
 pretty(id, qIdentity + nonModular + withSubscript)
 
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # $\Delta_2(25n+24)$
+
 -- +
 -------------------------------------------------------------------
 --test:Delta2-25-24
 -------------------------------------------------------------------
 -- -
+
+-- Investigate the identities of Theorem 9.1 of
+-- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+--
+-- Let
+-- \begin{align*}
+-- \sum_{n=0}^\infty \Delta_k(n) q^n
+-- &=
+-- \frac{
+--       (q^2;q^2)_\infty (q^{2k+1};q^{2k+1})_\infty
+--      }{
+--       (q;q)_\infty^5 (q^{4k+2};q^{4k+2})_\infty
+--      }.
+-- \end{align*}
+-- In \cite{AndrewsPaule_MacMahonsPartitionAnalysisXI_2007}
+-- it is conjectured that
+-- $$
+-- \Delta_2(25n+24) \equiv 0 \pmod{5}.
+-- $$
+-- We show that by a witness identity.
+
+m := 25; t := 24
+rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+nn := minLevel1(rspec,m,t)
+idxs := [[1],[2],[5],[10],[5,1],[10,1]]
+id := findID1(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(# monomials identityPolynomial id, 59)
+
+-- Let
+-- \begin{align*}
+-- \sum_{n=0}^\infty a(n) q^n
+-- &=
+-- \frac{
+--       (q;q)_\infty^2 (q^2;q^2)_\infty
+--      }{
+--       (q^{10};q^{10})_\infty
+--      }.
+-- \end{align*}
+-- Then, because of $(1-q^n)^5\equiv 1-q^{5n} \pmod{5}$,
+-- we have
+-- $\Delta_2(n)\equiv a(n) \pmod{5}$ for all natural $n$.
+--
+-- In \cite{AndrewsPaule_MacMahonsPartitionAnalysisXI_2007}
+-- it is conjectured that
+-- $$
+-- \Delta_2(25n+24) \equiv 0 \pmod{5}.
+-- $$
+--
+-- A relation for the series $a(n)$ is much smaller than
+-- the one for $\Delta_2(n)$.
+
+-- +
+m := 25; t := 24
+--rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+rspec := geqSPEC [[1,2],[2,1],[10,-1]]
+nn := minLevel1(rspec,m,t)
+idxs := [[1],[2],[5],[10],[10,1]]
+id := findID1(nn, idxs, rspec, m, t, idxs);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+
+pol := 5*((2*M1+1)*M3 - (4*M1+1)*M1) - F;
+assertEquals(5*identityPolynomial id, pol)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
 -- # $\Delta_2(25n+24)$
+
+-- +
+-------------------------------------------------------------------
+--test:theorem-10-5-1
+-------------------------------------------------------------------
+-- -
 
 -- Investigate the identities of Theorem 9.1 of
 -- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
@@ -959,11 +1079,10 @@ assertEquals(# monomials identityPolynomial id, 59)
 -- $$
 -- \Delta_2(25n+24) -\equiv 0 \pmod{5}.
 -- $$
---
+
 -- A relation for the series $a(n)$ is much smaller than
 -- the one for $\Delta_2(n)$.
 
--- +
 m := 25; t := 24
 --rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 rspec := geqSPEC [[1,2],[2,1],[10,-1]]
@@ -974,6 +1093,66 @@ pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 5*((2*M1+1)*M3 - (4*M1+1)*M1) - F;
 assertEquals(5*identityPolynomial id, pol)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Theorem 10.4
+
+-- +
+-------------------------------------------------------------------
+--test:formula-10-10
+-------------------------------------------------------------------
+-- -
+-- See Formula (10.10) of
+-- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+--
+-- \begin{align}
+-- R(q)
+-- &=
+-- \frac{(q^2,q^{3};q^{5})_\infty}
+--      {(q,q^{4};q^{5})_\infty}
+-- \\
+-- &=
+-- \frac{(q^8,q^{12};q^{20})_\infty^2}
+--      {(q^6,q^{14};q^{20})_\infty (q^{10},q^{10};q^{20})_\infty}
+-- +
+-- q \frac{(q^2,q^{18};q^{20})_\infty (q^8,q^{12};q^{20})_\infty}
+--      {(q^4,q^{16};q^{20})_\infty (q^{10},q^{10};q^{20})_\infty}
+-- \tag{10.10}
+-- \end{align}
+
+rspec := geqSPEC [[5,1,-1],[5,2,1]]
+modularGamma1? rspec
+
+nn := minLevel1(rspec,2,0)
+idxs := rest properGeneralizedEtaFunctionIndices nn
+
+
+id := findID1(10, idxs, rspec, 2, 0, idxs);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+sspec2n0 := coSpecification id;
+assertEquals(sspec2n0, geqSPEC[[10,3,1],[10,4,-2],[10,5,1]])
+
+id := findID1(10, idxs, rspec, 2, 1, idxs);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+sspec2n1 := coSpecification id;
+assertEquals(sspec2n1, geqSPEC[[10,1,-1],[10,2,1],[10,4,-1],[10,5,1]])
+
+-- And now for $R(q)^{-1}$.
+
+id := findID1(10, idxs, inv rspec, 2, 0, idxs);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+sspec2n0 := coSpecification id;
+assertEquals(sspec2n0, geqSPEC[[10,1,1],[10,2,-2], [10,5,1]])
+
+id := findID1(10, idxs, inv rspec, 2, 1, idxs);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+sspec2n1 := coSpecification id;
+assertEquals(sspec2n1, geqSPEC[[10,2,-1],[10,3,-1],[10,4,1],[10,5,1]])
 
 -- +
 -------------------------------------------------------------------
