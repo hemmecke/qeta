@@ -1,0 +1,794 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Generalized Ramanujan Identities
+
+
+-- We check some identies from \cite{FarkasKra_ThetaConstants_2001}
+--
+--     @Book{FarkasKra_ThetaConstants_2001,
+--       author =       {Hershel M. Farkas and Irwin Kra},
+--       title =        {Theta Constants, Riemann Surfaces and the Modular
+--                       Group},
+--       publisher =    {American Mathematical Society},
+--       series =       {Graduate Texts in Mathematics},
+--       volume =       37,
+--       year =         2001,
+--       isbn =         0821813927,
+--       ISBN13 =       9780821813928,
+--     }
+
+-- This worksheet demonstrates the finding of identities for
+-- generalized eta-quotients.
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(n)q^n
+-- =
+-- \prod_{\delta|M} \qPochhammer{q^\delta}{q^\delta}^{r_\delta}
+-- \prod_{\substack{\delta | M \\ 0 < g < \delta/2}}
+-- \qPochhammer{q^g, q^{\delta-g}}{q^\delta}^{r_{\delta,g}}
+-- \end{gather*}
+--
+-- We find an identities for
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(mn+t)q^n
+-- \end{gather*}
+-- in terms of generalized eta-quotients.
+--
+-- On page 325 of \cite{FarkasKra_ThetaConstants_2001}
+-- the Euler-Ramanujan partition functions $p_N$ are defined.
+-- \begin{gather*}
+--   P^N(q) =
+--   \sum_{n=0}^\infty p_N(n)q^n =
+--   \qPochhammer{q}{q}^{-N}
+-- \end{gather*}
+-- for all $N\in\mathbb{Z}$.
+--
+-- Note that we use a small letter $p$ for the coefficient
+-- sequence.
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
+
+)set mess type off
+)set mess time off
+C ==> Q
+)read convenience.input )quiet
+)set stream calc 2
+
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+
+commonFactor id ==> (_
+  pol := inv coefficient id * identityPolynomial id - 'F;_
+  cs := [leadingCoefficient x for x in monomials pol];_
+  den := lcm [denom x for x in cs];_
+  num := gcd [numer(den*x) for x in cs];_
+  num/den)
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+)set output algebra on
+)set output formatted off
+
+-- # Page 330
+
+-- ## $p_3$
+
+-- +
+-------------------------------------------------------------------
+--test:p3-3n2
+-------------------------------------------------------------------
+-- -
+
+-- ### $p_3(3n+2) \equiv 0 \pmod{9}$
+
+-- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
+
+
+rspec := geqSPEC [[1,-3]]; m := 3; t := 2;
+nn := minLevel1(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(coSpecification id, geqSPEC [[1,12],[3,-9]])
+assertEquals(identityPolynomial(id), F-9)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_2$
+
+-- +
+-------------------------------------------------------------------
+--test:p2-5n3
+-------------------------------------------------------------------
+-- -
+
+-- ### $p_2(5n+3) \equiv 0 \pmod{5}$
+
+-- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-2]];
+nn := minLevel1(rspec, 5, 3)
+assertEquals(nn, 5)
+id:=findID0(10,rspec,5,3);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(commonFactor id, 5)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ### $p_2(5^2n+23) \equiv 0 \pmod{5^2}$
+
+-- +
+-------------------------------------------------------------------
+--test:p2-25n23
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-2]]; m:=25; t:=23;
+nn := minLevel0(rspec, m, t)
+assertEquals(nn, 5)
+id:=findID0(5,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(commonFactor id, 25)
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_4$
+
+-- +
+-------------------------------------------------------------------
+--test:p4-7n6
+-------------------------------------------------------------------
+-- -
+
+-- ### $p_4(7n+6) \equiv 0 \pmod{7}$
+
+-- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-4]]; m:=7; t:=6;
+nn := minLevel1(rspec,m,t);
+assertEquals(nn,m)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(commonFactor id, 7)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:p4-49n+41
+-------------------------------------------------------------------
+-- -
+
+-- ### $p_4(49n+41) \equiv 0 \pmod{49}$
+
+-- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-4]]; m:=49; t:=41;
+nn := minLevel0(rspec, m, t);
+assertEquals(nn, 7)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(commonFactor id, m)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{-8}$
+
+-- ### $p_{-8}(5n+3) = - 5^3 p_{-8}\left(\frac{n-1}{5}\right)$
+
+-- +
+-------------------------------------------------------------------
+--test:p-8-25n8
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
+-- \begin{gather*}
+-- p_{-8}(25n+8) = - 5^3 p_{-8}(n)
+-- \end{gather*}
+
+rspec := geqSPEC [[1,8]]; m:=5; t:=3;
+nn := minLevel0(rspec, m, t);
+assertEquals(nn, 5)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+assertEquals(commonFactor id, 125)
+
+rspec := geqSPEC [[1,8]]; m:=25; t:=8;
+nn := minLevel0(rspec, m, t);
+assertEquals(nn, 5)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+assertEquals(commonFactor id, 125)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{-26}$
+
+-- ### IMPROVE: $p_{-26}(11n+9) = 11^2 p_{-26}\left(\frac{n-11}{11}\right)$
+
+-- +
+-------------------------------------------------------------------
+--test:p-26-11n9
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
+-- \begin{gather*}
+-- p_{-26}(121n+9) = 11^2 p_{-26}(n)
+-- \end{gather*}
+-- Maybe a typo in, but we can prove a $11^{12}$ factor instead
+-- of just $11^2$.
+
+rspec := geqSPEC [[1,26]]; m:=11; t:=9;
+nn := minLevel0(rspec, m, t);
+assertEquals(nn,11)
+assertEquals(ORBIT(rspec,m,t),[9])
+
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+assertEquals(commonFactor id, 11^12)
+identityPolynomial id
+
+rspec := geqSPEC [[1,26]]; m:=121; t:=9;
+nn := minLevel0(rspec, m, t);
+assertEquals(nn,11)
+assertEquals(ORBIT(rspec,m,t),[9])
+
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + nonModular + asExpression)
+assertEquals(commonFactor id, 11^12)
+identityPolynomial id
+
+ser := eulerExpansion specEQI(C) rspec;
+s11 := choose(11,9,ser)
+[coefficient(s11,i) for i in 0..100]
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{-6}$
+
+-- ### $p_{-6}(5n+1) = -5^2 p_{-6}\left(\frac{n-11}{5}\right) - 2\cdot3 p_{-6}(n)$
+
+-- +
+-------------------------------------------------------------------
+--test:p-6-5n1
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 330]{FarkasKra_ThetaConstants_2001}
+-- \begin{gather*}
+--   p_{-6}(5n+1)
+--   =
+--   -5^2 p_{-6}\left(\frac{n-1}{5}\right)
+--   -
+--   2\cdot3 p_{-6}(n)
+-- \end{gather*}
+
+rspec := geqSPEC [[1,6]]; m:=5; t:=1;
+nn := minLevel0(rspec, m, t);
+assertEquals(nn,5)
+assertEquals(ORBIT(rspec,m,t),[1])
+
+id1:=findID0(nn,rspec,m,t);
+pretty(id1, qIdentity + expand + nonModular + asExpression)
+
+ipol1 := (inv coefficient id1 * identityPolynomial id1)::Pol(Z)
+assertEquals(ipol1, 6*M1+F+25)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # page 331
+
+-- ## CORRECT and IMPROVE: $p_{-15}(13n+1) \equiv 0 \pmod{5}$
+
+-- +
+-------------------------------------------------------------------
+--test:p-15-13n1
+-------------------------------------------------------------------
+-- -
+
+-- In \cite[p. 331]{FarkasKra_ThetaConstants_2001}
+-- it is claimed that
+-- \begin{gather*}
+-- p_{-15}(13n+1) \equiv 0 \pmod{5}.
+-- \end{gather*}
+-- However, that is wrong. Let $p_{-15}$ be defined by
+-- \begin{gather*}
+-- \sum_{n=0}^\infty p_{-15}(n)q^n = \qPochhammer{q}{q}^{15}.
+-- \end{gather*}
+-- Then the first 8 coefficients of
+-- $\sum_{n=0}^\infty p_{-15}(13n+1)q^n$ are listed below and
+-- show that the $\gcd$ of all coefficients is at most 5, but
+-- $p_{-15}(13\cdot 8 + 1)=−6051657$
+-- and thus there is no congruence for $p_{-15}(13n+1)$.
+--
+-- However, if we add $13^7q^8 \qPochhammer{q^{13}}{q^{13}}^{15}$,
+-- i.e., we define a sequence $(a(n))_{n\ge0}$ by
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(n) q^n
+-- =
+-- \sum_{n=0}^\infty p_{-15}(13 n + 1) q^n
+-- +
+-- 13^7 q^8 \qPochhammer{q^{13}}{q^{13}}^{15}
+-- \end{gather*}
+-- then $a(n) \equiv 0 \pmod{5}$.
+
+rspec := geqSPEC [[1,15]]; m:=13; t:=1;
+nn := minLevel0(rspec, m, t);
+assertEquals(nn, 13)
+assertEquals(ORBIT(rspec, m, t),[1])
+
+id:=findID0(nn,rspec,m,t);
+mspecs := monoidSpecifications id;
+sspec := coSpecification id;
+pretty(id, qIdentity + expand + asExpression + nonModular)
+assertEquals(commonFactor id, 1)
+
+-- The above representation does not reveal divisibility by 5.
+-- However, by subtracting the constant term of the
+-- representation polynomial, we actually find a mod 5
+-- congruence.
+
+ipol := inv coefficient id * identityPolynomial id;
+c := 13^7;
+pol := (ipol - 'F - c)::Pol(Z)
+assertEquals(content pol, 5)
+
+-- Let us check the 8th coefficient of the disected series.
+
+ser := eulerExpansion specEQI(C) rspec;
+c8 := coefficient(ser,13*8+1)::Z
+assertTrue(not zero? positiveRemainder(c8, 5))
+assertTrue(zero? positiveRemainder(c8 + c, 5))
+
+factor c8
+
+-- There are several coefficients of the disected series that
+-- are not divisible by 5.
+
+l := [[n,cc] for n in 0..100 | (cc := coefficient(ser, 13*n+1)::Z; not zero?(cc rem 5))]
+assertEquals(#l, 2)
+
+s13 := choose(13,1,ser)
+l := [[i,c] for i in 0..400|(c:=coefficient(s13,i)::Z; not zero?(c rem 5))]
+assertEquals([first x for x in l], [8,73,398])
+factor(coefficient(s13,2)::Z)
+
+-- Expansion of the $q$-Pochhammer symbol corresponding
+-- to the inverse of the cofactor is a series that
+-- starts with 1 and which has coefficients not divisible
+-- by zero at the same places as computed above.
+
+printSPEC inv sspec
+u := eulerExpansion specEQI(C) inv sspec
+
+l := [[i+8,c] for i in 0..400|(c:=coefficient(u,i)::Z; not zero? c and not zero?(c rem 5))]
+assertEquals([first x for x in l], [8,73,398])
+
+-- When checking for a congruence, we only need to check
+-- that the first 9 coefficients are divisible by 5.
+-- We check up to the coefficient of $q^{100}$.
+
+assertEquals(alphaInfinity id, -8)
+
+h := s13 + monomial(13^7,8)$L1(C) * u
+l := [[i,c] for i in 0..100|(c:=coefficient(h,i)::Z; not zero?(c rem 5))]
+assertTrue(empty? l)
+
+u := eulerExpansion specEQI(C) inv sspec;
+t := expansion specEQI(C) (mspecs.1);
+q := monomial(1,1)$L1(C);
+s := s13 + q^8 * u *_
+      (13^7 +_
+       5*t*(3*t^7 + 7743*t^6 + 115258*t^5 +_
+            846690*t^4 + 3651414*t^3 +_
+            9482252*t^2 + 14480427*t + 14480427));
+l := [coefficient(s,i) for i in 0..100];
+assertEquals(removeDuplicates l, [0])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # page 373
+
+-- ## $p_{-24}(2n+1)$
+
+-- +
+-------------------------------------------------------------------
+--test:p-24-2n1
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 373]{FarkasKra_ThetaConstants_2001} (top)
+-- \begin{gather*}
+-- P_{-24}(2n+1) \equiv 0 \pmod{8}
+-- \end{gather*}
+
+rspec := geqSPEC [[1,24]]; m := 2; t := 1;
+nn := minLevel0(rspec, m, t)
+assertEquals(nn, 2)
+orb := ORBIT(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression + nonModular)
+assertEquals(commonFactor id, 2^3)
+mspec := inv coSpecification id * first monoidSpecifications id;
+assertEquals(mspec, eqSPEC(nn,[[1,24]]))
+ipol := inv coefficient id * identityPolynomial id
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{-24}(4n+3)$
+
+-- +
+-------------------------------------------------------------------
+--test:p-24-4n3
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 373]{FarkasKra_ThetaConstants_2001} (top)
+-- \begin{gather*}
+-- P_{-24}(n) \equiv P_{-24}\left(\frac{n-3}{4}\right) \pmod{3}
+-- \\
+-- P_{-24}(4n+3) \equiv 0 \pmod{2^6}
+-- \end{gather*}
+
+rspec := geqSPEC [[1,24]]; m := 4; t := 3;
+nn := minLevel0(rspec, m, t)
+assertEquals(nn, 2)
+orb := ORBIT(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression + nonModular)
+assertEquals(commonFactor id, 2^6)
+mspec := inv coSpecification id * first monoidSpecifications id;
+assertEquals(mspec, eqSPEC(nn,[[1,24]]))
+ipol := inv coefficient id * identityPolynomial id
+
+c := coefficient(ipol,[M1,F],[0,0])::Z
+assertTrue(zero?(c rem 3))
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{-15}(9n+2)$
+
+-- +
+-------------------------------------------------------------------
+--test:p-15-9n+2
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 373[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,15]]; m := 9; t := 2
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t)
+pretty(id, qIdentity + expand + nonModular + asExpression)
+assertEquals(commonFactor id, 90)
+
+factor 4860
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{-15}(9n+8)$
+
+-- +
+-------------------------------------------------------------------
+--test:p-15-9n+8
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 373[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,15]]; m := 9; t := 8
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t)
+pretty(id, qIdentity + expand + nonModular + asExpression)
+assertEquals(commonFactor id, 4860)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Page 382 &mdash; Theorem 6.8
+
+-- ## $p_{2N}(2n+1)$
+
+-- +
+-------------------------------------------------------------------
+--test:p2N-2n1
+-------------------------------------------------------------------
+-- -
+-- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,2]]; m := 2; t := 1;
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 2)
+
+rspec := geqSPEC [[1,4]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 4)
+
+rspec := geqSPEC [[1,6]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 2)
+
+rspec := geqSPEC [[1,8]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 8)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{3N}(3n+1)$
+
+-- +
+-------------------------------------------------------------------
+--test:p3N-3n1
+-------------------------------------------------------------------
+-- -
+-- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-3]]; m := 3; t := 1;
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 3)
+
+rspec := geqSPEC [[1,-6]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 3)
+
+rspec := geqSPEC [[1,-9]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 9)
+
+rspec := geqSPEC [[1,-12]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 3)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{3N}(3n+2)$
+
+-- +
+-------------------------------------------------------------------
+--test:p3N-3n2
+-------------------------------------------------------------------
+-- -
+-- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-3]]; m := 3; t := 2;
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 9)
+
+rspec := geqSPEC [[1,-6]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 27)
+
+rspec := geqSPEC [[1,-9]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(2*nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 27)
+
+rspec := geqSPEC [[1,-12]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 9)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{5N+1}(5n+4)$
+
+-- +
+-------------------------------------------------------------------
+--test:p5N1-5n4
+-------------------------------------------------------------------
+-- -
+-- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-6]]; m := 5; t := 4;
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 5)
+
+rspec := geqSPEC [[1,-11]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 25)
+
+rspec := geqSPEC [[1,-16]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 5)
+
+rspec := geqSPEC [[1,-21]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 5)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $p_{5N+2}(5n+3)$
+
+-- +
+-------------------------------------------------------------------
+--test:p5N2-5n3
+-------------------------------------------------------------------
+-- -
+-- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
+
+rspec := geqSPEC [[1,-2]]; m := 5; t := 3;
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 5)
+
+rspec := geqSPEC [[1,-7]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 5)
+
+rspec := geqSPEC [[1,-17]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression)
+assertEquals(commonFactor id, 25)
+
+rspec := geqSPEC [[1,-22]];
+nn := minLevel0(rspec, m, t)
+id:=findID0(nn,rspec,m,t);
+pretty(id, qIdentity + expand + asExpression+nonModular)
+assertEquals(commonFactor id, 5)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Identity in level 11
+
+-- +
+-------------------------------------------------------------------
+--test:eta_11x
+-------------------------------------------------------------------
+-- -
+
+-- \cite[p. 445[{FarkasKra_ThetaConstants_2001}
+
+rspec1 := geqSPEC [[11,6,2],[11,1,-1],[11,4,-1]];
+rspec2 := geqSPEC [[11,1,2],[11,2,-1],[11,3,-1]];
+rspec3 := geqSPEC [[11,2,2],[11,4,-1],[11,5,-1]];
+rspec4 := geqSPEC [[11,4,2],[11,1,-1],[11,3,-1]];
+rspec5 := geqSPEC [[11,3,2],[11,2,-1],[11,5,-1]];
+
+modularGamma1? rspec1
+qetaGrades specYGEQ rspec1
+rspecs := [rspec1, rspec2, rspec3, rspec4]
+xiords := [minimalRootOfUnity specYGEQ rspec for rspec in rspecs]
+xiord := lcm xiords
+spitzen := cusps(11)$GAMMA1
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+
+)set stream calc 2
+an := specM1AnCX rspec1 _
+    - specM1AnCX rspec2 _
+    + specM1AnCX rspec3 _
+    - specM1AnCX rspec4 _
+    - specM1AnCX rspec5 _
+    + 1$An(CX)
+assertTrue(zero? an)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
