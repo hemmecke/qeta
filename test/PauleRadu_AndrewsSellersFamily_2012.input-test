@@ -1,0 +1,180 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
+
+)set mess type off
+)set mess time off
+C ==> Q
+
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+
+commonFactor id ==> (_
+  pol := inv coefficient id * identityPolynomial id - 'F;_
+  cs := [leadingCoefficient x for x in monomials pol];_
+  den := lcm [denom x for x in cs];_
+  num := gcd [numer(den*x) for x in cs];_
+  num/den)
+
+QF ==> QFunctions(C, L1(C))
+ef ==> eulerFunction $ QF
+gep ==> generalizedEulerProduct $ QF
+
+rspec := eqSPEC [[1, - 4], [2, 5], [4, - 2]]
+
+invk(k) ==> positiveRemainder(extendedEuclidean(12,5^k).coef1, 5^k)
+checkPower(k) ==> (_
+  m := 5^k;_
+  t := invk k;_
+  nn := minLevel0(rspec, m, t);_
+  tracePrint("[nn, m, t]", [nn, m, t]$List(Z));_
+  tracePrint("orb", ORBIT(rspec,m,t));_
+  id := findID0(nn,rspec,m,t);_
+  out := pretty(id, qIdentity);_
+  assertEquals(commonFactor id, 5^k);_
+  pol := (inv(5^k * coefficient id) * identityPolynomial id);_
+  tracePrint("pol", pol);_
+  out)
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+
+)set output algebra on
+)set output formatted off
+
+-- # Generalized 2-colored Frobenius partitions $c\phi_2$
+
+-- \cite{PauleRadu_AndrewsSellersFamily_2012}
+
+-- \begin{gather*}
+-- \sum_{n=0}^\infty c\phi_2(n) q^n
+-- =
+-- \prod_{n=1}^\infty \frac{1-q^{4n-2}}{(1-q^{2n-1})(1-q^{4n})}
+-- =
+-- \frac
+-- {\qPochhammer{q^2}{q2}^5}
+-- {\qPochhammer{q}{q}^4 \qPochhammer{q^4}{q^4}^2}
+-- \end{gather*}
+
+-- +
+-------------------------------------------------------------------
+--test:cphi2-2n1
+-------------------------------------------------------------------
+-- -
+
+m := 2 ; t := 1;
+nn := minLevel0(rspec, m, t)
+orb := ORBIT(rspec,m,t)
+id := findID0(nn,rspec,m,t);
+pretty(id, qIdentity)
+assertEquals(commonFactor id, 4)
+(inv coefficient id * identityPolynomial id)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:cphi2-5n3
+-------------------------------------------------------------------
+-- -
+
+checkPower 1
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:cphi2-25n23
+-------------------------------------------------------------------
+-- -
+
+checkPower 2
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--test:cphi2-125n73
+-------------------------------------------------------------------
+-- -
+
+-- The following computation takes about 55 seconds
+-- (with streamMultiply improvement)
+
+k := 3; m := 5^k ; t := invk k;
+C ==> IntegerMod m
+nn := minLevel0(rspec, m, t)
+orb := ORBIT(rspec,m,t)
+sspec := cofactI0(nn, rspec, m, t)
+a := alphaInfinity(sspec, rspec, m, [t])
+xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), 'F)
+
+ser := first(xf)::A1(C)
+l := [qetaCoefficient(ser,-i) for i in a..-0]
+assertEquals(removeDuplicates l, [0])
+
+-- checkPower 3
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- +
+-------------------------------------------------------------------
+--notest:cphi2-625n573
+-------------------------------------------------------------------
+-- -
+
+-- The following computation takes about 615 seconds.
+
+k := 4; m := 5^k ; t := invk k
+C ==> IntegerMod m
+nn := minLevel0(rspec, m, t)
+orb := ORBIT(rspec,m,t)
+
+sspec := cofactI0(nn, rspec, m, t)
+
+a := alphaInfinity(sspec, rspec, m, [t])
+xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), 'F)
+
+ser := first(xf)::A1(C)
+l := [qetaCoefficient(ser,-i) for i in a..-0]
+assertEquals(removeDuplicates l, [0])
+
+-- checkPower 4
+
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
