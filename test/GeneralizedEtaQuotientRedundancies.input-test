@@ -1,0 +1,708 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Generalized eta-quotient redundancies
+
+
+-- This worksheet demonstrates that some generalized eta-quotients
+-- with index $(\delta,g)$ can be expressed by a sum of
+-- generalized eta-quotients with strictly smaller $g$.
+--
+-- Let $N$ be a positive integer and
+-- $\delta$ be a positive divisor of $N$.
+-- Furthermore let $0 \le g \le \delta$.
+--
+-- With $P_2(x) = \{x\}^2 - \{x\} + \frac{1}{6}$
+-- (where $\{x\}= x-\lfloor x \rfloor$ is the fractional
+-- part of x) define
+-- \begin{align}
+--   \eta_{\delta,g}(\tau)
+--   &:=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+--   \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+--   \notag\\
+--   &=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \prod_{n=1}^\infty (1-q^{\delta (n-1)+g})(1-q^{\delta n-g})
+--   \notag\\
+--   &=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \qPochhammer{q^{g}}{q^\delta} \qPochhammer{q^{\delta-g}}{q^\delta}.
+-- \end{align}
+--
+-- Clearly,
+-- $$
+-- \eta_{\delta,g} = \eta_{\delta, \delta - g}.
+-- $$
+--
+-- Since
+-- \begin{align}
+--   \eta_{\delta,0}(\tau)
+--   &=
+--   \eta(\delta\tau)^2
+--   \\
+--   \eta_{\delta,\frac{\delta}{2}}(\tau)
+--   &=
+--   \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2},
+-- \end{align}
+-- we can restrict $g$ to $0 < g < \frac{\delta}{2}$, if we
+-- take ordinary eta-functions into account.
+--
+-- Because of
+-- \begin{align}
+--   P_2\!\left(\frac{g}{\delta}\right)
+--     &=
+--   \sum_{i=0}^{k-1} k P_2\!\left(\frac{g + \delta i}{\delta k}\right)
+-- \end{align}
+-- and
+-- \begin{align}
+--   \qPochhammer{q^{g}}{q^\delta}
+--     &=
+--   \prod_{m=1}^\infty \bigl(1-q^{\delta m + g}\bigr)
+--     =
+--   \prod_{n=1}^\infty \prod_{i=0}^{k-1} \bigl(1-q^{\delta (k n + i) + g}\bigr)
+--     =
+--   \prod_{i=0}^{k-1} \prod_{n=1}^\infty \bigl(1-q^{N n + \delta i + g}\bigr)
+--     =
+--   \prod_{i=0}^{k-1} \qPochhammer{q^{\delta i + g}}{q^N}
+-- \end{align}
+-- we have
+-- \begin{align}
+--     \eta_{\delta,g}(\tau)
+--     &=
+--     \prod_{i=0}^{k-1} \eta_{N,\delta i + g}(\tau).
+-- \end{align}
+-- Therefore, it is enough if for some level $N$ we only
+-- consider $\eta_{N,g}$, since the potential
+-- $\eta_{\delta,g}$ for $\delta | N$ are redundant.
+--
+-- The implementation, however, allows to work with all possible index pairs
+-- $(\delta, g)$ for $\delta | N$.
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+-- +
+)set mess type off
+)set mess time off
+C ==> Q
+oo ==> infinity()$Cusp
+
+)read convenience.input )quiet
+)set stream calc 2
+-- -
+
+-- ## Macros to beautify the output
+
+qIdentity ==> 1
+expand ==> 2
+nonModular ==> 4
+asExpression ==> 8
+withSubscript ==> 16
+
+-- ## Represent generalized eta-functions
+
+RKI==>QEtaRamanujanKolbergIdentity(C)
+idxSPEC idx ==> if #idx=3 then geqSPEC[idx] else geqSPEC[concat(idx,1)]
+ERMp(spec) ==> etaRelationMonomial(1,spec,0,varPochhammer $ RKI,0)$RKI
+ERM ==> ERMp
+REL1(id) ==> ERM definingSpecification id = (_
+  if fpol = 'fpol then fpol := 1;_
+  idpol := identityPolynomial(id);_
+  rpol := 'F - (inv(coefficient(idpol,'F, 1))::C) * idpol;_
+  assertEquals(rpol,fpol);_
+  rspec := definingSpecification id;_
+  sspec := coSpecification id;_
+  mspecs := monoidSpecifications id;_
+  msyms := indexedSymbols("M", #mspecs);_
+  m := multiplier id;_
+  f := specM1A1(C)(sspec,rspec,m,first orbit id);_
+  egens := [specM1A1(C) mspec for mspec in mspecs];_
+  zser := eval(idpol, c+->c::A1(C), cons('F,msyms), cons(f,egens))$_
+            PolynomialEvaluation(C, A1 C);_
+  assertTrue(zero? zser);_
+  if one? rpol then _
+     ERM inv coSpecification id _
+  else _
+     rhs pretty(id, qIdentity + expand + nonModular + withSubscript + asExpression))
+findREL1(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,idxs);REL1 id)
+findREL1ID(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,id);REL1 id)
+findREL1x(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1(nn,idx,idxs))
+findREL1IDx(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1ID(nn,idx,idxs))
+
+)set mess type on
+)set mess time on
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+)set output algebra on
+)set output formatted off
+
+-- # Level 5
+
+-- +
+-------------------------------------------------------------------
+--test:level5
+-------------------------------------------------------------------
+-- -
+
+
+aidxs := generalizedEtaFunctionIndices 5
+idxs := aidxs(1..3)
+findREL1(5,[5,2],idxs)
+
+findREL1(5,[5],[[1],[5,1],[5,2]])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 6
+
+-- +
+-------------------------------------------------------------------
+--test:level6
+-------------------------------------------------------------------
+-- -
+aidxs := generalizedEtaFunctionIndices(nn:=6)
+idxs := concat[aidxs(1..4),aidxs(6..6)]
+idxs := aidxs(1..4)
+findREL1(nn,[3,1],idxs)
+
+findREL1ID(nn,[6,2],idxs)
+
+findREL1(nn,[6,1],aidxs(1..4))
+
+mspecs := mSPECS1 6;
+[qetaGrade specM1A1(C) m for m in mspecs]
+[printQPOCH m for m in mspecs]
+
+qrep(rspec,idxs) ==> (_
+  id:=findID1(nn,idxs,rspec,1,0,idxs);_
+  ERMp rspec = rhs pretty(id, qIdentity + expand + nonModular + asExpression))
+
+idxs := [[1],[2],[6,1],[6,2]]
+
+qrep(geqSPEC [[3,1]], idxs)
+
+qrep(geqSPEC [[6,1]], idxs)
+
+qrep(geqSPEC [[6,3,1]], idxs)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 7
+
+-- +
+-------------------------------------------------------------------
+--test:level7
+-------------------------------------------------------------------
+-- -
+aidxs := generalizedEtaFunctionIndices(nn:=7)
+idxs := aidxs(1..4)
+findREL1(nn,[7,3],idxs)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 8
+
+-- +
+-------------------------------------------------------------------
+--test:level8
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=8)
+idxs := concat[aidxs(1..4),aidxs(6..6)]
+findREL1(nn,[8,3],idxs)
+findREL1ID(nn,[8,2],idxs)
+findREL1ID(nn,[4,1],idxs)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 9
+
+-- +
+-------------------------------------------------------------------
+--test:level9
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=9)
+idxs := concat[aidxs(1..3),aidxs(5..6)]
+findREL1(nn,[9,4],idxs)
+findREL1ID(nn,[9,3],idxs)
+findREL1ID(nn,[3,1],idxs)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 10
+
+-- +
+-------------------------------------------------------------------
+--test:level10
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=10)
+idxs := concat(aidxs(1..4),aidxs(7..8))
+findREL1(nn,[10,4],idxs)
+findREL1ID(nn,[10,3],idxs)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 11
+
+-- +
+-------------------------------------------------------------------
+--test:level11
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=11)
+idxs := aidxs(1..5)
+findREL1x(nn,[11,5],idxs,M1-1)
+findREL1IDx(nn,[11,4],idxs,(M1-1)^3 + M2 - M3)
+findREL1IDx(nn,[11,4,-1],idxs,M1-1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 12
+
+-- +
+-------------------------------------------------------------------
+--test:level12
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=12)
+idxs := concat(aidxs(1..6),aidxs(11..11))
+findREL1x(nn,[12,5],idxs,1)
+findREL1ID(nn,[12,4],idxs)
+findREL1ID(nn,[12,3],idxs)
+findREL1ID(nn,[12,2],idxs)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 13
+
+-- +
+-------------------------------------------------------------------
+--test:level13
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=13)
+idxs := aidxs(1..6)
+findREL1x(nn,[13,6],idxs,M1-1)
+findREL1IDx(nn,[13,5],idxs,M1*(M1-1)-M4)
+findREL1IDx(nn,[13,5,-1],idxs,M1-1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 14
+
+-- +
+-------------------------------------------------------------------
+--test:level14
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=14)
+idxs := concat(aidxs(1..4),aidxs(8..10))
+findREL1x(nn,[14,6],idxs,- M7 + M6 + 2*M3 - M1)
+findREL1IDx(nn,[14,6,-1],idxs, - M7 + M6 + 2*M3)
+findREL1IDx(nn,[14,5],idxs,1)
+findREL1IDx(nn,[14,4],idxs,- M7 + M6 + 2*M3)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 15
+
+-- +
+-------------------------------------------------------------------
+--test:level15
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=15)
+idxs := concat(aidxs(1..4),aidxs(8..10))
+findREL1x(nn,[15,7],idxs,M1 - 1)
+findREL1IDx(nn,[15,7,-1],idxs,M2 - M1 + 1)
+findREL1IDx(nn,[15,6],idxs,1)
+findREL1IDx(nn,[15,5],idxs,1)
+findREL1IDx(nn,[15,4],idxs,M2-M1+1)
+findREL1IDx(nn,[15,4,-1],idxs,M1-1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 16
+
+-- +
+-------------------------------------------------------------------
+--test:level16
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=16)
+idxs := concat[aidxs(1..5),aidxs(10..12)]
+findREL1x(nn,[16,7],idxs,M1-1)
+findREL1IDx(nn,[16,7],idxs,M1-1)
+findREL1IDx(nn,[16,6],idxs,1)
+findREL1IDx(nn,[16,5],idxs,M5 - M2 + M1*(M1-2))
+findREL1IDx(nn,[16,4],idxs,1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 17
+
+-- +
+-------------------------------------------------------------------
+--test:level17
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=17)
+idxs := aidxs(1..7)
+findREL1x(nn,[17,8],idxs,-M8+M5-3*M4-3/2*M3-1/2*M2+3/2*M1-1/2)
+findREL1IDx(nn,[17,7],idxs,_
+  (2*M1-1)*M8+(-M1+1)*M7-M1*M5+(4*M1-2)*M4+(5/2*M1-1)*M3+1/2*M1*M2-3/2*M1^2+1/2*M1)
+findREL1IDx(nn,[17,6],idxs,2*M8-M7-M5+4*M4+5/2*M3+1/2*M2-3/2*M1+1/2)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 18
+
+-- +
+-------------------------------------------------------------------
+--test:level18
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=18)
+idxs := concat(aidxs(1..6),aidxs(14..15))
+findREL1x(nn,[18,8],idxs,_
+  (10/3*M1+1/3)*M7+(6*M1-2/3)*M5+(-2*M1+17/3)*M2+2/3*M12-10/3*M1^3+7/3*M1^2+M1)
+findREL1IDx(nn,[18,7],idxs,_
+  (-5/3*M1-2/3)*M7+(-3*M1-2/3)*M5+(M1-4/3)*M2-1/3*M12+5/3*M1^3-2/3*M1^2-M1)
+findREL1IDx(nn,[18,6],idxs,1)
+findREL1IDx(nn,[18,5],idxs,_
+  (5/3*M1^2+2/3*M1)*M7+(3*M1^2+2/3*M1)*M5_
+  +(-M1^2+7/3*M1+2)*M2+1/3*M1*M12-5/3*M1^4+2/3*M1^3+M1^2)
+findREL1IDx(nn,[18,4],idxs,_
+  (10/3*M1^2-4/3*M1-2/3)*M7+(6*M1^2-11/3*M1-2/3)*M5_
+  +(-2*M1^2+20/3*M1-4/3)*M2+(2/3*M1-1/3)*M12-10/3*M1^4+4*M1^3-2/3*M1^2)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 19
+
+-- +
+-------------------------------------------------------------------
+--test:level19
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=19)
+idxs := aidxs(1..8)
+
+-- The following computation take about 3 min, 90 sec, 90 sec.
+
+findREL1x(nn,[19,9],idxs,- M9 + 2*M7 + 2*M5 - M16 + M15 + M1)
+
+findREL1IDx(nn,[19,8],idxs,M5+M3-M2)
+
+findREL1IDx(nn,[19,7],idxs,M9-1/3*M8-4/3*M7-2*M5+1/3*M3-1/6*M2+2/3*M16_
+                           -2/3*M15-1/2*M1+1/6)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 20
+
+-- +
+-------------------------------------------------------------------
+--test:level20
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=20)
+idxs := concat(aidxs(1..6),aidxs(14..17))
+
+findREL1x(nn,[20,9],idxs,M1+1)
+
+findREL1IDx(nn,[20,8],idxs,1)
+
+findREL1IDx(nn,[20,7],idxs,M7-M5+M3+M1)
+
+findREL1IDx(nn,[20,6],idxs,1)
+
+findREL1IDx(nn,[20,5],idxs,1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Level 21
+
+-- +
+-------------------------------------------------------------------
+--test:level21
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=21)
+idxs := concat(aidxs(1..4),aidxs(9..13))
+
+findREL1x(nn,[21,10],idxs,M8-2*M7+M6+M4-2*M3+M2+M1)
+
+findREL1IDx(nn,[21,9],idxs,_
+  4*M9+(M1+2)*M8+(-2*M1+6)*M7+(M1-1)*M6+(M1-5)*M4_
+  +(-2*M1+6)*M3+(M1-3)*M2-M15-3*M11+M1^2-3*M1-1)
+
+findREL1IDx(nn,[21,8],idxs,2*M8-3*M7+M6+2*M4-5*M3+2*M2+2*M1+1)
+
+findREL1IDx(nn,[21,7],idxs,1)
+
+findREL1IDx(nn,[21,6],idxs,_
+  4*M9+(M1+2)*M8+(-2*M1+6)*M7+(M1-1)*M6+(M1-5)*M4+(M1-3)*M2_
+  +(-2*M1+6)*M3-M15-3*M11+M1^2-3*M1)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+-- # Level 22
+
+-- +
+-------------------------------------------------------------------
+--test:level22
+-------------------------------------------------------------------
+-- -
+
+aidxs := generalizedEtaFunctionIndices(nn:=22)
+idxs := concat[aidxs(1..4),aidxs(10..14)]
+
+-- The following computation takes about 10 min.
+
+mspecs := ncmSPECS1(nn, idxs);
+
+-- Let us set up the algebra basis computation.
+
+C ==> Q
+
+egens := [specM1A1(C) mspec for mspec in mspecs];
+msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools;
+xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];
+lg := # xgens
+cgens := [first x for x in xgens];
+[qetaGrade x for x in cgens(1..10)], [qetaGrade x for x in cgens(lg-9..lg)]
+
+-- So we have generators of pole order 15 up to pole order 1000.
+--
+-- The genus, however is only 6.
+
+gen := genus(nn)$CongruenceSubgroupGamma1
+
+-- The actual computation with the series is rather quick.
+
+cab := samba(cgens.1, cgens, gen, oneVerboseStep!(1,1,1,1))$QTOPSAMBA1(C);
+
+-- A straight-forward computation in the following way
+--     findREL1x(nn,[22,10],idxs,1)
+--     findREL1IDx,(nn,[22,9],idxs,1)
+--     findREL1IDx(nn,[22,8],idxs,1)
+--     findREL1IDx(nn,[22,6],idxs,1)
+-- does not succeed, because the computation including the
+-- representation consumes too much memory (more than 1 million
+-- terms in the representing polynomial.
+
+-- With the algebra basis from above we can conclude that an algebra
+-- basis of $Q[x | x \in xgens]$ with a t of pole order 6, we would
+-- need 5 other basis elements of pole order 7,9,10, and 11 to arrive
+-- at an algebra basis.
+
+sort [qetaGrade x for x in basis cab]
+
+-- We have found a ($\Gamma_1(22)$-modular) generalized eta-quotient
+-- of pole order 6 by solving an integer-linear problem. Similarly, we
+-- can find elements of pole order 7, 9, 10, and 11.
+
+-- The computation for aspec7, aspec9, and aspec11 took each about 1 h,
+-- whereas the compuation for aspec10 involved index [22,8] and took
+-- approx. 6 hours.
+
+-- Its specification is:
+
+aspec6 := geqSPEC [[1,1],[11,-1],_
+  [22,1,-2],[22,2,-2],[22,3,-2],[22,4,-2],[22,5,-1],[22,6,-1]];
+
+aspec7a := geqSPEC [[1,2],[2,-2],_
+  [22,1,-5],[22,2,1],[22,3,-3],[22,4,-1],[22,5,-2],[22,7,-1]];
+aspec7b := geqSPEC [[1,2],[2,-1],[11,-2],[22,1],_
+  [22,1,-3],[22,2,-3],[22,3,-3],[22,4,-1],[22,5,-2],[22,6,-1],[22,7,-2]];
+
+aspec9a := geqSPEC [[1,1],[2,1],[11,-1],[22,-1],_
+  [22,1,-3],[22,2,-3],[22,3,-3],[22,4,-2],[22,5,-2],[22,6,-1],[22,7,-1]];
+aspec9b := geqSPEC [[1,1],[11,1],[22,-2],_
+  [22,1,-3],[22,2,-3],[22,3,-2],[22,4,-1],[22,5,-1],[22,6,-1]];
+aspec9c := geqSPEC [[1,2],[2,-1],[22,-1],_
+  [22,1,-4],[22,2,-2],[22,3,-3],[22,4,-2],[22,5,-3],[22,6,-1],[22,7,-1]];
+
+aspec10a := geqSPEC [[1,2],[2,-1],[22,-1],[22,1,-4],[22,2,-3],[22,3,-2],_
+  [22,4,-3],[22,5,-2],[22,6,-1],[22,7,-3],[22,8,2]]
+aspec10b := geqSPEC [[1,1],[11,1],[22,-2],[22,1,-3],[22,2,-3],[22,3,-2],_
+  [22,4,-3],[22,7,-1],[22,8,1]]
+aspec10c := geqSPEC [[1,1],[2,2],[11,1],[22,-4],[22,1,-3],[22,2,-5],_
+  [22,3,-1],[22,4,-4],[22,5,-2],[22,6,-4],[22,8,-2]]
+aspec10d := geqSPEC [[1,2],[2,1],[22,-3],[22,1,-3],[22,2,-5],[22,3,-3],_
+  [22,4,-5],[22,5,-3],[22,6,-3],[22,7,-2],[22,8,-2]]
+aspec10e := geqSPEC [[1,2],[11,-2],[22,1,-4],[22,2,-4],[22,3,-3],_
+  [22,4,-3],[22,5,-2],[22,6,-2],[22,7,-1],[22,8,-1]]
+aspec10f := geqSPEC [[1,2],[2,-1],[22,-1],[22,1,-5],[22,2,-2],[22,3,-3],_
+  [22,4,-1],[22,5,-3],[22,6,-1],[22,8,-1]]
+aspec10g := geqSPEC [[1,1],[2,1],[11,1],[22,-3],[22,1,-3],[22,2,-4],_
+  [22,3,-3],[22,4,-3],[22,8,-3]]
+aspec10h := geqSPEC [[1,2],[2,-1],[11,-2],[22,1],[22,1,-3],[22,2,-3],_
+  [22,3,-4],[22,4,-3],[22,5,-3],[22,8,1]]
+aspec10h := geqSPEC [[1,2],[2,-1],[22,-1],[22,1,-4],[22,2,-3],[22,3,-4],_
+  [22,4,-1],[22,5,-2],[22,7,-1],[22,8,-1]]
+aspec10i := geqSPEC [[1,1],[2,1],[11,1],[22,-3],[22,1,-3],[22,2,-4],_
+  [22,3,-2],[22,4,-2],[22,5,-2],[22,6,-3],[22,7,1],[22,8,-1]]
+aspec10j := geqSPEC [[1,2],[22,-2],[22,1,-3],[22,2,-4],[22,3,-4],_
+  [22,4,-3],[22,5,-3],[22,6,-2],[22,7,-1],[22,8,-1]]
+
+aspec11a := geqSPEC [[1,1],[2,1],[11,1],[22,-3],_
+  [22,1,-3],[22,2,-4],[22,3,-2],[22,4,-4],[22,5,-1],[22,6,-2]];
+aspec11b := geqSPEC [[1,2],[2,-1],[22,-1],_
+  [22,1,-5],[22,2,-2],[22,3,-3],[22,4,-3],[22,5,-2],[22,7,-1]];
+
+aspecs := [_
+  aspec6,_
+  aspec7a, aspec7b,_
+  aspec9a, aspec9b, aspec9c,_
+  aspec10a, aspec10b, aspec10c, aspec10d, aspec10e, aspec10f,_
+            aspec10g, aspec10h, aspec10i, aspec10j,_
+  aspec11a, aspec11b];
+
+mspecs := aspecs;
+egens := [specM1A1(C) mspec for mspec in mspecs];
+
+msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools;
+xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms];
+gen := genus(nn)$CongruenceSubgroupGamma1
+# xgens
+
+xab := samba(xgens.1, xgens, gen, oneVerboseStep!(1,1,1,1))$QXTOPSAMBA1(C);
+
+xab
+
+fsym: Symbol := "F"::Symbol
+
+rspec2210 := geqSPEC [[22,10,1]]
+sspec2210: SPEC := cofactI1(nn, rspec2210, 1, 0, idxs)
+f2210 := specM1A1(C)(sspec2210, rspec2210, 1, 0)
+xf2210 := toX1(C, f2210, fsym::Pol(C))
+xz2210: X1(C) := reduce(xf2210, xab)$QXTOPRED1(C)
+
+assertEquals(second(xz2210)::Pol(C), 2*M5-M3+M16-M1-F)
+
+rspec2209 := geqSPEC [[22,9,1]]
+sspec2209: SPEC := cofactI1(nn, rspec2209, 1, 0, idxs)
+f2209 := specM1A1(C)(sspec2209, rspec2209, 1, 0)
+xf2209 := toX1(C, f2209, fsym::Pol(C))
+xz2209: X1(C) := reduce(xf2209, xab)$QXTOPRED1(C)
+assertEquals(second(xz2209)::Pol(C), M3+2*M1-1-F)
+
+
+
+rspecp11n6 := geqSPEC [[1,-1]]
+nn := 22
+sspecp11n6: SPEC := cofactI1(nn, rspecp11n6, 11, 6, idxs)
+alphaInfinity(sspecp11n6,rspecp11n6,11,[6])
+fp11n6 := specM1A1(C)(sspecp11n6, rspecp11n6, 11, 6)
+xfp11n6 := toX1(C, fp11n6, fsym::Pol(C))
+xzp11n6 := reduce(xfp11n6, xab)$QXTOPRED1(C)
+polp11n6 := ((22*second(xzp11n6)::Pol(Q)) -'F)::Pol(Z)
+content(polp11n6)
+# monomials polp11n6
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
