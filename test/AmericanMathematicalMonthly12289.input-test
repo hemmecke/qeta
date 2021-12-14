@@ -25,7 +25,6 @@
 -- 2 \sum_{n=0}^\infty q^{(3n+1)(3n+2)/2}
 -- +
 -- \underbrace{\sum_{n=0}^\infty q^{(3n+2)(3n+3)/2}}_{=: t(q^3)}
--- \\
 -- \end{align*}
 -- where
 -- \begin{gather*}
@@ -55,7 +54,7 @@
 -- The Jacobi triple product is given by
 -- \begin{align*}
 -- \sum_{n=-\infty}^\infty q^{n(n+1)/2} z^n
--- & = \qPochhammer{q}{q} \qPochhammer{-\frac{1}{2}}{q} \qPochhammer{-zq}{q}
+-- & = \qPochhammer{q}{q} \qPochhammer{-\frac{1}{z}}{q} \qPochhammer{-zq}{q}
 -- \end{align*}
 -- (see last but one formula at https://en.wikipedia.org/wiki/Jacobi_triple_product#Properties).
 --
@@ -64,7 +63,7 @@
 -- \sum_{n=-\infty}^\infty (q^9)^{n(n+1)/2} q^{-3n}
 -- &=
 -- \sum_{n=-\infty}^\infty q^{9 n(n+1)/2 - 3n}
--- = \sum_{n=-\infty}^\infty q^{9 n^2 + 9n - 6n)/2}
+-- = \sum_{n=-\infty}^\infty q^{(9 n^2 + 9n - 6n)/2}
 -- = \sum_{n=-\infty}^\infty q^{3n(3n+1)/2}
 -- \\
 -- &= s(q^3) + t(q^3)
@@ -159,8 +158,9 @@
 -- \end{gather*}
 -- [[1,2],[2,−1],[3,−1],[6,1]]
 
-specEQI(Z) eqSPEC [[1,2],[2,-1],[3,-1],[6,1]]
-specEQI(Z) geqSPEC [[1,1],[6,1,1]]
+)set stream calc 80
+--eulerExpansion specEQI(Z) eqSPEC [[1,2],[2,-1],[3,-1],[6,1]]
+eulerExpansion specEQI(Z) geqSPEC [[1,1],[6,1,1]]
 
 -- # Init
 
@@ -205,9 +205,20 @@ withSubscript ==> 16
 -- -
 
 
+-- The left-hand side of the problem equation.
+
 rspec := geqSPEC [[1,1],[6,1,1]]
+
+-- The two specifications for the generating functions
+-- of $a(3n)$ and $a(3n+1)$.
+
 rspec30 := geqSPEC [[1,-1],[2,1],[3,2],[6,-1]]
 rspec31 := geqSPEC [[3,-1],[6,2]]
+
+-- We form the respective eta-quotients of the
+-- equation among (modular) eta-quotients that we
+-- have derived above and that remains to verify.
+
 rspec0 := dilate(rspec30,3)/rspec
 rspec1 := dilate(rspec31,3)/rspec
 modularGamma1? rspec0
@@ -267,7 +278,7 @@ assertTrue(zero?(aa))
 
 -- +
 -------------------------------------------------------------------
---notest:problem12289
+--notest:problem12289-3disection
 -------------------------------------------------------------------
 -- -
 
@@ -288,11 +299,12 @@ s2 := choose(3,2,s)
 
 -- Interesting, all coefficients for exponents congruent to
 -- 2 modulo 3 vanish and the coefficients for exponents congruent
--- to 1 modulo 3 seem to be -1.
+-- to 1 modulo 3 seem to be -2.
 
 -- Let us use QEta to do the 3-disection.
 
--- We can actually start with a proper eta-quotient.
+-- In level 6, the left-hand side generalized eta-product,
+-- can be written as a proper eta-quotient.
 -- We do a 1-disection of the generalized eta-quotient
 -- and find a proper eta-quotient for it.
 
@@ -305,6 +317,9 @@ rhs printSPEC rspec = rhs printSPEC inv coSpecification id
 rspec := inv coSpecification id
 
 -- ## (3n+2)-disection &mdash; Vanishing of coefficient for exponent congruent 2 mod 3
+
+-- The following is no surprise since there is no integer
+-- $n$ with $\frac{n(n+1)}{2} \equiv 2 \pmod{3}$.
 
 id2 := findID0(nn, rspec, 3, 2);
 pretty(id2, qIdentity + asExpression + expand + nonModular)
