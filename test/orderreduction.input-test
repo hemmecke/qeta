@@ -21,7 +21,7 @@ FX ==> FunctionalLaurentInverse(CX)
 
 U(m, f) ==> (choose(m, 0, f::A1(CX))$A1(CX))::LX
 U2 f ==> U(2, f)
-EQL1C(r) ==> specM0A1C(r)::LX
+EQL1C(r) ==> specM0A1(C)(eqSPEC(nn,r))::LX
 
 -- determinantTruncationOrder(mat) computes the highest order of an
 -- entry of mat for the correct computation of the principal part of
@@ -29,17 +29,17 @@ EQL1C(r) ==> specM0A1C(r)::LX
 -- This function is needed since for choosing the pivot in the Gaussian
 -- algorithm that underlies the determinant computation.
 
-truncationOrder(mat: Matrix LX): Z ==
-  truncOrdRow := truncOrdCol := 0
-  for i in 1..grdt-1 repeat
-    tOrdRow := tOrdCol := 0
-    for j in 1..grdt-1 repeat
-      tOrdRow := min(tOrdRow, order mat(i,j))
-      tOrdCol := min(tOrdCol, order mat(j,i))
-    truncOrdRow := truncOrdRow + tOrdRow
-    truncOrdCol := truncOrdCol + tOrdCol
-    print([truncOrdRow, truncOrdCol])
-  return -max(truncOrdRow, truncOrdCol)
+truncationOrder(mat: Matrix LX): Z == (_
+  truncOrdRow := truncOrdCol := 0;_
+  for i in 1..grdt-1 repeat (_
+    tOrdRow := tOrdCol := 0;_
+    for j in 1..grdt-1 repeat (_
+      tOrdRow := min(tOrdRow, order mat(i,j));_
+      tOrdCol := min(tOrdCol, order mat(j,i)));_
+    truncOrdRow := truncOrdRow + tOrdRow;_
+    truncOrdCol := truncOrdCol + tOrdCol;_
+    print([truncOrdRow, truncOrdCol]));_
+  return -max(truncOrdRow, truncOrdCol))
 
 -- +
 -------------------------------------------------------------------
@@ -53,7 +53,7 @@ truncationOrder(mat: Matrix LX): Z ==
 
 -- +
 -------------------------------------------------------------------
---test:ordpoly-z11
+--TODOtest:ordpoly-z11
 -------------------------------------------------------------------
 -- -
 
@@ -61,7 +61,7 @@ truncationOrder(mat: Matrix LX): Z ==
 -- Example 5.4 and 5.5
 
 ell: Z := 11
-level: P := 2*ell;
+nn: P := 2*ell;
 expo: Z := 24 exquo gcd(ell-1, 12)
 t := EQL1C [expo, 0, -expo, 0] -- = 1/z_{11}
 grdt := - order t
@@ -140,7 +140,7 @@ assertEquals(pol2, (11^3 + x)^2 * pol)
 
 -- +
 -------------------------------------------------------------------
---test:ordpoly-etaquot22
+--TODOtest:ordpoly-etaquot22
 -------------------------------------------------------------------
 -- -
 --
@@ -211,7 +211,7 @@ pol
 
 -- +
 -------------------------------------------------------------------
---test:ordpoly-etaquot121
+--TODOtest:ordpoly-etaquot121
 -------------------------------------------------------------------
 -- -
 
