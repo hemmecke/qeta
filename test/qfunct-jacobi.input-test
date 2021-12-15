@@ -1,15 +1,13 @@
 -- -*- coding: utf-8 -*-
 -- Via jupytext this file can be shown as a jupyter notebook.
 
-)read /home/hemmecke/g/qeta/input/jfricas-test-support.input
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
 
 -- +
 -------------------------------------------------------------------
 --setup
 -------------------------------------------------------------------
 
-Z ==> Integer
-Q ==> Fraction Z
 C ==> Q
 L1 C  ==> QEtaLaurentSeries C
 QF ==> QFunctions(Q, L1 Q)
@@ -47,6 +45,8 @@ xicheck(delta, g, h) ==> (_
         assertEquals(order lm, order lt);_
         assertEquals(leadingCoefficient lm, leadingCoefficient lt)));
 
+)set mess type on
+)set mess time on
 
 -- +
 -------------------------------------------------------------------
@@ -54,35 +54,6 @@ xicheck(delta, g, h) ==> (_
 -------------------------------------------------------------------
 -- -
 
-)compile /home/hemmecke/g/qeta/src/qfunct
-)set output algebra on
-
-delta := 4
-g := 0
-h := 1
-xiord := delta
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-z := xi^h
-
-j := jfx(n +-> z^n, delta, g)
-
-e := efx delta;
-p1 := qPochhammer(z, g      , delta)$QFX;
-p2 := qPochhammer(z^(-1), delta-g, delta)$QFX;
-p := p1 * p2;
-t := e * p
-
-j-t
-
-)set stream calc 20
-)set message time on
-order(j-t,30)
-
-for n in 0..20 repeat (_
-    lm := leadingMonomial(j); j := j - lm;_
-    lt := leadingMonomial(t); t := t - lt;_
-    assertEquals(order lm, order lt);_
-    assertEquals(leadingCoefficient lm, leadingCoefficient lt));
 
 -- # Check jacobiFunction with rational coefficients
 
@@ -314,7 +285,7 @@ xicheck(15, 9, 1)
 xicheck(15, 7, 1)
 --endtest
 
---test:xiq16
+--test:time6-xiq16
 xicheck(16, 0, 1)
 xicheck(16, 1, 1)
 xicheck(16, 8, 1)
