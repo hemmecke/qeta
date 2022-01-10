@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018-2021  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018-2022  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -406,6 +406,13 @@ QEtaAuxiliaryPackage: with
       ++ matrixEtaOrderModularGamma1(nn, spitzen, idxs) where
       ++ idxs:=generalizedEtaFunctionIndices(nn).
 
+    minimizeVector: (Vector Z, List Vector Z) -> Vector Z
+      ++ minizeVector(v, basis) computes
+      ++ vps := concat [w for b in bas | (w:=v+b; dot(w,w)<dot(v,v)]
+      ++ vms := concat [w for b in bas | (w:=v-b; dot(w,w)<dot(v,v)]
+      ++ From these vectors it takes the one with minimal length as
+      ++ the new v and iterates as long as concat(vps, vms) is not empty.
+      ++ This minimal vector is eventually returned.
 
 -------------------------------------------------------------------
 -- Temporarily exported
@@ -883,6 +890,25 @@ $a\in X_c$.
     kappaYang(nn: P, g: Z, h: Z, mat: MZ): Q ==
         kappaYang(nn, g, h, mat(1,1), mat(1,2), mat(2,1), mat(2,2))
 
+
+    -- By adding interger multiples of elements of b we try to make
+    -- the length of a vector v as small as possible in a cheap way.
+    -- The emphasis here is on "cheap". It is actually an auxiliary
+    -- function. It is not completely necessary to find the optimally
+    -- minimal vector, since there is a second optimization step in
+    -- the place where we are going to use it to compute the cofactor
+    -- specification.
+    minimizeVector(v: Vector Z, basis: List Vector Z): Vector Z ==
+        empty? basis => v
+        w := v; lw := lv := dot(v, v)
+        repeat
+            for b in basis repeat -- search for a minimal w
+                t := v+b; lt := dot(t, t); if lt < lw then (w := t; lw := lt)
+                t := v-b; lt := dot(t, t); if lt < lw then (w := t; lw := lt)
+            lw = lv => break -- no change happened
+            -- otherwise lw < lv
+            v := w; lv := lw -- take this minimal w as the new v
+        w
 
 
 

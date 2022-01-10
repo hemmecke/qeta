@@ -1,7 +1,7 @@
 ###################################################################
 #
 # Eta relations
-# Copyright 2015-2020,  Ralf Hemmecke <ralf@hemmecke.org>
+# Copyright 2015-2022,  Ralf Hemmecke <ralf@hemmecke.org>
 #
 ###################################################################
 # This program is free software: you can redistribute it and/or modify

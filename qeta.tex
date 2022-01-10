@@ -3682,7 +3682,11 @@ conditions \ref{eq:generalized-sigmaInfinity} and
 \ref{eq:generalized-sigma0} from above.
 
 
-
+Note that \code{matrixEtaOrder} is the collection of coefficients of
+the $r_{\delta,g}$ in Theorem~\ref{thm:matrixEtaOrderRobins} for the
+in \eqref{eq:order-rbar-non-adjusted} with an adjustment for $N=4$ so
+that we get the order of the expansion in $w_\gamma$, see
+\eqref{eq:width1}.
 
 
 
@@ -4309,8 +4313,54 @@ theorem.
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Find ``$\Gamma_1(N)$-modular'' cofactor with only pole
+  at $\infty$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Suppose $\bar{s}$ is a solution (a column vector with \code{#idxs}
+components) of the system from
+Theorem~\ref{thm:condition-co-eta-quotient-gamma1} for given $\bar{r}$
+and $\bar{b_i}$, $i=1,\ldots,k$ form a basis of solutions for the
+corresponding homogeneous system. Note that the $\bar{b}_i$ describe
+$\Gamma_1(N)$-modular generalized eta-quotients (with possible poles
+at any cusp).
 
+Furthermore assume that $A$ is the matrix that determines the order of
+the expansion of generalized eta-quotients corresponding to an
+exponent vector (like $\bar{b}_i$). $A$ can be computed by
+\code{matrixEtaOrder(nn,spitzen,idxs)}. The matrix $A$ is indexed by
+the cusps in \code{spitzen} (rows) and the indices $(\delta,g)$ from
+\code{idxs} (columns).
+
+Then $A \bar{b}_i$ is a column vector that gives the order of the
+$q$-expansion (corresponding to $\bar{b}_i$) at each cusp that is in
+\code{spitzen}.
+
+Let $v$ be the column vector of the orders (at all cusps) of
+$F_{\bar{s},\bar{r},m,t}(\tau)$. By subtracting a $\setZ$-linear
+combination of the $\bar{b}_i$ from $\bar{s}$ we find
+$c_1,\ldots,c_k$ such that
+\begin{gather}
+  v' - A'(c_1\bar{b}_1+\dots+c_k\bar{b}_k)
+  =
+  v' - A'(\bar{b}_1,\ldots,\bar{b}_k) c
+  =
+  - u' + G' c
+  \ge 0
+\end{gather}
+where the prime means removing the component for the cusp $\infty$
+and $u':=-v'$, $g_i':= - A' \bar{b}_i'$, $G':=(g_1',\ldots,g_k')$,
+$c = (c_1,\ldots, c_k)^T$.
+
+In the implementation we work with grades (which is the negation of
+the expansion order and corresponds to the pole order of the
+expansion). Thus we must solve the following system
+\begin{gather}
+  \label{eq:remove-non-infinity-poles}
+  G' c \ge u'
+\end{gather}
+in order to find $c_1,\ldots, c_k$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
