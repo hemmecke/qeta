@@ -96,6 +96,9 @@ assertTrue x ==> x
 )set mess type off
 )set mess time on
 
+)set output algebra on
+)set output formatted off
+
 RKI ==> QEtaRamanujanKolbergIdentity C
 qIdentity ==> 1
 expand ==> 2
@@ -400,9 +403,32 @@ pretty(id, qIdentity + withSubscript + nonModular)
 -- because it assumes that a sifted eta-quotient is never the zero
 -- series. WRONG ASSUMPTION!
 
+
 C==>Q
---id := findIdentity(4,1,[8],4,3)$QEtaRamanujanKolberg(C)
-pretty(id, qIdentity + withSubscript + nonModular)
+rspec := eqSPEC [[1,8]]; nn := 4; m := 4; t := 3;
+id := findIdentity(nn,rspec,m,t)$QEtaRamanujanKolberg(C)
+cofactI0(nn,rspec,m,t)
+ecs := etaCofactorSpace0(nn,rspec,m,t)$QEtaCofactorSpace
+n: Z := numberOfDivisors(nn)
+VZ ==> Vector Z
+rinitial: VZ := ((ecs.particular)::VZ)(1..n)
+basis := [x(1..n) for x in ecs.'basis]
+sinitial := minimizeVector(rinitial, basis)$QETAAUX
+spitzen: List Cusp := [cusp for cusp in cusps(nn)$GAMMA0 | not infinity? cusp]
+sspec := etaQuotientSpecification(nn, members sinitial)
+qetaGrades(sspec,rspec,m,t)
+y := etaQuotient(sspec, rspec, m, t)$YM0EQ;
+qetaGradesEstimate(y)
+y := etaQuotient(sspec, rspec, m, t, spitzen)$YM0EQ;
+qetaGrades(y)
+
+
+
+
+ pretty(id, qIdentity + withSubscript + nonModular)
+
+
+
 
 C==>Q
 id := findIdentity(8,1,[-4],4,3)$QEtaRamanujanKolberg(C);
