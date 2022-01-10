@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018-2021  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018-2022  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -1208,13 +1208,14 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
       ++ The result is [qetaGradeEstimate(x.c) for c in cusps x].
     constant?: % -> Boolean
       ++ constant?(x) returns true if qetaGradesEstimate(x) returns a
-      ++ list of non-positive entries. Since x represents a modular
-      ++ function, with only poles at the cusps, it means that the
-      ++ function must be constant. Since we rely on estimates, x can
-      ++ represent a constant even if constant?(x) is false. If,
-      ++ however, multiplier(x)=1 then x represents simply an
-      ++ eta-quotient and qetaGradesEstimate(x) gives the exact
-      ++ poleorders.
+      ++ list of entries that are properly smaller than 1. Note that
+      ++ qetaGradesEstimate(x) gives an upper bound of the poleorder
+      ++ for each cusp. Since x represents a modular function, with
+      ++ only poles at the cusps, it means that the function must be
+      ++ constant. Since we rely on estimates, x can represent a
+      ++ constant even if constant?(x) is false. If, however,
+      ++ multiplier(x)=1 then x represents simply an eta-quotient and
+      ++ qetaGradesEstimate(x) gives the exact poleorders.
 
  == add
     YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
@@ -1295,7 +1296,7 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
         [qetaGradeEstimate(x.c) for c in cusps x]
 
     constant?(x: %): Boolean ==
-        for g in qetaGradesEstimate x repeat if g>0 then return false
+        for g in qetaGradesEstimate x repeat if g>=1 then return false
         true
 
 
@@ -2104,7 +2105,7 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
     qetaGradeEstimate: % -> Q
       ++ qetaGradeEstimate(x) returns the expected pole order of the
       ++ x-expansion in terms of x=q^(1/w) where w is the widths of the
-      ++ cussp of Gamma0(level(x)) corresponding to gamma(x).
+      ++ cussp of Gamma1(level(x)) corresponding to gamma(x).
       ++ Note that this is an upper bound of the pole order. The
       ++ coefficient corresponding to this grade may be zero.
       ++ Further note that due to estimation it does not necessarily
@@ -2396,13 +2397,14 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
       ++ The result is [qetaGradeEstimate(x.c) for c in cusps x].
     constant?: % -> Boolean
       ++ constant?(x) returns true if qetaGradesEstimate(x) returns a
-      ++ list of non-positive entries. Since x represents a modular
-      ++ function, with only poles at the cusps, it means that the
-      ++ function must be constant. Since we rely on estimates, x can
-      ++ represent a constant even if constant?(x) is false. If,
-      ++ however, multiplier(x)=1 then x represents simply a
-      ++ generalized eta-quotient and qetaGradesEstimate(x) gives the
-      ++ exact poleorders.
+      ++ list of entries that are properly smaller than 1. Note that
+      ++ qetaGradesEstimate(x) gives an upper bound of the poleorder
+      ++ for each cusp. Since x represents a modular function, with
+      ++ only poles at the cusps, it means that the function must be
+      ++ constant. Since we rely on estimates, x can represent a
+      ++ constant even if constant?(x) is false. If, however,
+      ++ multiplier(x)=1 then x represents simply an eta-quotient and
+      ++ qetaGradesEstimate(x) gives the exact poleorders.
  == add
     YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
     HT ==> XHashTable(Cusp, YM1GEQG)
@@ -2475,7 +2477,7 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
         [qetaGradeEstimate(x.c) for c in cusps x]
 
     constant?(x: %): Boolean ==
-        for g in qetaGradesEstimate x repeat if g>0 then return false
+        for g in qetaGradesEstimate x repeat if g>=1 then return false
         true
 
 
