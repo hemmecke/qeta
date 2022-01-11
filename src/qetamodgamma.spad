@@ -83,7 +83,10 @@ LLZ ==> List LZ
 INDICES ==> LLZ
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
+SPECS ==> List SPEC
+CUSPS ==> List Cusp
 
+YGEQ ==> SymbolicGeneralizedEtaQuotient
 YM0EQ ==> SymbolicModularGamma0EtaQuotient
 YM1GEQ ==> SymbolicModularGamma1GeneralizedEtaQuotient
 
@@ -92,38 +95,17 @@ asP x ==> x pretend P
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
-ECS ==> Record(indices:INDICES, particular:Union(VZ,"failed"), basis:List VZ)
+LVZ ==> List VZ
+ECS ==> Record(indices: INDICES, particular: Union(VZ,"failed"), basis: LVZ)
 ECSS ==> Record(comatrix: MZ, rhs: VZ)
-SOL ==> Record(particular: Union(VZ, "failed"), basis: List VZ)
+SOL ==> Record(particular: Union(VZ, "failed"), basis: LVZ)
+ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
 
 GAMMA0 ==> CongruenceSubgroupGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
 
 A1 C ==> Finite0Series C
 specM1A1 C ==> modularGeneralizedEtaQuotientInfinity $ QEtaModularGamma1Infinity(C)
-
--- The following macro abbreviates code that is used in the qetaGrades
--- function of both QEtaModularGamma0Package and
--- QEtaModularGamma1Package.
--- We require e to be of type QLX (= XHashTable(Cusp, LX))
-qetaGradesQLX e ==>
-    -- Check first whether e corresponds to 0, i.e., positive order in
-    -- every component. Since y corresponds to a modular function for
-    -- Gamma_0(level y) or Gamma_1(level y), positive order of the
-    -- series expansion of every cups means the function is 0.
-    -- Otherwise we would risk running into an endless loop while
-    -- trying to find the order of the zero series.
-    allPositiveOrders? := true
-    ht: XHashTable(Cusp, Z) := empty()
-    isZero? := true
-    for cusp in keys e while isZero? repeat
-         ht.cusp := - order(e.cusp, 1)
-          -- is a non-zero constant or has a pole at some cusp
-         if ht.cusp > -1 then isZero? := false
-     isZero? => ht
-     -- Coming here, we know that y does not correspond to the 0 function
-     for cusp in keys e repeat ht.cusp := -order(e.cusp)
-     ht
 
 
 
@@ -150,24 +132,26 @@ orders at all cusps (\code{qetaGrades}) small in total sum.
 )abbrev package QETAMGP QEtaModularGammaPackage
 QEtaModularGammaPackage: Exports == Implementation where
   Exports ==> with
-    etaCofactorInfinitySpaceSystem: (XHashTable(Cusp,Z),SPECS,List Cusp)->ECSS
-      ++ etaCofactorInfinitySpaceSystem(grds,bspecs,spitzen) return
-      ++ a matrix A and a right-hand side v for a system A*x>=v.
+    etaCofactorInfinitySpaceSystem: (SPECS, LZ, CUSPS) -> ECSS
+      ++ etaCofactorInfinitySpaceSystem(bspecs,grds,spitzen) returns a
+      ++ matrix A and a right-hand side v for a system A*x>=v where
+      ++ the right-hand side is grds (which is the expansion
+      ++ poleorders ath the cusps spitzen and A is the expansion
+      ++ poleorders of the basis elements given by bspecs. The rows
+      ++ are indexed by the cusps.
     reduceSystem: ECSS -> ECSS
       ++ reduceSystem([A,v]) returns a matrix A' and a right-hand side
       ++ v' such that A*x>=v and A'*x>=v' have the same solutions, but
       ++ A' has duplicate rows removed.
-
   Implementation ==> add
-    etaCofactorInfinitySpaceSystem(grds: XHashTable(Cusp, Z),
-                                   bspecs: SPECS, spitzen: List Cusp): ECSS ==
+    etaCofactorInfinitySpaceSystem(bspecs:SPECS,grds:LZ,spitzen:CUSPS):ECSS ==
         -- For bspecs (modular functions) we can use the
         -- matrixEtaOrder to compute the order vectors.
         ybas: List YGEQ := [generalizedEtaQuotient(bspec, spitzen)
                             for bspec in bspecs]
         bas: LLZ := [qetaGrades y for y in ybas]
         mat: MZ := transpose matrix bas
-        [mat, vector [g.cusp for cusp in spitzen]]
+        [mat, vector grds]
 
     reduceSystem(ecss: ECSS): ECSS ==
         -- See \eqref{eq:remove-non-infinity-poles}. We have to solve
@@ -186,11 +170,10 @@ QEtaModularGammaPackage: Exports == Implementation where
             if g case "failed" or u.i > (g::Z) then hrows.hrow := u.i
         ll: LLZ := empty()
         v: LZ := empty()
-        for hrow in hrows repeat
-            ll := cons(hrow, ll)
+        for hrow in keys hrows repeat
+            ll := cons(members hrow, ll)
             v := cons(hrows.hrow, v)
         [matrix ll, vector v]
-
 
 
 
@@ -218,7 +201,7 @@ orders at all cusps (\code{qetaGrades}) small in total sum.
 )abbrev package QETAMG0 QEtaModularGamma0Package
 QEtaModularGamma0Package: Exports == Implementation where
   Exports ==> with
-    qetaGrades: YM0EQ -> XHashTable(Cusp, Z)
+    qetaGrades: YM0EQ -> LZ
       ++ qetaGrades(y) returns the qetaGrades of the modular function
       ++ corresponding to y. In the special case when order(e.c) is
       ++ less than 0 for every cusp c in cusps(y), the function
@@ -226,13 +209,11 @@ QEtaModularGamma0Package: Exports == Implementation where
       ++ be the true grade of the expansion. This special treatment
       ++ avoids running into an infinite loop if y represents the zero
       ++ function.
-    qetaGrades: (SPEC, SPEC, P, N, List Cusp) -> XHashTable(Cusp, Z)
-      ++ qetaGrades(sspec,rspec,m,t,spitzen) returns
-      ++ qetaGrades(y) where
-      ++ y=etaQuotient(sspec,rspec,m,t,spitzen)$SymbolicModularGamma0EtaQuotient.
-    qetaGrades: (SPEC, SPEC, P, N) -> XHashTable(Cusp, Z)
-      ++ qetaGrades(sspec,rspec,m,t) returns
-      ++ qetaGrades(y) where
+    qetaGrades: (SPEC, SPEC, P, N, CUSPS) -> LZ
+      ++ qetaGrades(sspec,rspec,m,t,spitzen) returns qetaGrades(y) where
+      ++ y=etaQuotient(sspec,rspec,m,t,spitzen)$SymbolicModularGamma0EtaQuotient
+    qetaGrades: (SPEC, SPEC, P, N) -> LZ
+      ++ qetaGrades(sspec,rspec,m,t) returns qetaGrades(y) where
       ++ y=etaQuotient(sspec,rspec,m,t)$SymbolicModularGamma0EtaQuotient.
     etaCofactorInfinity: (P, SPEC, P, N) -> SPEC
       ++ etaCofactorInfinity(nn,rspec,m,t) returns a specification
@@ -243,8 +224,6 @@ QEtaModularGamma0Package: Exports == Implementation where
       ++ and with smallest pole order.
 
   Implementation ==> add
-    LVZ ==> List VZ
-    ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
     C ==> Q
     lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
     SUPC ==> SparseUnivariatePolynomial C
@@ -263,22 +242,21 @@ QEtaModularGamma0Package: Exports == Implementation where
 
     -- local
     -- orders at cusps of Gamma0(nn) different from infinity
-    grades(nn: P, divs: LP, cusps: List Cusp, r: LZ): LZ ==
+    grades(nn: P, divs: LP, cusps: CUSPS, r: LZ): LZ ==
         [grade(nn, divs, denom cusp, r) for cusp in cusps]
 
-    qetaGrades(y: YM0EQ): XHashTable(Cusp, Z) ==
+    qetaGrades(y: YM0EQ): LZ ==
         mx: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
         e: QLX := laurentExpansions(y)$QEtaSeriesExpansion(C, mx, CX, xi)
-        qetaGradesQLX e
-
-    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: List Cusp):_
-      XHashTable(Cusp, Z) ==
-        qetaGrades(etaQuotient(sspec, rspec, m, t, spitzen)$YM0EQ);
-    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): XHashTable(Cusp, Z) ==
-        qetaGrades(etaQuotient(sspec, rspec, m, t)$YM0EQ);
+        spitzen: CUSPS := cusps y
+        qetaGrades(e :: ModularFunctionExpansionsAtCusps(CX, spitzen))
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: CUSPS): LZ ==
+        qetaGrades(etaQuotient(sspec, rspec, m, t, spitzen)$YM0EQ)
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): LZ ==
+        qetaGrades(etaQuotient(sspec, rspec, m, t)$YM0EQ)
 
     -- local function
     -- What actually counts is that the grade of eta-quotient corresponding
@@ -293,19 +271,18 @@ QEtaModularGamma0Package: Exports == Implementation where
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution rinitial.
         sspec: SPEC := etaQuotientSpecification(nn, members sinitial)
-        g: XHashTable(Cusp, Z) := qetaGrades(sspec, rspec, m, t)
         -- Exclude order at the cusp infinity.
-        cusps: List Cusp := [cusp for cusp in cusps(nn)$GAMMA0 _
-                             | not infinity? cusp]
-        rhs: LZ := [g.cusp for cusp in cusps]
+        spitzen: CUSPS := [cusp for cusp in cusps(nn)$GAMMA0 _
+                           | not infinity? cusp]
+        rhs: LZ := qetaGrades(sspec, rspec, m, t, spitzen)
         -- For the vectors in the basis, we don't need to compute the
         -- series explicitly, since these vectors correspond to
         -- modular eta-quotients and thus we can use the matrix of
         -- Ligozat to compute the order vectors.
         nndivs: List P := DIVISORS nn
-        bas: List LZ := [grades(nn, nndivs, cusps, members x) for x in b]
+        bas: List LZ := [grades(nn, nndivs, spitzen, members x) for x in b]
         mat: MZ := transpose matrix bas
-        rels: VZ := vector [1 for x in 1..#cusps]
+        rels: VZ := vector [1 for x in 1..#spitzen]
         zresult: ZRESULT := zsolve(mat, rels, vector rhs)$X4ti2
         -- We are interested in the inhomogeneous solutions, since
         -- they yield an adjustment such that the resulting cofactor
@@ -389,16 +366,14 @@ cusps (\code{qetaGrades}) small in total sum.
 )abbrev package QETAMG1 QEtaModularGamma1Package
 QEtaModularGamma1Package: Exports == Implementation where
   Exports ==> with
-    qetaGrades: YM1GEQ -> XHashTable(Cusp, Z)
+    qetaGrades: YM1GEQ -> LZ
       ++ qetaGrades(y) returns the qetaGrades of the modular
       ++ function corresponding to y.
-    qetaGrades: (SPEC, SPEC, P, N, List Cusp) -> XHashTable(Cusp, Z)
-      ++ qetaGrades(sspec,rspec,m,t,spitzen) returns
-      ++ qetaGrades(y) where
-      ++ y=etaQuotient(sspec,rspec,m,t, spitzen)$SymbolicModularGamma1GeneralizedEtaQuotient.
-    qetaGrades: (SPEC, SPEC, P, N) -> XHashTable(Cusp, Z)
-      ++ qetaGrades(sspec,rspec,m,t) returns
-      ++ qetaGrades(y) where
+    qetaGrades: (SPEC, SPEC, P, N, CUSPS) -> LZ
+      ++ qetaGrades(sspec,rspec,m,t,spitzen) returns qetaGrades(y) where
+      ++ y=etaQuotient(sspec,rspec,m,t,spitzen)$SymbolicModularGamma1GeneralizedEtaQuotient.
+    qetaGrades: (SPEC, SPEC, P, N) -> LZ
+      ++ qetaGrades(sspec,rspec,m,t) returns qetaGrades(y) where
       ++ y=etaQuotient(sspec,rspec,m,t)$SymbolicModularGamma1GeneralizedEtaQuotient
     etaCofactorInfinity: (P, SPEC, P, N, INDICES) -> SPEC
       ++ etaCofactorInfinity(nn,rspec,m,t,idxs) returns a
@@ -412,8 +387,6 @@ QEtaModularGamma1Package: Exports == Implementation where
       ++ etaCofactorInfinity(nn,rspec,m,t) returns
       ++ etaCofactorInfinity(nn,rspec,m,t,[])
   Implementation ==> add
-    LVZ ==> List VZ
-    ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
     C ==> Q
     lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
     SUPC ==> SparseUnivariatePolynomial C
@@ -423,50 +396,20 @@ QEtaModularGamma1Package: Exports == Implementation where
     YGEQ ==> SymbolicGeneralizedEtaQuotient
     QLX ==> XHashTable(Cusp, LX)
 
-    qetaGrades(y: YM1GEQ): XHashTable(Cusp, Z) ==
+    qetaGrades(y: YM1GEQ): LZ ==
         mx: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(mx)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
         e: QLX := laurentExpansions(y)$QEtaSeriesExpansion(C, mx, CX, xi)
-        qetaGradesQLX e
+        spitzen: CUSPS := cusps y
+        qetaGrades(e :: ModularFunctionExpansionsAtCusps(CX, spitzen))
 
-    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: List Cusp):_
-      XHashTable(Cusp, Z) ==
-        y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
-        qetaGrades y
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: CUSPS): LZ ==
+        qetaGrades generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
 
-    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): XHashTable(Cusp, Z) ==
-        y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t);
-        qetaGrades y
-
-    --assertions:
-    -- The input (sspec,rspec,m,t) corresponds to a modular function.
-    -- spitzen are the non-infinity cusps of $\Gamma_1(nn)$
-    -- bspecs are specifications for modular  functions.
-    etaCofactorInfinitySpaceSystem(sspec: SPEC, rspec: SPEC, m: P, t: N,
-      bspecs: SPECS, spitzen: List Cusp): ECSS ==
-        y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
-        etaCofactorInfinitySpaceSystem(qetaGrades y, bspecs, spitzen)
-
-    -- local
-    constant?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
-        -- We assume that the input arguments specify a modular
-        -- function for $\Gamma_1(nn)$ where nn=level(sspec).
-        -- A modular function is constant if it does not have a pole
-        -- at any cusp.
-        -- We try to decide this in a cheap why first by estimating
-        -- the pole order at all cusps.
-        spitzen: List Cusp := cusps(nn)$GAMMA1
-        y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
-        constant? y => true
-        -- y can still represent a constant function.
-        -- We only make a actual test at the cusp infinity for all others
-        -- the poleorder estimate must suffice.
-        for c in spitzen | not ininity? c repeat
-            if qetaGradeEstimat(y.c) >= 1 then return false
-        e: A1 C := specM1A1(C)(sspec, rspec, m, t)
-        qetaGrade e <= 0
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): LZ ==
+        qetaGrades generalizedEtaQuotient(sspec, rspec, m, t)
 
     etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N, idxs: LLZ): SPEC ==
         ecs: ECS := etaCofactorSpace1(nn, rspec, m, t, idxs)$QEtaCofactorSpace
@@ -475,30 +418,41 @@ QEtaModularGamma1Package: Exports == Implementation where
         rinitial: VZ := (ecs.particular)::VZ
         idxs := ecs.indices -- because idxs can be empty initially
         hbasis: LVZ := ecs.basis -- a basis for the homogeneous solutions
-        hmat: MZ := transpose matrix hbasis -- basis as columns
+        hmat: MZ := transpose matrix [members x for x in hbasis]
         sinitial: VZ := minimizeVector(rinitial, hbasis)$QETAAUX
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution sinitial.
         le := members sinitial -- exponents
         sspec: SPEC := generalizedEtaQuotientSpecification(nn, idxs, le)
-        constant?(sspec, rspec, m, t) => sspec
+        spitzen: CUSPS := cusps(level sspec)$GAMMA1
+        y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
+        constant? y => sspec
+        -- y can still represent a constant function.
+        -- We only make an actual test at the cusp infinity for all others
+        -- the poleorder estimate must suffice.
+        spitzen := remove!(infinity(), spitzen)
+        y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
+        if constant? y then -- note that infinity is not involved
+            -- Coming here, we definitely have no pole at non-infinity cusps.
+            -- The implementation for qetaGrade in A1(C) takes care of not
+            -- running indefinityly of the series is zero.
+            if qetaGrade(specM1A1(C)(sspec, rspec, m, t)) <= 0 then return sspec
         -- Coming here, it is still possible that (sspec, rspec, m, t)
         -- represents a constant function, since the "constant?"
         -- function above only estimates the grades.
-        -- At this place we know that (sspec,rspec,m,t) specifies a
-        -- function that has a pole at some cusp, i.e. is non-zero.
         bspecs := [generalizedEtaQuotientSpecification(nn, idxs, members x)
                    for x in hbasis]
-        ecss: ECSS := etaCofactorInfinitySpaceSystem(sspec, rspec, m, t,
-                                                     bspecs, spitzen)
+        import from QEtaModularGammaPackage
+        ecss := etaCofactorInfinitySpaceSystem(bspecs, qetaGrades y, spitzen)
         ecss := reduceSystem ecss -- remove identical rows
+        mat: MZ := ecss.comatrix
+        u: VZ := ecss.rhs
         -- We first solve mat*x=u for x.
         sol: SOL := diophantineSystem(mat, u)$SmithNormalForm(Z, VZ, VZ, MZ)
         not sol.particular case "failed" =>
             s := sinitial - (hmat * ((sol.particular)::VZ))
             return generalizedEtaQuotientSpecification(nn, idxs, members s)
         -- If there is no solution, we try the more involved mat*x>=u.
-        u: VZ := ecss.rhs
         rels: VZ := vector [1 for x in 1..#u]
         zresult: ZRESULT := zsolve(mat, rels, u)$X4ti2
         -- We are interested in the inhomogeneous solutions, since
