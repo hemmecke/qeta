@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018, 2020-2021  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018, 2020-2022  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -160,7 +160,6 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ equation mat*s=v it holds
       ++ modularGamma0?(ssoec,rspec,m,t) where sspec results from
       ++ the list of the first #divisors(nn) entries of s.
-    etaCofactorSpace1System: (P, SPEC, P, N) -> ECSS
     etaCofactorSpace1System: (P, SPEC, P, N, INDICES) -> ECSS
       ++ etaCofactorSpace1System(nn, rspec, m, t, idxs) returns a
       ++ matrix mat and a vector v such that for the integer solutions
@@ -264,111 +263,6 @@ QEtaCofactorSpace: Exports == Implementation where
         part: VZ := ((sol.particular)::VZ)(1..n)
         bas: List VZ := [x(1..n) for x in sol.basis]
         [idxs, part, bas]
-
-    etaCofactorSpace1System(nn: P, rspec: SPEC, m: P, t: N): ECSS ==
-        -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
-        import from QEtaCofactorConditions
-        not conditionCoEtaQuotientGamma1?(nn, rspec, m, t) =>
-            error "conditionCoEtaQuotientGamma1? not met"
-
-        nndivs: List P := DIVISORS nn
-        numOfVars: N := lengthOfGeneralizedEtaFunctionIndices(nn)$QETAAUX
-
-        -- rows/cols for condition (4)
-        k: N := 0 -- need k more rows and k slack variable
-        for i in 0..11 repeat if one? gcd(i*nn+1, 6) then k := k + 1
-
-        cols: N := numOfVars+k+2 -- the 2 is for mod 24 slack variables
-        rows: N := k+3 -- for conditions (4) + conditions (1), (2), (3)
-        -- The matrix columns correspond to the following variables
-        -- (in this order).
-        -- [a(d) for d in nndivs]
-        -- [[a(d,g) for g in 1..ceiling(d/2)-1] for d in nndivs]
-        mat: MZ := new(rows, cols, 0)
-        v: VZ := new(rows, 0)
-
-        r: LZ := pureExponents rspec
-        rtilde: LLZ := properGeneralizedPart rspec
-        n: Z := # nndivs
-
-        -----------------------------------------------------------
-        ii: Z := 1 -- the row index
-        -- CDZ Condition (1), \eqref{eq:CDZ-sum=0}
-        for j in 1..n repeat qsetelt!(mat, ii, j, 1)
-        v.ii := - reduce(_+, r, 0) -- fill right-hand side
-        -----------------------------------------------------------
-        -- CDZ Condition (3) and slack variable for mod 24
-        -- \eqref{eq:CDZ-sigmainfinity=0}
-        -- We multiply the entries and the rhs by nn to remove denominators.
-        ii := ii + 1
-        jj := 0
-        for d in nndivs for j in 1..n repeat
-            qsetelt!(mat, ii, j, nn*d)
-            for g in 1..ceiling(d/2)$Q -1 repeat
-                jj := jj + 1
-                x: Z := numer(12*nn*d*fractionalBernoulli2(g/d)$QETAAUX)
-                qsetelt!(mat, ii, n + jj, x)
-        qsetelt!(mat, ii, numOfVars+1, 24*nn) -- slack variable for (mod 24)
-
-        mm: P := level rspec
-        --assert(DIVISIBLEBY?(mm, nn))
-        -- fill the right-hand side
-        nnrbarhat: Z := numer(nn*sigmaInfinity(rspec)) -- is integral
-        q:Q := (nnrbarhat + 24*t*(1-m^2)*nn)/m -- is integral
-        -- Security check. Should never fail because of Condition 8 on page 37
-        -- of \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-        not one? denom q =>
-            error "etaCofactorSpace1System: not divisible by m"
-        v.ii := positiveRemainder(- numer q, 24*nn)
-
-        -----------------------------------------------------------
-        -- CDZ Condition (2) and slack variable for mod 24
-        -- \eqref{eq:CDZ-sigma0=0}
-        ii := ii + 1
-        jj: Z := 0
-        for d in nndivs for j in 1..n repeat
-            nnd := numer(nn/d)
-            qsetelt!(mat, ii, j, nnd)
-            for g in 1..ceiling(d/2)-1 repeat
-                jj := jj + 1
-                qsetelt!(mat, ii, n + jj, 2*nnd)
-        qsetelt!(mat, ii, numOfVars+2, 24) -- slack variable for (mod 24)
-        --assert(DIVISIBLEBY?(mm, nn))
-        v.ii := - m * ((nn exquo mm)::Z) * sigma0(rspec) -- fill right-hand side
-
-        -----------------------------------------------------------
-        -- Condition (4) and slack variable for mod 2 for all a
-        -- \eqref{eq:CDZ-productsquare}
-        mmdivs: List P := divisors rspec
-        for i in 0..11 repeat
-            a: Z := nn*i+1
-            one? gcd(a,6) =>
-                ii := ii + 1
-                -- setEntries!(mat, v, n, ii, ...)
-                jj := 0
-                for d in nndivs for j in 1..n repeat
-                    if jacobi(d, a) < 0 then qsetelt!(mat, ii, j, 1)
-                    for g in 1..ceiling(d/2)-1 repeat
-                        jj := jj + 1
-                        q := (a-1) * (g/d-1/2)
-                        not one? denom q =>
-                            error "etaCofactorSpace1System: e exponent not integral"
-                        if odd? numer q then qsetelt!(mat, ii, n + jj, 1)
-                -- slack variable for (mod 2)
-                qsetelt!(mat, ii, numOfVars+ii-1, 2)
-
-                -- fill right-hand side
-                expo: Q := 0
-                for l in rtilde repeat --assert(#l=3) -- l=[d,g,e]
-                    expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
-                expo := (a-1) * expo
-                not one? denom expo =>
-                    error "etaCofactorSpace1System: exponent not integral"
-                isOdd?: Boolean := odd? numer expo
-                for d in mmdivs for rd in r | odd? rd repeat
-                    if jacobi(m*d, a) < 0 then isOdd? := not isOdd?
-                if isOdd? then v.ii := 1 -- else v.ii := 0
-        return [mat, v]$ECSS
 
     -- Compute the common denominator den of the rowidx-th row of mat1
     -- and the value rval intended for the right-hand side. Then
