@@ -162,15 +162,16 @@ ys := [specYM1GEQ(x/rspec1) for x in rspecs];
 spitzen := cusps(105)$GAMMA1;
 #spitzen
 
-pords :=  [qetaGrades(y) for y in ys];
-cuspsoo := remove(oo,spitzen);
-reduce(+,[max [pord.c for pord in pords] for c in cuspsoo])
+gmat := matrix [qetaGrades(y) for y in ys];
+poo := position(oo,spitzen)
+reduce(+,[max [gmat(i,j) for i in 1..nrows gmat]_
+          for j in 1..ncols gmat | j~=poo])
 
 -- Another way is to expand the series at the cusps where the expansion
 -- has cusps.
 
-cuspsWithPoles := [first l for c in cuspsoo | _
-                   not empty?(l:=[c for pord in pords | (pord.c)>0])]
+cuspsWithPoles := [first l for c in spitzen for p in 1..#spitzen | p~=poo and_
+                   not empty?(l:=[c for i in 1..nrows gmat | gmat(i,p)>0])]
 # cuspsWithPoles
 
 -- We must find the minimal extension of the coefficient field.
@@ -187,18 +188,11 @@ a := [expandAnCX y for y in ys];
 aa := a.1 + a.2 - a.3 + a.4 - a.5
 assertTrue(zero? aa)
 
-)set message time on
-)set message type on
-
 -- +
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
 -- -
-
-)set output algebra on
-)set output formatted off
-
 
 -- # Weierstrass relations
 
