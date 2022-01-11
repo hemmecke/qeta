@@ -268,6 +268,81 @@ a1 := specM1AnCX(rspec1)
 aa := a0 - 2*a1 - 1 $ An(CX)
 assertTrue(zero?(aa))
 
+-- ## Verify in $\Gamma_0(18)$
+
+-- In level 6, the right-hand side generalized eta-product,
+-- can be written as a proper eta-quotient.
+-- We do a 1-disection of the generalized eta-quotient
+-- and find a proper eta-quotient for it.
+
+-- Let us show that
+-- \begin{gather*}
+--   \frac{\qPochhammer{q^2}{q^2}
+--         \qPochhammer{q^9}{q^9}}
+--        {\qPochhammer{q}{q}^2
+--         \qPochhammer{q^{18}}{q^{18}}}
+--   -
+--   2 q \frac{\qPochhammer{q^2}{q^2}
+--             \qPochhammer{q^3}{q^3}
+--             \qPochhammer{q^{18}}{q^{18}}^2}
+--            {\qPochhammer{q}{q}^2
+--             \qPochhammer{q^6}{q^6}
+--             \qPochhammer{q^9}{q^9}}
+--   = 1.
+-- \end{gather*}
+
+rspec := geqSPEC [[1,1],[6,1,1]];
+nn := minLevel1(rspec, 3, 2)
+idxs := etaFunctionIndices nn
+id := findID1(nn, idxs, rspec, 1, 0, idxs);
+-- pretty(id, qIdentity + asExpression + expand)
+rhs printSPEC rspec = rhs printSPEC inv coSpecification id
+pspec := inv coSpecification id
+assertEquals(pspec, eqSPEC [[1, 2], [2, - 1], [3, - 1], [6, 1]])
+modularGamma0? pspec
+
+uwspec := eqSPEC [[1,-1],[2,1],[3,2],[6,-1]];
+vspec  := eqSPEC [[1,-1],[2,2]];
+rspec1 := dilate(uwspec, 3)/pspec;
+rspec2 := dilate(vspec, 9)/pspec;
+lhs printSPEC rspec1, lhs printSPEC rspec2
+modularGamma0? rspec1
+modularGamma0? rspec2
+qetaGradesEstimate specYM0EQ rspec1
+qetaGradesEstimate specYM0EQ rspec2
+
+-- +
+nn := level rspec1
+mspecs := mSPECS0 nn;
+[level x for x in mspecs]
+[qetaGradesEstimate specYM0EQ x for x in mspecs]
+ispec1 := rspec1*mspecs.3;
+ispec2 := rspec2*mspecs.3;
+ispec3 := mspecs.3;
+qetaGradesEstimate specYM0EQ(ispec1)
+qetaGradesEstimate specYM0EQ(ispec2)
+qetaGradesEstimate specYM0EQ(ispec3)
+
+printSPEC(ispec1)
+printSPEC(ispec2)
+printSPEC(ispec3)
+-- -
+
+ispecs := [ispec1,ispec2, ispec3];
+[modularGamma0? x for x in ispecs]
+
+ys := [specYM0EQ x for x in ispecs];
+xiord := lcm [minimalRootOfUnity y for y in ys]
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
+spitzen := cusps(nn)$GAMMA0;
+as := [expandAnCX y for y in ys]
+
+--as.1 - 2*as.2
+)set stream calc 50
+series(as.3,8)
+
+assertTrue(zero?(as.1 - 2*as.2 - as.3))
+
 -- +
 -------------------------------------------------------------------
 --endtest
@@ -287,8 +362,12 @@ assertTrue(zero?(aa))
 -- at the $q$-series expansion.
 
 rspec := geqSPEC [[1,1],[6,1,1]];
+pspec := eqSPEC [[1, 2], [2, - 1], [3, - 1], [6, 1]]
+assertTrue(modularGamma1?(rspec/pspec))
+s := eulerExpansion specEQI(C)(rspec/pspec) - 1
+assertEquals(removeDuplicates [coefficient(s,i) for i in 0..100], [0])
 )set stream calc 100
-s := eulerExpansion specEQI(C) rspec
+s := eulerExpansion specEQI(C) pspec
 
 -- Deceived by the $\frac{1}{3}$ in the problem specification,
 -- we try a 3-disection of the series.
@@ -303,32 +382,19 @@ s2 := choose(3,2,s)
 
 -- Let us use QEta to do the 3-disection.
 
--- In level 6, the left-hand side generalized eta-product,
--- can be written as a proper eta-quotient.
--- We do a 1-disection of the generalized eta-quotient
--- and find a proper eta-quotient for it.
-
-rspec := geqSPEC [[1,1],[6,1,1]];
-nn := minLevel1(rspec, 3, 2)
-idxs := etaFunctionIndices nn
-id := findID1(nn, idxs, rspec, 1, 0, idxs);
--- pretty(id, qIdentity + asExpression + expand)
-rhs printSPEC rspec = rhs printSPEC inv coSpecification id
-rspec := inv coSpecification id
-assertEquals(rspec, eqSPEC [[1, 2], [2, - 1], [3, - 1], [6, 1]])
-
 -- ## (3n+2)-disection &mdash; Vanishing of coefficient for exponent congruent 2 mod 3
 
 -- The following is no surprise since there is no integer
 -- $n$ with $\frac{n(n+1)}{2} \equiv 2 \pmod{3}$.
 
-id2 := findID0(nn, rspec, 3, 2);
+nn := minLevel0(pspec, 3, 2)
+id2 := findID0(nn, pspec, 3, 2);
 pretty(id2, qIdentity + asExpression + expand + nonModular)
 assertEquals(identityPolynomial id2, F)
 
 -- ## (3n+1)-disection &mdash; Explain the $-2$ coefficients
 
-id1 := findID0(nn, rspec, 3, 1);
+id1 := findID0(nn, pspec, 3, 1);
 pretty(id1, asExpression + expand + nonModular + qIdentity)
 assertEquals(identityPolynomial id1, F+2)
 
@@ -336,7 +402,7 @@ assertEquals(identityPolynomial id1, F+2)
 
 -- We can do the 3-disection in $\Gamma_0(6)$.
 
-id1 := findID0(nn, rspec, 3, 0);
+id1 := findID0(nn, pspec, 3, 0);
 pretty(id1, asExpression + expand + nonModular + qIdentity)
 assertEquals(identityPolynomial id1, F-1)
 
@@ -344,3 +410,58 @@ assertEquals(identityPolynomial id1, F-1)
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+
+-- +
+SER ==> UnivariateTaylorSeries(Z,q,0)
+SERIES x ==> series(x)$SER
+
+st := [[n*(n+1)/2, 2*cos((2*n+1)/3*%pi)]$Record(k:N,c:Z) for n in 0 ..];
+st0 := [[n*(n+1)/2, 2*cos((2*n+1)/3*%pi)]$Record(k:N,c:Z) for n in 0 .. by 3];
+st1 := [[n*(n+1)/2, 2*cos((2*n+1)/3*%pi)]$Record(k:N,c:Z) for n in 1 .. by 3];
+st2 := [[n*(n+1)/2, 2*cos((2*n+1)/3*%pi)]$Record(k:N,c:Z) for n in 2 .. by 3];
+
+s := SERIES(st)
+s0 := SERIES st0
+s1 := SERIES st1
+s2 := SERIES st2
+
+tt0 := [[3*n*(3*n+1)/2,     1]$Record(k:N,c:Z) for n in 0 ..];
+tt1 := [[(3*n+1)*(3*n+2)/2, 1]$Record(k:N,c:Z) for n in 0 ..];
+tt2 := [[(3*n+2)*(3*n+3)/2, 1]$Record(k:N,c:Z) for n in 0 ..];
+
+t0 := SERIES tt0
+t1 := SERIES tt1
+t2 := SERIES tt2
+n
+s - s0 - s1 - s2
+s0-t0
+s1 + 2*t1
+s2-t2
+
+multisect(3,0,quoByVar t1)
+
+1
+-- -
+
+
+
+nn := 6
+idxs := concat([[1]],rest properGeneralizedEtaFunctionIndices nn)
+
+id := findID1(nn, idxs, rspec, 1, 0, idxs);
+-- pretty(id, qIdentity + asExpression + expand)
+lhs printSPEC rspec = lhs printSPEC inv coSpecification id
+
+id := findID1(nn, idxs, rspec30, 1, 0, idxs);
+-- pretty(id, qIdentity + asExpression + expand)
+lhs printSPEC rspec30 = lhs printSPEC inv coSpecification id
+
+id := findID1(nn, idxs, rspec31, 1, 0, idxs);
+--pretty(id, qIdentity + asExpression + expand)
+lhs printSPEC rspec31 = lhs printSPEC inv coSpecification id
+
+id := findID1(nn, idxs, eqSPEC [[3,1]], 1, 0, idxs);
+--pretty(id, qIdentity + asExpression + expand)
+lhs printSPEC eqSPEC [[1,1]] = lhs printSPEC inv coSpecification id
+
+1
