@@ -131,9 +131,6 @@ ECS ==> Record(indices:INDICES, particular:Union(VZ,"failed"), basis:List VZ)
 ECSS ==> Record(comatrix: MZ, rhs: VZ)
 SOL ==> Record(particular: Union(VZ, "failed"), basis: List VZ)
 
-SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
-SIGMA0 ==> sigma0 $ QETAAUX
-
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetaq.tex.
 -- Variable   <--> mathematical notation
@@ -154,23 +151,24 @@ SIGMA0 ==> sigma0 $ QETAAUX
 )abbrev package QETACOFS QEtaCofactorSpace
 QEtaCofactorSpace: Exports == Implementation where
   Exports ==> with
-    etaCofactorSpace0System: (P, SPEC, P, N) -> ECSS
-      ++ etaCofactorSpace0System(nn, rsoec, m, t) returns a matrix mat
-      ++ and a vector v such that for the integer solutions s of the
-      ++ equation mat*s=v it holds
-      ++ modularGamma0?(ssoec,rspec,m,t) where sspec results from
-      ++ the list of the first #divisors(nn) entries of s.
+    etaCofactorSpace0System: (P, SPEC, P, N, INDICES) -> ECSS
+      ++ etaCofactorSpace0System(nn,rsoec,m,t,idxs) returns a matrix
+      ++ mat and a vector v such that for the integer solutions s of
+      ++ the equation mat*s=v it holds modularGamma0?(sspec,rspec,m,t)
+      ++ where sspec results from the list of the first #idxs entries
+      ++ of s. With idxs one can specify what indexes should be
+      ++ allowed in the solution space.
     etaCofactorSpace1System: (P, SPEC, P, N, INDICES) -> ECSS
-      ++ etaCofactorSpace1System(nn, rspec, m, t, idxs) returns a
-      ++ matrix mat and a vector v such that for the integer solutions
-      ++ s of the equation mat*s=v it holds
-      ++ modularGamma1?(sspec,rspec,m,t) where sbar is the translation
-      ++ of s into a generalized eta-quotient specification, see
-      ++ generalizedEtaQuotientSpecification. With the idxs one can
+      ++ etaCofactorSpace1System(nn,rspec,m,t,idxs) returns a matrix
+      ++ mat and a vector v such that for the integer solutions s of
+      ++ the equation mat*s=v it holds modularGamma1?(sspec,rspec,m,t)
+      ++ where sbar is the translation of s into a generalized
+      ++ eta-quotient specification, see
+      ++ generalizedEtaQuotientSpecification. With idxs one can
       ++ specify what indexes should be allowed in the solution space.
-    etaCofactorSpace0: (P, SPEC, P, N) -> ECS
-      ++ etaCofactorSpace0(nn,rspec,m,t) returns a vector v and the
-      ++ basis of a space such that #v=#divisors(nn) and
+    etaCofactorSpace0: (P, SPEC, P, N, INDICES) -> ECS
+      ++ etaCofactorSpace0(nn,rspec,m,t,idxs) returns a vector v and the
+      ++ basis of a space such that #v=#idxs  and
       ++ modularGamma0?(nn,members(s),rspec,m,t) is true for any
       ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
@@ -180,7 +178,7 @@ QEtaCofactorSpace: Exports == Implementation where
     etaCofactorSpace1: (P, SPEC, P, N, INDICES) -> ECS
       ++ etaCofactorSpace1(nn,rspec,m,t,idxs) returns a vector v and
       ++ the basis of a space such that #v=#idxs and
-      ++ modularGamma1?(ssepc,rspec,m,t) is true for any
+      ++ modularGamma1?(sspec,rspec,m,t) is true for any
       ++ sbar = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
       ++ and any sufficiently long list z of integers.
       ++ The function fails, if there is no such solution.
@@ -188,6 +186,10 @@ QEtaCofactorSpace: Exports == Implementation where
       ++ corresponds to the entries of the solution vectors.
       ++ If idxs=[] then the computation is done for
       ++ idxs=generalizedEtaFunctionIndices(nn)$QETAAUX..
+    etaCofactorSpace0: (P, SPEC, P, N) -> ECS
+      ++ etaCofactorSpace0(nn,rspec,m,t) returns
+      ++ etaCofactorSpace0(nn,rspec,m,t,idxs) for
+      ++ idxs=etaFunctionIndices(nn)$QETAAUX.
     etaCofactorSpace1: (P, SPEC, P, N) -> ECS
       ++ etaCofactorSpace1(nn,rspec,m,t) returns
       ++ etaCofactorSpace1(nn,rspec,m,t,idxs) for
@@ -210,13 +212,26 @@ QEtaCofactorSpace: Exports == Implementation where
     FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
     DIVISIBLEBY?(k, z) ==> zero?(z rem k)
 
-    etaCofactorSpace0System(nn: P, rspec: SPEC, m: P, t: N): ECSS ==
+    -- local
+    etaCofactorSpace(ecss: ECSS, idxs: INDICES): ECS ==
+        mat: MZ := ecss.comatrix
+        v := ecss.rhs
+        -- Now we have a matrix mat and a right-hand side v and need to
+        -- solve mat*x=v for x.
+        sol: SOL := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+        n := #idxs
+        sol.particular case "failed" => [idxs, "failed", []]
+        part: VZ := ((sol.particular)::VZ)(1..n)
+        bas: List VZ := [x(1..n) for x in sol.basis]
+        [idxs, part, bas]
+
+    etaCofactorSpace0System(nn:P, rspec:SPEC, m:P, t:N, idxs:INDICES): ECSS ==
         import from QEtaCofactorConditions
         not conditionCoEtaQuotientGamma0?(nn, rspec, m, t) =>
             error "conditionCoEtaQuotientGamma0 not met"
 
         -- Setup matrix.
-        matmod0: MZ := matrixModularGamma0(nn)$QETAAUX
+        matmod0: MZ := matrixModularGamma0(nn, idxs)$QETAAUX
 
         -- Setup right-hand side.
         w: Z := reduce(_+, pureExponents rspec, 0)$List(Z)
@@ -249,20 +264,14 @@ QEtaCofactorSpace: Exports == Implementation where
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         return [matmod0, v]
 
-    etaCofactorSpace0(nn: P, rspec: SPEC, m: P, t: N): ECS ==
+    etaCofactorSpace0(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): ECS ==
         not pure? rspec => error "specification is not for a pure eta-quotient"
-        ecss: ECSS := etaCofactorSpace0System(nn, rspec, m, t)
-        matmod0 := ecss.comatrix
-        v := ecss.rhs
-        -- Now we have a matrix mat and a right-hand side v and need to
-        -- solve mat*x=v for x.
-        sol: SOL := diophantineSystem(matmod0, v)$SmithNormalForm(Z, VZ, VZ, MZ)
-        idxs: INDICES := etaFunctionIndices(nn)$QETAAUX
-        sol.particular case "failed" => [idxs, "failed", []]
-        n := #idxs
-        part: VZ := ((sol.particular)::VZ)(1..n)
-        bas: List VZ := [x(1..n) for x in sol.basis]
-        [idxs, part, bas]
+        if empty? idxs then idxs := etaFunctionIndices(nn)$QETAAUX
+        ecss: ECSS := etaCofactorSpace0System(nn, rspec, m, t, idxs)
+        etaCofactorSpace(ecss, idxs)
+
+    etaCofactorSpace0(nn: P, rspec: SPEC, m: P, t: N): ECS ==
+        etaCofactorSpace0(nn, rspec, m, t, [])
 
     -- Compute the common denominator den of the rowidx-th row of mat1
     -- and the value rval intended for the right-hand side. Then
@@ -362,16 +371,7 @@ QEtaCofactorSpace: Exports == Implementation where
     etaCofactorSpace1(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): ECS ==
         if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
         ecss: ECSS := etaCofactorSpace1System(nn, rspec, m, t, idxs)
-        mat: MZ := ecss.comatrix
-        v := ecss.rhs
-        -- Now we have a matrix mat and a right-hand side v and need to
-        -- solve mat*x=v for x.
-        sol: SOL := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
-        n := #idxs
-        sol.particular case "failed" => [idxs, "failed", []]
-        part: VZ := ((sol.particular)::VZ)(1..n)
-        bas: List VZ := [x(1..n) for x in sol.basis]
-        [idxs, part, bas]
+        etaCofactorSpace(ecss, idxs)
 
     etaCofactorSpace1(nn: P, rspec: SPEC, m: P, t: N): ECS ==
         etaCofactorSpace1(nn, rspec, m, t, [])
