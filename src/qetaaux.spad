@@ -238,6 +238,16 @@ QEtaAuxiliaryPackage: with
       ++ modularGamma0(nn, r) returns true iff the eta-quotient
       ++ corresponding to r is a modular function for Gamma_0(nn). It
       ++ is equivalent to zero?(modularGamma0(nn, r)).
+    matrixModularGamma0: (P, INDICES) -> MZ
+      ++ matrixModularGamma0(nn,idxs) returns part of the matrix
+      ++ matrixModularGamma0(nn) corresponding to the divisors that
+      ++ are given through idxs (i.e., the order of the columns
+      ++ corresponds to what is given through idxs).
+      ++ Irrelevant rows in the rows specifying the square condition
+      ++ are removed.
+      ++ nn represents the level of $\Gamma_0(nn)$ and idxs has the form
+      ++ [[d1],...,[dn]] where the di are (different) divisors of nn.
+      ++ See description for matrixModularGamma0(nn) for more information.
     matrixModularGamma0: P -> MZ
       ++ matrixModularGamma0(nn) returns a matrix mat such
       ++ that if divs:=divisors(nn), n=#divisors(nn) and v is such
@@ -251,6 +261,8 @@ QEtaAuxiliaryPackage: with
       ++ \cite{HemmeckeRadu_EtaRelations_2019}
       ++ \url{http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf}
       ++ (DOI:10.1016/j.jsc.2018.10.001).
+      ++ matrixModularGamma0(nn) returns a matrixModularGamma0(nn,idxs) for
+      ++ idxs:=etaFunctionIndices(nn).
     matrixLigozatModularGamma0: (P, List Z) -> MZ
       ++ matrixLigozatModularGamma0(nn, idivs) returns a matrix mat which
       ++ is a vertical concatenation (a part of) matrixLigozat(nn)
@@ -330,7 +342,7 @@ QEtaAuxiliaryPackage: with
       ++ conditions \eqref{eq:generalized-weight},
       ++ \eqref{eq:generalized-sigmaInfinity}, and
       ++ \eqref{eq:generalized-sigma0}, but corresponding to the given
-      ++ indices idxs.. See also modularGamm1 and modularGamma1?. The
+      ++ indices idxs. See also modularGamm1 and modularGamma1?. The
       ++ first row encodes that the some of the exponents of the pure
       ++ part must be zero. The second row encodes that order at
       ++ infinity must be an integer. The third row encodes that the
@@ -339,7 +351,7 @@ QEtaAuxiliaryPackage: with
       ++ and (n+2)-th column, respectively. All other entries are 0.
 
     matrixModularGamma1: P -> MQ
-      ++ matrixModularGamma1(nn) returns a matrixModularGamma1(nn, idxs) for
+      ++ matrixModularGamma1(nn) returns a matrixModularGamma1(nn,idxs) for
       ++ idxs:=generalizedEtaFunctionIndices(nn).
 
     matrixEtaOrderElement: (P, Cusp, LZ) -> Q
@@ -506,31 +518,6 @@ QEtaAuxiliaryPackage: with
 
     modularGamma0?(nn: P, r: List Z): Boolean ==
         zero? modularGamma0(nn, r)
-
-    matrixModularGamma0(m: P): MZ ==
-        divs: List Z := divisors(m)$INTF
-        n: N := # divs
-        d: Vector Z := vector divs
-        fl: List Record(factor: Z, exponent: N) := factors factor m
-        cols: P := asP(n + 2 + #fl)
-        rows: P := asP(3 + #fl)
-        mat: MZ := new(rows, cols, 0)
-        -- sum(r(d.i), i=1..n)=0
-        for j in 1..n repeat qsetelt!(mat, 1, j, 1)
-        -- sum(d.i * r(d.i), i=1..n+1) = 0 (mod 24)
-        for j in 1..n repeat qsetelt!(mat, 2, j, d.j)
-        qsetelt!(mat, 2, n+1, 24) -- additional variable for (mod 24)
-        -- sum(d.(n+2-i) * r(d.i), i=1..n+1) = 0 (mod 24)
-        for j in 1..n repeat qsetelt!(mat, 3, j, d(n+1-j))
-        qsetelt!(mat, 3, n+2, 24) -- additional variable for (mod 24)
-        -- product is rational square
-        for i in 1..#fl for fe in fl repeat
-            k := n+2+i
-            p: P := asP(fe.factor)
-            for j in 2..n repeat -- for all divisors > 1
-                qsetelt!(mat, i+3, j, primePower(asP(d.j), p))
-            qsetelt!(mat, i+3, k, 2) -- additional variable for (mod 2)
-        return mat
 
     matrixLigozatModularGamma0(m: P, idivs: List Z): MZ ==
         matmod0: MZ := matrixModularGamma0 m
@@ -762,7 +749,45 @@ $a\in X_c$.
     sigma0(mm: P, r: List Z, rtilde: List List Z): Z ==
         sigma0(mm, r) + 2*sigma0(mm, rtilde)
 
+    matrixModularGamma0(nn: P, idxs: INDICES): MZ ==
+        if empty? idxs then idxs := etaFunctionIndices nn
+        -- check idxs
+        n: N := # idxs
+        for j in 1..n for idx in idxs repeat
+            if #idx ~= 1 then error "matrixModularGamma0: not pure index"
+            d: Z := first idx
+            if d < 1 or not zero?(nn rem d) then
+                error "matrixModularGamma0: index not positive divisor"
+        fl: List Record(factor: Z, exponent: N) := factors factor nn
+        -- product is rational square
+        ll: LLZ := [[primePower(asP(idx.1), asP(fe.factor)) for idx in idxs]_
+                    for fe in fl]
+        import from LZ
+        ll := removeDuplicates ll
+        ll := [l for l in ll | removeDuplicates first ll ~= [0]] -- no 0-rows
+        cols: P := asP(n + 2 + #ll)
+        rows: P := asP(3 + #ll)
+        mat: MZ := new(rows, cols, 0)
+        for j in 1..n for idx in idxs repeat
+            d: Z := first idx
+            -- sum(r(d.i), i=1..n)=0
+            qsetelt!(mat, 1, j, 1)
+            -- sum(d * r(d) for [d] in idxs) = 0 (mod 24)
+            qsetelt!(mat, 2, j, d)
+            -- sum(nn/d * r(d) for [d] in idxs) = 0 (mod 24)
+            qsetelt!(mat, 3, j, (nn exquo d)::Z)
+        for i in 1..#ll for l in ll repeat
+            for j in 1..n for z in l repeat qsetelt!(mat, i+3, j, z)
+            qsetelt!(mat, i+3, n+2+i, 2) -- additional variable for (mod 2)
+        qsetelt!(mat, 2, n+1, 24) -- additional variable for (mod 24)
+        qsetelt!(mat, 3, n+2, 24) -- additional variable for (mod 24)
+        return mat
+
+    matrixModularGamma0(nn: P): MZ ==
+        matrixModularGamma0(nn, etaFunctionIndices nn)
+
     matrixModularGamma1(nn: P, idxs: INDICES): MQ ==
+        if empty? idxs then idxs := generalizedEtaFunctionIndices nn
         spitzen: List Cusp := [infinity(), cusp(0,1)]
         rows: List List Q := [matrixEtaOrderRow(nn, c, idxs) for c in spitzen]
         s: List Q := [(#idx=1=>1;0) for idx in idxs]
@@ -775,8 +800,7 @@ $a\in X_c$.
         qsetelt!(mat, 3, n+2, 1)
         return mat
 
-    matrixModularGamma1(nn: P): MQ ==
-        matrixModularGamma1(nn, generalizedEtaFunctionIndices nn)
+    matrixModularGamma1(nn: P): MQ == matrixModularGamma1(nn, [])
 
     -- matrixEtaOrderElement(nn, cusp, delta, g) returns the coefficient of
     -- r_{delta.g} in
