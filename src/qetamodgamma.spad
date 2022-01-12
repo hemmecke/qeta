@@ -367,8 +367,13 @@ cusps (\code{qetaGrades}) small in total sum.
 QEtaModularGamma1Package: Exports == Implementation where
   Exports ==> with
     qetaGrades: YM1GEQ -> LZ
-      ++ qetaGrades(y) returns the qetaGrades of the modular
-      ++ function corresponding to y.
+      ++ qetaGrades(y) returns the qetaGrades of the modular function
+      ++ corresponding to y. In the special case when order(e.c) is
+      ++ less than 0 for every cusp c in cusps(y), the function
+      ++ returns a value of -1 for each cusp although this might not
+      ++ be the true grade of the expansion. This special treatment
+      ++ avoids running into an infinite loop if y represents the zero
+      ++ function.
     qetaGrades: (SPEC, SPEC, P, N, CUSPS) -> LZ
       ++ qetaGrades(sspec,rspec,m,t,spitzen) returns qetaGrades(y) where
       ++ y=etaQuotient(sspec,rspec,m,t,spitzen)$SymbolicModularGamma1GeneralizedEtaQuotient.
@@ -393,7 +398,6 @@ QEtaModularGamma1Package: Exports == Implementation where
     CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
     TX ==> QEtaTaylorSeries CX
     LX ==> QEtaLaurentSeries CX
-    YGEQ ==> SymbolicGeneralizedEtaQuotient
     QLX ==> XHashTable(Cusp, LX)
 
     qetaGrades(y: YM1GEQ): LZ ==
@@ -404,17 +408,15 @@ QEtaModularGamma1Package: Exports == Implementation where
         e: QLX := laurentExpansions(y)$QEtaSeriesExpansion(C, mx, CX, xi)
         spitzen: CUSPS := cusps y
         qetaGrades(e :: ModularFunctionExpansionsAtCusps(CX, spitzen))
-
     qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: CUSPS): LZ ==
         qetaGrades generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
-
     qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): LZ ==
         qetaGrades generalizedEtaQuotient(sspec, rspec, m, t)
 
-    etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N, idxs: LLZ): SPEC ==
+    etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): SPEC ==
         ecs: ECS := etaCofactorSpace1(nn, rspec, m, t, idxs)$QEtaCofactorSpace
         ecs.particular case "failed" =>
-            error "etaCofactorInfinity: cannot find cofactor"
+            error "etaCofactorInfinity: cannot make modular"
         rinitial: VZ := (ecs.particular)::VZ
         idxs := ecs.indices -- because idxs can be empty initially
         hbasis: LVZ := ecs.basis -- a basis for the homogeneous solutions
