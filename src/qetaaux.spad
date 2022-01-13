@@ -98,6 +98,7 @@ Pol ==> SparseUnivariatePolynomial Z
 LZ ==> List Z
 LLZ ==> List LZ
 INDICES ==> LLZ
+CUSPS1 nn ==> cusps()$CongruenceSubgroupGamma1(nn)
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
@@ -122,7 +123,6 @@ vector to correspond to a modular eta-quotient is violated.
 
 )endif
 
--- Maybe this should become a domain CongruenceSubgroupGamma0(m).
 )abbrev package QETAAUX QEtaAuxiliaryPackage
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta-quotients that are modular functions.
@@ -339,7 +339,7 @@ QEtaAuxiliaryPackage: with
       ++ Theorem~\ref{thm:matrixEtaOrderRobins}. Note that Robins
       ++ refers to an expansion in the uniformizing variable
       ++ q^(gcd(c,nn)/nn) (where cusp=a/c). That is equal to
-      ++ q^(1/width(nn,c)$CongruenceSubgroupGamma1) except for the
+      ++ q^(1/width(c)$CongruenceSubgroupGamma1(nn)) except for the
       ++ case nn=4 and gcd(nn,c)=2. In that case the width of the cusp
       ++ 1/2 is 1 and not 2=4/gcd(4.2). For this case, we deviate from
       ++ Robins' coefficients and adapt to an expansion in q rather
@@ -374,7 +374,7 @@ QEtaAuxiliaryPackage: with
 
     matrixEtaOrder: P -> MQ
       ++ matrixEtaOrder(nn) returns matrixEtaOrder(nn, spitzen) where
-      ++ spitzen := cusps(nn)$CongruenceSubgroupGamma1.
+      ++ spitzen := cusps()$CongruenceSubgroupGamma1(nn).
 
     matrixEtaOrderModularGamma1: (P, List Cusp, INDICES) -> MQ
       ++ matrixEtaOrderModularGamma1(nn,spitzen,idxs) returns the
@@ -746,7 +746,7 @@ $a\in X_c$.
     -- the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
     -- $q^{1/w_\gamma}$.
     matrixEtaOrderElement(nn: P, cusp: Cusp, idx: LZ): Q ==
-        --assert(cusp>0) -- comes from cusps(nn)$CongruenceSubgroupGamma1
+        --assert(cusp>0) -- comes from cusps()$CongruenceSubgroupGamma1(nn)
         empty? idx =>
             errorPrint("idx", idx)
             error "matrixEtaOrderElement: index not allowed"
@@ -757,7 +757,7 @@ $a\in X_c$.
         -- If cusp=a/c=lambda/(mu*epsilon), then we must have the
         -- condition: gcd(lambda,nn)=gcd(lambda,mu)=gcd(mu,nn)=1. So
         -- we try to find an equivalent cusp with this property.
-        -- See function normalize in CongruenceSubgroupGamma1.
+        -- See function normalizeCusp in CongruenceSubgroupGamma1.
         delta <= 0 => error "matrixEtaOrderElement: delta not positive"
         g > delta => error "matrixEtaOrderElement: no such g allowed"
         c: Z := denom cusp
@@ -800,8 +800,7 @@ $a\in X_c$.
     matrixEtaOrder(nn: P, spitzen: List Cusp): MQ ==
         matrixEtaOrder(nn, spitzen, generalizedEtaFunctionIndices nn)
 
-    matrixEtaOrder(nn: P): MQ ==
-        matrixEtaOrder(nn, cusps(nn)$CongruenceSubgroupGamma1)
+    matrixEtaOrder(nn: P): MQ == matrixEtaOrder(nn, CUSPS1 nn)
 
     matrixEtaOrderModularGamma1(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
         matmod1 := matrixModularGamma1(nn, idxs)

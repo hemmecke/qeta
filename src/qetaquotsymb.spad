@@ -87,8 +87,10 @@ QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
 
 asP x ==> x pretend P
-WIDTH0(nn, c) ==> asP(width(nn, c)$GAMMA0)
-WIDTH1(nn, c) ==> asP(width(nn, c)$GAMMA1)
+CUSPS0 nn ==> cusps()$GAMMA0(nn)
+CUSPS1 nn ==> cusps()$GAMMA1(nn)
+WIDTH0(nn, c) ==> asP(width(c)$GAMMA0(nn))
+WIDTH1(nn, c) ==> asP(width(c)$GAMMA1(nn))
 
 )if LiterateDoc
 %$
@@ -943,13 +945,15 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
 
     qExponent(x: %): Q == qExponent cofactor x + qExponent orbitProduct x
 
-    qetaGradeEstimate(x: %): Q ==
+    -- local
+    qetaGradeEstimateAux(nn: P, x: %): Q ==
         qe: Q := qExponent x
         cf: SymbolicEtaQuotientGamma := cofactor x
         g: SL2Z := gamma cf
         c: Cusp := cusp(g(1,1),g(2,1))
-        - WIDTH0(level cf, c) * qe
+        - WIDTH0(nn, c) * qe
 
+    qetaGradeEstimate(x: %): Q == qetaGradeEstimateAux(level cofactor x, x)
 
 
 
@@ -975,7 +979,7 @@ $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right) \in
 
 If \code{e = etaQuotient(nn, r)}, then
 for each cusp in
-\code{cusps(nn)$CongruenceSubgroupGamma0(nn)}
+\code{cusps()$CongruenceSubgroupGamma0(nn)}
 %$
 we have \code{e.cusp} is the corresponding data from
 \code{SymbolicEtaQuotientGamma}.
@@ -999,7 +1003,7 @@ SymbolicEtaQuotient: SetCategory with
       ++ all cusps a/c of Gamma0(mm) in terms of x = \exp(2 \pi i \tau/w)
       ++ where w=width(m, c) and gamma=cuspToMatrix(mm, a/c).
       ++ It is the same as
-      ++ etaQuotient(mm, r, cusps(mm)$CongruenceSubgroupGamma0).
+      ++ etaQuotient(mm, r, cusps()$CongruenceSubgroupGamma0(mm)).
       ++ $r$ is indexed by the divisors of $mm$.
       ++ See \eqref{eq:g_r(tau)}.
     etaQuotient: (SPEC, List Cusp) -> %
@@ -1014,7 +1018,7 @@ SymbolicEtaQuotient: SetCategory with
       ++ all cusps a/c of Gamma0(mm) in terms of x = \exp(2 \pi i \tau/w)
       ++ where w=width(m, c) and gamma=cuspToMatrix(mm, a/c).
       ++ It is the same as
-      ++ etaQuotient(rspec, cusps(mm)$CongruenceSubgroupGamma0).
+      ++ etaQuotient(rspec, cusps()$CongruenceSubgroupGamma0(mm)).
       ++ $r$ and $mm$ are given by rspec.
       ++ See \eqref{eq:g_r(tau)}.
     definingSpecification: % -> SPEC
@@ -1028,7 +1032,7 @@ SymbolicEtaQuotient: SetCategory with
       ++ exponents, i.e., exponents(x)=r.
     cusps: % -> List Cusp
       ++ If x=etaQuotient(mm, r), then
-      ++ cusps(x)=cusp(mm)$CongruenceSubgroupGamma0.
+      ++ cusps(x)=cusp()$CongruenceSubgroupGamma0(mm).
     minimalRootOfUnity: % -> P
       ++ If x=etaQuotient(mm, r), then minimalRootOfUnity(x) returns the
       ++ smallest positive integer n such that the expansion of the
@@ -1041,7 +1045,8 @@ SymbolicEtaQuotient: SetCategory with
     qetaGrades: % -> List Z
       ++ qetaGrades(x) returns the (negated) exponents of a series
       ++ expansion of x at all the cusps in the canonical variables,
-      ++ i.e. in x=q^(1/w) where w=width(level x, denom cusp)$GAMMA0
+      ++ i.e. in x=q^(1/w) where
+      ++ w=width(denom(cusp))$CongruenceSubgroupGamma0(level(x)),
       ++ Internally, the matrix of Ligozat is employed.
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient corresponding to x
@@ -1058,28 +1063,37 @@ SymbolicEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    xExponent(x: %, cusp: Cusp): Z ==
+    -- local
+    xExponent(nn: P, x: %, cusp: Cusp): Z ==
         qe: Q := qExponent(x.cusp.0)$SymbolicEtaQuotientLambdaGamma
-        xe: Q := WIDTH0(level x, cusp) * qe
+        xe: Q := WIDTH0(nn, cusp) * qe
         not one? denom xe =>
             error "SymbolicEtaQuotient: fractional exponent"
         numer xe
-    qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
+    qetaGrades(x: %): List Z ==
+        nn: P := level x
+        [-xExponent(nn, x, cusp) for cusp in cusps x]
 
-    etaQuotient(rspec: SPEC, cusps: List Cusp): % ==
+    -- local
+    etaQuotientAux(mm: P, rspec: SPEC, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
-        mm: P := level rspec
         for cusp in cusps repeat
-            gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA0
+            gamma: SL2Z := cuspToMatrix(cusp)$GAMMA0(mm)
             y: SymbolicEtaQuotientGamma := etaQuotient(rspec, gamma)
             h.cusp := y
             minroot := lcm(minroot, minimalRootOfUnity y)
         per [rspec, cusps, h, asP minroot]
-    etaQuotient(rspec: SPEC): % == etaQuotient(rspec, cusps(level rspec)$GAMMA0)
+    --local
+    etaQuotientCuspsAux(mm: P, rspec: SPEC): % ==
+        etaQuotientAux(mm, rspec, CUSPS0 mm)
+
+    etaQuotient(rspec: SPEC, cusps: List Cusp): % ==
+        etaQuotientAux(level rspec, rspec, cusps)
+    etaQuotient(rspec: SPEC): % == etaQuotientCuspsAux(level rspec, rspec)
     etaQuotient(mm: P, r: LZ, cusps: List Cusp): % ==
         etaQuotient(etaQuotientSpecification(mm, r),  cusps)
-    etaQuotient(mm: P, r: LZ): % == etaQuotient(mm, r, cusps(mm)$GAMMA0)
+    etaQuotient(mm: P, r: LZ): % == etaQuotient etaQuotientSpecification(mm, r)
 
     definingSpecification(x: %): SPEC == xx.fspec
     level(x: %): P == level definingSpecification x
@@ -1188,7 +1202,7 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     cusps: % -> List Cusp
       ++ cusps(x) either returns the value that was given to
       ++ etaQuotient at creation time or
-      ++ cusps(level(x))$CongruenceSubgroupGamma0 if the cusps where
+      ++ cusps()$CongruenceSubgroupGamma0(level(x)) if the cusps where
       ++ not given.
     elt: (%, Cusp) -> SymbolicModularGamma0EtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
@@ -1233,25 +1247,35 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N, cusps: List Cusp): % ==
+    -- local
+    etaQuotientAux(nn: P,_
+                   sspec: SPEC, rspec: SPEC, m: P, t: N, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
-        nn: P := level sspec
         for cusp in cusps repeat
-            gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA0
+            gamma: SL2Z := cuspToMatrix(cusp)$GAMMA0(nn)
             e: YM0EQG := etaQuotient(sspec, rspec, m, t, gamma)
             h.cusp := e
             minroot := lcm(minroot, minimalRootOfUnity e)
         per [sspec, rspec, m, t, cusps, h, asP minroot]
 
+    -- local
+    etaQuotientCuspsAux(nn: P, sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
+        etaQuotientAux(nn, sspec, rspec, m, t, CUSPS0 nn)
+
+    etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N, cusps: List Cusp): % ==
+        etaQuotientAux(level sspec, sspec, rspec, m, t, cusps)
+
     etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
-        etaQuotient(sspec, rspec, m, t, cusps(level sspec)$GAMMA0)
+        etaQuotientCuspsAux(level sspec, sspec, rspec, m, t)
 
     etaQuotient(rspec: SPEC, cusps: List Cusp): % ==
         sspec: SPEC := etaQuotientSpecification(level rspec, [])
         etaQuotient(sspec, rspec, 1, 0, cusps)
 
-    etaQuotient(rspec: SPEC): % == etaQuotient(rspec, cusps(level rspec)$GAMMA0)
+    etaQuotient(rspec: SPEC): % ==
+        sspec: SPEC := etaQuotientSpecification(level rspec, [])
+        etaQuotient(sspec, rspec, 1, 0)
 
     etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N, cusps: List Cusp): % ==
         sspec: SPEC := etaQuotientSpecification(nn, s)
@@ -1259,7 +1283,7 @@ SymbolicModularGamma0EtaQuotient: SetCategory with
         etaQuotient(sspec, rspec, m, t, cusps)
 
     etaQuotient(nn: P, s: LZ, mm: P, r: LZ, m: P, t: N): % ==
-        etaQuotient(nn, s, mm, r, m, t, cusps(nn)$GAMMA0)
+        etaQuotient(nn, s, mm, r, m, t, CUSPS0 nn)
 
     coerce(x: SymbolicEtaQuotient): % ==
         etaQuotient(definingSpecification x, cusps x)
@@ -2164,12 +2188,14 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
 
     qExponent(x: %): Q == qExponent cofactor x + qExponent basefactor x
 
-    qetaGradeEstimate(x: %): Q ==
+    -- local
+    qetaGradeEstimateAux(nn: P, x: %): Q ==
         qe: Q := qExponent x
         cf: SymbolicGeneralizedEtaQuotientGamma := cofactor x
         g: SL2Z := gamma cf
         c: Cusp := cusp(g(1,1),g(2,1))
-        - WIDTH1(level cf, c) * qe
+        - WIDTH1(nn, c) * qe
+    qetaGradeEstimate(x: %): Q == qetaGradeEstimateAux(level cofactor x, x)
 
 
 
@@ -2197,7 +2223,7 @@ cusps.
 
 If \code{e = generalizedEtaQuotient(nn, rbar)}, then
 for each cusp in
-\code{cusps(nn)$CongruenceSubgroupGamma1(nn)}
+\code{cusps()$CongruenceSubgroupGamma1(nn)}
 %$
 we have \code{e.cusp} is the corresponding data from
 \code{SymbolicGeneralizedEtaQuotientGamma}.
@@ -2213,7 +2239,8 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
       ++ generalizedEtaQuotient(rspec,cusps) represents the
       ++ expansion of g_rbar(\tau) at the given cusps of
       ++ Gamma1(mm) in terms of $x = \exp(2 \pi i \tau/w)$ where
-      ++ w=width(mm,cusp)$GAMMA1 and gamma=cuspToMatrix(mm,cusp)$GAMMA1.
+      ++ w=width(cusp)$ComgruenceSubgroupGamma1(mm) and
+      ++ gamma=cuspToMatrix(cusp)$CongruenceSubgroupGamma1(mm).
       ++ mm and rbar are given through rspec, see QEtaSpecification.
       ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
     generalizedEtaQuotient: SPEC -> %
@@ -2221,7 +2248,7 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
       ++ g_rbar(\tau) at all cusps of Gamma1(mm) in terms of
       ++ $x = \exp(2 \pi i \tau/w)$ where w=width(mm,cusp) and
       ++ gamma=cuspToMatrix(mm,cusp). It is the same as
-      ++ generalizedEtaQuotient(rspec,cusps(mm)$CongruenceSubgroupGamma1).
+      ++ generalizedEtaQuotient(rspec,cusps()$CongruenceSubgroupGamma1(mm)).
       ++ mm and rbar are given through rspec, see QEtaSpecification.
       ++ See \eqref{eq:g_rbar(tau)} and \eqref{eq:g_rbar(gamma*tau)}.
     level: % -> P
@@ -2246,7 +2273,8 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     qetaGrades: % -> List Z
       ++ qetaGrades(x) returns the (negated) exponents of a series
       ++ expansion of x at all the cusps in the canonical variables.
-      ++ i.e. in x=q^(1/w) where w=width(level x, denom q)$GAMMA1.
+      ++ i.e. in x=q^(1/w) where
+      ++ w=width(denom(q))$CongruenceSubgroupGamma1(level(x)).
       ++ Internally, the matrixEtaOrder is used.
     one?: % -> Boolean
       ++ one?(x) returns true if the generalized eta-quotient
@@ -2264,28 +2292,37 @@ SymbolicGeneralizedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    xExponent(x: %, cusp: Cusp): Z ==
+    -- local
+    xExponent(nn: P, x: %, cusp: Cusp): Z ==
         qe: Q := qExponent(x.cusp.0)$SymbolicGeneralizedEtaQuotientLambdaGamma
-        xe: Q := WIDTH1(level x, cusp) * qe
+        xe: Q := WIDTH1(nn, cusp) * qe
         not one? denom xe =>
             error "SymbolicGeneralizedEtaQuotient: fractional exponent"
         numer xe
-    qetaGrades(x: %): List Z == [-xExponent(x, cusp) for cusp in cusps x]
+    qetaGrades(x: %): List Z ==
+        nn: P := level x
+        [-xExponent(nn, x, cusp) for cusp in cusps x]
 
-    generalizedEtaQuotient(rspec: SPEC, cusps: List Cusp): % ==
+    -- local
+    generalizedEtaQuotientAux(mm: P, rspec: SPEC, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
-        mm: P := level rspec
         for cusp in cusps repeat
-            gamma: SL2Z := cuspToMatrix(mm, cusp)$GAMMA1
+            gamma: SL2Z := cuspToMatrix(cusp)$GAMMA1(mm)
             import from SymbolicGeneralizedEtaQuotientGamma
             y := generalizedEtaQuotient(rspec, gamma)
             h.cusp := y
             minroot := lcm(minroot, minimalRootOfUnity y)
         per [rspec, cusps, h, asP minroot]
 
+    -- local
+    generalizedEtaQuotientCuspsAux(mm: P, rspec: SPEC): % ==
+        generalizedEtaQuotientAux(mm, rspec, CUSPS1 mm)
+
+    generalizedEtaQuotient(rspec: SPEC, cusps: List Cusp): % ==
+        generalizedEtaQuotientAux(level rspec, rspec, cusps)
     generalizedEtaQuotient(rspec: SPEC): % ==
-        generalizedEtaQuotient(rspec, cusps(level rspec)$GAMMA1)
+        generalizedEtaQuotientCuspsAux(level rspec, rspec)
 
     definingSpecification(x: %): SPEC == xx.fspec
     level(x: %): P == level definingSpecification x
@@ -2375,7 +2412,7 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
     cusps: % -> List Cusp
       ++ cusps(x) either returns the value that was given to
       ++ generalizedEtaQuotient at creation time or
-      ++ cusps(level(x))$CongruenceSubgroupGamma1 if the cusps where
+      ++ cusps()$CongruenceSubgroupGamma1(level(x)) if the cusps where
       ++ not given.
     elt: (%, Cusp) -> SymbolicModularGamma1GeneralizedEtaQuotientGamma
       ++ x.cusp returns the data corresponding to the respective
@@ -2421,27 +2458,35 @@ SymbolicModularGamma1GeneralizedEtaQuotient: SetCategory with
     xx ==> rep x
     yy ==> rep y
 
-    generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N,
-                           cusps: List Cusp): % ==
+    generalizedEtaQuotientAux(nn: P,
+      sspec: SPEC, rspec: SPEC, m: P, t: N, cusps: List Cusp): % ==
         h: HT := empty()
         minroot: Z := 1
-        nn: P := level sspec
         for cusp in cusps repeat
-            gamma: SL2Z := cuspToMatrix(nn, cusp)$GAMMA1
+            gamma: SL2Z := cuspToMatrix(cusp)$GAMMA1(nn)
             e: YM1GEQG := generalizedEtaQuotient(sspec, rspec, m, t,gamma)
             h.cusp := e
             minroot := lcm(minroot, minimalRootOfUnity e)
         per [sspec, rspec, m, t, cusps, h, asP minroot]
 
+    generalizedEtaQuotientCuspsAux(nn: P,
+      sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
+        generalizedEtaQuotientAux(level sspec, sspec, rspec, m, t, CUSPS1 nn)
+
+    generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N,
+                              cusps: List Cusp): % ==
+        generalizedEtaQuotientAux(level sspec, sspec, rspec, m, t, cusps)
+
     generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N): % ==
-        generalizedEtaQuotient(sspec, rspec, m, t, cusps(level sspec)$GAMMA1)
+        generalizedEtaQuotientCuspsAux(level sspec, sspec, rspec, m, t)
 
     generalizedEtaQuotient(rspec: SPEC, cusps: List Cusp): % ==
         sspec: SPEC := generalizedEtaQuotientSpecification(level rspec, [])
         generalizedEtaQuotient(sspec, rspec, 1, 0, cusps)
 
     generalizedEtaQuotient(rspec: SPEC): % ==
-        generalizedEtaQuotient(rspec, cusps(level rspec)$GAMMA1)
+        sspec: SPEC := generalizedEtaQuotientSpecification(level rspec, [])
+        generalizedEtaQuotient(sspec, rspec, 1, 0)
 
     coerce(x: SymbolicGeneralizedEtaQuotient): % ==
         generalizedEtaQuotient(definingSpecification x, cusps x)

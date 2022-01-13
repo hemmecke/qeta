@@ -146,6 +146,8 @@ INDICES ==> LLZ
 
 Pol ==> Polynomial
 SUP ==> SparseUnivariatePolynomial
+GAMMA0 ==> CongruenceSubgroupGamma0
+GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage;
 
 asP x ==> x pretend P
@@ -781,8 +783,8 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         not zero? xz => identity(sspec, rspec, m, orb, mspecs, 0$Pol(C), xab)
         identity(sspec, rspec, m, orb, mspecs, second(xz)::Pol(C), xab)
 
-    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
-                 mspecs: SPECS): IDENTITY ==
+    findIdentityAux(nn: P,
+      sspec: SPEC, rspec: SPEC, m: P, t: N, mspecs: SPECS): IDENTITY ==
         specM0A1C spec ==> expansion(etaQuotient(spec)$EQI(C))::A1(C)
         egens: List A1(C) := [specM0A1C mspec for mspec in mspecs]
         -- We attach some identifiers also to those eta-quotients.
@@ -790,10 +792,15 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
         xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms]
         -- Eventualle, we apply the samba algorithm to obtain an
         -- order-complete basis.
-        gen := genus(level sspec)$CongruenceSubgroupGamma0
+        gen := genus()$GAMMA0(nn)
         import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
         xab: QXAB1(C) := samba(xgens.1, xgens, gen)$QXTOPSAMBA1(C)
         findIdentity(sspec, rspec, m, t, mspecs, xab)
+
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
+                 mspecs: SPECS): IDENTITY ==
+        findIdentityAux(level sspec, sspec, rspec, m, t, mspecs)
+
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N): IDENTITY ==
         -- We compute the basis for the modular eta-quotients of level nn.
@@ -908,8 +915,8 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
         not zero? xz => identity(sspec, rspec, m, orb, mspecs, 0$Pol(C), xab)
         identity(sspec, rspec, m, orb, mspecs, second(xz)::Pol(C), xab)
 
-    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
-                 mspecs: SPECS): IDENTITY ==
+    findIdentityAux(nn: P,
+      sspec: SPEC, rspec: SPEC, m: P, t: N, mspecs: SPECS): IDENTITY ==
         specM1A1C spec ==> expansion(generalizedEtaQuotient(spec)$EQI(C))::A1(C)
         -- For finding an algebra basis we must remove the
         -- specifications, that represent constant modular functions.
@@ -920,10 +927,14 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
         xgens := [toX1(C, x, sym::Pol(C)) for x in ncegens for sym in msyms]
         -- Eventualle, we apply the samba algorithm to obtain an
         -- order-complete basis.
-        gen := genus(level sspec)$CongruenceSubgroupGamma1
+        gen := genus()$GAMMA1(nn)
         import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
         xab: QXAB1(C) := samba(xgens.1, xgens, gen)$QXTOPSAMBA1(C)
         findIdentity(sspec, rspec, m, t, mspecs, xab)
+
+    findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
+                 mspecs: SPECS): IDENTITY ==
+        findIdentityAux(level sspec, sspec, rspec, m, t, mspecs)
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,
                  bidxs: INDICES): IDENTITY ==

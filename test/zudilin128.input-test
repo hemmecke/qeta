@@ -132,12 +132,12 @@ xgens: List X1 C := [toX1(C, x, s) for x in egens for s in msyms];
 -- generators and make it special. Then we compute an algebra basis
 -- for $C[M_1,\ldots,M_{28}]$.
 
-genus(level)$GAMMA0
+genus()$GAMMA0(level)
 
 xt: X1 C := xgens.1
 xab := samba(xt, xgens, 9)$QXTOPSAMBA1(C)
 
-assertEquals(genus(level)$GAMMA0, 9)
+assertEquals(genus()$GAMMA0(level), 9)
 assertEquals(numberOfGaps(xab), 9)
 
 -- Since the genus is equal to the number of gaps, we know by the
@@ -294,7 +294,7 @@ f128monsDZ
 
 assertEquals([x.1 for x in f128monsDZ], [0 for i in 1..25])
 
-spitzen := sort(smallerCusp, cusps(level)$GAMMA0)
+spitzen := sort(smallerCusp, CUSPS0 level)
 oo ==> infinity()$Cusp
 c(n: Z, q: Q): Cusp ==
   q = 1/n => oo
@@ -305,12 +305,12 @@ ex := [1,1/2,1/4,3/4,1/8,3/8,5/8,7/8,1/16,3/16,5/16,7/16,1/32,3/32,1/64,1/128]
 assertEquals(spitzen, [c(level,x) for x in ex])
 
 o := reduce(_+, [WIDTH0(level, cusp) for cusp in spitzen])
-assertEquals(o, index(level)$GAMMA0)
+assertEquals(o, index()$GAMMA0(level))
 
 -- The index of $\Gamma_0(128)$ in $\mathrm{SL}_2(Z)$ is equal
 -- to the number of coset rright representatives,
 
-reps := rightCosetRepresentatives(level)$GAMMA0;
+reps := rightCosetRepresentatives()$GAMMA0(level);
 assertEquals(# reps, o)
 
 -- ## Experiment with other cofactor
@@ -480,7 +480,7 @@ xab64 := samba(xt64, xgens64)$QXTOPSAMBA1(C)
 -- We have found an algebra basis for $M^\infty(64)$.
 
 assertEquals(numberOfGaps(xab64), 3)
-assertEquals(genus(64)$GAMMA0, 3)
+assertEquals(genus()$GAMMA0(64), 3)
 
 -- ### Reduce $h$ by algebra basis
 
@@ -569,7 +569,7 @@ hapolRZ
 -- We introduce now `haA64` as the expansions of an element of
 -- $M^\infty(64)$ given by `hapolRZ`.
 
-level := 64; spitzen := sort(smallerCusp, cusps(level)$GAMMA0);
+level := 64; spitzen := sort(smallerCusp, CUSPS0 level);
 egens64n := [specM0AnCX x for x in mspecs64];
 xgens64n := [toXn(CX, x, sy) for x in egens64n for sy in usyms64];
 u := egens64n;
@@ -818,7 +818,7 @@ assertEquals(removeDuplicates cs, [0])
 -- agrees with `fA128` (after multiplication
 -- with the respective eta-quotient).
 
-level:=128; spitzen:=sort(smallerCusp, cusps(level)$GAMMA0);
+level:=128; spitzen:=sort(smallerCusp, CUSPS0 level);
 rkfadjust := members(vector allPureExponents rfcofactorspec_
                    - vector rkcofactor);
 assertEquals(rkfadjust, [0,0,0,-1,6,-7,18,-16])
@@ -839,7 +839,7 @@ assertEquals(removeDuplicates ords, [50])
 xgens64
 
 xxab64 := samba(xgens64.2, [xgens64.1, xgens64.7])$QXTOPSAMBA1(C)
-numberOfGaps(xxab64) = genus(64)$GAMMA0
+numberOfGaps(xxab64) = genus()$GAMMA0(64)
 
 -- So we only need to do the first two reductions
 -- manually and can then employ the algebra basis
@@ -872,11 +872,11 @@ rez kbpolRZ
 -- It differs only by a zero expression, i.e.,
 -- a relation among eta-quotients.
 
-level:=128; spitzen:=sort(smallerCusp, cusps(level)$GAMMA0);
+level:=128; spitzen:=sort(smallerCusp, CUSPS0 level);
 rzToAnCX(kapolRZ - kbpolRZ)
 rez(1/112*(kapolRZ - kbpolRZ))
 
-level:=64; spitzen:=sort(smallerCusp, cusps(level)$GAMMA0);
+level:=64; spitzen:=sort(smallerCusp, CUSPS0 level);
 kbA64 := rzToAnCX kbpolRZ;
 kaA64-kbA64
 
@@ -961,7 +961,7 @@ assertTrue(zero?(z::A1(C)))
 
 -- # Express $1/\eta(64\tau)$ as sum of eta-quotients
 
-level := 64; spitzen := cusps(level)$GAMMA0;
+level := 64; spitzen := CUSPS0 level;
 QEtaIdeal ==> QEtaIdealHemmeckeCached
 elig64 := etaLaurentIdealGenerators(level)$QEtaIdeal(C)
 
@@ -986,7 +986,7 @@ er64z := etaRelations(level, elig64z)$QEtaIdeal(C);
 
 -- # Try to solve holomorphic matrix
 
-level:=64; spitzen:=cusps(level)$GAMMA0;
+level:=64; spitzen:=CUSPS0 level;
 divs := DIVISORS level
 idivs := [i for i in 1..#divs]
 wght
@@ -1015,19 +1015,19 @@ wght
 --setFormats!([Format1D,FormatMathJax])$JFriCASSupport
 setFormats!([FormatMathJax])$JFriCASSupport
 
-level:=32; spitzen:=cusps(level)$GAMMA0;
+level:=32; spitzen:=CUSPS0 level;
 mspecs32 := mSPECS0 level;
 egens32 := [specM0A1C(spec) for spec in mspecs32]
 rsyms32 := indexedSymbols("R", #egens32)
 
 xgens32: List X1 C := [toX1(C, x, sy) for x in egens32 for sy in rsyms32]
-gen := genus(level)$GAMMA0
+gen := genus()$GAMMA0(level)
 tx32: X1 C := xgens32.1
 abex2 := samba(tx32, xgens32, gen)$QXTOPSAMBA1(C)
 
 kahalfpolRZ := reduce(_+, [leadingCoefficient x * monRZ concat(rest members degree x,0) for x in monomials kapolRZ]);
 
-level:=32; spitzen:=cusps(level)$GAMMA0;
+level:=32; spitzen:=CUSPS0 level;
 egens32n := [EQAnCX r for r in rgens32];
 xgens32n := [toXn(CX, x, sy) for x in egens32n for sy in rsyms32];
 u := egens32n;
@@ -1036,7 +1036,7 @@ u := egens32n;
 
 kahalfA32 := rzToAnCX kahalfpolRZ;
 qetaGrades(kahalfA32)
-cusps(level)$GAMMA0
+CUSPS0 level
 
 kahalfA32
 
@@ -1088,7 +1088,7 @@ for cusp in spitzen for i in 1..#spitzen repeat _
 
 -- # Experiment: $M^\infty(32)$
 
-level:=128; spitzen:=cusps(level)$GAMMA0;
+level:=128; spitzen:=CUSPS0 level;
 rfkadjust := members(vector rkcofactor - vector rfcofactor);
 assertEquals(rfkadjust, [0,0,0,1,-6,7,-18,16])
 fkmonRZ := monRZ rfkadjust;
@@ -1104,7 +1104,7 @@ egens2 := [specM0A1C(spec) for spec in mspecs2]
 msyms2 := indexedSymbols("M", #egens2)
 
 xgens2: List X1 C := [toX1(C, x, s) for x in egens2 for s in msyms];
-gen := genus(level)$GAMMA0
+gen := genus()$GAMMA0(level)
 tex2: X1 C := xgens2.1
 abex2 := samba(tex2, xgens2, gen)$QXTOPSAMBA1(C)
 
@@ -1118,7 +1118,7 @@ matLR := matrixLigozatModularGamma0(128,[1,2,3,4,5,6,7])$QEtaAuxiliaryPackage;
 rcofactorx := concat(rcofactorx2, [0 for i in 1..8-#divs])
 radjustx := members(vector rcofactorx - vector rcofactor3)
 
-level:=128; spitzen:=cusps(level)$GAMMA0;
+level:=128; spitzen:=CUSPS0 level;
 modularGamma0? eqSPEC(level, radjustx)
 monadjustx := monRZ radjustx
 
@@ -1166,7 +1166,7 @@ r2 := members(matLR * vector [8,-16,0,0,0,0,0,0,0,0,0])
 
 -- # TODO: Is every eta-quotient in the sum holomorphic?
 
-level := 128; spitzen := cusps(level)$GAMMA0
+level := 128; spitzen := CUSPS0 level
 
 )set mess typ on
 monsRZ := [EV64RZ x for x in _
@@ -1201,7 +1201,7 @@ z.zinhom
 -- so we append a 0 for the exponent of $\eta(128\tau)$.
 
 )set stream calc 3
-level := 128; spitzen := cusps(level)$GAMMA0;
+level := 128; spitzen := CUSPS0 level;
 rgens64x := [concat(x,0) for x in rgens64]
 assertEquals(sort rgens64x, sort zzh)
 
@@ -1311,7 +1311,7 @@ level := 64
 divs := DIVISORS level
 idivs := [i for i in 1..#divs]
 
-spitzen := cusps(level)$GAMMA0
+spitzen := CUSPS0 level
 rhs := concat([0 for i in idivs], 2*wght)
 
 zmodform := zsolve4ti2(level, idivs, rhs)$QES4TI2; -- takes about 3min40sec

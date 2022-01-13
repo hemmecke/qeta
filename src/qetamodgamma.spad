@@ -81,10 +81,14 @@ LP ==> List P
 LZ ==> List Z
 LLZ ==> List LZ
 INDICES ==> LLZ
+GAMMA0 ==> CongruenceSubgroupGamma0
+GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 CUSPS ==> List Cusp
+CUSPS0 nn ==> cusps()$GAMMA0(nn)
+CUSPS1 nn ==> cusps()$GAMMA1(nn)
 
 YGEQ ==> SymbolicGeneralizedEtaQuotient
 YM0EQ ==> SymbolicModularGamma0EtaQuotient
@@ -272,8 +276,7 @@ QEtaModularGamma0Package: Exports == Implementation where
         -- particular solution rinitial.
         sspec: SPEC := etaQuotientSpecification(nn, members sinitial)
         -- Exclude order at the cusp infinity.
-        spitzen: CUSPS := [cusp for cusp in cusps(nn)$GAMMA0 _
-                           | not infinity? cusp]
+        spitzen: CUSPS := [cusp for cusp in CUSPS0 nn | not infinity? cusp]
         rhs: LZ := qetaGrades(sspec, rspec, m, t, spitzen)
         -- For the vectors in the basis, we don't need to compute the
         -- series explicitly, since these vectors correspond to
@@ -429,7 +432,7 @@ QEtaModularGamma1Package: Exports == Implementation where
         -- particular solution sinitial.
         le := members sinitial -- exponents
         sspec: SPEC := generalizedEtaQuotientSpecification(nn, idxs, le)
-        spitzen: CUSPS := cusps(level sspec)$GAMMA1
+        spitzen: CUSPS := CUSPS1 nn
         y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
         constant? y => sspec
         -- y can still represent a constant function.

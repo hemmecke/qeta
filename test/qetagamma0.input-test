@@ -4,7 +4,6 @@
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
 
 --setup
-CUSPS0 ==> cusps $ GAMMA0
 oo ==> infinity()$Cusp
 --endsetup
 
@@ -26,7 +25,7 @@ c(n: Z, q: Q): Cusp ==
   q = 1/n => oo
   one? q => cusp(0, 1)$Cusp
   cusp(numer q, denom q)$Cusp
-cog0(n, result) == assertEquals(CUSPS0 n, sort [c(n,x) for x in result])
+cog0(nn, result) == assertEquals(CUSPS0 nn, sort [c(nn, x) for x in result])
 cog0(2, [1, 1/2])
 cog0(3, [1, 1/3])
 cog0(4, [1, 1/2, 1/4])
@@ -50,12 +49,12 @@ vals := [1, 2, 2, 3, 2, 4, 2, 4, 4, 4, 2, 6, 2, 4, 4, 6, 2, 8, 2, 6,_
          2, 8, 2, 6, 8, 4, 2, 12, 8, 12]
 
 for level in 1..#vals for n in vals repeat
-    assertEquals(numberOfCusps(level)$GAMMA0, n)
+    assertEquals(numberOfCusps()$GAMMA0(level), n)
 --endtest
 
 --test:numberOfCuspsOfGamma0-eq
 for level in 1..200 repeat
-    assertEquals(numberOfCusps(level)$GAMMA0, # CUSPS0 level)
+    assertEquals(numberOfCusps()$GAMMA0(level), # CUSPS0 level)
 --endtest
 
 -- +
@@ -70,7 +69,7 @@ genusVals := [0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,1,0,1,1,1,2,2,1,_
               5,8,7,11,6,7,4,9,7,11,7,10,9,9,7,11,7,10,9,11,9,9,_
               7,7,9,7,8,15]
 for level in 1..#genusVals for g in genusVals repeat
-    assertEquals(genus(level)$GAMMA0, g)
+    assertEquals(genus()$GAMMA0(level), g)
 
 -- +
 --endtest
@@ -81,7 +80,7 @@ for level in 1..#genusVals for g in genusVals repeat
 vals:=[1,1,0,0,2,0,0,0,0,2,0,0,2,0,0,0,2,0,0,0,0,0,0,0,2,_
        2,0,0,2,0,0,0,0,2,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,2]
 for level in 1..#vals for n in vals repeat
-    assertEquals(nu2(level)$GAMMA0, n)
+    assertEquals(nu2()$GAMMA0(level), n)
 
 --+
 --endtest
@@ -94,7 +93,7 @@ vals:=[1,0,1,0,0,0,2,0,0,0,0,0,2,0,0,0,0,0,2,0,2,0,0,0,0,_
        0,0,0,0,0,2,0,0,0,0,0,2,0,2,0,0,0,2,0,0,0,0,0,2,0]
 
 for level in 1..#vals for n in vals repeat
-    assertEquals(nu3(level)$GAMMA0, n)
+    assertEquals(nu3()$GAMMA0(level), n)
 
 --+
 --endtest
@@ -104,7 +103,7 @@ for level in 1..#vals for n in vals repeat
 -- -
 
 ncusp(nn: P, a: Z, c: Z): Q ==
-  s := normalizeCusp(nn, cusp(a, c))$GAMMA0
+  s := normalizeCusp(cusp(a, c))$GAMMA0(nn)
   infinity? s => 1/nn
   zero? numer s => 1$Q
   numer(s)/denom(s)
@@ -176,8 +175,8 @@ assertEquals(normcusps, expected)
 
 for nn in 1..30 repeat
   for c in 1..nn repeat for a in 1..c | one? gcd(a,c) repeat
-    normedCusp := normalizeCusp(nn, cusp(a,c))$GAMMA0
-    assertTrue(equivalentCusps?(nn, cusp(a,c), normedCusp)$GAMMA0)
+    normedCusp := normalizeCusp(cusp(a,c))$GAMMA0(nn)
+    assertTrue(equivalentCusps?(cusp(a,c), normedCusp)$GAMMA0(nn))
 
 --+
 --endtest

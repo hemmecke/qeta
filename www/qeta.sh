@@ -78,9 +78,9 @@ expansionAtAllCusps? := empty? "$gamma";
 gammas: List SL2Z := empty();
 -- Expand at all cusps if no gamma was given.
 if (expansionAtAllCusps?) then (_
-  spitzen: List Cusp := cusps(level)\$GAMMA0;_
+  spitzen: List Cusp := cusps()\$GAMMA0(level);_
   for cusp in spitzen repeat (_
-    g: SL2Z := cuspToMatrix(level, cusp)\$GAMMA0;_
+    g: SL2Z := cuspToMatrix(cusp)\$GAMMA0(level);_
     gammas := cons(g, gammas));_
   gammas := reverse! gammas_
 ) else (_
@@ -132,7 +132,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
            for se in lse] for lse in llse]_
 ) else (_
   vPrint("Expansion at cusps", spitzen);_
-  vPrint("Expansion at CUSPS", [cuspToMatrix(level, cusp)\$GAMMA0 for cusp in spitzen]);_
+  vPrint("Expansion at CUSPS", [cuspToMatrix(cusp)\$GAMMA0(level) for cusp in spitzen]);_
   le := [etaQuotient(level, r)\$QELX(Q,CX) for r in rs];_
   ees := [EXPANDn e for e in le];_
   [[rr, ex] for rr in rs for ex in ees])
