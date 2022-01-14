@@ -150,6 +150,7 @@ GAMMA0 ==> CongruenceSubgroupGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage;
 QCONDM0 ==> QEtaConditionsModularGamma0
+QCONDM1 ==> QEtaConditionsModularGamma1
 
 asP x ==> x pretend P
 
@@ -171,6 +172,8 @@ SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 QES4TI2 ==> QEtaQuotientSpecifications4ti2
 
+specM0A1 C ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, QCONDM0)
+specM1A1 C ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, QCONDM1)
 
 )if LiterateDoc
 %$
@@ -766,7 +769,7 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
                  mspecs: SPECS, xab: QXAB1 C): IDENTITY ==
-        import from QEtaModularGamma0Infinity(C)
+        import from QEtaModularInfinity(C, QCONDM0)
         f: A1 C := modularEtaQuotientInfinity(sspec, rspec, m, t)
         -- For the following computation we attach a marker to the series.
         xf: X1 C := toX1(C, f, "F"::Symbol::Pol(C))
@@ -781,8 +784,7 @@ QEtaRamanujanKolberg(C): Exports == Implementation where
 
     findIdentityAux(nn: P,
       sspec: SPEC, rspec: SPEC, m: P, t: N, mspecs: SPECS): IDENTITY ==
-        specM0A1C spec ==> expansion(etaQuotient(spec)$EQI(C))::A1(C)
-        egens: List A1(C) := [specM0A1C mspec for mspec in mspecs]
+        egens: List A1(C) := [specM0A1(C) mspec for mspec in mspecs]
         -- We attach some identifiers also to those eta-quotients.
         msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools
         xgens := [toX1(C, x, sym::Pol(C)) for x in egens for sym in msyms]
@@ -898,8 +900,8 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: P, t: N,_
                  mspecs: SPECS, xab: QXAB1 C): IDENTITY ==
-        import from QEtaModularGamma1Infinity(C)
-        f: A1 C := modularGeneralizedEtaQuotientInfinity(sspec, rspec, m, t)
+        import from QEtaModularInfinity(C, QCONDM1)
+        f: A1 C := modularEtaQuotientInfinity(sspec, rspec, m, t)
         -- For the following computation we attach a marker to the series.
         xf: X1 C := toX1(C, f, "F"::Symbol::Pol(C))
         -- We look of a representation of our original modular function f in
@@ -913,10 +915,9 @@ QEtaGeneralizedRamanujan(C): Exports == Implementation where
 
     findIdentityAux(nn: P,
       sspec: SPEC, rspec: SPEC, m: P, t: N, mspecs: SPECS): IDENTITY ==
-        specM1A1C spec ==> expansion(generalizedEtaQuotient(spec)$EQI(C))::A1(C)
         -- For finding an algebra basis we must remove the
         -- specifications, that represent constant modular functions.
-        egens: List A1(C) := [specM1A1C mspec for mspec in mspecs]
+        egens: List A1(C) := [specM1A1(C) mspec for mspec in mspecs]
         ncegens := [x for x in egens | not zero? qetaGrade x]
         -- We attach some identifiers also to those eta-quotients.
         msyms: List Symbol := indexedSymbols("M", #ncegens)$QAuxiliaryTools

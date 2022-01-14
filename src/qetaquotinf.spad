@@ -120,8 +120,8 @@ quotients of eta-functions.
 ++ from the "series part" even when the fractional part is an integer.
 EtaQuotientInfinity(C): Exports == Implementation where
   C: Ring
-  T ==> QEtaTaylorSeries C
-  L ==> QEtaLaurentSeries C
+  T1 C ==> QEtaTaylorSeries C
+  L1 C ==> QEtaLaurentSeries C
   Exports ==> Join(Monoid, CoercibleTo OutputForm) with
     if C has IntegralDomain then Group
     -- Note that e = \prod_{k=1}^\infty (1-q^{kn}) has integer coefficients
@@ -132,7 +132,7 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ the fractional q-power prefactor of x where q is the variable
       ++ of L. The returned value is in the range 0<=prefactor(x)<1,
       ++ because integer powers of q are moved to the series part.
-    seriesPart: % -> L
+    seriesPart: % -> L1 C
       ++ seriesPart(x) returns the Laurent series part of x.
       ++ x = q^r*seriesPart(x) where r=prefactor(x).
     eulerExponent: % -> Q
@@ -140,29 +140,24 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ is the fractional exponent e of q such that
       ++ q^e*eulerExpansion(x) is equal to the Puiseux series
       ++ expansion of x.
-    eulerExpansion: % -> L
+    eulerExpansion: % -> L1 C
       ++ eulerExpansion(x) returns the power series (with constant
       ++ coefficient 1) that results from just considering the product
       ++ of Euler function powers (q-Pochhammer symbols) connected to
       ++ the creation the (generalized) eta-quotient.
-    expansion: % -> L
+    expansion: % -> L1 C
       ++ expansion(x) aborts with error if eulerExponent(x) is not am
       ++ integer. Otherwise it returns q^r*seriesPart(x) where
-      ++ r=prefactor(x) and q is the variable of L. It is the same
-      ++ as q^e*eulerExpansion(x) where e=eulerExponent(x).
+      ++ r=prefactor(x) and q is the variable of the series domain. It
+      ++ is the same as q^e*eulerExpansion(x) where
+      ++ e=eulerExponent(x).
     eta: P -> %
       ++ eta(n) returns q^(n/24)*\prod_{k=1}^\infty (1-q^{kn}).
-    eulerFunctionPower: (P, Z) -> L
+    eulerFunctionPower: (P, Z) -> L1 C
       ++ eulerFunctionPower(n, e) computes
       ++ (\prod_{k=1}^\infty(1-q^{kn}))^e.
     etaPower: (P, Z) -> %
       ++ etaPower(d, e) returns eta(d)^e.
-    etaQuotient: SPEC -> %
-      ++ etaQuotient(rspec) returns the eta-quotient given by the
-      ++ specification rspec.
-      ++ This is the same as the product over etaPower(d,e) over all
-      ++ elements in the purePort(rspec).
-      ++ It is an error if properGeneralizedParts(rspec) is not 1.
     generalizedEtaPower: (P, P, Q) -> %
       ++ generalizedEtaPower(d,g,e) returns the generalized
       ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
@@ -182,24 +177,23 @@ EtaQuotientInfinity(C): Exports == Implementation where
 --      ++ generalizedEtaQuotient(delta,0,e):=$\eta(\delta\tau)^e$ and
 --      ++ generalizedEtaQuotient(delta,g,e):=
 --      ++ $\frac{\eta(g\tau)^e}{\eta(2g\tau)^e}}$ if $g=\delta/2$.
-    generalizedEtaQuotient: SPEC -> %
-      ++ generalizedEtaQuotient(rspec) returns the product (generalized)
-      ++ eta-powers for each list l in rspec.
-      ++ See generalizedEtaPower for the format of the parameter l.
+    etaQuotientInfinity: SPEC -> %
+      ++ etaQuotientInfinity(rspec) returns the product (generalized)
+      ++ eta-powers for each list l in rspec. See generalizedEtaPower
+      ++ for the format of the parameter l.
 
-    -- This function (polynomialToEta) is for checking and actually
-    -- does not necessarily yield an element of %.
-    -- For example, E2 + E3 would mean to add Laurent series with different
-    -- prefactors which is not supported by our "+" function and also not
-    -- by the chosen representation of the domain. We expect the polynomial
-    -- p to have the property that each monomial leads to Laurent series with
-    -- the same prefactor.
-    -- In this sense the function is only partial.
-    -- However, we intend only to use it to check whether
-    -- zero?(seriesPart toEta p).
-    -- Furthermore, toEta(p) aborts with error if Laurent series with
-    -- different prefactor are about to be added, since that cannot be
-    -- represented in %.
+    -- The following function (polynomialToEta) is for checking and
+    -- actually does not necessarily yield an element of %. For
+    -- example, E2 + E3 would mean to add Laurent series with
+    -- different prefactors which is not supported by our "+" function
+    -- and also not by the chosen representation of the domain. We
+    -- expect the polynomial p to have the property that each monomial
+    -- leads to Laurent series with the same prefactor. In this sense
+    -- the function is only partial. However, we intend only to use it
+    -- to check whether zero?(seriesPart polynomialToEta p).
+    -- Furthermore, polynomialToEta(p) aborts with error if Laurent
+    -- series with different prefactor are about to be added, since
+    -- that cannot be represented in %.
     polynomialToEta: Polynomial C -> %
       ++ polynomialToEta(p) assumes that all variables are of the form
       ++ Ei with the letter E and a positive number i. In the
@@ -212,21 +206,21 @@ EtaQuotientInfinity(C): Exports == Implementation where
     -- fact, it is a product/quotient of Euler functions. The
     -- eulerexpo must be divided by 24 to get the correct fractional
     -- exponent of q.
-    Rep ==> Record(eulerexpo: Q, eulerquot: L)
-    jacobiFunctionPow ==> jacobiFunctionPower $ CachedQPochhammerPower(C, L)
+    Rep ==> Record(eulerexpo: Q, eulerquot: L1 C)
+    jacobiFunctionPow ==> jacobiFunctionPower $ CachedQPochhammerPower(C, L1 C)
 
-    new(e: Q, s: L): % == per [e, s]
+    new(e: Q, s: L1 C): % == per [e, s]
     eulerExponent(x: %): Q == rep(x).eulerexpo
-    eulerExpansion(x: %): L == rep(x).eulerquot
+    eulerExpansion(x: %): L1 C == rep(x).eulerquot
 
-    1: % == new(0, 1$L)
+    1: % == new(0, 1$L1(C))
     ((x: %) * (y: %)): % == new(eulerExponent x + eulerExponent y,
                                 eulerExpansion x * eulerExpansion y)
-    inv(x: %): % == new(- eulerExponent x, recip(eulerExpansion x)::L)
+    inv(x: %): % == new(- eulerExponent x, recip(eulerExpansion x)::L1(C))
     hashUpdate!(h: HashState, x: %): HashState ==
         hashUpdate!(hashUpdate!(h, eulerExponent x), eulerExpansion x)
     coerce(x: %): OutputForm ==
-        q: OutputForm := (variable(0$L)$L)::OutputForm
+        q: OutputForm := (variable(0$L1(C))$L1(C))::OutputForm
         r: Q := eulerExponent x
         zero? r => (eulerExpansion x)::OutputForm
         e: OutputForm := r::OutputForm
@@ -237,27 +231,21 @@ EtaQuotientInfinity(C): Exports == Implementation where
     prefactor(x: %): Q ==
         e: Q := eulerExponent x
         e - floor(e)::Q
-    seriesPart(x: %): L ==
+    seriesPart(x: %): L1 C ==
         laurent(floor eulerExponent x, qetaTaylorRep eulerExpansion x)
 
-    eulerFunctionPower(d: P, rd: Z): L ==
-        eulerFunctionPower(d, rd)$CachedQPochhammerPower(C, L)
-
-    expansion(x: %): L ==
+    expansion(x: %): L1 C ==
         e: Q := eulerExponent x
         not one? denom e =>  error "eta-quotient has fractional expansion"
         laurent(numer eulerExponent x, qetaTaylorRep eulerExpansion x)
 
     eta(n: P): % == new(n/24, eulerFunctionPower(n, 1))
+    eulerFunctionPower(d: P, rd: Z): L1 C ==
+        eulerFunctionPower(d, rd)$CachedQPochhammerPower(C, L1 C)
     etaPower(n: P, e: Z): % == new(n*e/24, eulerFunctionPower(n, e))
 
-    etaQuotient(rspec: SPEC): % ==
-        not pure? rspec => error "specification is not for a pure eta-quotient"
-        generalizedEtaQuotient rspec
-
--------------------------------------------------------------------
     -- local
-    generalizedEulerFunctionPower(d: P, g: P, e: Z): L ==
+    generalizedEulerFunctionPower(d: P, g: P, e: Z): L1 C ==
         eulerFunctionPower(d, -e) * jacobiFunctionPow(d, g, e)
 
     generalizedEtaPower(d: P, g: P, e: Q): % ==
@@ -269,18 +257,19 @@ EtaQuotientInfinity(C): Exports == Implementation where
 
         2*g = d =>
             e := 2*e
-            one? denom e => etaQuotient eqSPEC([g, d], [numer e, - numer e])
+            one? denom e =>
+                etaQuotientInfinity eqSPEC([g, d], [numer e, - numer e])
             error "generalizedEtaQuotient: only accepting half-integer powers"
 
         not one? denom e =>
             error "generalizedEtaQuotient: only accepting integer powers"
 
-        l: L := generalizedEulerFunctionPower(d, g, numer e)
+        l: L1 C := generalizedEulerFunctionPower(d, g, numer e)
         -- Since 0<g<d, g/d is already the fractional part.
         q: Q := g^2/(2*d) - g/2 + d/12 --=d/2*((g/d)^2-g/d+1/6)
         new(e*q, l)
 
-    generalizedEtaQuotient(rspec: SPEC): % ==
+    etaQuotientInfinity(rspec: SPEC): % ==
         rspec := purify rspec
         -- see \eqref{eq:eta_delta-g^[R](tau)} and \eqref{eq:g_rbar(tau)}
         rpure: XHashTable(P, Z) := empty()
@@ -291,21 +280,21 @@ EtaQuotientInfinity(C): Exports == Implementation where
         -- eta-quotients that adjust the Jacobi triple product to
         -- become a generalized eta-quotient.
         num?: Boolean := den? := false
-        num: L := den := 1
+        num: L1 C := den := 1
         for l in properGeneralizedParts rspec repeat
             d: P := specDelta l
             g: P := asP(specSubindex l) -- g is positive in purified rspec
             e: Z := specExponent l
             rpure.d := elt(rpure, d, 0) - e
             e > 0 =>
-                z: L := jacobiFunctionPow(d, g, e)
+                z: L1 C := jacobiFunctionPow(d, g, e)
                 if num? then num := num * z else (num := z; num? := true)
             e < 0 =>
-                z: L := jacobiFunctionPow(d, g, - e)
+                z: L1 C := jacobiFunctionPow(d, g, - e)
                 if den? then den := den * z else (den := z; den? := true)
 
         -- Now we can compute the pure part.
-        zpure: L := 1
+        zpure: L1 C := 1
         nonTrivialPurePart? := false
         for d in keys rpure | not zero? rpure.d repeat
             zpure := zpure * eulerFunctionPower(d, rpure.d)
@@ -316,11 +305,11 @@ EtaQuotientInfinity(C): Exports == Implementation where
         -- multiplication with 1.
         if nonTrivialPurePart? then -- pure part is non-trivial
             z := zpure
-            if den? then z := z * recip(den)::L
+            if den? then z := z * recip(den)::L1(C)
             if num? then z := z * num
           else
             if den? then
-                z := recip(den)::L
+                z := recip(den)::L1(C)
                 if num? then z := z * num
               else z := num
         return new((1/24)*sigmaInfinity(rspec), z)
@@ -371,7 +360,7 @@ know in advance that summands have the same prefactor.
         new(prefactor x, seriesPart x + seriesPart y)
     polynomialToEta(p: Polynomial C): % ==
         --assert(all variables are of the form En where n is some integer)
-        zero? p => new(0, 0$L)
+        zero? p => new(0, 0$L1(C))
         -- To get the correct prefactor we cannot start with r:=0.
         r: % := toEtaMonomial leadingMonomial p
         while not zero?(p := reductum p) repeat
@@ -394,8 +383,6 @@ know in advance that summands have the same prefactor.
 
 
 
-
-
 )if LiterateDoc
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -406,23 +393,19 @@ know in advance that summands have the same prefactor.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{P QEtaModularGamma0Infinity}
-\label{sec:QEtaModularGamma0Infinity}
+\subsection{P QEtaModularInfinity}
+\label{sec:QEtaModularInfinity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Compute a vector that must be multiplied to the (sifted) eta-quotient
-in order to make it a modular function for $\Gamma_0(N)$ having a pole
-only at infinity or to make the (positive) orders at all cusps
-(\code{qetaGrades}) small in total sum.
-
 )endif
 
-)abbrev package QETAMG0I QEtaModularGamma0Infinity
-QEtaModularGamma0Infinity(C: Ring): Exports == Implementation where
-  T1 C  ==> QEtaTaylorSeries C
-  L1 C  ==> QEtaLaurentSeries C
+)abbrev package QETAMODI QEtaModularInfinity
+QEtaModularInfinity(C, MOD): Exports == Implementation where
+  C: Ring
+  MOD: QEtaConditionsModularCategory
+  T1 C ==> QEtaTaylorSeries C
+  L1 C ==> QEtaLaurentSeries C
   A1 C ==> Finite0Series C
   EQI C  ==> EtaQuotientInfinity C
-  YM0EQG ==> SymbolicModularGamma0EtaQuotientGamma
   Exports ==> with
     laurentExpansionInfinity: SPEC -> L1 C
     laurentExpansionInfinity: (SPEC, SPEC, P, N) -> L1 C
@@ -437,32 +420,32 @@ QEtaModularGamma0Infinity(C: Ring): Exports == Implementation where
           ++ the series expansion of
           ++ etaQuotient(sspec,rspec,m,t)$SymbolicModularGamma0EtaQuotient
           ++ at the cusp infinity.
+
   Implementation ==> add
-    specEQI C ==> etaQuotient $ EQI(C)
 
     laurentExpansionInfinity(rspec: SPEC): L1 C ==
-      (expansion(specEQI(C) rspec)$EQI(C))
+        eqi: EQI C := etaQuotientInfinity rspec
+        expansion eqi
 
     -- generating series for a(m*n+t) with cofactor eta-quotient and
     -- the fractional q power where \sum_{k=0}^\infty a(k)q^k is
     -- defined by an eta-quotient with exponent vector r.
 
     laurentExpansionInfinity(sspec:SPEC, rspec:SPEC, m:P, t:N): L1 C ==
-        not pure? rspec or not pure? rspec =>
-            error "eta-quotient specification is not a pure eta-quotient"
+        -- We only consider the Taylor part and take care of the
+        -- correct q-order through alphaInfinity.
+        import from EQI C
+        specT1 x ==> qetaTaylorRep eulerExpansion etaQuotientInfinity x
+        eulerquo: T1 C := specT1 rspec
+        cofact:   T1 C := specT1 sspec
 
-        -- First compute the expansion of the orbit product.
-        eulerquo: T1 C := qetaTaylorRep(eulerExpansion specEQI(C) rspec)
-
-        orb: List N := modularOrbit(rspec, m, t)$QCONDM0
+        -- We must take care of the m-dissection and take a possible
+        -- orbit on the shift t into account.
+        orb: List N := modularOrbit(rspec, m, t)$MOD
         tt := first orb
         p: T1 C := multisect(m-tt, tt, eulerquo)
         -- Now multiply the series selecting sum_{n=0}^\infty a(m*n+k)q^n.
         for k in rest orb repeat p := p * multisect(m-k, k, eulerquo)
-
-        -- The expansion of the cofactor is here.
-        -- We take care of the correct q-order through alphaInfinity.
-        cofact: T1 C := qetaTaylorRep(eulerExpansion specEQI(C) sspec)
 
         -- We multiply both things together to get (nearly) a modular
         -- function.
@@ -479,100 +462,6 @@ QEtaModularGamma0Infinity(C: Ring): Exports == Implementation where
 
         modularEtaQuotientInfinity(sspec:SPEC, rspec:SPEC, m:P, t:N): A1 C ==
             laurentExpansionInfinity(sspec, rspec, m, t) :: A1(C)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-)if LiterateDoc
-%$
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{P QEtaModularGamma1Infinity}
-\label{sec:QEtaModularGamma1Infinity}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Compute a vector that must be multiplied to the (sifted) eta-quotient
-in order to make it a modular function for $\Gamma_1(N)$ having a pole
-only at infinity or to make the (positive) orders at all cusps
-(\code{qetaGrades}) small in total sum.
-
-)endif
-
-)abbrev package QETAMG1I QEtaModularGamma1Infinity
-QEtaModularGamma1Infinity(C: Ring): Exports == Implementation where
-  T1 C  ==> QEtaTaylorSeries C
-  L1 C  ==> QEtaLaurentSeries C
-  A1 C ==> Finite0Series C
-  EQI C  ==> EtaQuotientInfinity C
-  YM1EQG ==> SymbolicModularGamma1EtaQuotientGamma
-  Exports ==> with
-    laurentExpansionInfinity: SPEC -> L1 C
-    laurentExpansionInfinity: (SPEC, SPEC, P, N) -> L1 C
-
-    if C has CommutativeRing then
-        modularGeneralizedEtaQuotientInfinity: SPEC -> A1 C
-          ++ modularGeneralizedEtaQuotientInfinity(rspec) checks whether
-          ++ rspec specifices a Gamma_1-modular generalized eta-quotient
-          ++ and returns
-          ++ (expansion(generalizedEtaQuotient(rspec)$EQI(C))$EQI(C))::A1(C).
-        modularGeneralizedEtaQuotientInfinity: (SPEC, SPEC, P, N) -> A1 C
-          ++ modularGeneralizedEtaQuotientInfinity(sspec,rspec,m,t)
-          ++ returns the series expansion of
-          ++ generalizedEtaQuotient(sspec,rspec,m,t)
-          ++ from SymbolicModularGamma1GeneralizedEtaQuotient at the cusp
-          ++ infinity.
-  Implementation ==> add
-
-    laurentExpansionInfinity(rspec: SPEC): L1 C ==
-        expansion(generalizedEtaQuotient(rspec)$EQI(C))$EQI(C)
-
-    -- generating series for a(m*n+t) with cofactor (generalized)
-    -- eta-quotient and the fractional q power where
-    -- \sum_{k=0}^\infty a(k)q^k is defined by a (generalized)
-    -- eta-quotient given by rspec.
-
-    laurentExpansionInfinity(
-      sspec: SPEC, rspec: SPEC, m: P, t: N): L1 C ==
-        rgeq: EQI(C) := generalizedEtaQuotient(rspec)$EQI(C)
-        eulerquo: T1 C := qetaTaylorRep eulerExpansion rgeq
-        p: T1 C := multisect(m-t, t, eulerquo)
-
-        -- The expansion of the cofactor is here.
-        -- We take care of the correct q-order through alphaInfinity.
-        sgeq: EQI(C) := generalizedEtaQuotient(sspec)$EQI(C)
-        cofact: T1 C := qetaTaylorRep eulerExpansion sgeq
-
-        -- We multiply both things together to get (nearly) a modular
-        -- function.
-        tf: T1 C := cofact * p
-
-        -- We have to multiply by some q-power to get the expansion of
-        -- a modular function f.
-        alpha: Z := alphaInfinity(sspec, rspec, m, [t])
-        laurent(alpha, tf)$L1(C)
-
-    if C has CommutativeRing then
-        modularGeneralizedEtaQuotientInfinity(rspec: SPEC): A1 C ==
-            laurentExpansionInfinity(rspec) :: A1(C)
-
-        modularGeneralizedEtaQuotientInfinity(
-          sspec: SPEC, rspec: SPEC, m: P, t: N): A1 C ==
-            laurentExpansionInfinity(sspec,rspec,m,t) :: A1(C)
 
 
 
