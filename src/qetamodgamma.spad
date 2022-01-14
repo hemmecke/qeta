@@ -310,17 +310,20 @@ QEtaModularGamma0Package: Exports == Implementation where
         -- grade. Note that grade = -order.
         -- Since in the computation of alphaInfinity only the cofactor
         -- part changes, it is sufficient if we try to maximize
-        -- sigmaInfinity(nn, s).
-        sinf: Z := sigmaInfinity(nn, s)$QETAAUX
+        -- sigmaInfinity(etaQuotientSpecification(nn, s)).
+        sspec: SPEC := etaQuotientSpecification(nn, s)
+        sinf: Q := sigmaInfinity sspec
         while not empty?(adjustments := rest adjustments) repeat
             v := first adjustments
             sadjust: VZ := reduce(_+, [x*bb for x in members v for bb in b])
             stest := members(sinitial - sadjust)
-            si := sigmaInfinity(nn, stest)$QETAAUX
+            tspec := etaQuotientSpecification(nn, stest)
+            si: Q := sigmaInfinity tspec
             if si > sinf then
                 s := stest
+                sspec := tspec
                 sinf := si
-        etaQuotientSpecification(nn, s)
+        sspec
 
     etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N): SPEC ==
         ecs: ECS := etaCofactorSpace0(nn, rspec, m, t)$QEtaCofactorSpace

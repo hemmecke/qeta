@@ -198,6 +198,22 @@ QEtaSpecification: Exports == Implementation where
       ++ sigma0(x) returns the value corresponding to
       ++ \eqref{eq:sigmazerobar} in qeta.tex or to
       ++ \eqref{eq:sigmazero} for the pure eta-quotient case.
+    sigmaInfinityPure: % -> Z
+      ++ sigmaInfinityPure(x) returns the value of sigmaInfinity(x)
+      ++ considering onlyt the purePart of x.
+      ++ See \eqref{eq:sigmainfty} in qeta.tex.
+    sigma0Pure: % -> Z
+      ++ sigma0Pure(x) returns the value of sigma0(x)
+      ++ considering onlyt the purePart of x.
+      ++ See \eqref{eq:sigmazero} in qeta.tex.
+    sigmaInfinityProperGeneralized: % -> Q
+      ++ sigmaInfinityProperGeneralize(x) returns the value of sigmaInfinity(x)
+      ++ considering onlyt the purePart of x.
+      ++ See \eqref{eq:sigmainftytilde} in qeta.tex.
+    sigma0ProperGeneralized: % -> Z
+      ++ sigma0ProperGeneralized(x) returns the value of sigma0(x)
+      ++ considering only the properGeneralizedPart of x.
+      ++ See \eqref{eq:sigmazerotilde} in qeta.tex.
 
     modularGamma0: % -> Z
       ++ modularGamma0(x) returns 0 if all conditions are fulfilled
@@ -391,17 +407,45 @@ QEtaSpecification: Exports == Implementation where
     purePart(x: %): LLZ ==
         [[d, e] for d in divisors x for e in pureExponents x | not zero? e]
 
+    -- local
+    fractionalPart(x: Q): Q == -- local function
+        d: Z := denom x
+        positiveRemainder(numer x, d)/d
+
+    -- local
+    fractionalBernoulli2(x: Q): Q ==
+        t: Q := fractionalPart x
+        t^2 - t + 1/6
+
+    sigmaInfinityPure(x: %): Z ==
+        res: Z := 0
+        for l in purePart x repeat res := res + l.1 * l.2
+        res
+
+    sigmaInfinityProperGeneralized(x: %): Q ==
+        res: Q := 0
+        for l in properGeneralizedPart x repeat --assert(#l=3)
+            res := res + l.1 * l.3 * fractionalBernoulli2(l.2/l.1)
+        res
+
     sigmaInfinity(x: %): Q ==
-        import from QETAAUX
-        mm: P := level x
-        r: LZ := pureExponents x
-        rtilde: LLZ := properGeneralizedPart x
-        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, rtilde)
+        sigmaInfinityPure(x)::Q + 12*sigmaInfinityProperGeneralized x
+
+    sigma0Pure(x: %): Z ==
+        mm: Z := level x
+        res: Z := 0
+        for l in purePart x repeat res := res + l.2 * ((mm exquo l.1)::Z)
+        res
+
+    sigma0ProperGeneralized(x): Z ==
+        mm: Z := level x
+        res: Z := 0
+        for l in properGeneralizedPart x repeat --assert(#l=3)
+            res := res + l.3 * ((mm exquo l.1)::Z)
+        res
 
     sigma0(x: %): Z ==
-        import from QETAAUX
-        mm: P := level x
-        sigma0(mm, pureExponents x) + 2*sigma0(mm, properGeneralizedPart x)
+        sigma0Pure x + 2*sigma0ProperGeneralized x
 
     -- These are the conditions (1) to (4) of
     -- \cite{HemmeckeRadu_EtaRelations_2019} that have to be fulfilled

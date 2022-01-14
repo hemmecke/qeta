@@ -115,18 +115,11 @@ VZ ==> Vector Z
 MZ ==> Matrix Z -- consider only 2x2 matricies
 LP ==> List P
 LZ ==> List Z
-LLZ ==> List LZ
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
 
 asN x ==> x pretend N
 asP x ==> x pretend P
-
-INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
-
-SIGMAINFINITY ==> sigmaInfinity $ QETAAUX
-SIGMA0 ==> sigma0 $ QETAAUX
 
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetaq.tex.
@@ -155,74 +148,80 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ (28) in \cite{Radu_RamanujanKolberg_2015} and to
       ++ \eqref{eq:p|m=>p|N} in qeta.tex.
 
-    conditionMmN?: (P, P, LZ, P) -> Boolean
-      ++ conditionMmN(nn, mm, r, m) returns true if every divisor d of
-      ++ mm (for which r_d is non-zero) is also a devisor of m*N. This
-      ++ corresponds to condition (4.7) in \cite{Radu_PhD_2010} and in
-      ++ equation \eqref{eq:delta|M=>delta|mN} in qeta.tex.
+    conditionMmN?: (P, SPEC, P) -> Boolean
+      ++ conditionMmN(nn, rspec, m) returns true if every divisor d of
+      ++ mm=level(rspec) (for which r_d is non-zero) is also a divisor
+      ++ of m*N where r=pureExponents(rspec). This corresponds to
+      ++ condition (4.7) in \cite{Radu_PhD_2010} and in equation
+      ++ \eqref{eq:delta|M=>delta|mN} in qeta.tex.
 
-    conditionSigma0?: (P, P, LZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, r, m) returns true if
-      ++ (kappa(m)*m*nn^2/mm)*sigma0(nn, r) = 0 mod 24. This
-      ++ corresponds to \eqref{eq:sv24} in qeta.tex and to the
-      ++ first condition on page~241 of
+    conditionSumExponentsPure?: (P, SPEC, P) -> Boolean
+      ++ conditionSumExponentsPure?(nn, rspec, m) returns true if the
+      ++ sum of the entries of pureExponents(rspec) multiplied by
+      ++ kappa(m)*nn is divisible by 8. This corresponds to
+      ++ \eqref{eq:sum-r} in qeta.tex second condition on page~241 of
       ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
 
-    conditionSigma0?: (P, P, LLZ, P) -> Boolean
-      ++ conditionSigma0?(nn, mm, rtilde, m) returns true if
-      ++ (kappa(m)*m*nn^2)*sum(e/d for [d,g,e] in rtilde) = 0 mod 12.
+    conditionSumExponentsProperGeneralized?: (P, SPEC, P) -> Boolean
+      ++ conditionSumExponentsProperGeneralized?(nn, rspec, m) returns
+      ++ true if the sum of the entries of rspec corresponding to the
+      ++ exponents of properGeneralizedPart(rspec) multiplied by
+      ++ kappa(m)*nn is divisible by 4. This corresponds to condition
+      ++ 4 on page 37 of Chapter 10 of
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
+      ++ \eqref{eq:conditionSumExponentsProperGeneralized?(nn,rspec,m)}.
+
+    conditionSigma0Pure?: (P, SPEC, P) -> Boolean
+      ++ conditionSigma0?(nn, rspec, m) returns true if
+      ++ (kappa(m)*m*nn^2/mm)*sigma0(rspec) = 0 mod 24. This
+      ++ corresponds to \eqref{eq:sv24} and
+      ++ \eqref{{eq:conditionSigma0Pure?(nn,mm,r,m)} in qeta.tex and
+      ++ to the first condition on page~241 of
+      ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
+
+    conditionSigma0ProperGeneralized?: (P, SPEC, P) -> Boolean
+      ++ conditionSigma0?(nn, rspec, m) returns true if
+      ++ (kappa(m)*m*nn^2) *
+      ++ sum(e/d for [d,g,e] in properGeneralizedPart x) = 0 mod 12.
       ++ This corresponds to condition 5 on page 37 of Chapter 10 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-      ++ See \eqref{eq:conditionSigma0?(nn,mm,rtilde,m)}
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
+      ++ \eqref{eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}.
 
-    conditionGSigma0?: (P, P, LLZ, P) -> Boolean
-      ++ conditionGSigma0?(nn, mm, rtilde, m) returns true if
-      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in rtilde) = 0 mod 2.
-      ++ This corresponds to condition 3 on page 37 of Chapter 10 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-      ++ See \eqref{eq:conditionGSigma0?(nn,mm,rtilde,m)}
+    conditionGSigma0?: (P, SPEC, P) -> Boolean
+      ++ conditionGSigma0?(nn, rspec, m) returns true if
+      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in properGeneralizedPart
+      ++ rspec) = 0 mod 2. This corresponds to condition 3 on page 37
+      ++ of Chapter 10 of
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
+      ++ \eqref{eq:conditionGSigma0?(nn,rspec,m)}
 
-    conditionSumExponents?: (P, LZ, P) -> Boolean
-      ++ conditionSumExponents?(nn, r, m) returns true if the sum of
-      ++ the entries of s multiplied by kappa(m)*nn is divisible by 8.
-      ++ This corresponds to \eqref{eq:sum-r} in qeta.tex second
-      ++ condition on page~241 of \cite{Radu_RamanujanKolberg_2015}
-      ++ (Definition 35).
-
-    conditionSumExponents?: (P, LLZ, P) -> Boolean
-      ++ conditionSumExponents?(nn, rtilde, m) returns true if the sum of
-      ++ the entries (corresponding to the exponents) of rtilde multiplied
-      ++ by kappa(m)*nn is divisible by 4.
-      ++ This corresponds to condition 4 on page 37 of Chapter 10 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-      ++ See \eqref{eq:conditionSumExponents?(nn,rtilde,m)}.
-
-    conditionNDivisor?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionNDivisor?(nn, mm, r, m, t) returns true if the
-      ++ expression
-      ++ (24*m)/gcd(kappa(m)*(-24*t-sigmaInfinity(mm,r)),24*m) is a
-      ++ divisor of nn. This corresponds to \eqref{eq:w|N} in
-      ++ qeta.tex third condition on page~241 of
-      ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
-
-    conditionNDivisor?: (P, P, LZ, LLZ, P, N) -> Boolean
-      ++ conditionNDivisor?(nn, mm, r, rtilde, m, t) returns true if the
+    conditionNDivisor?: (P, SPEC, P, N) -> Boolean
+      ++ conditionNDivisor?(nn, rspec, m, t) returns true if the
       ++ expression (24*m*mm)/gcd(mm*kappa(m)*alpha, 24*m*mm) is a
-      ++ divisor of nn where
-      ++ alpha=sigmaInfinity(mm,r,rtilde) + 24*t.
-      ++ This corresponds to condition 8 on page 37 of Chapter 10 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-      ++ See \eqref{eq:conditionNDivosor?(nn,mm,r,rtilde,m,t)}.
-
-    conditionEvenMultiplier?: (P, P, LZ, P) -> Boolean
-      ++ conditionEvenMultiplier?(nn, mm, r, m) returns true if
-      ++ various divisibility conditions are fulfilled.
-      ++ This corresponds to \eqref{eq:even-m} in
-      ++ qeta.tex fourth condition on page~241 of
+      ++ divisor of nn where alpha=sigmaInfinity(rspec) + 24*t. This
+      ++ corresponds to condition 8 on page 37 of Chapter 10 of
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} and
+      ++ to \eqref{eq:w|N} and
+      ++ \eqref{eq:conditionNDivosor?(nn,rspec,m,t)} in qeta.tex and
+      ++ to the third condition on page~241 of
       ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
-      ++ Same as condition 9 on page 37 of
+
+    conditionEvenMultiplier?: (P, SPEC, P) -> Boolean
+      ++ conditionEvenMultiplier?(nn, rspec, m) returns true if
+      ++ various divisibility conditions are fulfilled. This
+      ++ corresponds to \eqref{eq:even-m} and
+      ++ \eqref{eq:conditionEvenMultiplier?(nn,rspec,m)} in qeta.tex
+      ++ fourth condition on page~241 of
+      ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35). Same as
+      ++ condition 9 on page 37 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-      ++ See \eqref{eq:conditionEvenMultiplier?(nn,mm,r,m)}.
+
+    conditionOrbitLength?: (P, SPEC, P, N) -> Boolean
+      ++ conditionOrbitLength?(nn, rspec, m, t) returns true if the
+      ++ conditions for an orbit of length 1 are satisfied. This
+      ++ corresponds to condition 7 on page 6 of Chapter 2 and to
+      ++ condition 10 on page 37 of Chapter 10 of
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 
     conditionCoEtaQuotientGamma0?: (P, SPEC, P, N) -> Boolean
       ++ conditionCoEtaQuotientGamma0?(nn, rspec, m, t) returns
@@ -233,39 +232,20 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ qeta.tex and in Definition 35 of
       ++ \cite{Radu_RamanujanKolberg_2015}
 
-    conditionCoEtaQuotientGamma1?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma1?(nn, mm, r, m, t) returns true
-      ++ iff the conditions of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
-      ++ just before Theorem 2.1 are fulfilled. These are slight
-      ++ modifications of conditions appearing in Definition 35 of
-      ++ \cite{Radu_RamanujanKolberg_2015}.
-      ++ In case the defining eta-quotient is not a generalized one.
     conditionCoEtaQuotientGamma1?: (P, SPEC, P, N) -> Boolean
-      ++ conditionCoEtaQuotientGamma1?(nn, rspec, m, t) returns
-      ++ true iff the conditions in Chapter 10 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
-      ++ just before Theorem 10.1 are fulfilled. See
+      ++ conditionCoEtaQuotientGamma1?(nn, rspec, m, t) returns true
+      ++ iff the conditions in Chapter 10 of
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} just
+      ++ before Theorem 10.1 are fulfilled. See
       ++ Definition~\ref{def:condition-co-eta-quotient-gamma1}. These
       ++ are conditions for the existence of a product of eta- and
       ++ generalized eta-quotient to exist as a cofactor for a
       ++ disection of such a quotient. The parameter rbar specifies
       ++ the generalized eta-quotient via
-      ++ generalizedEtaQuotient(rbar).
-
-    conditionOrbitLength?: (P, P, LZ, P, N) -> Boolean
-      ++ conditionOrbitLength?(nn, mm, r, m, t) returns true if the
-      ++ conditions for an orbit of length 1 are satisfied.
-      ++ This corresponds to condition 7 on page 6 of Chapter 2 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-
-    conditionOrbitLength?: (P, P, LZ, LLZ, P, N) -> Boolean
-      ++ conditionOrbitLength?(nn, mm, r, rtilde, m, t) returns true if
-      ++ the conditions for an orbit of length 1 are satisfied. This
-      ++ corresponds to condition 10 on page 37 of Chapter 10 of
-      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-      ++ The parameters r and rtilde specify the defining eta-quotient and
-      ++ generalized eta-quotient part.
+      ++ generalizedEtaQuotient(rbar). These are slight modifications
+      ++ of conditions appearing in Definition 35 of
+      ++ \cite{Radu_RamanujanKolberg_2015} in case the defining
+      ++ eta-quotient is not a generalized one.
 
     candidateLevelsCoEtaQuotientGamma0: (SPEC, P, N) -> List P
       ++ candidateLevelsCoEtaQuotientGamma0(rspec,m,t) returns an
@@ -281,16 +261,6 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ level might still be too small to find a cofactor an example
       ++ is for rspec=[[1,-1],[7,1]], m=9, t=5 where this function
       ++ returns 21, but one would have to use 42.
-    candidateLevelsCoEtaQuotientGamma1: (P, LZ, P, N) -> List P
-      ++ candidateLevelsCoEtaQuotientGamma1(mm,r,m,t) returns an
-      ++ ascendingly sorted list of the nn up to 24*m*mm such that
-      ++ conditionCoEtaQuotientGamma1?(nn,mm,r,m,t) is true, i.e. that
-      ++ (nn,mm,r,m,t) fulfills the 7 conditions as defined in Section
-      ++ 2 of \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-    minimalLevelCoEtaQuotientGamma1: (P, LZ, P, N) -> P
-      ++ minimalLevelCoEtaQuotientGamma1(mm,r,m,t) returns the
-      ++ smallest nn of
-      ++ candidateLevelsCoEtaQuotientGamma1(nn,mm,r,m,t).
     candidateLevelsCoEtaQuotientGamma1: (SPEC, P, N) -> List P
       ++ minimalLevelCoEtaQuotientGamma1(rspec,m,t) returns an
       ++ ascendingly sorted list of the nn up to 24*m*level(rspec)
@@ -386,7 +356,7 @@ QEtaCofactorConditions: Exports == Implementation where
     -- the condition is true.
     checkSquare1?(sspec: SPEC, rspec: SPEC, m: P, a: Z): Boolean ==
         --assert(one? gcd(a, d)) for every divisor of nn (and of mm).
-        import from INTF
+        import from IntegerNumberTheoryFunctions
         z: Z := 1
         for l in purePart sspec | odd? l.2 repeat z := z * jacobi(l.1, a)
         for l in purePart rspec | odd? l.2 repeat z := z * jacobi(m*l.1, a)
@@ -401,10 +371,6 @@ QEtaCofactorConditions: Exports == Implementation where
         not one? denom expo => error "checkSquare1?: expo not integral"
 
         (z > 0 and even? numer expo) or (z < 0 and odd? numer expo)
-
-    -- local function
-    alphaAux(mm: P, r: LZ, rtilde: LLZ, t: N): Q ==
-        (24*t)::Q + SIGMAINFINITY(mm, r, rtilde)
 
     -- exported functions
 
@@ -446,114 +412,74 @@ QEtaCofactorConditions: Exports == Implementation where
             not member?(f.factor, nnprimes) => return false
         return true
 
-    conditionMmN?(nn: P, mm: P, r: LZ, m: P): Boolean ==
-        mmdivs: LP := DIVISORS mm
-
-        divs: LP := DIVISORS(m*nn)
-        for delta in mmdivs for rdelta in r | not zero? rdelta repeat
-            not member?(delta, divs) => return false
+    conditionMmN?(nn: P, rspec: SPEC, m: P): Boolean ==
+        divs: LZ := divisors(m*nn)$IntegerNumberTheoryFunctions
+        for l in purePart rspec | not member?(l.1, divs) repeat return false
         return true
 
-    conditionSigma0?(nn: P, mm: P, r: LZ, m: P): Boolean ==
-        sv: Z := SIGMA0(mm, r)
-        x: Z := kappa(m)*m*nn*nn*sv
-        DIVISIBLEBY?(24, (x exquo mm) :: Z)
+    -- CDZ condition 6 (p. 37)
+    conditionSumExponentsPure?(nn: P, rspec: SPEC, m: P): Boolean ==
+        rsum: Z := 0
+        for l in purePart rspec repeat rsum := rsum + l.2
+        DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
-    conditionSumExponents?(nn: P, r: LZ, m: P): Boolean ==
-        ssum: Z := 0
-        for rdelta in r repeat ssum := ssum + rdelta
-        DIVISIBLEBY?(8, kappa(m)*nn*ssum)
+    -- CDZ condition 4 (p. 37)
+    conditionSumExponentsProperGeneralized?(
+      nn: P, rspec: SPEC, m: P): Boolean ==
+        rsum: Z := 0
+        for l in purePart rspec repeat rsum := rsum + l.2
+        DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
-    conditionNDivisor?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
-        a: Z := kappa(m)*(24*t + SIGMAINFINITY(mm, r))
-        --assert(a = kappa(m)*numer(alphaAux(mm, r, [], t)))
-        n: Z := 24*m
-        w: Z := (n exquo gcd(a, n)) :: Z
-        DIVISIBLEBY?(w, nn)
-
-    conditionEvenMultiplier?(nn: P, mm: P, r: LZ, m: P): Boolean ==
-        odd? m => true
-        u: Z := 1
-        for delta in DIVISORS mm for rdelta in r | not zero? rdelta repeat
-            adelta: P := asP abs(rdelta)
-            u := u * delta^adelta
-        e: Z := 0
-        while even? u repeat
-            e := e + 1
-            u := shift(u, -1)
-
-        b1: Boolean := DIVISIBLEBY?(4, kappa(m)*nn) and DIVISIBLEBY?(8, nn*e)
-        b2: Boolean := even? e and DIVISIBLEBY?(8, nn*(u-1))
-        return (b1 or b2)
-
-    -- See condition 7 in section "2. Finding Modular Functions for
-    -- $\Gamma_1(N)$.
-    conditionOrbitLength?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
-        n: P := 24*m*mm
-        rhat := SIGMAINFINITY(mm, r)
-        for i in 0.. (n quo nn) repeat
-            j := nn*i+1 -- (j = 1 (mod nn))
-            one? gcd(j, n) => -- then 24|(j^2-1)
-               not zero?((((j^2 - 1) quo 24)*(rhat+24*t)) rem m) => return false
-        return true
-
-    conditionCoEtaQuotientGamma0?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
+    -- CDZ condition 7 (p. 37)
+    conditionSigma0Pure?(nn: P, rspec: SPEC, m: P): Boolean ==
         mm: P := level rspec
-        r: LZ := pureExponents rspec
-        t >= m => error "0<=t<m is a necessary condition"
-        conditionPrimeDivisors?(nn, m) -- \eqref{eq:p|m=>p|N}
-         and conditionMmN?(nn, mm, r, m) -- \eqref{eq:delta|M=>delta|mN}
-          and conditionSigma0?(nn, mm, r, m) -- \eqref{eq:sv24}
-           and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
-            and conditionNDivisor?(nn, mm, r, m, t) -- \eqref{eq:w|N}
-             and conditionEvenMultiplier?(nn, mm, r, m) -- \eqref{eq:even-m}
+        rv: Z := sigma0Pure rspec
+        h: Z := (nn exquo mm)::Z
+        DIVISIBLEBY?(24, kappa(m)*m*nn*h*rv)
 
-    conditionCoEtaQuotientGamma1?(nn: P, mm: P, r: LZ, m: P, t: N): Boolean ==
-        t >= m => error "0<=t<m is a necessary condition"
-        DIVISIBLEBY?(mm, nn) -- M|N
-         and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
-          and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
-           and conditionSigma0?(nn, mm, r, m) --\eqref{eq:sv24}
-            and conditionNDivisor?(nn, mm, r, m, t) --\eqref{eq:w|N}
-             and conditionEvenMultiplier?(nn, mm, r, m) --\eqref{eq:even-m}
-              and conditionOrbitLength?(nn, mm, r, m, t) -- CDZ condition 7.
-
--------------------------------------------------------------------
--- generalized eta-quotients allowed in input
--------------------------------------------------------------------
+    -- CDZ condition 5 (p. 37)
+    conditionSigma0ProperGeneralized?(nn: P, rspec: SPEC, m: P): Boolean ==
+        mm: P := level rspec
+        rv: Z := sigma0ProperGeneralized rspec
+        h: Z := (nn exquo mm)::Z
+        DIVISIBLEBY?(12, kappa(m)*m*nn*h*rv)
 
     -- CDZ condition 3 (p. 37)
-    conditionGSigma0?(nn: P, mm: P, rtilde: LLZ, m: P): Boolean ==
+    conditionGSigma0?(nn: P, rspec: SPEC, m: P): Boolean ==
         rv: Q := 0
-        for l in rtilde repeat rv := rv + l.2*l.3/l.1
+        for l in properGeneralizedPart rspec repeat rv := rv + l.2*l.3/l.1
         x: Q := kappa(m)*nn*rv
         one? denom x and even? numer x
 
-    -- CDZ condition 4 (p. 37)
-    conditionSumExponents?(nn: P, rtilde: LLZ, m: P): Boolean ==
-        rsum: Z := 0
-        for l in rtilde repeat rsum := rsum + l.3
-        x: Z := kappa(m)*nn*rsum
-        DIVISIBLEBY?(4, x)
-
-    -- CDZ condition 5 (p. 37)
-    conditionSigma0?(nn: P, mm: P, rtilde: LLZ, m: P): Boolean ==
-        rv: Q := 0
-        for l in rtilde repeat rv := rv + l.3/l.1
-        x: Q := kappa(m)*m*nn*nn*rv
-        one? denom x and DIVISIBLEBY?(12, numer x)
+    -- local
+    alphaAux(rspec: SPEC, t: N): Q == (24*t)::Q + sigmaInfinity rspec
 
     -- CDZ condition 8 (p. 37)
-    conditionNDivisor?(nn: P, mm: P, r: LZ, rtilde: LLZ, m: P,t: N): Boolean ==
-        a: Z := kappa(m)*numer(mm*alphaAux(mm, r, rtilde, t))
+    conditionNDivisor?(nn: P, rspec: SPEC, m: P,t: N): Boolean ==
+        mm: P := level rspec
+        a: Z := kappa(m)*numer(mm*alphaAux(rspec, t))
         n: Z := 24*m*mm
         w: Z := (n exquo gcd(a, n)) :: Z
         DIVISIBLEBY?(w, nn)
 
+    -- CDZ condition 9 (p. 37)
+    conditionEvenMultiplier?(nn: P, rspec: SPEC, m: P): Boolean ==
+        odd? m => true
+        u: Z := 1
+        for l in purePart rspec repeat -- l = [delta,rdelta]
+            u := u * l(1)^asP(abs(l.2))
+        e: Z := 0
+        while even? u repeat
+            e := e + 1
+            u := shift(u, -1)
+        b1: Boolean := DIVISIBLEBY?(4, kappa(m)*nn) and DIVISIBLEBY?(8, nn*e)
+        b2: Boolean := even? e and DIVISIBLEBY?(8, nn*(u-1))
+        return (b1 or b2)
+
     -- CDZ condition 10 (p. 38)
-    conditionOrbitLength?(nn: P, mm: P, r: LZ, rtilde: LLZ, m: P, t: N): Boolean ==
-        a: Q := alphaAux(mm, r, rtilde, t)
-        n: P := 24*m*mm
+    conditionOrbitLength?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
+        a: Q := alphaAux(rspec, t)
+        n: P := 24*m*level(rspec)
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn)) (j^2-1 is in S_{n})
             one? gcd(j, n) => -- then 24|(j^2-1)
@@ -562,22 +488,60 @@ QEtaCofactorConditions: Exports == Implementation where
                not zero?(numer(x) rem m) => return false
         return true
 
+    conditionCoEtaQuotientGamma0?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
+        not pure? rspec => false
+        t >= m => error "0<=t<m is a necessary condition"
+        not conditionMmN?(nn, rspec, m) => false -- \eqref{eq:delta|M=>delta|mN}
+        not conditionPrimeDivisors?(nn, m) => false -- \eqref{eq:p|m=>p|N}
+        not conditionSumExponentsPure?(nn, rspec, m) => false --\eqref{eq:sum-r}
+        not conditionSigma0Pure?(nn, rspec, m) => false -- \eqref{eq:sv24}
+        not conditionNDivisor?(nn, rspec, m, t) => false -- \eqref{eq:w|N}
+        conditionEvenMultiplier?(nn, rspec, m) -- \eqref{eq:even-m}
+
     -- condition for the disection of mixed-generalized eta-quotients
     conditionCoEtaQuotientGamma1?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
         t >= m => error "0<=t<m is a necessary condition"
         mm: P := level rspec
-        r: LZ := pureExponents rspec
-        rtilde: LLZ := properGeneralizedPart rspec
-        zero?(nn rem mm) -- M|N
-         and conditionPrimeDivisors?(nn, m) --\eqref{eq:p|m=>p|N}
-          and conditionGSigma0?(nn, mm, rtilde, m) -- CDZ condition 3 (p. 37)
-           and conditionSumExponents?(nn, rtilde, m) -- CDZ condition 4 (p. 37)
-            and conditionSigma0?(nn, mm, rtilde, m) -- CDZ condition 5 (p. 37)
-             and conditionSumExponents?(nn, r, m) --\eqref{eq:sum-r}
-              and conditionSigma0?(nn, mm, r, m) -- \eqref{eq:sv24}
-               and conditionNDivisor?(nn, mm, r, rtilde, m, t) -- CDZ 8 (p.37)
-                and conditionEvenMultiplier?(nn, mm, r, m) --\eqref{eq:even-m}
-                 and conditionOrbitLength?(nn, mm, r, rtilde, m, t) -- CDZ cond. 10
+
+        -- CDZ(1), condition 1 (p. 6), M|N,
+        not zero?(nn rem mm) => false
+
+        -- CDZ(2), condition 2, p. 6)
+        -- qeta.tex {eq:p|m=>p|N}
+        not conditionPrimeDivisors?(nn, m) => false
+
+        -- CDZ(6), condition 3 (p. 6)
+        -- qeta.tex {eq:sum-r},
+        --          {eq:conditionSumPureExponents?(nn,rspec,m)
+        not conditionSumExponentsPure?(nn, rspec, m) => false
+
+        -- CDZ(4)
+        -- qeta.tex {eq:conditionSumExponentsProperGeneralized?(nn,rspec,m)}
+        not conditionSumExponentsProperGeneralized?(nn, rspec, m) => false
+
+        -- CDZ(7)
+        -- qeta.tex {eq:rv24}, {eq:conditionSigma0Pure?(nn,rspec,m)}
+        not conditionSigma0Pure?(nn, rspec, m) => false
+
+        -- CDZ(5)
+        -- qeta.tex {eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}
+        not conditionSigma0ProperGeneralized?(nn, rspec, m) => false
+
+        -- CDZ(3)
+        -- qeta.tex {eq:conditionGSigma0?(nn,rspec,m)}
+        not conditionGSigma0?(nn, rspec, m) => false
+
+        -- CDZ(8)
+        -- qeta.tex {eq:w|N}, {eq:conditionNDivisor?(nn,rspec,m,t)}
+        not conditionNDivisor?(nn, rspec, m, t) => false
+
+        -- CDZ(9)
+        -- qeta.tex {eq:even-m}, {eq:conditionEvenMultiplier?(nn,rspec,m)}
+        not conditionEvenMultiplier?(nn, rspec, m) => false
+
+        -- CDZ(10)
+        -- qeta.tex {eq:conditionOrbitLength?(nn,rspec,m,t)}
+        conditionOrbitLength?(nn, rspec, m, t)
 
 -------------------------------------------------------------------
 -- use of conditions from above
@@ -592,40 +556,21 @@ QEtaCofactorConditions: Exports == Implementation where
             conditionCoEtaQuotientGamma0?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma0: should not be here"
 
-    candidateLevelsCoEtaQuotientGamma1(mm: P, r: LZ, m: P, t: N): List P ==
-        [asP nn for nn in 1..24*m*mm | _
-            conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t)]
-
-    minimalLevelCoEtaQuotientGamma1(mm: P, r: LZ, m: P, t: N): P ==
-        for nn in 1..24*m*mm repeat
-            conditionCoEtaQuotientGamma1?(asP nn, mm, r, m, t) => return asP nn
-        error "minimalLevelCoEtaQuotientGamma1: should not be here"
-
     candidateLevelsCoEtaQuotientGamma1(rspec: SPEC, m: P, t: N): List P ==
-        pure? rspec =>
-            r: LZ := pureExponents rspec
-            candidateLevelsCoEtaQuotientGamma1(level rspec, r, m, t)
         [asP nn for nn in 1..24*m*level(rspec) | _
-            conditionCoEtaQuotientGamma0?(asP nn, rspec, m, t)]
+            conditionCoEtaQuotientGamma1?(asP nn, rspec, m, t)]
 
     minimalLevelCoEtaQuotientGamma1(rspec: SPEC, m: P, t: N): P ==
-        pure? rspec =>
-            r: LZ := pureExponents rspec
-            minimalLevelCoEtaQuotientGamma1(level rspec, r, m, t)
         for nn in 1..24*m*level(rspec) repeat
             conditionCoEtaQuotientGamma1?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotientGamma1: should not be here"
 
     modularGamma0?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
+        not pure? sspec => false
         nn: P := level sspec; s: LZ := pureExponents sspec
         mm: P := level rspec; r: LZ := pureExponents rspec
 
         not conditionCoEtaQuotientGamma0?(nn, rspec, m, t) => false
-
-        nndivs: LP := DIVISORS nn
-        #nndivs < #s =>
-            warnPrint("size of s:", s)
-            false
 
         orb: List N := modularGamma0Orbit(rspec, m, t)
         orbitSize: Z := # orb
@@ -652,8 +597,8 @@ QEtaCofactorConditions: Exports == Implementation where
         --\eqref{eq:Radu-sigma0}
         sv: Z := sigma0 sspec
         rv: Z := sigma0 rspec
-        -- conditionCoEtaQuotientGamma0?(nn, mm, r, m, t) \implies f \in Z
-        -- See conditionMmN?(nn, mm, r, m).
+        -- conditionCoEtaQuotientGamma0?(nn, rspec, m, t) \implies f \in Z
+        -- See conditionMmN?(nn, rspec, m).
         f: Z := ((m * nn) exquo mm)::Z
 
         not DIVISIBLEBY?(24, sv + orbitSize * f * rv) =>
@@ -700,7 +645,7 @@ QEtaCofactorConditions: Exports == Implementation where
         -- Condition \eqref{eq:CDZ-sigmainfinity=0}
         rbarhat: Q := sigmaInfinity rspec
         sbarhat: Q := sigmaInfinity sspec
-        alpha: Q := rbarhat + (24*t)::Q -- alphaAux(mm, r, rtilde, t)
+        alpha: Q := alphaAux(rspec, t)
         q: Q := sbarhat + m*rbarhat - ((m^2-1)/m)*alpha
         not one? denom q or not DIVISIBLEBY?(24, z) => --shouldn't happen
             warnPrint("Chen: Theorem 10.1(3) sspec", sspec)

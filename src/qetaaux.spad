@@ -154,37 +154,6 @@ QEtaAuxiliaryPackage: with
       ++ lengthOfGeneralizedEtaFunctionIndices(nn) returns
       ++ #generalizedEtaQuotientSpecification(nn) without ever
       ++ computing the specification list explicitly.
-    sigmaInfinity: (P, List Z) -> Z
-      ++ sigmaInfinity(mm, r) returns \sum_{delta|mm} delta*r_delta where
-      ++ it is assumed that the entries of r correspond to the divisors
-      ++ of mm.
-      ++ It corresponds to \eqref{eq:sumdelta} in qeta.tex.
-    sigmaInfinity: (P, List List Z) -> Q
-      ++ sigmaInfinity(mm, rtilde) returns
-      ++ \sum_{delta|mm,0<g<delta/2}
-      ++      delta*fractionalBernoulli2(g/delta)*r_{delta,g}
-      ++ or rather
-      ++ \sum_{l \in rtilde}(d*fractionalBernoulli2(g/d)*e | (d,g,e)=l).
-      ++ We assume here that everly element of rtilde is of the form
-      ++ [d,g,e] and describes the generalized eta-power \eta_{d,g}^e
-    sigmaInfinity: (P, List Z, List List Z) -> Q
-      ++ sigmaInfinity(mm, r, rtilde) returns
-      ++ sigmaInfinity(mm, r) + 12*sigmaInfinity(mm, rtilde).
-      ++ Compare with \eqref{eq:generalized-sigmaInfinity}.
-    sigma0: (P, List Z) -> Z
-      ++ sigma0(mm, r) returns \sum_{delta|mm} (mm/delta)*r_delta where
-      ++ it is assumed that the entries of r correspond to the divisors
-      ++ of mm.
-      ++ It corresponds to \eqref{eq:sumdelta} in qeta.tex.
-    sigma0: (P, List List Z) -> Z
-      ++ sigma0(mm, rtilde) returns
-      ++ \sum_{delta|mm, 0<g<delta/2} (mm/delta)*r_{delta,g}
-      ++ or rather \sum_{l \in rtilde}((mm/d)*e | (d,g,e)=l).
-      ++ We assume here that everly element of rtilde is of the form
-      ++ [d,g,e] and describes the generalized eta-power \eta_{d,g}^e
-    sigma0: (P, List Z, List List Z) -> Z
-      ++ sigma0(mm, r, rtilde) returns sigma0(mm, r) + 2*sigma0(mm, rtilde).
-      ++ Compare with \eqref{eq:generalized-sigma0}.
     fractionalPart: Q -> Q
       ++ fractionalPart(x) returns x - floor(x)::Fraction(Integer).
     fractionalBernoulli1: Q -> Q
@@ -443,22 +412,6 @@ QEtaAuxiliaryPackage: with
   == add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
     FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
-    DIVISIBLEBY?(k, z) ==> zero?(z rem k)
-
-)if LiterateDoc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Local functions}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-)endif
-
-    sigmaAux(divs: List P, r: List Z): Z ==
-        z: Z := 0
-        for d in divs for rd in r repeat z := z + d*rd
-        return z
-
-    sigmaInfinity(mm: P, r: List Z): Z == sigmaAux(DIVISORS mm, r)
-    sigma0(mm: P, r: List Z): Z == sigmaAux(reverse! DIVISORS mm, r)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -728,26 +681,6 @@ $a\in X_c$.
         len: N := 0
         for d in nndivs repeat len := len + asN(ceiling(d/2)$Q)
         return len
-
-    sigmaInfinity(mm: P, rtilde: List List Z): Q ==
-        res: Q := 0
-        for l in rtilde repeat --assert(#l=3)
-            not DIVISIBLEBY?(l.1, mm) =>
-                error "sigmaInfinity: delta is not a divisor"
-            res := res + l.1 * l.3 * fractionalBernoulli2(l.2/l.1)
-        res
-
-    sigmaInfinity(mm: P, r: List Z, rtilde: List List Z): Q ==
-        sigmaInfinity(mm, r)::Q + 12*sigmaInfinity(mm, rtilde)
-
-    sigma0(mm: P, rtilde: List List Z): Z ==
-        z: Z := 0
-        for l in rtilde repeat --assert(#l=3)
-            z := z + l.3 * ((mm exquo l.1)::Z)
-        z
-
-    sigma0(mm: P, r: List Z, rtilde: List List Z): Z ==
-        sigma0(mm, r) + 2*sigma0(mm, rtilde)
 
     matrixModularGamma0(nn: P, idxs: INDICES): MZ ==
         if empty? idxs then idxs := etaFunctionIndices nn
