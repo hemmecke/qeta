@@ -1539,35 +1539,35 @@ element of \code{SymbolicGeneralizedEtaGamma}.
 ++ $g_{\tilde{r},m,\lambda}(\gamma\tau)$. See
 ++ \eqref{eq:g_rtilde-m-lambda(gamma*tau)}.
 SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
-    properGeneralizedEtaQuotient: (P, LLZ, P, N, SL2Z) -> %
-      ++ properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma)
-      ++ represents the
-      ++ expansion of $g_{\tilde{r},m,\lambda}(\gamma\tau)$. see
+    properGeneralizedEtaQuotient: (SPEC, P, N, SL2Z) -> %
+      ++ properGeneralizedEtaQuotient(rspec,m,lambda,gamma) represents
+      ++ the expansion of $g_{\tilde{r},m,\lambda}(\gamma\tau)$ where
+      ++ $\tilde{r}$ is the properGeneralizedPart of rspec. see
       ++ \eqref{eq:g_rtilde-m-lambda(gamma*tau)}.
-    properGeneralizedEtaQuotient: (P, LLZ, SL2Z) -> %
-      ++ properGeneralizedEtaQuotient(nn,rtilde,gamma) returns
-      ++ properGeneralizedEtaQuotient(nn,rtilde,1,0,gamma).
+    properGeneralizedEtaQuotient: (SPEC, SL2Z) -> %
+      ++ properGeneralizedEtaQuotient(rspec,gamma) returns
+      ++ properGeneralizedEtaQuotient(rspec,1,0,gamma).
     level: % -> P
-      ++ If x=properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
-      ++ level(x) returns nn.
-    exponents: % -> LLZ
-      ++ If x=properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
-      ++ exponents(x) returns rtilde.
+      ++ If x=properGeneralizedEtaQuotient(rspec,m,lambda,gamma), then
+      ++ level(x) returns level(rspec).
+    definingSpecification: % -> SPEC
+      ++ If x=properGeneralizedEtaQuotient(rspec,m,lambda,gamma), then
+      ++ definingSpecification(x) returns rspec.
     multiplier: % -> P
-      ++ If x=properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
+      ++ If x=properGeneralizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ multiplier(x) returns m.
     lambda: % -> N
-      ++ If x=properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
+      ++ If x=properGeneralizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ lambda(x) returns lambda.
     gamma: % -> SL2Z
-      ++ If x=properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
+      ++ If x=properGeneralizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ gamma(x) returns gamma.
     unityExponent: % -> Q
-      ++ If x=properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
+      ++ If x=properGeneralizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ unityExponent(x) returns the argument of the first product of
       ++ \eqref{eq:g_rtilde(gamma*tau)}.
     qExponent: % -> Q
-      ++ If x=properGeneralizedEtaQuotient(nn,rtilde,m,lambda,gamma), then
+      ++ If x=properGeneralizedEtaQuotient(rspec,m,lambda,gamma), then
       ++ qExponent(x) returns the argument of the third product of
       ++ \eqref{eq:g_rtilde(gamma*tau)}, i.e.,
       ++ $\gensum
@@ -1582,8 +1582,7 @@ SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
             -- mapping (delta, g) to $\eta_{\delta, g}^{[R]}$ where
             -- (delta, g) is encoded by n=level*delta+g
     Rep ==> Record(
-              flevel: P,      -- level \Gamma_1(lev)
-              fexponents: LLZ,-- rtilde
+              fspec: SPEC,    -- rtilde
               fmultiplier: P, -- m
               flambda: N,     -- lambda
               fgamma: SL2Z,   -- gamma
@@ -1599,10 +1598,13 @@ SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
     idx(nn: P, delta: P, g: Z): Z == nn*delta + g
 
     properGeneralizedEtaQuotient(
-      nn: P, rtilde: LLZ, m: P, lambda: N, gamma: SL2Z): % ==
+      rspec: SPEC, m: P, lambda: N, gamma: SL2Z): % ==
         y: HT := empty()
         uexponent: Q := 0
         qexponent: Q := 0
+        nn: P := level rspec
+        rtilde: LLZ := properGeneralizedPart rspec
+        spec: SPEC := generalizedEtaQuotientSpecification(nn, rtilde)
         for l in rtilde repeat
             delta := asP l.1; g := asP l.2; rdg := l.3;
             k: Z := idx(nn, delta, g)
@@ -1611,14 +1613,14 @@ SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
             uexponent := uexponent + rdg * unityExponent(etadg)
             qexponent := qexponent + rdg * qExponent(etadg)
         uexponent := fractionalPart(uexponent)$QETAAUX
-        per [nn, rtilde, m, lambda, gamma, y, uexponent, qexponent]
+        per [spec, m, lambda, gamma, y, uexponent, qexponent]
 
-    properGeneralizedEtaQuotient(nn: P, rtilde: LLZ, gamma: SL2Z): % ==
-        properGeneralizedEtaQuotient(nn, rtilde, 1, 0, gamma)
+    properGeneralizedEtaQuotient(rspec: SPEC, gamma: SL2Z): % ==
+        properGeneralizedEtaQuotient(rspec, 1, 0, gamma)
 
-    level(x: %): P == xx.flevel
+    level(x: %): P == level definingSpecification x
     elt(x: %, delta: P, g: P): YGEG == xx.feta.idx(level x, delta, g)
-    exponents(x: %): LLZ == xx.fexponents
+    definingSpecification(x: %): SPEC == xx.fspec
     multiplier(x: %): P == xx.fmultiplier
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
@@ -1627,16 +1629,14 @@ SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
     coerce(x: %): OutputForm == xx::OutputForm
 
     hashUpdate!(h: HashState, x: %): HashState ==
-        h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fexponents)
+        h := hashUpdate!(h, xx.fspec)
         h := hashUpdate!(h, xx.fmultiplier)
         h := hashUpdate!(h, xx.flambda)
         h := hashUpdate!(h, xx.fgamma)
         h
 
     ((x: %) = (y: %)): Boolean ==
-        xx.flevel ~= yy.flevel => false
-        xx.fexponents ~= yy.fexponents => false
+        xx.fspec ~= yy.fspec => false
         xx.fmultiplier ~= yy.fmultiplier => false
         xx.flambda ~= yy.flambda => false
         xx.fgamma = yy.fgamma
@@ -1763,10 +1763,10 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
         nspec := purify rspec
         r: LZ := pureExponents nspec
         rtilde: LLZ := properGeneralizedPart nspec
-        mm: P := level rspec
+        mm: P := level nspec
+        gspec := generalizedEtaQuotientSpecification(mm, rtilde)
         yeqlg := etaQuotient(mm, r, m, lambda, gamma)$YEQLG
-        ypgeqlg := properGeneralizedEtaQuotient(
-                     mm, rtilde, m, lambda, gamma)$YPGEQLG
+        ypgeqlg := properGeneralizedEtaQuotient(gspec, m, lambda, gamma)$YPGEQLG
         per [rspec, m, lambda, gamma, yeqlg, ypgeqlg]
 
     generalizedEtaQuotient(rspec: SPEC, gamma: SL2Z): % ==
@@ -1918,7 +1918,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
     minRootOfUnityAlphaSchoenebergProperGeneralized(_
       y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): P ==
         mr: Z := 1
-        for l in exponents y repeat
+        for l in properGeneralizedPart definingSpecification y repeat
             delta := asP l.1; g := asP l.2;
             ygeg := y(delta, g)
             g1 := gamma1 ygeg
@@ -1963,7 +1963,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
 
         -- fifth factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
         -- See qPochhammerProperGeneralized in qetaquot.spad.
-        for l in exponents ypg repeat
+        for l in properGeneralizedPart definingSpecification ypg repeat
             delta := asP l.1; g := asP l.2;
             ygeg := ypg(delta, g)
             g1 := gamma1 ygeg
