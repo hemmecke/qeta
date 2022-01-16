@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018-2021  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018-2022  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -472,29 +472,29 @@ $q^{1/w)}$, \ie, the series from
         y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): CX ==
           cx: CX := 1
           for l in properGeneralizedPart definingSpecification y repeat
-              delta := asP l.1; g := asP l.2; rdg := l.3;
+              delta := specDelta l; g := asP specSubindex l; e := specExponent l
               ygeg := y(delta, g)
               g1 := gamma1 ygeg
               gd: Q := fractionalPart(g1(1,1)*g/delta)$QETAAUX -- note that h=0
               hd: Q := fractionalPart(g1(1,2)*g/delta)$QETAAUX
-              if zero? numer gd and not zero? numer hd and not zero? rdg then
+              if zero? numer gd and not zero? numer hd and not zero? e then
                   -- Note that xi is a mx-th root of unity so, we have
                   -- to multiply the (rational) exponent of xi by mx.
                   uexp: Q := (mx/2)*fractionalBernoulli1(hd)$QETAAUX
                   not one? denom uexp =>
                       errorPrint("mx * Bernoulli1", uexp)
                       error "QEtaSeriesExpansion: alphaSchoenebergContribution"
-                  cx := cx * xipow(rdg * numer uexp)
+                  cx := cx * xipow(e * numer uexp)
           cx
 
       -- local
       -- Compute $\tilde{r}_\delta$ from $\tilde{r}$. See definition
       -- below \eqref{eq:p_rbar-m-lambda(gamma*tau)}, i.e.
       -- $\tilde{r}_\delta := \sum_{0 < g < \frac{\delta}{2}} r_{\delta,g}$.
-      rtilde(delta: P, y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): Z ==
+      rTilde(delta: P, y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): Z ==
           rd: Z := 0
           ll: LLZ := properGeneralizedPart definingSpecification y
-          for l in ll | delta = asP l.1 repeat rd := rd + l.3;
+          for l in ll | delta = specDelta l repeat rd := rd + specExponent l
           rd
 
       -- local
@@ -517,7 +517,7 @@ $q^{1/w)}$, \ie, the series from
           divs: List P := divisors ypure
           r: LZ := concat(exponents ypure, [0 for i in divs]) -- fill r with 0's
           for delta in divs for rd in r _
-                  | not zero?(expo := rd - rtilde(delta, ypg)) repeat
+                  | not zero?(expo := rd - rTilde(delta, ypg)) repeat
               etadelta: SymbolicEtaGamma := ypure.delta
               u: Q := udelta etadelta
               v: Q := mx * vdelta etadelta
@@ -534,7 +534,7 @@ $q^{1/w)}$, \ie, the series from
           -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)-0} and
           -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}
           for l in properGeneralizedPart definingSpecification ypg repeat
-              delta := asP l.1; g := asP l.2; rdg := l.3;
+              delta := specDelta l; g := asP specSubindex l; e := specExponent l
               ygeg: SymbolicGeneralizedEtaGamma := ypg(delta, g)
               g1 := gamma1 ygeg
               alphabeta := fractionalPart(g1(1,1)*g/delta)$QETAAUX
@@ -549,9 +549,9 @@ $q^{1/w)}$, \ie, the series from
               -- See \eqref{eq:mimimalRootOfUnity-g_rtilde-m-lambda}.
               nh: Z := numer h
               if zero? alpha then -- {eq:eta_delta-g-m-lambda^[R](gamma*tau)-0}
-                  lx: LX := jac(xiPower(-nh), beta::P, 0)^rdg
+                  lx: LX := jac(xiPower(-nh), beta::P, 0)^e
               else
-                  lx: LX := jac(xiPower nh, beta::P, alpha::N)^rdg
+                  lx: LX := jac(xiPower nh, beta::P, alpha::N)^e
               u: Q := udelta(ygeg)
               v: Q := vdelta(ygeg)
               vbeta: Q := mx * v * (1/beta)

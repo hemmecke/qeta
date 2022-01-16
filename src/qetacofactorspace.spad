@@ -227,7 +227,7 @@ QEtaCofactorSpace: Exports == Implementation where
 
     etaCofactorSpace0System(nn:P, rspec:SPEC, m:P, t:N, idxs:INDICES): ECSS ==
         import from QEtaCofactorConditions
-        not conditionCoEtaQuotientGamma0?(nn, rspec, m, t) =>
+        not conditionCoEtaQuotientGamma0?(nn, rspec, m, t)$QEtaCofactorConditions =>
             error "conditionCoEtaQuotientGamma0 not met"
 
         -- Setup matrix.
@@ -259,8 +259,8 @@ QEtaCofactorSpace: Exports == Implementation where
                 p: P := asP(fe.factor) -- extract prime factor
                 em: N := primePower(m, p)$QETAAUX
                 e: Z := 0
-                for l in purePart rspec | odd?(l.2) repeat -- exponent
-                    e := e + em + primePower(asP(l.1), p)$QETAAUX -- l.1=delta
+                for l in purePart rspec | odd? specExponent l repeat -- exponent
+                    e := e + em + primePower(specDelta l, p)$QETAAUX
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         return [matmod0, v]
 
@@ -307,12 +307,14 @@ QEtaCofactorSpace: Exports == Implementation where
         -- prepend the entry for the right-hand side
         expo: Q := 0
         for l in properGeneralizedPart rspec repeat --assert(#l=3) l=[d,g,e]
-            expo := expo + l.3 * fractionalBernoulli1(l.2/l.1)$QETAAUX
+            d := specDelta l; g := specSubindex l; e := specExponent l
+            expo := expo + e * fractionalBernoulli1(g/d)$QETAAUX
         expo := (a-1) * expo
         not one? denom expo =>
             error "etaCofactorSpace1System: exponent not integral"
         isOdd?: Boolean := odd? numer expo
-        for l in purePart rspec | odd? l.2 and jacobi(m*l.1,a)$INTF < 0 repeat
+        for l in purePart rspec | odd? specExponent l
+                                  and jacobi(m*specDelta(l),a)$INTF < 0 repeat
             isOdd? := not isOdd?
         if isOdd? then cons(1, row) else cons(0, row)
 

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2015-2021  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2015-2022  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -181,13 +181,6 @@ EtaQuotientInfinity(C): Exports == Implementation where
 --      ++ generalizedEtaQuotient(delta,0,e):=$\eta(\delta\tau)^e$ and
 --      ++ generalizedEtaQuotient(delta,g,e):=
 --      ++ $\frac{\eta(g\tau)^e}{\eta(2g\tau)^e}}$ if $g=\delta/2$.
-    generalizedEtaPower: List Z -> %
-      ++ generalizedEtaPower(l) returns a (generalized) eta-power.
-      ++ If l is either a list [d,e] then it returns etaPower(d, e),
-      ++ if l=[d,g,e], then it returns generalizedEtaPower(d,g,e/1).
-      ++ A one-element list l=[d] is equivalent to [d,1]. The empty
-      ++ list returns 1. All other cases are errors. It is also an
-      ++ error if the conditions 0<d and 0<g<d/2 do not hold.
     generalizedEtaQuotient: SPEC -> %
       ++ generalizedEtaQuotient(rspec) returns the product (generalized)
       ++ eta-powers for each list l in rspec.
@@ -286,47 +279,28 @@ EtaQuotientInfinity(C): Exports == Implementation where
         q: Q := g^2/(2*d) - g/2 + d/12 --=d/2*((g/d)^2-g/d+1/6)
         new(e*q, l)
 
-    generalizedEtaPower(l: List Z): % ==
-        empty? l => 1
-        d: Z := first l; l := rest l
-        d <= 0 => error "generalizedEtaPower: only positive divisors allowed"
-        empty? l => eta asP d
-        e: Z := first l; l := rest l
-        empty? l => etaPower(asP d, e)
-        g: Z := e
-        g <= 0 or 2*g > d =>
-            error "generalizedEtaPower: condition on offset violated"
-        e := first l
-        not empty? rest l =>
-            error "generalizedEtaPower: only lists of lenght <= 3 allowed"
-        generalizedEtaPower(asP d, asP g, e::Q)
-
     generalizedEtaQuotient(rspec: SPEC): % ==
         rspec := purify rspec
         -- see \eqref{eq:eta_delta-g^[R](tau)} and \eqref{eq:g_rbar(tau)}
         rpure: XHashTable(P, Z) := empty()
-        divs: List P := divisors rspec
-        r: LZ := pureExponents rspec
-        rtilde := properGeneralizedPart rspec
-        --assert(not empty? rtilde)
-        for rd in r for delta in divs repeat rpure.delta := rd
+        for l in purePart rspec repeat rpure(specDelta l) := specExponent l
         -- We want to avoid multiple recip computations, so we compute
         -- numerator and denominator separately and invert at the end.
-        -- While walking through we collect the respective powers of
+        -- While walking through, we collect the respective powers of
         -- eta-quotients that adjust the Jacobi triple product to
         -- become a generalized eta-quotient.
         num?: Boolean := den? := false
         num: L := den := 1
-        -- All elements in rtilde are lists of length exactly 3.
-        for l in rtilde repeat
-            d: P := asP(l.1) -- it comes form rspec, so we know it is positive
-            g: P := asP(l.2)
-            rpure.d := elt(rpure, d, 0) - l.3
-            l.3 > 0 =>
-                z: L := jacobiFunctionPow(d, g, l.3)
+        for l in properGeneralizedPart rspec repeat
+            d: P := specDelta l
+            g: P := asP(specSubindex l) -- g is positive in purified rspec
+            e: Z := specExponent l
+            rpure.d := elt(rpure, d, 0) - e
+            e > 0 =>
+                z: L := jacobiFunctionPow(d, g, e)
                 if num? then num := num * z else (num := z; num? := true)
-            l.3 < 0 =>
-                z: L := jacobiFunctionPow(d, g, - l.3)
+            e < 0 =>
+                z: L := jacobiFunctionPow(d, g, - e)
                 if den? then den := den * z else (den := z; den? := true)
 
         -- Now we can compute the pure part.

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2018, 2020-2021  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2018, 2020-2022  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -336,16 +336,16 @@ QEtaCofactorConditions: Exports == Implementation where
             -- Determine whether an even power of p divides
             -- \prod_{\delta|N}\delta^rdelta.
             e1: Z := 0
-            for l in purePart sspec | odd?(l.2) repeat -- exponent is odd
-                e1 := e1 + primePower(asP(l.1), p)$QETAAUX -- l.1 = delta
+            for l in purePart sspec | odd? specExponent l repeat
+                e1 := e1 + primePower(specDelta l, p)$QETAAUX
             e2: Z := 0
             if odd? orbitSize then
                 -- check 2nd prod in eq:Radu-productsquare
                 em: N := primePower(m, p)
                 -- for all divisors of mm > 1
-                for l in purePart rspec | odd?(l.2) repeat -- exponent is odd
+                for l in purePart rspec | odd? specExponent l repeat
                     -- mod 2, only odd sdelta is relevant.
-                    e2 := e2 + em + primePower(asP(l.1), p) -- l.1=delta
+                    e2 := e2 + em + primePower(specDelta l, p)
             if odd?(e1 + e2) then return false
         return true
 
@@ -358,15 +358,17 @@ QEtaCofactorConditions: Exports == Implementation where
         --assert(one? gcd(a, d)) for every divisor of nn (and of mm).
         import from IntegerNumberTheoryFunctions
         z: Z := 1
-        for l in purePart sspec | odd? l.2 repeat z := z * jacobi(l.1, a)
-        for l in purePart rspec | odd? l.2 repeat z := z * jacobi(m*l.1, a)
+        for l in purePart sspec | odd? specExponent l repeat
+            z := z * jacobi(  specDelta l, a)
+        for l in purePart rspec | odd? specExponent l repeat
+            z := z * jacobi(m*specDelta l, a)
         zero? z => error "checkSquare1?: zero jacobi symbol"
 
         expo: Q := 0
-        for l in properGeneralizedPart rspec repeat --assert(#l=3) -- l=[d,g,e]
-            expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
-        for l in properGeneralizedPart sspec repeat --assert(#l=3) -- l=[d,g,e]
-            expo := expo + (l.2/l.1 - 1/2) * l.3 -- (g/d-1/2)*e
+        ll := concat(properGeneralizedPart sspec, properGeneralizedPart rspec)
+        for l in ll repeat --assert(#l=3) -- l=[d,g,e], (g/d-1/2)*e
+            d := specDelta l; g := specSubindex l; e := specExponent l
+            expo := expo + (g/d - 1/2)*e
         expo := (a-1) * expo -- this should give an integer
         not one? denom expo => error "checkSquare1?: expo not integral"
 
@@ -414,20 +416,21 @@ QEtaCofactorConditions: Exports == Implementation where
 
     conditionMmN?(nn: P, rspec: SPEC, m: P): Boolean ==
         divs: LZ := divisors(m*nn)$IntegerNumberTheoryFunctions
-        for l in purePart rspec | not member?(l.1, divs) repeat return false
+        for l in purePart rspec | not member?(specDelta l, divs) repeat
+            return false
         return true
 
     -- CDZ condition 6 (p. 37)
     conditionSumExponentsPure?(nn: P, rspec: SPEC, m: P): Boolean ==
         rsum: Z := 0
-        for l in purePart rspec repeat rsum := rsum + l.2
+        for l in purePart rspec repeat rsum := rsum + specExponent l
         DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
     -- CDZ condition 4 (p. 37)
     conditionSumExponentsProperGeneralized?(
       nn: P, rspec: SPEC, m: P): Boolean ==
         rsum: Z := 0
-        for l in purePart rspec repeat rsum := rsum + l.2
+        for l in purePart rspec repeat rsum := rsum + specExponent l
         DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
     -- CDZ condition 7 (p. 37)
@@ -447,7 +450,9 @@ QEtaCofactorConditions: Exports == Implementation where
     -- CDZ condition 3 (p. 37)
     conditionGSigma0?(nn: P, rspec: SPEC, m: P): Boolean ==
         rv: Q := 0
-        for l in properGeneralizedPart rspec repeat rv := rv + l.2*l.3/l.1
+        for l in properGeneralizedPart rspec repeat
+            d := specDelta l; g := specSubindex l; e := specExponent l
+            rv := rv + e*g/d
         x: Q := kappa(m)*nn*rv
         one? denom x and even? numer x
 
@@ -467,7 +472,7 @@ QEtaCofactorConditions: Exports == Implementation where
         odd? m => true
         u: Z := 1
         for l in purePart rspec repeat -- l = [delta,rdelta]
-            u := u * l(1)^asP(abs(l.2))
+            u := u * specDelta(l)^asP(abs(specExponent l))
         e: Z := 0
         while even? u repeat
             e := e + 1
