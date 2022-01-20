@@ -87,7 +87,6 @@ Z ==> Integer
 Q ==> Fraction Z
 LZ ==> List Z
 LLZ ==> List LZ
-QETAAUX ==> QEtaAuxiliaryPackage
 
 INTF ==> IntegerNumberTheoryFunctions
 DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
@@ -163,9 +162,25 @@ QEtaSpecification: Exports == Implementation where
     level: % -> P
       ++ level(x) returns either the level that was given at
       ++ specification time or the lcm of all the indices.
-    divisors: % -> List P
-      ++ divisors(x) returns divisors(level(x)). This data is
-      ++ precomputed and stored inside the structure.
+    parts: % -> LLZ
+      ++ pureParts(x) returns a list of triples of the form
+      ++ [delta,g,e] for the specification of a power of a
+      ++ (generalized) eta-function [d,-1,e] that specifies
+      ++ $\eta(d*\tau)^e$ whereas [d,g,e] for g~=-1 specifies
+      ++ $\eta_{d,g}(\tau)^e$.
+    pureParts: % -> LLZ
+      ++ pureParts(x) returns the part of the (generalized)
+      ++ eta-quotient that corresponds to pure eta-functions. Each
+      ++ element of the result is a three-element list [d,-1,e] that
+      ++ stands for $\eta(d*\tau)^e$.
+    properGeneralizedParts: % -> LLZ
+      ++ properGeneralizedParts(x) returns the list of indicies and
+      ++ exponents of the proper generalized part of the (generalized)
+      ++ eta-quotient. Each element is a 3-element list of the form
+      ++ [d, g, e] that stands for $\eta_{d,g}^{[R]}(\tau)^e$.
+--    divisors: % -> List P
+--      ++ divisors(x) returns divisors(level(x)). This data is
+--      ++ precomputed and stored inside the structure.
     pureExponents: % -> LZ
       ++ pureExponents returns the exponents of the pure eta-quotient
       ++ part of the specification. Zeros at the end of the list are
@@ -174,21 +189,9 @@ QEtaSpecification: Exports == Implementation where
       ++ allPureExponents(x) returns the exponents of the pure
       ++ eta-quotient part of the specification. The resulting list
       ++ has as many entries as divisors(x).
-    properGeneralizedPart: % -> LLZ
-      ++ properGeneralizedPart(x) returns the list of indicies and
-      ++ exponents of the proper generalized part of the (generalized)
-      ++ eta-quotient. Each element is a 3-element list of the form
-      ++ [d, g, e] that stands for $\eta_{d,g}^{[R]}(\tau)^e$.
-
-    -- extracting other information from the data
     pure?: % -> Boolean
       ++ pure?(x) returns true if x contains no proper generalized
-      ++ eta-functions, i.e., if empty?(generalizedPart(x)).
-    purePart: % -> LLZ
-      ++ purePart(x) returns the part of the (generalized)
-      ++ eta-quotient that corresponds to pure eta-functions. Each
-      ++ element of the result is a two-element list [d,e] that stands
-      ++ for $\eta(d*\tau)^e$.
+      ++ eta-functions, i.e., if empty?(generalizedParts(x)).
 
     sigmaInfinity: % -> Q
       ++ sigmaInfinity(x) returns the value corresponding to
@@ -200,19 +203,19 @@ QEtaSpecification: Exports == Implementation where
       ++ \eqref{eq:sigmazero} for the pure eta-quotient case.
     sigmaInfinityPure: % -> Z
       ++ sigmaInfinityPure(x) returns the value of sigmaInfinity(x)
-      ++ considering onlyt the purePart of x.
+      ++ considering onlyt the pureParts of x.
       ++ See \eqref{eq:sigmainfty} in qeta.tex.
     sigma0Pure: % -> Z
       ++ sigma0Pure(x) returns the value of sigma0(x)
-      ++ considering onlyt the purePart of x.
+      ++ considering onlyt the pureParts of x.
       ++ See \eqref{eq:sigmazero} in qeta.tex.
     sigmaInfinityProperGeneralized: % -> Q
       ++ sigmaInfinityProperGeneralize(x) returns the value of sigmaInfinity(x)
-      ++ considering onlyt the purePart of x.
+      ++ considering onlyt the pureParts of x.
       ++ See \eqref{eq:sigmainftytilde} in qeta.tex.
     sigma0ProperGeneralized: % -> Z
       ++ sigma0ProperGeneralized(x) returns the value of sigma0(x)
-      ++ considering only the properGeneralizedPart of x.
+      ++ considering only the properGeneralizedParts of x.
       ++ See \eqref{eq:sigmazerotilde} in qeta.tex.
 
     modularGamma0: % -> Z
@@ -258,53 +261,40 @@ QEtaSpecification: Exports == Implementation where
 
     -- helper functions
     specExponent: LZ -> Z
-      ++ If x is a specification and l=[d,e] is an element of
-      ++ purePart(x) or l=[d,g,e] is an element of
-      ++ properGeneralizedPart(x), then specExponent(l) returns e.
+      ++ If x is a specification and l=[d,g,e] is an element of
+      ++ parts(x), then specExponent(l) returns e.
     specIndex: LZ -> LZ
-      ++ If x is a specification and l=[d,e] is an element of
-      ++ purePart(x), then specIndex(l) returns [d]. If l=[d,g,e] is
-      ++ an element of properGeneralizedPart(x), then specIndex(l)
-      ++ returns [d,g].
+      ++ If x is a specification and l=[d,g,e] is an element of
+      ++ parts(x), then specIndex(l) returns [d] if g=-1, and returns
+      ++ [d,g] otherwise.
     specDelta: LZ -> P
-      ++ If x is a specification and l=[d,e] is an element of
-      ++ purePart(x) or l=[d,g,e] is an element of
-      ++ properGeneralizedPart(x), then specDelta(l) returns d.
+      ++ If x is a specification and l=[d,g,e] is an element of
+      ++ parts(x), then specDelta(l) returns d.
     specSubindex: LZ -> Z
-      ++ If x is a specification and l=[d,e] is an element of
-      ++ purePart(x), then specSubindex(l) returns -1. If l=[d,g,e]
-      ++ is an element of properGeneralizedPart(x), then specSubindex(l)
-      ++ returns g.
+      ++ If x is a specification and l=[d,g,e] is an element of
+      ++ parts(x), then specSubindex(l) returns g.
 
   Implementation ==> add
-    -- Note that the list of exponents of the pure part can be shorter
-    -- than the number of divisors, i.e., trailing zeros are removed.
-    Rep ==> Record(flevel: P, fdivisors: List P,
-                   fpure: LZ, fproperGeneralized: LLZ)
+    -- The representation is basically rbar in the form of a sorted
+    -- list of [delta,g,e] triples where g=-1 for a specification of a
+    -- pure eta-function power specification.
+    Rep ==> Record(flevel: P, frpure: LLZ, frtilde: LLZ)
     xx ==> rep x
     yy ==> rep y
     DIVISIBLEBY?(k, z) ==> zero?(z rem k)
 
     -- creation functions
     etaQuotientSpecification(divs: List P, r: LZ): % ==
-        mm: P := asP lcm [d::Z for d in divs]
-        mmdivs: List P := DIVISORS mm
-        s: LZ := empty()
-        for d in mmdivs repeat
-            p := position(d, divs)
-            zero? p => cons(0, s)
-            cons(r.p, s)
-        -- remove trailing zeros
-        while not empty? s and zero? first s repeat s := rest s
-        per [mm, mmdivs, reverse! s, []]
+        rpure: LLZ := [[d::Z,-1,e] for d in divs for e in r | not zero? e]
+        rpure := sort((x:LZ,y:LZ):Boolean +-> x<y, rpure)
+        mm: P := asP lcm [specDelta l for l in rpure]
+        per [mm, rpure, []]
 
     etaQuotientSpecification(mm: P, r: LZ): % ==
         divs: List P := DIVISORS mm
-        -- remove trailing zeros
-        r := reverse r
-        while not empty? r and zero? first r repeat r := rest r
-        #divs < #r => error "exponent list longer than number of divisors"
-        per [mm, divs, reverse! r, []]
+        rpure: LLZ := [[d::Z,-1,e] for d in divs for e in r | not zero? e]
+        rpure := sort((x:LZ,y:LZ):Boolean +-> x<y, rpure)
+        per [mm, rpure, []]
 
     etaQuotientSpecification(mm: P, rpure: LLZ): % ==
         rspec: % := generalizedEtaQuotientSpecification(mm, rpure)
@@ -317,7 +307,7 @@ QEtaSpecification: Exports == Implementation where
         rspec
 
     generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
-        hr: XHashTable(List Z, Z) := table() -- to store index,exponent pairs
+        h: XHashTable(List Z, Z) := table() -- to store index,exponent pairs
         for l in rbar | not empty? l repeat
             d: Z := first l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
@@ -326,56 +316,53 @@ QEtaSpecification: Exports == Implementation where
             e: Z := 1
             g: Z := -1
             if #l=2 then e := l.2
-            if #l=3 then (g := l.2; e := l.3)
+            if #l=3 then
+                g := l.2
+                e := l.3
+                if g < -1 then error "g<-1 not allowed"
             if 2*g>d then g := d-g
-            setelt!(hr, [d, g], e + elt(hr, [d, g], 0))
+            setelt!(h, [d, g], e + elt(h, [d, g], 0))
         -- Now extract the data from the hashtable.
-        divs := DIVISORS mm
-        r: List Z := empty(); -- exponents of the pure part
-        rtilde: LLZ := empty() -- specify all generalized eta-quotients
-        for d in divs repeat r := cons(elt(hr, [d,-1], 0), r)
-        while not empty? r and zero? first r repeat r := rest r
-        for key in keys hr | not zero?(z := hr.key) repeat
+        rpure: LLZ := empty() -- pure part
+        rtilde: LLZ := empty() -- generalized part
+        for key in keys h | not zero?(e := h.key) repeat
             d := key.1
             g := key.2
-            if g ~= -1 then rtilde := cons([d, g, z], rtilde)
+            if g = -1 then
+                rpure := cons([d, g, e], rpure)
+              else
+                rtilde := cons([d, g, e], rtilde)
+        rpure  := sort((x:LZ,y:LZ):Boolean +-> x<y, rpure)
         rtilde := sort((x:LZ,y:LZ):Boolean +-> x<y, rtilde)
-        per [asP mm, divs, reverse! r, rtilde]
+        per [mm, rpure, rtilde]
 
     purify(x: %): % ==
         mm: P := level x
-        rbar: LLZ := concat(purePart x, properGeneralizedPart x)
-        hr: XHashTable(Z, Z) := table() -- to store index,exponent pairs
-        for l in rbar | not empty? l repeat
+        h: XHashTable(LZ, Z) := table() -- to store index,exponent pairs
+        for l in parts x | not empty? l repeat
             d: Z := specDelta l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
-            i := mm*d -- index for hashtable
             g := specSubindex l -- = -1 for in the pure case
             e := specExponent l
-            g = -1 => hr.i := elt(hr, i, 0) + e -- iterate
+            g = -1 => h.[d,g] := elt(h, [d,g], 0) + e -- iterate
             g := positiveRemainder(g, d)
             if 2*g > d then g := d - g
             --Note that \eta_{2g,g}(t)=\eta(g*t)^2/\eta(2*g*t)^2.
             d = 2*g => -- iterate
-                hr.i := elt(hr, i, 0) - 2*e -- Note that here i=mm*2*g.
-                i := mm*g
-                hr.i := elt(hr, i, 0) + 2*e
+                h.[d,-1] := elt(h, [d,-1], 0) - 2*e -- Note that here i=mm*2*g.
+                h.[g,-1] := elt(h, [g,-1], 0) + 2*e
             -- Note that \eta_{\delta,0}(\tau)=\eta(\delta\tau)^2.
-            if zero? g then e := 2*e
-            i := i + g
-            hr.i := elt(hr, i, 0) + e
+            zero? g => h.[d,-1] := elt(h, [d,-1], 0) + 2*e
+            h.[d,g] := elt(h, [d,g], 0) + e
         -- Now extract the data from the hashtable.
-        divs := DIVISORS mm
-        r: List Z := empty(); -- exponents of the pure part
-        rtilde: LLZ := empty() -- specify all generalized eta-quotients
-        for d in divs repeat r := cons(elt(hr, mm*d, 0), r)
-        while not empty? r and zero? first r repeat r := rest r
-        for i in keys hr | not zero?(z := hr.i) repeat
-            qr: Record(quotient: Z, remainder: Z) := divide(i, mm)
-            if not zero? qr.remainder then
-                rtilde := cons([qr.quotient, qr.remainder, z], rtilde)
-        rtilde := sort((u:LZ,v:LZ):Boolean +-> u<v, rtilde)
-        per [mm, divs, reverse! r, rtilde]
+        for idx in keys h repeat
+            if not zero?(z := h.idx) then
+                l: LZ := concat(idx,z)
+                if idx.2 = -1 then rpure: LLZ  := cons(l, rpure)
+                              else rtilde: LLZ := cons(l, rtilde)
+        rpure  := sort((a:LZ,b:LZ):Boolean +-> a<b, rpure)
+        rtilde := sort((a:LZ,b:LZ):Boolean +-> a<b, rtilde)
+        per [mm, rpure, rtilde]
 
     generalizedEtaQuotientSpecification(rbar: LLZ): % ==
         empty? rbar => 1
@@ -390,37 +377,40 @@ QEtaSpecification: Exports == Implementation where
             if not zero? e then rbar := cons(concat(i, e), rbar)
         generalizedEtaQuotientSpecification(mm, rbar)
 
-
     -- accessor functions
     level(x: %): P == xx.flevel
-    divisors(x: %): List P == xx.fdivisors
-    pureExponents(x: %): List Z == xx.fpure
-    properGeneralizedPart(x: %): LLZ == xx.fproperGeneralized
+    -- divisors(x: %): List P == xx.fdivisors
+    pureParts(x: %): LLZ == xx.frpure
+    properGeneralizedParts(x: %): LLZ == xx.frtilde
+    parts(x: %): LLZ == concat(xx.frpure, xx.frtilde)
+
+    allPureExponents(x: %): List Z ==
+       divs: List P := DIVISORS level x
+       h: XHashTable(Z, Z) := table()
+       for l in pureParts x repeat h(specDelta l) := specExponent l
+       [elt(h, d, 0) for d in divs]
+
+    pureExponents(x: %): List Z == -- remove zero entries from the end
+       r: LZ := reverse! allPureExponents x
+       while not empty? r and zero? first r repeat r := rest r
+       reverse! r
+
+    pure?(x: %): Boolean == empty? properGeneralizedParts x
 
     -- SetCategory functions
     coerce(x: %): OutputForm ==
-        concat(purePart x, properGeneralizedPart x)::OutputForm
+        rpure: LLZ :=[[specDelta(l)::Z, specExponent l] for l in pureParts x]
+        concat(rpure, properGeneralizedParts x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
         import from Z, LZ, LLZ
         h := hashUpdate!(h, xx.flevel)
-        h := hashUpdate!(h, xx.fpure)
-        h := hashUpdate!(h, set(xx.fproperGeneralized)$Set(LZ))
+        h := hashUpdate!(h, xx.frpure)
+        h := hashUpdate!(h, xx.frtilde)
         h
-
     ((x: %) = (y: %)): Boolean ==
         xx.flevel ~= yy.flevel => false
-        xx.fpure ~= yy.fpure => false
-        set(xx.fproperGeneralized)$Set(LZ) = set(yy.fproperGeneralized)$Set(LZ)
-
-    -- extracting other information from the data
-    pure?(x: %): Boolean == empty? properGeneralizedPart x
-    allPureExponents(x: %): List Z ==
-        le := xx.fpure
-        n := #le + 1
-        for i in n .. #divisors(x) repeat le := concat(le, 0)
-        le
-    purePart(x: %): LLZ ==
-        [[d, e] for d in divisors x for e in pureExponents x | not zero? e]
+        xx.frpure ~= yy.frpure => false
+        xx.frtilde = yy.frtilde
 
     -- local
     fractionalPart(x: Q): Q == -- local function
@@ -434,12 +424,12 @@ QEtaSpecification: Exports == Implementation where
 
     sigmaInfinityPure(x: %): Z ==
         res: Z := 0
-        for l in purePart x repeat res := res + specDelta(l) * specExponent(l)
+        for l in pureParts x repeat res := res + specDelta(l) * specExponent(l)
         res
 
     sigmaInfinityProperGeneralized(x: %): Q ==
         res: Q := 0
-        for l in properGeneralizedPart x repeat --assert(#l=3)
+        for l in properGeneralizedParts x repeat --assert(#l=3)
             d := specDelta l; g := specSubindex l; e := specExponent l
             res := res + d * e * fractionalBernoulli2(g/d)
         res
@@ -450,19 +440,18 @@ QEtaSpecification: Exports == Implementation where
     sigma0Pure(x: %): Z ==
         mm: Z := level x
         res: Z := 0
-        for l in purePart x repeat
+        for l in pureParts x repeat
             res := res + specExponent(l) * ((mm exquo specDelta(l))::Z)
         res
 
     sigma0ProperGeneralized(x): Z ==
         mm: Z := level x
         res: Z := 0
-        for l in properGeneralizedPart x repeat --assert(#l=3)
+        for l in properGeneralizedParts x repeat --assert(#l=3)
             res := res + specExponent(l) * ((mm exquo specDelta(l))::Z)
         res
 
-    sigma0(x: %): Z ==
-        sigma0Pure x + 2*sigma0ProperGeneralized x
+    sigma0(x: %): Z == sigma0Pure x + 2*sigma0ProperGeneralized x
 
     -- These are the conditions (1) to (4) of
     -- \cite{HemmeckeRadu_EtaRelations_2019} that have to be fulfilled
@@ -474,15 +463,17 @@ QEtaSpecification: Exports == Implementation where
         not zero? z => z
         -- Test condition (4) or \eqref{eq:productsquare}
         c: Factored Z := 1
-        for rd in pureExponents x for d in divisors x repeat
-            c := c * factor(d)^asN(abs rd)
+        for l in pureParts x repeat
+            c := c * factor(specDelta l)^asN(abs specExponent l)
         for fe in factors c repeat if odd?(fe.exponent) then return 4
         return 0
 
     modularGamma0?(x: %): Boolean == zero? modularGamma0 x
 
     modularGamma1(x: %): Z ==
-        not zero? reduce(_+, pureExponents x, 0)$List(Z) => 1 -- non-zero weight
+        w: Z := 0
+        for l in pureParts x repeat w := w + specExponent l
+        not zero? w => 1 -- non-zero weight
         -- order at inifinity is an integer
         rhat: Q := sigmaInfinity x
         not one? denom rhat or not DIVISIBLEBY?(24, numer rhat) => 2
@@ -493,46 +484,45 @@ QEtaSpecification: Exports == Implementation where
     modularGamma1?(x: %): Boolean == zero? modularGamma1 x
 
     -- SemiGroup functions
-    1: % == per [1, [1], [], []]
-    one?(x: %): Boolean == pure? x and empty? pureExponents x
-    inv(x: %): % ==
-        r: LZ := [-e for e in pureExponents x]
-        rtilde := [[specDelta l, specSubindex l, - specExponent l] _
-                   for l in properGeneralizedPart x]
-        per [level x, divisors x, r, rtilde]
+    1: % == per [1, [], []]
+    one?(x: %): Boolean == empty? xx.frpure and empty? xx.frtilde
     ((x: %) * (y: %)): % ==
         mm: P := asP lcm(level x, level y)
-        rbar: LLZ := concat [purePart x, properGeneralizedPart x,
-                             purePart y, properGeneralizedPart y]
+        rbar: LLZ := concat(parts x, parts y)
         generalizedEtaQuotientSpecification(mm, rbar)
     ((x: %) ^ (z: Z)): % ==
-        r: LZ := [z*rd for rd in pureExponents x]
-        rtilde: LLZ := [[specDelta l, specSubindex l, z*specExponent(l)] _
-                         for l in properGeneralizedPart x]
-        per [level x, divisors x, r, rtilde]
+        mm: P := level x
+        rbar: LLZ := [[specDelta(l)::Z, specSubindex l, z*specExponent l]_
+                      for l in parts x]
+        generalizedEtaQuotientSpecification(mm, rbar)
+    inv(x: %): % ==
+        mm: P := level x
+        rbar: LLZ := [[specDelta(l)::Z, specSubindex l, - specExponent l]_
+                      for l in parts x]
+        generalizedEtaQuotientSpecification(mm, rbar)
 
     numer(x: %): % ==
-        r: LZ := reverse! [max(e,0) for e in pureExponents x]
-        while not empty? r and zero? first r repeat r := rest r
-        rbar: LLZ := [l for l in properGeneralizedPart x | specExponent l > 0]
-        per [level x, divisors x, reverse! r, rbar]
+        mm: P := level x
+        rbar: LLZ := [[specDelta(l)::Z, specSubindex l, e]_
+                      for l in parts x | (e := specExponent l) > 0]
+        generalizedEtaQuotientSpecification(mm, rbar)
+
     denom(x: %): % == -- numer(x)/x
-        r: LZ := reverse! [max(-e,0) for e in pureExponents x]
-        while not empty? r and zero? first r repeat r := rest r
-        rbar: LLZ := [[specDelta l, specSubindex l, - specExponent l]_
-                      for l in properGeneralizedPart x | specExponent l < 0]
-        per [level x, divisors x, reverse! r, rbar]
+        mm: P := level x
+        rbar: LLZ := [[specDelta(l)::Z, specSubindex l, - e]_
+                      for l in parts x | (e := specExponent l) < 0]
+        generalizedEtaQuotientSpecification(mm, rbar)
 
     dilate(x: %, n: P): % ==
-        rpure: LLZ := [[n*specDelta l, specExponent l] for l in purePart x]
-        rtilde: LLZ := [[n*specDelta l, n*specSubindex l, specExponent l]_
-                        for l in properGeneralizedPart x]
-        generalizedEtaQuotientSpecification(n*level x, concat(rpure, rtilde))
+        rbar: LLZ := [(g:=specSubindex l; if g>0 then g:=n*g;_
+                       [n*specDelta l, g, specExponent l])_
+                      for l in parts x]
+        generalizedEtaQuotientSpecification(n*level x, rbar)
 
     specExponent(l: LZ): Z == last l
-    specIndex(l: LZ): LZ == if #l = 2 then [l.1] else [l.1, l.2]
+    specIndex(l: LZ): LZ == if specSubindex l = -1 then [l.1] else [l.1, l.2]
     specDelta(l: LZ): P == asP first l
-    specSubindex(l: LZ): Z == if #l = 2 then -1  else l.2
+    specSubindex(l: LZ): Z == l.2
 
 
 

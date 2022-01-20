@@ -90,13 +90,10 @@ termToSpecTerm(l: List Z): RecSQS == (_
   return [l.1, l.2, spec]);
 
 specTermToMonomial(r: RecSQS): Pol(Q) == (_
-  purespec := purePart r.fspec;_
-  properspec := properGeneralizedPart r.fspec;_
   p: Pol Q := r.fsgn :: Pol(Q);_
-  for l in concat(purespec, properspec) repeat (_
-      rl := reverse l;_
-      e := first rl;_
-      i := reverse! rest rl;_
+  for l in parts(r.fspec) repeat (_
+      e := specExponent l;_
+      i := specIndex l;_
       p := p * (indexedSymbol("E", i)::Pol(Q))^(e::N));_
   return p);
 

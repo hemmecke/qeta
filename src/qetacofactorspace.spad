@@ -259,7 +259,7 @@ QEtaCofactorSpace: Exports == Implementation where
                 p: P := asP(fe.factor) -- extract prime factor
                 em: N := primePower(m, p)$QETAAUX
                 e: Z := 0
-                for l in purePart rspec | odd? specExponent l repeat -- exponent
+                for l in pureParts rspec | odd? specExponent l repeat
                     e := e + em + primePower(specDelta l, p)$QETAAUX
                 qsetelt!(v, i+3, positiveRemainder(e, 2))
         return [matmod0, v]
@@ -306,14 +306,14 @@ QEtaCofactorSpace: Exports == Implementation where
         row: LZ := [productSquareElement(idx, a) for idx in idxs]
         -- prepend the entry for the right-hand side
         expo: Q := 0
-        for l in properGeneralizedPart rspec repeat --assert(#l=3) l=[d,g,e]
+        for l in properGeneralizedParts rspec repeat --assert(#l=3) l=[d,g,e]
             d := specDelta l; g := specSubindex l; e := specExponent l
             expo := expo + e * fractionalBernoulli1(g/d)$QETAAUX
         expo := (a-1) * expo
         not one? denom expo =>
             error "etaCofactorSpace1System: exponent not integral"
         isOdd?: Boolean := odd? numer expo
-        for l in purePart rspec | odd? specExponent l
+        for l in pureParts rspec | odd? specExponent l
                                   and jacobi(m*specDelta(l),a)$INTF < 0 repeat
             isOdd? := not isOdd?
         if isOdd? then cons(1, row) else cons(0, row)

@@ -232,7 +232,8 @@ SymbolicEtaGamma: SetCategory with
 
     eta(mm: P, delta: P, m: P, lambda: N, gamma: SL2Z): % ==
         --assert(gamma(2, 1)>0)
-        gamma(2, 1) <= 0 ==> error "QEtaSymbolicData: we want gamma(2,1)>0"
+        gamma(2, 1) <= 0 ==> error "SymbolicEtaGamma: we want gamma(2,1)>0"
+        lambda >= m => error "SymbolicEtaGamma: we require lambda < m"
         rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
         gamma1: SL2Z := rec.red
         gamma2: MZ := rec.triang
@@ -344,17 +345,6 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
     definingSpecification: % -> SPEC
       ++ If x=etaQuotient(spec,...), then definingSpecification(x)
       ++ returns spec.
-    level: % -> P
-      ++ level(x) returns the level of the eta-quotient.
-      -- Returns mm.
-    divisors: % -> LP
-      ++ divisors(x) returns the divisors of level(x) that were given
-      ++ at creation time of x.
-      -- Returns divs.
-    exponents: % -> LZ
-      ++ exponents(x) returns the list of exponents corresponding to all
-      ++ divisors.
-      -- Returns r.
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
       ++ Returns m.
@@ -404,8 +394,9 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
         rat: Q := 1
         uexponent: Q := 0 -- unityExponent
         qexponent: Q := 0
-        r: LZ := pureExponents rspec
-        for delta in divisors rspec for rdelta in r | not zero? rdelta repeat
+        for l in pureParts rspec repeat
+            delta: P := specDelta l
+            rdelta: Z := specExponent l
             e := eta(delta)
             rat := rat * rationalPrefactor(e)^rdelta
             rd := rdelta/24
@@ -423,7 +414,8 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         mm: P := level rspec
-        for delta in divisors rspec repeat
+        for l in pureParts rspec repeat
+            delta := specDelta l
             eta.delta := eta(mm, delta, m, lambda, gamma)$SymbolicEtaGamma
         etaquot(rspec, m, lambda, gamma, eta)
 
@@ -432,10 +424,7 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
         etaQuotient(rspec, m, lambda, gamma)
 
     definingSpecification(x: %): SPEC == xx.fspec
-    level(x: %): P == level definingSpecification x
-    divisors(x: %): LP == divisors definingSpecification x
     elt(x: %, delta: P): SymbolicEtaGamma == xx.feta.delta
-    exponents(x: %): LZ == pureExponents definingSpecification x
     multiplier(x: %): P == xx.fmultiplier
     lambda(x: %): N == xx.flambda
     gamma(x: %): SL2Z == xx.fgamma
@@ -512,17 +501,6 @@ SymbolicEtaQuotientGamma: SetCategory with
     definingSpecification: % -> SPEC
       ++ If x=etaQuotient(spec,...), then definingSpecification(x)
       ++ returns spec.
-    level: % -> P
-      ++ level(x) returns the level of the eta-quotient.
-      -- Returns mm.
-    divisors: % -> LP
-      ++ divisors(x) returns the divisors of level(x) that were
-      ++ given at creation time of x.
-      -- Returns divs.
-    exponents: % -> LZ
-      ++ exponents(x) returns the list of exponents corresponding to all
-      ++ divisors. Zeros at the end of the list are removed.
-      -- Returns r.
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
       ++ Returns m.
@@ -578,15 +556,15 @@ SymbolicEtaQuotientGamma: SetCategory with
         rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
         minroot: Z := minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
         uexp: Q := lambda(y)*ue + unityExponent y
-        minroot := lcm(minroot, denom uexp)
+        minroot: Z := lcm(minroot, denom uexp)
 
         -- Additionally, we have to consider the root of unity factor
         -- in $q_{\delta,m,\lambda}$, i.e., the denominator of the
         -- $v_{\delta,m,\lambda}$.
         -- minroot for the q-Pochhammer part (last product) in
         -- \eqref{eq:g_r-m-lambda(gamma*tau)}
-        divs: LP := divisors y
-        for delta in divs repeat minroot := lcm(minroot, denom vdelta(y.delta))
+        for l in pureParts definingSpecification y repeat
+            minroot := lcm(minroot, denom vdelta y specDelta l)
         asP minroot
 
     etaQuotient(mm: P, r: LZ, m: P, t: N, gamma: SL2Z): % ==
@@ -614,9 +592,6 @@ SymbolicEtaQuotientGamma: SetCategory with
     elt(x: %, lambda: N): SymbolicEtaQuotientLambdaGamma ==
         rep(x).feta.lambda
     definingSpecification(x: %): SPEC == definingSpecification(x.0)
-    level(x: %): P == level(x.0)
-    divisors(x: %): LP == divisors(x.0)
-    exponents(x: %): LZ == exponents(x.0)
     multiplier(x: %): P == multiplier(x.0)
     offset(x: %): N == rep(x).foffset
     gamma(x: %): SL2Z == gamma(x.0)
@@ -697,13 +672,6 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
     definingSpecification: % -> SPEC
       ++ If x=etaQuotient(spec,...), then definingSpecification(x)
       ++ returns spec.
-    level: % -> P
-      ++ level(x) returns the level of the eta-quotient.
-      -- Returns mm.
-    exponents: % -> LZ
-      ++ exponents(x) returns the list of exponents corresponding to all
-      ++ divisors. Zeros at the end of the list are removed.
-      -- Returns r.
     multiplier: % -> P
       ++ multiplier(x) returns the subsequence multiplier.
       ++ Returns m.
@@ -715,8 +683,9 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
       -- Returns gamma as given in etaSequence(...,gamma).
     orbit: % -> List N
       ++ orbit(x) returns $\modularOrbit{r, m, t}$ where
-      ++ r=exponents(x), m=multiplier(x), t=offset(x).
-      ++ See definition of orbit in qetacofactorspace.spad
+      ++ r=pureExponents(definingSpecification x), m=multiplier(x),
+      ++ t=offset(x). See definition of orbit in
+      ++ qetacofactorspace.spad
     minimalRootOfUnity: % -> P
       ++ minimalRootOfUnity(x) returns
       ++ lcm [minimalRootOfUnity(x.u) for u in orbit(x)]
@@ -768,9 +737,6 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
 
     elt(x: %, tt: N): YEQG == rep(x).fdata.tt
     definingSpecification(x: %): SPEC == xx.fspec
-    level(x: %): P == level definingSpecification x
-    divisors(x: %): LP == divisors definingSpecification x
-    exponents(x: %): LZ == pureExponents definingSpecification x
     multiplier(x: %): P == xx.fmultiplier
     offset(x: %): N == xx.foffset
     gamma(x: %): SL2Z == xx.fgamma
@@ -953,7 +919,9 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
         c: Cusp := cusp(g(1,1),g(2,1))
         - WIDTH0(nn, c) * qe
 
-    qetaGradeEstimate(x: %): Q == qetaGradeEstimateAux(level cofactor x, x)
+    qetaGradeEstimate(x: %): Q ==
+        sspec: SPEC := definingSpecification cofactor x
+        qetaGradeEstimateAux(level sspec, x)
 
 
 
@@ -1024,12 +992,6 @@ SymbolicEtaQuotient: SetCategory with
     definingSpecification: % -> SPEC
       ++ If  x=etaQuotient(spec,...),   then  definingSpecification(x)
       ++ returns spec.
-    level: % -> P
-      ++ If x=etaQuotient(mm, r) then level(x) returns the level of
-      ++ the eta-quotient, i.e., level(x)=mm.
-    exponents: % -> LZ
-      ++ If x=etaQuotient(m, r) then exponents(x) returns the list of
-      ++ exponents, i.e., exponents(x)=r.
     cusps: % -> List Cusp
       ++ If x=etaQuotient(mm, r), then
       ++ cusps(x)=cusp()$CongruenceSubgroupGamma0(mm).
@@ -1071,7 +1033,7 @@ SymbolicEtaQuotient: SetCategory with
             error "SymbolicEtaQuotient: fractional exponent"
         numer xe
     qetaGrades(x: %): List Z ==
-        nn: P := level x
+        nn: P := level definingSpecification x
         [-xExponent(nn, x, cusp) for cusp in cusps x]
 
     -- local
@@ -1096,9 +1058,6 @@ SymbolicEtaQuotient: SetCategory with
     etaQuotient(mm: P, r: LZ): % == etaQuotient etaQuotientSpecification(mm, r)
 
     definingSpecification(x: %): SPEC == xx.fspec
-    level(x: %): P == level definingSpecification x
-    divisors(x: %): LP == divisors definingSpecification x
-    exponents(x: %): LZ == pureExponents definingSpecification x
     cusps(x: %): List Cusp == xx.fcusps
     elt(x: %, cusp: Cusp): SymbolicEtaQuotientGamma == xx.feta.cusp
     minimalRootOfUnity(x: %): P == xx.fminroot
@@ -1566,7 +1525,7 @@ SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
     properGeneralizedEtaQuotient: (SPEC, P, N, SL2Z) -> %
       ++ properGeneralizedEtaQuotient(rspec,m,lambda,gamma) represents
       ++ the expansion of $g_{\tilde{r},m,\lambda}(\gamma\tau)$ where
-      ++ $\tilde{r}$ is the properGeneralizedPart of rspec. see
+      ++ $\tilde{r}$ is the properGeneralizedParts of rspec. see
       ++ \eqref{eq:g_rtilde-m-lambda(gamma*tau)}.
     properGeneralizedEtaQuotient: (SPEC, SL2Z) -> %
       ++ properGeneralizedEtaQuotient(rspec,gamma) returns
@@ -1627,7 +1586,7 @@ SymbolicProperGeneralizedEtaQuotientLambdaGamma: SetCategory with
         uexponent: Q := 0
         qexponent: Q := 0
         nn: P := level rspec
-        rtilde: LLZ := properGeneralizedPart rspec
+        rtilde: LLZ := properGeneralizedParts rspec
         spec: SPEC := generalizedEtaQuotientSpecification(nn, rtilde)
         for l in rtilde repeat
             delta := specDelta l; g := asP specSubindex l; e := specExponent l
@@ -1786,7 +1745,7 @@ SymbolicGeneralizedEtaQuotientLambdaGamma: Exports == Implementation where
         if gamma(2,1) < 0 then gamma := -gamma
         nspec := purify rspec
         r: LZ := pureExponents nspec
-        rtilde: LLZ := properGeneralizedPart nspec
+        rtilde: LLZ := properGeneralizedParts nspec
         mm: P := level nspec
         gspec := generalizedEtaQuotientSpecification(mm, rtilde)
         yeqlg := etaQuotient(mm, r, m, lambda, gamma)$YEQLG
@@ -1942,7 +1901,7 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
     minRootOfUnityAlphaSchoenebergProperGeneralized(_
       y: SymbolicProperGeneralizedEtaQuotientLambdaGamma): P ==
         mr: Z := 1
-        for l in properGeneralizedPart definingSpecification y repeat
+        for l in properGeneralizedParts definingSpecification y repeat
             delta := specDelta l; g := asP specSubindex l
             ygeg := y(delta, g)
             g1 := gamma1 ygeg
@@ -1981,19 +1940,18 @@ SymbolicGeneralizedEtaQuotientGamma: SetCategory with
 
         -- fourth factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
         -- See qPochhammerPure in qetaquot.spad.
-        divs: LP := divisors ypure
-        for delta in divs repeat
-            minroot := lcm(minroot, denom vdelta(ypure.delta))
+        for l in pureParts definingSpecification ypure repeat
+            minroot := lcm(minroot, denom vdelta ypure specDelta l)
 
         -- fifth factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
         -- See qPochhammerProperGeneralized in qetaquot.spad.
-        for l in properGeneralizedPart definingSpecification ypg repeat
-            delta := specDelta l; g := asP specSubindex l
-            ygeg := ypg(delta, g)
+        for l in properGeneralizedParts definingSpecification ypg repeat
+            d := specDelta l; g := asP specSubindex l
+            ygeg := ypg(d, g)
             g1 := gamma1 ygeg
-            beta := denom(g1(1,1)*g/delta)
+            beta := denom(g1(1,1)*g/d)
             minroot := lcm(minroot, denom(vdelta(ygeg) * (1/beta)))
-            minroot := lcm(minroot, denom(g1(1,2)*g/delta))
+            minroot := lcm(minroot, denom(g1(1,2)*g/d))
 
         asP minroot
 

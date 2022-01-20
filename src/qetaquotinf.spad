@@ -161,7 +161,7 @@ EtaQuotientInfinity(C): Exports == Implementation where
       ++ specification rspec.
       ++ This is the same as the product over etaPower(d,e) over all
       ++ elements in the purePort(rspec).
-      ++ It is an error if properGeneralizedPart(rspec) is not 1.
+      ++ It is an error if properGeneralizedParts(rspec) is not 1.
     generalizedEtaPower: (P, P, Q) -> %
       ++ generalizedEtaPower(d,g,e) returns the generalized
       ++ eta-quotient given by \eqref{eq:generalized-eta-quotient} and
@@ -283,7 +283,7 @@ EtaQuotientInfinity(C): Exports == Implementation where
         rspec := purify rspec
         -- see \eqref{eq:eta_delta-g^[R](tau)} and \eqref{eq:g_rbar(tau)}
         rpure: XHashTable(P, Z) := empty()
-        for l in purePart rspec repeat rpure(specDelta l) := specExponent l
+        for l in pureParts rspec repeat rpure(specDelta l) := specExponent l
         -- We want to avoid multiple recip computations, so we compute
         -- numerator and denominator separately and invert at the end.
         -- While walking through, we collect the respective powers of
@@ -291,7 +291,7 @@ EtaQuotientInfinity(C): Exports == Implementation where
         -- become a generalized eta-quotient.
         num?: Boolean := den? := false
         num: L := den := 1
-        for l in properGeneralizedPart rspec repeat
+        for l in properGeneralizedParts rspec repeat
             d: P := specDelta l
             g: P := asP(specSubindex l) -- g is positive in purified rspec
             e: Z := specExponent l

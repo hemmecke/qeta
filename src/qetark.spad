@@ -288,7 +288,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     varEta: (Z, Z) -> OutputForm
     varPochhammer: (Z, Z) -> OutputForm
 
-    varPower: (Z, Z, Z, (Z, Z) -> OutputForm) -> OutputForm
+    varPower: (LZ, (Z, Z) -> OutputForm) -> OutputForm
     monomial: (SPEC, (Z, Z) -> OutputForm) -> OutputForm
     monomialQuotient: (SPEC,  (Z, Z) -> OutputForm) -> OutputForm
 
@@ -505,18 +505,19 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         o := semicolonSeparate[o, q^(d::OF)]
         sub(paren o, "%Infinity"::Symbol::OF)
 
-    varPower(d: Z, g: Z, rd: Z, v: (Z, Z) -> OF): OF ==
-        --assert(not zero? rd)
-        one? rd => v(d, g)
-        v(d, g)^(rd::OF)
+    varPower(l: LZ, v: (Z, Z) -> OF): OF ==
+        import from QEtaSpecification
+        d: Z := (specDelta l)::Z
+        g: Z := specSubindex l
+        e: Z := specExponent l
+        --assert(not zero? e)
+        one? e => v(d, g)
+        v(d, g)^(e::OF)
 
     monomial(rspec: SPEC, v: (Z, Z) -> OF): OF ==
-        r: LLZ := purePart rspec
-        rtilde: LLZ := sort(_<$LZ, properGeneralizedPart rspec)
         one? rspec => (1$Z)::OF
-        l: List OF := [varPower(x.1, x.2, x.3, v) for x in rtilde]
-        for x in reverse r repeat l := cons(varPower(x.1, -1, x.2, v), l)
-        reduce(_*, l)$List(OF)
+        vs: List OF := [varPower(l, v) for l in parts rspec]
+        reduce(_*, vs)$List(OF)
 
     monomialQuotient(rspec: SPEC, v: (Z, Z) -> OF): OF ==
         mm: P := level rspec
@@ -644,25 +645,19 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             subscript(v, [d::OF, g::OF]$List(OF))
 
         -- local
-        vPower(v: Symbol, d: Z, g: Z, e: N): Pol C == (sub(v, d, g)::Pol(C))^e
+        vPower(v: Symbol, l: LZ): Pol C ==
+            d: Z := specDelta l
+            g: Z := specSubindex l
+            e: N := specExponent(l)::N
+            (sub(v, d, g)::Pol(C))^e
 
         monomialX(rspec: SPEC, v: Symbol): EX ==
-            r: LLZ := purePart rspec
-            rtilde: LLZ := sort(_<$LZ, properGeneralizedPart rspec)
             one? rspec => 1$EX
-            l: List Pol C := [vPower(v, x.1, x.2, (x.3)::N) for x in rtilde]
-            for x in reverse r repeat l := cons(vPower(v, x.1, -1, (x.2)::N), l)
-            reduce(_*, l)::EX
+            vs: List Pol C := [vPower(v, l) for l in parts rspec]
+            reduce(_*, vs)::EX
 
         monomialQuotientX(rspec: SPEC, v: Symbol): EX ==
-            rbar := concat(purePart rspec, properGeneralizedPart rspec)
-            rbarpos := [x for x in rbar | last x > 0]
-            rbarneg := [reverse! cons(-t, rest z)
-                        for x in rbar | (z := reverse x; t := first z; t < 0)]
-            mm: P := level rspec
-            rspecpos: SPEC := generalizedEtaQuotientSpecification(mm, rbarpos)
-            rspecneg: SPEC := generalizedEtaQuotientSpecification(mm, rbarneg)
-            monomialX(rspecpos, v) / monomialX(rspecneg, v)
+            monomialX(numer rspec, v) / monomialX(denom rspec, v)
 
         etaQuotientX(rspec: SPEC, v: Symbol): EX ==
             monomialQuotientX(rspec, v)

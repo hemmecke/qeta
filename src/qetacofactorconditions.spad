@@ -165,7 +165,7 @@ QEtaCofactorConditions: Exports == Implementation where
     conditionSumExponentsProperGeneralized?: (P, SPEC, P) -> Boolean
       ++ conditionSumExponentsProperGeneralized?(nn, rspec, m) returns
       ++ true if the sum of the entries of rspec corresponding to the
-      ++ exponents of properGeneralizedPart(rspec) multiplied by
+      ++ exponents of properGeneralizedParts(rspec) multiplied by
       ++ kappa(m)*nn is divisible by 4. This corresponds to condition
       ++ 4 on page 37 of Chapter 10 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
@@ -182,14 +182,14 @@ QEtaCofactorConditions: Exports == Implementation where
     conditionSigma0ProperGeneralized?: (P, SPEC, P) -> Boolean
       ++ conditionSigma0?(nn, rspec, m) returns true if
       ++ (kappa(m)*m*nn^2) *
-      ++ sum(e/d for [d,g,e] in properGeneralizedPart x) = 0 mod 12.
+      ++ sum(e/d for [d,g,e] in properGeneralizedParts x) = 0 mod 12.
       ++ This corresponds to condition 5 on page 37 of Chapter 10 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
       ++ \eqref{eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}.
 
     conditionGSigma0?: (P, SPEC, P) -> Boolean
       ++ conditionGSigma0?(nn, rspec, m) returns true if
-      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in properGeneralizedPart
+      ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in properGeneralizedParts
       ++ rspec) = 0 mod 2. This corresponds to condition 3 on page 37
       ++ of Chapter 10 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
@@ -336,14 +336,14 @@ QEtaCofactorConditions: Exports == Implementation where
             -- Determine whether an even power of p divides
             -- \prod_{\delta|N}\delta^rdelta.
             e1: Z := 0
-            for l in purePart sspec | odd? specExponent l repeat
+            for l in pureParts sspec | odd? specExponent l repeat
                 e1 := e1 + primePower(specDelta l, p)$QETAAUX
             e2: Z := 0
             if odd? orbitSize then
                 -- check 2nd prod in eq:Radu-productsquare
                 em: N := primePower(m, p)
                 -- for all divisors of mm > 1
-                for l in purePart rspec | odd? specExponent l repeat
+                for l in pureParts rspec | odd? specExponent l repeat
                     -- mod 2, only odd sdelta is relevant.
                     e2 := e2 + em + primePower(specDelta l, p)
             if odd?(e1 + e2) then return false
@@ -358,14 +358,14 @@ QEtaCofactorConditions: Exports == Implementation where
         --assert(one? gcd(a, d)) for every divisor of nn (and of mm).
         import from IntegerNumberTheoryFunctions
         z: Z := 1
-        for l in purePart sspec | odd? specExponent l repeat
+        for l in pureParts sspec | odd? specExponent l repeat
             z := z * jacobi(  specDelta l, a)
-        for l in purePart rspec | odd? specExponent l repeat
+        for l in pureParts rspec | odd? specExponent l repeat
             z := z * jacobi(m*specDelta l, a)
         zero? z => error "checkSquare1?: zero jacobi symbol"
 
         expo: Q := 0
-        ll := concat(properGeneralizedPart sspec, properGeneralizedPart rspec)
+        ll := concat(properGeneralizedParts sspec, properGeneralizedParts rspec)
         for l in ll repeat --assert(#l=3) -- l=[d,g,e], (g/d-1/2)*e
             d := specDelta l; g := specSubindex l; e := specExponent l
             expo := expo + (g/d - 1/2)*e
@@ -416,21 +416,21 @@ QEtaCofactorConditions: Exports == Implementation where
 
     conditionMmN?(nn: P, rspec: SPEC, m: P): Boolean ==
         divs: LZ := divisors(m*nn)$IntegerNumberTheoryFunctions
-        for l in purePart rspec | not member?(specDelta l, divs) repeat
+        for l in pureParts rspec | not member?(specDelta l, divs) repeat
             return false
         return true
 
     -- CDZ condition 6 (p. 37)
     conditionSumExponentsPure?(nn: P, rspec: SPEC, m: P): Boolean ==
         rsum: Z := 0
-        for l in purePart rspec repeat rsum := rsum + specExponent l
+        for l in pureParts rspec repeat rsum := rsum + specExponent l
         DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
     -- CDZ condition 4 (p. 37)
     conditionSumExponentsProperGeneralized?(
       nn: P, rspec: SPEC, m: P): Boolean ==
         rsum: Z := 0
-        for l in purePart rspec repeat rsum := rsum + specExponent l
+        for l in pureParts rspec repeat rsum := rsum + specExponent l
         DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
     -- CDZ condition 7 (p. 37)
@@ -450,7 +450,7 @@ QEtaCofactorConditions: Exports == Implementation where
     -- CDZ condition 3 (p. 37)
     conditionGSigma0?(nn: P, rspec: SPEC, m: P): Boolean ==
         rv: Q := 0
-        for l in properGeneralizedPart rspec repeat
+        for l in properGeneralizedParts rspec repeat
             d := specDelta l; g := specSubindex l; e := specExponent l
             rv := rv + e*g/d
         x: Q := kappa(m)*nn*rv
@@ -471,7 +471,7 @@ QEtaCofactorConditions: Exports == Implementation where
     conditionEvenMultiplier?(nn: P, rspec: SPEC, m: P): Boolean ==
         odd? m => true
         u: Z := 1
-        for l in purePart rspec repeat -- l = [delta,rdelta]
+        for l in pureParts rspec repeat -- l = [delta,rdelta]
             u := u * specDelta(l)^asP(abs(specExponent l))
         e: Z := 0
         while even? u repeat

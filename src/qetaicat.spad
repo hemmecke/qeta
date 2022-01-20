@@ -289,10 +289,9 @@ QEtaIdealCategory(C): Category == Exports where
       mspec: SPEC, pv: Character, nv: Character): Pol ==
         iSY(c,i) ==> indexedSymbol(c::String, i) $ QAuxiliaryTools
         p: Pol := 1
-        for l in concat(purePart mspec, properGeneralizedPart mspec) repeat
-            r := reverse l
-            e := first r
-            i: List Z := reverse rest r
+        for l in parts mspec repeat
+            e := specExponent l
+            i: List Z := specIndex l
             e > 0 => p := p * monomial(1$Pol, iSY(pv, i), asN e)
             e < 0 => p := p * monomial(1$Pol, iSY(nv, i), asN abs e)
         return p
