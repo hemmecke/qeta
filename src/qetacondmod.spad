@@ -1,0 +1,725 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2018, 2020-2022  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+warnPrint(x,y) ==> tracePrint(x,y)
+errorPrint(x,y) ==> tracePrint(x,y)
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\externaldocument{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Finding co-factors for sifted (generalized) Eta-Quotients}
+\author{Ralf Hemmecke}
+\date{26-Jan-2018}
+\maketitle
+\begin{abstract}
+  The package \code{QEtaCofactorConditions} implements functions to
+  help turning a sifted eta-quotient into a modular function by
+  finding an appropriate cofactor.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We try to find all missing parts to find a Ramanujan-Kolberg relation
+as defined in \cite[p.~227]{Radu_RamanujanKolberg_2015} and also for
+\cite[Sect.~10]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+
+Assume that we are given a series
+\begin{gather*}
+  \sum_{n=0}^\infty a(n) q^n
+  =
+  \prod_{\delta|M}\prod_{n=0}^\infty(1-q^{\delta n})^{r_\delta}
+\end{gather*}
+and want to express $\sum_{n=0}^\infty a(mn+t) q^n$ where $m$ and $M$
+are a positive integers with $m|M$, $r\in R(M)$, and
+$t\in\Set{0,\ldots,m-1}$ as a $\setQ$-linear combination of
+eta-quotients and (maybe) an appropriate power of
+$q^{1/24}=\unityPowerTau{\frac{1}{24}}=\unityPower{\frac{\tau}{24}}$.
+
+For mathematical background see \PathName{qeta.tex}.
+
+As an extensionn of the above problem, we assume that
+\begin{gather*}
+  \sum_{n=0}^\infty a(n) q^n
+  =
+  g_{\bar{r}}(\tau)
+\end{gather*}
+is given by \ref{eq:g_rbar(tau)}.
+
+By multiplication with a prefactor, we want to make
+$\sum_{n=0}^\infty a(mn+t) q^n$ into a modular function for
+$\Gamma_0(N)$ or $\Gamma_1(N)$ (for a suitable positive number $N$).
+In case of $\Gamma_0(N)$, the sum might have to be multiplied with
+similar sums in order to take care of the fact that by an arbitrary
+transformation with a matrix from $\Gamma_0(N)$ we might come to a sum
+with a different $t$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us start with a few common macros.
+
+These two technical macros are necessary to distinguish between Rep
+and \%.
+)endif
+
+rep x ==> (x@%) pretend Rep
+per x ==> (x@Rep) pretend %
+
+)if LiterateDoc
+Now some abbreviations for common domains.
+)endif
+
+P ==> PositiveInteger
+N ==> NonNegativeInteger
+Z ==> Integer
+Q ==> Fraction Z
+MZ ==> Matrix Z -- consider only 2x2 matricies
+MQ ==> Matrix Q -- consider only 2x2 matricies
+LP ==> List P
+LZ ==> List Z
+LLZ ==> List LZ
+INDICES ==> LLZ
+SPEC ==> QEtaSpecification
+
+asN x ==> x pretend N
+asP x ==> x pretend P
+
+-- Note that in the following correspondence between programming variables
+-- and notation in the mathematical description in qetaq.tex.
+-- Variable   <--> mathematical notation
+-- m               m
+-- mm              M
+-- nn              N
+-- sigmaInfty      \sigmainfty{r}
+-- kappa(m)        \kappa
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{C QEtaCofactorConditionsCategory}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev Category QETACMC QEtaConditionsModularCategory
+++ QEtaConditionsModularCategory provides functions to check
+++ modularity conditions.
+QEtaConditionsModularCategory: Category == with
+    conditionCoEtaQuotient?: (P, SPEC, P, N) -> Boolean
+      ++ conditionCoEtaQuotient?(nn,rspec,m,t) returns true iff a
+      ++ cofactor eta-quotient can be found such that the product of
+      ++ the cofactor with the orbit product corresponding to the
+      ++ dissection (m,t) gives a modular function in level nn.
+    candidateLevelsCoEtaQuotient: (SPEC, P, N) -> List P
+      ++ candidateLevelsCoEtaQuotient(rspec,m,t) returns an
+      ++ ascendingly sorted list of the nn up to 24*m*level(rspec)
+      ++ such that conditionCoEtaQuotient?(nn,rspec,m,t) is true.
+    matrixEtaOrderElement: (P, Cusp, LZ) -> Q
+      ++ z:=matrixEtaOrderElement(nn,cusp,idx). The parameter
+      ++ corresponds to the index of a (generalized) eta-quotient,
+      ++ i.e., it can be of the form idx=[delta,g] or of the form
+      ++ idx=[delta] with g in the range 0..delta. Then z is the
+      ++ coefficient of r_{delta,g} in
+      ++ \cite[Thm.~4]{Robins_GeneralizedDedekindEtaProducts_1994},
+      ++ except for the case nn=4, gcd(denom(cusp),nn)=2 (or
+      ++ Gamma1(4)-equivalent) where we return half of this
+      ++ coefficient. If idx=[delta] then
+      ++ z=1/2*matrixEtaOrderElement(nn,cusp,[delta,0])/2. and thus
+      ++ corresponds to the coefficient of $r_\delta$ in
+      ++ \eqref{eq:order-rbar-non-adjusted} in
+      ++ Theorem~\ref{thm:matrixEtaOrderRobins}. Note that Robins
+      ++ refers to an expansion in the uniformizing variable
+      ++ q^(gcd(c,nn)/nn) (where cusp=a/c). That is equal to
+      ++ q^(1/width(c)$CongruenceSubgroupGamma1(nn)) except for the
+      ++ case nn=4 and gcd(nn,c)=2. In that case the width of the cusp
+      ++ 1/2 is 1 and not 2=4/gcd(4.2). For this case, we deviate from
+      ++ Robins' coefficients and adapt to an expansion in q rather
+      ++ than an expansion in q^(1/2).
+    matrixEtaOrderRow: (P, Cusp, INDICES) -> List Q
+      ++ matrixEtaOrderRow(nn, cusp, idxs) returns
+      ++ [matrixEtaOrderElement(nn,cusp,idx) for idx in idxs].
+    matrixModular: (P, INDICES) -> MQ
+      ++ matrixModular(nn, idxs) returns a matrix mat mat*v=0 for an
+      ++ (extended) exponent vector where the exponents correspond to
+      ++ idxs, i.e., #v=#idxs+k where k corresponds to additional
+      ++ (slack) variables due to the modularity conditions.
+    minimalLevelCoEtaQuotient: (SPEC, P, N) -> P
+      ++ minimalLevelCoEtaQuotient(rspec, m, t) returns the
+      ++ smallest nn of candidateLevalsCoEtaQuotient(rspec,m,t).
+    modular?: (SPEC, SPEC, P, N) -> Boolean
+      ++ modular?(sspec,rspec,m,t) returns true iff (sspec,rspec,m,t)
+      ++ specifies a modular function in level(sspec).
+  add
+
+    matrixEtaOrderRow(nn: P, cusp: Cusp, idxs: INDICES): List Q ==
+        [matrixEtaOrderElement(nn, cusp, idx) for idx in idxs]
+
+
+
+
+
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaCofactorConditionsGamma0}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev package QETACM0 QEtaConditionsModularGamma0
+++ QEtaConditionsModularGamma0 provides functions to check modularity
+++ for Gamma0.
+++
+++ TODO:
+++
+++ conditionCoEtaQuotient?(nn,rspec,m,t) returns true iff all the
+++ conditions for the parameters are fulfilled. This checks whether
+++ (nn,rspec,m,t) is in \Delta^* as defined in
+++ Definition~\ref{def:condition-co-eta-quotient-gamma0} in qeta.tex
+++ and in Definition 35 of \cite{Radu_RamanujanKolberg_2015}
+++
+++ candidateLevelsCoEtaQuotient(rspec,m,t) returns an ascendingly
+++ sorted list of the nn up to 24*m*level(rspec) such that
+++ conditionCoEtaQuotient?(nn,rspec,m,t) is true, i.e. that
+++ (nn,rspec,m,t) is an element of \Delta^* as defined in
+++ Definition~\ref{def:condition-co-eta-quotient-gamma0}.
+++
+++ matrixEtaOrderElement(nn,cusp,idx)=a_nn(c,delta)/24 where
+++ a_nn(di,dj) given by Notation 3.2.6 in
+++ \cite{Ligozat_CourbesModulaires_1975} where di and dj run over all
+++ positive divisors of nn. The Ligozat matrix is A_N as described
+++ after Lemma 5.2 in \cite{HemmeckeRadu_EtaRelations_2019}. The
+++ parameter idx corresponds to the index of a pure eta-quotient,
+++ i.e., it is of the form idx=[delta] with delta a divisor of nn. We
+++ assume that cusp=(a:c).
+++
+++ matrixModular(nn,idxs) returns part of the matrix matrixModular(nn)
+++ corresponding to the divisors that are given through idxs (i.e.,
+++ the order of the columns corresponds to what is given through
+++ idxs). Irrelevant rows in the rows specifying the square condition
+++ are removed. nn represents the level of $\Gamma_0(nn)$ and idxs has
+++ the form [[d1],...,[dn]] where the di are (different) divisors of
+++ nn. See description for matrixModular(nn) for more information.
+++
+++ minimalLevelCoEtaQuotient(rspec,m,t) returns the smallest nn of
+++ candidateLevalsCoEtaQuotient(rspec,m,t). Note that one might have
+++ to use a bigger nn, because the level might still be too small to
+++ find a cofactor an example is for rspec=[[1,-1],[7,1]], m=9, t=5
+++ where this function returns 21, but one would have to use 42.
+++
+++ modular?(sspec,rspec,m,t) returns true iff all the conditions of
+++ Theorem~\ref{thm:RaduConditions} are fulfilled. Compare with
+++ modularGamma0? from QEtaAuxiliaryPackage.
+QEtaConditionsModularGamma0: Exports == Implementation where
+  Exports ==> QEtaConditionsModularCategory with
+    matrixLigozat: P -> MZ
+      ++ matrixLigozat(n) returns the (n,n) matrix with entries
+      ++ a_m(di,dj) given by Notation 3.2.6 in
+      ++ \cite{Ligozat_CourbesModulaires_1975} where di and dj run
+      ++ over all positive divisors of m. This matrix is A_N as
+      ++ described after Lemma 5.2 in
+      ++ \cite{HemmeckeRadu_EtaRelations_2019}.
+    matrixLigozatElement: (P, Z, Z) -> Z
+      ++ matrixLigozatElement(nn, c, delta) computes an entry of the
+      ++ matrix of Ligozat corresponding to the index (c, delta)
+      ++ counted in divisors of nn.
+    modularOrbit: (SPEC, P, N) -> List N
+      ++ modularOrbit(rspec, m, t) computes the elements of
+      ++ $\modularOrbit{r,m,t)$ as defined in qeta.tex,
+      ++ \cite[Def.~42]{Radu_RamanujanKolberg_2015} and
+      ++ \cite[Lemma 4.35]{Radu_PhD_2010} were r is pureExponents(rspec)
+      ++ and rspec is expected to specify a pure eta-quotient.
+    primePower: (P, P) -> N
+      ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
+      ++ highest power e such that p^e is a factor of d.
+
+  Implementation ==> add
+    fUnion ==> Union("nil", "sqfr", "irred", "prime")
+    FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
+    DIVISIBLEBY?(k, z) ==> zero?(z rem k)
+    import from QEtaCofactorConditions
+
+    -- local
+    -- \cite[Def.~35]{Radu_RamanujanKolberg_2015}
+    kappa(m: P): P == -- gcd(1-m^2, 24)
+        (even? m => 1; 8) * (DIVISIBLEBY?(3, m) => 1; 3)
+
+    -- local
+    odotBar(a2: Z, sigmaInfty: Z, m: P, t: N): N ==
+        --assert(one? positiveRemainder(a2, 24))
+        -- \cite[Def.~41]{Radu_RamanujanKolberg_2015}
+        z: Z := positiveRemainder(t*a2+(((a2-1) exquo 24)::Z)*sigmaInfty, m)
+        asN z
+
+    -- local
+    -- Return true iff \eqref{eq:Radu-productsquare} holds.
+    checkSquare?(sspec: SPEC, rspec: SPEC, m: P, orbitSize: Z): Boolean ==
+        --assert(pure? sspec)
+        --assert(pure? rspec)
+        nn: P := level sspec
+        fl: FL := factorList factor nn
+        -- By \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}, it is
+        -- enough to consider all prime divisors of N.
+        for fe in fl repeat -- do for all primes dividing nn
+            p: P := asP(fe.factor) -- extract prime factor
+            -- Determine whether an even power of p divides
+            -- \prod_{\delta|N}\delta^rdelta.
+            e1: Z := 0
+            for l in pureParts sspec | odd? specExponent l repeat
+                e1 := e1 + primePower(specDelta l, p)
+            e2: Z := 0
+            if odd? orbitSize then
+                -- check 2nd prod in eq:Radu-productsquare
+                em: N := primePower(m, p)
+                -- for all divisors of mm > 1
+                for l in pureParts rspec | odd? specExponent l repeat
+                    -- mod 2, only odd sdelta is relevant.
+                    e2 := e2 + em + primePower(specDelta l, p)
+            if odd?(e1 + e2) then return false
+        return true
+
+-------------------------------------------------------------------
+-- exported functions
+-------------------------------------------------------------------
+
+    primePower(d: P, p: P): N ==
+        e: N := 0;
+        x: Z := d
+        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
+        return e
+
+    conditionCoEtaQuotient?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
+        not pure? rspec => false
+        t >= m => error "0<=t<m is a necessary condition"
+        not conditionMmN?(nn, rspec, m) => false -- \eqref{eq:delta|M=>delta|mN}
+        not conditionPrimeDivisors?(nn, m) => false -- \eqref{eq:p|m=>p|N}
+        not conditionSumExponentsPure?(nn, rspec, m) => false --\eqref{eq:sum-r}
+        not conditionSigma0Pure?(nn, rspec, m) => false -- \eqref{eq:sv24}
+        not conditionNDivisor?(nn, rspec, m, t) => false -- \eqref{eq:w|N}
+        conditionEvenMultiplier?(nn, rspec, m) -- \eqref{eq:even-m}
+
+    candidateLevelsCoEtaQuotient(rspec: SPEC, m: P, t: N): List P ==
+        [asP nn for nn in 1..24*m*level(rspec) | _
+            conditionCoEtaQuotient?(asP nn, rspec, m, t)]
+
+    matrixEtaOrderElement(nn: P, cusp: Cusp, idx: LZ): Q ==
+        --assert(cusp=nomalizeCusp(cusp))
+        --assert(#idx=1)
+        #idx ~=1 or not((d:=first idx)>0 and denom(nn/d)=1) =>
+          error "matrixEtaOrderElement: bad eta index"
+        matrixLigozatElement(nn, denom cusp, first idx)/24
+
+    matrixLigozat(nn: P): MZ ==
+        divs: List Z := divisors(nn)$IntegerNumberTheoryFunctions
+        n: N := # divs
+        mat: MZ := new(n, n, 0)
+        for i in 1..n for di in divs repeat
+            for j in 1..n for dj in divs repeat
+                qsetelt!(mat, i, j, matrixLigozatElement(nn, di, dj))
+        mat
+
+    -- Compute B_N and V_N as in
+    -- \cite{HemmeckeRadu_EtaRelations_2019}.
+    -- matrixLigozatElement(m,di,dj) here corresponds to a_m(di, dj)
+    -- in \cite[Notation 3.2.6]{Ligozat_CourbesModulaires_1975}. Note
+    -- that we can use any integer c here, including c=0.
+    matrixLigozatElement(m: P, c: Z, delta: Z): Z == -- di==c, dj==delta
+        num: Z := m * gcd(c, delta)^2
+        den: Z := gcd(c^2, m) * delta
+        (num exquo den)::Z -- can prove that this cannot fail
+
+    matrixModular(nn: P, idxs: INDICES): MQ ==
+        -- check idxs
+        n: N := # idxs
+        for j in 1..n for idx in idxs repeat
+            if #idx ~= 1 then error "matrixModularGamma0: not pure index"
+            d: Z := first idx
+            if d < 1 or not zero?(nn rem d) then
+                error "matrixModularGamma0: index not positive divisor"
+        fl: List Record(factor: Z, exponent: N) := factors factor nn
+        -- product is rational square
+        ll: LLZ := [[primePower(asP(idx.1), asP(fe.factor)) for idx in idxs]_
+                    for fe in fl]
+        import from LZ
+        ll := removeDuplicates ll
+        ll := [l for l in ll | removeDuplicates first ll ~= [0]] -- no 0-rows
+        cols: P := asP(n + 2 + #ll)
+        rows: P := asP(3 + #ll)
+        mat: MQ := new(rows, cols, 0)
+        for j in 1..n for idx in idxs repeat
+            d: Z := first idx
+            -- sum(r(d.i), i=1..n)=0
+            qsetelt!(mat, 1, j, 1)
+            -- sum(d * r(d) for [d] in idxs) = 0 (mod 24)
+            qsetelt!(mat, 2, j, d::Q)
+            -- sum(nn/d * r(d) for [d] in idxs) = 0 (mod 24)
+            qsetelt!(mat, 3, j, nn/d) -- note that d divides nn
+        for i in 1..#ll for l in ll repeat
+            for j in 1..n for z in l repeat qsetelt!(mat, i+3, j, z::Q)
+            qsetelt!(mat, i+3, n+2+i, 2::Q) -- additional variable for (mod 2)
+        qsetelt!(mat, 2, n+1, 24::Q) -- additional variable for (mod 24)
+        qsetelt!(mat, 3, n+2, 24::Q) -- additional variable for (mod 24)
+        return mat
+
+    minimalLevelCoEtaQuotient(rspec: SPEC, m: P, t: N): P ==
+        for nn in 1..24*m*level(rspec) repeat
+            conditionCoEtaQuotient?(asP nn, rspec, m, t) => return asP nn
+        error "minimalLevelCoEtaQuotient: should not be here"
+
+    modular?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
+        not pure? sspec => false
+        nn: P := level sspec; s: LZ := pureExponents sspec
+        mm: P := level rspec; r: LZ := pureExponents rspec
+
+        not conditionCoEtaQuotient?(nn, rspec, m, t) => false
+
+        orb: List N := modularOrbit(rspec, m, t)
+        orbitSize: Z := # orb
+
+        --\eqref{eq:Radu-sum=0}
+        not zero?(reduce(_+, s, 0) + orbitSize * reduce(_+, r, 0)) =>
+            warnPrint("eq:Radu-sum=0 sspec", sspec)
+            warnPrint("eq:Radu-sum=0 rspec", rspec)
+            warnPrint("eq:Radu-sum=0 orbitSize", orbitSize)
+            false
+
+        --\eqref{eq:Radu-sigmainfinity}
+        shat: Z := numer sigmaInfinity sspec
+        rhat: Z := numer sigmaInfinity rspec
+        nu: Z := chiExponent(rspec, m, t, orb)
+        z: Z := shat + orbitSize * m * rhat + nu
+        not DIVISIBLEBY?(24, z) =>
+            warnPrint("eq:Radu-sigmainfinity sspec", sspec)
+            warnPrint("eq:Radu-sigmainfinity rspec", rspec)
+            warnPrint("eq:Radu-sigmainfinity orbitSize", orbitSize)
+            warnPrint("eq:Radu-sigmainfinity nu", nu)
+            false
+
+        --\eqref{eq:Radu-sigma0}
+        sv: Z := sigma0 sspec
+        rv: Z := sigma0 rspec
+        -- conditionCoEtaQuotientGamma0?(nn, rspec, m, t) \implies f \in Z
+        -- See conditionMmN?(nn, rspec, m).
+        f: Z := ((m * nn) exquo mm)::Z
+
+        not DIVISIBLEBY?(24, sv + orbitSize * f * rv) =>
+            warnPrint("eq:Radu-sigma0 sspec", sspec)
+            warnPrint("eq:Radu-sigma0 rspec", rspec)
+            warnPrint("eq:Radu-sigma0 orbitSize", orbitSize)
+            false
+
+        --\eqref{eq:Radu-productsquare}
+        not checkSquare?(sspec, rspec, m, orbitSize) =>
+            warnPrint("eq:Radu-productsquare sspec", sspec)
+            warnPrint("eq:Radu-productsquare rspec", rspec)
+            warnPrint("eq:Radu-productsquare orbitSize", orbitSize)
+            false
+
+        true
+
+    -- The following function computes \modularOrbit{r, m, t} with the
+    -- optimization given by Radu in \cite[Lemma 4.35]{Radu_PhD_2010},
+    -- i.e., we do not need to check all entries of \setS_{24m}, but
+    -- only those that are not equivalent mod w.
+    modularOrbit(rspec: SPEC, m: P, t: N): List N ==
+        not pure? rspec => error "orbit computation only for pure eta-quotients"
+        --assert(one?(denom sigmaInfinity rspec)), because it is a pure EQ
+        sigmaInfty := numer sigmaInfinity rspec
+        m24: Z := 24*m
+        g := gcd(kappa(m)*(24*t + sigmaInfty), m24)
+        w: P := asP((m24 exquo g)::Z)
+        result: List N := empty()
+        for a in 0..w-1 | one? gcd(a, w) repeat
+            y := a
+            while y < m24 and not one? gcd(y, m24) repeat y := y + w
+            -- Note that m24=g*w and gcd(a + k*w, m24) =
+            -- gcd(a+k*w,g*w) = 1 for k chosen to be the product of
+            -- all prime divisors of g that do not divide a and do not
+            -- divide w. In other words, the above while loop also
+            -- terminates without the "y < m24" condition.
+            e := odotBar(positiveRemainder(y^2, m24), sigmaInfty, m, t)
+            if not member?(e, result) then result := cons(e, result)
+        result
+
+
+)if LiterateDoc
+%$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaCofactorConditionsModularGamma1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+)endif
+
+)abbrev package QETACM1 QEtaConditionsModularGamma1
+++ QEtaConditionsModularGamma0 provides functions to check modularity
+++ for Gamma0.
+++
+++ TODO:
+++
+++ conditionCoEtaQuotient?(nn,rspec,m,t) returns true iff the
+++ conditions in Chapter 10 of
+++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} just before
+++ Theorem 10.1 are fulfilled. See
+++ Definition~\ref{def:condition-co-eta-quotient-gamma1}. These are
+++ conditions for the existence of a product of eta- and generalized
+++ eta-quotient to exist as a cofactor for a disection of such a
+++ quotient. The parameter rbar specifies the generalized eta-quotient
+++ via etaQuotient(rbar). These are slight modifications of conditions
+++ appearing in Definition 35 of \cite{Radu_RamanujanKolberg_2015} in
+++ case the defining eta-quotient is not a generalized one.
+++
+++ candidateLevelsCoEtaQuotient(rspec,m,t) returns an ascendingly
+++ sorted list of the nn up to 24*m*level(rspec) such that
+++ conditionCoEtaQuotient?(nn,rspec,m,t) is true, i.e. that
+++ (nn,mm,rbar m,t) fulfills the 10 conditions as defined in
+++ Section 10 of
+++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. The
+++ parameter rbar specifies the generalized eta-quotient via
+++ etaQuotient(rbar).
+++
+++ z:=matrixEtaOrderElement(nn,cusp,idx). The parameter corresponds to
+++ the index of a (generalized) eta-quotient, i.e., it can be of the
+++ form idx=[delta,g] or of the form idx=[delta] with g in the range
+++ 0..delta. Then z is the coefficient of r_{delta,g} in
+++ \cite[Thm.~4]{Robins_GeneralizedDedekindEtaProducts_1994}, except
+++ for the case nn=4, gcd(denom(cusp),nn)=2 (or Gamma1(4)-equivalent)
+++ where we return half of this coefficient. If idx=[delta] then
+++ z=1/2*matrixEtaOrderElement(nn,cusp,[delta,0])/2. and thus
+++ corresponds to the coefficient of $r_\delta$ in
+++ \eqref{eq:order-rbar-non-adjusted} in
+++ Theorem~\ref{thm:matrixEtaOrderRobins}. Note that Robins refers to
+++ an expansion in the uniformizing variable q^(gcd(c,nn)/nn) (where
+++ cusp=a/c). That is equal to
+++ q^(1/width(c)$CongruenceSubgroupGamma1(nn)) except for the case
+++ nn=4 and gcd(nn,c)=2. In that case the width of the cusp 1/2 is 1
+++ and not 2=4/gcd(4.2). For this case, we deviate from Robins'
+++ coefficients and adapt to an expansion in q rather than an
+++ expansion in q^(1/2).
+++
+++ matrixModular(nn,idxs) returns a matrix mat with 3 rows and n+2
+++ colums (where n=#idxs such that mat*v=0 for an (extended) exponent
+++ vector where the exponents correspond to
+++ generalizedEtaFunctionIndices(nn). mat*v=0 encodes the conditions
+++ \eqref{eq:generalized-weight},
+++ \eqref{eq:generalized-sigmaInfinity}, and
+++ \eqref{eq:generalized-sigma0}, but corresponding to the given
+++ indices idxs. See also modularGamm1 and modularGamma1?. The first
+++ row encodes that the some of the exponents of the pure part must be
+++ zero. The second row encodes that order at infinity must be an
+++ integer. The third row encodes that the order at 0 must be an
+++ integer. For the last two rows, the "is-an-integer" property is
+++ encoded by a 1 in the (n+1)-th and (n+2)-th column, respectively.
+++ All other entries are 0.
+++
+++ modular?(sspec,rspec,m,t) returns true iff all the conditions of
+++ Theorem~10.1 of
+++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} are
+++ fulfilled. Here the parameter sspec stands for the exponents
+++ $a_\delta$ and $a_{\delta,g}$. See also
+++ Theorem~\ref{thm:condition-co-eta-quotient-gamma1}.
+QEtaConditionsModularGamma1: Exports == Implementation where
+  Exports ==> QEtaConditionsModularCategory
+  Implementation ==> add
+    DIVISIBLEBY?(k, z) ==> zero?(z rem k)
+    import from QEtaCofactorConditions
+
+    -- local
+    alphaAux(rspec: SPEC, t: N): Q == (24*t)::Q + sigmaInfinity rspec
+
+    -- local
+    -- \cite[Def.~35]{Radu_RamanujanKolberg_2015}
+    kappa(m: P): P == -- gcd(1-m^2, 24)
+        (even? m => 1; 8) * (DIVISIBLEBY?(3, m) => 1; 3)
+
+    -- local function
+    -- return true if for some a in
+    -- \cite[Thm~10.1(4)]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+    -- or in \eqref{eq:CDZ-productsquare}
+    -- the condition is true.
+    checkSquare?(sspec: SPEC, rspec: SPEC, m: P, a: Z): Boolean ==
+        --assert(one? gcd(a, d)) for every divisor of nn (and of mm).
+        import from IntegerNumberTheoryFunctions
+        z: Z := 1
+        for l in pureParts sspec | odd? specExponent l repeat
+            z := z * jacobi(  specDelta l, a)
+        for l in pureParts rspec | odd? specExponent l repeat
+            z := z * jacobi(m*specDelta l, a)
+        zero? z => error "checkSquare?: zero jacobi symbol"
+
+        expo: Q := 0
+        ll := concat(properGeneralizedParts sspec, properGeneralizedParts rspec)
+        for l in ll repeat --assert(#l=3) -- l=[d,g,e], (g/d-1/2)*e
+            d := specDelta l; g := specSubindex l; e := specExponent l
+            expo := expo + (g/d - 1/2)*e
+        expo := (a-1) * expo -- this should give an integer
+        not one? denom expo => error "checkSquare?: expo not integral"
+
+        (z > 0 and even? numer expo) or (z < 0 and odd? numer expo)
+
+-------------------------------------------------------------------
+-- exported functions
+-------------------------------------------------------------------
+
+    -- condition for the disection of mixed-generalized eta-quotients
+    conditionCoEtaQuotient?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
+        t >= m => error "0<=t<m is a necessary condition"
+        mm: P := level rspec
+
+        -- CDZ(1), condition 1 (p. 6), M|N,
+        not zero?(nn rem mm) => false
+
+        -- CDZ(2), condition 2, p. 6)
+        -- qeta.tex {eq:p|m=>p|N}
+        not conditionPrimeDivisors?(nn, m) => false
+
+        -- CDZ(6), condition 3 (p. 6)
+        -- qeta.tex {eq:sum-r},
+        --          {eq:conditionSumPureExponents?(nn,rspec,m)
+        not conditionSumExponentsPure?(nn, rspec, m) => false
+
+        -- CDZ(4)
+        -- qeta.tex {eq:conditionSumExponentsProperGeneralized?(nn,rspec,m)}
+        not conditionSumExponentsProperGeneralized?(nn, rspec, m) => false
+
+        -- CDZ(7)
+        -- qeta.tex {eq:rv24}, {eq:conditionSigma0Pure?(nn,rspec,m)}
+        not conditionSigma0Pure?(nn, rspec, m) => false
+
+        -- CDZ(5)
+        -- qeta.tex {eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}
+        not conditionSigma0ProperGeneralized?(nn, rspec, m) => false
+
+        -- CDZ(3)
+        -- qeta.tex {eq:conditionGSigma0?(nn,rspec,m)}
+        not conditionGSigma0?(nn, rspec, m) => false
+
+        -- CDZ(8)
+        -- qeta.tex {eq:w|N}, {eq:conditionNDivisor?(nn,rspec,m,t)}
+        not conditionNDivisor?(nn, rspec, m, t) => false
+
+        -- CDZ(9)
+        -- qeta.tex {eq:even-m}, {eq:conditionEvenMultiplier?(nn,rspec,m)}
+        not conditionEvenMultiplier?(nn, rspec, m) => false
+
+        -- CDZ(10)
+        -- qeta.tex {eq:conditionOrbitLength?(nn,rspec,m,t)}
+        conditionOrbitLength?(nn, rspec, m, t)
+
+    candidateLevelsCoEtaQuotient(rspec: SPEC, m: P, t: N): List P ==
+        [asP nn for nn in 1..24*m*level(rspec) | _
+            conditionCoEtaQuotient?(asP nn, rspec, m, t)]
+
+    minimalLevelCoEtaQuotient(rspec: SPEC, m: P, t: N): P ==
+        for nn in 1..24*m*level(rspec) repeat
+            conditionCoEtaQuotient?(asP nn, rspec, m, t) => return asP nn
+        error "minimalLevelCoEtaQuotient: should not be here"
+
+    matrixModular(nn: P, idxs: INDICES): MQ ==
+        spitzen: List Cusp := [infinity(), cusp(0,1)]
+        rows: List List Q := [matrixEtaOrderRow(nn, c, idxs) for c in spitzen]
+        s: List Q := [(#idx=1=>1;0) for idx in idxs]
+        rows := cons(s, rows)
+        n: N := #idxs
+        mat: MQ := new(3, n+2, 0) -- 2 more for "is-an-integer" columns
+        for i in 1..3 for row in rows repeat
+            for j in 1..n for e in row repeat mat(i, j) := e
+        qsetelt!(mat, 2, n+1, 1)
+        qsetelt!(mat, 3, n+2, 1)
+        return mat
+
+    modular?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
+        not conditionCoEtaQuotient?(level sspec, rspec, m, t) => false
+        -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+        -- Condition (1)
+        -- Condition \eqref{eq:CDZ-sum=0}
+        ws: Z := reduce(_+, pureExponents sspec, 0)$LZ
+        wr: Z := reduce(_+, pureExponents rspec, 0)$LZ
+        not zero?(ws + wr) =>
+            warnPrint("Chen: Theorem 10.1(1) sspec", sspec)
+            warnPrint("Chen: Theorem 10.1(1) rspec", rspec)
+            false
+
+        -- Condition (2)
+        -- Condition \eqref{eq:CDZ-sigma0=0}
+        rbarv: Z := sigma0 rspec
+        sbarv: Z := sigma0 sspec
+        nn: P := level sspec
+        mm: P := level rspec
+        cc: Z := (nn exquo mm)::Z
+        z: Z := sbarv + cc*m*rbarv -- Note that mm divides nn.
+        not DIVISIBLEBY?(24, z) =>
+            warnPrint("Chen: Theorem 10.1(2) sspec", sspec)
+            warnPrint("Chen: Theorem 10.1(2) rspec", rspec)
+            warnPrint("Chen: Theorem 10.1(2) z", z)
+            false
+
+        -- Condition (3)
+        -- Condition \eqref{eq:CDZ-sigmainfinity=0}
+        rbarhat: Q := sigmaInfinity rspec
+        sbarhat: Q := sigmaInfinity sspec
+        alpha: Q := alphaAux(rspec, t)
+        q: Q := sbarhat + m*rbarhat - ((m^2-1)/m)*alpha
+        not one? denom q or not DIVISIBLEBY?(24, z) => --shouldn't happen
+            warnPrint("Chen: Theorem 10.1(3) sspec", sspec)
+            warnPrint("Chen: Theorem 10.1(3) rspec", rspec)
+            warnPrint("Chen: Theorem 10.1(3) q", q)
+            false
+
+        -- Condition (4)
+        -- Condition \eqref{eq:CDZ-productsquare}
+        for i in 1..11 repeat
+            a: Z := nn*i+1
+            one? gcd(a,6) and not checkSquare?(sspec, rspec, m, a) =>
+                warnPrint("Chen: Theorem 10.1(4) sspec", sspec)
+                warnPrint("Chen: Theorem 10.1(4) rspec", rspec)
+                warnPrint("Chen: Theorem 10.1(4) a", a)
+                return false
+
+        true
+
+
+)if LiterateDoc
+\bibliography{qeta}
+\end{document}
+)endif

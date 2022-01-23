@@ -87,8 +87,11 @@ all: compile-spad
 SPADFILES=4ti2 qfunct cachedpow cachedqpochpow \
   qetacusp \
   qetagamma \
-  qetaalg qetasqrt qetaaux qetaspec qetaqmspecs \
-  qetacofactorconditions \
+  qetaspec \
+  qetacofactorconditions qetacondmod \
+  qetaaux \
+  qetaqmspecs \
+  qetaalg qetasqrt \
   qetaser qetaquotinf qetatool \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \

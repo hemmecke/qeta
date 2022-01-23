@@ -176,16 +176,6 @@ QEtaAuxiliaryPackage: with
        ++ generalizedDedekindSum(nn,g,h,p,q) =
        ++ sum(sawTooth((g+i*nn)/(q*nn))*sawTooth((g'+p*i*nn)/(q*nn)),i=1..q-1).
        ++ Condition: one? gcd(p,q).
-    aLigozat: (P, Z, Z) -> Z
-      ++ aLigozat(m, c, delta) computes an entry of the matrix of
-      ++ Ligozat corresponding to the index (c, delta) counted in
-      ++ divisors.
-    matrixLigozat: P -> MZ
-      ++ matrixLigozat(m) returns the (n,n) matrix with entries a_m(di,dj)
-      ++ given by Notation 3.2.6 in \cite{Ligozat_CourbesModulaires_1975}
-      ++ where di and dj run over all positive divisors of m.
-      ++ This matrix is A_N as described after Lemma 5.2 in
-      ++ \cite{HemmeckeRadu_EtaRelations_2019}.
     matrixAtkinLehner: (P, P) -> MZ
       ++ matrixAtkinLehner(m, t) with t a Hall divisor
       ++ (https://en.wikipedia.org/wiki/Hall_subgroup) of m returns
@@ -207,31 +197,6 @@ QEtaAuxiliaryPackage: with
       ++ modularGamma0(nn, r) returns true iff the eta-quotient
       ++ corresponding to r is a modular function for Gamma_0(nn). It
       ++ is equivalent to zero?(modularGamma0(nn, r)).
-    matrixModularGamma0: (P, INDICES) -> MZ
-      ++ matrixModularGamma0(nn,idxs) returns part of the matrix
-      ++ matrixModularGamma0(nn) corresponding to the divisors that
-      ++ are given through idxs (i.e., the order of the columns
-      ++ corresponds to what is given through idxs).
-      ++ Irrelevant rows in the rows specifying the square condition
-      ++ are removed.
-      ++ nn represents the level of $\Gamma_0(nn)$ and idxs has the form
-      ++ [[d1],...,[dn]] where the di are (different) divisors of nn.
-      ++ See description for matrixModularGamma0(nn) for more information.
-    matrixModularGamma0: P -> MZ
-      ++ matrixModularGamma0(nn) returns a matrix mat such
-      ++ that if divs:=divisors(nn), n=#divisors(nn) and v is such
-      ++ that mat*v=0 then v(1..n) is in R^*(nn), in other words, the
-      ++ nullspace of mat "generates" R^*(nn). The first row of mat
-      ++ corresponds sum(r.i, i=1..n). The second row of mat
-      ++ corresponds to the sum(divs.i*r.i,i=1..n)+24*r(n+1). The
-      ++ third row of mat corresponds to the
-      ++ sum((nn/divs.i)*r.i,i=1..n)+24*r(n+2). The function computes
-      ++ matrix B_N (equation (8) from
-      ++ \cite{HemmeckeRadu_EtaRelations_2019}
-      ++ \url{http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf}
-      ++ (DOI:10.1016/j.jsc.2018.10.001).
-      ++ matrixModularGamma0(nn) returns a matrixModularGamma0(nn,idxs) for
-      ++ idxs:=etaFunctionIndices(nn).
     matrixLigozatModularGamma0: (P, List Z) -> MZ
       ++ matrixLigozatModularGamma0(nn, idivs) returns a matrix mat which
       ++ is a vertical concatenation (a part of) matrixLigozat(nn)
@@ -299,30 +264,6 @@ QEtaAuxiliaryPackage: with
       ++ exists an element y such that y^2=p.
       ++ p must be a radical integer, i.e., should not contain the
       ++ square of a prime.
-    primePower: (P, P) -> N
-      ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
-      ++ highest power e such that p^e is a factor of d.
-
-    matrixModularGamma1: (P, INDICES) -> MQ
-      ++ matrixModularGamma1(nn, idxs) returns a matrix mat with 3
-      ++ rows and n+2 colums (where n=#idxs such that mat*v=0 for an
-      ++ (extended) exponent vector where the exponents correspond to
-      ++ generalizedEtaFunctionIndices(nn). mat*v=0 encodes the
-      ++ conditions \eqref{eq:generalized-weight},
-      ++ \eqref{eq:generalized-sigmaInfinity}, and
-      ++ \eqref{eq:generalized-sigma0}, but corresponding to the given
-      ++ indices idxs. See also modularGamm1 and modularGamma1?. The
-      ++ first row encodes that the some of the exponents of the pure
-      ++ part must be zero. The second row encodes that order at
-      ++ infinity must be an integer. The third row encodes that the
-      ++ order at 0 must be an integer. For the last two rows, the
-      ++ "is-an-integer" property is encoded by a 1 in the (n+1)-th
-      ++ and (n+2)-th column, respectively. All other entries are 0.
-
-    matrixModularGamma1: P -> MQ
-      ++ matrixModularGamma1(nn) returns a matrixModularGamma1(nn,idxs) for
-      ++ idxs:=generalizedEtaFunctionIndices(nn).
-
     matrixEtaOrderElement: (P, Cusp, LZ) -> Q
       ++ z:=matrixEtaOrderElement(nn,cusp,idx). The parameter
       ++ corresponds to the index of a (generalized) eta-quotient,
@@ -345,11 +286,7 @@ QEtaAuxiliaryPackage: with
       ++ Robins' coefficients and adapt to an expansion in q rather
       ++ than an expansion in q^(1/2).
 
-    matrixEtaOrderRow: (P, Cusp, INDICES) -> List Q
-      ++ matrixEtaOrderRow(nn, cusp, idxs) returns
-      ++ [matrixEtaOrderElement(nn,cusp,idx) for idx in idxs].
-
-    matrixEtaOrderFull: (P, List Cusp, INDICES) -> MQ
+   matrixEtaOrderFull: (P, List Cusp, INDICES) -> MQ
       ++ matrixEtaOrder(nn,spitzen,idxs) returns a matrix that is
       ++ similar to matrixLigozat(nn). It allows the compution of the
       ++ order of generalized eta-quotients at the cusps of Gamma1(nn)
@@ -419,24 +356,6 @@ QEtaAuxiliaryPackage: with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
-
-    -- Compute B_N and V_N as in \cite{HemmeckeRadu_EtaRelations_2019}.
-    -- aLigozat(m, di, dj) here corresponds to a_m(di, dj) in
-    -- \cite[Notation 3.2.6]{Ligozat_CourbesModulaires_1975}.
-    -- Note that we can use any integer c here, including c=0.
-    aLigozat(m: P, c: Z, delta: Z): Z == -- di==c, dj==delta
-        num: Z := m * gcd(c, delta)^2
-        den: Z := gcd(c^2, m) * delta
-        (num exquo den)::Z -- can prove that this cannot fail
-
-    matrixLigozat(m: P): MZ ==
-        divs: List Z := divisors(m)$INTF
-        n: N := # divs
-        mat: MZ := new(n, n, 0)
-        for i in 1..n for di in divs repeat
-            for j in 1..n for dj in divs repeat
-                qsetelt!(mat, i, j, aLigozat(m, di, dj))
-        mat
 
     matrixAtkinLehner(m: P, t: P): MZ ==
         -- t is a Hall divisor of m.
@@ -617,12 +536,6 @@ $a\in X_c$.
         positiveRemainder(x, 4)=1 => x
         4*x
 
-    primePower(d: P, p: P): N ==
-        e: N := 0;
-        x: Z := d
-        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
-        return e
-
 )if LiterateDoc
 %$
 
@@ -681,43 +594,6 @@ $a\in X_c$.
         len: N := 0
         for d in nndivs repeat len := len + asN(ceiling(d/2)$Q)
         return len
-
-    matrixModularGamma0(nn: P, idxs: INDICES): MZ ==
-        if empty? idxs then idxs := etaFunctionIndices nn
-        -- check idxs
-        n: N := # idxs
-        for j in 1..n for idx in idxs repeat
-            if #idx ~= 1 then error "matrixModularGamma0: not pure index"
-            d: Z := first idx
-            if d < 1 or not zero?(nn rem d) then
-                error "matrixModularGamma0: index not positive divisor"
-        fl: List Record(factor: Z, exponent: N) := factors factor nn
-        -- product is rational square
-        ll: LLZ := [[primePower(asP(idx.1), asP(fe.factor)) for idx in idxs]_
-                    for fe in fl]
-        import from LZ
-        ll := removeDuplicates ll
-        ll := [l for l in ll | removeDuplicates first ll ~= [0]] -- no 0-rows
-        cols: P := asP(n + 2 + #ll)
-        rows: P := asP(3 + #ll)
-        mat: MZ := new(rows, cols, 0)
-        for j in 1..n for idx in idxs repeat
-            d: Z := first idx
-            -- sum(r(d.i), i=1..n)=0
-            qsetelt!(mat, 1, j, 1)
-            -- sum(d * r(d) for [d] in idxs) = 0 (mod 24)
-            qsetelt!(mat, 2, j, d)
-            -- sum(nn/d * r(d) for [d] in idxs) = 0 (mod 24)
-            qsetelt!(mat, 3, j, (nn exquo d)::Z)
-        for i in 1..#ll for l in ll repeat
-            for j in 1..n for z in l repeat qsetelt!(mat, i+3, j, z)
-            qsetelt!(mat, i+3, n+2+i, 2) -- additional variable for (mod 2)
-        qsetelt!(mat, 2, n+1, 24) -- additional variable for (mod 24)
-        qsetelt!(mat, 3, n+2, 24) -- additional variable for (mod 24)
-        return mat
-
-    matrixModularGamma0(nn: P): MZ ==
-        matrixModularGamma0(nn, etaFunctionIndices nn)
 
     matrixModularGamma1(nn: P, idxs: INDICES): MQ ==
         if empty? idxs then idxs := generalizedEtaFunctionIndices nn
@@ -786,9 +662,6 @@ $a\in X_c$.
         z: Q := entryFactor * (nn*h^2/(2*delta*e)) * fractionalBernoulli2(l*g/h)
         nn = 4 and e = 2 => 1/2*z
         z
-
-    matrixEtaOrderRow(nn: P, cusp: Cusp, idxs: INDICES): List Q ==
-        [matrixEtaOrderElement(nn, cusp, idx) for idx in idxs]
 
     matrixEtaOrderFull(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
         matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
