@@ -28,31 +28,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
-\title{Auxiliary functions for modular functions}
+\title{Auxiliary functions}
 \author{Ralf Hemmecke}
 \date{26-Jan-2018}
 \maketitle
 \begin{abstract}
-  The packages \code{QEtaAuxiliaryPackage} contains helper functions
-  for transformations of eta-quotients.
+  The packages \code{QEtaAuxiliaryPackage} contains helper functions.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \tableofcontents
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Indroduction}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Let $N$ be a positive natural number and $\Gamma_0(N)$ be as defined
-in \eqref{eq:Gamma0}.
-
-This file contains code to compute a (finite) monoid basis for
-$E^\infty(N)$.
-
-This file contains code to compute a (finite) monoid basis for
-$GE^\infty(N)$ (the generalized eta-quotients that are modular for
-$\Gamma_1(N)$).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -97,11 +82,8 @@ Rec ==> Record(red: SL2Z, triang: MZ)
 Pol ==> SparseUnivariatePolynomial Z
 LZ ==> List Z
 LLZ ==> List LZ
-INDICES ==> LLZ
-CUSPS1 nn ==> cusps()$CongruenceSubgroupGamma1(nn)
 
 INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
 
 asN x ==> x pretend N
 asP x ==> x pretend P
@@ -127,55 +109,6 @@ vector to correspond to a modular eta-quotient is violated.
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta-quotients that are modular functions.
 QEtaAuxiliaryPackage: with
-    etaFunctionIndices: P -> INDICES
-      ++ etaFunctionIndices(nn) returns the divisors of n as
-      ++ indices in the form [[d] for d in divisors nn].
-    properGeneralizedEtaFunctionIndices: P -> INDICES
-      ++ properGeneralizedEtaFunctionIndices(nn) returns the indices
-      ++ of a proper generalized eta-quotient of level nn. The first
-      ++ entries of the indices are always nn, i.e, it returns
-      ++ [[nn,1],...,[nn,floor(nn/2)]].
-    allGeneralizedEtaFunctionIndices: P -> INDICES
-      ++ allGeneralizedEtaFunctionIndices(nn) returns all indices that
-      ++ can be used. In fact it is the union of
-      ++ etaFunctionIndices(nn) and
-      ++ properGeneralizedEtaFunctionIndices(d) where d runs over all
-      ++ divisors of nn.
-    generalizedEtaFunctionIndices: P -> INDICES
-      ++ generalizedEtaFunctionIndices(nn) returns all the indices of
-      ++ a generalized eta-quotient of level nn (without exponents),
-      ++ i.e., it return the list in \eqref{eq:sorted-indices} where
-      ++ the 0 in the second argument is removed. To be precise, it
-      ++ returns
-      ++ [[d1],[d2],...,[dn],[d2,1],...,[d2,f2],...,[dn,1],...,[dn,fn]]
-      ++ where di is the i-th positive divisor of nn and
-      ++ fi=ceiling(di/2)-1.
-    lengthOfGeneralizedEtaFunctionIndices: P -> N
-      ++ lengthOfGeneralizedEtaFunctionIndices(nn) returns
-      ++ #generalizedEtaQuotientSpecification(nn) without ever
-      ++ computing the specification list explicitly.
-    fractionalPart: Q -> Q
-      ++ fractionalPart(x) returns x - floor(x)::Fraction(Integer).
-    fractionalBernoulli1: Q -> Q
-      ++ fractionalBernoulli1(x) computes t - 1/2 where t is the
-      ++ fractional part of x, i.e., t = x - floor(x)
-    fractionalBernoulli2: Q -> Q
-      ++ fractionalBernoulli2(x) computes t^2 - t + 1/6 where t is the
-      ++ fractional part of x, i.e., t = x - floor(x)
-    sawTooth: Q -> Q
-      ++ sawTooth(x) is 0 if x is an integer and
-      ++ fractionalBernoulli1(x) otherwise.
-    dedekindSum: (Z, Z) -> Q
-       ++ dedekindSum(p,q) returns for two relatively prime integers
-       ++ p and q the Dedekind sum as defined by
-       ++ dedekindSum(p,q)=sum(sawTooth(1/q)*sawTooth(p*i/q), i=1..q-1).
-    generalizedDedekindSum: (P, Z, Z, Z, Z) -> Q
-       ++ generalizedDedekindSum(nn,g,h,p,q) returns the generalized
-       ++ Dedekind sum as defined in
-       ++ \cite[p~673]{Yang:GeneralizedDedekindEtaFunctions} by
-       ++ generalizedDedekindSum(nn,g,h,p,q) =
-       ++ sum(sawTooth((g+i*nn)/(q*nn))*sawTooth((g'+p*i*nn)/(q*nn)),i=1..q-1).
-       ++ Condition: one? gcd(p,q).
     matrixAtkinLehner: (P, P) -> MZ
       ++ matrixAtkinLehner(m, t) with t a Hall divisor
       ++ (https://en.wikipedia.org/wiki/Hall_subgroup) of m returns
@@ -197,15 +130,12 @@ QEtaAuxiliaryPackage: with
       ++ modularGamma0(nn, r) returns true iff the eta-quotient
       ++ corresponding to r is a modular function for Gamma_0(nn). It
       ++ is equivalent to zero?(modularGamma0(nn, r)).
-    matrixLigozatModularGamma0: (P, List Z) -> MZ
-      ++ matrixLigozatModularGamma0(nn, idivs) returns a matrix mat which
-      ++ is a vertical concatenation (a part of) matrixLigozat(nn)
-      ++ whose rowindices correspond to idivs and
-      ++ matrixModularGamma0(nn).
-      ++ It computes matrix B_N equation (8) in
-      ++ \cite{HemmeckeRadu_EtaRelations_2019}
-      ++ (DOI:10.1016/j.jsc.2018.10.001) put below the respective rows
-      ++ of matrix A_N from the same article.
+    jacobiLowerStar: (Z, Z) -> Z
+      ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
+      ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
+    jacobiUpperStar: (Z, Z) -> Z
+      ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
+      ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
     upsilonExponent: (Z, Z, Z, Z) -> Z
       ++ upsilonExponent(a,b,c,d) returns z \in {0..23} such that
       ++ exp(\pi*i*z/12) is a multiplier in the transformation of an
@@ -214,30 +144,6 @@ QEtaAuxiliaryPackage: with
     upsilonExponent: MZ -> Z
       ++ upsilonExponent(m) for a matrix m from SL_2(Z) returns
       ++ upsilonExponent(m(1,1), m(1,2), m(2,1), m(2,2)).
-    kappaSchoeneberg: (P, Z, Z, Z, Z, Z, Z) -> Q
-      ++ kappaSchoeneberg(nn, g, h, a, b, c, d) returns a value x such
-      ++ that \eta_{g,h}(mat*tau) = exp(2*%pi*%i*x) *
-      ++ \eta_{g',h'}(tau) as given at the top of page 673 of
-      ++ \cite{Yang_GeneralizedDedekindEtaFunctions_2004} where
-      ++ mat=matrix[[a,b],[c,d]].
-      ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
-    kappaSchoeneberg: (P, Z, Z, MZ) -> Q
-      ++ kappaSchoeneberg(nn, g, h, mat) returns a value x such
-      ++ that \eta_{g,h}(mat*tau) = exp(2*%pi*%i*x) *
-      ++ \eta_{g',h'}(tau) as given at the top of page 673 of
-      ++ \cite{Yang_GeneralizedDedekindEtaFunctions_2004}.
-      ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
-    kappaYang: (P, Z, Z, Z, Z, Z, Z) -> Q
-      ++ kappaYang(nn, g, h, a, b, c, d) returns a value x such that
-      ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
-      ++ in \cite[Theorem~1]{Yang_GeneralizedDedekindEtaFunctions_2004}
-      ++ where mat = matrix [[a,b],[c,d]].
-      ++ Condition: not zero? c.
-    kappaYang: (P, Z, Z, MZ) -> Q
-      ++ kappaYang(nn, g, h, mat) returns a value x such that
-      ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
-      ++ in \cite[Theorem~1]{Yang_GeneralizedDedekindEtaFunctions_2004}.
-      ++ Condition: not zero? mat(2,1).
     numberOfGaps: (P, List P) -> N
       ++ numberOfGaps(n, l) computes
       ++ reduce(+, [floor(x/n) for x in l], 0).
@@ -264,66 +170,52 @@ QEtaAuxiliaryPackage: with
       ++ exists an element y such that y^2=p.
       ++ p must be a radical integer, i.e., should not contain the
       ++ square of a prime.
-    matrixEtaOrderElement: (P, Cusp, LZ) -> Q
-      ++ z:=matrixEtaOrderElement(nn,cusp,idx). The parameter
-      ++ corresponds to the index of a (generalized) eta-quotient,
-      ++ i.e., it can be of the form idx=[delta,g] or of the form
-      ++ idx=[delta] with g in the range 0..delta. Then z is the
-      ++ coefficient of r_{delta,g} in
-      ++ \cite[Thm.~4]{Robins_GeneralizedDedekindEtaProducts_1994},
-      ++ except for the case nn=4, gcd(denom(cusp),nn)=2 (or
-      ++ Gamma1(4)-equivalent) where we return half of this
-      ++ coefficient. If idx=[delta] then
-      ++ z=1/2*matrixEtaOrderElement(nn,cusp,[delta,0])/2. and thus
-      ++ corresponds to the coefficient of $r_\delta$ in
-      ++ \eqref{eq:order-rbar-non-adjusted} in
-      ++ Theorem~\ref{thm:matrixEtaOrderRobins}. Note that Robins
-      ++ refers to an expansion in the uniformizing variable
-      ++ q^(gcd(c,nn)/nn) (where cusp=a/c). That is equal to
-      ++ q^(1/width(c)$CongruenceSubgroupGamma1(nn)) except for the
-      ++ case nn=4 and gcd(nn,c)=2. In that case the width of the cusp
-      ++ 1/2 is 1 and not 2=4/gcd(4.2). For this case, we deviate from
-      ++ Robins' coefficients and adapt to an expansion in q rather
-      ++ than an expansion in q^(1/2).
-
-   matrixEtaOrderFull: (P, List Cusp, INDICES) -> MQ
-      ++ matrixEtaOrder(nn,spitzen,idxs) returns a matrix that is
-      ++ similar to matrixLigozat(nn). It allows the compution of the
-      ++ order of generalized eta-quotients at the cusps of Gamma1(nn)
-      ++ given by the parameter spitzen. The rows of the matrix are
-      ++ sorted according to spitzen. The matrix columns correspond to
-      ++ the given indices. It gives the coefficients of $r_\delta$
-      ++ and $r_{\delta,g}$ in the sense of
-      ++ Theorem~\ref{thm:matrixEtaOrderRobins}, in particular to the
-      ++ coefficients in \eqref{eq:order-rbar-non-adjusted}.
-      ++ It returns
-      ++ matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen].
-
-    matrixEtaOrder: (P, List Cusp, INDICES) -> MQ
-      ++ matrixEtaOrder(nn,spitzen,idxs) returns the matrix given by
-      ++ [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen] with
-      ++ duplicate rows removed.
-
-    matrixEtaOrder: (P, List Cusp) -> MQ
-      ++ matrixEtaOrder(nn, spitzen) returns
-      ++ matrixEtaOrder(nn,spitzen,idxs) where
-      ++ idxs:=generalizedEtaFunctionIndices(nn).
-
-    matrixEtaOrder: P -> MQ
-      ++ matrixEtaOrder(nn) returns matrixEtaOrder(nn, spitzen) where
-      ++ spitzen := cusps()$CongruenceSubgroupGamma1(nn).
-
-    matrixEtaOrderModularGamma1: (P, List Cusp, INDICES) -> MQ
-      ++ matrixEtaOrderModularGamma1(nn,spitzen,idxs) returns the
-      ++ vertical concatenation of matrixEtaOrder(nn,spitzen,idxs) and
-      ++ matrixModularGamma1(nn,idxs) so that there will be #spitzen+3
-      ++ rows and ncols(matrixModularGamma1 nn) columns.
-
-    matrixEtaOrderModularGamma1: (P, List Cusp) -> MQ
-      ++ matrixEtaOrderModularGamma1(nn, spitzen) returns
-      ++ matrixEtaOrderModularGamma1(nn, spitzen, idxs) where
-      ++ idxs:=generalizedEtaFunctionIndices(nn).
-
+    fractionalPart: Q -> Q
+      ++ fractionalPart(x) returns x - floor(x)::Fraction(Integer).
+    fractionalBernoulli1: Q -> Q
+      ++ fractionalBernoulli1(x) computes t - 1/2 where t is the
+      ++ fractional part of x, i.e., t = x - floor(x)
+    fractionalBernoulli2: Q -> Q
+      ++ fractionalBernoulli2(x) computes t^2 - t + 1/6 where t is the
+      ++ fractional part of x, i.e., t = x - floor(x)
+    sawTooth: Q -> Q
+      ++ sawTooth(x) is 0 if x is an integer and
+      ++ fractionalBernoulli1(x) otherwise.
+    dedekindSum: (Z, Z) -> Q
+       ++ dedekindSum(p,q) returns for two relatively prime integers
+       ++ p and q the Dedekind sum as defined by
+       ++ dedekindSum(p,q)=sum(sawTooth(1/q)*sawTooth(p*i/q), i=1..q-1).
+    generalizedDedekindSum: (P, Z, Z, Z, Z) -> Q
+       ++ generalizedDedekindSum(nn,g,h,p,q) returns the generalized
+       ++ Dedekind sum as defined in
+       ++ \cite[p~673]{Yang:GeneralizedDedekindEtaFunctions} by
+       ++ generalizedDedekindSum(nn,g,h,p,q) =
+       ++ sum(sawTooth((g+i*nn)/(q*nn))*sawTooth((g'+p*i*nn)/(q*nn)),i=1..q-1).
+       ++ Condition: one? gcd(p,q).
+    kappaSchoeneberg: (P, Z, Z, Z, Z, Z, Z) -> Q
+      ++ kappaSchoeneberg(nn, g, h, a, b, c, d) returns a value x such
+      ++ that \eta_{g,h}(mat*tau) = exp(2*%pi*%i*x) *
+      ++ \eta_{g',h'}(tau) as given at the top of page 673 of
+      ++ \cite{Yang_GeneralizedDedekindEtaFunctions_2004} where
+      ++ mat=matrix[[a,b],[c,d]].
+      ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
+    kappaSchoeneberg: (P, Z, Z, MZ) -> Q
+      ++ kappaSchoeneberg(nn, g, h, mat) returns a value x such
+      ++ that \eta_{g,h}(mat*tau) = exp(2*%pi*%i*x) *
+      ++ \eta_{g',h'}(tau) as given at the top of page 673 of
+      ++ \cite{Yang_GeneralizedDedekindEtaFunctions_2004}.
+      ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
+    kappaYang: (P, Z, Z, Z, Z, Z, Z) -> Q
+      ++ kappaYang(nn, g, h, a, b, c, d) returns a value x such that
+      ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
+      ++ in \cite[Theorem~1]{Yang_GeneralizedDedekindEtaFunctions_2004}
+      ++ where mat = matrix [[a,b],[c,d]].
+      ++ Condition: not zero? c.
+    kappaYang: (P, Z, Z, MZ) -> Q
+      ++ kappaYang(nn, g, h, mat) returns a value x such that
+      ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
+      ++ in \cite[Theorem~1]{Yang_GeneralizedDedekindEtaFunctions_2004}.
+      ++ Condition: not zero? mat(2,1).
     minimizeVector: (Vector Z, List Vector Z) -> Vector Z
       ++ minizeVector(v, basis) computes
       ++ vps := concat [w for b in bas | (w:=v+b; dot(w,w)<dot(v,v)]
@@ -331,20 +223,9 @@ QEtaAuxiliaryPackage: with
       ++ From these vectors it takes the one with minimal length as
       ++ the new v and iterates as long as concat(vps, vms) is not empty.
       ++ This minimal vector is eventually returned.
-
--------------------------------------------------------------------
--- Temporarily exported
--------------------------------------------------------------------
-    jacobiUpperStar: (Z, Z) -> Z
-      ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
-      ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
-    jacobiLowerStar: (Z, Z) -> Z
-      ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
-      ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
-    coprimePart: (Z, Z) -> Z
-       ++ coPrimePart(n, c) splits n into u*v such that gcd(u,c)=1
-       ++ and returns u.
-       ++ We assume that all input numbers are positive.
+    primePower: (P, P) -> N
+      ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
+      ++ highest power e such that p^e is a factor of d.
 
   == add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
@@ -356,6 +237,12 @@ QEtaAuxiliaryPackage: with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 )endif
+
+    primePower(d: P, p: P): N ==
+        e: N := 0;
+        x: Z := d
+        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
+        return e
 
     matrixAtkinLehner(m: P, t: P): MZ ==
         -- t is a Hall divisor of m.
@@ -390,21 +277,6 @@ QEtaAuxiliaryPackage: with
 
     modularGamma0?(nn: P, r: List Z): Boolean ==
         zero? modularGamma0(nn, r)
-
-    matrixLigozatModularGamma0(m: P, idivs: List Z): MZ ==
-        matmod0: MZ := matrixModularGamma0 m
-        empty? idivs => return matmod0
-        matLigozat: MZ := matrixLigozat m -- is a square matrix
-        l: N := ncols matLigozat
-        n: N := # idivs
-        rows: N := nrows matmod0
-        cols: N := ncols matmod0
-        mat: MZ := new(rows + n, cols, 0)
-        for i in idivs for k in 1..n repeat for j in 1..l repeat
-            qsetelt!(mat, k, j, qelt(matLigozat, i, j))
-        for i in 1..rows repeat for j in 1..cols repeat
-            qsetelt!(mat, n+i, j, qelt(matmod0, i, j))
-        return mat
 
 )if LiterateDoc
 %$
@@ -501,6 +373,7 @@ $a\in X_c$.
 
 )endif
 
+    -- local
     squarePart(fl: FL): Z ==
         -- if fl = factorList factor x and z=squarePart(fl) then
         -- z^2*r=expand(fl) for some squarefree r.
@@ -523,6 +396,8 @@ $a\in X_c$.
         for x in fl | odd? (x.exponent) repeat r := x.factor * r
         return [squarePart(fl)/squarePart(factorList fden), asP r]
 
+    -- local
+    -- TODO: unused
     square(x: Record(root: P, elem: Pol)): Vector Z ==
         pol: Pol := cyclotomic(x.root)$CyclotomicPolynomialPackage
         C ==> SimpleAlgebraicExtension(Z, Pol, pol)
@@ -573,126 +448,6 @@ $a\in X_c$.
             s2: Q := sawTooth((gg+a*i*nn)/cn)
             gds := gds + s1*s2
         return gds
-
-    etaFunctionIndices(nn: P): INDICES == [[d] for d in divisors(nn)$INTF]
-    properGeneralizedEtaFunctionIndices(nn: P): INDICES ==
-        [[nn,i] for i in 0.. floor(nn /$Q 2)]
-    allGeneralizedEtaFunctionIndices(nn: P): INDICES ==
-        ll := [properGeneralizedEtaFunctionIndices d for d in DIVISORS nn]
-        concat cons(etaFunctionIndices nn, ll)
-
-    generalizedEtaFunctionIndices(nn: P): LLZ ==
-        nndivs: List P := DIVISORS nn
-        indices: List List Z := empty()
-        for d in nndivs repeat indices := cons([d], indices)
-        for d in nndivs repeat
-            for g in 1..ceiling(d/2)$Q-1 repeat indices := cons([d, g], indices)
-        reverse! indices
-
-    lengthOfGeneralizedEtaFunctionIndices(nn: P): N ==
-        nndivs: List P := DIVISORS nn
-        len: N := 0
-        for d in nndivs repeat len := len + asN(ceiling(d/2)$Q)
-        return len
-
-    matrixModularGamma1(nn: P, idxs: INDICES): MQ ==
-        if empty? idxs then idxs := generalizedEtaFunctionIndices nn
-        spitzen: List Cusp := [infinity(), cusp(0,1)]
-        rows: List List Q := [matrixEtaOrderRow(nn, c, idxs) for c in spitzen]
-        s: List Q := [(#idx=1=>1;0) for idx in idxs]
-        rows := cons(s, rows)
-        n: N := #idxs
-        mat: MQ := new(3, n+2, 0) -- 2 more for "is-an-integer" columns
-        for i in 1..3 for row in rows repeat
-            for j in 1..n for e in row repeat mat(i, j) := e
-        qsetelt!(mat, 2, n+1, 1)
-        qsetelt!(mat, 3, n+2, 1)
-        return mat
-
-    matrixModularGamma1(nn: P): MQ == matrixModularGamma1(nn, [])
-
-    -- matrixEtaOrderElement(nn, cusp, delta, g) returns the coefficient of
-    -- r_{delta.g} in
-    -- \cite[Thm.~4]{Robins_GeneralizedDedekindEtaProducts_1994}. See
-    -- also Theorem~\ref{thm:matrixEtaOrderRobins}. Since we always
-    -- want an expansion in $q^{1/w_\gamma}$ where $w_\gamma$ is the
-    -- width of the respective cusp for $\Gamma_1(nn)$, we adjust the
-    -- following function for the special case, so that if $A$ is the
-    -- result of \code{matrixEtaOrder}$(N)$, then $A \bar{r}$ gives
-    -- the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
-    -- $q^{1/w_\gamma}$.
-    matrixEtaOrderElement(nn: P, cusp: Cusp, idx: LZ): Q ==
-        --assert(cusp>0) -- comes from cusps()$CongruenceSubgroupGamma1(nn)
-        empty? idx =>
-            errorPrint("idx", idx)
-            error "matrixEtaOrderElement: index not allowed"
-        entryFactor: Q := 1
-        delta: Z := idx.1
-        g: Z := 0
-        if #idx=1 then entryFactor := 1/2 else g := idx.2
-        -- If cusp=a/c=lambda/(mu*epsilon), then we must have the
-        -- condition: gcd(lambda,nn)=gcd(lambda,mu)=gcd(mu,nn)=1. So
-        -- we try to find an equivalent cusp with this property.
-        -- See function normalizeCusp in CongruenceSubgroupGamma1.
-        delta <= 0 => error "matrixEtaOrderElement: delta not positive"
-        g > delta => error "matrixEtaOrderElement: no such g allowed"
-        c: Z := denom cusp
-        l: Z := numer cusp -- \lambda
-        -- Make cusp (0:1)=infinity a special case, i.e. treat it like
-        -- (1:nn). See (11) of Robins.
-        if infinity? cusp then
-            c := nn
-            l := 1
-        e: Z := gcd(c, nn) -- \epsilon: divisor of nn (will not change)
-        -- Note that nn/e = width(nn, c) (at least if (nn,c)~=(4,2)).
-        -- Find a coprime (to nn) cofactor m such that m*e = c (mod nn).
-        m: Z := (c exquo e)::Z
-        n: Z := (nn exquo e)::Z
-        while not one? gcd(m, nn) repeat m := m + n
-        -- Find a coprime numerator l such that l/(m*e) is Gamma1(nn)
-        -- equivalent to a/c.
-        while not one? gcd(l, m) or not one? gcd(nn, l) repeat
-            l := l + e
-            if l >= nn then -- safety check -- should actually not happen
-               errorPrint("[nn, numer cusp, denom cusp, c, m, e]",
-                           [nn, numer cusp, denom cusp, c, m, e]$List(Z))
-               error "matrixEtaOrder: lambda too big"
-
-        h: Z := gcd(delta, e)
-        z: Q := entryFactor * (nn*h^2/(2*delta*e)) * fractionalBernoulli2(l*g/h)
-        nn = 4 and e = 2 => 1/2*z
-        z
-
-    matrixEtaOrderFull(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
-        matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
-
-    matrixEtaOrder(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
-        ll := [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
-        matrix removeDuplicates! ll
-
-    matrixEtaOrder(nn: P, spitzen: List Cusp): MQ ==
-        matrixEtaOrder(nn, spitzen, generalizedEtaFunctionIndices nn)
-
-    matrixEtaOrder(nn: P): MQ == matrixEtaOrder(nn, CUSPS1 nn)
-
-    matrixEtaOrderModularGamma1(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
-        matmod1 := matrixModularGamma1(nn, idxs)
-        matord := matrixEtaOrder(nn, spitzen, idxs)
-        m := nrows matord
-        mat: MQ := new(m+3, ncols matmod1, 0)
-        --assert(nrows(matmod1)=3)
-        --assert(ncols matord + 2 = ncols matmod1)
-        for i in 1..m repeat
-            for j in 1..ncols matord repeat
-                qsetelt!(mat, i, j, matord(i, j))
-        for i in 1..3 repeat
-            for j in 1..ncols matmod1 repeat
-                qsetelt!(mat, m+i, j, matmod1(i, j))
-        return mat
-
-    matrixEtaOrderModularGamma1(nn: P, spitzen: List Cusp): MQ ==
-        idxs:=generalizedEtaFunctionIndices(nn)
-        matrixEtaOrderModularGamma1(nn, spitzen, idxs)
 
     kappaSchoeneberg(nn: P, g: Z, h: Z, a: Z, b: Z, c: Z, d: Z): Q ==
         zero? c => fractionalPart(b/(2*d)*fractionalBernoulli2(g/nn))
@@ -749,103 +504,6 @@ $a\in X_c$.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-)if LiterateDoc
-%$
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Unused Package QAuxiliaryModularPackage: Annihilate
-leading coefficients}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Add $p$-multiples of original generators in order to reduce the
-order of the series. Return the respective (adjustment) polynomial.
-
-)endif
-
-)if UNUSED
-
---)abbrev package QAUXMOD QAuxiliaryModularPackage
-QAuxiliaryModularPackage(L): Exports == Implementation where
-  L: QEtaLaurentSeriesCategory Z
-  ZX ==> Polynomial Z
-  VZ ==> Vector Z
-  term x ==> monomial(1, degree x)$ZX
-  lc x ==> leadingCoefficient x
-  Exports ==> with
-    annihilateCoefficients: (P, List ZX, ZX -> L) -> ZX -> ZX
-    annihilateLeadingCoefficients: (P, ZX -> L) -> ZX -> ZX
-      ++ annihilateLeadingCoefficients(p, ev)(pol) adds a p-multiple
-      ++ to any monomial of pol and returns a polynomial z such that
-      ++ the evaluation order ev(z) >= order ev(pol) and the order
-      ++ of ev(z) is as big as it can be made by varying each of the
-      ++ monomials, i.e. we expect
-      ++ order(ev z) = order(ev pol) + #monomials(pol) - 1.
-      ++ The polynomial pol is assumed to be nonzero.
-  Implementation ==> add
-    annihilateCoefficients(p: P, mons: List ZX, ev: ZX -> L): ZX -> ZX ==
-      (pol: ZX): ZX +->
-        --assert(not zero? pol)
-        ll: L := ev pol
-        zero? ll => primitivePart pol
-        ls: List L := [ev term x for x in mons]
-        ords: List Z := [order(l, 1) for l in ls]
-        o: Z := min ords
-        nmons: N := # mons      -- number of variables
-        for neqs in nmons..1 by -1 repeat
-            mat: MZ := new(neqs, nmons, 0)
-            v: VZ := new(neqs, 0)
-            for i in 1..neqs repeat -- number of equations
-                v.i := - coefficient(ll, o+i-1)
-                for j in 1..nmons for l in ls repeat -- number of coefficients
-                    mat(i, j) := p*coefficient(l, o+i-1)
-            sol := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
-            if sol.particular case VZ then
-                s := (sol.particular) :: VZ
-                adjust := [p*c*term(x) for c in members s for x in mons]
-                z := pol + reduce(_+, adjust, 0)
-                ll := ev z
-                c: Z := coefficient(ll, 0) quo p
-                z := z - p*c*1$ZX
-                zero? ev z => return primitivePart z
-                -- divide by primes not in p
-                c := content z
-                primesp := [x.factor for x in factorList factor p]
-                for x in primesp repeat
-                    while zero? positiveRemainder(c, x) repeat
-                        c := (c exquo x)::Z
-                return (z exquo c)::ZX
-        tracePrint("annihilateLeadingCoefficients", "nothing annihilated"::Symbol)
-        return primitivePart pol
-
-    annihilateLeadingCoefficients(p: P, ev: ZX -> L): ZX -> ZX ==
-      (pol: ZX): ZX +->
-        --assert(not zero? pol)
-        mons: List ZX := monomials pol
-        tracePrint("mons", [term(x) for x in mons])
-        annihilateCoefficients(p, mons, ev)(pol)
-
-)endif
 
 
 )if LiterateDoc

@@ -96,7 +96,8 @@ SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 INDICES ==> List List Z
 
-QETAAUX ==> QEtaAuxiliaryPackage
+AUXFUN ==> QEtaAuxiliaryFunctions
+QCONDM0 ==> QEtaConditionsModularGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
 CUSPS1 nn ==> cusps()$GAMMA1(nn)
 
@@ -122,7 +123,7 @@ QEtaQuotientExponentVectorsAux: with
       ++ rs := sortByComponentGrade(m, gens) sorts gens such that if
       ++ ri:=vector(rs.i), rj:=vector(rs.j), and i<j then
       ++ smallerGrade?(toG(ri, t).sgi, toG(rj, t).sgi) holds where
-      ++ t:=transpose(matrixLigozat(m)$QETAAUX) and toG computes
+      ++ t:=transpose(matrixLigozat(m)$QCONDM0) and toG computes
       ++ the respective sorted grades.
       ++ Informally, since the gens correspond to exponent vectors of
       ++ eta-quotients and t to the transpose of the Ligozat matrix,
@@ -152,7 +153,7 @@ QEtaQuotientExponentVectorsAux: with
 
     sortByComponentGrade(m: P, gens: List VZ): List List Z ==
         empty? gens => empty()
-        t: MZ := transpose(matrixLigozat(m)$QETAAUX)
+        t: MZ := transpose(matrixLigozat(m)$QCONDM0)
         ggens: List G := [toG(v, t) for v in gens]
         z := [members(g.rvec) for g in sort!(smallerGradeG?, ggens)]
 
@@ -181,7 +182,7 @@ QEtaQuotientSpecifications4ti2: with
       ++ number of divisors of n.
     etaQuotientMonoidSpecifications: (P, List Z) -> SPECS
       ++ etaQuotientMonoidSpecifications(m, idivs) computes the
-      ++ matrixLigozatModularGamma0(m, idivs)$QEtaAuxiliaryPackage
+      ++ matrixLigozatModularGamma0(m, idivs)$QEtaAuxiliaryFunctions
       ++ and finds a basis of the solution space.
       ++ It computes the same as etaQuotientSpecifications(m, idivs, 0).
     etaQuotientSpecifications: (P, List Z, Z) -> SPECS
@@ -196,7 +197,7 @@ QEtaQuotientSpecifications4ti2: with
       ++ are also taken into account.
     zsolve4ti2: (P, List Z, List Z) -> ZRESULT
       ++ zsolve4ti2(m, idivs, rhs) computes n:=#idivs,
-      ++ mat:=matrixLigozatModularGamma0(m,idivs)$QEtaAuxiliaryPackage
+      ++ mat:=matrixLigozatModularGamma0(m,idivs)$QEtaAuxiliaryFunctions
       ++ and the column vector b whose first entries are given by rhs.
       ++ Note that the (n+1)-th entry corresponds to the weight.
       ++ See in the specification of matrixLigozatModularGamma0 about
@@ -254,7 +255,7 @@ QEtaQuotientSpecifications4ti2: with
     -- \cite{HemmeckeRadu_EtaRelations_2019}, the variable idivs
     -- should be [i for i in 1..n-1].
     zsolve4ti2(nn: P, idivs: List Z, rhs: List Z): ZRESULT ==
-        mat: MZ := matrixLigozatModularGamma0(nn, idivs)$QETAAUX
+        mat: MZ := matrixLigozatModularGamma0(nn, idivs)$AUXFUN
         rows := nrows mat
         nidivs: N := #idivs
         --assert(#rhs=nidivs)
@@ -325,14 +326,14 @@ QEtaQuotientSpecifications4ti2: with
         matZ
 
     generalizedEtaQuotientMonoidSystem(nn: P, idxs: INDICES): ZINPUT ==
-        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$SPEC
         -- At the cusp infinity (=1/nn) the order must be an integer.
         -- That, however, is already taken care of in the
         -- matrixModularGamma1(nn) part of the matrix. Therefore, we
         -- remove this cusp.
         oo: Cusp := infinity()
         spitzen: List Cusp := remove!(oo, CUSPS1 nn)
-        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen, idxs)$QETAAUX
+        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen, idxs)$AUXFUN
         b: VZ := new(nrows mat, 0) -- the right hand side vector
         rels: VZ := new(nrows mat, 0) -- all equations
         -- Except the last 3 rows, we have inequations A x >= b.
@@ -370,14 +371,14 @@ QEtaQuotientSpecifications4ti2: with
 
     nonConstantGeneralizedEtaQuotientMonoidSpecifications(
       nn: P, idxs: INDICES): SPECS ==
-        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$SPEC
         z: ZINPUT := generalizedEtaQuotientMonoidSystem(nn, idxs)
         zres: ZRESULT := zsolve(z)$X4ti2
         homogeneousSpecifications(nn, idxs, zres)
 
     generalizedEtaQuotientMonoidSpecifications(
       nn: P, idxs: INDICES): SPECS ==
-        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$SPEC
         z: ZINPUT := generalizedEtaQuotientMonoidSystem(nn, idxs)
         zres: ZRESULT := zsolve(z)$X4ti2
         fspecs0: SPECS := freeSpecifications(nn, idxs, zres)
@@ -395,14 +396,14 @@ QEtaQuotientSpecifications4ti2: with
     -- a pole at infinity of order poleorder>0.
     generalizedEtaQuotientSpecifications(_
       nn: P, idxs: INDICES, poleorder: Z): SPECS ==
-        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$SPEC
         -- At the cusp infinity (=1/nn) the order must be an integer.
         -- That, however, is already taken care of in the
         -- matrixModularGamma1(nn) part of the matrix. Therefore, we
         -- remove this cusp.
         oo: Cusp := infinity()
         spitzen: List Cusp := remove!(oo, CUSPS1 nn)
-        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen, idxs)$QETAAUX
+        mat: MQ := matrixEtaOrderModularGamma1(nn, spitzen, idxs)$AUXFUN
         m := nrows mat
         b: VZ := new(m, 0) -- the right hand side vector
         rels: VZ := new(m, 0) -- all equations
@@ -478,7 +479,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     -- exported functions
     etaQuotientMonoidExponentVectors(m: P): List List Z ==
-        matmod0: MZ := matrixModularGamma0(m)$QETAAUX
+        matmod0: MZ := matrixModularGamma0(m)$AUXFUN
         gens: List VZ := integerNullSpace matmod0
         mat: MZ := matrix [entries v for v in gens]
         lat: MZ := LLL(mat)$LLLReduction
@@ -488,10 +489,10 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     etaQuotientMonoidExponentVectorsX(m: P): List List Z ==
         divs: List Z := divisors(m)$IntegerNumberTheoryFunctions
-        matmod0: MZ := matrixModularGamma0(m)$QETAAUX
+        matmod0: MZ := matrixModularGamma0(m)$AUXFUN
         gens: List VZ := integerNullSpace matmod0
         mat: MZ := matrix [[x for x in entries v for d in divs] for v in gens]
-        ligozat: MZ := matrixLigozat(m)$QETAAUX
+        ligozat: MZ := matrixLigozat(m)$QCONDM0
         ligozat := transpose ligozat
         ords := mat * ligozat
         rec: Record(lll: MZ, trf: MZ) := extendedLLL(ords)$LLLReduction

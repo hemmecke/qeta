@@ -118,6 +118,7 @@ LZ ==> List Z
 LLZ ==> List LZ
 INDICES ==> LLZ
 SPEC ==> QEtaSpecification
+QETAAUX ==> QEtaAuxiliaryPackage
 
 asN x ==> x pretend N
 asP x ==> x pretend P
@@ -140,7 +141,7 @@ asP x ==> x pretend P
 
 )endif
 
-)abbrev category QETACMC QEtaConditionsModularCategory
+)abbrev category QCONDMC QEtaConditionsModularCategory
 ++ QEtaConditionsModularCategory provides functions to check
 ++ modularity conditions.
 QEtaConditionsModularCategory: Category == with
@@ -153,6 +154,10 @@ QEtaConditionsModularCategory: Category == with
       ++ candidateLevelsCoEtaQuotient(rspec,m,t) returns an
       ++ ascendingly sorted list of the nn up to 24*m*level(rspec)
       ++ such that conditionCoEtaQuotient?(nn,rspec,m,t) is true.
+    matrixEtaOrder: (P, List Cusp, INDICES) -> MQ
+      ++ matrixEtaOrder(nn,spitzen,idxs) returns the matrix given by
+      ++ [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen] with
+      ++ duplicate rows removed.
     matrixEtaOrderElement: (P, Cusp, LZ) -> Q
       ++ z:=matrixEtaOrderElement(nn,cusp,idx). The parameter
       ++ corresponds to the index of a (generalized) eta-quotient,
@@ -174,6 +179,9 @@ QEtaConditionsModularCategory: Category == with
       ++ 1/2 is 1 and not 2=4/gcd(4.2). For this case, we deviate from
       ++ Robins' coefficients and adapt to an expansion in q rather
       ++ than an expansion in q^(1/2).
+    matrixEtaOrderFull: (P, List Cusp, INDICES) -> MQ
+      ++ matrixEtaOrder(nn,spitzen,idxs) returns a matrix given by
+      ++ [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen].
     matrixEtaOrderRow: (P, Cusp, INDICES) -> List Q
       ++ matrixEtaOrderRow(nn, cusp, idxs) returns
       ++ [matrixEtaOrderElement(nn,cusp,idx) for idx in idxs].
@@ -193,6 +201,13 @@ QEtaConditionsModularCategory: Category == with
     matrixEtaOrderRow(nn: P, cusp: Cusp, idxs: INDICES): List Q ==
         [matrixEtaOrderElement(nn, cusp, idx) for idx in idxs]
 
+    matrixEtaOrderFull(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+        matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
+
+    matrixEtaOrder(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+        ll := [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
+        matrix removeDuplicates! ll
+
 
 
 
@@ -207,7 +222,7 @@ QEtaConditionsModularCategory: Category == with
 
 )endif
 
-)abbrev package QETACM0 QEtaConditionsModularGamma0
+)abbrev package QCONDM0 QEtaConditionsModularGamma0
 ++ QEtaConditionsModularGamma0 provides functions to check modularity
 ++ for Gamma0.
 ++
@@ -270,9 +285,6 @@ QEtaConditionsModularGamma0: Exports == Implementation where
       ++ \cite[Def.~42]{Radu_RamanujanKolberg_2015} and
       ++ \cite[Lemma 4.35]{Radu_PhD_2010} were r is pureExponents(rspec)
       ++ and rspec is expected to specify a pure eta-quotient.
-    primePower: (P, P) -> N
-      ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
-      ++ highest power e such that p^e is a factor of d.
 
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
@@ -307,27 +319,21 @@ QEtaConditionsModularGamma0: Exports == Implementation where
             -- \prod_{\delta|N}\delta^rdelta.
             e1: Z := 0
             for l in pureParts sspec | odd? specExponent l repeat
-                e1 := e1 + primePower(specDelta l, p)
+                e1 := e1 + primePower(specDelta l, p)$QETAAUX
             e2: Z := 0
             if odd? orbitSize then
                 -- check 2nd prod in eq:Radu-productsquare
-                em: N := primePower(m, p)
+                em: N := primePower(m, p)$QETAAUX
                 -- for all divisors of mm > 1
                 for l in pureParts rspec | odd? specExponent l repeat
                     -- mod 2, only odd sdelta is relevant.
-                    e2 := e2 + em + primePower(specDelta l, p)
+                    e2 := e2 + em + primePower(specDelta l, p)$QETAAUX
             if odd?(e1 + e2) then return false
         return true
 
 -------------------------------------------------------------------
 -- exported functions
 -------------------------------------------------------------------
-
-    primePower(d: P, p: P): N ==
-        e: N := 0;
-        x: Z := d
-        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
-        return e
 
     conditionCoEtaQuotient?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
         not pure? rspec => false
@@ -379,11 +385,12 @@ QEtaConditionsModularGamma0: Exports == Implementation where
                 error "matrixModularGamma0: index not positive divisor"
         fl: List Record(factor: Z, exponent: N) := factors factor nn
         -- product is rational square
-        ll: LLZ := [[primePower(asP(idx.1), asP(fe.factor)) for idx in idxs]_
+        ll: LLZ := [[primePower(asP(idx.1), asP(fe.factor))$QETAAUX _
+                     for idx in idxs] _
                     for fe in fl]
         import from LZ
         ll := removeDuplicates ll
-        ll := [l for l in ll | removeDuplicates first ll ~= [0]] -- no 0-rows
+        ll := [l for l in ll | removeDuplicates l ~= [0]] -- no 0-rows
         cols: P := asP(n + 2 + #ll)
         rows: P := asP(3 + #ll)
         mat: MQ := new(rows, cols, 0)
@@ -491,7 +498,7 @@ QEtaConditionsModularGamma0: Exports == Implementation where
 
 )endif
 
-)abbrev package QETACM1 QEtaConditionsModularGamma1
+)abbrev package QCONDM1 QEtaConditionsModularGamma1
 ++ QEtaConditionsModularGamma0 provides functions to check modularity
 ++ for Gamma0.
 ++
@@ -654,6 +661,59 @@ QEtaConditionsModularGamma1: Exports == Implementation where
         for nn in 1..24*m*level(rspec) repeat
             conditionCoEtaQuotient?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotient: should not be here"
+
+    -- matrixEtaOrderElement(nn, cusp, delta, g) returns the coefficient of
+    -- r_{delta.g} in
+    -- \cite[Thm.~4]{Robins_GeneralizedDedekindEtaProducts_1994}. See
+    -- also Theorem~\ref{thm:matrixEtaOrderRobins}. Since we always
+    -- want an expansion in $q^{1/w_\gamma}$ where $w_\gamma$ is the
+    -- width of the respective cusp for $\Gamma_1(nn)$, we adjust the
+    -- following function for the special case, so that if $A$ is the
+    -- result of \code{matrixEtaOrder}$(N)$, then $A \bar{r}$ gives
+    -- the order of $g_{\bar{r}}(\gamma\tau)$ in terms of
+    -- $q^{1/w_\gamma}$.
+    matrixEtaOrderElement(nn: P, cusp: Cusp, idx: LZ): Q ==
+        --assert(cusp>0) -- comes from cusps()$CongruenceSubgroupGamma1(nn)
+        empty? idx =>
+            errorPrint("idx", idx)
+            error "matrixEtaOrderElement: index not allowed"
+        entryFactor: Q := 1
+        delta: Z := idx.1
+        g: Z := 0
+        if #idx=1 then entryFactor := 1/2 else g := idx.2
+        -- If cusp=a/c=lambda/(mu*epsilon), then we must have the
+        -- condition: gcd(lambda,nn)=gcd(lambda,mu)=gcd(mu,nn)=1. So
+        -- we try to find an equivalent cusp with this property.
+        -- See function normalizeCusp in CongruenceSubgroupGamma1.
+        delta <= 0 => error "matrixEtaOrderElement: delta not positive"
+        g > delta => error "matrixEtaOrderElement: no such g allowed"
+        c: Z := denom cusp
+        l: Z := numer cusp -- \lambda
+        -- Make cusp (0:1)=infinity a special case, i.e. treat it like
+        -- (1:nn). See (11) of Robins.
+        if infinity? cusp then
+            c := nn
+            l := 1
+        e: Z := gcd(c, nn) -- \epsilon: divisor of nn (will not change)
+        -- Note that nn/e = width(nn, c) (at least if (nn,c)~=(4,2)).
+        -- Find a coprime (to nn) cofactor m such that m*e = c (mod nn).
+        m: Z := (c exquo e)::Z
+        n: Z := (nn exquo e)::Z
+        while not one? gcd(m, nn) repeat m := m + n
+        -- Find a coprime numerator l such that l/(m*e) is Gamma1(nn)
+        -- equivalent to a/c.
+        while not one? gcd(l, m) or not one? gcd(nn, l) repeat
+            l := l + e
+            if l >= nn then -- safety check -- should actually not happen
+               errorPrint("[nn, numer cusp, denom cusp, c, m, e]",
+                           [nn, numer cusp, denom cusp, c, m, e]$List(Z))
+               error "matrixEtaOrder: lambda too big"
+
+        h: Z := gcd(delta, e)
+        f: Q := fractionalBernoulli2(l*g/h)$QETAAUX
+        z: Q := entryFactor * (nn*h^2/(2*delta*e)) * f
+        nn = 4 and e = 2 => 1/2*z
+        z
 
     matrixModular(nn: P, idxs: INDICES): MQ ==
         spitzen: List Cusp := [infinity(), cusp(0,1)]

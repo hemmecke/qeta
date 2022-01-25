@@ -85,6 +85,8 @@ GAMMA0 ==> CongruenceSubgroupGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
+QCONDM0 ==> QEtaConditionsModularGamma0
+QCONDM1 ==> QEtaConditionsModularGamma1
 
 asP x ==> x pretend P
 CUSPS0 nn ==> cusps()$GAMMA0(nn)
@@ -722,7 +724,7 @@ SymbolicEtaQuotientOrbitProductGamma: SetCategory with
 
     etaQuotient(rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
         not pure? rspec => error "specification is not for a pure eta-quotient"
-        orb: List N := modularGamma0Orbit(rspec, m, t)$QEtaCofactorConditions
+        orb: List N := modularOrbit(rspec, m, t)$QCONDM0
         h: HT := empty()
         minroot: Z := 1
         for tt in orb repeat
@@ -871,7 +873,7 @@ SymbolicModularGamma0EtaQuotientGamma: SetCategory with
         etaQuotient(sspec, rspec, m, t, gamma)
 
     etaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
-        not modularGamma0?(sspec, rspec, m, t)$QEtaCofactorConditions =>
+        not modular?(sspec, rspec, m, t)$QCONDM0 =>
             error "modular conditions are not fulfilled"
         coetaqg: SymbolicEtaQuotientGamma := etaQuotient(sspec, 1, 0, gamma)
         yeqopg: SymbolicEtaQuotientOrbitProductGamma :=
@@ -2105,7 +2107,7 @@ SymbolicModularGamma1GeneralizedEtaQuotientGamma: SetCategory with
 
     generalizedEtaQuotient(sspec: SPEC, rspec: SPEC, m: P, t: N,
                            gamma: SL2Z): % ==
-        not modularGamma1?(sspec, rspec, m, t)$QEtaCofactorConditions =>
+        not modular?(sspec, rspec, m, t)$QCONDM1 =>
             error "modular conditions are not fulfilled"
         cofactor: YGEQG := generalizedEtaQuotient(sspec, 1, 0, gamma)
         basefactor: YGEQG := generalizedEtaQuotient(rspec, m, t, gamma)

@@ -120,6 +120,8 @@ LLZ ==> List LZ
 INDICES ==> LLZ
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
+QCONDM0 ==> QEtaConditionsModularGamma0
+QCONDM1 ==> QEtaConditionsModularGamma1
 
 asN x ==> x pretend N
 asP x ==> x pretend P
@@ -227,17 +229,20 @@ QEtaCofactorSpace: Exports == Implementation where
 
     etaCofactorSpace0System(nn:P, rspec:SPEC, m:P, t:N, idxs:INDICES): ECSS ==
         import from QEtaCofactorConditions
-        not conditionCoEtaQuotientGamma0?(nn, rspec, m, t)$QEtaCofactorConditions =>
+        not conditionCoEtaQuotient?(nn, rspec, m, t)$QCONDM0 =>
             error "conditionCoEtaQuotientGamma0 not met"
 
         -- Setup matrix.
-        matmod0: MZ := matrixModularGamma0(nn, idxs)$QETAAUX
+        matmod0Q: MQ := matrixModular(nn, idxs)$QCONDM0
+        matmod0: MZ := new(nrows matmod0Q, ncols matmod0Q, 0)
+        for i in 1..nrows matmod0Q repeat for j in 1..ncols matmod0Q repeat
+            qsetelt!(matmod0, i, j, numer qelt(matmod0Q, i, j)) -- cannot fail
 
         -- Setup right-hand side.
         w: Z := reduce(_+, pureExponents rspec, 0)$List(Z)
         sigmaInfty: Z := numer sigmaInfinity rspec
         sigma0: Z := sigma0 rspec
-        orb: List N := modularGamma0Orbit(rspec, m, t)$QEtaCofactorConditions
+        orb: List N := modularOrbit(rspec, m, t)$QCONDM0
         orbitSize: Z := # orb
         nu: Z := chiExponent(rspec, m, t, orb)
         nr: N := nrows matmod0
@@ -266,7 +271,7 @@ QEtaCofactorSpace: Exports == Implementation where
 
     etaCofactorSpace0(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): ECS ==
         not pure? rspec => error "specification is not for a pure eta-quotient"
-        if empty? idxs then idxs := etaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then idxs := etaFunctionIndices(nn)$SPEC
         ecss: ECSS := etaCofactorSpace0System(nn, rspec, m, t, idxs)
         etaCofactorSpace(ecss, idxs)
 
@@ -341,9 +346,9 @@ QEtaCofactorSpace: Exports == Implementation where
     etaCofactorSpace1System(nn:P, rspec:SPEC, m:P, t:N, idxs:INDICES): ECSS ==
         -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
         import from QEtaCofactorConditions
-        not conditionCoEtaQuotientGamma1?(nn, rspec, m, t) =>
+        not conditionCoEtaQuotient?(nn, rspec, m, t)$QCONDM1 =>
             error "conditionCoEtaQuotientGamma1? not met"
-        mat1: MQ := matrixModularGamma1(nn, idxs)$QETAAUX
+        mat1: MQ := matrixModular(nn, idxs)$QCONDM1
         mat: MZ := new(nrows mat1, ncols mat1, 0)
         v: VZ := new(nrows mat1, 0)
         nspec: SPEC := purify rspec -- we must normalize!!!
@@ -371,7 +376,7 @@ QEtaCofactorSpace: Exports == Implementation where
         extendByProductSquareRows(mat, v, nn, rspec, m, idxs)
 
     etaCofactorSpace1(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): ECS ==
-        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$QETAAUX
+        if empty? idxs then idxs := generalizedEtaFunctionIndices(nn)$SPEC
         ecss: ECSS := etaCofactorSpace1System(nn, rspec, m, t, idxs)
         etaCofactorSpace(ecss, idxs)
 

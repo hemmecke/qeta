@@ -87,9 +87,9 @@ Z ==> Integer
 Q ==> Fraction Z
 LZ ==> List Z
 LLZ ==> List LZ
+INDICES ==> LLZ
 
-INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [asP d for d in divisors(m)$INTF]
+DIVISORS m ==>  [asP d for d in divisors(m)$IntegerNumberTheoryFunctions]
 
 asN x ==> x pretend N
 asP x ==> x pretend P
@@ -273,6 +273,30 @@ QEtaSpecification: Exports == Implementation where
     specSubindex: LZ -> Z
       ++ If x is a specification and l=[d,g,e] is an element of
       ++ parts(x), then specSubindex(l) returns g.
+
+    etaFunctionIndices: P -> INDICES
+      ++ etaFunctionIndices(nn) returns the divisors of n as
+      ++ indices in the form [[d] for d in divisors nn].
+    properGeneralizedEtaFunctionIndices: P -> INDICES
+      ++ properGeneralizedEtaFunctionIndices(nn) returns the indices
+      ++ of a proper generalized eta-quotient of level nn. The first
+      ++ entries of the indices are always nn, i.e, it returns
+      ++ [[nn,1],...,[nn,floor(nn/2)]].
+    allGeneralizedEtaFunctionIndices: P -> INDICES
+      ++ allGeneralizedEtaFunctionIndices(nn) returns all indices that
+      ++ can be used. In fact it is the union of
+      ++ etaFunctionIndices(nn) and
+      ++ properGeneralizedEtaFunctionIndices(d) where d runs over all
+      ++ divisors of nn.
+    generalizedEtaFunctionIndices: P -> INDICES
+      ++ generalizedEtaFunctionIndices(nn) returns all the indices of
+      ++ a generalized eta-quotient of level nn (without exponents),
+      ++ i.e., it return the list in \eqref{eq:sorted-indices} where
+      ++ the 0 in the second argument is removed. To be precise, it
+      ++ returns
+      ++ [[d1],[d2],...,[dn],[d2,1],...,[d2,f2],...,[dn,1],...,[dn,fn]]
+      ++ where di is the i-th positive divisor of nn and
+      ++ fi=ceiling(di/2)-1.
 
   Implementation ==> add
     -- The representation is basically rbar in the form of a sorted
@@ -523,6 +547,20 @@ QEtaSpecification: Exports == Implementation where
     specIndex(l: LZ): LZ == if specSubindex l = -1 then [l.1] else [l.1, l.2]
     specDelta(l: LZ): P == asP first l
     specSubindex(l: LZ): Z == l.2
+
+    etaFunctionIndices(nn: P): INDICES == [[d::Z] for d in DIVISORS(nn)]
+    properGeneralizedEtaFunctionIndices(nn: P): INDICES ==
+        [[nn,i] for i in 0.. floor(nn /$Q 2)]
+    allGeneralizedEtaFunctionIndices(nn: P): INDICES ==
+        ll := [properGeneralizedEtaFunctionIndices d for d in DIVISORS nn]
+        concat cons(etaFunctionIndices nn, ll)
+    generalizedEtaFunctionIndices(nn: P): LLZ ==
+        nndivs: List P := DIVISORS nn
+        indices: List List Z := empty()
+        for d in nndivs repeat indices := cons([d], indices)
+        for d in nndivs repeat
+            for g in 1..ceiling(d/2)$Q-1 repeat indices := cons([d, g], indices)
+        reverse! indices
 
 
 
