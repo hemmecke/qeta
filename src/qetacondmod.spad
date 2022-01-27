@@ -196,6 +196,14 @@ QEtaConditionsModularCategory: Category == with
     modular?: (SPEC, SPEC, P, N) -> Boolean
       ++ modular?(sspec,rspec,m,t) returns true iff (sspec,rspec,m,t)
       ++ specifies a modular function in level(sspec).
+    modularOrbit: (SPEC, P, N) -> List N
+      ++ modularOrbit(rspec, m, t) (for $\Gamma_0(N) where N is
+      ++ level(rspec)) computes the elements of $\modularOrbit{r,m,t)$
+      ++ as defined in qeta.tex,
+      ++ \cite[Def.~42]{Radu_RamanujanKolberg_2015} and \cite[Lemma
+      ++ 4.35]{Radu_PhD_2010} were r is pureExponents(rspec) and rspec
+      ++ is expected to specify a pure eta-quotient.
+      ++ For $\Gamma_1(N)$, modularOrbit(rspec, m, t) returns [t].
   add
 
     matrixEtaOrderRow(nn: P, cusp: Cusp, idxs: INDICES): List Q ==
@@ -208,6 +216,7 @@ QEtaConditionsModularCategory: Category == with
         ll := [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
         matrix removeDuplicates! ll
 
+    modularOrbit(rspec: SPEC, m: P, t: N): List N == [t]
 
 
 
@@ -279,12 +288,6 @@ QEtaConditionsModularGamma0: Exports == Implementation where
       ++ matrixLigozatElement(nn, c, delta) computes an entry of the
       ++ matrix of Ligozat corresponding to the index (c, delta)
       ++ counted in divisors of nn.
-    modularOrbit: (SPEC, P, N) -> List N
-      ++ modularOrbit(rspec, m, t) computes the elements of
-      ++ $\modularOrbit{r,m,t)$ as defined in qeta.tex,
-      ++ \cite[Def.~42]{Radu_RamanujanKolberg_2015} and
-      ++ \cite[Lemma 4.35]{Radu_PhD_2010} were r is pureExponents(rspec)
-      ++ and rspec is expected to specify a pure eta-quotient.
 
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
