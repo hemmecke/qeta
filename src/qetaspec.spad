@@ -298,6 +298,19 @@ QEtaSpecification: Exports == Implementation where
       ++ where di is the i-th positive divisor of nn and
       ++ fi=ceiling(di/2)-1.
 
+    alphaInfinity: (%, %, P, List N) -> Z
+      ++ alphaInfinity(sspec,rspec,m,orb) implements the definition
+      ++ \eqref{eq:alphabarInfinity} and \eqref{eq:alphaInfinity},
+      ++ i.e., the definition of Radu in
+      ++ \cite{Radu_RamanujanKolberg_2015},
+      ++ DOI=10.1016/j.jsc.2017.02.001,
+      ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
+      ++ and can also be extracted from from formula (10.4) of
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+      ++ when the respective cofactor part is taken into account. Note
+      ++ that it does not agree with \alpha(t) as defined in
+      ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+
   Implementation ==> add
     -- The representation is basically rbar in the form of a sorted
     -- list of [delta,g,e] triples where g=-1 for a specification of a
@@ -561,6 +574,15 @@ QEtaSpecification: Exports == Implementation where
         for d in nndivs repeat
             for g in 1..ceiling(d/2)$Q-1 repeat indices := cons([d, g], indices)
         reverse! indices
+
+    alphaInfinity(sspec: %, rspec: %, m: P, orb: List N): Z ==
+        sbarhat: Q := sigmaInfinity sspec
+        rbarhat: Q := sigmaInfinity rspec
+        l: List Q := [24*k::Q + rbarhat for k in orb]
+        orbsumrbarhat: Q := reduce(_+, l, 0)
+        alpha: Q := (1/24)*(sbarhat + (1/m)*orbsumrbarhat)
+        not one? denom alpha => error "alpha not an integer"
+        return numer alpha
 
 
 
