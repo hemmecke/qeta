@@ -97,7 +97,7 @@ SPADFILES=4ti2 qfunct cachedpow cachedqpochpow \
   qetasamba \
   qetaicat qetaih qetaihc qetasomos \
   qetapowersamba qetacofactorspace \
-  qetaquotsymb qetaquot qetamodgamma qetamodfunexp \
+  qetasymb qetaquot qetamodgamma qetamodfunexp \
   qetark \
   ivar iffts ffalgclos algclos newtonpuiseux \
 
