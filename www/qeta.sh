@@ -126,7 +126,7 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   tPrint("g_r(trf*tau) = x^xpower * ser");_
   tPrint("where x=q^(1/w).");_
   lle := [[(g := gamma se;_
-            w := WIDTH0(level, g(2, 1));_
+            w := WIDTH0(level, g);_
             lx := laurentExpansion(se, w)\$QELX(Q,CX);_
             [exponents se, g, w, lx]\$Rec)_
            for se in lse] for lse in llse]_
