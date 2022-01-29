@@ -167,14 +167,14 @@ CongruenceSubgroup: Category == with
     rightCosetRepresentatives: () -> List SL2Z
       ++ rightCosetRepresentatives() returns a list of right coset
       ++ representatives of $\Gamma_0(nn) \backslash SL_2(Z)$.
-    width: Cusp -> Z
+    width: Cusp -> P
       ++ If GAMMA denotes this domain, then width(cusp) returns the
       ++ width of the cusp=(a:c) of GAMMA.
-    width: SL2Z -> Z
+    width: SL2Z -> P
       ++ width(gamma)=width(cuspOf(gamma)).
   add
     cuspOf(mat: SL2Z): Cusp == cusp(mat(1,1),mat(2,1))
-    width(gamma: SL2Z): Z == width cuspOf gamma
+    width(gamma: SL2Z): P == width cuspOf gamma
 
 
 
@@ -216,7 +216,7 @@ CongruenceSubgroupGamma0(nn: P): CongruenceSubgroup == add
 
     index(): P == dedekindPsi nn
 
-    width(cusp: Cusp): Z == (nn exquo gcd(denom(cusp)^2, nn)) :: Z
+    width(cusp: Cusp): P == asP((nn exquo gcd(denom(cusp)^2, nn)) :: Z)
 
 )if LiterateDoc
 
@@ -477,18 +477,10 @@ CongruenceSubgroupGamma1(nn: P): CongruenceSubgroup == add
         nn < 3 => index()
         asP shift(index(), -1)
 
-    width(cusp: Cusp): Z ==
+    width(cusp: Cusp): P ==
         c := denom cusp
         nn=4 and gcd(c,nn)=2 => 1
-        (nn exquo gcd(c, nn)) :: Z
-
-    cuspWidth(a: Z, c: Z): Z ==
-        g: SL2Z := cuspToMatrix(cusp(a, c))$Cusp
-        ig: SL2Z := matrix [[g(2,2), -g(1,2)],[-g(2,1), g(1,1)]]
-        for d in 1..index() repeat
-            member?(g * matrix [[ 1,d],[0, 1]] * ig) => return d
-            member?(g * matrix [[-1,d],[0,-1]] * ig) => return d
-        error "width(Gamma1): we should not come here"
+        asP((nn exquo gcd(c, nn)) :: Z)
 
     cusps(): List Cusp ==
         nn = 1 => [infinity()]
