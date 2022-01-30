@@ -50,35 +50,7 @@ FRICAS=FRICAS_INITFILE='' fricas -nosman
 	>> projectcompile.input
 	${STAMP} $@
 
-cachedqpochpow.compile: cachedpow.compile qfunct.compile
-qetaalg.compile: cachedpow.compile
-qetaser.compile: qetaalg.compile
-qetagamma.compile: qetacusp.compile
-qetacofactorconditions.compile: qetaspec.compile
-qetacondmod.compile: qetacofactorconditions.compile qetaspec.compile \
-  qetacusp.compile qetaaux.compile
-qetaauxfun.compile: qetagamma.compile qetacondmod.compile
-qetaqmspecs.compile: 4ti2.compile qetacondmod.compile qetaauxfun.compile
-qetacofactorspace.compile: qetacofactorconditions.compile
-qetaquotinf.compile: qetaser.compile cachedqpochpow.compile qetacondmod.compile
-qetatool.compile: qetaser.compile
-qetasamba.compile: qetaquotinf.compile qetaaux.compile
-qetasomos.compile: qetaquotinf.compile qetatool.compile
-qetasymb.compile: qetagamma.compile qetacondmod.compile
-qetaquot.compile: qetaquotinf.compile qetasymb.compile qetasqrt.compile \
-  qetacondmod.compile
-qetamodfunexp.compile: qetaser.compile qetagamma.compile
-qetamodgamma.compile: qetaquot.compile 4ti2.compile qetamodfunexp.compile \
-  qetacofactorspace.compile
-qetaicat.compile: qetatool.compile qetaqmspecs.compile qetamodgamma.compile
-qetaih.compile: qetaicat.compile qetasamba.compile
-qetark: qetacofactormod.compile qetasymb.compile
-iffts.compile: ivar.compile
-ffalgclos.compile: iffts.compile
-algclos.compile: ffalgclos.compile
-newtonpuiseux.compile: algclos.compile
-
-
+include deps.mk
 
 projectcompile.input: ${patsubst %,%.spad, ${SPADFILES}}
 	rm -f projectcompile.input ${patsubst %,%.compile, ${SPADFILES}}

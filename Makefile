@@ -85,21 +85,27 @@ TPROJECT=${TMP}/${PROJECT}
 # toplevel targets
 all: compile-spad
 SPADFILES=4ti2 qfunct cachedpow cachedqpochpow \
-  qetacusp \
+  qetaaux qetaspec qetacusp qetasqrt \
+  qetaalg \
+  qetaser \
   qetagamma \
-  qetaspec \
-  qetaaux \
-  qetacofactorconditions qetacondmod \
+  qetacofactorconditions \
+  qetacondmod \
   qetaauxfun \
+  qetaquotinf \
+  qetasymb \
+  qetaquot \
+  qetamodfunexp \
+  qetacofactorspace \
+  qetamodgamma \
   qetaqmspecs \
-  qetaalg qetasqrt \
-  qetaser qetaquotinf qetatool \
+  qetatool \
   qetasamba \
-  qetaicat qetaih qetaihc qetasomos \
-  qetapowersamba qetacofactorspace \
-  qetasymb qetaquot qetamodgamma qetamodfunexp \
+  qetasomos \
+  qetaicat qetaih qetaihc \
+  qetapowersamba \
   qetark \
-  ivar iffts ffalgclos algclos newtonpuiseux \
+  ivar iffts ffalgclos algclos newtonpuiseux
 
 PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 # We also add convenience.input and modfuns.input so that we can
@@ -108,9 +114,11 @@ PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 PREREQS_INPUT=checksomos.input etacompute.input etamacros.input \
   convenience.input modfuns.input
 PREREQS_SAGE=etagb.sage
-PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQS_SAGE}}
+PREREQS_SCRIPT=mkdeps.pl
+PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQS_SAGE} ${PREREQS_SCRIPT}}
 
 prerequisites: ${PREREQS}
+	cd ${TMP}; for f in ${PREREQS_SPAD}; do echo $$f; done | perl mkdeps.pl > deps.mk
 
 QETAEXTS=aux bbl blg idx ilg ind log out synctex.gz toc
 clean:
@@ -139,6 +147,9 @@ ${patsubst %,${TMP}/%,${PREREQS_SPAD}}: ${TMP}/%: src/%
 	${MKDIR_P} ${TMP}
 	cp -a $< $@
 ${patsubst %,${TMP}/%,${PREREQS_SAGE}}: ${TMP}/%: sagemath/%
+	${MKDIR_P} ${TMP}
+	cp -a $< $@
+${patsubst %,${TMP}/%,${PREREQS_SCRIPT}}: ${TMP}/%: bin/%
 	${MKDIR_P} ${TMP}
 	cp -a $< $@
 
