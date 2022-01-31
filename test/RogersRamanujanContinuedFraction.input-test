@@ -21,12 +21,10 @@ asExpression ==> 8
 withSubscript ==> 16
 )set mess type off
 
-)read /home/hemmecke/g/qeta/input/convenience.input )quiet
+)read convenience.input )quiet
 findID1a(nn,rspec,m,t)==> _
-  findID1(nn,generalizedEtaFunctionIndices nn, rspec,m,t,_
-             generalizedEtaFunctionIndices nn)
+  findIdM1(nn, rspec,m,t,generalizedEtaFunctionIndices nn)
 
-RKI==>QEtaRamanujanKolbergIdentity(C)
 idxSPEC idx ==> if #idx=3 then eqSPEC[idx] else eqSPEC[concat(idx,1)]
 ERMp(spec) ==> etaRelationMonomial(1,spec,0,varPochhammer $ RKI,0)$RKI
 ERMe(spec) ==> etaRelationMonomial(1,spec,0,varEta$RKI,0)$RKI
@@ -51,8 +49,8 @@ REL1(id) ==> ERMp definingSpecification id = (_
      ERMp inv coSpecification id _
   else _
      rhs pretty(id, qIdentity + expand + nonModular + withSubscript + asExpression))
-findREL1(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,idxs);REL1 id)
-findREL1ID(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,id);REL1 id)
+findREL1(nn,idx,idxs) ==> (id:=findIdM1(nn,idxs,idxSPEC idx,1,0,idxs);REL1 id)
+findREL1ID(nn,idx,idxs) ==> (id:=findIdM1(nn,idxs,idxSPEC idx,1,0,id);REL1 id)
 findREL1x(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1(nn,idx,idxs))
 findREL1IDx(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1ID(nn,idx,idxs))
 commonFactor id ==> (_
@@ -62,8 +60,7 @@ commonFactor id ==> (_
   num := gcd [numer(den*x) for x in cs];_
   num/den)
 findID1a(nn,rspec,m,t)==> _
-  findID1(nn,generalizedEtaFunctionIndices nn, rspec,m,t,_
-             generalizedEtaFunctionIndices nn)
+  findID1(nn,rspec,m,t,generalizedEtaFunctionIndices nn)
 
 )set stream calc 4
 
@@ -130,14 +127,14 @@ rspecs := [eqSPEC([[5,1,-11], [5,2, -1]]),_
            eqSPEC([[1,-6],[5,6]])];
 [assertTrue(modularGamma1? x) for x in rspecs]
 
-ys := [specYM1GEQ x for x in rspecs];
+ys := [specYM1EQ x for x in rspecs];
 xiord := lcm [minimalRootOfUnity(y)::P for y in ys]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(ys.1)
 
 -- To the cusps belong the following transformation matrices.
 
-[cuspToMatrix(c)$GAMMA1(5) for c in spitzen]
+[cuspToMatrix(5, c)$MOD1 for c in spitzen]
 
 [qetaGrades y for y in ys]
 
@@ -145,7 +142,7 @@ spitzen := cusps(ys.1)
 -- we must look at all cusps.
 
 )set stream calc 2
-as := [expandAnCX y for y in ys]
+as := [expandM1AnCX y for y in ys]
 
 z := as.1 - as.2 - (1$An(CX) + 11 * as.3)
 assertTrue(zero? z)
@@ -165,7 +162,7 @@ s1 := series(as.1,4)
 
 t := 4
 idxs := [[5,1],[5,2]]
-id1 := findID1(5,idxs,rspecs.1,5,t,idxs);
+id1 := findIdM1(5,rspecs.1,5,t,idxs);
 --pretty(id1, qIdentity + withSubscript)
 eq1 := inv(coefficient id1)*equationX(id1,a[1])
 commonFactor id1
@@ -182,7 +179,7 @@ commonFactor id1
 s2 := monomial(1,-2)$L1(C)*series(as.2,4)
 
 idxs := [[5,1],[5,2]]
-id2 := findID1(5,idxs,rspecs.2,5,t,idxs);
+id2 := findIdM1(5,rspecs.2,5,t,idxs);
 --pretty(id2, qIdentity + withSubscript)
 eq2 := inv(coefficient id2)*equationX(id2,a[2])
 commonFactor id2
@@ -267,7 +264,7 @@ findREL1(5,[5,2,-1],[[1],[5],[5,1]])
 -- ### Divisibility property of $\frac{\eta(5\tau)^6}{q\cdot\eta(\tau)^{6}}=\frac{\qPochhammer{q^5}{q^5}}{\qPochhammer{q}{q}}$
 
 idxs := [[5,1],[5,2]]
-id3 := findID1(5,idxs,rspecs.3,5,4,idxs);
+id3 := findIdM1(5,rspecs.3,5,4,idxs);
 pretty(id3, qIdentity + withSubscript)
 't=ERMe(monoidSpecifications(id3).1) = 1/('R(q)^5)
 -- qEtaQuotient(rspecs.3,varPochhammer$RKI)
@@ -284,11 +281,11 @@ t := 1
 idxs := [[5,1],[5,2]]
 rrspec := eqSPEC [[5,1,1],[5,2,-1]];
 r5spec := rrspec^5;
-idrp := findID1(5,idxs,r5spec,5,t,idxs);
+idrp := findIdM1(5,r5spec,5,t,idxs);
 --pretty(idrp, qIdentity + withSubscript);
 e1 := inv(coefficient idrp)*qequationX(idrp,a[1])
 
-idrn := findID1(5,idxs,inv r5spec,5,t,idxs);
+idrn := findIdM1(5,inv r5spec,5,t,idxs);
 --pretty(idrn, qIdentity + withSubscript);
 e2 := inv(coefficient idrn)*qequationX(idrn,a[2])
 -- -
@@ -305,14 +302,14 @@ m1 := specEQI(Q)(monoidSpecifications(idrp).1)
 
 sspecp := coSpecification(idrp)
 sspecn := coSpecification(idrn)
-y1 := specYM1GEQ(sspecp,r5spec,5,t);
-y2 := specYM1GEQ(sspecn,inv r5spec,5,t);
+y1 := specYM1EQ(sspecp,r5spec,5,t);
+y2 := specYM1EQ(sspecn,inv r5spec,5,t);
 xiord := lcm(minimalRootOfUnity y1, minimalRootOfUnity y2)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 )set stream calc 2
-a1 := expandAnCX y1
-a2 := expandAnCX y2
+a1 := expandM1AnCX y1
+a2 := expandM1AnCX y2
 qetaGrades a1, qetaGrades a2
 
 a1 + a2
@@ -332,11 +329,11 @@ t := 0;
 idxs := [[5,1],[5,2]]
 rrspec := eqSPEC [[5,1,1],[5,2,-1]];
 r5spec := rrspec^5;
-idrp := findID1(5,idxs,r5spec,5,t,idxs);
+idrp := findIdM1(5,r5spec,5,t,idxs);
 --pretty(idrp, qIdentity + withSubscript);
 e1 := inv(coefficient idrp)*qequationX(idrp,a[1])
 
-idrn := findID1(5,idxs,inv r5spec,5,t,idxs);
+idrn := findIdM1(5,inv r5spec,5,t,idxs);
 --pretty(idrn, qIdentity + withSubscript);
 e2 := inv(coefficient idrn)*qequationX(idrn,a[2])
 -- -
@@ -377,14 +374,14 @@ e1-e2
 
 sspecp := coSpecification(idrp)
 sspecn := coSpecification(idrn)
-y1 := specYM1GEQ(sspecp,r5spec,5,t);
-y2 := specYM1GEQ(sspecn,inv r5spec,5,t);
+y1 := specYM1EQ(sspecp,r5spec,5,t);
+y2 := specYM1EQ(sspecn,inv r5spec,5,t);
 xiord := lcm(minimalRootOfUnity y1, minimalRootOfUnity y2)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 )set stream calc 2
-a1 := expandAnCX y1;
-a2 := expandAnCX y2;
+a1 := expandM1AnCX y1;
+a2 := expandM1AnCX y2;
 qetaGrades a1, qetaGrades a2
 a1 - a2
 
@@ -421,23 +418,23 @@ modularGamma1? ixspec
 -- We do not need a cofactor to make the 5-disection
 -- modular in $\Gamma_1(25)$.
 
-(etaCofactorSpace1(25,xspec,5,0)$QEtaCofactorSpace).particular
+(etaCofactorSpace(25,xspec,5,0,idxs)$MOD1).particular
 
 -- +
 sspec := eqSPEC(25,[]$List(Z))
-yx := specYM1GEQ(sspec,xspec,5,0);
-yix := specYM1GEQ(sspec,ixspec,5,0);
+yx := specYM1EQ(sspec,xspec,5,0);
+yix := specYM1EQ(sspec,ixspec,5,0);
 
 xiord := lcm(minimalRootOfUnity yx, minimalRootOfUnity yix)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(yx)
 
-ax := expandAnCX yx;
-aix := expandAnCX yix;
+ax := expandM1AnCX yx;
+aix := expandM1AnCX yix;
 [qetaGrades ax, qetaGrades aix]
 -- -
 
-ax - aix
+assertTrue(zero?(ax - aix))
 
 -- +
 -------------------------------------------------------------------

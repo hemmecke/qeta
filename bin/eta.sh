@@ -36,7 +36,8 @@ function QuotientMonoidSpecifications {
 )read etacompute.input )quiet
 )set message type off
 )set message time on
-result := mSPECS0 $1;
+iddxs := etaFunctionIndices $1;
+result := mSPECSM0($1, idxs);
 )set message time off
 vPrint("etaQuotientMonoidSpecifications$1", result)
 EOF

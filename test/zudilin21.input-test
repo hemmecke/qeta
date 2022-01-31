@@ -37,8 +37,18 @@
 -- -
 
 C ==> Q
+MOD ==> MOD0
+
 VZ ==> Vector Z
-MZ ==> Matrix Z
+VQ ==> Vector Q
+MQ ==> Matrix Q
+RELS ==> VZ
+QINPUT ==> Record(qmat: MQ, zrels: RELS, qrhs: VQ)
+
+setWeight(qin, w) ==> (_
+  for i in 1..#(qin.zrels) repeat (_
+      if zero?(qin.zrels.i) then (qin.qrhs.i := w; break)))
+
 )set mess type off
 )set mess time off
 )read convenience.input )quiet
@@ -90,17 +100,17 @@ MZ ==> Matrix Z
 -- So we first compute the respective q-series and then multiply with
 -- a cofactor of level 42 to get a modular function in level 42.
 
-level := 63;
+nn := 63;
 f21epol63 := E7 / (2*E1^2*E3*E9*E21) _
         *_
         (3*E1^2*E7^2*E9^4 - E3^5*E7*E9*E21 + 7*E1*E3^2*E9*E21^4_
          + 3*E1^3*E7*E9^3*E63 - 3*E1*E3^5*E21*E63 + 3*E1^4*E9^2*E63^2)
-esyms := indexedSymbols("E", DIVISORS level);
+esyms := indexedSymbols("E", divisors nn);
 dim: N := #esyms;
 num21RZ := toRZ numer f21epol63;
 den21RZ := toRZ denom f21epol63;
 f21polzudilinRZ := (num21RZ exquo den21RZ)::RZ;
-f21 := rzToA1C f21polzudilinRZ
+f21 := rzToA1(C) f21polzudilinRZ
 
 -- The following variables must be made invalid for
 -- further computation.
@@ -115,10 +125,11 @@ f21 := rzToA1C f21polzudilinRZ
 -- divisors of 21). The variable `rgens42` corresponds to the generators
 -- of $R^\infty(42)$.
 
-level := 42; divs := DIVISORS level;
-mspecs42 := mSPECS0 level;
-egens42 := [specM0A1(C) spec for spec in mspecs42]
-msyms42 := indexedSymbols("M", #mspecs42)
+nn := 42;
+idxs := etaFunctionIndices nn
+mspecs42 := mSPECSInfM0(nn, idxs);
+egens42 := [specM0A1(C) spec for spec in mspecs42];
+msyms42 := indexedSymbols("M", #mspecs42);
 xgens42 := [toX1(C, x, sym) for x in egens42 for sym in msyms42];
 
 assertEquals(#mspecs42, 1517)
@@ -128,8 +139,8 @@ assertEquals(#mspecs42, 1517)
 -- for $C[M_1,\ldots,M_{1517}]$.
 
 xt: X1 C := xgens42.1
-assertEquals(genus()$GAMMA0(level), 5)
-xab42 := samba(xt, xgens42, 5)$QXTOPSAMBA1(C)
+assertEquals(genus()$GAMMA0(nn), 5)
+xab42 := samba(xt, xgens42, 5)$QXTOPSAMBA1(C);
 
 -- Interestingly, we only need to touch the first 13 entries
 -- from the generators of the monoid of eta-quotients
@@ -148,14 +159,14 @@ assertEquals(numberOfGaps(xab42), 5)
 -- $f_{21} \cdot c$ into $M^\infty(21)$.
 
 )set stream calc 2
-idivs := [i for i in 1.. #divs-1];
+
+qin: QINPUT := etaQuotientMonoidSystem(nn,[infinity()],idxs)$MOD0
 wght := 2; -- weight of f21.
-rhs: List Z := concat([0 for i in idivs], -2*wght);
-z := zsolve4ti2(level, idivs, rhs);
-zzi := sortByComponentGrade(level, [x(1..#divs) for x in z.zinhom]);
-zzh := sortByComponentGrade(level, [x(1..#divs) for x in z.zhom]);
-wmspecs := etaQuotientSpecifications(level, idivs, -2*wght);
-assertEquals(zzi,[allPureExponents x for x in wmspecs])
+setWeight(qin, -2*wght)
+z := zsolve(qin)$X4ti2;
+n := #idxs
+zzi := sortByComponentGrade(nn, [x(1..n) for x in z.zinhom]);
+zzh := sortByComponentGrade(nn, [x(1..n) for x in z.zhom]);
 assertEquals(#zzi,570)
 assertEquals(#zzh, #mspecs42)
 #zzi
@@ -164,12 +175,12 @@ assertEquals(#zzh, #mspecs42)
 -- that leads to a small pole order of the resulting
 -- modular function.
 
-min [qetaGrade specM0A1C eqSPEC(level,r) for r in zzi]
-qetaGrade specM0A1C eqSPEC(level,zzi.1)
+min [qetaGrade specM0A1(C) eqSPEC(nn,r) for r in zzi]
+qetaGrade specM0A1(C) eqSPEC(nn,zzi.1)
 
 rfcofactor := zzi.1
 assertEquals(rfcofactor, [1, - 2, - 3, 6, - 3, 6, 9, - 18]);
-f := f21 * specM0A1C eqSPEC(level, rfcofactor)
+f := f21 * specM0A1(C) eqSPEC(nn, rfcofactor)
 assertEquals(qetaGrade f, 19);
 xf := toX1(C, f, 'F);
 
@@ -184,12 +195,12 @@ assertEquals(removeDuplicates [qetaCoefficient(xfr,-i) for i in 0..230], [0])
 -- (and therefore also of $f_{21}$) as a sum of
 -- eta-quotients of $M^\infty(42)$.
 
-ixfr := 49*xfr;
+ixfr := inv(coefficient(second(xfr)::Pol(C),'F,1))*xfr;
 fmpol := -second(ixfr)::Pol(C) + F  -- This corresponds to the mod func f.
 
-assertEquals(# monomials fmpol, 17)
+assertEquals(# monomials fmpol, 16)
 
--- However, this relation has 17 terms in contrast to the
+-- However, this relation has 16 terms in contrast to the
 -- representation with only 6 eta-quotients of $M^\infty(63)$.
 
 -- # Find a basis for all eta-quotients of weight 2 that are modular forms
@@ -222,16 +233,21 @@ matrixLigozat(42)
 --
 -- As a result we get 138 candidates.
 
-idivs := [i for i in 1..#divs];
-rhs := concat([0 for i in idivs], 2*wght);
-zmodform := zsolve4ti2(level, idivs, rhs)$QEtaQuotientSpecifications4ti2;
-zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
+-- We now want eta-quotients that have no pole at any cusp, but are of
+-- weight wght, i.e., we want modular forms of weight wght.
+
+qin: QINPUT := etaQuotientMonoidSystem(nn,[],idxs)$MOD0
+setWeight(qin, 2*wght)
+zmodform := zsolve(qin)$X4ti2;
+zmodformzi := [members x(1..n) for x in zmodform.zinhom];
 assertEquals(#zmodformzi, 138)
 
 -- Sort the generating exponents according to the resulting
 -- series expansion at the cusp $\infty$.
 
-vdivs := vector(divs)$VZ; -- part of the Ligozat matrix that gives the order
+-- +
+ -- part of the Ligozat matrix that gives the order at infinity
+vdivs := vector(divisors nn)$VZ;
 vmodformgens := [vector x for x in zmodformzi];
 vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
 rmodformgens := [members x for x in vmodformgenss];
@@ -243,7 +259,7 @@ rmodformgens := [members x for x in vmodformgenss];
 --- CGRDS(gens, cond) ==> _
 ---  matrix [cons(i, x) for r in gens for i in 1..#gens| (x := g YEQn r; cond)]
 --- GRDS(gens) ==> CGRDS(gens, true)
-emodformgens := [specM0A1C eqSPEC(level, r) for r in rmodformgens];
+emodformgens := [specM0A1(C) eqSPEC(nn, r) for r in rmodformgens];
 [order x for x in emodformgens]
 
 -- Although the dimension of the space of modular forms for
@@ -338,12 +354,12 @@ xg21gens: List X1 C := [toX1(C, x, sy) for x in emodformgens for sy in qsyms];
 
 xg21 := -xg21gens.57 + 2*xg21gens.60 + xg21gens.100
 g21qpol := second(xg21)::Pol(C);
-esyms := indexedSymbols("E", DIVISORS level);
+esyms := indexedSymbols("E", divisors nn);
 dim: N := #esyms;
 qsymsRZ := [monRZ x for x in rmodformgens];
 
 g21polRZ := EVALRZ(qsyms, qsymsRZ, g21qpol);
-g21 := rzToA1C g21polRZ;
+g21 := rzToA1(C) g21polRZ;
 z0 := g21 - f21;
 assertEquals(order(z0, 301), 301)
 
@@ -363,13 +379,13 @@ g21numRZ := g21polRZ * g21denRZ;
 rez g21numRZ
 rez g21denRZ
 
-fRZtoE(x: RZ): Pol(C) ==
-  c := leadingCoefficient(x)
-  dd := degree(x)
-  divs := DIVISORS(42)
-  esysm := indexedSymbols("E", divs)
-  mon := reduce(_*, [(esyms.i::Pol(C))^(dd.i) for i in 1..#divs])
-  c*mon
+fRZtoE(x: RZ): Pol(C) == (_
+  c := leadingCoefficient(x);_
+  dd := degree(x);_
+  divs := divisors(42);_
+  esysm := indexedSymbols("E", divs);_
+  mon := reduce(_*, [(esyms.i::Pol(C))^(dd.i) for i in 1..#divs]);_
+  c*mon)
 enumpol := algSUM(fRZtoE, g21numRZ);
 assertEquals(enumpol,_
       E1^2        *E6^2*E7^2          *E42^3_
@@ -384,7 +400,7 @@ assertEquals(enumpol,_
 fmpol
 msymsRZ := [specMonRZ x for x in mspecs42];
 fpolRZ := EVALRZ(msyms42, msymsRZ, fmpol);
-fm := rzToA1C fpolRZ;
+fm := rzToA1(C) fpolRZ;
 z0 := fm - f
 assertTrue(zero? z0)
 assertEquals(order(z0, 301), 301)
@@ -395,9 +411,9 @@ assertEquals(order(z0, 301), 301)
 
 rfcofactorRZ := monRZ rfcofactor
 gpolRZ := g21polRZ * monRZ rfcofactor;
-g := rzToA1C gpolRZ;
+g := rzToA1(C) gpolRZ;
 assertTrue(zero?(g - f))
-z0 := f - g21 * specM0A1C eqSPEC(level, rfcofactor);
+z0 := f - g21 * specM0A1(C) eqSPEC(nn, rfcofactor);
 assertTrue(zero? z0)
 assertEquals(order(z0, 301), 301)
 
@@ -409,11 +425,11 @@ assertEquals(order(z0, 301), 301)
 -- the algebra basis and the other one by solving
 -- a linear system for the coefficients of $f_{21}$.
 
-level := 42; spitzen := CUSPS0 level;
-xiord := 24*level;
+nn := 42; spitzen := cuspsM0 nn;
+xiord := 24*nn;
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-fmA42 := rzToAnCX fpolRZ;
-gA42 := rzToAnCX gpolRZ
+fmA42 := rzToAn(CX) fpolRZ;
+gA42 := rzToAn(CX) gpolRZ
 z0 := fmA42 - gA42
 assertTrue(zero? z0)
 

@@ -221,8 +221,8 @@ rspec31 := eqSPEC [[3,-1],[6,2]]
 
 rspec0 := dilate(rspec30,3)/rspec
 rspec1 := dilate(rspec31,3)/rspec
-modularGamma1? rspec0
-modularGamma1? rspec1
+assertTrue(modularGamma1? rspec0)
+assertTrue(modularGamma1? rspec1)
 printSPEC rspec0
 printSPEC rspec1
 
@@ -238,15 +238,15 @@ assertEquals(order(expansion specEQI(Z)(spec) - 1$L1(Z), 100), 100)
 -- ## Must check at most 6 coefficient at expansion at infinity
 
 nn := 18
-spitzen := CUSPS1 nn
-y0 := specYM1GEQ rspec0;
-y1 := specYM1GEQ rspec1;
-g0 := qetaGradesEstimate y0
-g1 := qetaGradesEstimate y1
-d0 := reduce(+, [x for x in g0 | x>0])
-d1 := reduce(+, [x for x in g1 | x>0])
+spitzen := cuspsM1 nn
+y0 := specYM1EQ rspec0;
+y1 := specYM1EQ rspec1;
+o0 := ordersMin y0
+o1 := ordersMin y1
+d0 := reduce(+, [x for x in o0 | x<0])
+d1 := reduce(+, [x for x in o1 | x<0])
 l1 := (specM1A1(Z)(rspec0) - 2*specM1A1(Z)(rspec1) - 1$A1(Z))::L1(Z)
-assertEquals(order(l1, d0+d1+1), d0+d1+1)
+assertEquals(order(l1, -(d0+d1)+1), -(d0+d1)+1)
 
 -- ## Compute series expansion at every cusp
 
@@ -259,6 +259,7 @@ EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 -- Obviously the eta-quotients have pole not only at
 -- infinity.
 
+specM1AnCX ==> specM1An CX
 qetaGrades specM1AnCX rspec0
 qetaGrades specM1AnCX rspec1
 
@@ -292,9 +293,9 @@ assertTrue(zero?(aa))
 -- \end{gather*}
 
 rspec := eqSPEC [[1,1],[6,1,1]];
-nn := minLevel1(rspec, 3, 2)
+nn := minLevelM1(rspec, 3, 2)
 idxs := etaFunctionIndices nn
-id := findID1(nn, idxs, rspec, 1, 0, idxs);
+id := findIdM1(nn, rspec, 1, 0, idxs);
 -- pretty(id, qIdentity + asExpression + expand)
 rhs printSPEC rspec = rhs printSPEC inv coSpecification id
 pspec := inv coSpecification id
@@ -308,20 +309,21 @@ rspec2 := dilate(vspec, 9)/pspec;
 lhs printSPEC rspec1, lhs printSPEC rspec2
 modularGamma0? rspec1
 modularGamma0? rspec2
-qetaGradesEstimate specYM0EQ rspec1
-qetaGradesEstimate specYM0EQ rspec2
+ordersMin specYM0EQ rspec1
+ordersMin specYM0EQ rspec2
 
 -- +
 nn := level rspec1
-mspecs := mSPECS0 nn;
+idxs := etaFunctionIndices nn;
+mspecs := mSPECSInfM0(nn, idxs);
 [level x for x in mspecs]
-[qetaGradesEstimate specYM0EQ x for x in mspecs]
+[ordersMin specYM0EQ x for x in mspecs]
 ispec1 := rspec1*mspecs.3;
 ispec2 := rspec2*mspecs.3;
 ispec3 := mspecs.3;
-qetaGradesEstimate specYM0EQ(ispec1)
-qetaGradesEstimate specYM0EQ(ispec2)
-qetaGradesEstimate specYM0EQ(ispec3)
+ordersMin specYM0EQ(ispec1)
+ordersMin specYM0EQ(ispec2)
+ordersMin specYM0EQ(ispec3)
 
 printSPEC(ispec1)
 printSPEC(ispec2)
@@ -334,8 +336,8 @@ ispecs := [ispec1,ispec2, ispec3];
 ys := [specYM0EQ x for x in ispecs];
 xiord := lcm [minimalRootOfUnity y for y in ys]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-spitzen := CUSPS0 nn;
-as := [expandAnCX y for y in ys]
+spitzen := cuspsM0 nn;
+as := [expandM0AnCX y for y in ys]
 
 --as.1 - 2*as.2
 )set stream calc 50
@@ -387,14 +389,15 @@ s2 := choose(3,2,s)
 -- The following is no surprise since there is no integer
 -- $n$ with $\frac{n(n+1)}{2} \equiv 2 \pmod{3}$.
 
-nn := minLevel0(pspec, 3, 2)
-id2 := findID0(nn, pspec, 3, 2);
+nn := minLevelM0(pspec, 3, 2)
+idxs := etaFunctionIndices nn
+id2 := findIdM0(nn, pspec, 3, 2, idxs)
 pretty(id2, qIdentity + asExpression + expand + nonModular)
 assertEquals(identityPolynomial id2, F)
 
 -- ## (3n+1)-disection &mdash; Explain the $-2$ coefficients
 
-id1 := findID0(nn, pspec, 3, 1);
+id1 := findIdM0(nn, pspec, 3, 1,idxs);
 pretty(id1, asExpression + expand + nonModular + qIdentity)
 assertEquals(identityPolynomial id1, F+2)
 
@@ -402,7 +405,7 @@ assertEquals(identityPolynomial id1, F+2)
 
 -- We can do the 3-disection in $\Gamma_0(6)$.
 
-id1 := findID0(nn, pspec, 3, 0);
+id1 := findIdM0(nn, pspec, 3, 0, idxs);
 pretty(id1, asExpression + expand + nonModular + qIdentity)
 assertEquals(identityPolynomial id1, F-1)
 

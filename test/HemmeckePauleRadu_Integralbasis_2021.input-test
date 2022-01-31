@@ -118,8 +118,9 @@ smallerMod5?(x, y) == positiveRemainder(qetaGrade x, 5)<positiveRemainder(qetaGr
 -- We do expansion at the cusp $\infty$ which corresponds to `1/nn` in
 -- terms of our session variables.
 
-level := nn: P := 121;
-spitzen := CUSPS0 level;
+nn: P := 121;
+idxs := etaFunctionIndices nn
+spitzen := cuspsM0 nn;
 
 -- Show only a few terms of the $q$-series expansion.
 
@@ -135,7 +136,7 @@ spitzen := CUSPS0 level;
 -- at infinity $E^\infty(121)$ are given by these exponents
 -- for the eta-functions (with arguments being the divisors of 121).
 
-mspecs := mSPECS0 level;
+mspecs := mSPECSInfM0(nn, idxs);
 rgensExpected: List List Z := [[1,0,-1],[-1,12,-11]]
 assertEquals([pureExponents x for x in mspecs], rgensExpected)
 
@@ -151,7 +152,7 @@ EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 
 -- The corresponding series are the following.
 
-egens := [specM0A1C(spec) for spec in mspecs]
+egens := [specM0A1(C)(spec) for spec in mspecs]
 
 -- ## Naming convention
 
@@ -217,7 +218,7 @@ assertEquals(nog, 96)
 -- The genus of the Riemann surface $X_0(121)$ is a curve of genus 6.
 -- Its genus is equal to the genus of $\Gamma_0(121)$.
 
-gen := genus()$GAMMA0(level);
+gen := genus()$GAMMA0(nn);
 assertEquals(gen, 6)
 
 -- Since 6 < 96, it proves that `xab` does not represent
@@ -241,7 +242,7 @@ xabz := samba(xt, [xz], 96)$QXTOPSAMBA1(C);
 -- $$
 
 rspec := eqSPEC(1, [-1])
-sspec := cofactI0(121, rspec, 11, 6)
+sspec := cofactInfM0(121, rspec, 11, 6, etaFunctionIndices 121)
 assertEquals(pureExponents sspec, [11,1,-11])
 alpha := alphaInfinity(sspec, rspec, 11, [6])
 assertEquals(alpha, -54)
@@ -772,7 +773,7 @@ gamma := sm.red;
 -- $$
 -- where $f_{\gamma,2}(\tau) := (f|\gamma)(2\tau)$.
 
-w := WIDTH0(242, gamma)
+w := widthM0(242, gamma)
 
 -- The width of the Atkin-Lehner involution $W_2^{242}$ is 2,
 -- so the resulting series will be in $q^{1/2}$ which together with
@@ -788,9 +789,9 @@ w := WIDTH0(242, gamma)
 
 gen242 := genus()$GAMMA0(242);
 assertEquals(gen242, 22)
-mspecs242 := mSPECS0(242)
+mspecs242 := mSPECSInfM0(242, etaFunctionIndices 242);
 assertEquals(#mspecs242, 94)
-egens242 := [specM0A1C spec for spec in mspecs242];
+egens242 := [specM0A1(C) spec for spec in mspecs242];
 l := [qetaGrade(x) for x in egens242];
 assertEquals(l(1..17),_
   [15,55,55,55,55,55,55,60,60,60,60,60,65,65,65,65,66])
@@ -819,8 +820,8 @@ mspecs242(1..12)
 
 -- So apply the trace function from $M^\infty(242)$ to $M^\infty(121)$.
 
-xg := toX1(C, traceMap(level, 2, pureExponents mspecs242.1), 'G)
-xh := toX1(C, traceMap(level, 2, pureExponents mspecs242.4), 'H)
+xg := toX1(C, traceMap(nn, 2, pureExponents mspecs242.1), 'G)
+xh := toX1(C, traceMap(nn, 2, pureExponents mspecs242.4), 'H)
 
 -- +
 -------------------------------------------------------------------

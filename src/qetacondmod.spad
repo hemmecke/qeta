@@ -113,15 +113,29 @@ Z ==> Integer
 Q ==> Fraction Z
 MZ ==> Matrix Z -- consider only 2x2 matricies
 MQ ==> Matrix Q -- consider only 2x2 matricies
-LP ==> List P
+SL2Z ==> MZ -- represents SL_2(Z), will be a 2x2 square matrix
 LZ ==> List Z
 LLZ ==> List LZ
 INDICES ==> LLZ
 SPEC ==> QEtaSpecification
+CUSPS ==> List Cusp
 QETAAUX ==> QEtaAuxiliaryPackage
+GAMMA0 ==> CongruenceSubgroupGamma0
+GAMMA1 ==> CongruenceSubgroupGamma1
 
 asN x ==> x pretend N
 asP x ==> x pretend P
+
+VZ ==> Vector Z
+VQ ==> Vector Q
+RELS ==> VZ
+LVZ ==> List VZ
+QINPUT ==> Record(qmat: MQ, zrels: RELS, qrhs: VQ)
+ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
+
+ECS ==> Record(indices:INDICES, particular:Union(VZ,"failed"), basis:List VZ)
+--ECSS ==> Record(comatrix: MZ, rhs: VZ)
+--SOL ==> Record(particular: Union(VZ, "failed"), basis: List VZ)
 
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetaq.tex.
@@ -154,7 +168,7 @@ QEtaConditionsModularCategory: Category == with
       ++ candidateLevelsCoEtaQuotient(rspec,m,t) returns an
       ++ ascendingly sorted list of the nn up to 24*m*level(rspec)
       ++ such that conditionCoEtaQuotient?(nn,rspec,m,t) is true.
-    matrixEtaOrder: (P, List Cusp, INDICES) -> MQ
+    matrixEtaOrder: (P, CUSPS, INDICES) -> MQ
       ++ matrixEtaOrder(nn,spitzen,idxs) returns the matrix given by
       ++ [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen] with
       ++ duplicate rows removed.
@@ -179,7 +193,7 @@ QEtaConditionsModularCategory: Category == with
       ++ 1/2 is 1 and not 2=4/gcd(4.2). For this case, we deviate from
       ++ Robins' coefficients and adapt to an expansion in q rather
       ++ than an expansion in q^(1/2).
-    matrixEtaOrderFull: (P, List Cusp, INDICES) -> MQ
+    matrixEtaOrderFull: (P, CUSPS, INDICES) -> MQ
       ++ matrixEtaOrder(nn,spitzen,idxs) returns a matrix given by
       ++ [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen].
     matrixEtaOrderRow: (P, Cusp, INDICES) -> List Q
@@ -189,7 +203,9 @@ QEtaConditionsModularCategory: Category == with
       ++ matrixModular(nn, idxs) returns a matrix mat mat*v=0 for an
       ++ (extended) exponent vector where the exponents correspond to
       ++ idxs, i.e., #v=#idxs+k where k corresponds to additional
-      ++ (slack) variables due to the modularity conditions.
+      ++ (slack) variables due to the modularity conditions. The rows
+      ++ corresponding to slack variables have been normalized so that
+      ++ the entry of the slack variable (there is only one) is 1.
     minimalLevelCoEtaQuotient: (SPEC, P, N) -> P
       ++ minimalLevelCoEtaQuotient(rspec, m, t) returns the
       ++ smallest nn of candidateLevalsCoEtaQuotient(rspec,m,t).
@@ -204,22 +220,98 @@ QEtaConditionsModularCategory: Category == with
       ++ 4.35]{Radu_PhD_2010} were r is pureExponents(rspec) and rspec
       ++ is expected to specify a pure eta-quotient.
       ++ For $\Gamma_1(N)$, modularOrbit(rspec, m, t) returns [t].
+
+    etaQuotientMonoidSystem: (P, CUSPS, INDICES) -> QINPUT
+      ++ etaQuotientMonoidSystem(nn,polesat,idxs,rhs) returns
+      ++ a record that can be given to zsolve$X4ti2 in order to find
+      ++ the generators of the monoid of (generalized) eta-quotients
+      ++ that are modular wrt. MOD and have poles at most at the cusps
+      ++ given by polesat. The indices of the eta-functions that may
+      ++ appear is given by idxs.
+    etaCofactorSpaceSystem: (P, SPEC, P, N, INDICES) -> QINPUT
+      ++ etaCofactorSpaceSystem(nn,rspec,m,t,idxs) returns a matrix
+      ++ mat and a vector v such that for the integer solutions s of
+      ++ the equation mat*s=v it holds modular?(sspec,rspec,m,t)
+      ++ where sspec results from the list of the first #idxs entries
+      ++ of s. With idxs one can specify what indexes should be
+      ++ allowed in the solution space.
+    etaCofactorSpace: (P, SPEC, P, N, INDICES) -> ECS
+      ++ etaCofactorSpace(nn,rspec,m,t,idxs) returns a vector v and the
+      ++ basis of a space such that #v=#idxs  and
+      ++ modular?(nn,members(s),rspec,m,t) is true for any
+      ++ s = v + reduce(_+, [z.i * basis.i for i in 1..#basis])
+      ++ and any sufficiently long list z of integers.
+      ++ The function fails, if there is no such solution.
+      ++ The indices part of the result is equal to idxs and
+      ++ corresponds to the entries of the solution vectors.
+
+    -- Functions connected to CongruenceSubGroup
+
+    cusps: P -> CUSPS
+      ++ cusps(nn) returns representatives for all the (inequivalent)
+      ++ cusps for the congruence subgroup that the respective package
+      ++ represents. They are sorted by their size as rational numbers
+      ++ with infinity being the biggest cusp. Note that
+      ++ cusps()=[cusp(x(1,1),x(2,1)) for x in
+      ++ doubleCosetRepresentatives()] where
+      ++ doupleCosetRepresentatives() is from the respective
+      ++ congruence subgroup that is connected to the package.
+    cuspToMatrix: (P, Cusp) -> SL2Z
+      ++ For cusp=(a:c), cuspToMatrix(nn,cusp) returns a matrix
+      ++ gamma=[[a,b],[c,d]] corresponding to the cusp (a:c) of this
+      ++ domain. We assume that a/c is a normalized cusp, i.e.
+      ++ cusp=normalizeCusp(cusp).
+    genus: P -> N
+      ++ genus(nn) returns the genus of the congruence subgroup
+      ++ connected to the package (either Gamma_0(nn) or Gamma_1(nn).
+    width: (P, Cusp) -> P
+      ++ width(nn, cusp) returns the width of the cusp=(a:c) for G(nn)
+      ++ where G is the congruence subgroup of SL_2(Z) connected to
+      ++ this package.
+    width: (P, SL2Z) -> P
+      ++ width(nn, gamma) returns the width of the cusp=(a:c) for G(nn)
+      ++ where G is the congruence subgroup of SL_2(Z) connected to
+      ++ this package and gamma = matrix [[a,b],[c,d]].
+
   add
 
     matrixEtaOrderRow(nn: P, cusp: Cusp, idxs: INDICES): List Q ==
         [matrixEtaOrderElement(nn, cusp, idx) for idx in idxs]
 
-    matrixEtaOrderFull(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+    matrixEtaOrderFull(nn: P, spitzen: CUSPS, idxs: INDICES): MQ ==
         matrix [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
 
-    matrixEtaOrder(nn: P, spitzen: List Cusp, idxs: INDICES): MQ ==
+    matrixEtaOrder(nn: P, spitzen: CUSPS, idxs: INDICES): MQ ==
         ll := [matrixEtaOrderRow(nn,cusp,idxs) for cusp in spitzen]
         matrix removeDuplicates! ll
 
     modularOrbit(rspec: SPEC, m: P, t: N): List N == [t]
 
+    etaQuotientMonoidSystem(nn: P, polesat: CUSPS, idxs: INDICES): QINPUT ==
+        -- At the cusp infinity (=1/nn) the order must be an integer.
+        -- That, however, is already taken care of in the
+        -- matrixModular(nn)$MOD part of the matrix. Therefore, we
+        -- remove this cusp.
+        spitzen: CUSPS := setDifference(cusps nn, polesat)
+        matord := matrixEtaOrder(nn, spitzen, idxs)
+        matmod := matrixModular(nn, idxs)
+        mat: MQ := verticalConcat(matord, matmod)$QETAAUX
+        rels: VZ := new(nrows mat, 0) -- all equations
+        -- For the first rows we want a >= system. (no poles for other cusps)
+        for i in 1..nrows matord repeat rels.i := 1 -- non-negative order
+        [mat, rels, new(nrows mat, 0)]$QINPUT
 
-
+    etaCofactorSpace(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): ECS ==
+        qin: QINPUT := etaCofactorSpaceSystem(nn, rspec, m, t, idxs)
+        -- Now we have a matrix mat and a right-hand side v and need to
+        -- solve mat*x=v for x.
+        -- sol := diophantineSystem(mat, v)$SmithNormalForm(Z, VZ, VZ, MZ)
+        z: ZRESULT := zsolve(qin)$X4ti2
+        empty?(z.zinhom) => [idxs, "failed", []]
+        n := #idxs
+        part: VZ := first(z.zinhom)(1..n)
+        bas: List VZ := [x(1..n) for x in z.zfree]
+        [idxs, part, bas]
 
 
 
@@ -382,10 +474,10 @@ QEtaConditionsModularGamma0: Exports == Implementation where
         -- check idxs
         n: N := # idxs
         for j in 1..n for idx in idxs repeat
-            if #idx ~= 1 then error "matrixModularGamma0: not pure index"
+            if #idx ~= 1 then error "matrixModular-Gamma0: not pure index"
             d: Z := first idx
             if d < 1 or not zero?(nn rem d) then
-                error "matrixModularGamma0: index not positive divisor"
+                error "matrixModular-Gamma0: index not positive divisor"
         fl: List Record(factor: Z, exponent: N) := factors factor nn
         -- product is rational square
         ll: LLZ := [[primePower(asP(idx.1), asP(fe.factor))$QETAAUX _
@@ -401,15 +493,15 @@ QEtaConditionsModularGamma0: Exports == Implementation where
             d: Z := first idx
             -- sum(r(d.i), i=1..n)=0
             qsetelt!(mat, 1, j, 1)
-            -- sum(d * r(d) for [d] in idxs) = 0 (mod 24)
-            qsetelt!(mat, 2, j, d::Q)
-            -- sum(nn/d * r(d) for [d] in idxs) = 0 (mod 24)
-            qsetelt!(mat, 3, j, nn/d) -- note that d divides nn
+            -- 1/24 * sum(d * r(d) for [d] in idxs) should be an integer
+            qsetelt!(mat, 2, j, d/24)
+            -- 1/24 * sum(nn/d * r(d) for [d] in idxs) should be an integer
+            qsetelt!(mat, 3, j, nn/(24*d)) -- note that d divides nn
         for i in 1..#ll for l in ll repeat
-            for j in 1..n for z in l repeat qsetelt!(mat, i+3, j, z::Q)
-            qsetelt!(mat, i+3, n+2+i, 2::Q) -- additional variable for (mod 2)
-        qsetelt!(mat, 2, n+1, 24::Q) -- additional variable for (mod 24)
-        qsetelt!(mat, 3, n+2, 24::Q) -- additional variable for (mod 24)
+            for j in 1..n for z in l repeat qsetelt!(mat, i+3, j, z/2)
+            qsetelt!(mat, i+3, n+2+i, 1$Q) -- additional variable for (mod 1)
+        qsetelt!(mat, 2, n+1, 1$Q) -- additional variable for (mod 1)
+        qsetelt!(mat, 3, n+2, 1$Q) -- additional variable for (mod 1)
         return mat
 
     minimalLevelCoEtaQuotient(rspec: SPEC, m: P, t: N): P ==
@@ -492,6 +584,60 @@ QEtaConditionsModularGamma0: Exports == Implementation where
             if not member?(e, result) then result := cons(e, result)
         result
 
+    etaCofactorSpaceSystem(nn:P, rspec:SPEC, m:P, t:N, idxs:INDICES): QINPUT ==
+        import from QEtaCofactorConditions
+        not conditionCoEtaQuotient?(nn, rspec, m, t) =>
+            error "conditionCoEtaQuotient?(Gaamma0) not met"
+
+        mat: MQ := matrixModular(nn, idxs)
+
+        -- Setup right-hand side.
+        nr: N := nrows mat
+        v: VQ := new(nr, 0)
+
+        -- eq:Radu-sum=0
+        w: Z := reduce(_+, pureExponents rspec, 0)$List(Z)
+        orb: List N := modularOrbit(rspec, m, t)
+        orbitSize: Z := # orb
+        v.1 := (- orbitSize * w)::Q
+
+        -- eq:Radu-sigmainfinity
+        nu: Q := chiExponent(rspec, m, t, orb)::Q
+        v2: Q := -(1/24) * (nu + orbitSize * m * sigmaInfinity rspec)
+        v.2 := fractionalPart(v2)$QETAAUX
+
+        -- eq:Radu-sigma0
+        mm: P := level rspec
+        v3: Q := -(orbitSize * m * nn * sigma0 rspec)/(24*mm)
+        v.3 := fractionalPart(v3)$QETAAUX
+
+        -- now the stuff connected to eq:Radu-productsquare
+        fl: FL := factorList factor nn
+        -- Determine the cofactor according to (37) of
+        -- \cite{Radu_RamanujanKolberg_2015} for each prime separately.
+        -- Or see \ref{eq:Radu-productsquare} in qeta.tex.
+        if even? orbitSize then
+            for i in 1..#fl repeat v(i+3) := 0
+        else
+            for i in 1..#fl for fe in fl repeat
+                p: P := asP(fe.factor) -- extract prime factor
+                em: N := primePower(m, p)$QETAAUX
+                e: Z := 0
+                for l in pureParts rspec | odd? specExponent l repeat
+                    e := e + em + primePower(specDelta l, p)$QETAAUX
+                v(i+3) := fractionalPart(e/2)$QETAAUX
+
+        return [mat, new(#v,0)$VZ, v]
+
+    ----------------------------------------------------
+    -- Functions connected to congruence subgroup Gamma0
+    ----------------------------------------------------
+
+    cusps(nn: P): CUSPS == cusps()$GAMMA0(nn)
+    cuspToMatrix(nn: P, cusp: Cusp): SL2Z == cuspToMatrix(cusp)$GAMMA0(nn)
+    genus(nn: P): N == genus()$GAMMA0(nn)
+    width(nn: P, cusp: Cusp): P == width(cusp)$GAMMA0(nn)
+    width(nn: P, gamma: SL2Z): P == width(gamma)$GAMMA0(nn)
 
 )if LiterateDoc
 %$
@@ -719,7 +865,7 @@ QEtaConditionsModularGamma1: Exports == Implementation where
         z
 
     matrixModular(nn: P, idxs: INDICES): MQ ==
-        spitzen: List Cusp := [infinity(), cusp(0,1)]
+        spitzen: CUSPS := [infinity(), cusp(0,1)]
         rows: List List Q := [matrixEtaOrderRow(nn, c, idxs) for c in spitzen]
         s: List Q := [(#idx=1=>1;0) for idx in idxs]
         rows := cons(s, rows)
@@ -780,6 +926,102 @@ QEtaConditionsModularGamma1: Exports == Implementation where
                 return false
 
         true
+
+    -- loccal
+    productSquareElement(idx: LZ, a: Z): Z ==
+        import from IntegerNumberTheoryFunctions
+        empty? idx => error "etaCofactorSpace1System: idx is empty"
+        d := idx.1
+        #idx=1 => if jacobi(d, a) < 0 then 1 else 0
+        q := (a-1) * fractionalBernoulli1(idx.2/d)$QETAAUX
+        not one? denom q =>
+            error "etaCofactorSpace1System: e exponent not integral"
+        if odd? numer q then 1 else 0
+
+    -- The result is a list that consists of n row elements prepended
+    -- by the respective element for the right-hand side.
+    -- This corresponds to condition (4) in
+    -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+    -- See also \eqref{eq:CDZ-productsquare}.
+    -- local
+    productSquareRhsRow(rspec: SPEC, m: N, idxs: INDICES, a: Z): LZ ==
+        import from IntegerNumberTheoryFunctions
+        row: LZ := [productSquareElement(idx, a) for idx in idxs]
+        -- prepend the entry for the right-hand side
+        expo: Q := 0
+        for l in properGeneralizedParts rspec repeat --assert(#l=3) l=[d,g,e]
+            d := specDelta l; g := specSubindex l; e := specExponent l
+            expo := expo + e * fractionalBernoulli1(g/d)$QETAAUX
+        expo := (a-1) * expo
+        not one? denom expo =>
+            error "etaCofactorSpace1System: exponent not integral"
+        isOdd?: Boolean := odd? numer expo
+        for l in pureParts rspec | odd? specExponent l
+                                   and jacobi(m*specDelta(l),a) < 0 repeat
+            isOdd? := not isOdd?
+        if isOdd? then cons(1, row) else cons(0, row)
+
+    -- Extend the matrix by the product rows (with slack variable conditions).
+    -- local
+    extendByProductSquareRows(_
+      nn: P, rspec: SPEC, m: N, idxs: INDICES, qin: QINPUT): QINPUT ==
+        rows: LLZ := [productSquareRhsRow(rspec, m, idxs, a) _
+                      for a in 1..11*nn+1 by nn | one? gcd(a, 6)]
+        -- remove duplicate lines to reduce slack variables
+        rows := [row for row in removeDuplicates rows | not every?(zero?, row)]
+        n: N := #rows
+        nc: N := ncols(qin.qmat)
+        v: VQ := qin.qrhs
+        rels: VZ := qin.zrels
+        mat: MQ := new(n, nc + n, 0)
+        for i in 1..n for row in rows repeat
+            v := concat(v, first(row)/2) -- normalize to slackvar=1
+            rels := concat(rels, 0)
+            for e in rest row for j in 1..nc repeat mat(i, j) := e/2
+            mat(i, nc + i) := 1 -- for slack variable
+        [verticalConcat(qin.qmat, mat)$QETAAUX, rels, v]
+
+    etaCofactorSpaceSystem(nn:P, rspec:SPEC, m:P, t:N, idxs:INDICES): QINPUT ==
+        -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+        import from QEtaCofactorConditions
+        not conditionCoEtaQuotient?(nn, rspec, m, t) =>
+            error "conditionCoEtaQuotient?(Gaamma1) not met"
+
+        mat: MQ := matrixModular(nn, idxs)
+        v: VQ := new(nrows mat, 0)
+        nspec: SPEC := purify rspec -- we must normalize!!!
+        -----------------------------------------------------------
+        -- CDZ Condition (1), \eqref{eq:CDZ-sum=0}
+        v.1 := (- reduce(_+, pureExponents nspec, 0))::Q -- fill right-hand side
+        -----------------------------------------------------------
+        -- For the following two lines:
+        -- Since matrixModular refers to mod 1 instead of mod 24,
+        -- we must divide the sigma-expression by 24.
+        -----------------------------------------------------------
+        -- CDZ Condition (3), \eqref{eq:CDZ-sigmainfinity=0}
+        -- We transform \eqref{eq:CDZ-sigmainfinity=0} into
+        -- 1/m * (m^2 sigma + (1 - m^2)*24*t + (1-m^2) * sigma)
+        -- = 1/m * (24*t*(1-m^2) + sigma)
+        rval: Q := - (1/(24*m))*((24*t*(1-m^2))::Q + sigmaInfinity(nspec))
+        v.2 := fractionalPart(rval)$QETAAUX
+        -----------------------------------------------------------
+        -- CDZ Condition (2), \eqref{eq:CDZ-sigma0=0}
+        rval := - nn * m * sigma0(nspec) / (24 * level(nspec))
+        v.3 := fractionalPart(rval)$QETAAUX
+        -----------------------------------------------------------
+        -- CDZ condition (4), \eqref{eq:CDZ-productsquare}
+        qin: QINPUT := [mat, new(#v, 0)$VZ, v]
+        extendByProductSquareRows(nn, nspec, m, idxs, qin)
+
+    ----------------------------------------------------
+    -- Functions connected to congruence subgroup Gamma1
+    ----------------------------------------------------
+
+    cusps(nn: P): CUSPS == cusps()$GAMMA1(nn)
+    cuspToMatrix(nn: P, cusp: Cusp): SL2Z == cuspToMatrix(cusp)$GAMMA1(nn)
+    genus(nn: P): N == genus()$GAMMA1(nn)
+    width(nn: P, cusp: Cusp): P == width(cusp)$GAMMA1(nn)
+    width(nn: P, gamma: SL2Z): P == width(gamma)$GAMMA1(nn)
 
 
 )if LiterateDoc

@@ -97,7 +97,6 @@
 )set mess type off
 )set mess time off
 C ==> Q
-oo ==> infinity()$Cusp
 
 )read convenience.input )quiet
 )set stream calc 2
@@ -121,6 +120,7 @@ REL1(id) ==> ERM definingSpecification id = (_
   if fpol = 'fpol then fpol := 1;_
   idpol := identityPolynomial(id);_
   rpol := 'F - (inv(coefficient(idpol,'F, 1))::C) * idpol;_
+  tracePrint("rpol", rpol);_
   assertEquals(rpol,fpol);_
   rspec := definingSpecification id;_
   sspec := coSpecification id;_
@@ -136,8 +136,8 @@ REL1(id) ==> ERM definingSpecification id = (_
      ERM inv coSpecification id _
   else _
      rhs pretty(id, qIdentity + expand + nonModular + withSubscript + asExpression))
-findREL1(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,idxs);REL1 id)
-findREL1ID(nn,idx,idxs) ==> (id:=findID1(nn,idxs,idxSPEC idx,1,0,id);REL1 id)
+findREL1(nn,idx,idxs) ==> (id:=findIdM1(nn,idxs,idxSPEC idx,1,0,idxs);REL1 id)
+findREL1ID(nn,idx,idxs) ==> (id:=findIdM1(nn,idxs,idxSPEC idx,1,0,id);REL1 id)
 findREL1x(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1(nn,idx,idxs))
 findREL1IDx(nn,idx,idxs,pol) ==> (fpol:=pol;findREL1ID(nn,idx,idxs))
 
@@ -190,12 +190,12 @@ findREL1ID(nn,[6,2],idxs)
 
 findREL1(nn,[6,1],aidxs(1..4))
 
-mspecs := mSPECS1 6;
+mspecs := mSPECSInfM1(6, idxs);
 [qetaGrade specM1A1(C) m for m in mspecs]
 [printQPOCH m for m in mspecs]
 
 qrep(rspec,idxs) ==> (_
-  id:=findID1(nn,idxs,rspec,1,0,idxs);_
+  id:=findIdM1(nn,idxs,rspec,1,0,idxs);_
   ERMp rspec = rhs pretty(id, qIdentity + expand + nonModular + asExpression))
 
 idxs := [[1],[2],[6,1],[6,2]]
@@ -359,10 +359,10 @@ findREL1IDx(nn,[13,5,-1],idxs,M1-1)
 
 aidxs := generalizedEtaFunctionIndices(nn:=14)
 idxs := concat(aidxs(1..4),aidxs(8..10))
-findREL1x(nn,[14,6],idxs,- M7 + M6 + 2*M3 - M1)
-findREL1IDx(nn,[14,6,-1],idxs, - M7 + M6 + 2*M3)
+findREL1x(nn,[14,6],idxs,- M7 + M4 - M3 + 2*M1 - 1)
+findREL1IDx(nn,[14,6,-1],idxs, - M7 + M4 - M3 + 3*M1 - 1)
 findREL1IDx(nn,[14,5],idxs,1)
-findREL1IDx(nn,[14,4],idxs,- M7 + M6 + 2*M3)
+findREL1IDx(nn,[14,4],idxs, - M7 + M4 - M3 + 3*M1 - 1)
 
 -- +
 -------------------------------------------------------------------
@@ -406,7 +406,7 @@ idxs := concat[aidxs(1..5),aidxs(10..12)]
 findREL1x(nn,[16,7],idxs,M1-1)
 findREL1IDx(nn,[16,7],idxs,M1-1)
 findREL1IDx(nn,[16,6],idxs,1)
-findREL1IDx(nn,[16,5],idxs,M5 - M2 + M1*(M1-2))
+findREL1IDx(nn,[16,5],idxs,M5 - M2 + M1^2 - 1)
 findREL1IDx(nn,[16,4],idxs,1)
 
 -- +
@@ -425,9 +425,10 @@ findREL1IDx(nn,[16,4],idxs,1)
 
 aidxs := generalizedEtaFunctionIndices(nn:=17)
 idxs := aidxs(1..7)
-findREL1x(nn,[17,8],idxs,-M8+M5-3*M4-3/2*M3-1/2*M2+3/2*M1-1/2)
+findREL1x(nn,[17,8],idxs,-M8+M7-3*M4-3/2*M3-1/2*M2+3/2*M1-1/2)
 findREL1IDx(nn,[17,7],idxs,_
-  (2*M1-1)*M8+(-M1+1)*M7-M1*M5+(4*M1-2)*M4+(5/2*M1-1)*M3+1/2*M1*M2-3/2*M1^2+1/2*M1)
+  (2*M1-1)*M8-M1*M7+(-M1+1)*M5+(4*M1-2)*M4+(5/2*M1-1)*M3+1/2*M1*M2_
+  -3/2*M1^2+1/2*M1)
 findREL1IDx(nn,[17,6],idxs,2*M8-M7-M5+4*M4+5/2*M3+1/2*M2-3/2*M1+1/2)
 
 -- +
@@ -447,16 +448,16 @@ findREL1IDx(nn,[17,6],idxs,2*M8-M7-M5+4*M4+5/2*M3+1/2*M2-3/2*M1+1/2)
 aidxs := generalizedEtaFunctionIndices(nn:=18)
 idxs := concat(aidxs(1..6),aidxs(14..15))
 findREL1x(nn,[18,8],idxs,_
-  (10/3*M1+1/3)*M7+(6*M1-2/3)*M5+(-2*M1+17/3)*M2+2/3*M12-10/3*M1^3+7/3*M1^2+M1)
+  (10/3*M1+1/3)*M7+(6*M1-2/3)*M5+(10*M1+13/3)*M2+2/3*M12-10/3*M1^3+7/3*M1^2+M1)
 findREL1IDx(nn,[18,7],idxs,_
-  (-5/3*M1-2/3)*M7+(-3*M1-2/3)*M5+(M1-4/3)*M2-1/3*M12+5/3*M1^3-2/3*M1^2-M1)
+  (-5/3*M1-2/3)*M7+(-3*M1-2/3)*M5+(-5*M1-8/3)*M2-1/3*M12+5/3*M1^3-2/3*M1^2-M1)
 findREL1IDx(nn,[18,6],idxs,1)
 findREL1IDx(nn,[18,5],idxs,_
-  (5/3*M1^2+2/3*M1)*M7+(3*M1^2+2/3*M1)*M5_
-  +(-M1^2+7/3*M1+2)*M2+1/3*M1*M12-5/3*M1^4+2/3*M1^3+M1^2)
+  (5/3*M1^2+2/3*M1)*M7+(3*M1^2+2/3*M1)*M5+(5*M1^2+11/3*M1+2)*M2_
+  +1/3*M1*M12-5/3*M1^4+2/3*M1^3+M1^2)
 findREL1IDx(nn,[18,4],idxs,_
   (10/3*M1^2-4/3*M1-2/3)*M7+(6*M1^2-11/3*M1-2/3)*M5_
-  +(-2*M1^2+20/3*M1-4/3)*M2+(2/3*M1-1/3)*M12-10/3*M1^4+4*M1^3-2/3*M1^2)
+  +(10*M1^2-2/3*M1-8/3)*M2+(2/3*M1-1/3)*M12-10/3*M1^4+4*M1^3-2/3*M1^2)
 
 -- +
 -------------------------------------------------------------------

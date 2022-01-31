@@ -71,6 +71,7 @@
 C ==> IntegerLocalizedAtPrime 11
 L ==> A1 C
 X ==> X1 C
+ORBIT ==> modularOrbit $ MOD0
 
 -- The following function simply maps the integer coefficients of the
 -- series into the localized coefficient domain or into the rational
@@ -82,8 +83,6 @@ abmap(A, B, x) ==> abffmap(A, B, (c: A): B +-> c::B, x)
 zcmap(x) ==> abmap(Z, C, x)
 cqmap(x) ==> abmap(C, Q, x)
 zqmap(x) ==> abmap(Z, Q, x)
-
-level := 22;
 
 PolC ==> Pol C; LC ==> A1 C
 PolZ ==> Pol Z; LZ ==> A1 Z
@@ -120,9 +119,11 @@ smallerT(x: PolC, y: PolC):Boolean == degree(x, 'T) < degree(y, 'T)
 -- divisors of 22). The variable `rgens` corresponds to the generators
 -- of $R^\infty(22)$.
 
-mspecs := mSPECS0 level;
+nn := 22;
+idxs := etaFunctionIndices nn
+mspecs := mSPECSInfM0(nn, idxs);
 rgensExpected: List List Z := [_
-    [- 1, 1, 11, - 11], [- 4, 8, 4, - 8], [7, - 3, 3, - 7], _
+    [- 4, 8, 4, - 8], [- 1, 1, 11, - 11], [7, - 3, 3, - 7],_
     [- 2, 6, 6, - 10], [0, 4, 8, - 12], [2, 2, 10, - 14], [4, 0, 12, - 16]];
 rgens := [pureExponents x for x in mspecs]
 assertEquals(rgens, rgensExpected)
@@ -132,8 +133,8 @@ for x in eqgensZ repeat assertTrue(one? denom eulerExponent x)
 
 egensZ := [expansion x for x in eqgensZ];
 rfegensZ := [_
-  (3*q^5+2*q^4+2*q^3+q^2+q+1)/q^5,_
   (12*q^5+13*q^4+8*q^3+6*q^2+4*q+1)/q^5,_
+  (3*q^5+2*q^4+2*q^3+q^2+q+1)/q^5,_
   (-21*q^5+2*q^4-14*q^3+17*q^2-7*q+1)/q^5,_
   (-6*q^5-q^4-2*q^3-q^2+2*q+1)/q^6,_
   (8*q^6+2*q^4-4*q^2+1)/q^7,_
@@ -157,7 +158,7 @@ xgens := [toX1(C, x, s) for x in egens for s in msyms]; -- List X
 -- corresponding to $[- 1, 1, 11, - 11]$.
 -- We choose the vector corresponding to $[- 4, 8, 4, - 8]$.
 
-xt := xgens.2  -- X
+xt := xgens.1  -- X
 xab := samba(xt, xgens)$QXTOPSAMBA1(C)
 
 -- Due to another critical element selection strategy, the resulting
@@ -167,7 +168,7 @@ bas := sort(smallerGrade?, basis xab);
 xabExpectedArticle := [1/128*M7-5/128*M6+21/128*M5_
   +(-1/1024*M1+11*213/1024)*M4-85/128*M3+1/1024*M1^2+505/1024*M1,_
   1/8*M4-1/8*M1, M3, M5, M6] -- LPol C
-xabExpected := [3/8*M3+M2+11*(-1/8)*M1, 1/3*M2-1/3*M1, M4, M5, M6] --: LPol C
+xabExpected := [3/8*M3+11*(-1/8)*M2+M1, -1/3*M2+1/3*M1, M4, M5, M6]
 assertEquals([second(x)::PolC for x in bas], xabExpected)
 assertEquals(# bas, 5)
 
@@ -195,7 +196,7 @@ r11Expected := _
 assertEquals(rationalFunction(r11, 10), r11Expected)
 
 rspec := eqSPEC(1,[-1]); nn := 22; m := 11; t := 6;
-sspec := cofactI0(nn, rspec, m, t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 assertEquals(sspec, eqSPEC(nn,[10,2,11,-22]))
 
 fZ := specM0A1(Z)(sspec,rspec,m,t)
@@ -232,8 +233,8 @@ mxrExpectedArticle := _
   [F, 11*M1^2, 11*M1^3, 11*M1*M3, 11*M1^2*M4, 11*M1*M5, 11^2*M1, 11^2*M3,_
   11^2*M1*M4, 11^2*M5, 11^2*M1*M6, 11^2*M6, 11^2*M7, 11^3, 11^3*M4]$LPol(C)
 mxrExpected := _
-  [F, 11*M2^2, 11*M2^3, 11*M1*M2^2, 11*M2*M3, 11*M2^2*M3, 11*M2*M4, _
-  11*M2*M5, 11^2*M2, 11^2*M1*M2, 11^3*M3, 11^3*M4, 11^3*M5, 11^4, 11^5*M1]$LPol(C)
+  [F, 11*M1^2, 11*M1^3, 11*M1^2*M2, 11*M1*M3, 11*M1^2*M3, 11*M1*M4, _
+  11*M1*M5, 11^2*M1, 11^2*M1*M2, 11^3*M3, 11^3*M4, 11^3*M5, 11^4, 11^5*M2]$LPol(C)
 assertEquals(sort(smaller11, mxr), mxrExpected)
 
 -- Let's normalize the leading coefficient of $F$ to 1.
@@ -251,12 +252,11 @@ xrqExpectedArticle := _
   +(11*(-1867)*M1+11^2*(-2476))*M3+11*1/8*M1^3+11*1011/8*M1^2_
   +11^2*1647/2*M1+F+11^3*1360)$PolC
 xrqExpected := (11*(_
-  (M2+11^2*7)*M5_
-  +(3*M2+11^2*5)*M4_
-  +((-1/4)*M2^2+(-245/8)*M2+11^2*(-1/8))*M3_
-  +(-1)*M2^3+(5/4*M1+3)*M2^2_
-  +(11*(-49/8)*M1+11*(-13))*M2_
-  +11^4*1/8*M1+11^3*(-1))_
+  (M1+11^2*7)*M5 _
+  +(3*M1+11^2*5)*M4 _
+  +((-1/4)*M1^2 + (-245/8)*M1+11^2*(-1/8))*M3 _
+  +(5/4*M1^2+11*(-49/8)*M1+11^4*1/8)*M2 _
+  +(-1)*M1^3+3*M1^2+11*(-13)*M1+11^3*(-1)) _
   +F)$PolC
 assertEquals(xrq, xrqExpected)
 
@@ -266,7 +266,7 @@ assertEquals(xrq, xrqExpected)
 sers := cons(first xf, egens) --: List L
 -- Note that after some changes to the sorting order in the
 -- implementation, the old Mi correspond to other new Mi.
-sersArticle:=cons(first xf, [egens.i for i in [3,2,4,1,5,6,7]])
+sersArticle:=cons(first xf, [egens.i for i in [3,1,4,2,5,6,7]])
 ezArticle := eval(xrqExpectedArticle, c+->c::L, cons('F,msyms), sersArticle)_
       $ PolynomialEvaluation(C, L)
 assertTrue(zero? ezArticle)
@@ -696,7 +696,8 @@ assertTrue(zero? zq)
 -- However, that computation leads to only 5 elements in the algebra
 -- basis.
 
-level := nn := 11
+nn := 11
+idxs := etaFunctionIndices nn
 
 LQ ==> A1 Q
 XQ ==> X1 Q
@@ -716,7 +717,7 @@ degsExpected := [[7, 1], [8, 1], [9, 1], [11, 1]]$List(List Q)
 assertEquals(degs, degsExpected)
 
 rspec := eqSPEC(1,[-1]); m := 11; t := 6;
-sspec := cofactI0(nn, rspec, m, t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 xf := toX1(Q, specM0A1(Q)(sspec,rspec,m,t), F) --: X
 
 +-- As we have seen above, $U(3)$ lies in the $\mathbb{Q}[t]$-module
@@ -766,17 +767,19 @@ assertTrue(member?(false, znums))
 C ==> Z
 --LZ ==> A1 Z
 --XZ ==> X1 Z
-mspecs := mSPECS0 level;
+nn := 22;
+idxs := etaFunctionIndices nn;
+mspecs := mSPECSInfM0(nn,idxs);
 egens := [specM0A1(C)(spec) for spec in mspecs]
 msyms := indexedSymbols("M", #egens)
 xgens := [toX1(C, x, s) for x in egens for s in msyms]
  -- We only achieve a relation that shows divisibility by 11 with xgens.3.
 xt := xgens.3
-xab := samba(xt, xgens)$QXTOPSAMBA1(Z)
+xab := samba(xt, xgens)$QXTOPSAMBA1(C)
 assertEquals(# basis xab, 5)
 
 rspec := eqSPEC(1,[-1]); nn := 22; m := 11; t := 6;
-sspec: SPEC := cofactI0(nn, rspec, m, t)
+sspec: SPEC := cofactInfM0(nn, rspec, m, t, idxs)
 assertEquals(sspec, eqSPEC(nn,[10,2,11,-22]))
 xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), F)
 
@@ -788,12 +791,14 @@ assertTrue(zero? xr)
 
 pol := (second xr)::PolZ;
 polExpected := (11*(_
-  ((-1800)*M3+11^2*(-14336))*M5_
-  + ((-4696)*M3+11^2*53760)*M4_
-  + (-4)*M3^3_
-  + ((-12)*M2+16*M1+11*(-1139))*M3^2_
-  + ((-74080)*M2+11*4603*M1+11*(-135680))*M3_
-  + 11^2*84992*M2+11^3*(-28224)*M1+11^3*(-35840))_
+    (-1800*M3-1734656)*M5_
+    + (-4696*M3+6504960)*M4_
+    - 4*M3^3_
+    + (16*M2-12*M1-12529)*M3^2_
+    + (50633*M2-74080*M1-1492480)*M3_
+    - 37566144*M2_
+    + 10284032*M1_
+    - 47703040)_
   + 4*F)$PolZ
 assertEquals(pol, polExpected)
 
@@ -820,7 +825,8 @@ assertTrue(zero? e)
 -- -
 
 rspec := eqSPEC(1,[-1]); nn := 11; m := 11; t := 6;
-sspec := cofactI0(nn, rspec, m, t)
+idxs := etaFunctionIndices nn
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), 'F)
 xt := toX1(C, specM0A1(C) eqSPEC(11,[12,-12]), 'T)
 xab := samba(xt, [xf])$QXTOPSAMBA1(C);
@@ -869,6 +875,7 @@ assertEquals(-pol, polExpected)
 -- whether the just reduced element is divisible by 11.
 
 nn := 22::P; -- level
+idxs := etaFunctionIndices nn
 m := 11::P;
 rspec: SPEC := eqSPEC(1,[-1])
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
@@ -883,7 +890,7 @@ t := first(first orbs) :: N
 
 -- ## Create modular series for p(11n+6)
 
-sspec := cofactI0(nn, rspec, m, t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), 'F)
 
 -- The generators of the eta-quotients of level 22 are given by
@@ -891,7 +898,7 @@ xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), 'F)
 -- divisors of 22). The variable `rgens` corresponds to the generators
 -- of $R^\infty(22)$.
 
-mspecs := mSPECS0 nn;
+mspecs := mSPECSInfM0(nn, idxs);
 egens := [specM0A1(C)(spec) for spec in mspecs]
 msyms := indexedSymbols("M", #mspecs)
 xgens := [toX1(C, x, sym) for x in egens for sym in msyms];
@@ -913,9 +920,7 @@ bas := sort(smallerGrade?, basis xab);
 -- That this reduction should give 0 is clear, since xab is an
 -- algebra basis.
 
-x3 := (xt+1$X)*be.3.1-11*(be.3.2+3*be.2.1+5*be.1.1-xt+9*be.4.1-4*1$X)
-(xt+1$X)
---x3 := xt*bas.1-11*(bas.5-5*bas.4+21*bas.3-89*xt+32*bas.1-11*(53*bas.2+12*1$X))
+x3 := xt*be.3.1 - 11*(be.3.2 + 6*be.2.1 +10*be.1.1 + 10*xt - 11*be.4.1 - ((1/3)::C)*be.3.1 -11::C*1$X)
 assertTrue(zero? x3)
 
 -- It's still not a representation in terms of the Mi.

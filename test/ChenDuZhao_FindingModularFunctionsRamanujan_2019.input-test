@@ -77,8 +77,6 @@ TX ==> T1 CX
 LX ==> L1 CX
 PX ==> QEtaPuiseuxSeries CX
 
-puiex ==> puiseuxExpansion $ QESX(C, CX)
-
 oo ==> infinity()$Cusp
 
 qIdentity ==> 1
@@ -127,7 +125,7 @@ withSubscript ==> 16
 
 m := 5; t := 0;
 rspec := eqSPEC [[1,-1]];
-nn := minLevel1(rspec, m, t)
+nn := minLevelM1(rspec, m, t)
 
 -- As can be seen that is done in level 5.
 
@@ -153,7 +151,7 @@ assertEquals(order(f - g,100), 100)
 -- This cofactor can be computed as follows.
 
 idxs := [[1],[5],[5, 1]]
-sspec := cofactI1(nn,rspec,m,t,idxs)
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
 
 -- Interestingly, it is just the invers of the eta-quotient in
 -- the second summand of the right-hand side. So we will show:
@@ -183,13 +181,13 @@ sspec := cofactI1(nn,rspec,m,t,idxs)
 -- 3.
 -- \end{align}
 
-assertTrue(modular?(sspec,rspec,m,t)$QCONDM1)
+assertTrue(modular?(sspec,rspec,m,t)$MOD1)
 
 -- Is the cofactor and the basis modular for $\Gamma_1(N)$.
 
-yf := specYM1GEQ(sspec,rspec,m,t);
+yf := specYM1EQ(sspec,rspec,m,t);
 rspect := eqSPEC [[1,5], [5,-5], [5,1,-10]]
-yt := specYM1GEQ(rspect);
+yt := specYM1EQ(rspect);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(yf)
@@ -199,8 +197,8 @@ spitzen := cusps(yf)
 -- expanded at all cusps
 -- where $\xi$ is a 120-th primitive root of unity.
 
-af := expandAnCX yf; qetaGrades af
-at := expandAnCX yt; qetaGrades at
+af := expandM1AnCX yf; qetaGrades af
+at := expandM1AnCX yt; qetaGrades at
 
 )set stream calc 3
 af
@@ -222,9 +220,9 @@ assertTrue(zero?(af-at+3*1$An(CX)))
 generalizedEtaFunctionIndices(nn)
 
 idxs := [[1],[5],[5, 1]]
-mspecs := ncmSPECS1(nn, idxs)
-ygens := [specYM1GEQ x for x in mspecs];
-egens := [expandAnCX x for x in ygens];
+mspecs := ncmSPECSInfM1(nn, idxs)
+ygens := [specYM1EQ x for x in mspecs];
+egens := [expandM1AnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
 
@@ -248,10 +246,10 @@ assertEquals(mpol, M1-3)
 
 m := 5; t := 0;
 rspec := eqSPEC [[1,-1]];
-nn := minLevel1(rspec, m, t)
+nn := minLevelM1(rspec, m, t)
 idxs := [[1],[5],[5, 1]];
 
-id := findID1(nn, idxs, rspec, m, t, idxs)
+id := findIdM1(nn, rspec, m, t, idxs)
 pretty(id, qIdentity + asExpression + expand + withSubscript)
 
 assertEquals(coSpecification id, sspec)
@@ -260,19 +258,19 @@ ilcpol := -inv(coefficient(idpol,'F, 1))::C
 assertEquals(ilcpol*coefficient(idpol,'F,0), M1-3)
 
 idxs := [[1],[5],[5, 1]];
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript + asExpression)
 idxs := [[1],[5],[5, 2]];
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 idxs := [[1],[5],[5, 1]];
-id := findID1(nn, idxs, rspec, m, 1, idxs);
+id := findIdM1(nn, rspec, m, 1, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 idxs := [[1],[5],[5, 1]];
-id := findID1(nn, idxs, rspec, m, 2, idxs);
+id := findIdM1(nn, rspec, m, 2, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
-id := findID1(nn, idxs, rspec, m, 4, idxs);
+id := findIdM1(nn, rspec, m, 4, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 -- +
@@ -294,7 +292,7 @@ pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 m := 11; t := 6;
 rspec := eqSPEC [[1,-1]]
-nn := minLevel1(rspec, m, t)
+nn := minLevelM1(rspec, m, t)
 
 -- Create the series from the above article in two different ways
 -- and compare the first 100 coefficients.
@@ -333,31 +331,7 @@ assertEquals(order(zz, 100), 100)
 
 -- ## Check modularity for cofactor
 
-assertTrue(modular?(sspecz0,rspec,m,t)$QCONDM1)
-
--- ## Check Puiseux = Laurent expansion
-
--- Check that Puiseux expansion and Laurent
--- expansion have the same order.
-
-x := specYM1GEQ(sspecz0,rspec,m,t);
-spitzen := cusps x
-xiord := minimalRootOfUnity(x)::P
-EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-)set stream calc 2
-PGRD(nn,x,c) ==> - WIDTH1(nn, c)*order puiex(x(c))
-pgrds := [PGRD(nn, x, cusp) for cusp in spitzen]
-ax := expandAnCX x;
-assertEquals(pgrds, qetaGrades ax)
-yz0 := specYGEQ sspecz0;
-
-yz := specYGEQ rspecz;
-pgrds := [PGRD(nn, yz, cusp) for cusp in spitzen]
-assertEquals(pgrds, qetaGrades yz)
-
-ye := specYGEQ rspece;
-pgrds := [PGRD(nn, ye, cusp) for cusp in spitzen]
-assertEquals(pgrds, qetaGrades ye)
+assertTrue(modular?(sspecz0,rspec,m,t)$MOD1)
 
 -- ## Check modularity of basis
 
@@ -374,31 +348,24 @@ idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]]
 assertEquals(concat(idxs, [11,5]), generalizedEtaFunctionIndices nn)
 
 sspecz0
-sspec := cofactI1(nn,rspec,m,t,idxs)
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
 assertEquals(sspecz0,sspec)
 
-assertTrue(modular?(sspec,rspec,m,t)$QCONDM1)
-yf := generalizedEtaQuotient(sspec,rspec,m,t);
+assertTrue(modular?(sspec,rspec,m,t)$MOD1)
+yf := specYM1EQ(sspec,rspec,m,t);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps yf
-af := expandAnCX yf; qetaGrades af
-
--- Obviously, our cofactor gives the same modular
--- function as the cofactor $z_0$ from
--- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-
-)set stream calc 1
-assertTrue(zero?(af-ax))
+af := expandM1AnCX yf; qetaGrades af
 
 -- ## Find the relation
 
 -- Check whether the computation of exponent vectors and specifications
 -- agrees.
 
-mspecs := ncmSPECS1 nn;
-ygens := [specYM1GEQ x for x in mspecs];
-egens := [expandAnCX x for x in ygens];
+mspecs := ncmSPECSInfM1(nn, generalizedEtaFunctionIndices nn);
+ygens := [specYM1EQ x for x in mspecs];
+egens := [expandM1AnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
 msyms := indexedSymbols("M", #egens)
@@ -415,27 +382,26 @@ ilcpol := -inv(coefficient(pol,'F, 1))::C;
 mpol := coefficient(ilcpol*pol, 'F, 0)
 assertEquals(_
   mpol,_
-  11*(M1^10 + 40*M1^9 + 11*M1^8*M5 + 225*M1^8 + 44*M1^7*M5_
-      + 552*M1^7 + 44*M1^6*M5 + 718*M1^6-88*M1^5*M5_
-      + 516*M1^5 - 231*M1^4*M5 + 169*M1^4 - 220*M1^3*M5_
-      - 16*M1^3 - 110*M1^2*M5 - 24*M1^2 - 22*M1*M5_
-      - 3*M1+1))
+  11*((11*M1^8+44*M1^7+44*M1^6-88*M1^5-231*M1^4-220*M1^3-110*M1^2-22*M1)*M5_
+      +M1^10+29*M1^9+181*M1^8+508*M1^7+806*M1^6+747*M1^5+389*M1^4+94*M1^3_
+      -2*M1^2-3*M1+1))
+
+-- Check the series.
+
+assertTrue(zero?(eval((c:C):X1(C)+->c*1$X1(C),msyms,xgens)(mpol) - xf))
+
+
+
 
 -- ## Find the relation by just one function
 
 idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]];
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 -- +
-pol := 11*(11*(M1^8-4*M1^7+4*M1^6-4*M1^5+9*M1^4-12*M1^3+8*M1^2-2*M1)*M5_
-           + M1^10+19*M1^9-35*M1^8-16*M1^7+92*M1^6-155*M1^5_
-           + 190*M1^4-152*M1^3+71*M1^2-15*M1+1) - F;
+assertEquals(- 11*identityPolynomial id + F, mpol)
 
-pol := 11*((11*M1^8-44*M1^7+44*M1^6-44*M1^5+99*M1^4-132*M1^3+88*M1^2-22*M1)*M5_
-           +M1^10+19*M1^9-46*M1^8+28*M1^7+48*M1^6-111*M1^5+91*M1^4_
-           -20*M1^3-17*M1^2+7*M1+1)-F
-assertEquals(-11*identityPolynomial id, pol)
 
 
 -- +
@@ -464,10 +430,11 @@ assertEquals(-11*identityPolynomial id, pol)
 
 m := 5; t:= 2
 rspec := eqSPEC [[1,-2],[2,1]]
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 
 idxs := generalizedEtaFunctionIndices nn
-ecss := etaCofactorSpace1System(nn,rspec,m,t,idxs)$QEtaCofactorSpace
+qin := etaCofactorSpaceSystem(nn,rspec,m,t,idxs)$MOD1
+zin := clearDenominators qin
 
 -- ## Manual initial cofactor vector
 
@@ -475,13 +442,13 @@ ecss := etaCofactorSpace1System(nn,rspec,m,t,idxs)$QEtaCofactorSpace
 -- here, another relatively minimal (initial) vector for the
 -- cofactor.
 
-mat := ecss.comatrix
-v := ecss.rhs
+mat := zin.zmat
+v := zin.zrhs
 mat * vector [0,0,18,-17,0,0,0,0,0,-8,  1,0,13,4,9]
 
-ecs := etaCofactorSpace1(nn,rspec,m,t,idxs)$QEtaCofactorSpace
+ecs := etaCofactorSpace(nn,rspec,m,t,idxs)$MOD1
 
-spitzen := CUSPS1 10
+spitzen := cuspsM1 10
 v0 := ecs.particular;
 b := ecs.basis;
 vv := v0 - 23*b.9 + 2*b.8 + 4*b.7
@@ -493,21 +460,21 @@ vv := v0 - 23*b.9 + 2*b.8 + 4*b.7
 le := members vv
 idxs := ecs.indices
 sspecvv := etaQuotientSpecification(nn, idxs, le)$QEtaSpecification
-qetaGrades(sspecvv, rspec, m, t)$QEtaModularGamma1Package
+qetaGrades(sspecvv, rspec, m, t)$QEtaModularGammaPackage(MOD1)
 
 -- ## Automatic computation of cofactor
 
 -- +
-sspec := cofactI1(nn,rspec,m,t,idxs)
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
 
-modular?(sspec, rspec, m, t)$QCONDM1
+modular?(sspec, rspec, m, t)$MOD1
 -- -
 
 idxs := cons([nn], rest properGeneralizedEtaFunctionIndices nn)
-sspec := cofactI1(nn,rspec,m,t,idxs)
-modular?(sspec, rspec, m, t)$QCONDM1
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
+modular?(sspec, rspec, m, t)$MOD1
 
-y := specYM1GEQ(sspec, rspec, m, t);
+y := specYM1EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(y)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 )set stream calc 2
@@ -517,14 +484,14 @@ EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 -- is a modular function for $\Gamma_1(10)$ with only a pole
 -- of order 3 at infinity.
 
-af := expandAnCX y
+af := expandM1AnCX y
 assertEquals(qetaGrades af,[0,0,0,0,0,0,0,3])
 
 -- ## Find the relation for $\overline{p}(5n+2)$
 
-mspecs := ncmSPECS1 nn;
-ygens := [specYM1GEQ x for x in mspecs];
-egens := [expandAnCX x for x in ygens];
+mspecs := ncmSPECSInfM1(nn,idxs);
+ygens := [specYM1EQ x for x in mspecs];
+egens := [expandM1AnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
 msyms := indexedSymbols("M", #egens)
@@ -542,18 +509,12 @@ xr := reduce(xf, xab)$QXTOPRED1(C);
 pol := second(xr)::Pol(C);
 ilcpol := -inv(coefficient(pol,'F, 1))::C;
 mpol := coefficient(ilcpol*pol, 'F, 0)
-assertEquals(mpol, 4*(M1^3 + 7*M1^2 + 8*M1 + 4))
+assertEquals(mpol, 4*M1^3+4*M1^2-32*M1+32)
 
--- We can, however, get exactly the same relation if we use the
--- third element of our list.
+-- Check the series.
 
-xab := samba(xgens.3, xgens)$QXTOPSAMBA1(C);
-xf := toX1(C, series(af,k), 'F);
-xr := reduce(xf, xab)$QXTOPRED1(C);
-pol := second(xr)::Pol(C);
-ilcpol := -inv(coefficient(pol,'F, 1))::C;
-mpol := coefficient(ilcpol*pol, 'F, 0)
-assertEquals(mpol, 4*(M3^3 + M3^2 - 8*M3 + 8))
+ev ==> eval((c:C):A1(C)+->c*1$A1(C),msyms, [first(x)::A1(C) for x in xgens])
+assertTrue(zero?(ev mpol - first(xf)::A1(C)))
 
 -- ## Comparison with computation from article
 
@@ -569,14 +530,14 @@ sspec,mspecs.3
 -- the following specification in our notation.
 
 sspeccdz := eqSPEC [[1,11],[2,-7],[5,-1],[10,-2],[5,1,12],[10,1,-14],[10,4,-8]]
-assertTrue(modular?(sspeccdz, rspec, m, t)$QCONDM1)
+assertTrue(modular?(sspeccdz, rspec, m, t)$MOD1)
 
 -- The respective series for the generating series of
 -- $\overline{p}(5n+2)$ after multiplying with the cofactor
 -- is a modular function for $\Gamma_1(10)$ with only a pole
 -- of order 3 at infinity.
 
-afcdz := expandAnCX specYM1GEQ(sspeccdz, rspec, m, t);
+afcdz := expandM1AnCX specYM1EQ(sspeccdz, rspec, m, t);
 assertEquals(qetaGrades afcdz,[0,0,0,0,0,0,0,3])
 
 -- Although the initial cofactor is different, we get the
@@ -589,7 +550,7 @@ assertTrue(zero?(af - afcdz))
 -- a generalized eta-quotient that is equal to 1.
 
 spec1 := sspec/sspeccdz
-a1 := specM1AnCX spec1
+a1 := specM1An(CX) spec1
 assertTrue(zero?(a1 - 1$An(CX)))
 
 -- Let us investigate the difference to the $z$ of
@@ -602,8 +563,8 @@ assertTrue(modularGamma1? zspec)
 -- and the one from the article above have the same
 -- $q$-series expansion.
 
-spec1 := mspecs.3/zspec
-a1 := specM1AnCX spec1
+spec2 := mspecs.1/zspec
+a1 := specM1An(CX) spec2
 assertTrue(zero?(a1 - 1$An(CX)))
 
 -- ## Find a relation by just one function
@@ -611,7 +572,7 @@ assertTrue(zero?(a1 - 1$An(CX)))
 -- By our implementation, we are able to find a relation with
 -- only one generalized eta-function.
 
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(32*identityPolynomial id, F-4*(M1^3+M1^2-8*M1+8))
 
@@ -640,15 +601,15 @@ assertEquals(32*identityPolynomial id, F-4*(M1^3+M1^2-8*M1+8))
 
 m := 9; t := 3
 rspec := eqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 idxs := generalizedEtaFunctionIndices(nn)
-sspec := cofactI1(nn,rspec,m,t)
-modular?(sspec, rspec, m, t)$QCONDM1
-y := specYM1GEQ(sspec, rspec, m, t);
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
+assertTrue(modular?(sspec, rspec, m, t)$MOD1)
+y := specYM1EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(y)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps y
-af := expandAnCX y
+af := expandM1AnCX y
 assertEquals(qetaGrades af, [0,0,0,1])
 assertEquals(qetaGrades y, [0,0,0,1])
 
@@ -661,16 +622,16 @@ sspeccdz := eqSPEC [[1,14], [2,-5], [3,-6],[6,-3]]
 -- We can find it ourselves by restricting the search space.
 
 idxs := [[1], [2], [3], [6]]
-sspec := cofactI1(nn,rspec,m,t,idxs)
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
 assertEquals(sspeccdz, sspec)
 
-af := expandAnCX y
+af := expandM1AnCX y
 
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+3)$
 
-mspecs := ncmSPECS1 nn
-ygens := [specYM1GEQ x for x in mspecs];
-egens := [expandAnCX x for x in ygens];
+mspecs := ncmSPECSInfM1(nn, generalizedEtaFunctionIndices nn)
+ygens := [specYM1EQ x for x in mspecs];
+egens := [expandM1AnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
 -- The basis elements only differ in a constant.
@@ -697,7 +658,7 @@ assertEquals(mpol, 6*(M2 + 16))
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+3)$ in one step
 
 idxs := [[1],[2],[3],[6]]
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, idxs, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 6*(M1+15) - F;
@@ -736,7 +697,7 @@ rspec := eqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
 
 aidxs := generalizedEtaFunctionIndices(6)
 idxs := aidxs(1..4)
-id := findID1(6, idxs, rspec, 1, 0, idxs);
+id := findIdM1(6, rspec, 1, 0, idxs);
 -- pretty(id, qIdentity)
 rspec2 := inv coSpecification id
 rspec2Expected := eqSPEC [[1, - 2], [2, 1], [3, 2], [6, - 1]]
@@ -745,23 +706,23 @@ assertEquals(rspec2, rspec2Expected)
 -- Now we can try to prove divisibility by Radu's original method
 -- for (pure) eta-quorients.
 
-nn := minLevel0(rspec2,m,t)
-ORBIT(rspec2,m,t)
-id := findID0(nn, rspec2, m, 3);
+nn := minLevelM0(rspec2,m,t)
+modularOrbit(rspec2,m,t)$MOD0
+id := findIdM0(nn, rspec2, m, 3,etaFunctionIndices nn);
 pretty(id, qIdentity + nonModular + expand)
 
 -- In the following we show the same thing with the extension due to
 -- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 idxs := generalizedEtaFunctionIndices(nn)
-sspec := cofactI1(nn,rspec,m,t)
-modular?(sspec, rspec, m, t)$QCONDM1
-y := specYM1GEQ(sspec, rspec, m, t);
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
+modular?(sspec, rspec, m, t)$MOD1
+y := specYM1EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(y)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y)
-af := expandAnCX y
+af := expandM1AnCX y
 assertEquals(qetaGrades af, [0,0,0,1])
 assertEquals(qetaGrades y, [0,0,0,1])
 
@@ -774,16 +735,16 @@ sspeccdz := eqSPEC [[1,13], [2,-4], [3,-3],[6,-6]]
 -- We can find it ourselves by restricting the search space.
 
 idxs := [[1], [2], [3], [6]]
-sspec := cofactI1(nn,rspec,m,t,idxs)
+sspec := cofactInfM1(nn,rspec,m,t,idxs)
 assertEquals(sspeccdz, sspec)
 
-af := expandAnCX y
+af := expandM1AnCX y
 
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+6)$
 
-mspecs := ncmSPECS1 nn;
-ygens := [specYM1GEQ x for x in mspecs];
-egens := [expandAnCX x for x in ygens];
+mspecs := ncmSPECSInfM1(nn, idxs);
+ygens := [specYM1EQ x for x in mspecs];
+egens := [expandM1AnCX x for x in ygens];
 [qetaGrades x for x in egens]
 
 -- The basis elements only differ in a constant.
@@ -810,7 +771,7 @@ assertEquals(mpol, 24*(M2 + 4))
 -- ## Find the relation for $\overline{Q}_{3,1}(9n+6)$ in one step
 
 idxs := [[1],[2],[3],[6]]
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 pol := 24*(M1+3)- F;
@@ -852,9 +813,9 @@ assertEquals(-72*identityPolynomial id, pol)
 
 m := 25; t := 14
 rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1],[10,2]]
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
 -- We find that when we multiply the polynomial by
@@ -879,7 +840,7 @@ mspecs := monoidSpecifications id
 bas := [specEQI(C) mspecs.i for i in 1..#mspecs]
 
 -- +
---id1 := findID1(sspec, rspec, m, t, [mspecs.1]);
+--id1 := findIdM1(sspec, rspec, m, t, [mspecs.1]);
 --pol1 := 6192449487634432 * identityPolynomial id1
 -- -
 
@@ -887,7 +848,7 @@ bas := [specEQI(C) mspecs.i for i in 1..#mspecs]
 -- coefficients, if we take the second basis element.
 
 sspec := coSpecification id
-id2 := findID1(sspec, rspec, m, t, [mspecs.2]);
+id2 := findIdM1(sspec, rspec, m, t, [mspecs.2]);
 c := -(1/5)*inv coefficient(id2)
 pol2 := c * identityPolynomial id2
 
@@ -928,12 +889,12 @@ pol2 := c * identityPolynomial id2
 
 m := 25; t := 14
 rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]];
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 sspec := eqSPEC [[1,92],[2,-58],[5,14],[10,-46],_
                   [5,1,52],[10,1,-109],[10,4,4],[10,5,-5]];
 mspecs := [eqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]];
 specEQI(C) mspecs.1
-id := findID1(sspec, rspec, m, t, mspecs);
+id := findIdM1(sspec, rspec, m, t, mspecs);
 pretty(id, qIdentity + nonModular + withSubscript)
 
 -- +
@@ -972,9 +933,9 @@ pretty(id, qIdentity + nonModular + withSubscript)
 
 m := 25; t := 24
 rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[5,1],[10,1]]
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(# monomials identityPolynomial id, 59)
 
@@ -1005,13 +966,25 @@ assertEquals(# monomials identityPolynomial id, 59)
 m := 25; t := 24
 --rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 rspec := eqSPEC [[1,2],[2,1],[10,-1]]
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1]]
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
-pol := 5*((2*M1+1)*M3 - (4*M1+1)*M1) - F;
+pol := (-10*M1-5)*M3+10*M1^2+F;
 assertEquals(5*identityPolynomial id, pol)
+
+sspec := coSpecification id
+af := specM1A1(C)(sspec,rspec,m,t)
+mspecs := monoidSpecifications id
+egens := [specM1A1(C) spec for spec in mspecs];
+mpol := inv(coefficient id) * identityPolynomial id
+
+-- Check the series.
+
+msyms := indexedSymbols("M", #egens)
+ev ==> eval((c:C):A1(C)+->c*1$A1(C),cons('F,msyms),cons(af,egens))
+assertTrue(zero? ev identityPolynomial id)
 
 -- +
 -------------------------------------------------------------------
@@ -1049,9 +1022,9 @@ assertEquals(5*identityPolynomial id, pol)
 
 m := 25; t := 24
 rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[5,1],[10,1]]
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(# monomials identityPolynomial id, 59)
 
@@ -1081,13 +1054,29 @@ assertEquals(# monomials identityPolynomial id, 59)
 m := 25; t := 24
 --rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 rspec := eqSPEC [[1,2],[2,1],[10,-1]]
-nn := minLevel1(rspec,m,t)
+nn := minLevelM1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1]]
-id := findID1(nn, idxs, rspec, m, t, idxs);
+id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
-pol := 5*((2*M1+1)*M3 - (4*M1+1)*M1) - F;
+
+pol := (-10*M1-5)*M3+10*M1^2+F;
 assertEquals(5*identityPolynomial id, pol)
+
+sspec := coSpecification id
+af := specM1A1(C)(sspec,rspec,m,t)
+mspecs := monoidSpecifications id
+egens := [specM1A1(C) spec for spec in mspecs];
+mpol := inv(coefficient id) * identityPolynomial id
+
+-- Check the series.
+
+msyms := indexedSymbols("M", #egens)
+ev ==> eval((c:C):A1(C)+->c*1$A1(C),cons('F,msyms),cons(af,egens))
+assertTrue(zero? ev identityPolynomial id)
+
+
+
 
 -- +
 -------------------------------------------------------------------
@@ -1123,28 +1112,28 @@ assertEquals(5*identityPolynomial id, pol)
 rspec := eqSPEC [[5,1,-1],[5,2,1]]
 modularGamma1? rspec
 
-nn := minLevel1(rspec,2,0)
+nn := minLevelM1(rspec,2,0)
 idxs := rest properGeneralizedEtaFunctionIndices nn
 
 
-id := findID1(10, idxs, rspec, 2, 0, idxs);
+id := findIdM1(10, rspec, 2, 0, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n0 := coSpecification id;
 assertEquals(sspec2n0, eqSPEC[[10,3,1],[10,4,-2],[10,5,1]])
 
-id := findID1(10, idxs, rspec, 2, 1, idxs);
+id := findIdM1(10, rspec, 2, 1, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n1 := coSpecification id;
 assertEquals(sspec2n1, eqSPEC[[10,1,-1],[10,2,1],[10,4,-1],[10,5,1]])
 
 -- And now for $R(q)^{-1}$.
 
-id := findID1(10, idxs, inv rspec, 2, 0, idxs);
+id := findIdM1(10, inv rspec, 2, 0, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n0 := coSpecification id;
 assertEquals(sspec2n0, eqSPEC[[10,1,1],[10,2,-2], [10,5,1]])
 
-id := findID1(10, idxs, inv rspec, 2, 1, idxs);
+id := findIdM1(10, inv rspec, 2, 1, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n1 := coSpecification id;
 assertEquals(sspec2n1, eqSPEC[[10,2,-1],[10,3,-1],[10,4,1],[10,5,1]])

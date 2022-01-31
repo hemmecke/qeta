@@ -15,37 +15,44 @@ zqmap(x) ==> abmap(Z, Q, x)
 
 
 -------------------------------------------------------------------
--- Implicit global variables:
--- C: The coefficient ring where we consider the q-expansions.
-specEQIC ==> specEQI C
-specM0A1C ==> specM0A1 C -- was EQA1C
+-- macro that we use.
+-- MOD:     actually a macro pointing to MOD1 or MOD2
 
 -------------------------------------------------------------------
 -- Implicit global variables:
--- level:   We consider the modular group Gamma_0(level).
+-- nn:      We consider the modular groups Gamma_0(nn) or Gamma_1(nn).
 -- spitzen: The cusps at which to expand.
 -- xiord:   We compute with the xiord-th root of unity
 -- xi:      A xiord-th root of unity in CX
 -- CX:      An C-Algebra containing xi.
 -- Call macro EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi).
 -------------------------------------------------------------------
-QESX(C, CX) ==> QEtaSeriesExpansion(C, xiord, CX, xi)
+QESXM(C, CX, MOD) ==> QEtaSeriesExpansion(C, xiord, CX, xi, MOD)
+QESXMOD(C, CX) ==> QESXM(C, CX, MOD)
 An CX ==> ModularFunctionExpansionsAtCusps(CX, spitzen)
 
 -------------------------------------------------------------------
 -- Expansion of symbolic (generalized) eta-quotient into laurent series.
-expandAnCX y ==> (laurentExpansions(y, spitzen)$QESX(C,CX))::An(CX)
+expandMAn(CX, MOD) y ==> (laurentExpansions(y, spitzen)$QESXM(C,CX,MOD))::An(CX)
+expandMODAn CX ==> expandMAn(CX, MOD)
+expandMODAnCX ==> expandMAn(CX, MOD)
+expandM0An CX ==> expandMAn(CX, MOD0)
+expandM1An CX ==> expandMAn(CX, MOD1)
+expandM0AnCX ==> expandM0An CX
+expandM1AnCX ==> expandM1An CX
 
 -------------------------------------------------------------------
 -- Creation of eta-quotient expansions at the cusps given by spitzen.
+specYMODEQn spec ==> specYMODEQ(spec, spitzen)
 specYM0EQn spec ==> specYM0EQ(spec, spitzen)
-specYM1GEQn spec ==> specYM1GEQ(spec, spitzen)
+specYM1EQn spec ==> specYM1EQ(spec, spitzen)
 
 -------------------------------------------------------------------
 -- Expansion of a specification int (generalized) eta-quotient into
 -- laurent series.
-specM0AnCX spec ==> expandAnCX specYM0EQn spec
-specM1AnCX spec ==> expandAnCX specYM1GEQn spec
+specMAn(CX,MOD)(spec) ==> expandMAn(CX, MOD)(specYMEQ(MOD)(spec, spitzen))
+specM0An CX ==> specMAn(CX, MOD0)
+specM1An CX ==> specMAn(CX, MOD1)
 
 -------------------------------------------------------------------
 CAn CX ==> QEtaAlgebraCachedPower(CX, An CX) -- domain in cached version
@@ -83,7 +90,7 @@ specMonRZ spec ==> monomial(1, directProduct(allPureExponents spec)$DZ)$RZ
 monRZ(l) ==> monomial(1, directProduct(l)$DZ)$RZ
 
 -- A "term" here is a coefficient (Integer) cons'd to a list of
--- exponents for every divisor of level. See brunaultterms.
+-- exponents for every divisor of nn. See brunaultterms.
 
 -- termRZ(term: List Z): RZ == monomial(first term, directProduct(rest term)$DZ)
 termRZ(term) ==> monomial(first term, directProduct(rest term)$DZ)$RZ
@@ -94,13 +101,13 @@ polyRZ(terms) ==> reduce(_+, [termRZ x for x in terms], 0$RZ)
 algSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
 
 -- We assum that mon is such that degree(mon): DZ.
-monToA1C(mon) ==> _
-  leadingCoefficient(mon)*specM0A1C(eqSPEC(level, members degree mon))
-monToAnCX(mon) ==> _
-  leadingCoefficient(mon)*specM0AnCX(eqSPEC(level, members degree mon))
+monToA1(C)(mon) ==> _
+  leadingCoefficient(mon)*specMA1(C,MOD)(eqSPEC(nn, members degree mon))
+monToAn(CX)(mon) ==> _
+  leadingCoefficient(mon)*specMAn(CX,MOD)(eqSPEC(nn, members degree mon))
 
 -- rzToA1CX: RZ -> A1 C
-rzToA1C(x) ==> algSUM(monToA1C, x)
+rzToA1(C)(x) ==> algSUM(monToA1(C), x)
 
 -- rzToAnCX: RZ -> An CX
-rzToAnCX(x) ==> algSUM(monToAnCX, x)
+rzToAn(CX)(x) ==> algSUM(monToAn(CX), x)

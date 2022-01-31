@@ -76,6 +76,9 @@ commonFactor id ==> (_
   num := gcd [numer(den*x) for x in cs];_
   num/den)
 
+ORBIT ==> modularOrbit $ MOD0
+findID0(nn,rspec,m,t) ==> findIdM0(nn,rspec,m,t,etaFunctionIndices nn)
+
 )set mess type on
 )set mess time on
 
@@ -104,7 +107,8 @@ commonFactor id ==> (_
 
 
 rspec := eqSPEC [[1,-3]]; m := 3; t := 2;
-nn := minLevel1(rspec, m, t)
+nn := minLevelM1(rspec, m, t)
+
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(coSpecification id, eqSPEC [[1,12],[3,-9]])
@@ -129,8 +133,9 @@ assertEquals(identityPolynomial(id), F-9)
 -- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-2]];
-nn := minLevel1(rspec, 5, 3)
+nn := minLevelM1(rspec, 5, 3)
 assertEquals(nn, 5)
+
 id:=findID0(10,rspec,5,3);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(commonFactor id, 5)
@@ -152,8 +157,9 @@ assertEquals(commonFactor id, 5)
 -- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-2]]; m:=25; t:=23;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 assertEquals(nn, 5)
+
 id:=findID0(5,rspec,m,t);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(commonFactor id, 25)
@@ -178,8 +184,9 @@ assertEquals(commonFactor id, 25)
 -- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-4]]; m:=7; t:=6;
-nn := minLevel1(rspec,m,t);
+nn := minLevelM1(rspec,m,t);
 assertEquals(nn,m)
+
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(commonFactor id, 7)
@@ -200,8 +207,9 @@ assertEquals(commonFactor id, 7)
 -- \cite[p. 330[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-4]]; m:=49; t:=41;
-nn := minLevel0(rspec, m, t);
+nn := minLevelM0(rspec, m, t);
 assertEquals(nn, 7)
+
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 assertEquals(commonFactor id, m)
@@ -228,15 +236,17 @@ assertEquals(commonFactor id, m)
 -- \end{gather*}
 
 rspec := eqSPEC [[1,8]]; m:=5; t:=3;
-nn := minLevel0(rspec, m, t);
+nn := minLevelM0(rspec, m, t);
 assertEquals(nn, 5)
+
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 assertEquals(commonFactor id, 125)
 
 rspec := eqSPEC [[1,8]]; m:=25; t:=8;
-nn := minLevel0(rspec, m, t);
+nn := minLevelM0(rspec, m, t);
 assertEquals(nn, 5)
+
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 assertEquals(commonFactor id, 125)
@@ -265,7 +275,7 @@ assertEquals(commonFactor id, 125)
 -- of just $11^2$.
 
 rspec := eqSPEC [[1,26]]; m:=11; t:=9;
-nn := minLevel0(rspec, m, t);
+nn := minLevelM0(rspec, m, t);
 assertEquals(nn,11)
 assertEquals(ORBIT(rspec,m,t),[9])
 
@@ -275,7 +285,7 @@ assertEquals(commonFactor id, 11^12)
 identityPolynomial id
 
 rspec := eqSPEC [[1,26]]; m:=121; t:=9;
-nn := minLevel0(rspec, m, t);
+nn := minLevelM0(rspec, m, t);
 assertEquals(nn,11)
 assertEquals(ORBIT(rspec,m,t),[9])
 
@@ -314,7 +324,7 @@ s11 := choose(11,9,ser)
 -- \end{gather*}
 
 rspec := eqSPEC [[1,6]]; m:=5; t:=1;
-nn := minLevel0(rspec, m, t);
+nn := minLevelM0(rspec, m, t);
 assertEquals(nn,5)
 assertEquals(ORBIT(rspec,m,t),[1])
 
@@ -367,7 +377,7 @@ assertEquals(ipol1, 6*M1+F+25)
 -- then $a(n) \equiv 0 \pmod{5}$.
 
 rspec := eqSPEC [[1,15]]; m:=13; t:=1;
-nn := minLevel0(rspec, m, t);
+nn := minLevelM0(rspec, m, t);
 assertEquals(nn, 13)
 assertEquals(ORBIT(rspec, m, t),[1])
 
@@ -461,7 +471,7 @@ assertEquals(removeDuplicates l, [0])
 -- \end{gather*}
 
 rspec := eqSPEC [[1,24]]; m := 2; t := 1;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 assertEquals(nn, 2)
 orb := ORBIT(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
@@ -493,7 +503,7 @@ ipol := inv coefficient id * identityPolynomial id
 -- \end{gather*}
 
 rspec := eqSPEC [[1,24]]; m := 4; t := 3;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 assertEquals(nn, 2)
 orb := ORBIT(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
@@ -523,7 +533,7 @@ assertTrue(zero?(c rem 3))
 -- \cite[p. 373[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,15]]; m := 9; t := 2
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t)
 pretty(id, qIdentity + expand + nonModular + asExpression)
 assertEquals(commonFactor id, 90)
@@ -547,7 +557,7 @@ factor 4860
 -- \cite[p. 373[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,15]]; m := 9; t := 8
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t)
 pretty(id, qIdentity + expand + nonModular + asExpression)
 assertEquals(commonFactor id, 4860)
@@ -570,25 +580,25 @@ assertEquals(commonFactor id, 4860)
 -- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,2]]; m := 2; t := 1;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 2)
 
 rspec := eqSPEC [[1,4]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 4)
 
 rspec := eqSPEC [[1,6]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 2)
 
 rspec := eqSPEC [[1,8]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 8)
@@ -609,25 +619,25 @@ assertEquals(commonFactor id, 8)
 -- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-3]]; m := 3; t := 1;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 3)
 
 rspec := eqSPEC [[1,-6]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 3)
 
 rspec := eqSPEC [[1,-9]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 9)
 
 rspec := eqSPEC [[1,-12]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 3)
@@ -648,25 +658,25 @@ assertEquals(commonFactor id, 3)
 -- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-3]]; m := 3; t := 2;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 9)
 
 rspec := eqSPEC [[1,-6]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 27)
 
 rspec := eqSPEC [[1,-9]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(2*nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 27)
 
 rspec := eqSPEC [[1,-12]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 9)
@@ -687,25 +697,25 @@ assertEquals(commonFactor id, 9)
 -- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-6]]; m := 5; t := 4;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 5)
 
 rspec := eqSPEC [[1,-11]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 25)
 
 rspec := eqSPEC [[1,-16]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 5)
 
 rspec := eqSPEC [[1,-21]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 5)
@@ -726,25 +736,25 @@ assertEquals(commonFactor id, 5)
 -- \cite[p. 382[{FarkasKra_ThetaConstants_2001}
 
 rspec := eqSPEC [[1,-2]]; m := 5; t := 3;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 5)
 
 rspec := eqSPEC [[1,-7]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 5)
 
 rspec := eqSPEC [[1,-17]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression)
 assertEquals(commonFactor id, 25)
 
 rspec := eqSPEC [[1,-22]];
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
 id:=findID0(nn,rspec,m,t);
 pretty(id, qIdentity + expand + asExpression+nonModular)
 assertEquals(commonFactor id, 5)
@@ -772,14 +782,15 @@ rspec4 := eqSPEC [[11,4,2],[11,1,-1],[11,3,-1]];
 rspec5 := eqSPEC [[11,3,2],[11,2,-1],[11,5,-1]];
 
 modularGamma1? rspec1
-qetaGrades specYGEQ rspec1
+qetaGrades specYM1EQ rspec1
 rspecs := [rspec1, rspec2, rspec3, rspec4]
-xiords := [minimalRootOfUnity specYGEQ rspec for rspec in rspecs]
+xiords := [minimalRootOfUnity specYM1EQ rspec for rspec in rspecs]
 xiord := lcm xiords
-spitzen := CUSPS1 11
+spitzen := cuspsM1 11
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 
 )set stream calc 2
+specM1AnCX ==> specM1An CX
 an := specM1AnCX rspec1 _
     - specM1AnCX rspec2 _
     + specM1AnCX rspec3 _

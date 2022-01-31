@@ -39,15 +39,18 @@ invk(k) ==> positiveRemainder(extendedEuclidean(12,5^k).coef1, 5^k)
 checkPower(k) ==> (_
   m := 5^k;_
   t := invk k;_
-  nn := minLevel0(rspec, m, t);_
+  nn := minLevelM0(rspec, m, t);_
+  idxs := etaFunctionIndices nn;_
   tracePrint("[nn, m, t]", [nn, m, t]$List(Z));_
   tracePrint("orb", ORBIT(rspec,m,t));_
-  id := findID0(nn,rspec,m,t);_
+  id := findIdM0(nn,rspec,m,t,idxs);_
   out := pretty(id, qIdentity);_
   assertEquals(commonFactor id, 5^k);_
   pol := (inv(5^k * coefficient id) * identityPolynomial id);_
   tracePrint("pol", pol);_
   out)
+
+ORBIT ==> modularOrbit $ MOD0
 
 )set mess type on
 )set mess time on
@@ -83,9 +86,10 @@ checkPower(k) ==> (_
 -- -
 
 m := 2 ; t := 1;
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
 orb := ORBIT(rspec,m,t)
-id := findID0(nn,rspec,m,t);
+id := findIdM0(nn,rspec,m,t,idxs);
 pretty(id, qIdentity)
 assertEquals(commonFactor id, 4)
 (inv coefficient id * identityPolynomial id)
@@ -132,9 +136,10 @@ checkPower 2
 
 k := 3; m := 5^k ; t := invk k;
 C ==> IntegerMod m
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
 orb := ORBIT(rspec,m,t)
-sspec := cofactI0(nn, rspec, m, t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 a := alphaInfinity(sspec, rspec, m, [t])
 xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), 'F)
 
@@ -159,10 +164,11 @@ assertEquals(removeDuplicates l, [0])
 
 k := 4; m := 5^k ; t := invk k
 C ==> IntegerMod m
-nn := minLevel0(rspec, m, t)
+nn := minLevelM0(rspec, m, t)
+idxs := etaFunctionIndices nn
 orb := ORBIT(rspec,m,t)
 
-sspec := cofactI0(nn, rspec, m, t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 
 a := alphaInfinity(sspec, rspec, m, [t])
 xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), 'F)

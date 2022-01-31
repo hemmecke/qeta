@@ -31,24 +31,25 @@ kleinJn(nn: P, n: N): An(CX) == (_
 -- The result is a modular function in M(nn).
 -- Input condition: #r = #DIVISORS(nn*t), gcd(nn, t)=1.
 traceMap(nn: P, t: P, r: List Z): A1 C ==
-  #r ~= numberOfDivisors(nn*t)$INTF =>
+  #r ~= numberOfDivisors(nn*t)$IntegerNumberTheoryFunctions =>
     error "length of r must match number of divisors)"
   idgamma: SL2Z := matrix [[1,0],[0,1]]
-  ye := etaQuotient(nn*t, r, idgamma)$YEQG
-  p := puiseuxExpansion(ye)$QEtaSeriesExpansion(C, 1, C, 1)
-  e := laurent(p, 1)$QEtaSeriesExpansion(C, 1, C, 1)
-  alw: MZ := matrixAtkinLehner(nn*t, t)
+  rspec: SPEC := eqSPEC(nn*t, r)
+  ye := etaQuotient(rspec, idgamma)$YEQG
+  p := puiseuxExpansion(ye)$QEtaSeriesExpansion(C, 1, C, 1, MOD0)
+  e := laurent(p, 1)$QEtaSeriesExpansion(C, 1, C, 1, MOD0)
+  alw: Matrix Z := matrixAtkinLehner(nn*t, t)
   sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
   gamma := sm.red
-  yeg := etaQuotient(nn*t, r, gamma)$YEQG
+  yeg := etaQuotient(rspec, gamma)$YEQG
   -- Check that there is no need for an extension by a root of unity
   xiord := minimalRootOfUnity yeg;
   xiord > 2 =>
     print("minimalRootOfUnity yeg"::Symbol::OutputForm)
     print((minimalRootOfUnity yeg)::OutputForm)
     error "traceMap: need extension by root of unity"
-  pg := puiseuxExpansion(yeg)$QEtaSeriesExpansion(C, 2, C, -1)
-  eg := laurent(pg, t)$QEtaSeriesExpansion(C, 2, C, -1)
+  pg := puiseuxExpansion(yeg)$QEtaSeriesExpansion(C, 2, C, -1, MOD0)
+  eg := laurent(pg, t)$QEtaSeriesExpansion(C, 2, C, -1, MOD0)
   -- finally apply Ut operator
   uteg := choose(t, 0, eg)
   -- and add things up

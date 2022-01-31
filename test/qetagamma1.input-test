@@ -5,11 +5,15 @@
 
 --setup
 oo ==> infinity()$Cusp
-
+MOD ==> QCONDM1
+CUSPS1 nn ==> cusps(nn)$MOD
 )set mess type on
 )set mess time on
 
 --endsetup
+
+)set output algebra on
+)set output formatted off
 
 --test:cuspsOfGamma1
 -- Explicitly listing cusps for N=1 to N=40.
@@ -91,15 +95,15 @@ cusps40 := [_
    3/16,5/16,7/16,1/17,1/18,1/19,1/20,3/20,7/20,9/20,1/40,3/40,7/40,9/40,_
    11/40,13/40,17/40,19/40]]
 
-c(n: Z, q: Q): Cusp ==
-  q = 1/n => oo
-  one? q => cusp(0, 1)$Cusp
-  cusp(numer q, denom q)$Cusp
+c(n: Z, q: Q): Cusp == (_
+  q = 1/n => oo;_
+  one? q => cusp(0, 1)$Cusp;_
+  cusp(numer q, denom q)$Cusp)
 
-for cs in cusps40 for nn in 1..40 repeat
-  ccs := CUSPS1 nn
-  ecs := sort [c(nn,x) for x in cs]
-  assertEquals(ccs, ecs)
+for cs in cusps40 for nn in 1..40 repeat (_
+  ccs := CUSPS1 nn;_
+  ecs := sort [c(nn,x) for x in cs];_
+  assertEquals(ccs, ecs))
 
 --endtest
 
@@ -108,13 +112,14 @@ vals := [1, 2, 2, 3, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 16, 14, 16, 16,_
          18, 20, 24, 20, 22, 24, 28, 24, 30, 30, 28, 32, 30, 32, 40, 32,_
          48, 40, 36, 36, 48, 48, 40, 48, 42, 50, 64, 44, 46, 56, 60, 56]
 
-for level in 1..#vals for n in vals repeat
-    assertEquals(numberOfCusps()$GAMMA1(level), n)
+nn := 1$P
+anoc(nn, n) == assertEquals(numberOfCusps()$GAMMA1(nn), n)
+for n in vals repeat (anoc(nn, n); nn:=nn+1) -- FriCAS cannot compile anoc.
 --endtest
 
 --test:numberOfCuspsOfGamma1-eq
-for level in 1..200 repeat
-    assertEquals(numberOfCusps()$GAMMA1(level), # CUSPS1 level)
+anoc nn == assertEquals(numberOfCusps()$GAMMA1(nn), #cusps(nn)$MOD)
+for nn in 1..200 repeat anoc nn -- FriCAS cannot compile.
 --endtest
 
 -- +
@@ -128,16 +133,18 @@ genusVals := [0,0,0,0,0,0,0,0,0,0,1,0,2,1,1,2,5,2,7,3,5,6,12,5,12,10,_
               222,137,190,171,247,133,225,190,225,181,287,153,265,210,_
               261,231,289,193,345,235,281,231]
 
-for level in 1..#genusVals for g in genusVals repeat
-    assertEquals(genus()$GAMMA1(level), g)
+for nn in 1..#genusVals for g in genusVals repeat assertEquals(genus(nn)$MOD, g)
+
+-- +
 --endtest
 
 -- +
 --test:nu2OfGamma1
 -- -
 vals := [1,1,0,0,0,0,0,0,0,0]
-for level in 1..#vals for n in vals repeat
-    assertEquals(nu2()$GAMMA1(level), n)
+nn := 1$P
+anu2(nn, n) == assertEquals(nu2()$GAMMA1(nn), n)
+for n in vals repeat (anu2(nn, n); nn:=nn+1) -- FriCAS cannot compile anoc.
 
 --endtest
 
@@ -145,19 +152,20 @@ for level in 1..#vals for n in vals repeat
 --test:nu3OfGamma1
 -- -
 vals := [1,0,1,0,0,0,0,0,0,0]
-for level in 1..#vals for n in vals repeat
-    assertEquals(nu3()$GAMMA1(level), n)
+nn := 1$P
+anu3(nn, n) == assertEquals(nu3()$GAMMA1(nn), n)
+for n in vals repeat (anu3(nn, n); nn:=nn+1) -- FriCAS cannot compile anoc.
 --endtest
 
 -- +
 --test:normalizeCusp
 -- -
 
-ncusp(nn: P, a: Z, c: Z): Q ==
-  s := normalizeCusp(cusp(a, c))$GAMMA1(nn)
-  infinity? s => 1/nn
-  zero? numer s => 1$Q
-  numer(s)/denom(s)
+ncusp(nn: P, a: Z, c: Z): Q == (_
+  s := normalizeCusp(cusp(a, c))$GAMMA1(nn);_
+  infinity? s => 1/nn;_
+  zero? numer s => 1$Q;_
+  numer(s)/denom(s))
 
 normcusps := [_
   [[[[nn]]],_
@@ -225,11 +233,11 @@ expected := _
 
 assertEquals(normcusps, expected)
 
-for nn in 1..30 repeat
-  for c in 1..nn repeat for a in 1..c | one? gcd(a,c) repeat
-    ac: Cusp := cusp(a, c)
-    normedCusp := normalizeCusp(ac)$GAMMA1(nn)
-    assertTrue(equivalentCusps?(ac, normedCusp)$GAMMA1(nn))
+for nn in 1..30 repeat (_
+  for c in 1..nn repeat for a in 1..c | one? gcd(a,c) repeat (_
+    ac: Cusp := cusp(a, c);_
+    normedCusp := normalizeCusp(ac)$GAMMA1(nn);_
+    assertTrue(equivalentCusps?(ac, normedCusp)$GAMMA1(nn))))
 
 --+
 --endtest

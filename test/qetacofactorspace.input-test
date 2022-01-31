@@ -12,6 +12,7 @@
 -- -
 
 C ==> Q
+ORBIT ==> modularOrbit $ MOD0
 )read convenience.input )quiet
 
 )set mess type on
@@ -32,12 +33,13 @@ C ==> Q
 -------------------------------------------------------------------
 -- -
 
-nn := 5; spitzen := CUSPS0 nn;
+nn := 5; spitzen := cuspsM0 nn;
+idxs := etaFunctionIndices nn
 m := 5; t := 4
 rspec := eqSPEC(1, [-1]);
 assertEquals(ORBIT(rspec, m, t), [t])
 assertEquals(sort ORBIT(rspec, m, 0), [0, 3])
-rec := etaCofactorSpace0(nn, rspec, m, t)
+rec := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD0
 n := numberOfDivisors(nn)
 s := (rec.particular)(1..n)
 assertEquals(s, [0,1])
@@ -45,17 +47,19 @@ sspec := eqSPEC(nn, rec.indices, rec.particular)
 yf := specYM0EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf := expandAnCX yf
+mf := expandM0AnCX yf
 assertEquals(qetaGrades(mf), [1, -1])
 
 -- And now for $\Gamma_1(5)$.
 
-rec := etaCofactorSpace1(nn, rspec, m, t)
+idxs := generalizedEtaFunctionIndices nn
+rec := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD1
 
 -- Should not fail, because there is a solution for Gamma1(nn).
 
-assertEquals(rec.particular, [1, 0, 10, 0])
-assertEquals(rec.basis, [[- 1, 1, - 10, 0], [0, 0, 11, 1], [0, 0, - 60, 0]])
+assertEquals(rec.particular, [0, 1, 0, 0])
+assertEquals(rec.basis, [[1, - 1, - 1, - 1], [- 6, 6, - 5, 5], [0, 0, - 5, 5]])
+
 
 -- +
 -------------------------------------------------------------------
@@ -69,12 +73,13 @@ assertEquals(rec.basis, [[- 1, 1, - 10, 0], [0, 0, 11, 1], [0, 0, - 60, 0]])
 -------------------------------------------------------------------
 -- -
 
-nn := 7; spitzen := CUSPS0 nn;
+nn := 7; spitzen := cuspsM0 nn;
+idxs := etaFunctionIndices nn;
 rspec := eqSPEC(1,[-1]);
 m := 7; t := 5
 assertEquals(ORBIT(rspec, m, t), [t])
 assertEquals(sort ORBIT(rspec, m, 0), [0, 2, 6])
-rec := etaCofactorSpace0(nn, rspec, m, t)
+rec := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD0
 n := numberOfDivisors(nn)
 s := (rec.particular)(1..n)
 assertEquals(s, [0,1])
@@ -82,13 +87,14 @@ sspec := eqSPEC(nn, rec.indices, rec.particular)
 yf := specYM0EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf := expandAnCX yf
+mf := expandM0AnCX yf
 assertEquals(qetaGrades(mf), [2, -1])
 
 -- And now for $\Gamma_1(5)$.
 
-spitzen := CUSPS1 nn
-rec1 := etaCofactorSpace1(nn, rspec, m, t)
+spitzen := cuspsM1 nn
+idxs := generalizedEtaFunctionIndices nn
+rec1 := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD1
 
 -- Should not fail, because there is a solution for Gamma1(nn).
 
@@ -96,10 +102,10 @@ assertEquals(rec1.particular, [0,1,0,0,0])
 assertEquals(# rec1.basis, 4)
 
 sspec1 := eqSPEC(nn, rec1.indices, rec1.particular)
-yf1 := specYM1GEQ(sspec1, rspec, m, t);
+yf1 := specYM1EQ(sspec1, rspec, m, t);
 xiord := minimalRootOfUnity(yf1)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf1 := expandAnCX yf1
+mf1 := expandM1AnCX yf1
 assertEquals(qetaGrades(mf1), [2, -1, 2, -1, 2, -1])
 
 
@@ -116,12 +122,13 @@ assertEquals(qetaGrades(mf1), [2, -1, 2, -1, 2, -1])
 -------------------------------------------------------------------
 -- -
 
-nn := 11; spitzen := CUSPS0 nn;
+nn := 11; spitzen := cuspsM0 nn;
+idxs := etaFunctionIndices nn
 m := 11; t := 6
 rspec := eqSPEC(1,[-1]);
 assertEquals(ORBIT(rspec, m, t), [t])
 assertEquals(sort ORBIT(rspec, m, 0), [0, 4, 7, 9, 10])
-rec := etaCofactorSpace0(nn, rspec, m, t)
+rec := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD0
 n := numberOfDivisors(nn)
 s := (rec.particular)(1..n)
 assertEquals(s, [0,1])
@@ -129,12 +136,13 @@ sspec := eqSPEC(nn, rec.indices, rec.particular)
 yf := specYM0EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf := expandAnCX yf
+mf := expandM0AnCX yf
 assertEquals(qetaGrades(mf), [5, -1])
 
 -- And now for $\Gamma_1(5)$.
 
-rec := etaCofactorSpace1(nn, rspec, m, t)
+idxs := generalizedEtaFunctionIndices nn
+rec := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD1
 
 -- Should not fail, because there is a solution for Gamma1(nn).
 
@@ -142,10 +150,10 @@ assertEquals(rec.particular, [0, 1, 0, 0, 0, 0, 0])
 assertEquals(# rec.basis, 6)
 
 sspec := eqSPEC(nn, rec.indices, rec.particular)
-modular?(sspec, rspec, m, t)$QCONDM1
+modular?(sspec, rspec, m, t)$MOD1
 
 idxs := cons([nn], rest properGeneralizedEtaFunctionIndices nn)
-rec := etaCofactorSpace1(nn, rspec, m, t, idxs)
+rec := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD1
 assertEquals(rec.particular, [1, 0, 0, 0, 0, 0])
 
 bspecs := [eqSPEC(nn,idxs, b) for b in rec.basis]

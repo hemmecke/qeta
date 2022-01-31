@@ -26,6 +26,8 @@
 
 C ==> Q
 LX ==> L1 CX
+MOD ==> MOD0
+ORBIT ==> modularOrbit $ MOD0
 )read convenience.input )quiet
 )set mess type on
 )set mess time on
@@ -47,15 +49,16 @@ LX ==> L1 CX
 -- -
 
 nn := 10 :: P;
+idxs := etaFunctionIndices nn
 rspec := eqSPEC [[1,-1]]
 m := 5 :: P;
-spitzen := CUSPS0 nn
+spitzen := cuspsM0 nn
 
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
 t := (first first orbs)::Z
 assertEquals(t, 4)
 
-sspec := cofactI0(nn, rspec, m, t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 assertEquals(sspec, eqSPEC(10,[[1,6],[5,-5]]))
 
 minroot := 120 :: P
@@ -63,7 +66,7 @@ yf := specYM0EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity(yf)::P
 assertEquals(xiord, minroot)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf := expandAnCX yf
+mf := expandM0AnCX yf
 -- compare result with formula (4) from
 -- \cite{Hemmecke_DancingSambaRamanujan_2018}
 -- Note that mf comes with the cofactor given by r. So we also must
@@ -83,15 +86,16 @@ assertTrue zero?(mf+minusfive)
 -- -
 
 nn := 14 :: P;
+idxs := etaFunctionIndices nn
 rspec := eqSPEC [[1,-1]];
 m := 7 :: P;
-spitzen := CUSPS0 nn
+spitzen := cuspsM0 nn
 
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
 t := (first first orbs) :: N
 assertEquals(t, 5)
 
-sspec := cofactI0(nn, rspec, m, t) --: List Z
+sspec := cofactInfM0(nn, rspec, m, t, idxs) --: List Z
 assertEquals(sspec,  eqSPEC[[1,7], [2,1], [14,-7]])
 
 minroot := 168 :: P
@@ -104,10 +108,9 @@ minroot := 168 :: P
 yf := specYM0EQ(sspec, rspec, m, t);
 xiord := minimalRootOfUnity yf
 assertEquals(xiord, minroot)
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 
-mf := expandAnCX yf;
+mf := expandM0AnCX yf;
 
 -- compare result with formula (5) from
 -- \cite{Hemmecke_DancingSambaRamanujan_2018}
@@ -120,7 +123,7 @@ mf := expandAnCX yf;
 y1 := specYM0EQ(eqSPEC(nn,[3,1, 3,-7]),1$SPEC,1,0);
 y2 := specYM0EQ(eqSPEC(nn,[-1,1,7,-7]),1$SPEC,1,0);
 
-rhs := 7*expandAnCX(y1) + 49*expandAnCX(y2)
+rhs := 7*expandM0AnCX(y1) + 49*expandM0AnCX(y2)
 assertTrue(zero?(mf - rhs))
 
 -- +
@@ -137,15 +140,15 @@ assertTrue(zero?(mf - rhs))
 -- Check that the sifted computation equals modular computation as prefactor.
 
 nn := 14 :: P;
+idxs := etaFunctionIndices nn
 xiord := 168
-CX := UnityRootExtension(C, xiord)
-xi := generator()$CX
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 
-spitzen := CUSPS0 nn
-y1 := specYM0EQ(eqSPEC(nn,[0,0, 0,0]),eqSPEC(7,[4,-4]),1,0)
-y2 := specYM0EQ(eqSPEC(nn,[4,0,-4,0]),1$SPEC,1,0)
-m1 := expandAnCX y1
-m2 := expandAnCX y2
+spitzen := cuspsM0 nn
+y1 := specYM0EQ(eqSPEC(nn,[0,0, 0,0]),eqSPEC(7,[4,-4]),1,0);
+y2 := specYM0EQ(eqSPEC(nn,[4,0,-4,0]),1$SPEC,1,0);
+m1 := expandM0AnCX y1
+m2 := expandM0AnCX y2
 assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 
 -- +
@@ -160,17 +163,18 @@ assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 -- -
 
 nn := 22 :: P;
+idxs := etaFunctionIndices nn
 --nn: P := 11; r: List Z := [0, 1]
 --nn: P := 22; r: List Z := [-10,10,-9,10]
 rspec := eqSPEC [[1, -1]]
 m := 11 :: P;
-spitzen := CUSPS0 nn
+spitzen := cuspsM0 nn
 
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
 t := (first first orbs)::N
 assertEquals(t, 6)
 
-sspec := cofactI0(nn, rspec, m, t)
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
 assertEquals(pureExponents sspec, [10, 2, 11, -22])
 
 minroot := 264 :: P;
@@ -178,7 +182,7 @@ yf := specYM0EQ(sspec, rspec, m, t);
 xiord:= minimalRootOfUnity(yf) :: P
 assertEquals(xiord, minroot)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
-mf := expandAnCX yf
+mf := expandM0AnCX yf
 
 
 -- compare result with formula (9) from
@@ -186,7 +190,6 @@ mf := expandAnCX yf
 
 -- The $M_1, \ldots, M_7$ from \cite{Hemmecke_DancingSambaRamanujan_2018}.
 
-nndivs := DIVISORS nn
 mgens := [_
   [- 1,   1, 11, - 11],_
   [- 4,   8,  4,  - 8],_
@@ -197,10 +200,10 @@ mgens := [_
   [  4,   0, 12, - 16]]$List(List Z)
 mspecs := [eqSPEC(nn, x) for x in mgens];
 
-assertEquals(mSPECS0 nn, mspecs)
+assertEquals(sort [pureExponents x for x in mSPECSInfM0(nn,idxs)], sort mgens)
 
 ygens := [specYM0EQ(mspec,1$SPEC,1,0) for mspec in mspecs];
-M := [expandAnCX x for x in ygens];
+M := [expandM0AnCX x for x in ygens];
 F ==> mf
 X n ==> n * 1$An(CX)
 

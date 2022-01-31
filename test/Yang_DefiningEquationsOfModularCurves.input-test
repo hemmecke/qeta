@@ -1,8 +1,6 @@
 -- -*- coding: utf-8 -*-
 -- Via jupytext this file can be shown as a jupyter notebook.
 
-)clear complete
-
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
 
 -- # Problem formulation
@@ -61,37 +59,37 @@ oo ==> infinity()$Cusp
 CurveX1(nn: P, rx: LLZ, sx: C,_
                ry: LLZ, sy: C,_
                x: Symbol, y: Symbol,_
-        pxy: Polynomial(C)): Boolean ==
-    rspecx := eqSPEC(nn, [cons(nn,r) for r in rx]);
-    rspecy := eqSPEC(nn, [cons(nn,r) for r in ry]);
-    yx := specYM1GEQ(rspecx); xiordx := minimalRootOfUnity(yx)::P;
-    yy := specYM1GEQ(rspecy); xiordy := minimalRootOfUnity(yy)::P;
-    xiord := lcm(xiordx,xiordy);
-    EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-    spitzen := CUSPS1 nn;
-    e := 1$An(CX);
-    ax := expandAnCX(yx) + sx*e;
-    ay := expandAnCX(yy) + sy*e;
-    qetaGrades ax;
-    qetaGrades ay;
-    n := position(oo,spitzen)
-    xx := toX1(C, series(ax,n), x); gx := qetaGrade xx;
-    xy := toX1(C, series(ay,n), y); gy := qetaGrade xy;
-    xab := samba(xx, [xy])$QXTOPSAMBA1(C)
-    red := reduce(xy^gx, xab)$QXTOPRED1(C)
-    tracePrint("red", red)
-    polc := second(red)::Pol(C)
-    d := degree(polc, y)
-    polc := (inv(coefficient(polc, y, d)) * polc)
-    assertEquals(polc, pxy)
-    pol := polc::Pol(Z)
-    for i in 0..d repeat tracePrint("c", factor coefficient(pol,'y, i))
-    LC ==> leadingCoefficient;
-    mons := monomials pxy;
-    z := [(d := degree(m,[x,y]); LC(m)*ax^(d.1)*ay^(d.2)) for m in mons];
-    b: Boolean := zero? reduce(_+, z)
-    assertTrue(b)
-    b
+        pxy: Polynomial(C)): Boolean == (_
+    rspecx := eqSPEC(nn, [cons(nn,r) for r in rx]);_
+    rspecy := eqSPEC(nn, [cons(nn,r) for r in ry]);_
+    yx := specYM1EQ(rspecx); xiordx := minimalRootOfUnity(yx)::P;_
+    yy := specYM1EQ(rspecy); xiordy := minimalRootOfUnity(yy)::P;_
+    xiord := lcm(xiordx,xiordy);_
+    EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);_
+    spitzen := cuspsM1 nn;_
+    e := 1$An(CX);_
+    ax := expandM1AnCX(yx) + sx*e;_
+    ay := expandM1AnCX(yy) + sy*e;_
+    qetaGrades ax;_
+    qetaGrades ay;_
+    n := position(oo,spitzen);_
+    xx := toX1(C, series(ax,n), x); gx := qetaGrade xx;_
+    xy := toX1(C, series(ay,n), y); gy := qetaGrade xy;_
+    xab := samba(xx, [xy])$QXTOPSAMBA1(C);_
+    red := reduce(xy^gx, xab)$QXTOPRED1(C);_
+    tracePrint("red", red);_
+    polc := second(red)::Pol(C);_
+    d := degree(polc, y);_
+    polc := (inv(coefficient(polc, y, d)) * polc);_
+    assertEquals(polc, pxy);_
+    pol := polc::Pol(Z);_
+    for i in 0..d repeat tracePrint("c", factor coefficient(pol,'y, i));_
+    LC ==> leadingCoefficient;_
+    mons := monomials pxy;_
+    z := [(d := degree(m,[x,y]); LC(m)*ax^(d.1)*ay^(d.2)) for m in mons];_
+    b: Boolean := zero? reduce(_+, z);_
+    assertTrue(b);_
+    b)
 
 CX1(nn,rx,sx,ry,sy,pxy) ==> CurveX1(nn,rx,sx,ry,sy,x,y,pxy)
 )set stream calc 1

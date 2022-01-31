@@ -44,12 +44,10 @@ oo ==> infinity()$Cusp
 
 QEtaIdeal ==> QEtaIdealHemmeckeCached
 QI ==> QEtaIdeal(C)
-etaRels ==> etaRelations $ QEtaIdeal(Q)
-gEtaRels ==> generalizedEtaRelations $ QEtaIdeal(Q)
 
 idpol(id: RKI, f:Symbol): Pol C == (_
   sspec := coSpecification id;_
-  mon: Pol(C) := f*generalizedEtaQuotientMonomial(sspec,char"E",char"Y")$QI;_
+  mon: Pol(C) := f*etaQuotientMonomial(sspec,char"E",char"Y")$QI;_
   ipol: Pol(C) := inv coefficient id * identityPolynomial id - 'F::Pol(C);_
   mon+ipol)
 
@@ -114,7 +112,7 @@ geqrels := generalizedEtaLaurentIdealGenerators(idxs, mspecs, mps)$QI
 -- The following computation takes about 100 sec.
 
 )set message time on
-algrels := generalizedAlgebraicRelations(idxs, geqrels, char "f")$QI;
+algrels := algebraicRelations(idxs, geqrels, char "f")$QI;
 )set message time off
 galgrels := [clearDenominator x for x in algrels]
 
@@ -239,7 +237,7 @@ mps := [idpol(id,f) for id in ids for f in fsyms]
 mspecs := monoidSpecifications first ids;
 geqrels := generalizedEtaLaurentIdealGenerators(idxs, mspecs, mps)$QI
 
-algrels := generalizedAlgebraicRelations(idxs, geqrels, char "f")$QI;
+algrels := algebraicRelations(idxs, geqrels, char "f")$QI;
 galgrels := [clearDenominator x for x in algrels]
 
 -- galgrels:=[2*f2^4-3*f0*f1*f2^2+(-f1^3-f0^3)*f2+3*f0^2*f1^2]

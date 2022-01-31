@@ -49,9 +49,7 @@ TX ==> T1 CX
 LX ==> L1 CX
 PX ==> QEtaPuiseuxSeries CX
 
-puiex ==> puiseuxExpansion $ QESX(C, CX)
-
-oo ==> infinity()$Cusp
+puiex ==> puiseuxExpansion $ QESXM(C, CX, MOD1)
 
 )set mess type on
 )set mess time on
@@ -93,9 +91,9 @@ xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := expandAnCX y1;
-a2 := expandAnCX y2;
-a3 := expandAnCX y3;
+a1 := expandM0AnCX y1;
+a2 := expandM0AnCX y2;
+a3 := expandM0AnCX y3;
 assertTrue(zero?(a1 - a2 - 4*a3))
 
 -- +
@@ -139,7 +137,7 @@ assertTrue(zero?(a1 - a2 - 4*a3))
 -- Check Pochhammer relations with eta-quotient and Jacobi function
 -- computation.
 
-z1 := expansion specEQIC eqSPEC([[5,1,-11],[5,2,-1]]);
+z1 := expansion specEQI(C) eqSPEC([[5,1,-11],[5,2,-1]]);
 z2 := gep(5, [1,4])^(-11) * gep(5,[2,3])^(-1);
 assertEquals(order(z1 - z2, 200), 200)
 
@@ -211,19 +209,19 @@ assertTrue(modularGamma1? rspec2)
 rspec3 := eqSPEC([[1,-6],[5,6]])
 assertTrue(modularGamma1? rspec3)
 
-y1 := specYM1GEQ rspec1;
+y1 := specYM1EQ rspec1;
 xiord1 := minimalRootOfUnity(y1)::P
-y2 := specYM1GEQ rspec2;
+y2 := specYM1EQ rspec2;
 xiord2 := minimalRootOfUnity(y2)::P
-y3 := specYM1GEQ rspec3;
+y3 := specYM1EQ rspec3;
 xiord3 := minimalRootOfUnity(y3)::P
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := expandAnCX y1
-a2 := expandAnCX y2
-a3 := expandAnCX y3
+a1 := expandM1AnCX y1
+a2 := expandM1AnCX y2
+a3 := expandM1AnCX y3
 a1 - a2 - (1$An(CX) + 11 * a3)
 assertTrue(zero?(a1 - a2 - (1$An(CX) + 11 * a3)))
 
@@ -255,14 +253,15 @@ assertTrue(zero?(a1 - a2 - (1$An(CX) + 11 * a3)))
 nn := mm := 5;
 rspeceta51 := eqSPEC [[5,1,1]]; assertTrue(not modularGamma1? rspeceta51);
 rspeceta52 := eqSPEC [[5,2,1]]; assertTrue(not modularGamma1? rspeceta52);
-yeta51 := specYGEQ rspeceta51; xiord1 := minimalRootOfUnity(yeta51)::P;
-yeta52 := specYGEQ rspeceta52; xiord2 := minimalRootOfUnity(yeta52)::P;
+id := matrix [[1,0],[0,1]];
+yeta51 := specYEQG(rspeceta51,id); xiord1 := minimalRootOfUnity(yeta51)::P;
+yeta52 := specYEQG(rspeceta52,id); xiord2 := minimalRootOfUnity(yeta52)::P;
 xiord := lcm[xiord1,xiord2]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-spitzen := CUSPS1 nn
+spitzen := cuspsM1 nn
 
-p1 := puiex(yeta51(oo)); -- eta_{5,1} -- Puiseux expansion
-p2 := puiex(yeta52(oo)); -- eta_{5,2}
+p1 := puiex(yeta51); -- eta_{5,1} -- Puiseux expansion
+p2 := puiex(yeta52); -- eta_{5,2}
 px1 := multiplyExponents(inv p1, 11) * inv p2;
 px2 := inv p1 * multiplyExponents(inv p2,11);
 assertEquals(order(px1-px2-1, 50),50)
@@ -295,19 +294,19 @@ nn: P := 55
 rspec1 := eqSPEC [[55,11,-1],[5,2,-1]]; assertTrue(modularGamma1? rspec1)
 rspec2 := eqSPEC [[5,1,-1],[55,22,-1]]; assertTrue(modularGamma1? rspec2)
 
-y1 := specYM1GEQ(rspec1); xiord1 := minimalRootOfUnity(y1)::P;
-y2 := specYM1GEQ(rspec2); xiord2 := minimalRootOfUnity(y2)::P;
+y1 := specYM1EQ(rspec1); xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1EQ(rspec2); xiord2 := minimalRootOfUnity(y2)::P;
 xiord := lcm[xiord1,xiord2]
 -- -
 
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y2)
 
-a1 := expandAnCX y1
-a2 := expandAnCX y2
+a1 := expandM1AnCX y1;
+a2 := expandM1AnCX y2;
 assertTrue(zero?(a1-a2-1$An(CX)))
 
-pgrds := [-order puiex(y1 c) * WIDTH1(nn, c) for c in spitzen]
+pgrds := [-order puiex(y1 c) * widthM1(nn, c) for c in spitzen]
 lgrds := qetaGrades a1
 assertEquals(pgrds, lgrds)
 
@@ -344,17 +343,17 @@ assertTrue(modularGamma1? rspec1)
 assertTrue(modularGamma1? rspec2)
 assertTrue(modularGamma1? rspec3)
 
-y1 := specYM1GEQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
-y2 := specYM1GEQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
-y3 := specYM1GEQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
+y1 := specYM1EQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1EQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
+y3 := specYM1EQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 -- -
 
-a1 := expandAnCX y1;
-a2 := expandAnCX y2;
-a3 := expandAnCX y3;
+a1 := expandM1AnCX y1;
+a2 := expandM1AnCX y2;
+a3 := expandM1AnCX y3;
 assertTrue(zero?(a1 - a2 - (1$An(CX) + 3 * a3)))
 
 -- +
@@ -389,16 +388,16 @@ assertTrue(modularGamma1? rspec1)
 assertTrue(modularGamma1? rspec2)
 assertTrue(modularGamma1? rspec3)
 
-y1 := specYM1GEQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
-y2 := specYM1GEQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
-y3 := specYM1GEQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
+y1 := specYM1EQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1EQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
+y3 := specYM1EQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := expandAnCX y1;
-a2 := expandAnCX y2;
-a3 := expandAnCX y3;
+a1 := expandM1AnCX y1;
+a2 := expandM1AnCX y2;
+a3 := expandM1AnCX y3;
 assertTrue(zero?(a1 - a2 - 1$An(CX)))
 
 -- +
@@ -435,16 +434,16 @@ assertTrue(modularGamma1? rspec1)
 assertTrue(modularGamma1? rspec2)
 assertTrue(modularGamma1? rspec3)
 
-y1 := specYM1GEQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
-y2 := specYM1GEQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
-y3 := specYM1GEQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
+y1 := specYM1EQ rspec1; xiord1 := minimalRootOfUnity(y1)::P;
+y2 := specYM1EQ rspec2; xiord2 := minimalRootOfUnity(y2)::P;
+y3 := specYM1EQ rspec3; xiord3 := minimalRootOfUnity(y3)::P;
 xiord := lcm[xiord1,xiord2,xiord3]
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 spitzen := cusps(y1)
 
-a1 := expandAnCX y1;
-a2 := expandAnCX y2;
-a3 := expandAnCX y3;
+a1 := expandM1AnCX y1;
+a2 := expandM1AnCX y2;
+a3 := expandM1AnCX y3;
 assertTrue(zero?(a1 - a2 + a3 + 1$An(CX)))
 
 for c in spitzen repeat (_

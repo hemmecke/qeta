@@ -15,13 +15,7 @@ N ==> NonNegativeInteger
 P ==> PositiveInteger
 Z ==> Integer
 Q ==> Fraction Z
-MZ ==> Matrix Z -- consider only 2x2 matricies
-SL2Z ==> MZ -- matrices with determinant = 1
-
-LSym ==> List Symbol
-
-INTF ==> IntegerNumberTheoryFunctions
-DIVISORS m ==>  [qcoerce(d)@P for d in divisors(m)$INTF]
+SL2Z ==> Matrix Z -- 2x2 matricies with determinant = 1
 
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
@@ -32,7 +26,6 @@ printQPOCH spec ==> _
 printETA spec ==> _
   etaQuotient(spec, varEta$QEtaRamanujanKolbergIdentity(Z))
 printSPEC spec ==> printQPOCH spec = printETA spec
-
 
 -- rspec := eqSPEC(nn, r)
 -- rspec := eqSPEC(divs, r)
@@ -50,15 +43,25 @@ LPol C  ==> List Pol C
 
 GAMMA0 ==> CongruenceSubgroupGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
-QCONDM0 ==> QEtaConditionsModularGamma0
-QCONDM1 ==> QEtaConditionsModularGamma1
+MOD0 ==> QEtaConditionsModularGamma0
+MOD1 ==> QEtaConditionsModularGamma1
 QETAAUX ==> QEtaAuxiliaryPackage
 AUXFUN ==> QEtaAuxiliaryFunctions
-CUSPS0 nn ==> cusps()$GAMMA0(nn)
-CUSPS1 nn ==> cusps()$GAMMA1(nn)
-WIDTH0(nn, c) ==> qcoerce(width(c)$GAMMA0(nn))@P
-WIDTH1(nn, c) ==> qcoerce(width(c)$GAMMA1(nn))@P
-ORBIT ==> modularOrbit $ QCONDM0
+
+-- cusps(nn)$MOD
+-- cusps(nn)$MOD0 = cusps()$GAMMA0
+-- cusps(nn)$MOD1 = cusps()$GAMMA1
+cuspsMOD ==> cusps $ MOD
+cuspsM0  ==> cusps $ MOD0
+cuspsM1  ==> cusps $ MOD1
+
+-- width(nn, gamma)$MOD
+-- width(nn, cusp)$MOD
+-- width(nn, cusp)$MOD0 = width(cusp)$GAMMA0
+-- width(nn, cusp)$MOD1 = width(cusp)$GAMMA1
+widthMOD ==> width $ MOD
+widthM0  ==> width $ MOD0
+widthM1  ==> width $ MOD1
 
 -------------------------------------------------------------------
 -- The type of laurent series that we use for expansion.
@@ -78,78 +81,99 @@ toX1(C, a, b) ==> embed(a::CA1(C), b::CPol(C))$X1(C)
 
 -------------------------------------------------------------------
 -- Symbolic modular (generalized) eta-quotients
-YM0EQ   ==> SymbolicModularGamma0EtaQuotient
-YM0EQG  ==> SymbolicModularGamma0EtaQuotientGamma
-YM1GEQ  ==> SymbolicModularGamma1GeneralizedEtaQuotient
-YM1GEQG ==> SymbolicModularGamma1GeneralizedEtaQuotientGamma
+YMEQ  ==> SymbolicModularEtaQuotient
+YMEQG ==> SymbolicModularEtaQuotientGamma
+-- implicitly using the MOD parameter
+YMODEQ  ==> YMEQ MOD
+YMODEQG ==> YMEQG MOD
 
 -------------------------------------------------------------------
--- Creation of symbolic eta-quotients
--- We consider the modular group Gamma_0(level spec).
-specYM0EQ  ==> etaQuotient $ YM0EQ
-specYM0EQG ==> etaQuotient $ YM0EQG
--- We consider the modular group Gamma_1(level spec).
-specYM1GEQ  ==> generalizedEtaQuotient $ YM1GEQ
-specYM1GEQG ==> generalizedEtaQuotient $ YM1GEQG
+-- Creation of symbolic eta-quotients for one transformation matrix
+-- y := etaQuotient(sspec,rspec,m,t,gamma)
+-- y := etaQuotient(rspec,gamma)
+-- y := etaQuotient(rspec)
+specYMEQG MOD ==> etaQuotient $ YMEQG(MOD)
+-- implicitly using the MOD parameter
+specYMODEQG ==> specYMEQG MOD
+specYM0EQG  ==> specYMEQG MOD0
+specYM1EQG  ==> specYMEQG MOD1
+
+-- Creation of symbolic eta-quotients for several cusps
+-- y := etaQuotient(sspec,rspec,m,t,spitzen)
+-- y := etaQuotient(sspec,rspec,m,t)
+-- y := etaQuotient(rspec,spitzen)
+-- y := etaQuotient(rspec)
+specYMEQ MOD ==> etaQuotient $ YMEQ(MOD)
+-- implicitly using the MOD parameter
+specYMODEQ ==> specYMEQ MOD
+specYM0EQ  ==> specYMEQ MOD0
+specYM1EQ  ==> specYMEQ MOD1
 
 -------------------------------------------------------------------
 -- Creation of eta-quotient expansions from specifications
 -- a1 := modularEtaQuotientInfinity(rspec)
 -- a1 := modularEtaQuotientInfinity(sspec,rspec,m,t)
--- a1 := modularEtaQuotientInfinity(nn,rspec,m,t,sidxs)
 specEQI C ==> etaQuotientInfinity $ EQI(C)
-specM0A1 C ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, QCONDM0)
-specM1A1 C ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, QCONDM1)
+specMA1(C,MOD) ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, MOD)
+-- implicitly using the MOD parameter
+specMODA1 C ==> specMA1(C, MOD)
+specM0A1 C  ==> specMA1(C, MOD0)
+specM1A1 C  ==> specMA1(C, MOD1)
 
 -------------------------------------------------------------------
 -- Creation of symbolic eta-quotients (non-modular)
-specYEQ ==> etaQuotient $ YEQ
-specYGEQ ==> generalizedEtaQuotient $ YGEQ
+-- y1 := etaQuotient(spec,m,t,gamma)
+-- y1 := etaQuotient(spec,gamma)
+-- y1 := etaQuotient(spec) -- for gamma=id
+specYEQG ==> etaQuotient $ YEQG
 
 -------------------------------------------------------------------
 -- Creation of eta-quotient monoid
--- mspecs := etaQuotientMonoidSpecifications nn;
--- mspecs := generalizedEtaQuotientMonoidSpecifications(nn, idxs)
-mSPECS0 ==> etaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
-mSPECS1 ==> generalizedEtaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
-ncmSPECS1 ==> nonConstantGeneralizedEtaQuotientMonoidSpecifications $ QEtaQuotientSpecifications4ti2
+-- mspecs := etaQuotientMonoidInfinitySpecifications(nn, idxs)
+-- mspecs := nonConstantEtaQuotientMonoidInfinitySpecifications(nn, idxs)
+mSPECSInf MOD ==> etaQuotientMonoidInfinitySpecifications _
+                    $ QEtaQuotientSpecifications4ti2(MOD)
+-- implicitly using the MOD parameter
+mSPECSInfMOD ==> mSPECSInf MOD
+mSPECSInfM0 ==> mSPECSInf MOD0
+mSPECSInfM1 ==> mSPECSInf MOD1
 
+ncmSPECSInf MOD ==> nonConstantEtaQuotientMonoidInfinitySpecifications _
+                      $ QEtaQuotientSpecifications4ti2(MOD)
+-- implicitly using the MOD parameter
+ncmSPECSInfMOD ==> ncmSPECSInf MOD
+ncmSPECSInfM0 ==> ncmSPECSInf MOD0
+ncmSPECSInfM1 ==> ncmSPECSInf MOD1
 
 -------------------------------------------------------------------
 -- In which level must we compute?
--- nn := minimalLevelCoEtaQuotientGamma1(rspec, m, t)$QEtaCofactorConditions
-minLevel0 ==> minimalLevelCoEtaQuotient $ QCONDM0
-minLevel1 ==> minimalLevelCoEtaQuotient $ QCONDM1
-candidateLevels0 ==> candidateLevelsCoEtaQuotient $ QCONDM0
-candidateLevels1 ==> candidateLevelsCoEtaQuotient $ QCONDM1
+-- nn := minimalLevelCoEtaQuotient(rspec, m, t)$MOD
+minLevel MOD ==> minimalLevelCoEtaQuotient $ MOD
+minLevelMOD ==> minLevel MOD
+minLevelM0  ==> minLevel MOD0
+minLevelM1  ==> minLevel MOD1
 
 -------------------------------------------------------------------
 -- What is the cofactor for Gamma0/1?
--- sspec := etacofactorInfinity(nn, rspec, m, t) -- Gamma0
 -- sspec := etacofactorInfinity(nn, rspec, m, t, sidxs) -- Gamma1
-cofactI0 ==> etaCofactorInfinity $ QEtaModularGamma0Package
-cofactI1 ==> etaCofactorInfinity $ QEtaModularGamma1Package
-
--- ecs := etacofactorSpace0(nn, rspec, m, t) -- Gamma0
--- ecs := etacofactorSpace0(nn, rspec, m, t, sidx) -- Gamma1
--- s := members minimizeVector(ecs.particular, ecs.basis) $ QEtaModularGamma0
-cofactSpace0 ==> etaCofactorSpace0 $ QEtaCofactorSpace
-cofactSpace1 ==> etaCofactorSpace1 $ QEtaCofactorSpace
+cofactInf MOD ==> etaCofactorInfinity $ QEtaModularGammaPackage(MOD)
+cofactInfMOD ==> cofactInf MOD
+cofactInfM0  ==> cofactInf MOD0
+cofactInfM1  ==> cofactInf MOD1
 
 -------------------------------------------------------------------
 -- Given nn, rsoec, m, t, find an identity.
--- id := findID0(nn, rspec, m, t)
--- id := findID1(nn, sidxs, rspec, m, t, bidxs)
+-- id := findIdM1(nn, sidxs, rspec, m, t, bidxs)
 -- qIdentity ==> 1
 -- expand ==> 2
 -- nonModular ==> 4
 -- asExpression ==> 8
 -- withSubscript ==> 16
 -- pretty(id, qIdentity + expand + nonModular + withSubscript)
-findID0 ==> findIdentity $ QEtaRamanujanKolberg(C)
-findID1 ==> findIdentity $ QEtaGeneralizedRamanujan(C)
-
-
+findId MOD ==> findIdentity $ QEtaRamanujanKolberg(C, MOD)
+findIdMOD ==> findId MOD
+findIdM0  ==> findId MOD0
+findIdM1  ==> findId MOD1
 
 -------------------------------------------------------------------
 -- We always use CachedPower versions

@@ -2,7 +2,7 @@
 -- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
 -- Via jupytext this file can be shown as a jupyter notebook.
 
-)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet )quiet
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
 
 -- # Witness identities for Ramanujan congruences of small powers of 5, 7, and 11
 
@@ -51,37 +51,20 @@ lambda(m) ==> positiveRemainder(extendedEuclidean(24,m).coef1,m)
 -- Check witness identity for $p(a^b n + \lambda(a^b))$
 -- where $24 \lambda(x) \equiv 1 \pmod{x}$.
 
-check0(a, b, c) ==> (_
+check(MOD, a, b, c, idxs) ==> (_
   rspec := eqSPEC [[1,-1]]; m := a^b; t := lambda(m);_
-  nn := minLevel0(rspec, m, t);_
+  nn := minimalLevelCoEtaQuotient(rspec, m, t)$MOD;_
   assertEquals(nn, a);_
-  orb := ORBIT(rspec, m, t);_
+  orb := modularOrbit(rspec, m, t)$MOD;_
   assertEquals(orb, [t]);_
-  sspec := cofactI0(nn, rspec, m, t);_
+  sspec := cofactInf(MOD)(nn, rspec, m, t, idxs);_
   tracePrint("sspec", sspec);_
   alpha := alphaInfinity(sspec, rspec, m, [t]);_
   tracePrint("alphaInfinity", alpha);_
-  mspecs := mSPECS0 nn;_
+  mspecs := mSPECSInf(MOD)(nn, idxs);_
   tracePrint("mspecs", mspecs);_
-  id:=findID0(sspec,rspec,m,t,mspecs);_
+  id:=findId(MOD)(sspec,rspec,m,t,mspecs);_
   assertEquals(commonFactor id, c);_
-  ipol := inv coefficient id * identityPolynomial id;_
-  tracePrint("pol0",eval(1/c * ipol,'F,'Z)$Pol(C)))
-
-check1(a, b, c, lidxs) ==> (_
-  rspec := eqSPEC [[1,-1]]; m := a^b; t := lambda(m);_
-  nn := minLevel0(rspec, m, t);_
-  assertEquals(nn, a);_
-  aidxs := generalizedEtaFunctionIndices nn;_
-  idxs := concat [aidxs(i) for i in lidxs];_
-  sspec := cofactI1(nn, rspec, m, t, idxs);_
-  tracePrint("sspec", sspec);_
-  alpha := alphaInfinity(sspec, rspec, m, [t]);_
-  tracePrint("alphaInfinity", alpha);_
-  mspecs := mSPECS1(nn, idxs);_
-  tracePrint("mspecs", mspecs);_
-  id:=findID1(sspec,rspec,m,t,mspecs);_
-  assertEquals(commonFactor id, m);_
   ipol := inv coefficient id * identityPolynomial id;_
   tracePrint("pol1",eval(1/c * ipol,'F,'Z)$Pol(C)))
 
@@ -110,11 +93,11 @@ check1(a, b, c, lidxs) ==> (_
 
 -- The following takes 0.18 sec.
 
-check0(5,2,5^2)
+check(MOD0, 5, 2, 5^2, etaFunctionIndices 5)
 
 pretty(id, qIdentity + expand + asExpression + nonModular)
 
-check1(5,2,5^2,[1..4])
+check(MOD1, 5, 2, 5^2, [[1], [5], [5, 1], [5, 2]])
 pretty(id, qIdentity + expand + asExpression + nonModular)
 
 -- +
@@ -134,11 +117,11 @@ pretty(id, qIdentity + expand + asExpression + nonModular)
 
 -- The follwoing takes 0.23 sec.
 
-check0(5,3,5^3)
+check(MOD0, 5, 3, 5^3, etaFunctionIndices 5)
 
 -- The following takes 0.84 sec.
 
-check1(5,3,5^3,[1..3])
+check(MOD1, 5, 3, 5^3, [[1], [5], [5, 1]])
 
 -- +
 -------------------------------------------------------------------
@@ -157,7 +140,7 @@ check1(5,3,5^3,[1..3])
 
 -- The following takes 4.86 sec.
 
-check0(5,4,5^4)
+check(MOD0, 5, 4, 5^4, etaFunctionIndices 5)
 
 -- +
 -------------------------------------------------------------------
@@ -172,7 +155,7 @@ check0(5,4,5^4)
 
 -- The following takes 41.63 sec.
 
-check1(5,4,5^4,[1..3])
+check(MOD1, 5, 4, 5^4, [[1], [5], [5, 1]])
 
 -- +
 -------------------------------------------------------------------
@@ -193,10 +176,10 @@ check1(5,4,5^4,[1..3])
 -- It involves the evaluation of the partition function at
 -- $p(650\cdot 5^5+2474)=p(2033724)$.
 
-check0(5,5,5^5)
+check(MOD0, 5, 5, 5^5, etaFunctionIndices 5)
 
 -- +
---check1(5,5,5^5,[1..3])
+--check(MOD1, 5, 5, 5^5, [[1], [5], [5, 1]])
 
 -- +
 -------------------------------------------------------------------
@@ -217,11 +200,11 @@ check0(5,5,5^5)
 
 -- The following takes 0.17 sec.
 
-check0(7,2,7^2)
+check(MOD0, 7, 2, 7^2, etaFunctionIndices 7)
 
 -- The following takes 0.24 sec.
 
-check1(7,2,7^2,[1..4])
+check(MOD1, 7, 2, 7^2, [[1], [7], [7,1], [7,2]])
 
 -- +
 -------------------------------------------------------------------
@@ -240,10 +223,11 @@ check1(7,2,7^2,[1..4])
 
 -- The following takes 1.78 sec.
 
-check0(7,3,7^2)
+check(MOD0, 7, 3 , 7^2, etaFunctionIndices 7)
 
 -- +
---check1(7,3,7^2[1..3])
+--check(MOD1, 7, 3, 7^2, [[1], [7], [7,1], [7,2]])
+
 
 -- +
 -------------------------------------------------------------------
@@ -264,10 +248,10 @@ check0(7,3,7^2)
 -- It involves the evaluation of the partition function at
 -- $p(7^4\cdot 699 + 2301) = p(1680600)$.
 
-check0(7,4,7^3)
+check(MOD0, 7, 4, 7^3, etaFunctionIndices 7)
 
 -- +
---check1(7,4,7^3[1..4])
+--check(MOD1, 7, 4, 7^3, [[1], [7], [7,1], [7,2]])
 
 -- +
 -------------------------------------------------------------------
@@ -294,28 +278,27 @@ check0(7,4,7^3)
 
 a := 11; b := 2;
 rspec := eqSPEC [[1,-1]]; m := a^b; t := lambda(m);
-nn := 2*minLevel0(rspec, m, t);
+nn := 2*minLevelM0(rspec, m, t);
 assertEquals(nn, 2*a);
-orb := ORBIT(rspec, m, t);
+idxs := etaFunctionIndices nn;
+orb := modularOrbit(rspec, m, t)$MOD0;
 assertEquals(orb, [t]);
-sspec := cofactI0(nn, rspec, m, t);
+sspec := cofactInfM0(nn, rspec, m, t, idxs);
 tracePrint("sspec", sspec);
-alpha := alphaInfinity(sspec, rspec, m, [t]);_
-tracePrint("alphaInfinity", alpha);_
-mspecs := mSPECS0 nn;
--- exchange first and second mspec
-mspecs2 := concat([mspecs.2,mspecs.1], rest rest mspecs)
-tracePrint("mspecs2", mspecs2)
--- The following will also work, but with commonFactor = 121/1024.
---mspecs3 := concat([mspecs.3,mspecs.1,mspecs.3], rest rest rest mspecs)
-id:=findID0(sspec,rspec,m,t,mspecs2);
+alpha := alphaInfinity(sspec, rspec, m, [t])
+tracePrint("alphaInfinity", alpha)
+mspecs := mSPECSInfM0(nn, idxs)
+tracePrint("mspecs", mspecs)
+-- The following will also work, with commonFactor = 121/8.
+--mspecs3 := concat([mspecs.3,mspecs.1,mspecs.2], rest rest rest mspecs)
+id:=findIdM0(sspec,rspec,m,t,mspecs);
 assertEquals(commonFactor id, a^b/8)
 ipol := inv coefficient id * identityPolynomial id;
 tracePrint("pol0",eval(8/m * ipol,'F,'Z)$Pol(C))
 
 -- The following takes 5.83 sec.
 
-check1(11,2,11^2,[1..6])
+check(MOD1, 11, 2, 11^2, [[1], [11], [11,1], [11,2], [11,3], [11,4]])
 
 -- +
 -------------------------------------------------------------------
@@ -340,6 +323,7 @@ a := 11; b := 3;
 rspec := eqSPEC [[1,-1]]; m := a^b; t := lambda(m);
 nn := 2*minLevel0(rspec, m, t);
 assertEquals(nn, 2*a);
+idxs := etaFunctionIndices nn;
 orb := ORBIT(rspec, m, t);
 assertEquals(orb, [t]);
 
@@ -357,7 +341,7 @@ tracePrint("alphaInfinity", alpha);
 -- which by itself takes 1477 sec.
 -- $p(2435120)$ has 1732 decimal digits.
 
-mspecs := mSPECS0 nn;
+mspecs := mSPECSInfM0(nn, idxs);
 -- exchange first and second mspec
 mspecs2 := concat([mspecs.2,mspecs.1], rest rest mspecs)
 tracePrint("mspecs2", mspecs2)
@@ -386,7 +370,7 @@ tracePrint("pol0",eval(8/m * ipol,'F,'Z)$Pol(C))
 -- The test did not finish after more than 6 hours and consumed
 -- more than 16GB RAM.
 
-check1(11,3,11^3,[1..6])
+check(MOD1, 11, 3, 11^3, [[1], [11], [11,1], [11,2], [11,3], [11,4]])
 
 -- +
 -------------------------------------------------------------------

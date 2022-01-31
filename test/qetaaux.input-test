@@ -10,17 +10,33 @@
 
 u ==> upsilonExponent $ QETAAUX
 rsr ==> rationalSquareRoot $ QETAAUX
-matCusps(nn: P): List Matrix Z ==
-  [cuspToMatrix(c)$GAMMA1(nn) for c in CUSPS1 nn]
+gammas(nn: P): List Matrix Z == _
+  [cuspToMatrix(nn,c)$MOD1 for c in cuspsM1 nn]
 
-kappa(nn: P, g: Z, h: Z, mat: Matrix Z): List Q ==
-  ks := kappaSchoeneberg(nn, g, h, mat)$QETAAUX
-  ky := kappaYang(nn, g, h, mat)$QETAAUX
-  gprime := mat(1,1)*g+mat(2,1)*h
-  hprime := mat(1,2)*g+mat(2,2)*h
-  e := floor(gprime/nn)*(1/2 - hprime/nn)
+kappa(nn: P, g: Z, h: Z, mat: Matrix Z): List Q == (_
+  ks := kappaSchoeneberg(nn, g, h, mat)$QETAAUX;_
+  ky := kappaYang(nn, g, h, mat)$QETAAUX;_
+  gprime := mat(1,1)*g+mat(2,1)*h;_
+  hprime := mat(1,2)*g+mat(2,2)*h;_
+  e := floor(gprime/nn)*(1/2 - hprime/nn);_
   [nn,g,h,gprime, hprime, positiveRemainder(gprime,nn),_
-   ks, ky, e,_fractionalPart(ks - ky - e)]
+   ks, ky, e,_fractionalPart(ks - ky - e)])
+
+testKappa interval ==> (_
+  for nn in interval repeat _
+    for gamma in gammas nn repeat _
+      for g in 1..nn-1 repeat _
+        for h in 0..g-1 repeat (_
+          l :=  kappa(nn,g,h,gamma);_
+          if not zero? l.6 then (_
+              if not zero? last l then (_
+                dbgPrint("====== nn", nn);_
+                dbgPrint("====== gamma", gamma);_
+                dbgPrint("====== g", g);_
+                dbgPrint("====== h", h);_
+                dbgPrint("====== l", l));_
+              assertTrue(zero? last l))))
+
 
 )set mess type on
 )set mess time on
@@ -28,6 +44,8 @@ kappa(nn: P, g: Z, h: Z, mat: Matrix Z): List Q ==
 -- +
 --endsetup
 
+)set output algebra on
+)set output formatted off
 
 -- +
 --test:upsilon
@@ -118,7 +136,7 @@ assertEquals(s, expected)
 
 l := [[dedekindSum(a,c) for a in 1..c | one? gcd(a,c)] for c in 1..20]
 expected := [_
-  [0],
+  [0],_
   [0],_
   [1/18,-1/18],_
   [1/8,-1/8],_
@@ -150,7 +168,7 @@ assertEquals(l, expected)
 --test:generalizedDedekindSum
 -- -
 
-for c in 1..20 repeat for a in 1..c | one? gcd(a,c) repeat
+for c in 1..20 repeat for a in 1..c | one? gcd(a,c) repeat _
   assertEquals(dedekindSum(a,c), generalizedDedekindSum(10,0,0,a,c))
 
 -- +
@@ -164,13 +182,7 @@ for c in 1..20 repeat for a in 1..c | one? gcd(a,c) repeat
 --test:kappa-1-10
 -- -
 
-for nn in 1..10 repeat
-  for mat in matCusps(nn) repeat
-    for g in 1..nn-1 repeat
-      for h in 0..g-1 repeat
-        l :=  kappa(nn,g,h,mat)
-        if not zero? l.6 then assertTrue(zero? last l)
-
+testKappa(1..10)
 -- +
 --endtest
 
@@ -178,12 +190,7 @@ for nn in 1..10 repeat
 --test:kappa-11-20
 -- -
 
-for nn in 11..20 repeat
-  for mat in matCusps(nn) repeat
-    for g in 1..nn-1 repeat
-      for h in 0..g-1 repeat
-        l :=  kappa(nn,g,h,mat)
-        if not zero? l.6 then assertTrue(zero? last l)
+testKappa(11..20)
 
 -- +
 --endtest
@@ -192,12 +199,7 @@ for nn in 11..20 repeat
 --test:time6-kappa-21-30
 -- -
 
-for nn in 21..30 repeat
-  for mat in matCusps(nn) repeat
-    for g in 1..nn-1 repeat
-      for h in 0..g-1 repeat
-        l :=  kappa(nn,g,h,mat)
-        if not zero? l.6 then assertTrue(zero? last l)
+testKappa(21..30)
 
 -- +
 --endtest
@@ -206,13 +208,7 @@ for nn in 21..30 repeat
 --test:time21-kappa-31-40
 -- -
 
-for nn in 31..40 repeat
-  for mat in matCusps(nn) repeat
-    for g in 1..nn-1 repeat
-      for h in 0..g-1 repeat
-        l :=  kappa(nn,g,h,mat)
-        if not zero? l.6 then assertTrue(zero? last l)
-
+testKappa(31..40)
 -- +
 --endtest
 
@@ -220,12 +216,7 @@ for nn in 31..40 repeat
 --test:time55-kappa-41-50
 -- -
 
-for nn in 41..50 repeat
-  for mat in matCusps(nn) repeat
-    for g in 1..nn-1 repeat
-      for h in 0..g-1 repeat
-        l :=  kappa(nn,g,h,mat)
-        if not zero? l.6 then assertTrue(zero? last l)
+testKappa(41..50)
 
 -- +
 --endtest
@@ -234,12 +225,7 @@ for nn in 41..50 repeat
 --test:time115-kappa-51-60
 -- -
 
-for nn in 51..60 repeat
-  for mat in matCusps(nn) repeat
-    for g in 1..nn-1 repeat
-      for h in 0..g-1 repeat
-        l :=  kappa(nn,g,h,mat)
-        if not zero? l.6 then assertTrue(zero? last l)
+testKappa(51..60)
 
 -- +
 --endtest
@@ -248,12 +234,7 @@ for nn in 51..60 repeat
 --test:time210-kappa-61-70
 -- -
 
-for nn in 61..70 repeat
-  for mat in matCusps(nn) repeat
-    for g in 1..nn-1 repeat
-      for h in 0..g-1 repeat
-        l :=  kappa(nn,g,h,mat)
-        if not zero? l.6 then assertTrue(zero? last l)
+testKappa(61..70)
 
 -- +
 --endtest
