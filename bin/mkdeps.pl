@@ -21,8 +21,9 @@ sub read_definitions {
         if($line =~ /[)]endif/){$ignore=0;next}
         if($line =~ /[)]if/){$ignore=1}
         if($ignore) {next}
+#        print "=== $line";
         $line =~ s/--.*//;
-        if ($line =~ /^[)]abbrev [a-z]* [A-Z]* ([a-zA-Z0-9]*)/) {
+        if ($line =~ /^[)]abbrev [a-z]* [A-Z][A-Z0-9]* ([a-zA-Z0-9]*)/) {
             $c=$1;
             $C{$c}=$fn;
 #            print "def $fn: $c\n";
@@ -45,6 +46,7 @@ sub write_dependencies {
         $line =~ s/--.*//;
 #        print "=== $line";
         for $c (keys %C) {
+#            print "   >> $fn: $c\n";
             if (($line =~ /\W$c\W/) and ($C{$c} ne $fn)) {
 #                print "match $fn: $c\n";
                 $D{$C{$c}}=1; # -- we have found a dependency
