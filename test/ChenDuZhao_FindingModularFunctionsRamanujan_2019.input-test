@@ -126,7 +126,7 @@ withSubscript ==> 16
 -- We can easily verify this identity up to order 100.
 
 m := 5; t := 0;
-rspec := geqSPEC [[1,-1]];
+rspec := eqSPEC [[1,-1]];
 nn := minLevel1(rspec, m, t)
 
 -- As can be seen that is done in level 5.
@@ -135,8 +135,8 @@ nn := minLevel1(rspec, m, t)
 
 ps := partitionSeries(1)$QFunctions(Q, L1(Q))
 f := p5n0 := choose(m, t, ps)$L1(C);
-rspec1 := geqSPEC [[1,-2],[5,1],[5,1,-8]];
-rspec2 := geqSPEC [[1,-7],[5,6],[5,1,2]];
+rspec1 := eqSPEC [[1,-2],[5,1],[5,1,-8]];
+rspec2 := eqSPEC [[1,-7],[5,6],[5,1,2]];
 f1 := eulerExpansion specEQI(C) rspec1
 f2 := eulerExpansion specEQI(C) rspec2
 g := f1 - monomial(3, 1)$L1(C)*f2;
@@ -188,7 +188,7 @@ assertTrue(modular?(sspec,rspec,m,t)$QCONDM1)
 -- Is the cofactor and the basis modular for $\Gamma_1(N)$.
 
 yf := specYM1GEQ(sspec,rspec,m,t);
-rspect := geqSPEC [[1,5], [5,-5], [5,1,-10]]
+rspect := eqSPEC [[1,5], [5,-5], [5,1,-10]]
 yt := specYM1GEQ(rspect);
 xiord := minimalRootOfUnity(yf)::P
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
@@ -247,7 +247,7 @@ assertEquals(mpol, M1-3)
 -- There is also a package that puts the above steps together.
 
 m := 5; t := 0;
-rspec := geqSPEC [[1,-1]];
+rspec := eqSPEC [[1,-1]];
 nn := minLevel1(rspec, m, t)
 idxs := [[1],[5],[5, 1]];
 
@@ -302,17 +302,17 @@ nn := minLevel1(rspec, m, t)
 ps := partitionSeries(1)$QFunctions(Q, L1(Q));
 p11n6 := choose(11,6,ps);
 z01 := eulerExpansion(PEP(1,24)*PEP(11,-23)*GEP(11,1,-28)*GEP(11,2,-16)*GEP(11,3,-12)*GEP(11,4,-4));
-sspecz0 := geqSPEC [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
+sspecz0 := eqSPEC [[1,24],[11,-23],[11,1,-28],[11,2,-16],[11,3,-12],[11,4,-4]];
 z00 := eulerExpansion specEQI(C) sspecz0;
 assertEquals(order(z01-z00, 100), 100)
 z0 := monomial(1,-20)$L1(C)* z00;
 
-rspecz := geqSPEC [[1,1],[11,-1],[11,1,-3],[11,2,-2]];
+rspecz := eqSPEC [[1,1],[11,-1],[11,1,-3],[11,2,-2]];
 z := EX specEQI(C) rspecz;
 zexp := EX(PEP(1,1)*PEP(11,-1)*GEP(11,1,-3)*GEP(11,2,-2))
 assertEquals(order(z - zexp, 100), 100)
 
-rspece := geqSPEC [[1,3],[11,-3],[11,1,-5],[11,2,-5],[11,3,-4],[11,4,-1]];
+rspece := eqSPEC [[1,3],[11,-3],[11,1,-5],[11,2,-5],[11,3,-4],[11,4,-1]];
 e := EX specEQI(C) rspece;
 eexp := EX(PEP(1,3)*PEP(11,-3)*GEP(11,1,-5)*GEP(11,2,-5)*GEP(11,3,-4)*GEP(11,4,-1));
 assertEquals(order(e - eexp, 100), 100)
@@ -492,7 +492,7 @@ vv := v0 - 23*b.9 + 2*b.8 + 4*b.7
 
 le := members vv
 idxs := ecs.indices
-sspecvv := generalizedEtaQuotientSpecification(nn, idxs, le)$QEtaSpecification
+sspecvv := etaQuotientSpecification(nn, idxs, le)$QEtaSpecification
 qetaGrades(sspecvv, rspec, m, t)$QEtaModularGamma1Package
 
 -- ## Automatic computation of cofactor
@@ -568,7 +568,7 @@ sspec,mspecs.3
 -- We replace it by $\eta(5\tau)^2/\eta(10\tau)^2$ and therefore get
 -- the following specification in our notation.
 
-sspeccdz := geqSPEC [[1,11],[2,-7],[5,-1],[10,-2],[5,1,12],[10,1,-14],[10,4,-8]]
+sspeccdz := eqSPEC [[1,11],[2,-7],[5,-1],[10,-2],[5,1,12],[10,1,-14],[10,4,-8]]
 assertTrue(modular?(sspeccdz, rspec, m, t)$QCONDM1)
 
 -- The respective series for the generating series of
@@ -595,7 +595,7 @@ assertTrue(zero?(a1 - 1$An(CX)))
 -- Let us investigate the difference to the $z$ of
 -- \cite[Thm. 3.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 
-zspec := geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]
+zspec := eqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]
 assertTrue(modularGamma1? zspec)
 
 -- Indeed, our generalized eta-quotient (given by mspecs.1)
@@ -639,7 +639,7 @@ assertEquals(32*identityPolynomial id, F-4*(M1^3+M1^2-8*M1+8))
 -- $$
 
 m := 9; t := 3
-rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
+rspec := eqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
 nn := minLevel1(rspec,m,t)
 idxs := generalizedEtaFunctionIndices(nn)
 sspec := cofactI1(nn,rspec,m,t)
@@ -656,7 +656,7 @@ assertEquals(qetaGrades y, [0,0,0,1])
 -- \cite[Thm. 10.3]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
 -- is a pure eta-quotient.
 
-sspeccdz := geqSPEC [[1,14], [2,-5], [3,-6],[6,-3]]
+sspeccdz := eqSPEC [[1,14], [2,-5], [3,-6],[6,-3]]
 
 -- We can find it ourselves by restricting the search space.
 
@@ -728,7 +728,7 @@ assertEquals(-90*identityPolynomial id, pol)
 --
 
 m := 9; t := 6
-rspec := geqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
+rspec := eqSPEC [[1,-1],[3,1],[3,1,-1],[6,2,1]] -- Q_{3,1}
 
 -- That is equal to https://faculty.math.illinois.edu/~reznick/2690367.pdf
 -- where it is given by (q^3;q^3)*(-q;q)/(-q^3;q^3).
@@ -739,7 +739,7 @@ idxs := aidxs(1..4)
 id := findID1(6, idxs, rspec, 1, 0, idxs);
 -- pretty(id, qIdentity)
 rspec2 := inv coSpecification id
-rspec2Expected := geqSPEC [[1, - 2], [2, 1], [3, 2], [6, - 1]]
+rspec2Expected := eqSPEC [[1, - 2], [2, 1], [3, 2], [6, - 1]]
 assertEquals(rspec2, rspec2Expected)
 
 -- Now we can try to prove divisibility by Radu's original method
@@ -769,7 +769,7 @@ assertEquals(qetaGrades y, [0,0,0,1])
 -- \cite[Thm. 10.3]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
 -- is a pure eta-quotient.
 
-sspeccdz := geqSPEC [[1,13], [2,-4], [3,-3],[6,-6]]
+sspeccdz := eqSPEC [[1,13], [2,-4], [3,-3],[6,-6]]
 
 -- We can find it ourselves by restricting the search space.
 
@@ -851,7 +851,7 @@ assertEquals(-72*identityPolynomial id, pol)
 -- We show that by a witness identity.
 
 m := 25; t := 14
-rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1],[10,2]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
@@ -927,11 +927,11 @@ pol2 := c * identityPolynomial id2
 -- we get exactly the right-hand side presented on page 35.
 
 m := 25; t := 14
-rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]];
+rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]];
 nn := minLevel1(rspec,m,t)
-sspec := geqSPEC [[1,92],[2,-58],[5,14],[10,-46],_
+sspec := eqSPEC [[1,92],[2,-58],[5,14],[10,-46],_
                   [5,1,52],[10,1,-109],[10,4,4],[10,5,-5]];
-mspecs := [geqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]];
+mspecs := [eqSPEC [[1,1],[5,1],[10,-2],[5,1,-2],[10,1,-1]]];
 specEQI(C) mspecs.1
 id := findID1(sspec, rspec, m, t, mspecs);
 pretty(id, qIdentity + nonModular + withSubscript)
@@ -971,7 +971,7 @@ pretty(id, qIdentity + nonModular + withSubscript)
 -- We show that by a witness identity.
 
 m := 25; t := 24
-rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[5,1],[10,1]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
@@ -1003,8 +1003,8 @@ assertEquals(# monomials identityPolynomial id, 59)
 
 -- +
 m := 25; t := 24
---rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-rspec := geqSPEC [[1,2],[2,1],[10,-1]]
+--rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+rspec := eqSPEC [[1,2],[2,1],[10,-1]]
 nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
@@ -1048,7 +1048,7 @@ assertEquals(5*identityPolynomial id, pol)
 -- We show that by a witness identity.
 
 m := 25; t := 24
-rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
 nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[5,1],[10,1]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
@@ -1079,8 +1079,8 @@ assertEquals(# monomials identityPolynomial id, 59)
 -- the one for $\Delta_2(n)$.
 
 m := 25; t := 24
---rspec := geqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-rspec := geqSPEC [[1,2],[2,1],[10,-1]]
+--rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
+rspec := eqSPEC [[1,2],[2,1],[10,-1]]
 nn := minLevel1(rspec,m,t)
 idxs := [[1],[2],[5],[10],[10,1]]
 id := findID1(nn, idxs, rspec, m, t, idxs);
@@ -1120,7 +1120,7 @@ assertEquals(5*identityPolynomial id, pol)
 -- \tag{10.10}
 -- \end{align}
 
-rspec := geqSPEC [[5,1,-1],[5,2,1]]
+rspec := eqSPEC [[5,1,-1],[5,2,1]]
 modularGamma1? rspec
 
 nn := minLevel1(rspec,2,0)
@@ -1130,24 +1130,24 @@ idxs := rest properGeneralizedEtaFunctionIndices nn
 id := findID1(10, idxs, rspec, 2, 0, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n0 := coSpecification id;
-assertEquals(sspec2n0, geqSPEC[[10,3,1],[10,4,-2],[10,5,1]])
+assertEquals(sspec2n0, eqSPEC[[10,3,1],[10,4,-2],[10,5,1]])
 
 id := findID1(10, idxs, rspec, 2, 1, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n1 := coSpecification id;
-assertEquals(sspec2n1, geqSPEC[[10,1,-1],[10,2,1],[10,4,-1],[10,5,1]])
+assertEquals(sspec2n1, eqSPEC[[10,1,-1],[10,2,1],[10,4,-1],[10,5,1]])
 
 -- And now for $R(q)^{-1}$.
 
 id := findID1(10, idxs, inv rspec, 2, 0, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n0 := coSpecification id;
-assertEquals(sspec2n0, geqSPEC[[10,1,1],[10,2,-2], [10,5,1]])
+assertEquals(sspec2n0, eqSPEC[[10,1,1],[10,2,-2], [10,5,1]])
 
 id := findID1(10, idxs, inv rspec, 2, 1, idxs);
 pretty(id, qIdentity + expand + nonModular + asExpression)
 sspec2n1 := coSpecification id;
-assertEquals(sspec2n1, geqSPEC[[10,2,-1],[10,3,-1],[10,4,1],[10,5,1]])
+assertEquals(sspec2n1, eqSPEC[[10,2,-1],[10,3,-1],[10,4,1],[10,5,1]])
 
 -- +
 -------------------------------------------------------------------

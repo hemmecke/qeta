@@ -123,16 +123,7 @@ QEtaSpecification: Exports == Implementation where
       ++ over divs.
       ++ The two input lists are supposed to be of the same length.
     etaQuotientSpecification: (P, LLZ) -> %
-      ++ etaQuotientSpecification(mm, rbar) returns the specification for
-      ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where [d,rd]
-      ++ are the elements of rbar.
-      ++ The eta-quotient is considered to belong to level mm.
-    etaQuotientSpecification: LLZ -> %
-      ++ etaQuotientSpecification(rbar) returns the specification for
-      ++ the eta-quotient $\prod_{d} \eta(d*\tau)^{r_d}$ where [d,rd]
-      ++ are the elements of rbar.
-    generalizedEtaQuotientSpecification: (P, LLZ) -> %
-      ++ generalizedEtaQuotientSpecification(mm, rbar) returns the
+      ++ etaQuotientSpecification(mm, rbar) returns the
       ++ specification of a generalized eta-quotient given by a list
       ++ of (index, exponent) pairs where an index can be either a
       ++ divisor of mm or a pair (d,g) of a divisor d and a number g
@@ -141,14 +132,14 @@ QEtaSpecification: Exports == Implementation where
       ++ a) [d[     -- this is equivalent to [d,1],
       ++ b) [d,e]   -- stands for $\eta(d*\tau)^e$,
       ++ c) [d,g,e] -- stands for $\eta_{d,g}^{[R]}(\tau)^e$.
-    generalizedEtaQuotientSpecification: LLZ -> %
-      ++ generalizedEtaQuotientSpecification(rbar) returns
-      ++ generalizedEtaQuotientSpecification(mm, rbar) for
+    etaQuotientSpecification: LLZ -> %
+      ++ etaQuotientSpecification(rbar) returns
+      ++ eaQuotientSpecification(mm, rbar) for
       ++ mm=lcm[first l for l in rbar].
       ++ mm is 1 if rbar is empty.
-    generalizedEtaQuotientSpecification: (P, LLZ, LZ) -> %
-      ++ generalizedEtaQuotientSpecification(mm,idxs,le) returns
-      ++ generalizedEtaQuotientSpecification(mm, rbar) where rbar is
+    etaQuotientSpecification: (P, INDICES, LZ) -> %
+      ++ etaQuotientSpecification(mm,idxs,le) returns
+      ++ etaQuotientSpecification(mm, rbar) where rbar is
       ++ [concat(i,e) for e in le for i in idxs] without the entries
       ++ whose corresponding exponent e is zero.
 
@@ -333,23 +324,13 @@ QEtaSpecification: Exports == Implementation where
         rpure := sort((x:LZ,y:LZ):Boolean +-> x<y, rpure)
         per [mm, rpure, []]
 
-    etaQuotientSpecification(mm: P, rpure: LLZ): % ==
-        rspec: % := generalizedEtaQuotientSpecification(mm, rpure)
-        not pure? rspec => error "not a pure eta-quotient specification"
-        rspec
-
-    etaQuotientSpecification(rpure: LLZ): % ==
-        rspec: % := generalizedEtaQuotientSpecification rpure
-        not pure? rspec => error "not a pure eta-quotient specification"
-        rspec
-
-    generalizedEtaQuotientSpecification(mm: P, rbar: LLZ): % ==
+    etaQuotientSpecification(mm: P, rbar: LLZ): % ==
         h: XHashTable(List Z, Z) := table() -- to store index,exponent pairs
         for l in rbar | not empty? l repeat
             d: Z := first l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
             if #l>3 then
-                error "generalizedEtaQuotientSpecification: list length > 3"
+                error "etaQuotientSpecification: list length > 3"
             e: Z := 1
             g: Z := -1
             if #l=2 then e := l.2
@@ -401,18 +382,18 @@ QEtaSpecification: Exports == Implementation where
         rtilde := sort((a:LZ,b:LZ):Boolean +-> a<b, rtilde)
         per [mm, rpure, rtilde]
 
-    generalizedEtaQuotientSpecification(rbar: LLZ): % ==
+    etaQuotientSpecification(rbar: LLZ): % ==
         empty? rbar => 1
         mm: P := asP lcm [first l for l in rbar]
-        generalizedEtaQuotientSpecification(mm, rbar)
+        etaQuotientSpecification(mm, rbar)
 
-    generalizedEtaQuotientSpecification(mm: P, idxs: LLZ, le: LZ): % ==
+    etaQuotientSpecification(mm: P, idxs: INDICES, le: LZ): % ==
         #idxs < #le => --
-            error "generalizedEtaQuotientSpecification: exponent list too long"
+            error "etaQuotientSpecification: exponent list too long"
         rbar: LLZ := empty()
         for e in le for i in idxs repeat
             if not zero? e then rbar := cons(concat(i, e), rbar)
-        generalizedEtaQuotientSpecification(mm, rbar)
+        etaQuotientSpecification(mm, rbar)
 
     -- accessor functions
     level(x: %): P == xx.flevel
@@ -526,35 +507,35 @@ QEtaSpecification: Exports == Implementation where
     ((x: %) * (y: %)): % ==
         mm: P := asP lcm(level x, level y)
         rbar: LLZ := concat(parts x, parts y)
-        generalizedEtaQuotientSpecification(mm, rbar)
+        etaQuotientSpecification(mm, rbar)
     ((x: %) ^ (z: Z)): % ==
         mm: P := level x
         rbar: LLZ := [[specDelta(l)::Z, specSubindex l, z*specExponent l]_
                       for l in parts x]
-        generalizedEtaQuotientSpecification(mm, rbar)
+        etaQuotientSpecification(mm, rbar)
     inv(x: %): % ==
         mm: P := level x
         rbar: LLZ := [[specDelta(l)::Z, specSubindex l, - specExponent l]_
                       for l in parts x]
-        generalizedEtaQuotientSpecification(mm, rbar)
+        etaQuotientSpecification(mm, rbar)
 
     numer(x: %): % ==
         mm: P := level x
         rbar: LLZ := [[specDelta(l)::Z, specSubindex l, e]_
                       for l in parts x | (e := specExponent l) > 0]
-        generalizedEtaQuotientSpecification(mm, rbar)
+        etaQuotientSpecification(mm, rbar)
 
     denom(x: %): % == -- numer(x)/x
         mm: P := level x
         rbar: LLZ := [[specDelta(l)::Z, specSubindex l, - e]_
                       for l in parts x | (e := specExponent l) < 0]
-        generalizedEtaQuotientSpecification(mm, rbar)
+        etaQuotientSpecification(mm, rbar)
 
     dilate(x: %, n: P): % ==
         rbar: LLZ := [(g:=specSubindex l; if g>0 then g:=n*g;_
                        [n*specDelta l, g, specExponent l])_
                       for l in parts x]
-        generalizedEtaQuotientSpecification(n*level x, rbar)
+        etaQuotientSpecification(n*level x, rbar)
 
     specExponent(l: LZ): Z == last l
     specIndex(l: LZ): LZ == if specSubindex l = -1 then [l.1] else [l.1, l.2]

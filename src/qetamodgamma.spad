@@ -434,7 +434,7 @@ QEtaModularGamma1Package: Exports == Implementation where
         -- Compute the poleorders/grades (at all cusps) for the
         -- particular solution sinitial.
         le := members sinitial -- exponents
-        sspec: SPEC := generalizedEtaQuotientSpecification(nn, idxs, le)
+        sspec: SPEC := etaQuotientSpecification(nn, idxs, le)
         spitzen: CUSPS := CUSPS1 nn
         y: YM1GEQ := generalizedEtaQuotient(sspec, rspec, m, t, spitzen)
         constant? y => sspec
@@ -451,7 +451,7 @@ QEtaModularGamma1Package: Exports == Implementation where
         -- Coming here, it is still possible that (sspec, rspec, m, t)
         -- represents a constant function, since the "constant?"
         -- function above only estimates the grades.
-        bspecs := [generalizedEtaQuotientSpecification(nn, idxs, members x)
+        bspecs := [etaQuotientSpecification(nn, idxs, members x)
                    for x in hbasis]
         import from QEtaModularGammaPackage
         ecss := etaCofactorInfinitySpaceSystem(bspecs, qetaGrades y, spitzen)
@@ -462,7 +462,7 @@ QEtaModularGamma1Package: Exports == Implementation where
         sol: SOL := diophantineSystem(mat, u)$SmithNormalForm(Z, VZ, VZ, MZ)
         not sol.particular case "failed" =>
             s := sinitial - (hmat * ((sol.particular)::VZ))
-            return generalizedEtaQuotientSpecification(nn, idxs, members s)
+            return etaQuotientSpecification(nn, idxs, members s)
         -- If there is no solution, we try the more involved mat*x>=u.
         rels: VZ := vector [1 for x in 1..#u]
         zresult: ZRESULT := zsolve(mat, rels, u)$X4ti2
@@ -491,12 +491,12 @@ QEtaModularGamma1Package: Exports == Implementation where
         -- Since in the computation of alphaInfinity only the cofactor
         -- part changes, it is sufficient if we try to maximize
         -- sigmaInfinity(sspec) where sspec is given through s via
-        -- sbar:=generalizedEtaQuotientSpecification(nn,idxs,s)
-        sspec := generalizedEtaQuotientSpecification(nn, idxs, members s)
+        -- sbar:=etaQuotientSpecification(nn,idxs,s)
+        sspec := etaQuotientSpecification(nn, idxs, members s)
         sigmainf: Q := sigmaInfinity sspec
         while not empty?(adjustments := rest adjustments) repeat
             s := sinitial - hmat * first(adjustments)
-            tspec := generalizedEtaQuotientSpecification(nn, idxs, members s)
+            tspec := etaQuotientSpecification(nn, idxs, members s)
             si: Q := sigmaInfinity tspec
             if si > sigmainf then
                 sspec := tspec
