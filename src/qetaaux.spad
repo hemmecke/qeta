@@ -226,7 +226,9 @@ QEtaAuxiliaryPackage: with
     primePower: (P, P) -> N
       ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
       ++ highest power e such that p^e is a factor of d.
-
+    verticalConcat: (Matrix Q, Matrix Q) -> Matrix Q
+      ++ verticalConcat(m1, m2) puts m1 on top of m2 while creating a
+      ++ matrix big enough to hold all columns.
   == add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
     FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
@@ -493,6 +495,14 @@ $a\in X_c$.
             -- otherwise lw < lv
             v := w; lv := lw -- take this minimal w as the new v
         w
+
+    verticalConcat(mat1: MQ, mat2: MQ): MQ ==
+        r1 := nrows mat1; c1 := ncols mat1
+        r2 := nrows mat2; c2 := ncols mat2
+        mat: MQ := new(r1 + r2, max(c1, c2), 0)
+        for i in 1..r1 repeat for j in 1..c1 repeat mat(i, j) :=  mat1(i, j)
+        for i in 1..r2 repeat for j in 1..c2 repeat mat(r1+i, j) :=  mat2(i, j)
+        mat
 
 
 
