@@ -134,6 +134,10 @@ RELS ==> VZ -- only entries from {-1, 0, 1} are allowed with meaning {<=,=,>=}
 LVZ ==> List VZ
 ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
 ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
+Q ==> Fraction Z
+VQ ==> Vector Q
+MQ ==> Matrix Q
+QINPUT ==> Record(qmat: MQ, zrels: RELS, qrhs: VQ)
 
 )if LiterateDoc
 
@@ -164,6 +168,12 @@ X4ti2: with
       ++ random number. They will be removed after the computation.
     zsolve: ZINPUT -> ZRESULT
       ++ zsolve(z) returns zsolve(z.zmat, z.zrels, z.zrhs).
+    clearDenominators: QINPUT -> ZINPUT
+      ++ clearDenominators(q) computes (for each row i separately) the
+      ++ common denominator of the entries of row(q.qmat,i) and
+      ++ q.qrhx.i and multiplies the entries by this denominator.
+    zsolve: QINPUT -> ZRESULT
+      ++ zsolve(q) returns zsolve(clearDenominators(q)).
     setExecutable: S -> S
       ++ setExecutable(path) sets a path for an executable that is
       ++ called during the zsolve function call.
@@ -245,6 +255,21 @@ X4ti2: with
         error "zsolve: could not create temporary filename"
 
     zsolve(z: ZINPUT): ZRESULT == zsolve(z.zmat, z.zrels, z.zrhs)
+
+    clearDenominators(q: QINPUT): ZINPUT ==
+        matQ := q.qmat
+        m := nrows matQ
+        n := ncols matQ
+        mat: MZ := new(m, n, 0)
+        v: VZ := new(m, 0)
+        for i in 1..m repeat
+            d := denom(q.qrhs.i)
+            for j in 1..n repeat d := lcm(d, denom matQ(i,j))
+            v.i := numer(d * q.qrhs.i)
+            for j in 1..n repeat mat(i,j) := numer(d*matQ(i,j))
+        return [mat, q.zrels, v]
+
+    zsolve(q: QINPUT): ZRESULT == zsolve clearDenominators q
 
 )if LiterateDoc
 \bibliography{qeta}
