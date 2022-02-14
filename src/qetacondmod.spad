@@ -212,6 +212,9 @@ QEtaConditionsModularCategory: Category == with
     modular?: (SPEC, SPEC, P, N) -> Boolean
       ++ modular?(sspec,rspec,m,t) returns true iff (sspec,rspec,m,t)
       ++ specifies a modular function in level(sspec).
+    modular?: SPEC -> Boolean
+      ++ modular?(rspec) returns true iff spec specifies a modular
+      ++ function in level(rspec).
     modularOrbit: (SPEC, P, N) -> List N
       ++ modularOrbit(rspec, m, t) (for $\Gamma_0(N) where N is
       ++ level(rspec)) computes the elements of $\modularOrbit{r,m,t)$
@@ -508,6 +511,8 @@ QEtaConditionsModularGamma0: Exports == Implementation where
         for nn in 1..24*m*level(rspec) repeat
             conditionCoEtaQuotient?(asP nn, rspec, m, t) => return asP nn
         error "minimalLevelCoEtaQuotient: should not be here"
+
+    modular?(rspec: SPEC): Boolean == modularGamma0? rspec
 
     modular?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
         not pure? sspec => false
@@ -876,6 +881,8 @@ QEtaConditionsModularGamma1: Exports == Implementation where
         qsetelt!(mat, 2, n+1, 1)
         qsetelt!(mat, 3, n+2, 1)
         return mat
+
+    modular?(rspec: SPEC): Boolean == modularGamma1? rspec
 
     modular?(sspec: SPEC, rspec: SPEC, m: P, t: N): Boolean ==
         not conditionCoEtaQuotient?(level sspec, rspec, m, t) => false
