@@ -89,9 +89,9 @@ CUSPS ==> List Cusp
 asP x ==> x pretend P
 
 LVZ ==> List VZ
+RELS ==> VZ
 ECS ==> Record(indices: INDICES, particular: Union(VZ,"failed"), basis: LVZ)
-ECSS ==> Record(comatrix: MZ, rhs: VZ)
-SOL ==> Record(particular: Union(VZ, "failed"), basis: LVZ)
+ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
 ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
 
 
@@ -108,9 +108,9 @@ ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
 \subsection{P QEtaModularGammaPackage}
 \label{sec:QEtaModularGammaPackage}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Compute a vector that must be multiplied to the (sifted) eta-quotient
-in order to make it a modular function for
-$\Gamma_0(N)$ having a pole only at infinity or to make the (positive)
+Compute a vector that must be multiplied to the dissected eta-quotient
+in order to make it a modular function for the respective congruence
+subgroup having a pole only at infinity or to make the (positive)
 orders at all cusps (\code{qetaGrades}) small in total sum.
 
 )endif
@@ -120,14 +120,14 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
   MOD: QEtaConditionsModularCategory
   YMEQ ==> SymbolicModularEtaQuotient MOD
   Exports ==> with
-    etaCofactorInfinitySpaceSystem: (SPECS, LZ, CUSPS) -> ECSS
+    etaCofactorInfinitySpaceSystem: (SPECS, LZ, CUSPS) -> ZINPUT
       ++ etaCofactorInfinitySpaceSystem(bspecs,grds,spitzen) returns a
       ++ matrix A and a right-hand side v for a system A*x>=v where
       ++ the right-hand side is grds (which is the expansion
       ++ poleorders ath the cusps spitzen and A is the expansion
       ++ poleorders of the basis elements given by bspecs. The rows
       ++ are indexed by the cusps.
-    reduceSystem: ECSS -> ECSS
+    reduceSystem: ZINPUT -> ZINPUT
       ++ reduceSystem([A,v]) returns a matrix A' and a right-hand side
       ++ v' such that A*x>=v and A'*x>=v' have the same solutions, but
       ++ A' has duplicate rows removed.
@@ -174,24 +174,27 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         [numer x for x in ords]
 
     etaCofactorInfinitySpaceSystem(
-      bspecs: SPECS, ords: LZ, spitzen: CUSPS): ECSS ==
+      bspecs: SPECS, ords: LZ, spitzen: CUSPS): ZINPUT ==
         -- For bspecs (modular functions) we can use the
         -- matrixEtaOrder to compute the order vectors.
         ybas: List YMEQ := [etaQuotient(bspec, spitzen) for bspec in bspecs]
         bas: LLZ := [orderMod y for y in ybas]
         mat: MZ := transpose matrix bas
-        [mat, - vector ords]  -- switch from orders to grades
+        -- To achieve non-negative orders at each cusp, we must find a
+        -- solution that is at least as big (in each component) as the
+        -- negation of the current order vector.
+        [mat, new(#ords, 1)$VZ, - vector ords]
 
-    reduceSystem(ecss: ECSS): ECSS ==
-        -- We have to solve ecss.comatrix * x >= ecss.rhs and are
-        -- satisfied with a solution for "=" instead of ">=". The rows
-        -- of ecss.comatrix and ecss.rhs are indexed by cusps. Since
-        -- it might happen that some rows are identical, we remove
-        -- them. From the rhs we collect the corresponding entries and
-        -- take their maximum grade (pole order), see
+    reduceSystem(zin: ZINPUT): ZINPUT ==
+        -- We have to solve zin.zmat * x >= zin.zrhs and are satisfied
+        -- with a solution for "=" instead of ">=". The rows of
+        -- zin.zmat and zin.zrhs are indexed by cusps. Since it might
+        -- happen that some rows are identical, we remove them. From
+        -- the rhs we collect the corresponding entries and take their
+        -- maximum grade (pole order), see
         -- \eqref{eq:remove-non-infinity-poles}.
-        mat: MZ := ecss.comatrix
-        u: VZ := ecss.rhs
+        mat: MZ := zin.zmat
+        u: VZ := zin.zrhs
         hrows: XHashTable(VZ, Z) := empty()
         for i in 1..nrows(mat) repeat
             hrow: VZ := row(mat, i)
@@ -202,7 +205,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         for hrow in keys hrows repeat
             ll := cons(members hrow, ll)
             v := cons(hrows.hrow, v)
-        [matrix ll, vector v]
+        [matrix ll, new(#v, 1), vector v]
 
     qetaGrades(y: YMEQ): LZ ==
         xiord: P := minimalRootOfUnity y
@@ -229,10 +232,11 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- If it can be shown that multiplication with sspec leads
         -- to a constant series expansion (without computing this series),
         -- then we can return sspec.
-        sspec: SPEC := etaQuotientSpecification(nn, idxs, members sinitial)
+        sspec: SPEC := etaQuotientSpecification(nn, idxs, sinitial)
         spitzen: List Cusp := cusps(nn)$MOD
         yall: YMEQ := etaQuotient(sspec, rspec, m, t, spitzen)
-        constant? yall => sspec
+        constant? yall =>
+            sspec
 
         -- y can still represent a constant function.
         -- We only make an actual test at the cusp infinity for all others
@@ -243,7 +247,8 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
             -- Coming here, we definitely have no pole at non-infinity cusps.
             -- The implementation for order in A1(C) takes care of not
             -- running indefinityly of the series is zero.
-            if qetaGrade(specMODA1(C)(sspec, rspec, m, t))<=0 then return sspec
+            if (grd:=qetaGrade(specMODA1(C)(sspec, rspec, m, t)))<=0 then
+                return sspec
 
         -- Coming here, it is still possible that (sspec, rspec, m, t)
         -- represents a constant function, since the "constant?"
@@ -254,28 +259,26 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         ords: LZ := [-g for g in qetaGrades y]
         hasPole?: Boolean := false
         for o in ords repeat hasPole? := hasPole? or o < 0
-        if not hasPole? then return sspec -- only possible pole is at infinity
+        if not hasPole? then
+            return sspec -- only possible pole is at infinity
         -- There is a pole at a non-infinity cusp.
-        bspecs := [etaQuotientSpecification(nn, idxs, members x)
-                   for x in hbasis]
+        bspecs := [etaQuotientSpecification(nn, idxs, x) for x in hbasis]
         --- See \eqref{eq:remove-non-infinity-poles}.
-        ecss := etaCofactorInfinitySpaceSystem(bspecs, ords, spitzen)
+        zin: ZINPUT := etaCofactorInfinitySpaceSystem(bspecs, ords, spitzen)
         -- Now we have a system (mat, b) and look for a solution v such
         -- that mat*v>=b, where >= means "in each component".
-        ecss := reduceSystem ecss -- remove identical rows
-        mat: MZ := ecss.comatrix -- corresponds to O'
-        u: VZ := ecss.rhs -- corresponds to -v in eq:remove-non-infinity-poles
-
-        -- We first solve mat*x=u for x.
-        sol: SOL := diophantineSystem(mat, u)$SmithNormalForm(Z, VZ, VZ, MZ)
+        zin := reduceSystem zin -- remove identical rows
+        -- We first solve mat*x=v for x.
+        v: VZ := zin.zrhs
+        z: ZRESULT := zsolve([zin.zmat, new(#v,0), v]$ZINPUT)$X4ti2
         hmat: MZ := transpose matrix [members x for x in hbasis]
-        not sol.particular case "failed" =>
-            s := sinitial + (hmat * ((sol.particular)::VZ))
-            return etaQuotientSpecification(nn, idxs, members s)
+        not empty?(z.zinhom) =>
+            s := sinitial + hmat * first(z.zinhom)
+            sspec := etaQuotientSpecification(nn, idxs, s)
+            return sspec
 
         -- If there is no solution, we try the more involved mat*x>=u.
-        rels: VZ := vector [1 for x in 1..#u]
-        zresult: ZRESULT := zsolve(mat, rels, u)$X4ti2
+        z := zsolve(zin)$X4ti2
         -- We are interested in the inhomogeneous solutions, since
         -- they yield an adjustment such that the resulting cofactor
         -- vector sbar leads to an element in M^\infty(nn) for the
@@ -286,7 +289,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- qetaGrade (= small poleorder = big order) at infinity. So we
         -- compute the series expansion at infinity for each of the
         -- inhomogeneous solutions and take the minimal qetaGrade.
-        adjustments := zresult.zinhom
+        adjustments := z.zinhom
         empty? adjustments => error "cannot find cofactor"
         s := sinitial + hmat * first(adjustments)
         -- The order of the expansion at infinity of the modular
@@ -302,11 +305,11 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- sufficient if we try to maximize sigmaInfinity(sspec) where
         -- sspec is given through s via
         -- sbar:=etaQuotientSpecification(nn,idxs,s)
-        sspec := etaQuotientSpecification(nn, idxs, members s)
+        sspec := etaQuotientSpecification(nn, idxs, s)
         sigmainf: Q := sigmaInfinity sspec
         while not empty?(adjustments := rest adjustments) repeat
             s := sinitial + hmat * first(adjustments)
-            tspec := etaQuotientSpecification(nn, idxs, members s)
+            tspec := etaQuotientSpecification(nn, idxs, s)
             si: Q := sigmaInfinity tspec
             if si > sigmainf then
                 sspec := tspec
