@@ -321,15 +321,15 @@ check(MOD1, 11, 2, 11^2, [[1], [11], [11,1], [11,2], [11,3], [11,4]])
 
 a := 11; b := 3;
 rspec := eqSPEC [[1,-1]]; m := a^b; t := lambda(m);
-nn := 2*minLevel0(rspec, m, t);
+nn := 2*minLevelM0(rspec, m, t);
 assertEquals(nn, 2*a);
 idxs := etaFunctionIndices nn;
-orb := ORBIT(rspec, m, t);
+orb := modularOrbit(rspec, m, t)$MOD0;
 assertEquals(orb, [t]);
 
 -- The following takes 98.14 sec.
 
-sspec := cofactI0(nn, rspec, m, t);
+sspec := cofactInfM0(nn, rspec, m, t, idxs);
 tracePrint("sspec", sspec);
 
 alpha := alphaInfinity(sspec, rspec, m, [t]);
@@ -343,14 +343,14 @@ tracePrint("alphaInfinity", alpha);
 
 mspecs := mSPECSInfM0(nn, idxs);
 -- exchange first and second mspec
-mspecs2 := concat([mspecs.2,mspecs.1], rest rest mspecs)
-tracePrint("mspecs2", mspecs2)
+-- mspecs2 := concat([mspecs.2,mspecs.1], rest rest mspecs)
+-- tracePrint("mspecs2", mspecs2)
 -- The following will also work, but with commonFactor = 121/1024.
 --mspecs3 := concat([mspecs.3,mspecs.1,mspecs.3], rest rest rest mspecs)
 
 -- The following takes 2668.28 sec.
 
-id:=findID0(sspec,rspec,m,t,mspecs2);
+id:=findIdM0(sspec,rspec,m,t,mspecs);
 
 assertEquals(commonFactor id, a^b/8)
 ipol := inv coefficient id * identityPolynomial id;
