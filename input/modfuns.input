@@ -12,15 +12,15 @@ kleinJ(n: P, gamma: SL2Z, w: P): L1 CX ==
   not one? denom(uq) => error "kleinJ: denominator of u should vanish"
   not one? denom(vq) => error "kleinJ: denominator of v should vanish"
   v: N := numer(vq)::N
-  px: QEtaPuiseuxSeries CX := substitute(j, uq, v)$QESX(C, CX)
-  laurent(px, 1)$QESX(C, CX)
+  px: QEtaPuiseuxSeries CX := substitute(j, uq, v)$QESXM(C, CX, MOD0)
+  laurent(px, 1)$QESXM(C, CX, MOD0)
 
 -- expansion of j(n*tau) at all cusps of Gamma0(nn).
 kleinJn(nn: P, n: N): An(CX) == (_
   h := table()$XHashTable(Cusp, L1 CX);_
-  for cusp in CUSPS0 nn repeat (_
-    w := WIDTH0(nn, cusp);_
-    gamma := cuspToMatrix(cusp)$GAMMA0(nn);_
+  for cusp in cuspsM0 nn repeat (_
+    w := widthM0(nn, cusp);_
+    gamma := cuspToMatrix(nn,cusp)$MOD0;_
     h.cusp  := kleinJ(n, gamma, w));_
   h :: An(CX))
 
