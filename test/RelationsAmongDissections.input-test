@@ -31,19 +31,16 @@ MAX ==> maxPrecedence()$FormatMathJax
 MIN ==> minPrecedence()$FormatMathJax
 setHandler!(h, 2 , "SUB", subscript(MAX)$FormatMathJax)$OH;
 
-)read /home/hemmecke/g/qeta/input/convenience.input )quiet
-findID1a(nn,rspec,m,t)==> _
-  findID1(nn,generalizedEtaFunctionIndices nn, rspec,m,t,_
-             generalizedEtaFunctionIndices nn)
+)read convenience.input )quiet
 
-FINDID1(m,t)==>(_
-  ids(t+1) := findID1(nn, idxs, rspec, m, t, id); _
+FINDID1(m,t) ==> (_
+  ids(t+1) := findIdM1(nn, idxs, rspec, m, t, id); _
   pretty(ids(t+1), asExpression + qIdentity + nonModular + expand))
 
 oo ==> infinity()$Cusp
 
 QEtaIdeal ==> QEtaIdealHemmeckeCached
-QI ==> QEtaIdeal(C)
+QI ==> QEtaIdeal(C,MOD1)
 
 idpol(id: RKI, f:Symbol): Pol C == (_
   sspec := coSpecification id;_
@@ -80,13 +77,13 @@ idpol(id: RKI, f:Symbol): Pol C == (_
 -- eta-quotients.
 
 rspec:= eqSPEC [[1,-1]]; m:=5; t:=4;
-nn := minLevel1(rspec, m, t)
+nn := minLevelM1(rspec, m, t)
 
 aidxs := generalizedEtaFunctionIndices nn
 idxs := aidxs
 
 
-id := findID1(nn, idxs, rspec, m, 0, idxs);
+id := findIdM1(nn, rspec, m, 0, idxs);
 ids := [id for i in 0..4];
 
 FINDID1(5,0)
@@ -105,14 +102,14 @@ fsyms := [f0,f1,f2,f3,f4];
 mps := [idpol(id,f) for id in ids for f in fsyms]
 
 mspecs := monoidSpecifications first ids;
-geqrels := generalizedEtaLaurentIdealGenerators(idxs, mspecs, mps)$QI
+eqrels := etaLaurentIdealGenerators(idxs, mspecs, mps)$QI
 
 -- ## Eliminate generalized eta-quotients
 
 -- The following computation takes about 100 sec.
 
 )set message time on
-algrels := algebraicRelations(idxs, geqrels, char "f")$QI;
+algrels := algebraicRelations(idxs, eqrels, char "f")$QI;
 )set message time off
 galgrels := [clearDenominator x for x in algrels]
 
@@ -210,17 +207,17 @@ Jbasis := [3*f1^2*f2*f3^2 - 2*f0*f1*f3^3 - 4*f1^2*f2^2*f4 + 4*f0*f1*f2*f3*f4 - 2
 -- \end{gather*}
 
 rspec:= eqSPEC [[1,-1],[2,-1]]; m:=3; t:=2;
-nn := minLevel0(rspec, m, 2)
+nn := minLevelM0(rspec, m, 2)
 
 -- We must work with $\Gamma_0(6)$.
 
-id := findID0(nn, rspec, m, t);
+id := findIdM0(nn, rspec, m, t, etaFunctionIndices nn);
 pretty(id, asExpression + qIdentity + nonModular + expand)
 
 aidxs := generalizedEtaFunctionIndices 6
 idxs := aidxs(1..4)
 
-id := findID1(nn, idxs, rspec, m, 2, idxs);
+id := findIdM1(nn, rspec, m, 2, idxs);
 ids := [id for i in 0..2];
 
 FINDID1(3,0)
@@ -235,9 +232,9 @@ fsyms := [f0,f1,f2];
 mps := [idpol(id,f) for id in ids for f in fsyms]
 
 mspecs := monoidSpecifications first ids;
-geqrels := generalizedEtaLaurentIdealGenerators(idxs, mspecs, mps)$QI
+eqrels := etaLaurentIdealGenerators(idxs, mspecs, mps)$QI
 
-algrels := algebraicRelations(idxs, geqrels, char "f")$QI;
+algrels := algebraicRelations(idxs, eqrels, char "f")$QI;
 galgrels := [clearDenominator x for x in algrels]
 
 -- galgrels:=[2*f2^4-3*f0*f1*f2^2+(-f1^3-f0^3)*f2+3*f0^2*f1^2]
