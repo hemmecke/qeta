@@ -213,8 +213,24 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
         e: QLX := laurentExpansions(y)$QEtaSeriesExpansion(C,xiord,CX,xi,MOD)
-        spitzen: CUSPS := cusps y
-        qetaGrades(e :: ModularFunctionExpansionsAtCusps(CX, spitzen))
+        spitzen: CUSPS := cusps y -- = keys e
+        -- The following leads to problems with the size of the direct
+        -- product that is used. Using a non-domain parameter
+        -- ("spitzen", here) does not necessarily create a new domain
+        -- for different values of spitzen.
+        -- qetaGrades(e :: ModularFunctionExpansionsAtCusps(CX, spitzen))
+        -- We therefore do the computation directly.
+        -- First we check that e does not correspond to zero?
+
+        -- First check whether e is zero.
+        -- zero? e => [-1$Z for c in spitzen]
+        isZero?: Boolean := true
+        for c in keys e repeat
+            if order(e.c, 0) < 0 or not zero? coefficient(e.c, 0) then
+                isZero? := false
+                break
+        isZero? => [-1 for c in spitzen]
+        [- order(e.c) for c in spitzen]
     qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: CUSPS): LZ ==
         qetaGrades etaQuotient(sspec, rspec, m, t, spitzen)$YMEQ(MOD)
     qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): LZ ==
