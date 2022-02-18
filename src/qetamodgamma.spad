@@ -118,7 +118,7 @@ orders at all cusps (\code{qetaGrades}) small in total sum.
 )abbrev package QETAMGP QEtaModularGammaPackage
 QEtaModularGammaPackage(MOD): Exports == Implementation where
   MOD: QEtaConditionsModularCategory
-  YMEQ ==> SymbolicModularEtaQuotient MOD
+  YMEQ ==> SymbolicModularEtaQuotient
   Exports ==> with
     etaCofactorInfinitySpaceSystem: (SPECS, LZ, CUSPS) -> ZINPUT
       ++ etaCofactorInfinitySpaceSystem(bspecs,grds,spitzen) returns a
@@ -131,7 +131,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
       ++ reduceSystem([A,v]) returns a matrix A' and a right-hand side
       ++ v' such that A*x>=v and A'*x>=v' have the same solutions, but
       ++ A' has duplicate rows removed.
-    qetaGrades: YMEQ -> LZ
+    qetaGrades: YMEQ MOD -> LZ
       ++ qetaGrads(y) returns the poleorders of the modular function
       ++ corresponding to y. In the special case when e is the
       ++ expansion and qetaGrade(e.c) is less than 0 for every cusp c
@@ -167,7 +167,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
     -- We assume that sspec(y)=1, multiplier(basefactor y)=1, modular?(y).
     -- Then orderMin gives the true order of the expansion in terms of
     -- the canonical variables and the denominators are all 1.
-    orderMod(y: YMEQ): LZ ==
+    orderMod(y: YMEQ MOD): LZ ==
         ords: List Q := ordersMin y
         not one? lcm [denom x for x in ords] =>
             error "orderMod: fractional order" -- should never happen
@@ -177,7 +177,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
       bspecs: SPECS, ords: LZ, spitzen: CUSPS): ZINPUT ==
         -- For bspecs (modular functions) we can use the
         -- matrixEtaOrder to compute the order vectors.
-        ybas: List YMEQ := [etaQuotient(bspec, spitzen) for bspec in bspecs]
+        ybas: List YMEQ MOD := [etaQuotient(bspec, spitzen) for bspec in bspecs]
         bas: LLZ := [orderMod y for y in ybas]
         mat: MZ := transpose matrix bas
         -- To achieve non-negative orders at each cusp, we must find a
@@ -207,7 +207,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
             v := cons(hrows.hrow, v)
         [matrix ll, new(#v, 1), vector v]
 
-    qetaGrades(y: YMEQ): LZ ==
+    qetaGrades(y: YMEQ MOD): LZ ==
         xiord: P := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(xiord)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
@@ -216,9 +216,9 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         spitzen: CUSPS := cusps y
         qetaGrades(e :: ModularFunctionExpansionsAtCusps(CX, spitzen))
     qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: CUSPS): LZ ==
-        qetaGrades etaQuotient(sspec, rspec, m, t, spitzen)$YMEQ
+        qetaGrades etaQuotient(sspec, rspec, m, t, spitzen)$YMEQ(MOD)
     qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): LZ ==
-        qetaGrades etaQuotient(sspec, rspec, m, t)$YMEQ
+        qetaGrades etaQuotient(sspec, rspec, m, t)$YMEQ(MOD)
 
     etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): SPEC ==
         ecs: ECS := etaCofactorSpace(nn, rspec, m, t, idxs)
@@ -234,7 +234,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- then we can return sspec.
         sspec: SPEC := etaQuotientSpecification(nn, idxs, sinitial)
         spitzen: List Cusp := cusps(nn)$MOD
-        yall: YMEQ := etaQuotient(sspec, rspec, m, t, spitzen)
+        yall: YMEQ MOD := etaQuotient(sspec, rspec, m, t, spitzen)
         constant? yall =>
             sspec
 
@@ -242,7 +242,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- We only make an actual test at the cusp infinity for all others
         -- the poleorder estimate must suffice.
         spitzen := remove!(infinity(), spitzen)
-        y: YMEQ := etaQuotient(sspec, rspec, m, t, spitzen)
+        y: YMEQ MOD := etaQuotient(sspec, rspec, m, t, spitzen)
         if constant? y then -- note that infinity is not involved
             -- Coming here, we definitely have no pole at non-infinity cusps.
             -- The implementation for order in A1(C) takes care of not
