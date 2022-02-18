@@ -36,8 +36,7 @@ function QuotientMonoidSpecifications {
 )read etacompute.input )quiet
 )set message type off
 )set message time on
-iddxs := etaFunctionIndices $1;
-result := mSPECSM0($1, idxs);
+result := mSPECSInfM0($1, etaFunctionIndices $1);
 )set message time off
 vPrint("etaQuotientMonoidSpecifications$1", result)
 EOF
@@ -58,11 +57,11 @@ function QuotientIdealGenerators {
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
-QEtaIdeal ==> QEtaIdeal$VARIANT(C)
+QEtaIdeal ==> QEtaIdeal$VARIANT(C,MOD0)
 $DEP: List(List List Z) := [];
 )read $2/$3/$DEP.input )quiet
 dim: N := # $DEP
-syms: LSym := indexedSymbols("M", dim) \$ QAuxiliaryTools
+syms: List Symbol := indexedSymbols("M", dim) \$ QAuxiliaryTools
 D ==> HomogeneousDirectProduct(dim, N)
 E ==> Monomials(dim, N, D, syms) -- show DirectProduct as monomials.
 R ==> PolynomialRing(C, E)
@@ -94,24 +93,24 @@ function LaurentIdealGenerators {
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
-QEtaIdeal ==> QEtaIdeal$VARIANT(C)
+QEtaIdeal ==> QEtaIdeal$VARIANT(C,MOD0)
 $DEPQMSPECS: List(List List Z) := [];
 )read $2/$3/$DEPQMSPECS.input )quiet
 $DEPQIG: LPol C :=[];
 )read $2/$3/$DEPQIG.input )quiet
-divs: List Z := DIVISORS($1)
-esyms: LSym := indexedSymbols("E", divs) \$ QAuxiliaryTools
-ysyms: LSym := indexedSymbols("Y", divs) \$ QAuxiliaryTools
-syms: LSym := concat(ysyms, esyms)
+divs: List Z := divisors($1)
+esyms: List Symbol := indexedSymbols("E", divs) \$ QAuxiliaryTools
+ysyms: List Symbol := indexedSymbols("Y", divs) \$ QAuxiliaryTools
+syms: List Symbol := concat(ysyms, esyms)
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N)
 E ==> Monomials(dim, N, D, syms)
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
+elig ==> etaLaurentIdealGenerators \$ QEtaIdeal
 )set message type off
 )set message time on
-elig ==> etaLaurentIdealGenerators \$ QEtaIdeal
-result := elig($1, [eqSPEC x for x in $DEPQMSPECS], $DEPQIG)
+result := elig(etaFunctionIndices $1, [eqSPEC x for x in $DEPQMSPECS], $DEPQIG)
 )set message time off
 rs: List R := [coerce(x) \$ PC for x in result];
 vPrint("etaLaurentIdealGenerators$1", rs)
@@ -134,11 +133,11 @@ function Relations {
     cat <<EOF
 )read etacompute.input )quiet
 C ==> Z
-QEtaIdeal ==> QEtaIdeal$VARIANT(C)
+QEtaIdeal ==> QEtaIdeal$VARIANT(C,MOD0)
 $DEP: LPol C := [];
 )read $2/$3/$DEP.input )quiet
 divs: List Z := divisors($1)\$IntegerNumberTheoryFunctions
-syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
+syms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
 E ==> Monomials(dim, N, D, syms)
@@ -146,8 +145,7 @@ R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 )set message type off
 )set message time on
-xetaRelations ==> etaRelations $ QEtaIdeal
-result := xetaRelations($1, $DEP);
+result := etaRelations(etaFunctionIndices $1, $DEP) \$ QEtaIdeal;
 )set message time off
 rs: List R := [coerce(x) \$ PC for x in result];
 vPrint("etaRelations$1",rs)
