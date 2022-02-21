@@ -52,18 +52,16 @@ cat <<EOF  | $teecmd | timeout 60s fricas -nosman | sed '1,/OUTPUT STARTS HERE/d
 
 tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_
 
-S ==> Symbol;
-EZ ==> Expression Z;
-expr x ==> x :: S :: EZ;
-PZ ==> SparseUnivariatePolynomial Z;
-PQ ==> SparseUnivariatePolynomial Q;
-PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, Z, PZ, PQ);
-CX ==> SimpleAlgebraicExtension(Q, PQ, pq);
+expr x ==> x :: Symbol :: Expression(ZZ);
+PZZ ==> SparseUnivariatePolynomial ZZ;
+PQQ ==> SparseUnivariatePolynomial QQ;
+PL ==> PolynomialCategoryLifting(NN, SingletonAsOrderedSet, ZZ, PZZ, PQQ);
+CX ==> SimpleAlgebraicExtension(QQ, PQQ, pq);
 
-unityroots(m: P, rs: List List Z, gammas: List SL2Z): List List P == (_
-  l: List List P := empty(); _
+unityroots(m: PP, rs: List List ZZ, gammas: List SL2Z): List List PP == (_
+  l: List List PP := empty(); _
   for r in rs repeat (_
-      lp: List P := empty();_
+      lp: List PP := empty();_
       for g in gammas repeat (_
           e: YEQG := etaQuotient(m, r, g);_
           lp := cons(minimalRootOfUnity e, lp) _
@@ -96,9 +94,9 @@ if not one?(det:=determinant first gammas) then (_
    systemCommand("quit"))
 
 minroots := unityroots(level, rs, gammas)
-xiord: P := lcm [lcm l for l in minroots]
-pz: PZ := cyclotomic(xiord)\$CyclotomicPolynomialPackage;
-pq: PQ := map(n+->monomial(1\$Q,1\$N)\$PQ, c+->c::Q::PQ, pz)\$PL;
+xiord: PP := lcm [lcm l for l in minroots]
+pz: PZZ := cyclotomic(xiord)\$CyclotomicPolynomialPackage;
+pq: PQQ := map(n+->monomial(1\$QQ,1\$NN)\$PQQ, c+->c::QQ::PQQ, pz)\$PL;
 xsym: Symbol := "x"::Symbol;
 xi := generator()\$CX;
 
@@ -115,7 +113,7 @@ if xiord > 2 then _
   vPrint("The symbol ? corresponds to the n-th root of unity where n", xiord)
 lerr := [r for r in rs | not modularGamma0?(level, r)\$QETAAUX];
 
-Rec ==> Record(r: List Z, trf: SL2Z, w: Z, ser: L1 CX)
+Rec ==> Record(r: List ZZ, trf: SL2Z, w: ZZ, ser: L1 CX)
 if not empty? lerr or not expansionAtAllCusps? then (_
   vPrint("Non-modular quotients", lerr);_
   if expansionAtAllCusps? then vPrint("Expansion at cusps", spitzen);_
@@ -127,13 +125,13 @@ if not empty? lerr or not expansionAtAllCusps? then (_
   tPrint("where x=q^(1/w).");_
   lle := [[(g := gamma se;_
             w := WIDTH0(level, g);_
-            lx := laurentExpansion(se, w)\$QELX(Q,CX);_
+            lx := laurentExpansion(se, w)\$QELX(QQ,CX);_
             [exponents se, g, w, lx]\$Rec)_
            for se in lse] for lse in llse]_
 ) else (_
   vPrint("Expansion at cusps", spitzen);_
   vPrint("Expansion at CUSPS", [cuspToMatrix(cusp)\$GAMMA0(level) for cusp in spitzen]);_
-  le := [etaQuotient(level, r)\$QELX(Q,CX) for r in rs];_
+  le := [etaQuotient(level, r)\$QELX(QQ,CX) for r in rs];_
   ees := [EXPANDn e for e in le];_
   [[rr, ex] for rr in rs for ex in ees])
 

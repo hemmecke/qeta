@@ -56,14 +56,14 @@ function QuotientIdealGenerators {
     DEP=etaQuotientMonoidSpecifications$1
     cat <<EOF
 )read etacompute.input )quiet
-C ==> Z
+C ==> ZZ
 QEtaIdeal ==> QEtaIdeal$VARIANT(C,MOD0)
-$DEP: List(List List Z) := [];
+$DEP: List(List List ZZ) := [];
 )read $2/$3/$DEP.input )quiet
-dim: N := # $DEP
+dim: NN := # $DEP
 syms: List Symbol := indexedSymbols("M", dim) \$ QAuxiliaryTools
-D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, N, D, syms) -- show DirectProduct as monomials.
+D ==> HomogeneousDirectProduct(dim, NN)
+E ==> Monomials(dim, NN, D, syms) -- show DirectProduct as monomials.
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 )set message type off
@@ -92,19 +92,19 @@ function LaurentIdealGenerators {
     DEPQIG=etaQuotientIdealGenerators$1
     cat <<EOF
 )read etacompute.input )quiet
-C ==> Z
+C ==> ZZ
 QEtaIdeal ==> QEtaIdeal$VARIANT(C,MOD0)
-$DEPQMSPECS: List(List List Z) := [];
+$DEPQMSPECS: List(List List ZZ) := [];
 )read $2/$3/$DEPQMSPECS.input )quiet
 $DEPQIG: LPol C :=[];
 )read $2/$3/$DEPQIG.input )quiet
-divs: List Z := divisors($1)
+divs: List ZZ := divisors($1)
 esyms: List Symbol := indexedSymbols("E", divs) \$ QAuxiliaryTools
 ysyms: List Symbol := indexedSymbols("Y", divs) \$ QAuxiliaryTools
 syms: List Symbol := concat(ysyms, esyms)
-dim: N := #syms
-D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, N, D, syms)
+dim: NN := #syms
+D ==> HomogeneousDirectProduct(dim, NN)
+E ==> Monomials(dim, NN, D, syms)
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 elig ==> etaLaurentIdealGenerators \$ QEtaIdeal
@@ -132,15 +132,15 @@ function Relations {
     DEP=etaLaurentIdealGenerators$1
     cat <<EOF
 )read etacompute.input )quiet
-C ==> Z
+C ==> ZZ
 QEtaIdeal ==> QEtaIdeal$VARIANT(C,MOD0)
 $DEP: LPol C := [];
 )read $2/$3/$DEP.input )quiet
-divs: List Z := divisors($1)\$IntegerNumberTheoryFunctions
+divs: List ZZ := divisors($1)\$IntegerNumberTheoryFunctions
 syms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
-dim: N := #syms
-D ==> HomogeneousDirectProduct(dim, N);
-E ==> Monomials(dim, N, D, syms)
+dim: NN := #syms
+D ==> HomogeneousDirectProduct(dim, NN);
+E ==> Monomials(dim, NN, D, syms)
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 )set message type off

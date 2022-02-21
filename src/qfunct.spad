@@ -147,24 +147,24 @@ This is then implemented by the function \texttt{qPochhammerAux}.
 ++ Description:
 ++ Implement qPochhammer and friends.
 QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
-  N ==> NonNegativeInteger
-  P ==> PositiveInteger
-  Z ==> Integer
-  Rec ==> Record(k: Z, c: R)
+  NN ==> NonNegativeInteger
+  PP ==> PositiveInteger
+  ZZ ==> Integer
+  Rec ==> Record(k: ZZ, c: R)
   S ==> Stream Rec
-  asN x ==> x pretend N
+  asNN x ==> x pretend NN
   C ==> with
     qPochhammer: () -> L
         ++ qPochhammer() = qPochhammer(1, 1, 1)
     qPochhammer: R -> L
         ++ qPochhammer(c) = qPochhammer(c, 0, 1)
-    eulerFunction2: P -> L
+    eulerFunction2: PP -> L
       ++ Do not use this function! It is just another implementation
       ++ of eulerFunction.
-    eulerStream: (P, Z, Z, S) -> S
+    eulerStream: (PP, ZZ, ZZ, S) -> S
       ++ eulerStream is an auxiliary function for the computation of
       ++ eulerFunction and only exported for debugging purposes.
-    eulerFunction: P -> L
+    eulerFunction: PP -> L
         ++ For s>0, eulerFunction(s) = qPochhammer(1, s, s).
         ++ https://en.wikipedia.org/wiki/Euler_function
         ++ We use the Pentagonal number theorem to speed up
@@ -172,26 +172,26 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         ++ https://en.wikipedia.org/wiki/Pentagonal_number_theorem
         ++ eulerFunction(s) =
         ++   1 + \sum_{n>0} (-1)^n (q^(s*n*(3*n+1)/2) + q^(s*n*(3*n-1)/2))
-    eulerFunctionPower3: P -> L
+    eulerFunctionPower3: PP -> L
         ++ eulerFunctionPower3(x) returns eulerFunction(x)^3, but uses
         ++ the formula
         ++ $\sum_{n=0}^\infty (-1)^n (2n+1) q^{\frac{1}{2}(n^2 + n)}$
         ++ to compute the result more efficiently.
         ++ See \cite{HirschhornHunt_SimpleProofOfTheRamanujanConjecture_1981}.
         ++ http://eudml.org/doc/152366
-    partitionSeries: P -> L
+    partitionSeries: PP -> L
         ++ partitionSeries(s) returns the partition generating series, i.e.,
         ++ the coefficient of $q^(s*n)$ is the number of partitions of $n$
         ++ (where $q$ is the variable from $L$).
         ++ It holds: partitionSeries(s)*eulerFunction(s)=1.
-    qPochhammer: (R, N) -> L
+    qPochhammer: (R, NN) -> L
         ++ qPochhammer(c, n) = qPochhammer(c, 0, 1, n)
-    qPochhammer: (R, Z, P) -> L
+    qPochhammer: (R, ZZ, PP) -> L
         ++ qPochhammer(c, r, s) returns the Laurent series given by
         ++ \[(c\cdot q^r, q^s)=
         ++ \[\prod_{k=0}^{\infty} (1-c\cdot q^r \cdot (q^s)^k)\]
         ++ where q=monomial(1,1)$L.
-    qPochhammer: (R, Z, Z, N) -> L
+    qPochhammer: (R, ZZ, ZZ, NN) -> L
         ++ qPochhammer(c, r, s, n) returns the Laurent series
         ++ $(c\cdot q^r, q^s)_n$ given by 1, if n=0;
         ++ and
@@ -216,11 +216,11 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         ++ series in q=2i\pi. It is given by 1728*E4^3/(E4^3-E6^2)
         ++ where E4 and E6 are the respective normalized Eisenstein
         ++ series.
-    generalizedEulerProduct: (P, List Z) -> L
+    generalizedEulerProduct: (PP, List ZZ) -> L
         ++ generalizedEulerProduct(n, ts) computes the product of
         ++ qPochhammer(1, t, n) for each t in ts)
 
-    jacobiFunction: (Z -> R, P, N) -> L
+    jacobiFunction: (ZZ -> R, PP, NN) -> L
       ++ For d>0, 0<=g<d, jacobiFunction(f, d, g) returns
       ++ $\sum_{n=-\infty}^\infty (-1)^n f(n) q^{g n + d n (n-1) / 2}$
       ++ If f(n) = z^n for some element z from R
@@ -230,18 +230,18 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
       ++ For one(n)==1, we have the identity:
       ++ jacobiFunction(one, d, g) =
       ++ generalizedEulerProduct(d, [g, d-g]) * eulerFunction d.
-    jacobiFunction: (P, N) -> L
+    jacobiFunction: (PP, NN) -> L
       ++ jacobiFunction(d, g) returns jacobiFunction(n+->1,d,g).
 
   I ==> add
     qPochhammer(): L == qPochhammer(1, 1, 1)
     qPochhammer(c: R): L == qPochhammer(c, 0, 1)
-    qPochhammer(c: R, n: N): L == qPochhammer(c, 0, 1, n)
+    qPochhammer(c: R, n: NN): L == qPochhammer(c, 0, 1, n)
 
     -- prepend(n, c, st) returns a stream whose first n elements are
     -- c followed by the original stream st.
     -- Input condition: n>=0.
-    prepend(n: Z, c: R, st: Stream R): Stream R == delay
+    prepend(n: ZZ, c: R, st: Stream R): Stream R == delay
         zero? n => st
         concat(c, prepend(n-1, c, st))
 
@@ -253,19 +253,19 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
 
     -- This computes x+c*q^n*y.
     -- Input condition: n>=0.
-    qpauxrec(x: Stream R, c: R, n: Z, y: Stream R): Stream R == delay
+    qpauxrec(x: Stream R, c: R, n: ZZ, y: Stream R): Stream R == delay
         zero? n => plus(x, c, y)
         empty? x => prepend(n, 0$R, map((k: R): R +-> c*k, y))
         concat(frst x, qpauxrec(rst x, c, n-1, y))
 
     -- This computes (1+c*q^n)*g.
     -- Input condition: n>=0.
-    qpaux(c: R, n: Z, g: Stream R): Stream R == qpauxrec(g, c, n, g)
+    qpaux(c: R, n: ZZ, g: Stream R): Stream R == qpauxrec(g, c, n, g)
 
     -- Computes g_i from description above or rather g(r,s), but we
     -- needed a count n, so that we know when to abort the recursion.
     -- Input condition: r>=0, s>0, n>=0.
-    qPochhammerAuxN(c: R, r: Z, s: Z, n: Z): Stream R == delay
+    qPochhammerAuxN(c: R, r: ZZ, s: ZZ, n: ZZ): Stream R == delay
         zero? n => empty()$Stream(R)
         g: Stream R := qPochhammerAuxN(c, r+s, s, n-1)
         empty? g => concat(c, g)
@@ -273,14 +273,14 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
 
     -- This computes (c*q^r; q^s)_n.
     -- Input condition: r>=0, s>0, n>=0.
-    qPochhammerPos(c: R, r: Z, s: Z, n: Z): L ==
+    qPochhammerPos(c: R, r: ZZ, s: ZZ, n: ZZ): L ==
         zero? c => 1$L
         1 + laurent(r, qPochhammerAuxN(-c, r, s, n))
 
     -- This computes (c*q^r; q^s)_n.
     -- Input condition. n>=0.
     -- It is intended for the case r<0, r+s<0, ...,r+s*(n-1)<0.
-    qPochhammerNeg(c: R, r: Z, s: Z, n: Z): L ==
+    qPochhammerNeg(c: R, r: ZZ, s: ZZ, n: ZZ): L ==
         zero? n => 1$L
         c: R := -c
         l: L := 1 + monomial(c, r)
@@ -288,13 +288,13 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         l
 
     -- This computes (c*q^r; q^s)_n for n>=0.
-    qPochhammer(c: R, r: Z, s: Z, n: N): L ==
+    qPochhammer(c: R, r: ZZ, s: ZZ, n: NN): L ==
         zero? n => 1$L
         -- assert(n>0)
         zero? r =>
             cc: R := 1-c
             zero? cc => 0$L
-            cc * qPochhammer(c, s, s, asN(n-1))
+            cc * qPochhammer(c, s, s, asNN(n-1))
         zero? s => (1 + monomial(-c, r))^n -- s=0 is supposed to be a rare case
         s < 0 =>
             r > 0 => qPochhammer(c, r+s*(n-1), -s, n)
@@ -302,7 +302,7 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         -- assert(s>0)
         r > 0 => qPochhammerPos(c, r, s, n)
         -- assert(r<0)
-        j: Z := (-r) quo s -- j >= 0 -- find splitting point pos/neg
+        j: ZZ := (-r) quo s -- j >= 0 -- find splitting point pos/neg
         -- assert(r+s*j<=0)
         cc: R := -c
         j >= n => qPochhammerNeg(c, r, s, n)
@@ -310,19 +310,19 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
             cc: R := 1-c
             zero? cc => 0$L
             ln: L := qPochhammerNeg(c, r, s, j)
-            lp: L := qPochhammerPos(c, r+s*(j+1), s, asN(n-1-j))
+            lp: L := qPochhammerPos(c, r+s*(j+1), s, asNN(n-1-j))
             cc * ln * lp
         ln: L := qPochhammerNeg(c, r, s, j+1)
-        lp: L := qPochhammerPos(c, r+s*(j+1), s, asN(n-1-j))
+        lp: L := qPochhammerPos(c, r+s*(j+1), s, asNN(n-1-j))
         ln * lp
 
     -- Computes g_i from description above or rather g(r,s).
     -- Input condition: r>0, s>0.
-    qPochhammerAux(c: R, r: Z, s: Z): Stream R == delay
+    qPochhammerAux(c: R, r: ZZ, s: ZZ): Stream R == delay
         concat(c, prepend(s-1, 0, qpaux(c, r, qPochhammerAux(c, r+s, s))))
 
     -- This computes (a*q^r; q^s)_\infty.
-    qPochhammer(a: R, r: Z, s: P): L ==
+    qPochhammer(a: R, r: ZZ, s: PP): L ==
         zero? a => 1$L
         zero? r =>
             aa: R := 1-a
@@ -332,7 +332,7 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
         a := -a
         p: RX := 1
         while r < 0 repeat
-              p := p + monomial(a, asN(-r))$RX * p
+              p := p + monomial(a, asNN(-r))$RX * p
               r := r + s
         l: L := 1 + laurent(r, qPochhammerAux(a, r, s))
         one? p => l
@@ -364,10 +364,10 @@ summand for the previous index $k$.
 )endif
     -- This computes (q^s; q^s)_\infty.
     -- Input condition: s>0.
-    -- eulerFunction(s: P): L == 1 + laurent(s, qPochhammerAux(-1, s, s))
+    -- eulerFunction(s: PP): L == 1 + laurent(s, qPochhammerAux(-1, s, s))
     -- Faster version of eulerFunctions building on the Pentagonal number
     -- theorem.
-    eulerStream(s: P, n: Z, m: Z, z: S): S == delay
+    eulerStream(s: PP, n: ZZ, m: ZZ, z: S): S == delay
         -- We compute the series for q=q^s, so the parameters
         -- correspond to n=2ks, m4="last exponent for the previous k"
         -- z="remaining stream".
@@ -380,33 +380,33 @@ summand for the previous index $k$.
         cons([m1, -1], cons([m2, -1], cons([m3, 1], cons([m4, 1],
              eulerStream(s, n+s+s, m4, z)))))
 
-    eulerFunction(s: P): L ==
+    eulerFunction(s: PP): L ==
         series cons([0, 1], eulerStream(s, 2*s, 0, empty()$S))
 
-    partitionStream(s: P, n: Z, z: S): S == delay
-        p: Z := partition(n)$IntegerCombinatoricFunctions(Z)
+    partitionStream(s: PP, n: ZZ, z: S): S == delay
+        p: ZZ := partition(n)$IntegerCombinatoricFunctions(ZZ)
         cons([n*s, p::R], partitionStream(s, n+1, z))
-    partitionSeries(s: P): L ==
+    partitionSeries(s: PP): L ==
         series cons([0, 1], partitionStream(s, 1, empty$S))
 
-    eulerStream2(s: P, n: Z, m: Z, z: S): S == delay
+    eulerStream2(s: PP, n: ZZ, m: ZZ, z: S): S == delay
         r: R := if even? n then 1 else -1
         cons([s*m, r], cons([s*(2*n+1+m), -r], eulerStream2(s, n+1, m+3*n+2, z)))
-    eulerFunction2(s: P): L == series eulerStream2(s, 0, 0, empty()$S)
+    eulerFunction2(s: PP): L == series eulerStream2(s, 0, 0, empty()$S)
 
     ++ $\sum_{n=0}^\infty (-1)^n (2n+1) q^{\frac{1}{2}(n^2 + n)}$
     ++ $\sum_{m=0}^\infty (4m+1) q^{m(2m+1)} - (4m+3) q^{(m+1)(2m+1)$
-    eulerPower3Stream(s: P, r: R, p: Z, n: Z, z: S): S == delay
+    eulerPower3Stream(s: PP, r: R, p: ZZ, n: ZZ, z: S): S == delay
         pn := p+n
         cons([s*p, r], cons([s*pn, -(r+(2::R))],_
             eulerPower3Stream(s, r+(4::R), pn+n+1, n+2, z)))
 
-    eulerFunctionPower3(s: P): L ==
-        series(eulerPower3Stream(s, 1$R, 0$Z, 1$Z, empty()$S))
+    eulerFunctionPower3(s: PP): L ==
+        series(eulerPower3Stream(s, 1$R, 0$ZZ, 1$ZZ, empty()$S))
 
     -- first an auxiliary function
-    eisensteinStream(c: R, k: N, n: P): Stream R == delay
-        s: Z := sumOfKthPowerDivisors(n, k)$IntegerNumberTheoryFunctions
+    eisensteinStream(c: R, k: NN, n: PP): Stream R == delay
+        s: ZZ := sumOfKthPowerDivisors(n, k)$IntegerNumberTheoryFunctions
         cons(s*c, eisensteinStream(c, k, n+1))
 
     eisensteinE2(): L ==
@@ -423,14 +423,14 @@ summand for the previous index $k$.
         ps8: L := recip(ef4 * ef4)::L
         monomial(1, -1) * (eisensteinE4()*ps8)^3
 
-    generalizedEulerProduct(n: P, ts: List Z): L ==
+    generalizedEulerProduct(n: PP, ts: List ZZ): L ==
         reduce(_*, [qPochhammer(1, t, n) for t in ts], 1$L)$List(L)
 
     -- local
     -- assert(d>0)
     -- case g=0.
     -- see \eqref{eq:Jacobi-g=0}
-    jacobiStream0(f: Z -> R, d: Z, n: Z, s: S): S == delay
+    jacobiStream0(f: ZZ -> R, d: ZZ, n: ZZ, s: S): S == delay
         m := 2*n
         e := d*(m+1)
         en := e*n
@@ -442,13 +442,13 @@ summand for the previous index $k$.
     -- case 2*g=d
     -- $\sum_{n=1}^\infty (-1)^n (z^n + z^(-n)) q^{g*n^2}$.
     -- see \eqref{eq:Jacobi-2g=delta}
-    jacobiStream2(f: Z -> R, g: Z, n: Z, s: S): S == delay
+    jacobiStream2(f: ZZ -> R, g: ZZ, n: ZZ, s: S): S == delay
         cons([g*n^2, -(f(n)+f(-n))], cons([g*(n+1)^2, f(n+1)+f(-(n+1))],
             jacobiStream2(f, g, n+2, s)))
 
     -- local
     -- see \eqref{Jacobi-g-g'}
-    jacobiStream(f: Z -> R, g: Z, gprime: Z, n: Z, s: S): S == delay
+    jacobiStream(f: ZZ -> R, g: ZZ, gprime: ZZ, n: ZZ, s: S): S == delay
         --assert(g>0)
         --assert(gptime>0)
         --assert(g ~= gprime)
@@ -468,7 +468,7 @@ summand for the previous index $k$.
           cons([m2b, f(-(m+1))], cons([m2a,f(m+1)],
             jacobiStream(f, g, gprime, n+1, s)))))
 
-    jacobiFunction(f: Z -> R, d: P, g: N): L ==
+    jacobiFunction(f: ZZ -> R, d: PP, g: NN): L ==
         g >= d => error "jacobiFunction: condition 0<=g<d violated"
         zero? g =>
             one? f(1) => 0 -- There is a zero factor (1-f(1)) in the product.
@@ -484,12 +484,12 @@ summand for the previous index $k$.
     -- case 2*g=d
     -- $\sum_{n=1}^\infty (-1)^n (z^n + z^(-n)) q^{g*n^2}$.
     -- see \eqref{eq:Jacobi-2g=delta}
-    jacobi1Stream2(g: Z, n: Z, s: S): S == delay
+    jacobi1Stream2(g: ZZ, n: ZZ, s: S): S == delay
         cons([g*n^2, -2::R], cons([g*(n+1)^2, 2::R], jacobi1Stream2(g, n+2, s)))
 
     -- local
     -- see \eqref{Jacobi-g-g'}
-    jacobi1Stream(g: Z, gprime: Z, n: Z, s: S): S == delay
+    jacobi1Stream(g: ZZ, gprime: ZZ, n: ZZ, s: S): S == delay
         --assert(g>0)
         --assert(gptime>0)
         --assert(g ~= gprime)
@@ -507,7 +507,7 @@ summand for the previous index $k$.
         cons([m1b, -1], cons([m1a, -1], cons([m2b, 1], cons([m2a,1],
             jacobi1Stream(g, gprime, n+1, s)))))
 
-    jacobiFunction(d: P, g: N): L ==
+    jacobiFunction(d: PP, g: NN): L ==
         g >= d => error "jacobiFunction: condition 0<=g<d violated"
         zero? g => 0 -- There is a zero factor (1-f(1)) in the product.
         d = 2*g => series cons([0,1], jacobi1Stream2(g, 1, empty()$S))

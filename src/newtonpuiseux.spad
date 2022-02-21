@@ -60,22 +60,22 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 SY ==> Symbol
 POLYK ==> Polynomial K
 KX ==> SparseUnivariatePolynomial K -- K[x]
 KXY ==> SparseUnivariatePolynomial KX -- KX[y]
-KPX ==> PolynomialRing(K, Q) -- Puiseux polynomials
+KPX ==> PolynomialRing(K, QQ) -- Puiseux polynomials
 KPXY ==> SparseUnivariatePolynomial KPX -- KPX[y]
 SlopePoints K ==> Record(slope: K, points: List Point K)
 PRENP(K) ==> PreNewtonPuiseux K
 
-asN x ==> x pretend N
-asP x ==> x pretend P
-asZ x ==> x pretend Z
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
+asZZ x ==> x pretend ZZ
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -84,8 +84,8 @@ asZ x ==> x pretend Z
 
 )endif
 )abbrev domain QPOWER QPower
-QPower(v: SY): Join(QuotientFieldCategory Z, OpenMath, Canonical) == Q add
-    Rep ==> Q
+QPower(v: SY): Join(QuotientFieldCategory ZZ, OpenMath, Canonical) == QQ add
+    Rep ==> QQ
     xx ==> rep x
     coerce(x: %): OutputForm ==
         o: OutputForm := v::OutputForm
@@ -205,36 +205,36 @@ Puiseux series that are zeros of the given (bivariate) polynomial.
 ++ Puiseux series in case maxidx = #arr.
 PreNewtonPuiseux(K): Exports == Implementation where
   K: Field
-  PUIMON ==> Record(k: Q, c: K)
+  PUIMON ==> Record(k: QQ, c: K)
   PUIREC ==> Record(mons: List PUIMON, curpol: KPXY)
   Exports ==> CoercibleTo OutputForm with
-    new: (N, List PUIMON, KPXY) -> %
-    _#: % -> N
-    maxIndex: % -> N
-    elt: (%, N) -> PUIREC
-    setelt!: (%, N, PUIREC) -> PUIREC
+    new: (NN, List PUIMON, KPXY) -> %
+    _#: % -> NN
+    maxIndex: % -> NN
+    elt: (%, NN) -> PUIREC
+    setelt!: (%, NN, PUIREC) -> PUIREC
     extend!: (%, PUIREC) -> PUIREC
   Implementation ==> add
-    Rep ==> Record(maxidx: N, arr: PrimitiveArray PUIREC)
+    Rep ==> Record(maxidx: NN, arr: PrimitiveArray PUIREC)
     import from Rep
     coerce(x: %): OutputForm == rep(x)::OutputForm
     emptyPUIREC: PUIREC := [empty()$List(PUIMON), 0$KPXY]
-    new(n: N, monoms: List PUIMON, p: KPXY): % ==
+    new(n: NN, monoms: List PUIMON, p: KPXY): % ==
        a: PrimitiveArray PUIREC := new(n, emptyPUIREC)
-       i: N := 0
+       i: NN := 0
        for mon in monoms repeat
            a.i := [[mon], p]$PUIREC
            i := i+1
        per [i, a]
-    #(x: %): N == #(rep(x).arr)
-    maxIndex(x: %):N == rep(x).maxidx
-    elt(x: %, i: N): PUIREC == rep(x).arr.(asZ(i)-1)
-    setelt!(x: %, i: N, pr: PUIREC): PUIREC ==
+    #(x: %): NN == #(rep(x).arr)
+    maxIndex(x: %):NN == rep(x).maxidx
+    elt(x: %, i: NN): PUIREC == rep(x).arr.(asZZ(i)-1)
+    setelt!(x: %, i: NN, pr: PUIREC): PUIREC ==
         a: PrimitiveArray PUIREC := rep(x).arr
-        a.(asZ(i) - 1) := pr
+        a.(asZZ(i) - 1) := pr
     extend!(x: %, pr: PUIREC): PUIREC ==
         a: PrimitiveArray PUIREC := rep(x).arr
-        i: N := rep(x).maxidx
+        i: NN := rep(x).maxidx
         rep(x).maxidx := i+1
         a.i := pr
 
@@ -255,11 +255,11 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
   var: Symbol
   cen: K
   UPX ==> UnivariatePuiseuxSeries(K, var, cen)
-  PUIMON ==> Record(k: Q, c: K)
+  PUIMON ==> Record(k: QQ, c: K)
   PUIREC ==> Record(mons: List PUIMON, curpol: KPXY)
 
   Exports ==> with
-    leadingPuiseuxMonomials: (KPXY, Q) -> List PUIMON
+    leadingPuiseuxMonomials: (KPXY, QQ) -> List PUIMON
     leadingPuiseuxMonomials: KPXY -> List PUIMON
       ++ leadingPuiseuxMonomials(p) returns for each slope of the
       ++ Newton polygon of p the leading monomial of the Puiseux
@@ -282,14 +282,14 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
       ++ might correspond to several coefficients according to the
       ++ degree of the defining polynomial.
 
-    polynomial2Points: (POLYK, Symbol,Symbol) -> List Point Q
-    polynomial2Points: KXY -> List Point Q
-    polynomial2Points: KPXY -> List Point Q
+    polynomial2Points: (POLYK, Symbol,Symbol) -> List Point QQ
+    polynomial2Points: KXY -> List Point QQ
+    polynomial2Points: KPXY -> List Point QQ
 
     poly2KPXY: (POLYK, Symbol, Symbol) -> KPXY
     nextY: (KPXY, PUIMON) -> KPXY
     nextPuiseuxMonomials: PRENP K -> PRENP K
-    coefficientRelation: (KPXY, List Point Q) -> KX
+    coefficientRelation: (KPXY, List Point QQ) -> KX
       ++ coefficientRelation(p, points) returns the relation that the
       ++ coefficient must fulfil in order to be a coefficient of the
       ++ puiseux series.
@@ -323,24 +323,24 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
         zero? removeZeroCoefficientsX c => z
         m + z
 
-    coefficientRelation(p: KPXY, points: List Point Q): KX ==
+    coefficientRelation(p: KPXY, points: List Point QQ): KX ==
         --assert(#point > 1)
         --assert(one? denom(pt.1) for all pt in points)
         coefficientPoly: KX := 0
-        ymin: Z := numer(first(points).1)
+        ymin: ZZ := numer(first(points).1)
         for point in rest points repeat ymin := min(ymin, numer point.1)
         for point in points repeat
-            yex: Z := numer(point.1)
-            cx: KPX := coefficient(p, asN(yex))
+            yex: ZZ := numer(point.1)
+            cx: KPX := coefficient(p, asNN(yex))
             c: K := coefficient(cx, point.2)
             if not zero? c then
-                coefficientPoly := coefficientPoly + monomial(c, asN(yex-ymin))
+                coefficientPoly := coefficientPoly + monomial(c, asNN(yex-ymin))
         squareFreePart coefficientPoly
 
     toKPX(p: KX): KPX ==
         z: KPX := 0
         for m in reverse monomials p repeat -- from smallest to highest degree
-            z := z + monomial(leadingCoefficient p, degree(p)::Q)
+            z := z + monomial(leadingCoefficient p, degree(p)::QQ)
         return z
 
     toKPXY(p: KXY): KPXY ==
@@ -355,16 +355,16 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
             error "not a polynomial in the given variables"
         z: KPXY := 0
         for m in monomials p repeat
-            mx: KPX := monomial(leadingCoefficient m, degree(m, x)::Q)$KPX
+            mx: KPX := monomial(leadingCoefficient m, degree(m, x)::QQ)$KPX
             z := z + monomial(mx, degree(m, y))$KPXY
         z
 
     -- We don't need exponents in the result that are smaller than e.
-    biggerOrderThan?(e: Q): Q -> Boolean == (o: Q): Boolean +-> o > e
-    leadingPuiseuxMonomialsOrder(p: KPXY, cond?: Q -> Boolean): List PUIMON ==
-        import from NewtonPolygon(Q)
-        points: List Point Q := polynomial2Points p
-        slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
+    biggerOrderThan?(e: QQ): QQ -> Boolean == (o: QQ): Boolean +-> o > e
+    leadingPuiseuxMonomialsOrder(p: KPXY, cond?: QQ -> Boolean): List PUIMON ==
+        import from NewtonPolygon(QQ)
+        points: List Point QQ := polynomial2Points p
+        slopePointList: List SlopePoints QQ := slopePointsOfNewtonPolygon points
         mons: List PUIMON := empty()$List(PUIMON)
         for slopePoints in slopePointList | cond?(e:=-slopePoints.slope) repeat
             pnts := slopePoints.points
@@ -376,10 +376,10 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
 
     -- Here we assume that there is no branching anymore.
     --TODO: Code should be optimized, since we only need exponent > expo.
-    leadingPuiseuxMonomial(p: KPXY, expo: Q): PUIMON ==
-        import from NewtonPolygon(Q)
-        points: List Point Q := polynomial2Points p
-        slopePointList: List SlopePoints Q := slopePointsOfNewtonPolygon points
+    leadingPuiseuxMonomial(p: KPXY, expo: QQ): PUIMON ==
+        import from NewtonPolygon(QQ)
+        points: List Point QQ := polynomial2Points p
+        slopePointList: List SlopePoints QQ := slopePointsOfNewtonPolygon points
         for slopePoints in slopePointList | (e:=-slopePoints.slope)>expo repeat
             pnts := slopePoints.points
             cp: KX := coefficientRelation(p, pnts) -- assert(not zero? cp 0)
@@ -391,42 +391,42 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
 
 -- exported functions
 
-    polynomial2Points(p: POLYK, x: Symbol, y: Symbol): List Point Q ==
+    polynomial2Points(p: POLYK, x: Symbol, y: Symbol): List Point QQ ==
         sort variables p ~= sort [x, y] =>
             error "not a polynomial in the given variables"
-        [point [degree(m, y)::Q, degree(m, x)::Q] for m in monomials p]
+        [point [degree(m, y)::QQ, degree(m, x)::QQ] for m in monomials p]
 
-    polynomial2Points(p: KXY): List Point Q ==
-        points: List Point Q := empty()
+    polynomial2Points(p: KXY): List Point QQ ==
+        points: List Point QQ := empty()
         while not zero? p repeat
             ydeg := degree p
             cx: KX := leadingCoefficient p
             p := reductum p
             while not zero? cx repeat
-                xdeg: Z := degree cx
+                xdeg: ZZ := degree cx
                 c: K := leadingCoefficient cx
                 cx := reductum cx
-                points := cons(point [ydeg::Q, xdeg::Q], points)
+                points := cons(point [ydeg::QQ, xdeg::QQ], points)
         return points
 
-    polynomial2Points(p: KPXY): List Point Q ==
-        points: List Point Q := empty()
+    polynomial2Points(p: KPXY): List Point QQ ==
+        points: List Point QQ := empty()
         while not zero? p repeat
             ydeg := degree p
             cx: KPX := leadingCoefficient p
             p := reductum p
             while not zero? cx repeat
-                xdeg: Q := degree cx
+                xdeg: QQ := degree cx
                 c: K := leadingCoefficient cx
                 cx := reductum cx
-                points := cons(point [ydeg::Q, xdeg], points)
+                points := cons(point [ydeg::QQ, xdeg], points)
         return points
 
-    leadingPuiseuxMonomials(p: KPXY, e: Q): List PUIMON ==
+    leadingPuiseuxMonomials(p: KPXY, e: QQ): List PUIMON ==
         leadingPuiseuxMonomialsOrder(p, biggerOrderThan? e)
 
     leadingPuiseuxMonomials(p: KPXY): List PUIMON ==
-        leadingPuiseuxMonomialsOrder(p, (o: Q): Boolean +-> true)
+        leadingPuiseuxMonomialsOrder(p, (o: QQ): Boolean +-> true)
 
 
     leadingPuiseuxMonomials(p: KXY): List PUIMON ==
@@ -437,12 +437,12 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
         leadingPuiseuxMonomials poly2KPXY(p, x, y)
 
     nextPuiseuxMonomials(prenp: PRENP K): PRENP K ==
-        maxidx: N := maxIndex prenp
+        maxidx: NN := maxIndex prenp
         for i in 1..maxidx | (r := prenp.i; p := r.curpol; not zero? p) repeat
             puimons: List PUIMON := r.mons
             puimon := first puimons
             c: K := puimon.c
-            e: Q := puimon.k
+            e: QQ := puimon.k
 
             -- First check whether a finite series is a solution.
             cxe: KPXY := monomial(monomial(c, e)$KPX, 0)$KPXY
@@ -479,7 +479,7 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
     puiseuxStream(p: KPXY, mon: PUIMON): Stream PUIMON == delay
         zero? p => empty()
         -- First check whether a finite series is a solution.
-        e: Q := mon.k
+        e: QQ := mon.k
         cxe: KPXY := monomial(monomial(mon.c, e)$KPX, 0)$KPXY
         zero? p cxe => empty()
         y := monomial(1, 1)$KPXY + cxe
@@ -494,7 +494,7 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
     puiseux(puirec: PUIREC): UPX ==
         terms: List PUIMON := puirec.mons
         --assert(not empty? terms)
-        den: N := asN lcm [denom(m.k) for m in terms]
+        den: NN := asNN lcm [denom(m.k) for m in terms]
         st: Stream PUIMON := puiseuxStream(puirec.curpol, first terms)
         for mon in terms repeat st := cons(mon, st)
         series(den, st)
@@ -512,14 +512,14 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
     coerce(p: KPX): UPX ==
         z: UPX := 0
         terms: List PUIMON := empty()
-        den: Z := 1
+        den: ZZ := 1
         while not zero? p repeat
             t := leadingTerm p
             den := lcm(den, denom t.k)
             terms := cons(leadingTerm p, terms)
             p := reductum p
         st: Stream PUIMON := coerce terms
-        series(asN den, st)
+        series(asNN den, st)
 
     elt(p: KPXY, y: UPX): UPX ==
         d := degree p
@@ -551,9 +551,9 @@ NewtonPuiseux(K, var, cen): Exports == Implementation where
 ++ Algorithm follows \cite{PauleRadu_ProofWeierstrassGapTheorem_2019}
 ++ Section 6.
 FunctionalLaurentInverse(K): Exports == Implementation where
-  Z ==> Integer
-  Q ==> Fraction Z
-  K: Join(Algebra Q, PolynomialFactorizationExplicit)
+  ZZ ==> Integer
+  QQ ==> Fraction ZZ
+  K: Join(Algebra QQ, PolynomialFactorizationExplicit)
   LX ==> QEtaLaurentSeries K
   TX ==> QEtaTaylorSeries K
   Exports ==> with
@@ -575,7 +575,7 @@ FunctionalLaurentInverse(K): Exports == Implementation where
         --assert(not zero? l)
         --assert(one? leadingCoefficient l)
         -- below assume q = monomial(1,1)
-        d: Z := order l
+        d: ZZ := order l
         t: TX := taylorRep l -- l = q^d * t
         r: TX := nthRoot(t, -d) -- order(t) = 0 = order(r)
         --assert(l = (q/r)^d)
@@ -611,9 +611,9 @@ TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
   QLS ==> QEtaLaurentSeries
   QTS ==> QEtaTaylorSeries
   Exports ==> Field with
-    truncate: (QLS R, Z) -> %
+    truncate: (QLS R, ZZ) -> %
       ++ truncate(l, n) yields a truncated Laurent series at order n.
-    precision: % -> Z
+    precision: % -> ZZ
       ++ precision(x) returns the number of valid coefficient in
       ++ coefficients(x).
     truncatedSeries: % -> QLS R
@@ -624,20 +624,20 @@ TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
       ++ representation of the x. That need not necessarily be a
       ++ finite series.
   Implementation ==> add
-    Rep ==> Record(ser: QLS R, pr: Z) -- (series, precision)
+    Rep ==> Record(ser: QLS R, pr: ZZ) -- (series, precision)
 
     pZERO ==> -1
     pNONZEROCONSTANT ==> -2
 
-    truncate(l: QLS R, n: Z): % == per [l, max(0, n - order(l, 0))]
-    precision(x: %): Z == rep(x).pr
+    truncate(l: QLS R, n: ZZ): % == per [l, max(0, n - order(l, 0))]
+    precision(x: %): ZZ == rep(x).pr
     laurentRep(x: %): QLS R == rep(x).ser
     truncatedSeries(x: %): QLS R ==
         l: QLS R := laurentRep x
-        d: Z := degree l
+        d: ZZ := degree l
         truncate(l, precision x - d)
 
-    characteristic(): N == characteristic()$R
+    characteristic(): NN == characteristic()$R
     hashUpdate!(s: HashState, x: %): HashState == error "unimplemented"
     coerce(x: %): OutputForm == truncatedSeries(x)::OutputForm
     -- We treat 0 and 1 in a special way.
@@ -679,12 +679,12 @@ TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
         zero?(x - y)
 
     PLUSMINUS(x, y, op, zeroxres) ==>
-        (px: Z := precision x) = pZERO => zeroxres
-        (py: Z := precision y) = pZERO => x
+        (px: ZZ := precision x) = pZERO => zeroxres
+        (py: ZZ := precision y) = pZERO => x
         lx: QLS(R) := laurentRep x
         ly: QLS(R) := laurentRep y
-        dx: Z := degree lx
-        dy: Z := degree ly
+        dx: ZZ := degree lx
+        dy: ZZ := degree ly
         px = pNONZEROCONSTANT =>
             py = pNONZEROCONSTANT =>
                 lz := op(lx, ly)
@@ -717,7 +717,7 @@ TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
         per [- laurentRep x, px]
 
     ((x: %) * (y: %)): % ==
-        (px: Z := precision x) = pZERO or (py: Z := precision y) = pZERO => 0
+        (px: ZZ := precision x) = pZERO or (py: ZZ := precision y) = pZERO => 0
         lx: QLS R := laurentRep x
         ly: QLS R := laurentRep y
         lz := lx * ly
@@ -729,12 +729,12 @@ TruncatedUnivariateLaurentSeries(R) : Exports == Implementation where
         py = pNONZEROCONSTANT => per [lz, px]
         per [lz, min(px, py)]
 
-    ((z: Z) * (y: %)): % == (z::Q) * y
+    ((z: ZZ) * (y: %)): % == (z::QQ) * y
 
-    ((x: %) ^ (n: P)): % == per [laurentRep(x)^n, precision x]
-    ((x: %) ^ (n: N)): % == per [laurentRep(x)^n, precision x]
+    ((x: %) ^ (n: PP)): % == per [laurentRep(x)^n, precision x]
+    ((x: %) ^ (n: NN)): % == per [laurentRep(x)^n, precision x]
     if R has Field then
-        ((x: %) ^ (n: Z)): % == per [laurentRep(x)^n, precision x]
+        ((x: %) ^ (n: ZZ)): % == per [laurentRep(x)^n, precision x]
         inv(x: %): % ==
             (p := precision x) = pZERO => error "zero is not invertible"
             per [inv laurentRep x, precision x]
@@ -765,7 +765,7 @@ DeterminantByLeibnizFormula(R): Exports == Implementation where
       ++ applying Leibniz' formula and recursively calling the same
       ++ algorithm on the submatrices.
   Implementation ==> add
-    det(m: Matrix R, ndim: Z, ri: List Z, ci: List Z): R ==
+    det(m: Matrix R, ndim: ZZ, ri: List ZZ, ci: List ZZ): R ==
         zero? ndim => 1
         j := first ci; ci := rest ci
         i := first ri; ri := rest ri
@@ -773,14 +773,14 @@ DeterminantByLeibnizFormula(R): Exports == Implementation where
         ndim = 2 =>
             i2 := first ri; j2 := first ci
             m(i,j) * m(i2,j2) - m(i,j2) * m(i2,j)
-        n: Z := ndim - 1
+        n: ZZ := ndim - 1
         d := m(i,j) * det(m, n, ri, ci)
-        s: Z := -1; l: List Z := [i]
+        s: ZZ := -1; l: List ZZ := [i]
         while not empty? ri repeat
             i := first ri
             mij: R := m(i,j)
             ri := rest ri
-            ri2: List Z := ri
+            ri2: List ZZ := ri
             for k in l repeat ri2 := cons(k, ri2)
             d := d + s * mij * det(m, n, ri2, ci)
             s := -s
@@ -788,10 +788,10 @@ DeterminantByLeibnizFormula(R): Exports == Implementation where
         return d
 
     determinantLeibniz(m: Matrix R): R ==
-        (ndim: Z := nrows m) ~= (ncols m) =>
+        (ndim: ZZ := nrows m) ~= (ncols m) =>
             error "determinant: matrix must be square"
-        ci: List Z := [i for i in 1..ndim] -- column indices
-        ri: List Z := [i for i in 1..ndim] -- row indices
+        ci: List ZZ := [i for i in 1..ndim] -- column indices
+        ri: List ZZ := [i for i in 1..ndim] -- row indices
         det(m, ndim, ri, ci)
 
 )endif

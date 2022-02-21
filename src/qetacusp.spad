@@ -84,18 +84,18 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-MZ ==> Matrix Z -- will be a square matrix
-SL2Z ==> MZ -- represents SL_2(Z)
-EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+MZZ ==> Matrix ZZ -- will be a square matrix
+SL2Z ==> MZZ -- represents SL_2(ZZ)
+EXGCD ==> Record(coef1: ZZ, coef2: ZZ, generator: ZZ)
 
 INTF ==> IntegerNumberTheoryFunctions
 
-asN x ==> x pretend N
-asP x ==> x pretend P
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
 
 
 )if LiterateDoc
@@ -109,20 +109,20 @@ asP x ==> x pretend P
 )abbrev domain CUSP Cusp
 ++ Cusp implements representatives of cusps of a subgroup of $\SL2Z$
 Cusp: OrderedSet with
-    cusp: (Z, Z) -> %
+    cusp: (ZZ, ZZ) -> %
       ++ cusp(a, c) returns the cusp (a:c).
-    coerce: Q -> %
+    coerce: QQ -> %
       ++ coerce(a/c) returns the cusp (a:c).
     infinity: () -> %
       ++ infinity() returns the cusp (1:0).
     infinity?: % -> Boolean
       ++ infinity?(x) returns true if and only if x is the cusp (1:0).
-    numer: % -> Z
+    numer: % -> ZZ
       ++ For x=(a:c) numer(x) returns a.
-    denom: % -> Z
+    denom: % -> ZZ
       ++ For x=(a:c) denom(x) returns c.
       ++ We assure that denom(x)>=0.
-    rational: % -> Q
+    rational: % -> QQ
       ++ If not infinity?(x) then rational(x) returns the rational number
       ++ numer(x)/denom(x).
     cuspToMatrix: % -> SL2Z
@@ -130,28 +130,28 @@ Cusp: OrderedSet with
       ++ corresponding to the cusp (a:c).
 
   == add
-    Rep ==> Record(n: Z, d: Z)
+    Rep ==> Record(n: ZZ, d: ZZ)
     import from Rep
-    cusp(a: Z, c: Z): % ==
+    cusp(a: ZZ, c: ZZ): % ==
         zero? c => infinity()
         zero? a => per [0, 1]
         g := gcd(a, c)
-        per [(a exquo g)::Z, (c exquo g)::Z]
-    coerce(q: Q): % == per [numer q, denom q]
+        per [(a exquo g)::ZZ, (c exquo g)::ZZ]
+    coerce(q: QQ): % == per [numer q, denom q]
     infinity(): % == per [1,0]
     infinity?(x: %): Boolean == zero? denom x
-    numer(x: %): Z == rep(x).n
-    denom(x: %): Z == rep(x).d
-    rational(x: %): Q ==
+    numer(x: %): ZZ == rep(x).n
+    denom(x: %): ZZ == rep(x).d
+    rational(x: %): QQ ==
         infinity? x => error "argument is infinity"
         numer(x)/denom(x)
     cuspToMatrix(x: %): SL2Z ==
-        a: Z := numer x
-        c: Z := denom x
+        a: ZZ := numer x
+        c: ZZ := denom x
         exgcd: EXGCD := extendedEuclidean(a, c)
-        g: Z := exgcd.generator
-        b: Z := -exgcd.coef2
-        d: Z := exgcd.coef1
+        g: ZZ := exgcd.generator
+        b: ZZ := -exgcd.coef2
+        d: ZZ := exgcd.coef1
         matrix [[a, b], [c, d]]
     ((x: %) = (y: %)): Boolean == rep x = rep y
     ((x: %) < (y: %)): Boolean ==
@@ -160,7 +160,7 @@ Cusp: OrderedSet with
         rational x < rational y
     coerce(x: %): OutputForm ==
         infinity? x => "oo"::Symbol::OutputForm
-        q: Q := numer(x)/denom(x)
+        q: QQ := numer(x)/denom(x)
         q :: OutputForm
     hashUpdate!(h: HashState, x: %): HashState ==
         h := hashUpdate!(h, numer x)

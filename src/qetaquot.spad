@@ -77,18 +77,18 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-MZ ==> Matrix Z -- consider only 2x2 matricies
-SL2Z ==> MZ -- matrices with determinant = 1
-LZ ==> List Z
-LLZ ==> List LZ
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+MZZ ==> Matrix ZZ -- consider only 2x2 matricies
+SL2Z ==> MZZ -- matrices with determinant = 1
+LZZ ==> List ZZ
+LLZZ ==> List LZZ
 SPEC ==> QEtaSpecification
 QETAAUX ==> QEtaAuxiliaryPackage
-asN x ==> x pretend N
-asP x ==> x pretend P
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
 
 
 
@@ -145,7 +145,7 @@ the respective width of the cusp is given.
 ++ and \eqref{eq:F_s-r-m-t(gamma*tau)}.
 QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
   C: IntegralDomain -- basic coefficient domain
-  xiord: P -- xiord-th root of unity needed.
+  xiord: PP -- xiord-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive xiord-th root of unity.
   MOD: QEtaConditionsModularCategory
@@ -160,7 +160,7 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
 
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
-    puiseuxExpansion: (YEQLG, Q) -> PX
+    puiseuxExpansion: (YEQLG, QQ) -> PX
       ++ puiseuxExpansion(y, r) computes the Puiseux expansion of
       ++ $g_{r,m,\lambda(\gamma\tau)$ in terms of $q$ multiplied by
       ++ $\exp(2\pi i r)$. The $(c\tau+d)$ factor is missing.
@@ -175,7 +175,7 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
       ++ $F_{s,r,m,t}(\gamma \tau)$, see
       ++ \eqref{eq:F_s-r-m-t(gamma*tau)}.
 
-    laurent: (PX, P) -> LX
+    laurent: (PX, PP) -> LX
       ++ If p(q)=s(z) is a Puiseux series p expressed as a Laurent
       ++ series s in the variable z=q^r, then laurent(x, w) returns
       ++ the laurent series l such that l(x)=s(z)=p(q) where x=q^(1/w)
@@ -204,7 +204,7 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
       ++ canonical variables given by the width of the cusp wrt. MOD.
 
     --TODO: The following function should live somewhere else.
-    substitute: (LX, Q, N) -> PX
+    substitute: (LX, QQ, NN) -> PX
       ++ If s(q) is a series in q, then substitute(s, u, v) returns a
       ++ series t(q) such that t(q)=s(q^u*xi^v).
 
@@ -218,30 +218,30 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
 -------------------------------------------------------------------
 -- local functions
 -------------------------------------------------------------------
-    xipow(n: Z): CX ==
+    xipow(n: ZZ): CX ==
          -- Take care of the fact that xi^xiord = 1.
-        e: Z := positiveRemainder(n, xiord)
+        e: ZZ := positiveRemainder(n, xiord)
         zero? e => 1$CX
-        power!(xic, asP e)$CachedPower(CX)
+        power!(xic, asPP e)$CachedPower(CX)
 
-    xiPower(v: Z): (Z -> CX) == (e: Z): CX +-> xipow(v*e)
+    xiPower(v: ZZ): (ZZ -> CX) == (e: ZZ): CX +-> xipow(v*e)
 
     -- In the series s(q) replace q by q^u*xi^v, i.e., return s(q^u*xi^v).
-    substitute(s: LX, u: Q, v: N): PX ==
+    substitute(s: LX, u: QQ, v: NN): PX ==
         puiseux(u, multiplyCoefficients(xiPower v, s))
 
-    eulerFunctionPower(u: Q, v: N, rd: Z): PX ==
+    eulerFunctionPower(u: QQ, v: NN, rd: ZZ): PX ==
         zero? rd => 1$PX
         efp: LX := eulerFunctionPower(1, rd)$CachedQPochhammerPower(CX, LX)
         substitute(efp, u, v)
 
     -- We assume that CX has been chosen in such a way that the square
     -- root of the argument of squareRoot can be expressed in it.
-    squareRoot(fq: Q): CX ==
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(fq)$QETAAUX
+    squareRoot(fq: QQ): CX ==
+        rr: Record(rat: QQ, rootOf: PP) := rationalSquareRoot(fq)$QETAAUX
         sqrt: CX := squareRoot(rr.rootOf)$GaussRoot(CX, xi, xiord)
-        C has Algebra Q  => sqrt * ((rr.rat)::C::CX)
-        CX has Algebra Q => sqrt * ((rr.rat)::CX)
+        C has Algebra QQ  => sqrt * ((rr.rat)::C::CX)
+        CX has Algebra QQ => sqrt * ((rr.rat)::CX)
         -- Otherwise we can only continue if we have no denominators.
         one? denom(rr.rat) => numer(rr.rat)::CX * sqrt
         error "cannot take root in coefficient ring"
@@ -257,15 +257,15 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
     alphaSchoenebergContribution(y: YEQLG): CX ==
         cx: CX := 1
         for l in properGeneralizedParts definingSpecification y repeat
-            delta := specDelta l; g := asP specSubindex l; e := specExponent l
+            delta := specDelta l; g := asPP specSubindex l; e := specExponent l
             ygeg := y[delta,g]
             g1 := gamma1 ygeg
-            gd: Q := fractionalPart(g1(1,1)*g/delta)$QETAAUX -- note that h=0
-            hd: Q := fractionalPart(g1(1,2)*g/delta)$QETAAUX
+            gd: QQ := fractionalPart(g1(1,1)*g/delta)$QETAAUX -- note that h=0
+            hd: QQ := fractionalPart(g1(1,2)*g/delta)$QETAAUX
             if zero? numer gd and not zero? numer hd and not zero? e then
                 -- Note that xi is a xiord-th root of unity so, we have
                 -- to multiply the (rational) exponent of xi by xiord.
-                uexp: Q := (xiord/2)*fractionalBernoulli1(hd)$QETAAUX
+                uexp: QQ := (xiord/2)*fractionalBernoulli1(hd)$QETAAUX
                 not one? denom uexp =>
                     errorPrint("xiord * Bernoulli1", uexp)
                     error "QEtaSeriesExpansion: alphaSchoenebergContribution"
@@ -276,22 +276,22 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
     -- Compute $\tilde{r}_\delta$ from $\tilde{r}$. See definition
     -- below \eqref{eq:p_rbar-m-lambda(gamma*tau)}, i.e.
     -- $\tilde{r}_\delta := \sum_{0 < g < \frac{\delta}{2}} r_{\delta,g}$.
-    rTilde(delta: P, y: YEQLG): Z ==
-        rd: Z := 0
-        ll: LLZ := properGeneralizedParts definingSpecification y
+    rTilde(delta: PP, y: YEQLG): ZZ ==
+        rd: ZZ := 0
+        ll: LLZZ := properGeneralizedParts definingSpecification y
         for l in ll | delta = specDelta l repeat rd := rd + specExponent l
         rd
 
 -------------------------------------------------------------------
 -- exported functions
 -------------------------------------------------------------------
-    laurent(x: PX, w: P): LX ==
+    laurent(x: PX, w: PP): LX ==
         x := multiplyExponents(x, w)
-        r: Q := rationalPower x
+        r: QQ := rationalPower x
         -- Here we assume that the Puiseux series x is indeed a
         -- Laurent series in q^(1/w).
-        d: P := denom(r)::P
-        n: P := numer(r)::P
+        d: PP := denom(r)::PP
+        n: PP := numer(r)::PP
         lx: LX := qetaLaurentRep x
         -- if possible, get rid of some initial zeros up to degree 0
         lx := removeZeroes(-degree lx, lx)
@@ -331,67 +331,67 @@ without the $(c\tau+d)$-part.
         coefficientsCanBeInverted?: Boolean := false
         if CX has Field then coefficientsCanBeInverted? := true
         px: PX := 1
-        mm: P := level definingSpecification y
-        divs: List Z := divisors(mm)$IntegerNumberTheoryFunctions
-        r: LZ := allPureExponents definingSpecification y
+        mm: PP := level definingSpecification y
+        divs: List ZZ := divisors(mm)$IntegerNumberTheoryFunctions
+        r: LZZ := allPureExponents definingSpecification y
         gamma: SL2Z := transformationMatrix y
-        m: P := multiplier y
-        lm: N := lambda y
-        rr: LZ := [e - rTilde(asP d, y) for d in divs for e in r]
+        m: PP := multiplier y
+        lm: NN := lambda y
+        rr: LZZ := [e - rTilde(asPP d, y) for d in divs for e in r]
         rspec: SPEC := etaQuotientSpecification(mm, rr)
         ypure: YEQLG := etaQuotient(rspec, m, lm, gamma)
         for l in pureParts rspec repeat
-            d: P := specDelta l; g: Z := specSubindex l
+            d: PP := specDelta l; g: ZZ := specSubindex l
             etadelta: SymbolicEtaGamma := ypure[d,g]
-            u: Q := udelta etadelta
-            v: Q := xiord * vdelta etadelta
+            u: QQ := udelta etadelta
+            v: QQ := xiord * vdelta etadelta
             not one? denom v or v<0 =>
                 errorPrint("delta", d)
-                errorPrint("vdelta", [vdelta etadelta, u]$List(Q))
+                errorPrint("vdelta", [vdelta etadelta, u]$List(QQ))
                 error "QEtaSeriesExpansion: denominator does not vanish"
-            px := px * eulerFunctionPower(u, asN numer v, specExponent l)
+            px := px * eulerFunctionPower(u, asNN numer v, specExponent l)
         -- Now the jacobiFunction part.
         -- According to whether or not a'g/delta is an integer, we
         -- distinguish two cases.0
         -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)-0} and
         -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}
         for l in properGeneralizedParts definingSpecification y repeat
-            delta := specDelta l; g := asP specSubindex l; e := specExponent l
+            delta := specDelta l; g := asPP specSubindex l; e := specExponent l
             yeg: SymbolicEtaGamma := y[delta,g]
             g1 := gamma1 yeg
             alphabeta := fractionalPart(g1(1,1)*g/delta)$QETAAUX
-            alpha: Z := numer alphabeta
-            beta: Z  := denom alphabeta
+            alpha: ZZ := numer alphabeta
+            beta: ZZ  := denom alphabeta
             -- exponent for xiord-th root of unity
-            h: Q := xiord*g1(1,2)*g/delta -- is made smaller in xipow
+            h: QQ := xiord*g1(1,2)*g/delta -- is made smaller in xipow
             not one? denom h => -- xiord should be such that h is integral
                 errorPrint("xiord*h'/delta", h)
                 error "QEtaSeriesExpansion: denom for xi does not vanish"
              -- eq:eta_delta-g-m-lambda^[R](gamma*tau)
-            nh: Z := numer h
+            nh: ZZ := numer h
             jac ==> jacobiFunction $ QFunctions(CX, LX)
-            lx: LX := if zero? alpha then jac(xiPower(-nh), beta::P, 0)
-                                     else jac(xiPower nh, beta::P, alpha::N)
+            lx: LX := if zero? alpha then jac(xiPower(-nh), beta::PP, 0)
+                                     else jac(xiPower nh, beta::PP, alpha::NN)
             -- Here we need that CX is a field, since e can be negative.
             -- Note that e is not zero.
             if e>0 then
-                lx := lx^asP(e)
+                lx := lx^asPP(e)
               else if coefficientsCanBeInverted? then
                 lx := lx^e
               else
                 error "QEtaSeriesExpansion: cannot raise to negative power"
-            u: Q := udelta(yeg)
-            v: Q := vdelta(yeg)
-            vbeta: Q := xiord * v * (1/beta)
+            u: QQ := udelta(yeg)
+            v: QQ := vdelta(yeg)
+            vbeta: QQ := xiord * v * (1/beta)
             not one? denom vbeta =>
                 errorPrint("vbeta", vbeta)
                 error "QEtaSeriesExpansion: denom for xi does not vanish"
-            px := px * substitute(lx, (1/beta)*u, asP numer vbeta)
+            px := px * substitute(lx, (1/beta)*u, asPP numer vbeta)
         return px
 
     -- $g_{r,m,\lambda}(\gamma\tau)$
-    puiseuxExpansion(y: YEQLG, ue: Q): PX ==
-        uexp: Q := xiord * (lambda(y)*ue + unityExponent y)
+    puiseuxExpansion(y: YEQLG, ue: QQ): PX ==
+        uexp: QQ := xiord * (lambda(y)*ue + unityExponent y)
         not one? denom uexp =>
             errorPrint("xiord * unityExponent y", uexp)
             error "QEtaSeriesExpansion: denominator for xi does not vanish"
@@ -419,20 +419,20 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
     -- $p_{\bar{r},m,t}(\gamma\tau)$
     -- $p_{r,m,t}(\gamma\tau)$
     puiseuxExpansion(y: YEQG): PX ==
-        ue: Q := unityExponent y
+        ue: QQ := unityExponent y
         px: PX := puiseuxExpansion(y.0, ue) -- $g_{r,m,\lambda}$ for lambda=0
-        m: P := multiplier y
+        m: PP := multiplier y
         one? m => px
-        m1: P := asP(m::Z - 1)
+        m1: PP := asPP(m::ZZ - 1)
         for lambda in 1..m1 repeat px := px + puiseuxExpansion(y.lambda, ue)
         -- Summation possibly produces zero leading coefficients.
         -- We try to remove at most 100 leading coefficients.
         --TODO: Make 100 dependent on some parameters.
         -- "lx: LX := removeZeroes(lx)$LX" would be nice the following
         -- gives the zero series and thus wouldn't terminate.
-        -- "findIdentity(4,1,[8],4,3)$QEtaRamanujanKolberg(Q)"
-        C has Algebra Q => ((1/m)$Q)::C::CX * px
-        CX has Algebra Q => ((1/m)$Q)::CX * px
+        -- "findIdentity(4,1,[8],4,3)$QEtaRamanujanKolberg(QQ)"
+        C has Algebra QQ => ((1/m)$QQ)::C::CX * px
+        CX has Algebra QQ => ((1/m)$QQ)::CX * px
         error "cannot invert m in coefficient ring"
 
     -- $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ -- for specific gamma
@@ -445,8 +445,8 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
     -- $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ -- for specific gamma
     laurentExpansion(y: YMEQG MOD): LX ==
         yc: YEQG := cofactor y
-        nn: P := level definingSpecification yc
-        w: P := width(nn, transformationMatrix yc)$MOD
+        nn: PP := level definingSpecification yc
+        w: PP := width(nn, transformationMatrix yc)$MOD
         laurent(puiseuxExpansion y, w)
 
     laurentExpansionInfinity(y: YMEQG MOD): LX ==

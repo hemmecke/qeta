@@ -48,22 +48,22 @@ level := $LEVEL
 )read $SOMOS/somos$LEVEL.input
 )read $DIR/$VARIANT/etaRelations$LEVEL.input
 g := etaRelations$LEVEL;
-maxdeg: N := totalDegree first g
+maxdeg: NN := totalDegree first g
 vPrint("maxdeg", maxdeg);
 f: XHashTable(Symbol, PolC) := table();
 hkeys: List Symbol := keys h;
-xkey(k: Symbol, maxdeg: N): String == (_
-    b: Z := 10000;_
+xkey(k: Symbol, maxdeg: NN): String == (_
+    b: ZZ := 10000;_
     s: String := string k;_
-    l: Z := #s;_
+    l: ZZ := #s;_
     t: String := "";_
-    p1: Z := position(char "__", s);_
-    p2: Z := position(char "__", s, p1+1);_
-    p3: Z := position(alphabetic(), s, p2+1);_
+    p1: ZZ := position(char "__", s);_
+    p2: ZZ := position(char "__", s, p1+1);_
+    p3: ZZ := position(alphabetic(), s, p2+1);_
     if zero? p3 then p3 := l+1 else t := s(p3..l);_
-    d: Z := parse_integer(s(p1+1..p2-1))\$ScanningUtilities;_
+    d: ZZ := parse_integer(s(p1+1..p2-1))\$ScanningUtilities;_
     if d > maxdeg then return "";_
-    r: Z := parse_integer(s(p2+1..p3-1))\$ScanningUtilities;_
+    r: ZZ := parse_integer(s(p2+1..p3-1))\$ScanningUtilities;_
     return concat [string(b^2+d*b+r), t, ".", s]_
 );
 
@@ -72,20 +72,20 @@ skeys: List String := sort [x for x in xkeys | not empty? x];
 fkeys: List Symbol := [x(position(char ".", x)\$String+1..#x)::Symbol for x in skeys];
 for k in fkeys repeat f(k) := toEta(level, h k)
 
-divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
+divs: List ZZ := divisors(level)\$IntegerNumberTheoryFunctions
 syms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
-dim: N := #syms
-D ==> HomogeneousDirectProduct(dim, N);
-E ==> Monomials(dim, N, D, syms)
+dim: NN := #syms
+D ==> HomogeneousDirectProduct(dim, NN);
+E ==> Monomials(dim, NN, D, syms)
 R ==> PolynomialRing(C, E)
 PC ==> PolynomialConversion(C, E, syms)
 xnf ==> extendedNormalForm\$QEtaGroebner(C, E);
 gsyms: List Symbol := indexedSymbols("g", #g)\$QAuxiliaryTools
 toR ==> coerce\$PC
 tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_
-printPol(k: Symbol, lsyms: List Symbol, ldim: N, p: PolC): Void == (_
-    DX := DirectProduct(ldim, N); _
-    EX := Monomials(ldim, N, DX, lsyms); _
+printPol(k: Symbol, lsyms: LSym, ldim: NN, p: PolC): Void == (_
+    DX := DirectProduct(ldim, NN); _
+    EX := Monomials(ldim, NN, DX, lsyms); _
     RX := PolynomialRing(R, EX); _
     r: RX := 0; _
     z: PolC := p; _
@@ -94,7 +94,7 @@ printPol(k: Symbol, lsyms: List Symbol, ldim: N, p: PolC): Void == (_
         z: PolC := z - c*s; _
         cr: R := toR c; _
         dx: DX := unitVector(i)\$DX; _
-        ex: EX := directProduct(dx::Vector(N)); _
+        ex: EX := directProduct(dx::Vector(NN)); _
         r := r + monomial(cr, ex)); _
     if not zero? z then (print(k); print(z); error "NONZERO RELATION"); _
     display77(r::OutputForm));
@@ -109,7 +109,7 @@ tPrint("-- Relation relations --")
 for k in fkeys repeat (_
     p: PolC := xnf(f.k, g, syms, k, "g"); _
     lsyms: List Symbol := cons(k, gsyms); _
-    ldim: N := #lsyms; _
+    ldim: NN := #lsyms; _
     printPol(k, lsyms, ldim, p))
 EOF
 }

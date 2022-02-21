@@ -108,7 +108,7 @@
 )set mess type off
 )set mess time off
 
-C ==> Q;
+C ==> QQ;
 )read convenience.input )quiet
 smallerMod5?(x, y) == positiveRemainder(qetaGrade x, 5)<positiveRemainder(qetaGrade y, 5)
 
@@ -118,7 +118,7 @@ smallerMod5?(x, y) == positiveRemainder(qetaGrade x, 5)<positiveRemainder(qetaGr
 -- We do expansion at the cusp $\infty$ which corresponds to `1/nn` in
 -- terms of our session variables.
 
-nn: P := 121;
+nn: PP := 121;
 idxs := etaFunctionIndices nn
 spitzen := cuspsM0 nn;
 
@@ -137,7 +137,7 @@ spitzen := cuspsM0 nn;
 -- for the eta-functions (with arguments being the divisors of 121).
 
 mspecs := mSPECSInfM0(nn, idxs);
-rgensExpected: List List Z := [[1,0,-1],[-1,12,-11]]
+rgensExpected: List List ZZ := [[1,0,-1],[-1,12,-11]]
 assertEquals([pureExponents x for x in mspecs], rgensExpected)
 
 ys := [specYM0EQn spec for spec in mspecs];
@@ -268,7 +268,7 @@ assertTrue(not zero? xfr)
 -- we sort the factors by the size of the second coefficient.
 
 absSecondCoefficient(x: Pol C): C ==_
-  abs(coefficient(x, 'T, (degree(x, 'T)-1)::N)$Pol(C));
+  abs(coefficient(x, 'T, (degree(x, 'T)-1)::NN)$Pol(C));
 smallerSecondCoefficient?(x, y) == (_
   xfac := x.factor;  dx := degree(xfac, 'T);_
   yfac := y.factor;  dy := degree(yfac, 'T);_
@@ -359,11 +359,11 @@ assertEquals(l, [4,112,1])
 -- ## Computation of the corresponding polynomials $c_0,..,c_4$
 
 -- In this section we compute a polynomial
--- $c(T, Z) := \sum_{k=0}^4 c_k(T) Z^k \in \mathbb{Q}[T,Z]$
+-- $c(T, ZZ) := \sum_{k=0}^4 c_k(T) Z^k \in \mathbb{Q}[T,ZZ]$
 -- such that $d(t)f = c(t, z)$.
 
 cf1:=coefficient(df,'F,1); -- The denominator polynomial d(T).
-cf0:=coefficient(df,'F,0); -- The polynomial c(T, Z).
+cf0:=coefficient(df,'F,0); -- The polynomial c(T, ZZ).
 
 assertEquals(variables cf0, ['Z,'T])
 cf0s := [coefficient(cf0, 'Z, i) for i in 0..4];
@@ -423,13 +423,13 @@ dend:= denom ud
 -- and dividing by the common factor give the polynomial $d(T)$
 -- from the article.
 
-d := (-dend * cf1/T^37)::Pol(Z); degree(d)
+d := (-dend * cf1/T^37)::Pol(ZZ); degree(d)
 
 -- Here we collect all the coefficient polynomials $c_k(t)$ for
 -- $k=0,\ldots,4$ after they have been multiplied by the constant
 -- denominator.
 
-cis := [(denom(ud)*(x/T^37))::Pol(Z) for x in cf0s];
+cis := [(denom(ud)*(x/T^37))::Pol(ZZ) for x in cf0s];
 
 l := [leadingCoefficient degree x for x in cis];
 assertEquals(l, [75,66,56,46,36])
@@ -453,9 +453,9 @@ for x in cis for i in 0.. repeat (print(""::Symbol); _
 -- order $-325$.
 
 xd := eval(d,_
-           (c:Z): X1(C) +-> c*1$X1(C),_
+           (c:ZZ): X1(C) +-> c*1$X1(C),_
            ['T],_
-           [xt])$PolynomialEvaluation(Z, X1(C));
+           [xt])$PolynomialEvaluation(ZZ, X1(C));
 first xd
 assertEquals(qetaGrade first xd, 325)
 
@@ -471,7 +471,7 @@ assertTrue(zero? xdfredz)
 -- extract the respective polynomial representation (in particular the
 -- coefficient of the variable `F`) that we get back our polynomial d.
 
-xdfredz2 := clearDenominator(second(xdfredz)::Pol(Q));
+xdfredz2 := clearDenominator(second(xdfredz)::Pol(QQ));
 df0int := coefficient(xdfredz2, F, 0); -- the representation
 df1int := coefficient(xdfredz2, F, 1); -- the poly d
 assertTrue(zero?(df1int - d))
@@ -677,7 +677,7 @@ gens := concat([xj0, xj1], xgens)
 
 cfj01ab := samba(first xt, [first x for x in gens], 31)$QSAMBA1(C)
 
-grades := [(qetaGrade x)::P for x in basis cfj01ab]
+grades := [(qetaGrade x)::PP for x in basis cfj01ab]
 numberOfGaps(cfj01ab)
 
 -- <a name="xjab"></a>
@@ -705,7 +705,7 @@ assertEquals([qetaGrade x for x in xjabbas], [16,7,8,9])
 -- where $j_0=j$ is Klein's $j$-invariant and
 -- $j_2(\tau) := j(11^2\tau)$.
 
-bpols := [second(x)::Pol(Q) for x in xjabbas];
+bpols := [second(x)::Pol(QQ) for x in xjabbas];
 
 )set stream calc 2
 
@@ -1139,7 +1139,7 @@ assertEquals([degree(dh, x) for x in variables dh],[4,140,1])
 -- for the elements in basis `xab`.
 --
 -- In this section we compute a polynomial
--- $c^*(T, Z) := \sum_{k=0}^4 c^*_k(T) U^k \in \mathbb{Q}[T,U]$
+-- $c^*(T, ZZ) := \sum_{k=0}^4 c^*_k(T) U^k \in \mathbb{Q}[T,U]$
 -- such that $d^*(t)h = c^*(t, z)$.
 --
 
@@ -1159,7 +1159,7 @@ assertEquals(gcd cons(ch1,ch0s), T^39)
 -- Below are the factors $d^*_1, \ldots, d^*_6$, unsorted.
 
 dstarfactored := factor ch1;
-udstar := (unit dstarfactored)::Q    -- the constant common factor
+udstar := (unit dstarfactored)::QQ    -- the constant common factor
 
 -- Now we sort by degree and the size of the second coefficient.
 
@@ -1223,13 +1223,13 @@ dendstar := denom udstar
 -- and dividing by the common factor give the polynomial $d^*(T)$
 -- from the article.
 
-dstar := (-dendstar * ch1/T^39)::Pol(Z); degree(dstar)
+dstar := (-dendstar * ch1/T^39)::Pol(ZZ); degree(dstar)
 
 -- Here we collect all the coefficient polynomials $c^*_k(t)$ for
 -- $k=0,\ldots,4$ after they have been multiplied by the constant
 -- denominator.
 
-cstaris := [(denom(udstar)*(x/T^39)::Polynomial(Q)) for x in ch0s];
+cstaris := [(denom(udstar)*(x/T^39)::Polynomial(QQ)) for x in ch0s];
 
 -- Unfortunately, we find that not all denominators have been cleared
 -- by multiplication with the denominator of $d^*$.
@@ -1290,7 +1290,7 @@ xu5r := reduce(xu^5, xab)$QXRED1(C);
 
 assertTrue(zero? xu5r)
 
-p := second(xu5r)::Pol(Q);
+p := second(xu5r)::Pol(QQ);
 assertEquals(p,_
   1/108347059433883722041830251*U^5_
   +(-5/108347059433883722041830251*T^10_
@@ -1487,7 +1487,7 @@ for x in xvabbas for i in 1.. repeat vPrint(concat("bv", i::String), first x);
 
 
 -- +
-vprintp(i: Z, p: Pol(C)): Void == (_
+vprintp(i: ZZ, p: Pol(C)): Void == (_
   print(""::Symbol); _
   for j in 0..4 repeat (_
     print(""::Symbol); _

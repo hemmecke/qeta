@@ -46,16 +46,16 @@ level := $LEVEL
 f: XHashTable(Symbol, Pol) := table();
 hkeys: List Symbol := keys h;
 xkey(k: Symbol): String == (_
-    b: Z := 10000;_
+    b: ZZ := 10000;_
     s: String := string k;_
-    l: Z := #s;_
+    l: ZZ := #s;_
     t: String := "";_
-    p1: Z := position(char "__", s);_
-    p2: Z := position(char "__", s, p1+1);_
-    p3: Z := position(alphabetic(), s, p2+1);_
+    p1: ZZ := position(char "__", s);_
+    p2: ZZ := position(char "__", s, p1+1);_
+    p3: ZZ := position(alphabetic(), s, p2+1);_
     if zero? p3 then p3 := l+1 else t := s(p3..l);_
-    d: Z := parse_integer(s(p1+1..p2-1))\$ScanningUtilities;_
-    r: Z := parse_integer(s(p2+1..p3-1))\$ScanningUtilities;_
+    d: ZZ := parse_integer(s(p1+1..p2-1))\$ScanningUtilities;_
+    r: ZZ := parse_integer(s(p2+1..p3-1))\$ScanningUtilities;_
     return concat [string(b^2+d*b+r), t, ".", s]_
 );
 
@@ -64,10 +64,10 @@ skeys: List String := sort xkeys;
 fkeys: List Symbol := [x(position(char ".", x)\$String+1..#x)::Symbol for x in skeys];
 for k in fkeys repeat f(k) := toEta(level, h k)
 
-divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
+divs: List ZZ := divisors(level)\$IntegerNumberTheoryFunctions
 syms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
-dim: N := #syms
-D ==> HomogeneousDirectProduct(dim, N);
+dim: NN := #syms
+D ==> HomogeneousDirectProduct(dim, NN);
 toR ==> coerce\$PC
 tPrint("-- Somos eta relations --");
 for k in fkeys repeat vPrint(k, toR(f.k));

@@ -107,19 +107,19 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-VZ ==> Vector Z
-MZ ==> Matrix Z -- consider only 2x2 matricies
-LP ==> List P
-LZ ==> List Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+VZZ ==> Vector ZZ
+MZZ ==> Matrix ZZ -- consider only 2x2 matricies
+LPP ==> List PP
+LZZ ==> List ZZ
 
 SPEC ==> QEtaSpecification
 
-asN x ==> x pretend N
-asP x ==> x pretend P
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
 
 -- Note that in the following correspondence between programming variables
 -- and notation in the mathematical description in qetaq.tex.
@@ -142,27 +142,27 @@ asP x ==> x pretend P
 )abbrev package QETACOFC QEtaCofactorConditions
 QEtaCofactorConditions: Exports == Implementation where
   Exports ==> with
-    conditionPrimeDivisors?: (P, P) -> Boolean
+    conditionPrimeDivisors?: (PP, PP) -> Boolean
       ++ conditionExponentSum?(nn, m) returns true if every prime
       ++ divisor of m is also a divisor of nn. This corresponds to
       ++ (28) in \cite{Radu_RamanujanKolberg_2015} and to
       ++ \eqref{eq:p|m=>p|N} in qeta.tex.
 
-    conditionMmN?: (P, SPEC, P) -> Boolean
+    conditionMmN?: (PP, SPEC, PP) -> Boolean
       ++ conditionMmN(nn, rspec, m) returns true if every divisor d of
       ++ mm=level(rspec) (for which r_d is non-zero) is also a divisor
       ++ of m*N where r=pureExponents(rspec). This corresponds to
       ++ condition (4.7) in \cite{Radu_PhD_2010} and in equation
       ++ \eqref{eq:delta|M=>delta|mN} in qeta.tex.
 
-    conditionSumExponentsPure?: (P, SPEC, P) -> Boolean
+    conditionSumExponentsPure?: (PP, SPEC, PP) -> Boolean
       ++ conditionSumExponentsPure?(nn, rspec, m) returns true if the
       ++ sum of the entries of pureExponents(rspec) multiplied by
       ++ kappa(m)*nn is divisible by 8. This corresponds to
       ++ \eqref{eq:sum-r} in qeta.tex second condition on page~241 of
       ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
 
-    conditionSumExponentsProperGeneralized?: (P, SPEC, P) -> Boolean
+    conditionSumExponentsProperGeneralized?: (PP, SPEC, PP) -> Boolean
       ++ conditionSumExponentsProperGeneralized?(nn, rspec, m) returns
       ++ true if the sum of the entries of rspec corresponding to the
       ++ exponents of properGeneralizedParts(rspec) multiplied by
@@ -171,7 +171,7 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
       ++ \eqref{eq:conditionSumExponentsProperGeneralized?(nn,rspec,m)}.
 
-    conditionSigma0Pure?: (P, SPEC, P) -> Boolean
+    conditionSigma0Pure?: (PP, SPEC, PP) -> Boolean
       ++ conditionSigma0?(nn, rspec, m) returns true if
       ++ (kappa(m)*m*nn^2/mm)*sigma0(rspec) = 0 mod 24. This
       ++ corresponds to \eqref{eq:sv24} and
@@ -179,7 +179,7 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ to the first condition on page~241 of
       ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
 
-    conditionSigma0ProperGeneralized?: (P, SPEC, P) -> Boolean
+    conditionSigma0ProperGeneralized?: (PP, SPEC, PP) -> Boolean
       ++ conditionSigma0?(nn, rspec, m) returns true if
       ++ (kappa(m)*m*nn^2) *
       ++ sum(e/d for [d,g,e] in properGeneralizedParts x) = 0 mod 12.
@@ -187,7 +187,7 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
       ++ \eqref{eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}.
 
-    conditionGSigma0?: (P, SPEC, P) -> Boolean
+    conditionGSigma0?: (PP, SPEC, PP) -> Boolean
       ++ conditionGSigma0?(nn, rspec, m) returns true if
       ++ (kappa(m)*nn)*sum(g*e/d for [d,g,e] in properGeneralizedParts
       ++ rspec) = 0 mod 2. This corresponds to condition 3 on page 37
@@ -195,7 +195,7 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
       ++ \eqref{eq:conditionGSigma0?(nn,rspec,m)}
 
-    conditionNDivisor?: (P, SPEC, P, N) -> Boolean
+    conditionNDivisor?: (PP, SPEC, PP, NN) -> Boolean
       ++ conditionNDivisor?(nn, rspec, m, t) returns true if the
       ++ expression (24*m*mm)/gcd(mm*kappa(m)*alpha, 24*m*mm) is a
       ++ divisor of nn where alpha=sigmaInfinity(rspec) + 24*t. This
@@ -206,7 +206,7 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ to the third condition on page~241 of
       ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
 
-    conditionEvenMultiplier?: (P, SPEC, P) -> Boolean
+    conditionEvenMultiplier?: (PP, SPEC, PP) -> Boolean
       ++ conditionEvenMultiplier?(nn, rspec, m) returns true if
       ++ various divisibility conditions are fulfilled. This
       ++ corresponds to \eqref{eq:even-m} and
@@ -216,103 +216,103 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ condition 9 on page 37 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 
-    conditionOrbitLength?: (P, SPEC, P, N) -> Boolean
+    conditionOrbitLength?: (PP, SPEC, PP, NN) -> Boolean
       ++ conditionOrbitLength?(nn, rspec, m, t) returns true if the
       ++ conditions for an orbit of length 1 are satisfied. This
       ++ corresponds to condition 7 on page 6 of Chapter 2 and to
       ++ condition 10 on page 37 of Chapter 10 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 
-    chiExponent: (SPEC, P, N, List N) -> Z
+    chiExponent: (SPEC, PP, NN, List NN) -> ZZ
       ++ chiExponent(rspec,m,t,orb) computes e such that
       ++ $\exp(2\pi i e / 24) = \chi_{r,m,t)$ where r is given
       ++ by the pure eta-quotient specification rspec.
 
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
-    FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
+    FL ==> List Record(flag: fUnion, factor: ZZ, exponent: NN)
     DIVISIBLEBY?(k, z) ==> zero?(z rem k)
 
     -- auxiliary (local) functions
 
     -- local
     -- \cite[Def.~35]{Radu_RamanujanKolberg_2015}
-    kappa(m: P): P == -- gcd(1-m^2, 24)
+    kappa(m: PP): PP == -- gcd(1-m^2, 24)
         (even? m => 1; 8) * (DIVISIBLEBY?(3, m) => 1; 3)
 
-    chiExponent(rspec: SPEC, m: P, t: N, orb: List N): Z ==
+    chiExponent(rspec: SPEC, m: PP, t: NN, orb: List NN): ZZ ==
         sigmaInfty := numer sigmaInfinity rspec
-        x: Z := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
-        positiveRemainder((1-m^2)*((x exquo m)::Z), 24)
+        x: ZZ := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
+        positiveRemainder((1-m^2)*((x exquo m)::ZZ), 24)
 
-    conditionPrimeDivisors?(nn: P, m: P): Boolean ==
-        fm: Factored Z := factor m
+    conditionPrimeDivisors?(nn: PP, m: PP): Boolean ==
+        fm: Factored ZZ := factor m
         mfl: FL := factorList fm
         nnprimes := [f.factor for f in factorList factor nn]
         for f in mfl repeat
             not member?(f.factor, nnprimes) => return false
         return true
 
-    conditionMmN?(nn: P, rspec: SPEC, m: P): Boolean ==
-        divs: LZ := divisors(m*nn)$IntegerNumberTheoryFunctions
+    conditionMmN?(nn: PP, rspec: SPEC, m: PP): Boolean ==
+        divs: LZZ := divisors(m*nn)$IntegerNumberTheoryFunctions
         for l in pureParts rspec | not member?(specDelta l, divs) repeat
             return false
         return true
 
     -- CDZ condition 6 (p. 37)
-    conditionSumExponentsPure?(nn: P, rspec: SPEC, m: P): Boolean ==
-        rsum: Z := 0
+    conditionSumExponentsPure?(nn: PP, rspec: SPEC, m: PP): Boolean ==
+        rsum: ZZ := 0
         for l in pureParts rspec repeat rsum := rsum + specExponent l
         DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
     -- CDZ condition 4 (p. 37)
     conditionSumExponentsProperGeneralized?(
-      nn: P, rspec: SPEC, m: P): Boolean ==
-        rsum: Z := 0
+      nn: PP, rspec: SPEC, m: PP): Boolean ==
+        rsum: ZZ := 0
         for l in pureParts rspec repeat rsum := rsum + specExponent l
         DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
     -- CDZ condition 7 (p. 37)
-    conditionSigma0Pure?(nn: P, rspec: SPEC, m: P): Boolean ==
-        mm: P := level rspec
-        rv: Z := sigma0Pure rspec
-        h: Z := (nn exquo mm)::Z
+    conditionSigma0Pure?(nn: PP, rspec: SPEC, m: PP): Boolean ==
+        mm: PP := level rspec
+        rv: ZZ := sigma0Pure rspec
+        h: ZZ := (nn exquo mm)::ZZ
         DIVISIBLEBY?(24, kappa(m)*m*nn*h*rv)
 
     -- CDZ condition 5 (p. 37)
-    conditionSigma0ProperGeneralized?(nn: P, rspec: SPEC, m: P): Boolean ==
-        mm: P := level rspec
-        rv: Z := sigma0ProperGeneralized rspec
-        h: Z := (nn exquo mm)::Z
+    conditionSigma0ProperGeneralized?(nn: PP, rspec: SPEC, m: PP): Boolean ==
+        mm: PP := level rspec
+        rv: ZZ := sigma0ProperGeneralized rspec
+        h: ZZ := (nn exquo mm)::ZZ
         DIVISIBLEBY?(12, kappa(m)*m*nn*h*rv)
 
     -- CDZ condition 3 (p. 37)
-    conditionGSigma0?(nn: P, rspec: SPEC, m: P): Boolean ==
-        rv: Q := 0
+    conditionGSigma0?(nn: PP, rspec: SPEC, m: PP): Boolean ==
+        rv: QQ := 0
         for l in properGeneralizedParts rspec repeat
             d := specDelta l; g := specSubindex l; e := specExponent l
             rv := rv + e*g/d
-        x: Q := kappa(m)*nn*rv
+        x: QQ := kappa(m)*nn*rv
         one? denom x and even? numer x
 
     -- local
-    alphaAux(rspec: SPEC, t: N): Q == (24*t)::Q + sigmaInfinity rspec
+    alphaAux(rspec: SPEC, t: NN): QQ == (24*t)::QQ + sigmaInfinity rspec
 
     -- CDZ condition 8 (p. 37)
-    conditionNDivisor?(nn: P, rspec: SPEC, m: P,t: N): Boolean ==
-        mm: P := level rspec
-        a: Z := kappa(m)*numer(mm*alphaAux(rspec, t))
-        n: Z := 24*m*mm
-        w: Z := (n exquo gcd(a, n)) :: Z
+    conditionNDivisor?(nn: PP, rspec: SPEC, m: PP,t: NN): Boolean ==
+        mm: PP := level rspec
+        a: ZZ := kappa(m)*numer(mm*alphaAux(rspec, t))
+        n: ZZ := 24*m*mm
+        w: ZZ := (n exquo gcd(a, n)) :: ZZ
         DIVISIBLEBY?(w, nn)
 
     -- CDZ condition 9 (p. 37)
-    conditionEvenMultiplier?(nn: P, rspec: SPEC, m: P): Boolean ==
+    conditionEvenMultiplier?(nn: PP, rspec: SPEC, m: PP): Boolean ==
         odd? m => true
-        u: Z := 1
+        u: ZZ := 1
         for l in pureParts rspec repeat -- l = [delta,rdelta]
-            u := u * specDelta(l)^asP(abs(specExponent l))
-        e: Z := 0
+            u := u * specDelta(l)^asPP(abs(specExponent l))
+        e: ZZ := 0
         while even? u repeat
             e := e + 1
             u := shift(u, -1)
@@ -321,13 +321,13 @@ QEtaCofactorConditions: Exports == Implementation where
         return (b1 or b2)
 
     -- CDZ condition 10 (p. 38)
-    conditionOrbitLength?(nn: P, rspec: SPEC, m: P, t: N): Boolean ==
-        a: Q := alphaAux(rspec, t)
-        n: P := 24*m*level(rspec)
+    conditionOrbitLength?(nn: PP, rspec: SPEC, m: PP, t: NN): Boolean ==
+        a: QQ := alphaAux(rspec, t)
+        n: PP := 24*m*level(rspec)
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn)) (j^2-1 is in S_{n})
             one? gcd(j, n) => -- then 24|(j^2-1)
-               x: Q := ((j^2 - 1)/24) * a
+               x: QQ := ((j^2 - 1)/24) * a
                not one? denom x => error "x should be integral"
                not zero?(numer(x) rem m) => return false
         return true

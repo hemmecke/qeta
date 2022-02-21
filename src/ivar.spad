@@ -48,11 +48,11 @@
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
-P ==> PositiveInteger
-Z ==> Integer
+PP ==> PositiveInteger
+ZZ ==> Integer
 
-asP x ==> x pretend P
-asZ x ==> x pretend Z
+asPP x ==> x pretend PP
+asZZ x ==> x pretend ZZ
 
 )if LiterateDoc
 %$
@@ -73,26 +73,26 @@ IndexedVariable(v: String): Exports == Implementation where
   Exports ==> Join(OrderedSet, ConvertibleTo Symbol) with
     new: () -> %
       ++ new() returns a new (not yet used) variable.
-    rank: () -> Z
+    rank: () -> ZZ
       ++ rank() returns the highest index of the currently known
       ++ variables. It returns 0 if no variables are known.
-    lookup: % -> P
+    lookup: % -> PP
       ++ lookup(x) returns the index of the variable.
-    index: P -> %
+    index: PP -> %
       ++ index(p) returns the variable v such that lookup(v) = p.
       ++ p > rank() all variables with numbers less than or equal to p
       ++ will internally be created and rank() will be updated..
 
-  Implementation ==> P add
-    next: Reference Z := ref(1$Z)
+  Implementation ==> PP add
+    next: Reference ZZ := ref(1$ZZ)
     syms: FlexibleArray Symbol := empty()
-    Rep ==> Z -- we only use positive integers (x>0)
-    rank(): Z ==
+    Rep ==> ZZ -- we only use positive integers (x>0)
+    rank(): ZZ ==
 --        free next
         deref(next) - 1
-    lookup(x: %): P == asP rep x
-    index(p: P): % ==
-        z: Z := asZ p
+    lookup(x: %): PP == asPP rep x
+    index(p: PP): % ==
+        z: ZZ := asZZ p
         z < deref next => per z
         -- Variable does not exist, create every variable with smaller
         -- index.
@@ -100,11 +100,11 @@ IndexedVariable(v: String): Exports == Implementation where
         return new()
     new(): % ==
 --        free next, syms
-        m: Z := deref next
+        m: ZZ := deref next
         s: String := concat(v, string m)
         sym: Symbol := s::Symbol
         concat!(syms, sym) -- destructively changes syms
-        setelt!(next, m+1)$Reference(Z)
+        setelt!(next, m+1)$Reference(ZZ)
         per m
     convert(x: %): Symbol == syms(rep x)
     coerce(x: %): OutputForm ==

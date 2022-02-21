@@ -11,20 +11,20 @@ vPrint(x,y) ==> display77(hconcat([yof x,yof":=",y::OF]$List(OF)))
   -- print variable assignment in 1D
 
 -------------------------------------------------------------------
-N ==> NonNegativeInteger
-P ==> PositiveInteger
-Z ==> Integer
-Q ==> Fraction Z
-SL2Z ==> Matrix Z -- 2x2 matricies with determinant = 1
+NN ==> NonNegativeInteger
+PP ==> PositiveInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+SL2Z ==> Matrix ZZ -- 2x2 matricies with determinant = 1
 
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 
 -- Show the specification as q-Pochhammer symbol or eta-quotient.
 printQPOCH spec ==> _
-  qEtaQuotient(spec, varPochhammer$QEtaRamanujanKolbergIdentity(Z))
+  qEtaQuotient(spec, varPochhammer$QEtaRamanujanKolbergIdentity(ZZ))
 printETA spec ==> _
-  etaQuotient(spec, varEta$QEtaRamanujanKolbergIdentity(Z))
+  etaQuotient(spec, varEta$QEtaRamanujanKolbergIdentity(ZZ))
 printSPEC spec ==> printQPOCH spec = printETA spec
 
 -- rspec := eqSPEC(nn, r)
@@ -213,7 +213,7 @@ QFXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QFXCOMP1 C)
 -- xiord: order of the root of unity
 xisym: Symbol := "ξ"::Symbol;
 UPxi C ==> UnivariatePolynomial(xisym, C);
-SUPZ2SUP(C, x) ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
+SUPZ2SUP(C, x) ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(ZZ, C)
 SUP2UP(C, x) ==> unmakeSUP(SUPZ2SUP(C, x))$UPxi(C)
 
 -- minimal polynomial for n-th root of unity
@@ -225,7 +225,7 @@ UnityRootExtension(C, n) ==> _
     SimpleAlgebraicExtension(C, UPxi C, MINROOTPOL(C, n));
 
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi) ==> (_
-    if xiord < 3 then (CX := Q; xi := -(1$CX)) else _
+    if xiord < 3 then (CX := QQ; xi := -(1$CX)) else _
         (CX := UnityRootExtension(C, xiord); xi := generator()$CX))
 
 -------------------------------------------------------------------

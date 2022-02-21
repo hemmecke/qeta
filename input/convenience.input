@@ -9,9 +9,9 @@
 abfmap(A, B, f, x) ==> map(f, x)$QEtaLaurentSeriesFunctions2(A, B)
 abffmap(A, B, f, x) ==> abfmap(A, B, f, x::L1(A))::A1(B)
 abmap(A, B, x) ==> abffmap(A, B, (c: A): B +-> c::B, x)
-zcmap(x) ==> abmap(Z, C, x)
-cqmap(x) ==> abmap(C, Q, x)
-zqmap(x) ==> abmap(Z, Q, x)
+zcmap(x) ==> abmap(ZZ, C, x)
+cqmap(x) ==> abmap(C, QQ, x)
+zqmap(x) ==> abmap(ZZ, QQ, x)
 
 
 -------------------------------------------------------------------
@@ -75,28 +75,28 @@ polyToA1C poly ==> expansion(polynomialToEta(poly) $ EQI(C))
 -- Create a Laurent polynomial ring
 -- Implicit variable:
 -- dim: number of variables of polynomial ring
-DN ==> HomogeneousDirectProduct(dim, N);
-DZ ==> HomogeneousDirectProduct(dim, Z);
-RZ ==> PolynomialRing(C, DZ)
-toRZ x ==> (coerce(x)$PolynomialConversion(C, DN, esyms)) pretend RZ
+DNN ==> HomogeneousDirectProduct(dim, NN);
+DZZ ==> HomogeneousDirectProduct(dim, ZZ);
+RZZ ==> PolynomialRing(C, DZZ)
+toRZZ x ==> (coerce(x)$PolynomialConversion(C, DNN, esyms)) pretend RZZ
 
-EVALRZ(vars, vals, pol) ==> _
-    (eval((c:C):RZ +-> c, vars, vals)$PolynomialEvaluation(C, RZ))(pol)
-EZ ==> Monomials(dim, Z, DZ, esyms) -- show DirectProduct as monomials.
-rez x ==> x pretend  PolynomialRing(C, EZ)
+EVALRZZ(vars, vals, pol) ==> _
+    (eval((c:C):RZZ +-> c, vars, vals)$PolynomialEvaluation(C, RZZ))(pol)
+EZZ ==> Monomials(dim, ZZ, DZZ, esyms) -- show DirectProduct as monomials.
+rezz x ==> x pretend  PolynomialRing(C, EZZ)
 
--- monRZ(l: List Z): RZ == monomial(1, directProduct(l)$DZ)
-specMonRZ spec ==> monomial(1, directProduct(allPureExponents spec)$DZ)$RZ
-monRZ(l) ==> monomial(1, directProduct(l)$DZ)$RZ
+-- monRZZ(l: List ZZ): RZZ == monomial(1, directProduct(l)$DZZ)
+specMonRZZ spec ==> monomial(1, directProduct(allPureExponents spec)$DZZ)$RZZ
+monRZZ(l) ==> monomial(1, directProduct(l)$DZZ)$RZZ
 
 -- A "term" here is a coefficient (Integer) cons'd to a list of
 -- exponents for every divisor of nn. See brunaultterms.
 
--- termRZ(term: List Z): RZ == monomial(first term, directProduct(rest term)$DZ)
-termRZ(term) ==> monomial(first term, directProduct(rest term)$DZ)$RZ
+-- termRZZ(term: List ZZ): RZZ == monomial(first term, directProduct(rest term)$DZZ)
+termRZZ(term) ==> monomial(first term, directProduct(rest term)$DZZ)$RZZ
 
--- polyRZ(terms: List List Z): RZ == reduce(_+, [termRZ x for x in terms], 0$RZ)
-polyRZ(terms) ==> reduce(_+, [termRZ x for x in terms], 0$RZ)
+-- polyRZZ(terms: List List ZZ): RZZ == reduce(_+, [termRZZ x for x in terms], 0$RZZ)
+polyRZZ(terms) ==> reduce(_+, [termRZZ x for x in terms], 0$RZZ)
 
 algSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
 
@@ -106,8 +106,8 @@ monToA1(C)(mon) ==> _
 monToAn(CX)(mon) ==> _
   leadingCoefficient(mon)*specMAn(CX,MOD)(eqSPEC(nn, members degree mon))
 
--- rzToA1CX: RZ -> A1 C
-rzToA1(C)(x) ==> algSUM(monToA1(C), x)
+-- rzzA1CX: RZZ -> A1 C
+rzzA1(C)(x) ==> algSUM(monToA1(C), x)
 
--- rzToAnCX: RZ -> An CX
-rzToAn(CX)(x) ==> algSUM(monToAn(CX), x)
+-- rzzAnCX: RZZ -> An CX
+rzzAn(CX)(x) ==> algSUM(monToAn(CX), x)

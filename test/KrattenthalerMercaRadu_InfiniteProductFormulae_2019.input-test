@@ -22,7 +22,7 @@
 -------------------------------------------------------------------
 
 -- +
-C ==> Q
+C ==> QQ
 MOD ==> MOD1
 RKI ==> QEtaRamanujanKolbergIdentity C
 qIdentity ==> 1
@@ -43,7 +43,7 @@ ERMe(spec) ==> etaRelationMonomial(1,spec,0,varEta$RKI,0)$RKI
 oo ==> infinity()$Cusp
 
 QEtaIdeal ==> QEtaIdealHemmeckeCached
-etaRels ==> etaRelations $ QEtaIdeal(Q, MOD)
+etaRels ==> etaRelations $ QEtaIdeal(QQ, MOD)
 
 )set stream calc 10
 
@@ -70,10 +70,10 @@ weierstrassCandidates(nn) ==> concat concat concat _
 -- $\theta_{N,g}(q) = \qPochhammer{q^g,q^{N-g}}{q^N}$
 
 
-normalizeTerm(nn: P, l: List Z): List Z == (_
+normalizeTerm(nn: PP, l: List ZZ): List ZZ == (_
   sgn := l.1;_
   qexpo := l.2;_
-  r := empty()$List(Z);_
+  r := empty()$List(ZZ);_
   for g in rest rest l repeat (_
       if g <  0 then (g:=-g;   sgn:=-sgn; qexpo:=qexpo-g);_
       if g > nn then (g:=g-nn; sgn:=-sgn; qexpo:=qexpo-g);_
@@ -83,26 +83,26 @@ normalizeTerm(nn: P, l: List Z): List Z == (_
 
 
 -- +
-RecSQS ==> Record(fsgn: Z, fqexp: Z, fspec: SPEC) -- Sign, Q-expo, Spec
+RecSQS ==> Record(fsgn: ZZ, fqexp: ZZ, fspec: SPEC) -- Sign, QQ-expo, Spec
 
-termToSpecTerm(l: List Z): RecSQS == (_
+termToSpecTerm(l: List ZZ): RecSQS == (_
   spec: SPEC := 1;_
   for g in rest rest l repeat spec := spec * eqSPEC[[nn,g,1]];_
   return [l.1, l.2, spec]);
 
-specTermToMonomial(r: RecSQS): Pol(Q) == (_
-  p: Pol Q := r.fsgn :: Pol(Q);_
+specTermToMonomial(r: RecSQS): Pol(QQ) == (_
+  p: Pol QQ := r.fsgn :: Pol(QQ);_
   for l in parts(r.fspec) repeat (_
       e := specExponent l;_
       i := specIndex l;_
-      p := p * (indexedSymbol("E", i)::Pol(Q))^(e::N));_
+      p := p * (indexedSymbol("E", i)::Pol(QQ))^(e::NN));_
   return p);
 
-specTermsToPolynomial(l: List RecSQS): Pol(Q) == _
+specTermsToPolynomial(l: List RecSQS): Pol(QQ) == _
   reduce(+, [specTermToMonomial r for r in l]);
 
-specTermToSeries(r1: RecSQS, r2: RecSQS): L1 Q ==_
-  (r1.fsgn/r2.fsgn) * expansion specEQI(Q) (r1.fspec/r2.fspec)
+specTermToSeries(r1: RecSQS, r2: RecSQS): L1 QQ ==_
+  (r1.fsgn/r2.fsgn) * expansion specEQI(QQ) (r1.fspec/r2.fspec)
 -- -
 
 )set mess type on
@@ -174,7 +174,7 @@ cuspsWithPoles := [first l for c in spitzen for p in 1..#spitzen | p~=poo and_
 
 -- We must find the minimal extension of the coefficient field.
 
-minRoots := [[minimalRootOfUnity(y.c)::P for c in cuspsWithPoles] for y in ys];
+minRoots := [[minimalRootOfUnity(y.c)::PP for c in cuspsWithPoles] for y in ys];
 xiord := lcm concat minRoots
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
 
@@ -250,8 +250,8 @@ weierstrassGenerators := removeDuplicates weierstrassGens2
 
 esyms := indexedSymbols("E", idxs)
 dim := #esyms;
-D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, N, D, esyms)
+D ==> HomogeneousDirectProduct(dim, NN)
+E ==> Monomials(dim, NN, D, esyms)
 
 l := [extendedNormalForm(h, gb, esyms, 'F, "G")$QEtaGroebner(C, E)_
       for h in weierstrassGenerators]
@@ -324,8 +324,8 @@ weierstrassGenerators := removeDuplicates weierstrassGens2
 
 esyms := indexedSymbols("E", idxs);
 dim := #esyms;
-D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, N, D, esyms)
+D ==> HomogeneousDirectProduct(dim, NN)
+E ==> Monomials(dim, NN, D, esyms)
 
 l := [extendedNormalForm(h, gb, esyms, 'F, "G")$QEtaGroebner(C, E)_
       for h in weierstrassGenerators];
@@ -396,8 +396,8 @@ weierstrassGenerators := removeDuplicates weierstrassGens2
 
 esyms := indexedSymbols("E", idxs);
 dim := #esyms;
-D ==> HomogeneousDirectProduct(dim, N)
-E ==> Monomials(dim, N, D, esyms)
+D ==> HomogeneousDirectProduct(dim, NN)
+E ==> Monomials(dim, NN, D, esyms)
 
 l := [extendedNormalForm(h, gb, esyms, 'F, "G")$QEtaGroebner(C, E)_
       for h in weierstrassGenerators]

@@ -71,28 +71,28 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-VZ ==> Vector Z
-MZ ==> Matrix Z -- consider only 2x2 matricies
-LP ==> List P
-LZ ==> List Z
-LLZ ==> List LZ
-INDICES ==> LLZ
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+VZZ ==> Vector ZZ
+MZZ ==> Matrix ZZ -- consider only 2x2 matricies
+LPP ==> List PP
+LZZ ==> List ZZ
+LLZZ ==> List LZZ
+INDICES ==> LLZZ
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 CUSPS ==> List Cusp
 
-asP x ==> x pretend P
+asPP x ==> x pretend PP
 
-LVZ ==> List VZ
-RELS ==> VZ
-ECS ==> Record(indices: INDICES, particular: Union(VZ,"failed"), basis: LVZ)
-ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
-ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
+LVZZ ==> List VZZ
+RELS ==> VZZ
+ECS ==> Record(indices: INDICES, particular: Union(VZZ,"failed"), basis: LVZZ)
+ZINPUT ==> Record(zmat: MZZ, zrels: RELS, zrhs: VZZ)
+ZRESULT ==> Record(zinhom: LVZZ, zhom: LVZZ, zfree: LVZZ) -- zsolve$X4ti2
 
 
 )if LiterateDoc
@@ -120,7 +120,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
   MOD: QEtaConditionsModularCategory
   YMEQ ==> SymbolicModularEtaQuotient
   Exports ==> with
-    etaCofactorInfinitySpaceSystem: (SPECS, LZ, CUSPS) -> ZINPUT
+    etaCofactorInfinitySpaceSystem: (SPECS, LZZ, CUSPS) -> ZINPUT
       ++ etaCofactorInfinitySpaceSystem(bspecs,grds,spitzen) returns a
       ++ matrix A and a right-hand side v for a system A*x>=v where
       ++ the right-hand side is grds (which is the expansion
@@ -131,7 +131,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
       ++ reduceSystem([A,v]) returns a matrix A' and a right-hand side
       ++ v' such that A*x>=v and A'*x>=v' have the same solutions, but
       ++ A' has duplicate rows removed.
-    qetaGrades: YMEQ MOD -> LZ
+    qetaGrades: YMEQ MOD -> LZZ
       ++ qetaGrads(y) returns the poleorders of the modular function
       ++ corresponding to y. In the special case when e is the
       ++ expansion and qetaGrade(e.c) is less than 0 for every cusp c
@@ -140,14 +140,14 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
       ++ expansion, it rather is the value for the case that y
       ++ represents zero. This special treatment avoids running into
       ++ an infinite loop if y represents the zero function.
-    qetaGrades: (SPEC, SPEC, P, N, CUSPS) -> LZ
+    qetaGrades: (SPEC, SPEC, PP, NN, CUSPS) -> LZZ
       ++ qetaGrades(sspec,rspec,m,t,spitzen) returns qetaGrades(y)
       ++ where y=etaQuotient(sspec,rspec,m,t,spitzen) from
       ++ SymbolicModularEtaQuotient(MOD).
-    qetaGrades: (SPEC, SPEC, P, N) -> LZ
+    qetaGrades: (SPEC, SPEC, PP, NN) -> LZZ
       ++ qetaGrades(sspec,rspec,m,t) returns qetaGrades(y) where
       ++ y=etaQuotient(sspec,rspec,m,t)$SymbolicModularEtaQuotient(MOD).
-    etaCofactorInfinity: (P, SPEC, P, N, INDICES) -> SPEC
+    etaCofactorInfinity: (PP, SPEC, PP, NN, INDICES) -> SPEC
       ++ etaCofactorInfinity(nn,rspec,m,t,idxs) returns a
       ++ specification sspec such that sspec has only indices from
       ++ idxs, modular?(sspec,rspec,m,t)$MOD and
@@ -155,8 +155,8 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
   Implementation ==> add
-    C ==> Q
-    lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(Z, C)
+    C ==> QQ
+    lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(ZZ, C)
     SUPC ==> SparseUnivariatePolynomial C
     CX ==> SimpleAlgebraicExtension(C, SUPC, supc)
     TX ==> QEtaTaylorSeries CX
@@ -167,23 +167,23 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
     -- We assume that sspec(y)=1, multiplier(basefactor y)=1, modular?(y).
     -- Then orderMin gives the true order of the expansion in terms of
     -- the canonical variables and the denominators are all 1.
-    orderMod(y: YMEQ MOD): LZ ==
-        ords: List Q := ordersMin y
+    orderMod(y: YMEQ MOD): LZZ ==
+        ords: List QQ := ordersMin y
         not one? lcm [denom x for x in ords] =>
             error "orderMod: fractional order" -- should never happen
         [numer x for x in ords]
 
     etaCofactorInfinitySpaceSystem(
-      bspecs: SPECS, ords: LZ, spitzen: CUSPS): ZINPUT ==
+      bspecs: SPECS, ords: LZZ, spitzen: CUSPS): ZINPUT ==
         -- For bspecs (modular functions) we can use the
         -- matrixEtaOrder to compute the order vectors.
         ybas: List YMEQ MOD := [etaQuotient(bspec, spitzen) for bspec in bspecs]
-        bas: LLZ := [orderMod y for y in ybas]
-        mat: MZ := transpose matrix bas
+        bas: LLZZ := [orderMod y for y in ybas]
+        mat: MZZ := transpose matrix bas
         -- To achieve non-negative orders at each cusp, we must find a
         -- solution that is at least as big (in each component) as the
         -- negation of the current order vector.
-        [mat, new(#ords, 1)$VZ, - vector ords]
+        [mat, new(#ords, 1)$VZZ, - vector ords]
 
     reduceSystem(zin: ZINPUT): ZINPUT ==
         -- We have to solve zin.zmat * x >= zin.zrhs and are satisfied
@@ -193,22 +193,22 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- the rhs we collect the corresponding entries and take their
         -- maximum grade (pole order), see
         -- \eqref{eq:remove-non-infinity-poles}.
-        mat: MZ := zin.zmat
-        u: VZ := zin.zrhs
-        hrows: XHashTable(VZ, Z) := empty()
+        mat: MZZ := zin.zmat
+        u: VZZ := zin.zrhs
+        hrows: XHashTable(VZZ, ZZ) := empty()
         for i in 1..nrows(mat) repeat
-            hrow: VZ := row(mat, i)
-            g: Union(Z, "failed") := search(hrow, hrows)
-            if g case "failed" or u.i > (g::Z) then hrows.hrow := u.i
-        ll: LLZ := empty()
-        v: LZ := empty()
+            hrow: VZZ := row(mat, i)
+            g: Union(ZZ, "failed") := search(hrow, hrows)
+            if g case "failed" or u.i > (g::ZZ) then hrows.hrow := u.i
+        ll: LLZZ := empty()
+        v: LZZ := empty()
         for hrow in keys hrows repeat
             ll := cons(members hrow, ll)
             v := cons(hrows.hrow, v)
         [matrix ll, new(#v, 1), vector v]
 
-    qetaGrades(y: YMEQ MOD): LZ ==
-        xiord: P := minimalRootOfUnity y
+    qetaGrades(y: YMEQ MOD): LZZ ==
+        xiord: PP := minimalRootOfUnity y
         supc: SUPC := lift2C(cyclotomic(xiord)$CyclotomicPolynomialPackage);
         xi := generator()$CX;
         xsym: Symbol := "x"::Symbol;
@@ -223,7 +223,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- First we check that e does not correspond to zero?
 
         -- First check whether e is zero.
-        -- zero? e => [-1$Z for c in spitzen]
+        -- zero? e => [-1$ZZ for c in spitzen]
         isZero?: Boolean := true
         for c in keys e repeat
             if order(e.c, 0) < 0 or not zero? coefficient(e.c, 0) then
@@ -231,19 +231,19 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
                 break
         isZero? => [-1 for c in spitzen]
         [- order(e.c) for c in spitzen]
-    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N, spitzen: CUSPS): LZ ==
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: PP, t: NN, spitzen: CUSPS): LZZ ==
         qetaGrades etaQuotient(sspec, rspec, m, t, spitzen)$YMEQ(MOD)
-    qetaGrades(sspec: SPEC, rspec: SPEC, m: P, t: N): LZ ==
+    qetaGrades(sspec: SPEC, rspec: SPEC, m: PP, t: NN): LZZ ==
         qetaGrades etaQuotient(sspec, rspec, m, t)$YMEQ(MOD)
 
-    etaCofactorInfinity(nn: P, rspec: SPEC, m: P, t: N, idxs: INDICES): SPEC ==
+    etaCofactorInfinity(nn: PP, rspec: SPEC, m: PP, t: NN, idxs: INDICES): SPEC ==
         ecs: ECS := etaCofactorSpace(nn, rspec, m, t, idxs)
         ecs.particular case "failed" =>
             error "etaCofactorInfinity: cannot make modular"
         idxs := ecs.indices -- because idxs can be empty initially
-        hbasis: LVZ := ecs.basis -- a basis for the homogeneous solutions
-        rinitial: VZ := (ecs.particular)::VZ
-        sinitial: VZ := minimizeVector(rinitial, hbasis)$QETAAUX
+        hbasis: LVZZ := ecs.basis -- a basis for the homogeneous solutions
+        rinitial: VZZ := (ecs.particular)::VZZ
+        sinitial: VZZ := minimizeVector(rinitial, hbasis)$QETAAUX
 
         -- If it can be shown that multiplication with sspec leads
         -- to a constant series expansion (without computing this series),
@@ -272,7 +272,7 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
 
         -- Make sure that yall does not by chance have only a pole at
         -- infinity.
-        ords: LZ := [-g for g in qetaGrades y]
+        ords: LZZ := [-g for g in qetaGrades y]
         hasPole?: Boolean := false
         for o in ords repeat hasPole? := hasPole? or o < 0
         if not hasPole? then
@@ -285,9 +285,9 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- that mat*v>=b, where >= means "in each component".
         zin := reduceSystem zin -- remove identical rows
         -- We first solve mat*x=v for x.
-        v: VZ := zin.zrhs
+        v: VZZ := zin.zrhs
         z: ZRESULT := zsolve([zin.zmat, new(#v,0), v]$ZINPUT)$X4ti2
-        hmat: MZ := transpose matrix [members x for x in hbasis]
+        hmat: MZZ := transpose matrix [members x for x in hbasis]
         not empty?(z.zinhom) =>
             s := sinitial + hmat * first(z.zinhom)
             sspec := etaQuotientSpecification(nn, idxs, s)
@@ -322,11 +322,11 @@ QEtaModularGammaPackage(MOD): Exports == Implementation where
         -- sspec is given through s via
         -- sbar:=etaQuotientSpecification(nn,idxs,s)
         sspec := etaQuotientSpecification(nn, idxs, s)
-        sigmainf: Q := sigmaInfinity sspec
+        sigmainf: QQ := sigmaInfinity sspec
         while not empty?(adjustments := rest adjustments) repeat
             s := sinitial + hmat * first(adjustments)
             tspec := etaQuotientSpecification(nn, idxs, s)
-            si: Q := sigmaInfinity tspec
+            si: QQ := sigmaInfinity tspec
             if si > sigmainf then
                 sspec := tspec
                 sigmainf := si

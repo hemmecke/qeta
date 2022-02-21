@@ -66,15 +66,15 @@
 -- +
 )set mess type off
 )set mess time off
-C ==> Q
+C ==> QQ
 
-LZ ==> List Z
-VZ ==> Vector Z
-MZ ==> Matrix Z -- consider only 2x2 matricies
-LVZ ==> List VZ
-RELS ==> VZ
-ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
-ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ) -- zsolve$X4ti2
+LZZ ==> List ZZ
+VZZ ==> Vector ZZ
+MZZ ==> Matrix ZZ -- consider only 2x2 matricies
+LVZZ ==> List VZZ
+RELS ==> VZZ
+ZINPUT ==> Record(zmat: MZZ, zrels: RELS, zrhs: VZZ)
+ZRESULT ==> Record(zinhom: LVZZ, zhom: LVZZ, zfree: LVZZ) -- zsolve$X4ti2
 QES4TI2 ==> QEtaQuotientSpecifications4ti2
 eqSPECS1 ==> etaQuotientSpecifications $ QES4TI2(MOD1)
 
@@ -105,7 +105,7 @@ checkCongruence(C, MOD, nn, rspec, m, t, idxs, cong, sspecExpected) ==> (_
   assertEquals(coSpecification id, sspecExpected);_
   c := coefficient id;_
   c := - recip(c)::C;_
-  pol := (c*identityPolynomial(id))::Pol(Z);_
+  pol := (c*identityPolynomial(id))::Pol(ZZ);_
   tracePrint("cong", cnt := content(pol+F));_
   assertEquals(cnt, cong);_
   tracePrint("pretty",pretty(id, qIdentity));_
@@ -141,7 +141,7 @@ checkCongruenceExtended(C,MOD,nn,rspec,m,t,idxs,cong,sspecExpected) ==> (_
   assertTrue(zero? xz);_
   pol := second(xz)::Pol(C);_
   c := - recip(coefficient(zpol, 'F, 1))::C;_
-  pol := (c*pol)::Pol(Z);_
+  pol := (c*pol)::Pol(ZZ);_
   assertEquals(content(pol+'F), cong))
 
 )endif
@@ -154,7 +154,7 @@ rspec5 := eqSPEC [[7,1,-2],[7,3,-1]] -- case 5 a(9n+7) mod 3
 -- -
 
 -- In the following we list possible congruences. They are listed in
--- the form $[c, m, t, N]$ and means that for the specification
+-- the form $[c, m, t, NN]$ and means that for the specification
 -- rspec(i) of case i we have $c | a(m n+t)$ and we must compute in
 -- level $nn$.
 
@@ -225,7 +225,7 @@ sspecExpected := eqSPEC [[1,17],[3,-7],[7,-5],[21,-5],_
 idxs := [[1], [3], [7], [21], [21, 1], [21, 2], [21, 3], [21, 4], [21, 5]]
 
 )sys date
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 )sys date
 
 -------------------------------------------------------------------
@@ -237,7 +237,7 @@ YMEQ ==> SymbolicModularEtaQuotient
 --idxs := generalizedEtaFunctionIndices(nn)
 ecs := etaCofactorSpace(nn, rspec, m, t, idxs)$MOD1
 hbasis := ecs.basis
-rinitial := (ecs.particular)::VZ
+rinitial := (ecs.particular)::VZZ
 sinitial := minimizeVector(rinitial, hbasis)$QETAAUX
 sspec := etaQuotientSpecification(nn, idxs, sinitial)
 spitzen := cusps(nn)$MOD1
@@ -251,7 +251,7 @@ mat := zin.zmat; mat := vertConcat(mat([2,2],1..8),mat([1,3,4,5,6,7,8,9,10],1..8
 v := zin.zrhs; v := concat([0,0,v.1], rest(members v,3))
 v.1 := 0
 v.2 := -2
-rels := new(#v,1)$VZ
+rels := new(#v,1)$VZZ
 rels.1 := -1
 v,rels
 )sys date
@@ -353,7 +353,7 @@ xf := toX1(C, f, fsym::Pol(C))
 xz := reduce(xf, xab)$QXTOPRED1(C);
 pol := second(xz)::Pol(C);
 c := inv(coefficient(pol,'F, 1))::C
-mpol := (c*pol - F)::Pol(Z)
+mpol := (c*pol - F)::Pol(ZZ)
 content(mpol)
 #monomials(mpol)
 zser := eval(pol, c+->c::A1(C), cons('F,msyms), cons(f,egens))$_
@@ -390,7 +390,7 @@ sspecExpected := eqSPEC [[1,16],[3,-8],[7,-5],[21,-3],_
 idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
 
 )sys date
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 )sys date
 id13 := id;
 
@@ -400,7 +400,7 @@ sspecExpected := eqSPEC [[1,15],[3,-7],[7,-4],[21,-4],_
 
 idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5], [21,6]]
 )sys date
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 )sys date
 id14 := id;
 
@@ -425,7 +425,7 @@ assertEquals(nn,21)
 sspecExpected := eqSPEC [[1,55],[3,-21],[7,-12],[21,-22],_
                     [21,1,-60],[21,2,-48],[21,3,-50],[21,4,-34],[21,5,-40]]
 idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -449,7 +449,7 @@ assertEquals(nn,21)
 sspecExpected := eqSPEC  [[1,16],[3,-8],[7,-4],[21,-4],_
                     [21,1,-13],[21,2,-11],[21,3,-11],[21,4,-8],[21,5,-8]]
 idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
-checkCongruence(Q,MOD1,21,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,21,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -469,7 +469,7 @@ rspec := rspec5; m := 27; t := 19
 sspecExpected := eqSPEC [[1,50],[3,-18],[7,-15],[21,-17],_
                     [21,1,-47],[21,2,-39],[21,3,-44],[21,4,-28],[21,5,-30]]
 idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
-checkCongruence(Q,MOD1,21,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,21,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -487,7 +487,7 @@ checkCongruence(Q,MOD1,21,rspec,m,t,idxs,3,sspecExpected)
 -- -
 rspec := rspec3; m := 7; t := 5
 sspecExpected := eqSPEC [[1, 7], [7, - 7]]
-checkCongruence(Z,MOD0,7,rspec,m,t,etaFunctionIndices 7,7,sspecExpected)
+checkCongruence(ZZ,MOD0,7,rspec,m,t,etaFunctionIndices 7,7,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -507,14 +507,14 @@ rspec := rspec3; m := 9; t := 5
 assertEquals(nn:=minLevelM0(rspec,m,t),21)
 nn := 2*nn
 sspecExpected0 := eqSPEC [[1,9],[3,-4],[6,2],[7,-5],[14,6],[21,8],[42,-16]]
-C ==> Z
-checkCongruence(Z,MOD0,nn,rspec,m,t,etaFunctionIndices nn,7,sspecExpected0)
+C ==> ZZ
+checkCongruence(ZZ,MOD0,nn,rspec,m,t,etaFunctionIndices nn,7,sspecExpected0)
 
 sspecExpected1 := eqSPEC [[1,18],[3,-6],[7,-8],[21,-4],_
                     [21,1,-21],[21,2,-13],[21,3,-16],[21,4,-11],[21,5,-12]]
 idxs :=[[1], [3], [7], [21], [21,1], [21,2], [21,3], [21,4], [21,5]]
 assertEquals(nn := minLevelM1(rspec,m,t),21)
-checkCongruence(Z,MOD1,21,rspec,m,t,idxs,7,sspecExpected1)
+checkCongruence(ZZ,MOD1,21,rspec,m,t,idxs,7,sspecExpected1)
 -- +
 -------------------------------------------------------------------
 --endtest
@@ -529,7 +529,7 @@ checkCongruence(Z,MOD1,21,rspec,m,t,idxs,7,sspecExpected1)
 -- -
 rspec := rspec3; m := 9; t := 8
 sspecExpected := eqSPEC [[1,10],[3,-7],[6,2],[7,-4],[14,4],[21,5],[42,-10]]
-checkCongruence(Z,MOD0,42,rspec,m,t,etaFunctionIndices 42,21,sspecExpected)
+checkCongruence(ZZ,MOD0,42,rspec,m,t,etaFunctionIndices 42,21,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -550,7 +550,7 @@ assertEquals(nn,56)
 assertEquals(sort ORBIT(rspec,m,t), [7,9,13])
 sspecExpected := eqSPEC [[1,46],[2,-20],[4,4],[7,-7],[8,-1],[14,2],_
                          [28,23],[56,-47]]
-checkCongruence(Z,MOD0,56,rspec,m,t,etaFunctionIndices 56,8,sspecExpected)
+checkCongruence(ZZ,MOD0,56,rspec,m,t,etaFunctionIndices 56,8,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -573,7 +573,7 @@ assertEquals(nn, 6)
 -- In level 6 it is enought to use pure eta functions.
 idxs := etaFunctionIndices nn
 sspecExpected := eqSPEC [[1, 6], [2, 1], [3, - 3], [6, - 3]]
-checkCongruence(Q,MOD1,6,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,6,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -594,7 +594,7 @@ assertEquals(nn := minLevelM1(rspec, m, t), 6)
 -- In level 6 it is enought to use pure eta functions.
 idxs := etaFunctionIndices nn
 sspecExpected := eqSPEC [[1, 14], [2, 8], [3, 3], [6, - 24]]
-checkCongruence(Q,MOD1,6,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,6,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -615,7 +615,7 @@ assertEquals(nn := minLevelM1(rspec, m, t), 18)
 sspecExpected := eqSPEC [[1,23],[2,6],[3,-20],[6,7],[9,22],[18,-37],_
                           [18,1,-17],[18,2,-26],[18,4,-10]]
 idxs :=  [[1], [2], [3], [6], [9], [18], [18, 1], [18, 2], [18, 3], [18, 4]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -635,7 +635,7 @@ rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=9; t:=6;
 assertEquals(nn := minLevelM1(rspec, m, t), 6)
 idxs :=etaFunctionIndices nn
 sspecExpected := eqSPEC [[1, 13], [2, 9], [3, 6], [6, - 27]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -656,14 +656,14 @@ assertEquals(nn := minLevelM1(rspec, m, t), 18)
 sspecExpected := eqSPEC[[1,23], [2,5], [3,1], [6,-13], [9,1], [18,-16],_
                         [18,1,-17], [18,2,-25], [18,3,-21], [18,4,-8]]
 idxs := [[1], [2], [3], [6], [9], [18], [18, 1], [18, 2], [18, 3], [18, 4]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 
 sspecExpected := eqSPEC[[9,21],[18,-20],_
     [18,1,7],[18,2,8],[18,3,6],[18,4,17],_
     [18,5,20],[18,6,15],[18,7,24],[18,8,27]]
 idxs := [[9], [18],_
          [18,1], [18,2], [18,3], [18,4], [18,5], [18,6], [18,7], [18,8]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -683,7 +683,7 @@ rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=27; t:=12;
 assertEquals(nn := minLevelM1(rspec, m, t),6)
 idxs := etaFunctionIndices nn
 sspecExpected := eqSPEC [[1, 37], [2, 30], [3, 24], [6, - 90]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,m,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,m,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -705,7 +705,7 @@ rspec := rspec1 := eqSPEC [[1,-1],[6,2,-1],[6,3,-1]]; m:=3; t:=2;
 assertEquals(nn := minLevelM1(rspec, m, t),6)
 idxs := etaFunctionIndices nn
 sspecExpected := eqSPEC [[1,6], [2,1], [3,-3], [6,-3]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 
 es := eulerExpansion specEQI(C) rspec
 m:=2; t:=0; [coefficient(es,m*n+t) for n in 0..10]
@@ -744,7 +744,7 @@ xf := toX1(C, f, fsym::Pol(C))
 xz := reduce(xf, xab)$QXTOPRED1(C);
 pol := second(xz)::Pol(C);
 c := inv(coefficient(pol,'F, 1))::C
-mpol := (c*pol - F)::Pol(Z)
+mpol := (c*pol - F)::Pol(ZZ)
 content(mpol)
 #monomials(mpol)
 zser := eval(pol, c+->c::A1(C), cons('F,msyms), cons(f,egens))$_
@@ -792,11 +792,11 @@ for i in midxs repeat_
 -- Something tells me that there might be a congruence of the form
 -- $a(k n + (k-1)) \equiv 0 \pmod{k}$ for all k.
 
-k := 2;  rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=2; t:=(m-1)::N;
+k := 2;  rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=2; t:=(m-1)::NN;
 assertEquals(nn := minLevelM1(rspec, m, t), 8)
 sspecExpected := eqSPEC [[1, 3], [2, - 1], [4, 1], [8, - 2]]
 idxs := etaFunctionIndices nn
-checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,m,sspecExpected)
+checkCongruence(QQ,MOD0,nn,rspec,m,t,idxs,m,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -811,12 +811,12 @@ checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,m,sspecExpected)
 
 -- See test:p2-19-Oct-2021-mod2.
 
-k := 3;  rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::N;
+k := 3;  rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::NN;
 assertEquals(nn := minLevelM1(rspec, m, t),6)
 ORBIT(rspec,m,t)
 sspecExpected := eqSPEC [[1, 7], [2, - 2], [3, - 2], [6, - 2]]
 idxs := etaFunctionIndices nn
-checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
+checkCongruence(QQ,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -834,12 +834,12 @@ checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
 -- We first show that the generalized eta-quotient is actually a pure
 -- eta-quotient.
 
-k := 4; rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::N;
+k := 4; rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::NN;
 assertEquals(nn := minLevelM1(rspec, m, t),8)
 ORBIT(rspec,m,t)
 sspecExpected := eqSPEC[[1, 13], [2, - 9], [4, 3], [8, - 6]]
 idxs := etaFunctionIndices nn
-checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
+checkCongruence(QQ,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
 
 -- +
 -------------------------------------------------------------------
@@ -854,18 +854,18 @@ checkCongruence(Q,MOD0,nn,rspec,m,t,idxs,2*m,sspecExpected)
 
 -- See test:p2-19-Oct-2021-mod2.
 
-k := 5; rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::N;
+k := 5; rspec := eqSPEC [[2*k,-1],[1,-k],[2,k]]; m:=k; t:=(m-1)::NN;
 assertEquals(nn := minLevelM1(rspec, m, t),10)
 assertEquals(ORBIT(rspec,m,t),[1,4])
 idxs := etaFunctionIndices nn
 sspecExpected := eqSPEC[[1, 33], [2, - 11], [5, 5], [10, - 25]]
-checkCongruence(Q,MOD0,nn,rspec,m,t,idxs, m*m,sspecExpected)
+checkCongruence(QQ,MOD0,nn,rspec,m,t,idxs, m*m,sspecExpected)
 
 nn := minLevelM1(rspec, m, t)
 assertEquals(nn, 10)
 idxs := [[1], [2], [5], [10], [10,1], [10,2], [10,3]]
 sspecExpected := eqSPEC[[1,15],[5,4],[10,-18],[10,1,-3],[10,2,-8],[10,3,6]]
-checkCongruence(Q,MOD1,nn,rspec,m,t,idxs,m,sspecExpected)
+checkCongruence(QQ,MOD1,nn,rspec,m,t,idxs,m,sspecExpected)
 
 -- +
 -------------------------------------------------------------------

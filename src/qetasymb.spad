@@ -72,19 +72,19 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-MZ ==> Matrix Z -- consider only 2x2 matricies
-SL2Z ==> MZ -- matrices with determinant = 1
-LZ ==> List Z
-LLZ ==> List LZ
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+MZZ ==> Matrix ZZ -- consider only 2x2 matricies
+SL2Z ==> MZZ -- matrices with determinant = 1
+LZZ ==> List ZZ
+LLZZ ==> List LZZ
 LSL2Z ==> List SL2Z
 QETAAUX ==> QEtaAuxiliaryPackage
 SPEC ==> QEtaSpecification
 
-asP x ==> x pretend P
+asPP x ==> x pretend PP
 
 )if LiterateDoc
 %$
@@ -198,18 +198,18 @@ $\pi_{\delta,g,m,\lambda}$=\code{qExponent(e)}.
 ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)} and
 ++ \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}.
 SymbolicEtaGamma: SetCategory with
-    eta: (P, Z, P, N, SL2Z) -> %
+    eta: (PP, ZZ, PP, NN, SL2Z) -> %
       ++ eta(delta,g,m,lambda,gamma) represents the meta-data for
       ++ the expansion of $\eta_{\delta,g,m,\lambda}^{[R]}(\gamma
       ++ \tau)$ in terms of $q=\exp(2i\pi\tau)$. We require that c>0
       ++ in gamma=matrix[[a,b],[c,d]].
-    delta: % -> P
+    delta: % -> PP
       ++ If x=eta(delta,g,m,lambda,gamma) then delta(x) returns delta.
-    subindex: % -> Z
+    subindex: % -> ZZ
       ++ If x=eta(delta,g,m,lambda,gamma) then subindex(x) returns g.
-    multiplier: % -> P
+    multiplier: % -> PP
       ++ If x=eta(delta,g,m,lambda,gamma) then multiplier(x) returns m.
-    lambda: % -> N
+    lambda: % -> NN
       ++ If x=eta(delta,g,m,lambda,gamma) then lambda(x) returns lambda.
     transformationMatrix: % -> SL2Z
       ++ If x=eta(delta,g,m,lambda,gamma) then transformationMatrix(x)
@@ -217,56 +217,56 @@ SymbolicEtaGamma: SetCategory with
     gamma1: % -> SL2Z
       ++ If x=eta(delta,g,m,lambda,gamma) then gamma1(x) returns the
       ++ SL2Z part of splitMatrix(gamma,delta,m,lambda).
-    rationalPrefactor: % -> Q -- (h_delta/delta)
+    rationalPrefactor: % -> QQ -- (h_delta/delta)
       ++ rationalPrefactor(x) returns the square of the second product
       ++ in \eqref{eq:eta_delta-m-lambda(gamma*tau)} if pure?(x).
       ++ See \ref{thm:c*tau+d}.
       ++ If not pure?(x) then rationalPrefactor(x)=1.
-    qExponent: % -> Q
+    qExponent: % -> QQ
       ++ qExponent(x) returns the (fractional) exponent for the order
       ++ of the expansion of x in the original variable q, see
       ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)} and
       ++ \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}.
-    unityExponent: % -> Q
+    unityExponent: % -> QQ
       ++ unityExponent(x) returns the (fractional) exponent for the
       ++ unity factor of the expansion of x, see
       ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)} and
       ++ \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}.
-    udelta: % -> Q
+    udelta: % -> QQ
       ++ Returns $u_{\delta,m,\lambda}$. See
       ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
       ++ See \eqref{eq:uv_delta}
-    vdelta: % -> Q
+    vdelta: % -> QQ
       ++ Returns $v_{\delta,m,\lambda}$. See
       ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
       ++ See \eqref{eq:uv_delta}.
-    cdExponent: % -> Q
+    cdExponent: % -> QQ
       ++ If pure?(x) cdExponent(x)=1/2, otherwise cdExponent(x)=0.
     pure?: % -> Boolean
       ++ pure?(x) returns true if x corresponds to a pure eta function.
  == add
-    Rec ==> Record(red: SL2Z, triang: MZ)
+    Rec ==> Record(red: SL2Z, triang: MZZ)
     Rep ==> Record(
-              fdelta: P,
-              fsubindex: Z,  -- g
-              fmultiplier: P,-- m
-              flambda: N,
+              fdelta: PP,
+              fsubindex: ZZ,  -- g
+              fmultiplier: PP,-- m
+              flambda: NN,
               fgamma: SL2Z,
               fgamma1: SL2Z, -- \gamma_{\delta,m,\lambda}
-              fudelta: Q,    -- udelta = hdelta^2/(delta*m)
+              fudelta: QQ,    -- udelta = hdelta^2/(delta*m)
                              -- \eqref{eq:uv_delta-m-lambda}}
-              fvdelta: Q,    -- b2/d2, reduced form of roots of unity
+              fvdelta: QQ,    -- b2/d2, reduced form of roots of unity
                              -- 0<=b2<d2, 0<d2
-              frat: Q,       -- square of rational prefactor
-              fqExponent: Q,
-              funityExponent: Q,
-              fcdExponent: Q -- exponent of the (c \tau + d) factor
+              frat: QQ,       -- square of rational prefactor
+              fqExponent: QQ,
+              funityExponent: QQ,
+              fcdExponent: QQ -- exponent of the (c \tau + d) factor
             )
     import from Rep
     xx ==> rep x
     yy ==> rep y
 
-    eta(delta: P, g: Z, m: P, lambda: N, gamma: SL2Z): % ==
+    eta(delta: PP, g: ZZ, m: PP, lambda: NN, gamma: SL2Z): % ==
         determinant gamma ~= 1 => error "SymbolicEtaGamma: gamma not in SL2Z"
         zero? g => error "SymbolicEtaGamma: g=0 is not allowed"
         lambda >= m => error "SymbolicEtaGamma: only lambda < m allowed"
@@ -274,40 +274,40 @@ SymbolicEtaGamma: SetCategory with
         if gamma(2,1) < 0 then gamma := -gamma
         rec: Rec := splitMatrix(gamma, delta, m, lambda)$QETAAUX
         gamma1: SL2Z := rec.red
-        gamma2: MZ := rec.triang
-        a2: Z := gamma2(1, 1); b2: Z := gamma2(1, 2); d2: Z := gamma2(2, 2)
-        udelta: Q := a2/d2 -- = hdelta^2/delta/m
-        vdelta: Q := b2/d2
+        gamma2: MZZ := rec.triang
+        a2: ZZ := gamma2(1, 1); b2: ZZ := gamma2(1, 2); d2: ZZ := gamma2(2, 2)
+        udelta: QQ := a2/d2 -- = hdelta^2/delta/m
+        vdelta: QQ := b2/d2
         if g = -1 then -- pure eta case
-            rat: Q := a2/delta -- = hdelta/delta
-            kappa: Q := (upsilonExponent(gamma1)$QETAAUX)::Q
-            qexponent: Q := 1/24 * udelta
-            uexponent: Q := 1/24 * (vdelta + kappa)
-            cdexponent: Q := 1/2
+            rat: QQ := a2/delta -- = hdelta/delta
+            kappa: QQ := (upsilonExponent(gamma1)$QETAAUX)::QQ
+            qexponent: QQ := 1/24 * udelta
+            uexponent: QQ := 1/24 * (vdelta + kappa)
+            cdexponent: QQ := 1/2
           else -- proper generalized eta
-            rat: Q := 1
-            kappa: Q := kappaSchoeneberg(delta, g, 0, gamma1)$QETAAUX
-            gprime: Z := gamma1(1,1)*g -- $a' g$
-            hprime: Z := gamma1(1,2)*g -- $b' g$
-            p2: Q := (1/2)*fractionalBernoulli2(gprime/delta)
-            uexponent: Q := fractionalPart(kappa + vdelta * p2)
-            qexponent: Q := udelta * p2
-            cdexponent: Q := 0
+            rat: QQ := 1
+            kappa: QQ := kappaSchoeneberg(delta, g, 0, gamma1)$QETAAUX
+            gprime: ZZ := gamma1(1,1)*g -- $a' g$
+            hprime: ZZ := gamma1(1,2)*g -- $b' g$
+            p2: QQ := (1/2)*fractionalBernoulli2(gprime/delta)
+            uexponent: QQ := fractionalPart(kappa + vdelta * p2)
+            qexponent: QQ := udelta * p2
+            cdexponent: QQ := 0
         per [delta, g, m, lambda, gamma,_
              gamma1, udelta, vdelta, rat, qexponent, uexponent, cdexponent]
 
-    delta(x: %): P == xx.fdelta
-    subindex(x: %): Z == xx.fsubindex
-    multiplier(x: %): P == xx.fmultiplier
-    lambda(x: %): N == xx.flambda
+    delta(x: %): PP == xx.fdelta
+    subindex(x: %): ZZ == xx.fsubindex
+    multiplier(x: %): PP == xx.fmultiplier
+    lambda(x: %): NN == xx.flambda
     transformationMatrix(x: %): SL2Z == xx.fgamma
     gamma1(x: %): SL2Z == xx.fgamma1
-    udelta(x: %): Q == xx.fudelta
-    vdelta(x: %): Q == xx.fvdelta
-    rationalPrefactor(x: %): Q == xx.frat
-    qExponent(x: %): Q == xx.fqExponent
-    unityExponent(x: %): Q == xx.funityExponent
-    cdExponent(x: %): Q == xx.fcdExponent
+    udelta(x: %): QQ == xx.fudelta
+    vdelta(x: %): QQ == xx.fvdelta
+    rationalPrefactor(x: %): QQ == xx.frat
+    qExponent(x: %): QQ == xx.fqExponent
+    unityExponent(x: %): QQ == xx.funityExponent
+    cdExponent(x: %): QQ == xx.fcdExponent
 
     pure?(x: %): Boolean == subindex x = -1
     coerce(x: %): OutputForm == rep(x)::OutputForm
@@ -388,7 +388,7 @@ index pari $(\delta,g) \in I$.
 ++ See \eqref{eq:g_r-m-lambda(gamma*tau)} and
 ++ \eqref{eq:g_r-m---lambda(gamma*tau)}.
 SymbolicEtaQuotientLambdaGamma: SetCategory with
-    etaQuotient: (SPEC, P, N, SL2Z) -> %
+    etaQuotient: (SPEC, PP, NN, SL2Z) -> %
       ++ etaQuotient(rspec,m,lambda,gamma) represents the expansion
       ++ of $g_{\bar{r},m,\lambda}(\gamma\tau)$ in terms of
       ++ $q=\exp(2i\pi\tau)$ and gamma=matrix[[a,b],[c,d]] represents
@@ -396,59 +396,59 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
     definingSpecification: % -> SPEC
       ++ If x=etaQuotient(rspec,m,lambda,gamma)), then
       ++ definingSpecification(x) returns purify(rspec).
-    multiplier: % -> P
+    multiplier: % -> PP
       ++ If x=etaQuotient(rspec,m,lambda,gamma)), then
       ++ multiplier(x) returns the m.
-    lambda: % -> N
+    lambda: % -> NN
       ++ If x=etaQuotient(rspec,m,lambda,gamma)), then
       ++ lambda(x) returns lambda.
     transformationMatrix: % -> SL2Z
       ++ If x=etaQuotient(rspec,m,lambda,gamma)), then
       ++ transformationMatrix(x) returns gamma.
 
-    rationalPrefactor: % -> Q
+    rationalPrefactor: % -> QQ
       ++ If x=etaQuotient(rspec,m,lambda,gamma)), then
       ++ rationalPrefactor(x) returns the square of the second product
       ++ in \eqref{eq:g_r-m-lambda(gamma*tau)}. That is the product of
       ++ rationalPrefactor(y(d,-1))^e for [d,-1,e] in pureParts(rspec).
-    unityExponent: % -> Q
+    unityExponent: % -> QQ
       ++ If x=etaQuotient(rspec,m,lambda,gamma)), then
       ++ unityExponent(x) returns the square of the second product
       ++ in \eqref{eq:g_r-m-lambda(gamma*tau)}. That is the sum of
       ++ unityExponent(y(d,g))*e for [d,g,e] in parts(rspec).
-    qExponent: % -> Q
+    qExponent: % -> QQ
       ++ qExponent(e) returns the order of the expansion of e in
       ++ $q=\exp(2i\pi\tau)$ while neglecting the (c\tau+d) factor. It
       ++ corresponds to the exponent of the fourth product of
       ++ \eqref{eq:g_r-m-lambda(gamma*tau)}. Compare also with
       ++ \eqref{eq:modular-g_r(gamma*tau)}.
-    cdExponent: % -> Q
+    cdExponent: % -> QQ
       ++ cdExponent(x) returns the sum over all rd*cdExponent(f) where
       ++ f runs over all parts of definingSpecification(x) and rd is
       ++ the corresponding exponent of the eta-function specification.
-    elt: (%, LZ) -> SymbolicEtaGamma
+    elt: (%, LZZ) -> SymbolicEtaGamma
       ++ elt(x, [delta.g]) returns the data corresponding to the
       ++ respective (delta, g) pair. Note that the pure eta-functions
       ++ are indexed via (delta, -1).
  == add
-    HT ==> XHashTable(LZ, SymbolicEtaGamma)
+    HT ==> XHashTable(LZZ, SymbolicEtaGamma)
       -- mapping delta to \eta_{\delta,m,\lambda}
     Rep ==> Record(
               fspec: SPEC,   -- the defining specification of the eta-quotient
-              fmultiplier: P,-- the multiplier m
-              flambda: N,    -- lambda \in 0..(m-1)
+              fmultiplier: PP,-- the multiplier m
+              flambda: NN,    -- lambda \in 0..(m-1)
               fgamma: SL2Z,  -- gamma
-              frat: Q,       -- square of rational prefactor
-              funityExponent: Q,
-              fqExponent: Q,
-              fcdExponent: Q,
+              frat: QQ,       -- square of rational prefactor
+              funityExponent: QQ,
+              fqExponent: QQ,
+              fcdExponent: QQ,
               feta: HT       -- mapping (delta,g) to \eta_{\delta,g,m,lambda}
             )
     import from Rep
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(spec: SPEC, m: P, lambda: N, gamma: SL2Z): % ==
+    etaQuotient(spec: SPEC, m: PP, lambda: NN, gamma: SL2Z): % ==
         spec := purify spec
         determinant gamma ~= 1 =>
             error "SymbolicEtaQuotientLambdaGamma: gamma not in SL2Z"
@@ -457,15 +457,15 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
         -- Make sure gamma(2,1) >= 0. Corresponds to the same transformation.
         if gamma(2,1) < 0 then gamma := -gamma
         h: HT := empty()
-        mm: P := level spec
-        rat: Q := 1
-        uexponent: Q := 0 -- unityExponent
-        qexponent: Q := 0
-        cdexponent: Q := 0
+        mm: PP := level spec
+        rat: QQ := 1
+        uexponent: QQ := 0 -- unityExponent
+        qexponent: QQ := 0
+        cdexponent: QQ := 0
         for l in parts spec repeat
-            delta: P := specDelta l
-            g: Z := specSubindex l
-            e: Z := specExponent l
+            delta: PP := specDelta l
+            g: ZZ := specSubindex l
+            e: ZZ := specExponent l
             ed := eta(delta, g, m, lambda, gamma)$SymbolicEtaGamma
             h[delta, g] := ed
             rat := rat * rationalPrefactor(ed)^e
@@ -474,18 +474,18 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
             cdexponent := cdexponent + e * cdExponent(ed)
 
         -- Now make the numerator small.
-        uexponent: Q := fractionalPart(uexponent)$QETAAUX
+        uexponent: QQ := fractionalPart(uexponent)$QETAAUX
         per [spec, m, lambda, gamma, rat, uexponent, qexponent, cdexponent, h]
 
     definingSpecification(x: %): SPEC == xx.fspec
-    elt(x: %, idx: LZ): SymbolicEtaGamma == xx.feta.idx
-    multiplier(x: %): P == xx.fmultiplier
-    lambda(x: %): N == xx.flambda
+    elt(x: %, idx: LZZ): SymbolicEtaGamma == xx.feta.idx
+    multiplier(x: %): PP == xx.fmultiplier
+    lambda(x: %): NN == xx.flambda
     transformationMatrix(x: %): SL2Z == xx.fgamma
-    rationalPrefactor(x: %): Q == xx.frat
-    unityExponent(x: %): Q == xx.funityExponent
-    qExponent(x: %): Q == xx.fqExponent
-    cdExponent(x: %): Q == xx.fcdExponent
+    rationalPrefactor(x: %): QQ == xx.frat
+    unityExponent(x: %): QQ == xx.funityExponent
+    qExponent(x: %): QQ == xx.fqExponent
+    cdExponent(x: %): QQ == xx.fcdExponent
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
 
@@ -541,7 +541,7 @@ for $p_{\bar{r},m,t}(\gamma\tau)$.
 ++ expansion of $p_{{\bar{r},m,t}(\gamma \tau)$. See
 ++ \eqref{eq:p_r-m-t(gamma*tau)} and \eqref{eq:p_rbar-m-t(gamma*tau)}.
 SymbolicEtaQuotientGamma: SetCategory with
-    etaQuotient: (SPEC, P, N, SL2Z) -> %
+    etaQuotient: (SPEC, PP, NN, SL2Z) -> %
       ++ etaQuotient(rspec, m, t, gamma) represents the expansion of
       ++ $p_{\bar{r},m,t}(\gamma \tau)$ where $\bar{r}$ is given by
       ++ rspec.
@@ -551,34 +551,34 @@ SymbolicEtaQuotientGamma: SetCategory with
     definingSpecification: % -> SPEC
       ++ If x=etaQuotient(spec,m,t,gamma), then definingSpecification(x)
       ++ returns purify(spec).
-    multiplier: % -> P
+    multiplier: % -> PP
       ++ If x=etaQuotient(spec,m,t,gamma), then multiplier(x)
       ++ returns m.
-    offset: % -> N
+    offset: % -> NN
       ++ If x=etaQuotient(spec,m,t,gamma), then offset(x)
       ++ returns t.
       ++ offset(x) returns the subsequence offset.
     transformationMatrix: % -> SL2Z
       ++ If x=etaQuotient(spec,m,t,gamma), then
       ++ transformationMatrix(x) returns gamma.
-    unityExponent: % -> Q
+    unityExponent: % -> QQ
       ++ If x=etaQuotient(spec,m,t,gamma), then
       ++ unityExponent(x) returns -(24*t + \hat{r})/(24*m).
-    minimalRootOfUnity: % -> P
+    minimalRootOfUnity: % -> PP
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function
       ++ $p_{r,m,t}(\gamma\tau)$ corresponding to
       ++ x=etaQuotient(mm,divs,r,m,t,gamma) (neglecting the
       ++ (c*\tau+d)^* factor) lives in Q[w][[z]] where w is a n-th
       ++ root of unity and z a fractional q power.
-    elt: (%, N) -> SymbolicEtaQuotientLambdaGamma
+    elt: (%, NN) -> SymbolicEtaQuotientLambdaGamma
       ++ x.lambda returns the data corresponding to the respective
       ++ lambda.
     one?: % -> Boolean
       ++ one?(x) returns true if the eta-quotient corresponding to x
       ++ represents 1. This is the case if one?(specification(x)),
       ++ i.e., if the representation is trivial.
-    qExponentMin: % -> Q
+    qExponentMin: % -> QQ
       ++ qExponentMin(x) returns the order of the q-expansion in terms
       ++ of the original q.
       ++ Note that this exponent is only a lower bound for the
@@ -589,53 +589,53 @@ SymbolicEtaQuotientGamma: SetCategory with
     A ==> IndexedOneDimensionalArray(YEQLG, 0)
     Rep ==> Record(
               feta: A,    -- mapping lambda to \eta_{\delta,m,lambda}
-              foffset: N, -- the subsequence offset
-              funityExponent: Q, -- (24 t + \hat{r})/(24 m)
-              fminroot: P -- minimal root of unity needed for coefficients
+              foffset: NN, -- the subsequence offset
+              funityExponent: QQ, -- (24 t + \hat{r})/(24 m)
+              fminroot: PP -- minimal root of unity needed for coefficients
             )
     import from Rep
 
     -- local
-    minRootOfUnityAlphaSchoenebergProperGeneralized(y: YEQLG): P ==
-        mr: Z := 1
+    minRootOfUnityAlphaSchoenebergProperGeneralized(y: YEQLG): PP ==
+        mr: ZZ := 1
         for l in properGeneralizedParts definingSpecification y repeat
-            delta := specDelta l; g := asP specSubindex l
+            delta := specDelta l; g := asPP specSubindex l
             ydg := y[delta, g]
             g1: SL2Z := gamma1 ydg
-            h: Z := g1(1,2)*g
+            h: ZZ := g1(1,2)*g
             if zero?((g1(1,1)*g) rem delta) and not zero?(h rem delta) then
-                hd: Q := h/delta
+                hd: QQ := h/delta
                 mr := lcm(mr, denom hd)
                 mr := lcm(mr, denom((1/2)*fractionalBernoulli1(hd)$QETAAUX))
-        asP mr
+        asPP mr
 
     -- local
     -- returns the minimal root of unity needed to express a
     -- part of a summand of \eqref{eq:p_rbar-m-t(gamma*tau)} for the
     -- lambda stored in y.
-    minRootOfUnity(y: YEQLG, ue: Q): P ==
+    minRootOfUnity(y: YEQLG, ue: QQ): PP ==
         -- minimal root of unity needed for the expansion is
         -- determined from expressing the squareroot of the rational
         -- prefactor in roots of unity.
         -- second factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
         rat := rationalPrefactor y
-        rr: Record(rat: Q, rootOf: P) := rationalSquareRoot(rat)$QETAAUX
+        rr: Record(rat: QQ, rootOf: PP) := rationalSquareRoot(rat)$QETAAUX
         -- second factor of the summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
-        minroot: Z := minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
+        minroot: ZZ := minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
 
         -- first factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
-        uexp: Q := lambda(y)*ue + unityExponent y
+        uexp: QQ := lambda(y)*ue + unityExponent y
         minroot := lcm(minroot, denom uexp)
 
         -- third factor of summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
         -- See function alphaSchoenebergContribution in qetaquot.spad.
-        mr: P := minRootOfUnityAlphaSchoenebergProperGeneralized y
+        mr: PP := minRootOfUnityAlphaSchoenebergProperGeneralized y
         minroot := lcm(minroot, mr)
 
         -- fifth and sixth factor of summand of
         ---\eqref{eq:p_rbar-m-t(gamma*tau)}
         for l in parts definingSpecification y repeat
-            d := specDelta l; g := asP specSubindex l
+            d := specDelta l; g := asPP specSubindex l
             ydg := y[d, g]
             if g = -1 then
                 minroot := lcm(minroot, denom vdelta ydg)
@@ -644,38 +644,38 @@ SymbolicEtaQuotientGamma: SetCategory with
                 beta := denom(g1(1,1)*g/d)
                 minroot := lcm(minroot, denom(vdelta(ydg) * (1/beta)))
                 minroot := lcm(minroot, denom(g1(1,2)*g/d))
-        asP minroot
+        asPP minroot
 
-    etaQuotient(rspec: SPEC, m: P, t: N, gamma: SL2Z): % ==
+    etaQuotient(rspec: SPEC, m: PP, t: NN, gamma: SL2Z): % ==
         rspec := purify rspec
         y: YEQLG := etaQuotient(rspec, m, 0, gamma)
         eta: A := new(m, y) -- fill with dummy values
-        rbarhat: Q := sigmaInfinity rspec
-        uexponent: Q := fractionalPart(-(24*t::Q + rbarhat)*(1/(24*m)))$QETAAUX
-        minroot: Z := minRootOfUnity(y, uexponent)
+        rbarhat: QQ := sigmaInfinity rspec
+        uexponent: QQ := fractionalPart(-(24*t::QQ + rbarhat)*(1/(24*m)))$QETAAUX
+        minroot: ZZ := minRootOfUnity(y, uexponent)
         for lambda in 0..m-1 repeat -- can start with 1.
             y := etaQuotient(rspec, m, lambda, gamma)
             eta.lambda := y
             minroot := lcm(minroot, minRootOfUnity(y, uexponent))
-        per [eta, t, uexponent, asP minroot]
+        per [eta, t, uexponent, asPP minroot]
 
     etaQuotient(rspec: SPEC, gamma: SL2Z): % ==
         etaQuotient(rspec, 1, 0, gamma)
 
-    elt(x: %, lambda: N): SymbolicEtaQuotientLambdaGamma ==
+    elt(x: %, lambda: NN): SymbolicEtaQuotientLambdaGamma ==
         rep(x).feta.lambda
     definingSpecification(x: %): SPEC == definingSpecification(x.0)
-    multiplier(x: %): P == multiplier(x.0)
-    offset(x: %): N == rep(x).foffset
+    multiplier(x: %): PP == multiplier(x.0)
+    offset(x: %): NN == rep(x).foffset
     transformationMatrix(x: %): SL2Z == transformationMatrix(x.0)
-    unityExponent(x: %): Q == rep(x).funityExponent
-    minimalRootOfUnity(x: %): P == rep(x).fminroot
+    unityExponent(x: %): QQ == rep(x).funityExponent
+    minimalRootOfUnity(x: %): PP == rep(x).fminroot
 
     coerce(x: %): OutputForm == rep(x)::OutputForm
     hashUpdate!(h: HashState, x: %): HashState == hashUpdate!(h, x.0)
     ((x: %) = (y: %)): Boolean == x.0 = y.0 and offset x = offset y
     one?(x): Boolean == one? definingSpecification x
-    qExponentMin(x: %): Q ==
+    qExponentMin(x: %): QQ ==
         min [qExponent(x.lambda) for lambda in 0..multiplier(x)-1]
 
 

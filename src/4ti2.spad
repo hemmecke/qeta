@@ -67,14 +67,14 @@ Suppose you want to solve the following system of linear inequalities.
 Then setup your session (or \code{.spad} file) as follows.
 
 \begin{verbatim}
-Z ==> Integer
-VZ ==> Vector Z
-MZ ==> Matrix Z
-LVZ ==> List VZ
-ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
-mat: MZ := matrix [[1, -1], [-3, 1], [1, 1], [0, 1]]
-rels: VZ := vector [-1, -1, 1, 1]
-b: VZ := vector [2, 1, 1, 0]
+ZZ ==> Integer
+VZZ ==> Vector ZZ
+MZZ ==> Matrix ZZ
+LVZZ ==> List VZZ
+ZRESULT ==> Record(zinhom: LVZZ, zhom: LVZZ, zfree: LVZZ)
+mat: MZZ := matrix [[1, -1], [-3, 1], [1, 1], [0, 1]]
+rels: VZZ := vector [-1, -1, 1, 1]
+b: VZZ := vector [2, 1, 1, 0]
 zresult: ZRESULT := zsolve(mat, rels, b)$X4ti2
 \end{verbatim}
 
@@ -125,19 +125,19 @@ computation.
 )endif
 
 S ==> String
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-MZ ==> Matrix Z
-VZ ==> Vector Z
-RELS ==> VZ -- only entries from {-1, 0, 1} are allowed with meaning {<=,=,>=}
-LVZ ==> List VZ
-ZINPUT ==> Record(zmat: MZ, zrels: RELS, zrhs: VZ)
-ZRESULT ==> Record(zinhom: LVZ, zhom: LVZ, zfree: LVZ)
-Q ==> Fraction Z
-VQ ==> Vector Q
-MQ ==> Matrix Q
-QINPUT ==> Record(qmat: MQ, zrels: RELS, qrhs: VQ)
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+MZZ ==> Matrix ZZ
+VZZ ==> Vector ZZ
+RELS ==> VZZ -- only entries from {-1, 0, 1} are allowed with meaning {<=,=,>=}
+LVZZ ==> List VZZ
+ZINPUT ==> Record(zmat: MZZ, zrels: RELS, zrhs: VZZ)
+ZRESULT ==> Record(zinhom: LVZZ, zhom: LVZZ, zfree: LVZZ)
+QQ ==> Fraction ZZ
+VQQ ==> Vector QQ
+MQQ ==> Matrix QQ
+QINPUT ==> Record(qmat: MQQ, zrels: RELS, qrhs: VQQ)
 
 )if LiterateDoc
 
@@ -151,13 +151,13 @@ QINPUT ==> Record(qmat: MQ, zrels: RELS, qrhs: VQ)
 ++ X4ti2 provides an interface to the program zsolve from the
 ++ 4ti2 software package (http://4ti2.de, https://4ti2.github.io/).
 X4ti2: with
-    zsolve:  (MZ, RELS, VZ) -> ZRESULT
+    zsolve:  (MZZ, RELS, VZZ) -> ZRESULT
       ++ If A is a (m,n)-matrix,
       ++ r an m-dimensional vector with entries from {-1, 0, 1},
       ++ b an m-dimensional vector, then
       ++ zsolve(A, r, b) returns 3 lists I, H, F such that for any
-      ++ vector i in inhom and any N-linear combination h of vectors
-      ++ from hom H and any Z-linear combination f of vectors from F,
+      ++ vector i in inhom and any NN-linear combination h of vectors
+      ++ from hom H and any ZZ-linear combination f of vectors from F,
       ++ the vector x=i+h+f solves the given system Ax r b where here
       ++ the vector r has to be interpreted rowwise, such that -1
       ++ means <=, 0 means =, and 1 means >=.
@@ -199,7 +199,7 @@ X4ti2: with
          setref(zsolveoptions, options)
          return s
 
-    writeMatrix(fn: FileName, mat: MZ): Void ==
+    writeMatrix(fn: FileName, mat: MZZ): Void ==
         -- create .mat
         tf: TextFile := open(fn, "output")$TextFile
         rows := nrows mat
@@ -213,38 +213,38 @@ X4ti2: with
         close! tf
         void()
 
-    readFile(fn: FileName): List VZ ==
+    readFile(fn: FileName): List VZZ ==
         not exists? fn => empty()
-        f: File Z := open(fn, "input")
-        rows: N := (read! f)::N
-        cols: P := (read! f)::P
-        result: List(VZ) := empty()$List(VZ)
+        f: File ZZ := open(fn, "input")
+        rows: NN := (read! f)::NN
+        cols: PP := (read! f)::PP
+        result: List(VZZ) := empty()$List(VZZ)
         for i in 1..rows repeat
-            v: VZ := new(cols, 0)
+            v: VZZ := new(cols, 0)
             for j in 1..cols repeat v.j := read! f
             result := cons(v, result)
         close! f
         return result
 
-    localzsolve(mat: MZ, rels: RELS, b: VZ, dir: S, basename: S): ZRESULT ==
+    localzsolve(mat: MZZ, rels: RELS, b: VZZ, dir: S, basename: S): ZRESULT ==
         import from FileName
-        writeMatrix(filename(dir, basename, "rel"), transpose(rels)$MZ)
-        writeMatrix(filename(dir, basename, "rhs"), transpose(b)$MZ)
+        writeMatrix(filename(dir, basename, "rel"), transpose(rels)$MZZ)
+        writeMatrix(filename(dir, basename, "rhs"), transpose(b)$MZZ)
         writeMatrix(filename(dir, basename, "mat"), mat)
         cmd: S := concat ["system ",
             deref zsolvepath, " ", deref zsolveoptions, " ", basename]
         systemCommand(cmd)$MoreSystemCommands
-        I: LVZ := readFile filename(dir, basename, "zinhom")
-        H: LVZ := readFile filename(dir, basename, "zhom")
-        F: LVZ := readFile filename(dir, basename, "zfree")
+        I: LVZZ := readFile filename(dir, basename, "zinhom")
+        H: LVZZ := readFile filename(dir, basename, "zhom")
+        F: LVZZ := readFile filename(dir, basename, "zfree")
         fn: S := concat(filename(dir, basename, "") :: S, ".*")
         systemCommand(concat("system /bin/rm ", fn))$MoreSystemCommands
         [I, H, F]
 
-    zsolve(mat: MZ, rels: RELS, b: VZ): ZRESULT ==
+    zsolve(mat: MZZ, rels: RELS, b: VZZ): ZRESULT ==
         h: HashState := new()
-        v: Z := value hashUpdate!(hashUpdate!(hashUpdate!(h, mat), rels), b)
-        r: Z := random(2^32) -- that is enough randomness
+        v: ZZ := value hashUpdate!(hashUpdate!(hashUpdate!(h, mat), rels), b)
+        r: ZZ := random(2^32) -- that is enough randomness
         dir: S := ""
         basename: String := concat ["4ti2-", string v, "-", string r]
         for i in 0..100 repeat -- return for non-existing file
@@ -260,8 +260,8 @@ X4ti2: with
         matQ := q.qmat
         m := nrows matQ
         n := ncols matQ
-        mat: MZ := new(m, n, 0)
-        v: VZ := new(m, 0)
+        mat: MZZ := new(m, n, 0)
+        v: VZZ := new(m, 0)
         for i in 1..m repeat
             d := denom(q.qrhs.i)
             for j in 1..n repeat d := lcm(d, denom matQ(i,j))

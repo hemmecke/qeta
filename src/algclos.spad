@@ -56,16 +56,16 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 SI ==> SingleInteger
 SY ==> Symbol
 
-asN x ==> x pretend N
-asP x ==> x pretend P
-asZ x ==> x pretend Z
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
+asZZ x ==> x pretend ZZ
 
 )if LiterateDoc
 %$
@@ -94,7 +94,7 @@ field $K$ and returns the algebraic closure of $K$ in the sense of
 ++ tst(2::AN,3::AN) returns false whereas
 ++ tst(2::DAN,3::DAN) gives true.
 DynamicAlgebraicNumber(): Exports == Implementation where
-  K ==> Q
+  K ==> QQ
   V ==> IndexedVariable("r")
   EX ==> IndexedExponents V
   R ==> NewSparseMultivariatePolynomial(K, V)
@@ -102,21 +102,21 @@ DynamicAlgebraicNumber(): Exports == Implementation where
   NUP ==> NewSparseUnivariatePolynomial
   SUP ==> SparseUnivariatePolynomial
 
-  PSU ==> PolynomialSetUtilitiesPackage(Q, EX, V, R)
+  PSU ==> PolynomialSetUtilitiesPackage(QQ, EX, V, R)
   RREC ==> Record(ee: E, rr: %)
 
   Exports ==> Join(_
       AlgebraicallyClosedField,_
       PolynomialFactorizationExplicit,_
-      RetractableTo Q) _
+      RetractableTo QQ) _
    with
-    rank: () -> Z
+    rank: () -> ZZ
     show: () -> Void
-    primitiveNthRootOfUnity: Z -> %
+    primitiveNthRootOfUnity: ZZ -> %
       +++ primitiveNthRootOfUnity(n) returns a number x such that
       ++ x^n=1 and x^k is not 1 for every 1<k<n.
-    extensionPolynomial: P -> SUP %
-    getRoot: P -> %
+    extensionPolynomial: PP -> SUP %
+    getRoot: PP -> %
     -- if f = extensionPolynomial n and r = getRoot n then zero? f(r)
 
     -- The following functions are only exported for debugging purposes.
@@ -137,21 +137,21 @@ DynamicAlgebraicNumber(): Exports == Implementation where
 
     -- modular evaluation field E
     maxSI2 ==> shift(max()$SI, -1)
-    p: P := asP(prevPrime(maxSI2::Z)$IntegerPrimesPackage(Z))
+    p: PP := asPP(prevPrime(maxSI2::ZZ)$IntegerPrimesPackage(ZZ))
     E ==> DynamicAlgebraicClosureFiniteField PrimeField p
-    EZ ==> SUP E -- corr. to $E[z]$
+    EZZ ==> SUP E -- corr. to $E[z]$
 
-    RZ ==> SUP R
+    RZZ ==> SUP R
     G1 ==> Record(gcd: NUP %, coef1: NUP %) -- for "inv" computation
 
     FUNION ==> Union("nil", "sqfr", "irred", "prime")
 
-    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: N)
+    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: NN)
     FL ==> List FREC
 
     univar(r, v) ==> (univariate(r, v)$R) pretend SUP % -- (%, V) -> SUP %
     nunivar(r, v) ==> (univariate(r, v)$R) pretend NUP % -- (%, V) -> NUP %
-    multivar(s, v) ==> per(multivariate(s pretend RZ, v)$R) -- (NUP %, V) -> %
+    multivar(s, v) ==> per(multivariate(s pretend RZZ, v)$R) -- (NUP %, V) -> %
 
     -- We want extension polynomials to be at least square-free.
     STATE ==> Record(
@@ -173,8 +173,8 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         ts: TS,_
         roots: List RREC,_
         xroots: List RREC,_
-        nthRootsOfUnity: XHashTable(Z, %),_
-        rnk: Z)
+        nthRootsOfUnity: XHashTable(ZZ, %),_
+        rnk: ZZ)
 
     -- The domain state is changed destructively.
     state: STATE := [_
@@ -182,30 +182,30 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         empty()$TS,_
         empty()$List(RREC),_
         empty()$List(RREC),_
-        empty()$XHashTable(Z, %),_
+        empty()$XHashTable(ZZ, %),_
         0]
 
     mon: SUP % := monomial(1, 1)$SUP(%)
     dummysy: Symbol := new()$SY
 
-    rank(): Z == state.rnk
+    rank(): ZZ == state.rnk
 
-    getRec(n: P): RREC ==
+    getRec(n: PP): RREC ==
         --assert(not zero? state.rnk)
         rts: List RREC := state.roots
-        rts(state.rnk - asZ(n) + 1)
+        rts(state.rnk - asZZ(n) + 1)
 
-    getGamma(n: P): E == getRec(n).ee
-    getRoot(n: P): % == getRec(n).rr
+    getGamma(n: PP): E == getRec(n).ee
+    getRoot(n: PP): % == getRec(n).rr
 
     getRelations(): TS == state.ts
 
-    getRelation(n: P): R ==
+    getRelation(n: PP): R ==
         --assert(not zero? state.rnk)
         triset: List R := getRelations()::List(R)
-        triset(state.rnk - asZ(n) + 1)
+        triset(state.rnk - asZZ(n) + 1)
 
-    extensionPolynomial(n: P): SUP % ==
+    extensionPolynomial(n: PP): SUP % ==
         f: R := getRelation n
         univar(f, mvar f)
 
@@ -228,7 +228,7 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         ground? xx => applyPhiK ground xx
         --assert(not zero? x)
         v: V := mvar xx
-        n: P := lookup v
+        n: PP := lookup v
         s: NUP % := nunivar(xx, v)
         g: E := getGamma n
         e: E := applyPhiGamma(leadingCoefficient s) * g^degree(s)
@@ -236,10 +236,10 @@ DynamicAlgebraicNumber(): Exports == Implementation where
             e := e + applyPhiGamma(leadingCoefficient s) * g^degree(s)
         return e
 
-    evalPolynomial(s: NUP %): EZ ==
-        zero? s => 0$EZ
+    evalPolynomial(s: NUP %): EZZ ==
+        zero? s => 0$EZZ
         e: E := applyPhiGamma leadingCoefficient s
-        monomial(e, degree s)$EZ + evalPolynomial reductum s
+        monomial(e, degree s)$EZZ + evalPolynomial reductum s
 
     --assert(zero? state.rnk or (state.rnk = #(state.ts)))
     --assert(zero? state.rnk or (state.rnk = #(stete.vars)))
@@ -273,12 +273,12 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         z: Record(rnum: K, polnum: R, den: K) := remainder(r, getRelations())$TS
         per((z.rnum/z.den) * z.polnum)
 
-    retractIfCan(x: %): Union(Q, "failed") ==
+    retractIfCan(x: %): Union(QQ, "failed") ==
         x := reduce xx
         not ground? xx => "failed"
-        ground(xx)::Union(Q, "failed")
+        ground(xx)::Union(QQ, "failed")
 
-    retract(x: %): Q ==
+    retract(x: %): QQ ==
         x := reduce xx
         not ground? xx => error "retract: not a rational number"
         ground xx
@@ -297,13 +297,13 @@ DynamicAlgebraicNumber(): Exports == Implementation where
     ((x: %) - (y: %)): % == reduce(xx - yy)
     ((x: %) * (y: %)): % == reduce(xx * yy)
 
-    ((x: %) ^ (n: P)): % == expt(x, n)$RepeatedSquaring(%)
-    ((x: %) ^ (n: N)): % ==
+    ((x: %) ^ (n: PP)): % == expt(x, n)$RepeatedSquaring(%)
+    ((x: %) ^ (n: NN)): % ==
         zero? n => 1
-        x^asP(n)
-    ((x: %) ^ (n: Z)): % ==
-        n < 0 => inv(x) ^ asP(-n)
-        x^asN(n)
+        x^asPP(n)
+    ((x: %) ^ (n: ZZ)): % ==
+        n < 0 => inv(x) ^ asPP(-n)
+        x^asNN(n)
 
     -- zeroTest uses the algorithm ZeroTest from
     -- \cite{Steel_AlgebraicClosure_2002} in order to adjust
@@ -317,13 +317,13 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         --assert(x = rep reduce x)
         -- Step (3)
         v: V := mvar x
-        n: P := lookup v
+        n: PP := lookup v
         f: NUP % := nunivar(x, v)
         gn: R := getRelation n
         g: NUP % := nunivar(gn, v)
         -- Step (4)
-        fbar: EZ := evalPolynomial f
-        gbar: EZ := evalPolynomial g
+        fbar: EZZ := evalPolynomial f
+        gbar: EZZ := evalPolynomial g
         hbar := gcd(fbar, gbar)
         one? hbar => return false
         -- Step (5)
@@ -371,14 +371,14 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         -- Step (3)
         v: V := mvar xx
         f: NUP % := nunivar(xx, v)
-        n: P := lookup v
+        n: PP := lookup v
         gn: R := getRelation n
         g: NUP % := nunivar(gn, v)
         -- Step (4)
         cu: G1 := halfExtendedSubResultantGcd1(f, g)
         -- Step (5)
         c: NUP % := cu.gcd
-        import from N
+        import from NN
         not zero? degree c => error "ffalgclos: inv: gcd is not a constant"
         lcc: % := leadingCoefficient c
         inv(lcc) * multivar(cu.coef1, v)
@@ -391,7 +391,7 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         squareFree(poly)$UnivariatePolynomialSquareFree(%, SUP %)
 
     imaginaryI(): % == -- sqrt(-1)
-        t: XHashTable(Z, %) := state.nthRootsOfUnity
+        t: XHashTable(ZZ, %) := state.nthRootsOfUnity
         key?(4, t) => return t.4
         -- Is ther a extension polynomial of the form x^2+1?
         triset: List R := getRelations()::List(R)
@@ -411,25 +411,25 @@ DynamicAlgebraicNumber(): Exports == Implementation where
                 return r
         extendBy!(monomial(1, 2)$SUP(%) + monomial(1, 0)$SUP(%))
 
-    sqrtOfSquareFreePositiveInteger(z: Z): % ==
+    sqrtOfSquareFreePositiveInteger(z: ZZ): % ==
         --assert(z>0)
-        zx: % := (- z)::Q::%
+        zx: % := (- z)::QQ::%
         e := z::E
         for rrec in state.xroots repeat
             if (rrec.ee)^2=e and zero?((r := rrec.rr)^2 + zx) then return r
         extendBy!(monomial(1, 2)$SUP(%) + monomial(zx, 0)$SUP(%))
 
-    sqrtOfRational(xq: Q): % ==
+    sqrtOfRational(xq: QQ): % ==
         i: % := 1
-        dr: Z := 1; nr: Z := 1 -- root of denom and numer
-        d: Z := denom xq -- assume that is positive
-        n: Z := numer xq
+        dr: ZZ := 1; nr: ZZ := 1 -- root of denom and numer
+        d: ZZ := denom xq -- assume that is positive
+        n: ZZ := numer xq
         if n < 0 then
             n := -n
             i: % := imaginaryI()
             one? d and one? n => return i
 
-        mxq: Q := - xq
+        mxq: QQ := - xq
         zx: % := mxq :: %
         e := applyPhiK mxq
         for rrec in state.xroots repeat -- check existing roots
@@ -447,37 +447,37 @@ DynamicAlgebraicNumber(): Exports == Implementation where
             nr := nr * a^shift(f.exponent, -1)
         fl := factorList factor d
         for f in fl repeat
-            a: Z := f.factor
+            a: ZZ := f.factor
             dr := dr * a^shift(f.exponent, -1)
             if odd?(f.exponent) then
                 dr := dr * a
                 z := z * sqrtOfSquareFreePositiveInteger a -- numerator
         (nr/dr)*i*z
 
-    retractToQIfCan(poly: SUP %): Union(SUP Q, "failed") ==
-        result: SUP Q := 0
+    retractToQIfCan(poly: SUP %): Union(SUP QQ, "failed") ==
+        result: SUP QQ := 0
         while not zero? poly repeat
             lc: % := leadingCoefficient poly
             not ground? rep lc => return "failed"
-            result := result + monomial(ground rep lc, degree poly)$SUP(Q)
+            result := result + monomial(ground rep lc, degree poly)$SUP(QQ)
             poly := reductum poly
-        result :: Union(SUP Q, "failed")
+        result :: Union(SUP QQ, "failed")
 
     rootOfSquareFreePolynomial(f: SUP %, sy: Symbol): % ==
         -- Check whether one of the existing roots (or their negation)
         -- is a result.
-        fbar: EZ := evalPolynomial(f pretend NUP %)
+        fbar: EZZ := evalPolynomial(f pretend NUP %)
         for rrec in state.xroots repeat
             if zero? fbar(rrec.ee) and zero? f(r := rrec.rr) then return r
 
         -- If poly has only small rational coefficients, we try to
-        -- factor over Q, otherwise we just extend by f
+        -- factor over QQ, otherwise we just extend by f
         fq := retractToQIfCan f
         fq case "failed" => extendBy! f
 
-        fl := factorList factor(fq::SUP(Q))
-        g: SUP Q := first(fl).factor
-        d: N := degree g
+        fl := factorList factor(fq::SUP(QQ))
+        g: SUP QQ := first(fl).factor
+        d: NN := degree g
         one? d => return (-coefficient(g, 0))::%
         for frec in rest fl repeat
             if degree(frec.factor) < d then
@@ -486,19 +486,19 @@ DynamicAlgebraicNumber(): Exports == Implementation where
                 one? d => return (-coefficient(g, 0))::%
 
         d > 2 =>
-            f := map(coerce, g)$SparseUnivariatePolynomialFunctions2(Q, %)
+            f := map(coerce, g)$SparseUnivariatePolynomialFunctions2(QQ, %)
             extendBy! f
 
         -- use formula for quadratic equations (f is monoic)
-        b: Q := (1/2)*coefficient(g, 1)
-        c: Q := coefficient(g, 0)
+        b: QQ := (1/2)*coefficient(g, 1)
+        c: QQ := coefficient(g, 0)
         sqrtOfRational(b^2-c) - b::%
 
     rootOf(poly: SUP %, sy: Symbol): % ==
         -- First determine a minimal degree squarefree factor
         fl: FL := factorList(squareFreePolynomial poly)$Factored(SUP %)
         f: SUP % := first(fl).factor
-        d: N := degree f
+        d: NN := degree f
         one? d => return -coefficient(f, 0)
         for frec in rest fl repeat
             if degree(frec.factor) < d then
@@ -514,7 +514,7 @@ DynamicAlgebraicNumber(): Exports == Implementation where
                 if r = rrec.rr then return roots -- nothing to add
         return cons([-e, -r]$RREC, cons([e, r]$RREC, roots))
 
-    addToRoots(r: %, n: Z, primNthRootOfUnity: %, xr: List RREC): List RREC ==
+    addToRoots(r: %, n: ZZ, primNthRootOfUnity: %, xr: List RREC): List RREC ==
         e: E := applyPhiGamma r
         pe: E := applyPhiGamma primNthRootOfUnity
         for i in 1..n-1 repeat
@@ -523,15 +523,15 @@ DynamicAlgebraicNumber(): Exports == Implementation where
             xr := addRoots(e, r, xr)
         reverse! xr
 
-    internalPrimitiveNthRootOfUnity(n: Z): % ==
+    internalPrimitiveNthRootOfUnity(n: ZZ): % ==
         n < 2 => 1
         n = 2 => -1
-        cyclo: SUP Z := (cyclotomic(n)$CyclotomicPolynomialPackage)
-        f := map(coerce, cyclo)$SparseUnivariatePolynomialFunctions2(Z, %)
+        cyclo: SUP ZZ := (cyclotomic(n)$CyclotomicPolynomialPackage)
+        f := map(coerce, cyclo)$SparseUnivariatePolynomialFunctions2(ZZ, %)
         rootOfSquareFreePolynomial(f, dummysy)
 
-    primitiveNthRootOfUnity(n: Z): % ==
-        t: XHashTable(Z, %) := state.nthRootsOfUnity
+    primitiveNthRootOfUnity(n: ZZ): % ==
+        t: XHashTable(ZZ, %) := state.nthRootsOfUnity
         key?(n, t) => return t.n
         r: % := internalPrimitiveNthRootOfUnity n
         t.n := r -- remember that we know an nth root of unity
@@ -539,13 +539,13 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         state.xroots := addToRoots(1$%, n, r, xr)
         return r
 
-    ((x: %) ^ (q: Q)): % ==
+    ((x: %) ^ (q: QQ)): % ==
         one? x => x
-        n: Z := numer q
+        n: ZZ := numer q
         n < 0 => inv(x)^(-n/denom(q))
         zero? x => x
         denom q = 2 => (sqrt x)^n
-        d: N := asN denom q
+        d: NN := asNN denom q
         f: SUP % := monomial(1, d)$SUP(%) - monomial(x, 0)$SUP(%)
         r: % := rootOf f
         xr := reverse(state.xroots)
@@ -559,7 +559,7 @@ DynamicAlgebraicNumber(): Exports == Implementation where
         rootOf f
 
     -- auxiliary factorSquareFreePolynomial
-    fsfp(f: SUP %, n: N): Factored(SUP %) ==
+    fsfp(f: SUP %, n: NN): Factored(SUP %) ==
         --assert(squareFree? f)
         --assert(one? leadingCoefficient(f))
         roots: List % := rootsOf f -- if squarefree then all roots distinct!

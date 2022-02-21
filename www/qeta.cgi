@@ -79,7 +79,7 @@ print <<EOF;
     <br />
     <dd><input name="rvectors" value="$rvectors" size=40 /></dd>
 
-    <dt><strong>Transformation matrix γ</strong> from SL_2(Z) in the form
+    <dt><strong>Transformation matrix γ</strong> from SL_2(ZZ) in the form
     [[a, b], [c,d]] (leave empty to expand at every cusp of
     Gamma_0(level)).
     <dd><input name="gamma" value="$gamma" size=40 /></dd>

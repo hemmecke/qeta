@@ -69,9 +69,9 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-Z ==> Integer
-asP x ==> x pretend P
+PP ==> PositiveInteger
+ZZ ==> Integer
+asPP x ==> x pretend PP
 
 
 )if LiterateDoc
@@ -92,10 +92,10 @@ CachedQPochhammerPower(C, L): Exports == Implementation where
   C: Ring
   L: UnivariateLaurentSeriesCategory C
   Exports ==> Join(Monoid, CoercibleTo OutputForm) with
-    eulerFunctionPower: (P, Z) -> L
+    eulerFunctionPower: (PP, ZZ) -> L
       ++ eulerFunctionPower(n, e) computes
       ++ (\prod_{k=1}^\infty(1-q^{kn}))^e.
-    jacobiFunctionPower: (P, P, Z) -> L
+    jacobiFunctionPower: (PP, PP, ZZ) -> L
       ++ jacobiFunctionPower(d,g,e) computes and caches
       ++ jacobiFunction(d,g)^e from QFunctions(C,L).
   Implementation ==> add
@@ -106,7 +106,7 @@ CachedQPochhammerPower(C, L): Exports == Implementation where
     cef1: C := coefficient(ef, 1) -- avoid null pointer by expansion
     ef2: L := ef^2
     cef2: C := coefficient(ef2, 1) -- avoid null pointer by expansion
-    efc: XHashTable(Z, L) := table()
+    efc: XHashTable(ZZ, L) := table()
     -- The expansion of ef3:=ef(1)^3 is very sparse. We use this fact,
     -- by computing and caching powers of ef3 and perhaps additionally
     -- multiplying by ef(1) or ef(1)^2.
@@ -127,17 +127,17 @@ CachedQPochhammerPower(C, L): Exports == Implementation where
 -------------------------------------------------------------------
     -- We maintain a cache of expansions of powers of the Jacobi
     -- functions. One cache for each delta and each 0<g<delta/2.
-    jfc: XHashTable(P, XHashTable(P, CachedPower L)) := empty()
+    jfc: XHashTable(PP, XHashTable(PP, CachedPower L)) := empty()
 -------------------------------------------------------------------
 
     -- eulerFunctionPower(u, rd) returns eulerFunction(u)^rd. Internally,
     -- it is, however implemented via CachedPower(L) using only
     -- expansions of eulerFunction(1) and partitionSeries(1).
-    eulerFunction1Power(rd: Z): L == -- eulerFunction(1)^rd
+    eulerFunction1Power(rd: ZZ): L == -- eulerFunction(1)^rd
         zero? rd => 1$L
         rd < 0 => power!(psc, -rd)$CachedPower(L)
         key?(rd, efc) => efc.rd
-        qr: Record(quotient: Z, remainder: Z) := divide(rd, 3)
+        qr: Record(quotient: ZZ, remainder: ZZ) := divide(rd, 3)
         q := qr.quotient
         if key?(3*q, efc) then
             l := efc(3*q)
@@ -147,21 +147,21 @@ CachedQPochhammerPower(C, L): Exports == Implementation where
         zero?(qr.remainder) => l
         l * efc(qr.remainder)
 
-    eulerFunctionPower(d: P, rd: Z): L ==
+    eulerFunctionPower(d: PP, rd: ZZ): L ==
         zero? rd => 1$L
         l: L := eulerFunction1Power rd
         if one? d then l else multiplyExponents(l, d)
 
 -------------------------------------------------------------------
-    jacobiFunctionPower(d: P, g: P, e: Z): L ==
+    jacobiFunctionPower(d: PP, g: PP, e: ZZ): L ==
         --assert(not zero? e)
         --assert(not zero? g)
         -- => qetaTaylorRep eulerFunctionPower(d, 2*e)
         --assert(2*g ~= d)
         -- => qetaTaylorRep eulerExpansion etaQuotient eqSPEC([g,d],[2*e,2*e])
-        if 2*g > d then g := asP(d-g)
+        if 2*g > d then g := asPP(d-g)
         -- First make sure that the initial entry jfc.d.g exists.
-        jfcd := elt(jfc, d, empty()$XHashTable(P, CachedPower L))
+        jfcd := elt(jfc, d, empty()$XHashTable(PP, CachedPower L))
         if not key?(g, jfcd) then
             l: L := jacobiFunction(d, g)$QFunctions(C, L)
             jfcd.g := l::CachedPower(L)

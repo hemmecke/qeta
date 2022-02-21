@@ -47,10 +47,10 @@ level := $LEVEL
 )read $FILE1
 )read $FILE2
 
-divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
+divs: List ZZ := divisors(level)\$IntegerNumberTheoryFunctions
 syms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
-dim: N := #syms
-D ==> HomogeneousDirectProduct(dim, N);
+dim: NN := #syms
+D ==> HomogeneousDirectProduct(dim, NN);
 V ==> Vector R
 X ==> Record(poly: R, repr: V, mult: C)
 toR ==> coerce\$PolynomialConversion(C, E, syms)
@@ -58,15 +58,15 @@ toR ==> coerce\$PolynomialConversion(C, E, syms)
 f: List R := [toR p for p in $F]
 g: List R := [toR p for p in $G]
 
-printRelations(fdim: N, fsyms: List Symbol, f: List R, _
-               gdim: N, gsyms: List Symbol, g: List R): Void == (_
+printRelations(fdim: NN, fsyms: List Symbol, f: List R, _
+               gdim: NN, gsyms: List Symbol, g: List R): Void == (_
     ldim := fdim + gdim;_
     lsyms := concat(fsyms, gsyms);_
-    DX := DirectProduct(ldim, N);_
-    EX := Monomials(ldim, N, DX, lsyms);_
+    DX := DirectProduct(ldim, NN);_
+    EX := Monomials(ldim, NN, DX, lsyms);_
     RX := PolynomialRing(R, EX);_
-    fvars: List RX := [monomial(1, unitVector(i::P)\$EX)\$RX for i in 1..fdim];_
-    gvars: List RX := [monomial(1, unitVector(fdim+i::P)\$EX)\$RX for i in 1..gdim];_
+    fvars: List RX := [monomial(1, unitVector(i::PP)\$EX)\$RX for i in 1..fdim];_
+    gvars: List RX := [monomial(1, unitVector(fdim+i::PP)\$EX)\$RX for i in 1..gdim];_
     for fvar in fvars for p in f repeat (_
         x: X := reduce(p, g)\$ExtendedPolynomialReduction(C, E, R);_
         rx: RX := x.mult * fvar - x.poly * 1\$RX; _
@@ -74,8 +74,8 @@ printRelations(fdim: N, fsyms: List Symbol, f: List R, _
         for i in 1..gdim for gvar in gvars repeat rx := rx - v.i * gvar; _
         display77(rx :: OF)));
 
-fdim: N := #f;
-gdim: N := #g;
+fdim: NN := #f;
+gdim: NN := #g;
 
 fsyms: List Symbol := indexedSymbols("f", fdim)\$QAuxiliaryTools;
 gsyms: List Symbol := indexedSymbols("g", gdim)\$QAuxiliaryTools;

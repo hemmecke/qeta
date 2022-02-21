@@ -73,11 +73,11 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
-N ==> NonNegativeInteger
-Z ==> Integer
+NN ==> NonNegativeInteger
+ZZ ==> Integer
 UP ==> SparseUnivariatePolynomial C
 
-asN x ==> x pretend N
+asNN x ==> x pretend NN
 
 )if LiterateDoc
 %$
@@ -96,21 +96,21 @@ asN x ==> x pretend N
 ++ in terms of Euler functions to our representation in terms of eta
 ++ functions.
 CheckSomos: Exports == Implementation where
-  Pol ==> Polynomial Z
+  Pol ==> Polynomial ZZ
   LPol ==> List Pol
   Exports ==> with
-    toEta: (N, Pol) -> Pol
+    toEta: (NN, Pol) -> Pol
         ++ toEta(m, p) expresses the p (given as a polynomial in variables
         ++ ui and q where the ui correspond to the Euler functions of level m
         ++ https://en.wikipedia.org/wiki/Euler_function) into an expression
         ++ in variables Ei (corresponding to eta(i*tau)).
         ++ The ui and Ei correspond to level m.
-    fromEta: (N, Pol) -> Pol
+    fromEta: (NN, Pol) -> Pol
         ++ fromEta(m, p) expresses a polynomial p in variables Ei
         ++ (corresponding to eta(i*tau)) in terms of variables q and ui
         ++ where the ui correspond to the Euler functions of level m.
         ++ https://en.wikipedia.org/wiki/Euler_function).
-    member?: (N, Pol, LPol) -> Boolean
+    member?: (NN, Pol, LPol) -> Boolean
         ++ member?(m, s, gb) returns true if s is in the ideal given by the
         ++ (assumed degrevlex) Groebner bases gb for the eta relations of
         ++ level m.
@@ -120,13 +120,13 @@ CheckSomos: Exports == Implementation where
     -- variables. If everything is OK, the result should be a
     -- polynomial in the E variables times a power of t. We only
     -- return the factor that does not involve t.
-    toEta(level: N, p: Pol): Pol ==
+    toEta(level: NN, p: Pol): Pol ==
         import from QAuxiliaryTools
         FPol ==> Fraction Pol
-        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        divs: List ZZ := divisors(level)$IntegerNumberTheoryFunctions
         usyms: List Symbol := indexedSymbols("u", divs)
         esyms: List Symbol := indexedSymbols("E", divs)
-        fc(c: Z): FPol == c::FPol
+        fc(c: ZZ): FPol == c::FPol
         syms: List Symbol := cons("q"::Symbol, usyms)
         evals: List FPol := [e::Pol::FPol for e in esyms]
         symt: Symbol := "t"::Symbol
@@ -134,11 +134,11 @@ CheckSomos: Exports == Implementation where
         tt := t::FPol -- 1/q = t^24
         vals: List FPol := [e*tt^d for e in evals for d in divs]
         vals := cons(inv(tt^24), vals)
-        z: FPol := eval(p, fc, syms, vals)$PolynomialEvaluation(Z, FPol)
+        z: FPol := eval(p, fc, syms, vals)$PolynomialEvaluation(ZZ, FPol)
         if not one? denom z then error "toEta: denominator is not 1"
         x: Pol := numer z
         z: Union(Pol, "failed") := x exquo t
-        k: N := 0
+        k: NN := 0
         while z case Pol repeat
             k := k + 1
             x := z :: Pol
@@ -147,25 +147,25 @@ CheckSomos: Exports == Implementation where
            dbgPrint("debug message: toEta$CheckSomos contains t", x)
         return x
 
-    fromEta(level: N, p: Pol): Pol ==
+    fromEta(level: NN, p: Pol): Pol ==
         import from QAuxiliaryTools
-        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+        divs: List ZZ := divisors(level)$IntegerNumberTheoryFunctions
         usyms: List Symbol := indexedSymbols("u", divs)
         esyms: List Symbol := indexedSymbols("E", divs)
-        fc(c: Z): Pol == c::Pol
+        fc(c: ZZ): Pol == c::Pol
         uvals: LPol := [u::Pol for u in usyms]
         symt: Symbol := "t"::Symbol
         t: Pol := symt::Pol
-        vals: LPol := [u*t^asN(d) for u in uvals for d in divs]
-        x: Pol := eval(p, fc, esyms, vals)$PolynomialEvaluation(Z, Pol)
+        vals: LPol := [u*t^asNN(d) for u in uvals for d in divs]
+        x: Pol := eval(p, fc, esyms, vals)$PolynomialEvaluation(ZZ, Pol)
         return x
 
-    member?(level: N, somos: Pol, gb: LPol): Boolean ==
-        E ==> HomogeneousDirectProduct(dim, N)
-        divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+    member?(level: NN, somos: Pol, gb: LPol): Boolean ==
+        E ==> HomogeneousDirectProduct(dim, NN)
+        divs: List ZZ := divisors(level)$IntegerNumberTheoryFunctions
         esyms: List Symbol := indexedSymbols("E", divs)$QAuxiliaryTools
-        dim: N := #esyms
-        lp: LPol := normalForms([somos], gb, esyms)$QEtaGroebner(Z, E)
+        dim: NN := #esyms
+        lp: LPol := normalForms([somos], gb, esyms)$QEtaGroebner(ZZ, E)
         p: Pol := first lp
         zero? p
 )if LiterateDoc

@@ -11,16 +11,16 @@
 -------------------------------------------------------------------
 -- -
 
-C ==> Q
+C ==> QQ
 MOD ==> MOD0
 
-VZ ==> Vector Z
-VQ ==> Vector Q
-MQ ==> Matrix Q
-RELS ==> VZ
-QINPUT ==> Record(qmat: MQ, zrels: RELS, qrhs: VQ)
+VZZ ==> Vector ZZ
+VQQ ==> Vector QQ
+MQQ ==> Matrix QQ
+RELS ==> VZZ
+QINPUT ==> Record(qmat: MQQ, zrels: RELS, qrhs: VQQ)
 
-setWeight(qin: QINPUT, w: Q): N == (_
+setWeight(qin: QINPUT, w: QQ): NN == (_
   for i in 1..#(qin.zrels) repeat (_
       if zero?(qin.zrels.i) then (qin.qrhs.i := w; return i)))
 
@@ -111,7 +111,7 @@ f128 := q - 2*q^3 + 6*q^5 - 20*q^7 - 23*q^9 - 14*q^11 + 54*q^13 - 12*q^15 - _
 
 nn := 128; idxs := etaFunctionIndices nn;
 mspecs := mSPECSInfM0(nn, idxs)
-rgensExpected: List List Z := [_
+rgensExpected: List List ZZ := [_
   [0, 0, 0, 0, - 1, 2, 1, - 2], [0, 0, 0, 2, - 1, 0, 1, - 2],_
   [0, 2, - 1, 0, 0, 0, 1, - 2], [0, - 2, 5, - 2, 0, 0, 1, - 2],_
   [0, 0, 0, - 2, 5, - 2, 1, - 2], [0, 0, 0, 0, 0, - 2, 6, - 4],_
@@ -214,10 +214,10 @@ assertEquals(# monomials f128mpol, 23)
 -- the Ei variables.
 
 esyms := indexedSymbols("E", divisors nn)
-dim: N := #esyms   -- needed for RZ
+dim: NN := #esyms   -- needed for RZZ
 
-m0symsRZ := cons(monRZ NEGATE pureExponents rfcofactorspec,_
-                 [monRZ pureExponents x for x in mspecs]);
+m0symsRZZ := cons(monRZZ NEGATE pureExponents rfcofactorspec,_
+                 [monRZZ pureExponents x for x in mspecs]);
 m0syms := cons('M0, msyms);
 
 -- The following gives $f_{128}$ in terms of eta-quotients
@@ -227,8 +227,8 @@ m0syms := cons('M0, msyms);
 
 -- The Laurent polynomial (in Ei variables) that belongs to f.
 
-fpolRZ := EVALRZ(m0syms, m0symsRZ, fmpol);
-z := rzToA1(C) fpolRZ - f
+fpolRZZ := EVALRZZ(m0syms, m0symsRZZ, fmpol);
+z := rzzA1(C) fpolRZZ - f
 
 -- The function z is a modular function, so we only need to check the
 -- coefficients of the negative exponents.
@@ -242,24 +242,24 @@ assertEquals(order(z, 300), 237)
 -- Show nicely.
 -- Find common denominator
 
-minEntries(x: DZ, y: DZ): DZ == (_
+minEntries(x: DZZ, y: DZZ): DZZ == (_
     directProduct vector [min(x.i, y.i) for i in 1..#x]);
 
-fmonsDZ := [degree mon for mon in monomials fpolRZ];
+fmonsDZZ := [degree mon for mon in monomials fpolRZZ];
 
-fdenDZ := - reduce(minEntries, fmonsDZ, 0$DZ)$List(DZ);
-assertEquals(fdenDZ::VZ, vector [0,0,0,1,8,1,0,22])
+fdenDZZ := - reduce(minEntries, fmonsDZZ, 0$DZZ)$List(DZZ);
+assertEquals(fdenDZZ::VZZ, vector [0,0,0,1,8,1,0,22])
 
-fdenRZ := monomial(1, fdenDZ)$RZ;
-rez(fpolRZ * fdenRZ)
-rez fdenRZ
+fdenRZZ := monomial(1, fdenDZZ)$RZZ;
+rezz(fpolRZZ * fdenRZZ)
+rezz fdenRZZ
 
 -- Now we do the same thing for the modular form $f_{128}$ itself.
 
-f128polRZ := EVALRZ(m0syms, m0symsRZ, f128mpol);
-f128monsDZ := [degree mon for mon in monomials f128polRZ];
-f128denRZ := monomial(1, - reduce(minEntries, f128monsDZ, 0$DZ)$List(DZ))$RZ;
-z0 := rzToA1(C) f128polRZ - f128
+f128polRZZ := EVALRZZ(m0syms, m0symsRZZ, f128mpol);
+f128monsDZZ := [degree mon for mon in monomials f128polRZZ];
+f128denRZZ := monomial(1, - reduce(minEntries, f128monsDZZ, 0$DZZ)$List(DZZ))$RZZ;
+z0 := rzzA1(C) f128polRZZ - f128
 assertEquals(order(z0, 301), 301)
 
 -- We must check 300 coeffients (see the given f128 in order to see
@@ -270,12 +270,12 @@ assertEquals(removeDuplicates [qetaCoefficient(z0, -i) for i in 0..300], [0])
 -- We have found a representation of $f_{128}$ as a sum
 -- of $23$ eta-quotients.
 
-assertEquals(#monomials(rez f128polRZ), 23)
+assertEquals(#monomials(rezz f128polRZZ), 23)
 
 -- Show nicely
 
-num0 := rez (f128polRZ * f128denRZ)
-den0 := rez(f128denRZ)
+num0 := rezz (f128polRZZ * f128denRZZ)
+den0 := rezz(f128denRZZ)
 
 -- ## Mail from Zudillin 17-Feb-2020:
 
@@ -298,7 +298,7 @@ brunaultterms := [_
 
 # brunaultterms
 
-f128brunault := rzToA1(C) polyRZ brunaultterms
+f128brunault := rzzA1(C) polyRZZ brunaultterms
 z := f128brunault - f128
 assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 
@@ -308,13 +308,13 @@ assertEquals(removeDuplicates [qetaCoefficient(z, -i) for i in 0..300], [0])
 -- That suggests that $f_{128}$ is not only a modular form for
 -- $\Gamma_0(128)$, but for the supergroup $\Gamma_0(64)$.
 
-f128monsDZ
+f128monsDZZ
 
-assertEquals([x.1 for x in f128monsDZ], [0 for i in 1..23])
+assertEquals([x.1 for x in f128monsDZZ], [0 for i in 1..23])
 
 spitzen := sort(smallerCusp, cuspsM0 nn)
 oo ==> infinity()$Cusp
-c(n: Z, q: Q): Cusp == (_
+c(n: ZZ, q: QQ): Cusp == (_
   q = 1/n => oo;_
   one? q => cusp(0, 1)$Cusp;_
   cusp(numer q, denom q)$Cusp)
@@ -325,7 +325,7 @@ assertEquals(spitzen, [c(nn,x) for x in ex])
 o := reduce(_+, [widthM0(nn, cusp) for cusp in spitzen])
 assertEquals(o, index()$GAMMA0(nn))
 
--- The index of $\Gamma_0(128)$ in $\mathrm{SL}_2(Z)$ is equal
+-- The index of $\Gamma_0(128)$ in $\mathrm{SL}_2(ZZ)$ is equal
 -- to the number of coset rright representatives,
 
 reps := rightCosetRepresentatives()$GAMMA0(nn);
@@ -348,7 +348,7 @@ EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 
 -- Here we see the expansion of $f \in M^\infty(128)$ at all cusps.
 
-fA128 := rzToAn(CX) fpolRZ
+fA128 := rzzAn(CX) fpolRZZ
 
 -- Adjust $f$ to other cofactor so that the product is a modular function
 -- with poles at posssibly any cusp (**not** only at infinity).
@@ -361,8 +361,8 @@ rgcofactor := members((z.zinhom.1)(1..n));
 assertEquals(rgcofactor, [0,-16,8,0,0,0,0,0])
 z
 
-gpolRZ := f128polRZ * monRZ(rgcofactor);
-gA128 := rzToAn(CX) gpolRZ
+gpolRZZ := f128polRZZ * monRZZ(rgcofactor);
+gA128 := rzzAn(CX) gpolRZZ
 
 -- **Note:**
 -- $g$ has series expansion of the form `q*series(q^2)` at every cusp.
@@ -393,7 +393,7 @@ zin := clearDenominators qin
 -- We consider the resulting vectors as eta-quotient exponent vectors
 -- where the entry for $\eta_{128}$ is equal to zero.
 
-liftTo128(vs: List Vector Z): List List Z == (_
+liftTo128(vs: List Vector ZZ): List List ZZ == (_
     n := # divisors 128;_
     [(v := copy x(1..n); v.n := 0; v) for x in vs]);
 
@@ -428,10 +428,10 @@ assertEquals(zzf, [])
 rhcofactor := liftTo128([z.zinhom.1 - z.zhom.12]).1
 assertEquals(rhcofactor, [0, 0, 0, 3, - 4, 11, - 18, 0])
 
-hpolRZ := f128polRZ * monRZ(rhcofactor)
-#monomials hpolRZ
+hpolRZZ := f128polRZZ * monRZZ(rhcofactor)
+#monomials hpolRZZ
 assertEquals(nn, 128)
-hA128 := rzToAn(CX) hpolRZ
+hA128 := rzzAn(CX) hpolRZZ
 
 -- According to the orders of the expansions at all cusps,
 -- `hA128` corresponds to a modular function in $M(128)$ that
@@ -548,36 +548,36 @@ rhcofactor
 
 mspecs64x := [eqSPEC(128,pureExponents x) for x in mspecs64];
 u0syms64 := cons('U0, usyms64)
-u0syms64RZ := cons(monRZ NEGATE rhcofactor,_
-                   [specMonRZ x for x in mspecs64x]);
+u0syms64RZ := cons(monRZZ NEGATE rhcofactor,_
+                   [specMonRZZ x for x in mspecs64x]);
 
-hapolRZ := EVALRZ(u0syms64, u0syms64RZ, haupol);
-rez hapolRZ
+hapolRZZ := EVALRZZ(u0syms64, u0syms64RZ, haupol);
+rezz hapolRZZ
 
-assertTrue(zero?(h - rzToA1(C) hapolRZ))
+assertTrue(zero?(h - rzzA1(C) hapolRZZ))
 
 -- Here comes the representation for $f_{128}$ as a sum
 -- of eta-quotients.
 
 ha128upol := U0 * haupol;
-ha128polRZ := EVALRZ(u0syms64, u0syms64RZ, ha128upol);
-rez ha128polRZ
+ha128polRZZ := EVALRZZ(u0syms64, u0syms64RZ, ha128upol);
+rezz ha128polRZZ
 
 -- ### Safety check against original terms of $f_{128}$
 
 -- Indeed, if we replace the $E_i$ by the respective
 -- eta-function we get he following.
 
-z0 := rzToA1(C) ha128polRZ - f128
+z0 := rzzA1(C) ha128polRZZ - f128
 assertEquals(order(z0, 301), 301)
 
 -- We computed a common denominator.
 
-ha128monsDZ := [degree mon for mon in monomials ha128polRZ];
-ha128denRZ := monomial(1, - reduce(minEntries, ha128monsDZ, 0$DZ)$List(DZ))$RZ
+ha128monsDZZ := [degree mon for mon in monomials ha128polRZZ];
+ha128denRZZ := monomial(1, - reduce(minEntries, ha128monsDZZ, 0$DZZ)$List(DZZ))$RZZ
 
-num0 := rez (ha128polRZ * ha128denRZ)
-den0 := rez(ha128denRZ)
+num0 := rezz (ha128polRZZ * ha128denRZZ)
+den0 := rezz(ha128denRZZ)
 
 -- ## Partial manual reduction of $h$ by eta-quotients from $M^\infty(64)$
 
@@ -587,16 +587,16 @@ den0 := rez(ha128denRZ)
 -- Note that $\eta(128\tau)$ is not involved, therefore it is an
 -- element of $M(64)$, in fact, even in $M^\infty(64)$.
 
-hapolRZ
+hapolRZZ
 
 -- We introduce now `haA64` as the expansions of an element of
--- $M^\infty(64)$ given by `hapolRZ`.
+-- $M^\infty(64)$ given by `hapolRZZ`.
 
 nn := 64; spitzen := sort(smallerCusp, cuspsM0 nn); -- must set spitzen and nn
 egens64n := [specM0An(CX) x for x in mspecs64];
 xgens64n := [toXn(CX, x, sy) for x in egens64n for sy in usyms64];
 u := egens64n;
-haA64 := rzToAn(CX) hapolRZ;
+haA64 := rzzAn(CX) hapolRZZ;
 qetaGrades(haA64)
 
 -- ### "Reduction" by inspection
@@ -703,8 +703,8 @@ k3upol := 1/coefficient(k3upolrat, 'K3, 1)*k3upolrat - 'K3
 assertEquals(# monomials k3upol, 7)
 
 vsyms64 := indexedSymbols("V", #mspecs64);
-vsyms64RZ := [monRZ NEGATE allPureExponents x for x in mspecs64x];
-EV64RZ x ==> EVALRZ(concat[u0syms64,   vsyms64],_
+vsyms64RZ := [monRZZ NEGATE allPureExponents x for x in mspecs64x];
+EV64RZ x ==> EVALRZZ(concat[u0syms64,   vsyms64],_
                     concat(u0syms64RZ, vsyms64RZ), x)
 
 -- ### Yields representation for $f_{128}$ with only 10 summands
@@ -713,15 +713,15 @@ EV64RZ x ==> EVALRZ(concat[u0syms64,   vsyms64],_
 -- a representation for $k$ (and therefore also for $f_{128}$
 -- with only 10 terms.
 
-kpolRZ := EV64RZ(k3upol - (umon1 + umon2 + umon3))
-# monomials kpolRZ
+kpolRZZ := EV64RZ(k3upol - (umon1 + umon2 + umon3))
+# monomials kpolRZZ
 
-z0 := rzToA1(C) kpolRZ + series(kA64,12)
+z0 := rzzA1(C) kpolRZZ + series(kA64,12)
 assertEquals(order(z0, 301), 301)
-rez kpolRZ
-# monomials kpolRZ
+rezz kpolRZZ
+# monomials kpolRZZ
 
-z0 := rzToAn(CX) kpolRZ + kA64
+z0 := rzzAn(CX) kpolRZZ + kA64
 zero? z0
 
 -- We have found a sum of 7+3=10 eta-quotients for $f_{128}$.
@@ -808,7 +808,7 @@ qetaGrades(z)
 -- Clearly, this is a sum for $f_{128}$ consisting of
 -- only 10 eta-quotients.
 --
--- The variable `kA64` was given by the polynomial `kpolRZ`.
+-- The variable `kA64` was given by the polynomial `kpolRZZ`.
 --
 -- The `u.i` were given by the `rgens64` variable, i.e.,
 -- the exponents for the generators of the monoid of
@@ -820,27 +820,27 @@ qetaGrades(z)
 
 kaupol := umon1 + umon2 + umon3 + umon4 + umon5_
         + umon6 + umon7 + umon8 + umon9 - 64
-kapolRZ := EV64RZ kaupol
-# monomials kapolRZ
+kapolRZZ := EV64RZ kaupol
+# monomials kapolRZZ
 
-kaA64 := rzToAn(CX) kapolRZ
+kaA64 := rzzAn(CX) kapolRZZ
 qetaGrades(kaA64)
 
 z0 := kaA64 - kA64
 assertTrue(zero? z0)
 [order(series(z0,i),100) for i in 1..12]
 
-ka128polRZ := kapolRZ * monRZ(NEGATE rkcofactor)
-assertEquals(# monomials ka128polRZ, 10)
-rez ka128polRZ
+ka128polRZZ := kapolRZZ * monRZZ(NEGATE rkcofactor)
+assertEquals(# monomials ka128polRZZ, 10)
+rezz ka128polRZZ
 
-z0 := f128 - rzToA1(C) ka128polRZ
+z0 := f128 - rzzA1(C) ka128polRZZ
 cs := [coefficient(z0, i) for i in 1..300];
 assertEquals(removeDuplicates cs, [0])
 
 -- Check that `kaA64` (or rather the expansion of
 -- the modular function corresponding to
--- `kapolRZ` at every cusp of $\Gamma_0(128)$)
+-- `kapolRZZ` at every cusp of $\Gamma_0(128)$)
 -- agrees with `fA128` (after multiplication
 -- with the respective eta-quotient).
 
@@ -848,7 +848,7 @@ nn:=128; spitzen:=sort(smallerCusp, cuspsM0 nn);
 rkfadjust := members(vector allPureExponents rfcofactorspec_
                    - vector rkcofactor);
 assertEquals(rkfadjust, [0,0,0,-1,6,-7,18,-16])
-z0 := fA128 - rzToAn(CX)(kapolRZ * monRZ rkfadjust);
+z0 := fA128 - rzzAn(CX)(kapolRZZ * monRZZ rkfadjust);
 ords := [order(series(z0, i), 50) for i in 1 .. maxIndex()$An(CX)];
 assertEquals(removeDuplicates ords, [50])
 
@@ -879,16 +879,17 @@ qetaGrades(kA64*u.1^2)
 )set mess typ on
 ru := rule (U1*V1==1; U4*V4==1)
 
-EXZ ==> Expression Z
-kcupol := eval((U1^2*U4*kaupol)::EXZ, [V1::EXZ=(1/U1)::EXZ, V4::EXZ=(1/U4)::EXZ])::Pol(Z);
+kcupol := eval((U1^2*U4*kaupol)::Expression(ZZ),_
+               [V1::Expression(ZZ)=(1/U1)::Expression(ZZ),_
+                V4::Expression(ZZ)=(1/U4)::Expression(ZZ)])::Pol(ZZ);
 monomials kcupol
 
 v := [vector allPureExponents x for x in mspecs64x];
 ricofactor := members(vector rkcofactor + 2*v.1 + v.4)
 
 )set stream calc 2
-ipolRZ := ka128polRZ * monRZ(ricofactor);
-iA64 := rzToAn(CX) ipolRZ;
+ipolRZZ := ka128polRZZ * monRZZ(ricofactor);
+iA64 := rzzAn(CX) ipolRZZ;
 assertEquals(qetaGrades iA64,  [0,0,0,0,-1,-1,-1,-1,0,0,-2,30])
 
 z0 := iA64_
@@ -966,7 +967,7 @@ wght
 
 zmodform := zsolve4ti2(level,idivs,concat([0 for i in idivs],2*wght))$QES4TI2;
 
-vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
+vdivs := vector(divs)$VZZ -- part of the Ligozat matrix that gives the order
 zmodformzi := [members x(1..ndivs) for x in zmodform.zinhom]
 assertEquals(#zmodformzi, 40)
 wght
@@ -979,7 +980,7 @@ wght
 
 -- # Experiment with $M(32)$
 
--- Looking more closely at the expression `kapolRZ`,
+-- Looking more closely at the expression `kapolRZZ`,
 -- we realize that it does no involve $\eta(\tau)$.
 -- This suggests that there might be a relation for $f_{128}$
 -- involving only
@@ -998,7 +999,7 @@ gen := genus()$GAMMA0(level)
 tx32: X1 C := xgens32.1
 abex2 := samba(tx32, xgens32, gen)$QXTOPSAMBA1(C)
 
-kahalfpolRZ := reduce(_+, [leadingCoefficient x * monRZ concat(rest members degree x,0) for x in monomials kapolRZ]);
+kahalfpolRZZ := reduce(_+, [leadingCoefficient x * monRZZ concat(rest members degree x,0) for x in monomials kapolRZZ]);
 
 level:=32; spitzen:=CUSPS0 level;
 egens32n := [EQAnCX r for r in rgens32];
@@ -1007,7 +1008,7 @@ u := egens32n;
 
 )set stream calc 2
 
-kahalfA32 := rzToAnCX kahalfpolRZ;
+kahalfA32 := rzzAnCX kahalfpolRZZ;
 qetaGrades(kahalfA32)
 CUSPS0 level
 
@@ -1029,8 +1030,8 @@ lmu := [LM x for x in u];
 for x in lmu for i in 1.. repeat print([i, x])
 
 z1 := EV64RZ(umon1)
-z1 := reduce(_+, [leadingCoefficient x * monRZ concat(rest members degree x,0) for x in monomials z1])
-z2 := rzToAnCX z1
+z1 := reduce(_+, [leadingCoefficient x * monRZZ concat(rest members degree x,0) for x in monomials z1])
+z2 := rzzAnCX z1
 LM z2
 LM kahalfA32
 
@@ -1064,9 +1065,9 @@ for cusp in spitzen for i in 1..#spitzen repeat _
 level:=128; spitzen:=CUSPS0 level;
 rfkadjust := members(vector rkcofactor - vector rfcofactor);
 assertEquals(rfkadjust, [0,0,0,1,-6,7,-18,16])
-fkmonRZ := monRZ rfkadjust;
-z1 := rzToAnCX(fpolRZ * fkmonRZ);
-z2 := rzToAnCX kapolRZ;
+fkmonRZZ := monRZZ rfkadjust;
+z1 := rzzAnCX(fpolRZZ * fkmonRZZ);
+z2 := rzzAnCX kapolRZZ;
 z := z1 - z2
 ords := [order(series(z, i), 100) for i in 1 .. maxIndex()$An(CX)];
 assertEquals(removeDuplicates ords, [100])
@@ -1093,10 +1094,10 @@ radjustx := members(vector rcofactorx - vector rcofactor3)
 
 level:=128; spitzen:=CUSPS0 level;
 modularGamma0? eqSPEC(level, radjustx)
-monadjustx := monRZ radjustx
+monadjustx := monRZZ radjustx
 
 )set stream calc 1
-fadjustx := rzToA1C monadjustx
+fadjustx := rzzA1C monadjustx
 
 qetaGrades(fadjustx)
 
@@ -1108,7 +1109,7 @@ xfr := reduce(xf, abex)$QXTOPRED1(C)
 assertTrue(zero? xfr)
 
 level
-kpolRZ
+kpolRZZ
 
 
 
@@ -1149,14 +1150,14 @@ vexponents := [vector members degree m for m in monsRZ]
 
 ords := [(1/24*matrixLigozat(level)*v) for v in vexponents]
 
-monsA128 := [rzToAnCX x for x in monsRZ];
+monsA128 := [rzzAnCX x for x in monsRZ];
 [qetaGrades x for x in monsA128]
 
 
 
 )set stream calc 3
 monsRZ.1,monsRZ.2
-z := rzToAnCX(monsRZ.1+monsRZ.2);
+z := rzzAnCX(monsRZ.1+monsRZ.2);
 qetaGrades z
 
 assertEquals(removeDuplicates [removeDuplicates [x>=0 for x in members o] for o in ords], [[true, false], [true]])
@@ -1288,7 +1289,7 @@ spitzen := CUSPS0 level
 rhs := concat([0 for i in idivs], 2*wght)
 
 zmodform := zsolve4ti2(level, idivs, rhs)$QES4TI2; -- takes about 3min40sec
-vdivs := vector(divs)$VZ -- part of the Ligozat matrix that gives the order
+vdivs := vector(divs)$VZZ -- part of the Ligozat matrix that gives the order
 
 zmodformzi := [members x(1..#divs) for x in zmodform.zinhom];
 assertEquals(#zmodformzi, 8757)
@@ -1315,7 +1316,7 @@ emodformgens := [specM0A1C eqSPEC(level,r) for r in rmodformgens];
 -------------------------------------------------------------------
 -- -
 
--- Check whether there is a Q-linear combinationn of holomorphic
+-- Check whether there is a QQ-linear combinationn of holomorphic
 -- eta-quotients of level 42 that is equal to f21.
 
 -- +
@@ -1335,7 +1336,7 @@ assertEquals(rank matrix cmodformgens, dimM)
 matmodforms := transpose matrix cmodformgens;
 cf128 := [coefficient(f128, i) for i in 0..ncoefs]
 
-rels: VZ := new(nrows matmodforms, 0);
+rels: VZZ := new(nrows matmodforms, 0);
 zmodforms := zsolve(matmodforms, rels, vector cf128)$X4ti2;
 zmodformszi := zmodforms.zinhom;
 assertTrue(empty? zmodformszi)
@@ -1409,7 +1410,7 @@ assertTrue(false) -- stop here
 
 -- etaRelations64 := etaRelations(64)$QEtaIdealHemmeckeCached(C, A1(C))
 
-E ==> Monomials(dim, N, DN, esyms) -- show DirectProduct as monomials.
+E ==> Monomials(dim, NN, DNN, esyms) -- show DirectProduct as monomials.
 RE ==> PolynomialRing(C, E)
 PCE ==> PolynomialConversion(C, E, esyms)
 
@@ -1423,8 +1424,8 @@ NF(x, gb) ==> primitivePart redPol(x, gb)$GroebnerInternalPackage(C, E, RE)
 
 num0RE1 := NF(num0RE, etaRelations64RE);
 
-rhx := [directProduct(members degree x)$DZ for x in monomials num0RE1];
-reduce(minEntries, rhx, 0$DZ)$List(DZ)
+rhx := [directProduct(members degree x)$DZZ for x in monomials num0RE1];
+reduce(minEntries, rhx, 0$DZZ)$List(DZZ)
 
 num0RE1x := (num0RE1 exquo (coerce(E64^10)$PCE))::RE
 

@@ -70,14 +70,14 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 
-asN x ==> x pretend N
-asP x ==> x pretend P
-asZ x ==> x pretend Z
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
+asZZ x ==> x pretend ZZ
 
 )if LiterateDoc
 %$
@@ -106,7 +106,7 @@ DynamicAlgebraicClosureFiniteField(K): Exports == Implementation where
   Exports ==> Join(AlgebraicallyClosedField, FieldOfPrimeCharacteristic,
                    DifferentialRing, PolynomialFactorizationExplicit) with
     -- exported only for debugging purposes
-    rank: () -> Z
+    rank: () -> ZZ
       ++ rank() returns the size of the current triangular set used
       ++ for the extension.
     extendBy!: SUP % -> % -- yields a root (lifted variable)
@@ -115,10 +115,10 @@ DynamicAlgebraicClosureFiniteField(K): Exports == Implementation where
       ++ assumed that p is irreducible with respect to the current
       ++ extension. The return value is a root of the given polynomial
       ++ (then considered to be an element of this domain.
-    getGenerator: P -> %
+    getGenerator: PP -> %
       ++ getGenerator(n) for n < rank() returns a root of the n-th
       ++ extension polynomial.
-    minimalPolynomial: P -> SUP %
+    minimalPolynomial: PP -> SUP %
       ++ minimalPolynomial(n) for n < rank() returns the n-th extension
       ++ polynomial.
       -- if f = minimalPolynomial n and r = getGenerator n then zero? f(r)
@@ -133,7 +133,7 @@ DynamicAlgebraicClosureFiniteField(K): Exports == Implementation where
     suprep x ==> x pretend SUP(%)
 
     FUNION ==> Union("nil", "sqfr", "irred", "prime")
-    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: N)
+    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: NN)
     FL ==> List FREC
 
     rootOf(poly: SUP %, sy: Symbol): % ==
@@ -152,14 +152,14 @@ DynamicAlgebraicClosureFiniteField(K): Exports == Implementation where
         -- For simplicity, we simply take the first element in fl.
         extendBy!(first(fl).factor)
 
-    ((x: %) ^ (q: Q)): % ==
-        n: Z := numer q
-        d: N := asN denom q
+    ((x: %) ^ (q: QQ)): % ==
+        n: ZZ := numer q
+        d: NN := asNN denom q
         f: SUP % := monomial(1, d)$SUP(%) - (x^n)::SUP(%)
         rootOf f
 
     sqrt(x: %): % ==
-        import from N
+        import from NN
         f: SUP % := monomial(1, 2)$SUP(%) - x::SUP(%)
         rootOf f
 

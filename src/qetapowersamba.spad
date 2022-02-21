@@ -418,21 +418,21 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-IDX ==> XHashTable(P, P)
-MUL ==> XHashTable(P, F)
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+IDX ==> XHashTable(PP, PP)
+MUL ==> XHashTable(PP, F)
     -- There should be multipliers for each component k
     -- This is the mapping from k to multiplier.
     -- Let gk be grade(mul.k, k)
-H ==> XHashTable(Z, List F)
+H ==> XHashTable(ZZ, List F)
     -- For each component k and each i from 1 to gk-1 there should
     -- be a basisElement b such that grade(b, k) = i mod gk
 V ==> Vector H -- mapping k -> H
 
-asN x ==> x pretend N
-asP x ==> x pretend P
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -466,7 +466,7 @@ XEtaAlgebraBasisCategory(C, F): Category == Exports where
     basisElements: % -> V
       ++ basisElements(x) returns the basis elements that are stored
       ++ in the structure x.
-    component: (F, IDX) -> Z -- auxiliary function
+    component: (F, IDX) -> ZZ -- auxiliary function
       ++ Let k = qetaIndex(u), g := grade(u,k), and  I = sort(keys idx).
       ++ component(u, idx) returns c where
       ++ c is -k if empty?(I).
@@ -501,7 +501,7 @@ XEtaAlgebraBasis(C, F): Exports == Implementation where
     xx ==> rep x
     import from Rep
 
-    n: P := maxIndex()$F
+    n: PP := maxIndex()$F
 
     coerce(x: %): OutputForm == xx::OutputForm
 
@@ -515,13 +515,13 @@ XEtaAlgebraBasis(C, F): Exports == Implementation where
     multipliers(x: %): MUL == xx.mul
     basisElements(x: %): V == xx.be
 
-    component(u: F, ix: IDX): Z ==
-        k: P := qetaIndex u
+    component(u: F, ix: IDX): ZZ ==
+        k: PP := qetaIndex u
         empty? ix => -k -- no multiplier available
-        g: Z := qetaGrade(u, k)
-        for ii in n .. 1 by -1 | key?(i := asP ii, ix) repeat
+        g: ZZ := qetaGrade(u, k)
+        for ii in n .. 1 by -1 | key?(i := asPP ii, ix) repeat
             c := ix.i
-            qetaGrade(u, c) = g => return c::Z
+            qetaGrade(u, c) = g => return c::ZZ
         return -k
 
 
@@ -552,14 +552,14 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
   F: XEtaGradedAlgebra C
   AB: Type -- XEtaAlgebraBasisCategory(C, F)
   Exports ==> with
-    topReducible?: (F, F, P) -> Boolean
+    topReducible?: (F, F, PP) -> Boolean
       ++ topReducible?(u, b, k) returns true iff there exists f in F
       ++ such that for v = u - f*b, lc = qetaLeadingCoefficient, and
       ++ grade = qetaGrade:
       ++ (grade(u, k) > grade(v, k) or
       ++ (grade(u, k) = grade(v, k) and
       ++ euclideanSize lc(u, k) > euclideanSize lc(v, k)
-    reducer: (F, H, Z, P) -> Union(F, "failed")
+    reducer: (F, H, ZZ, PP) -> Union(F, "failed")
       ++ reducer(u, basis, grdt, k) returns an element b from the
       ++ basis or b=1 such that qetaGrade(u, k) - qetaGrade(b, k) is
       ++ divisible by grdt or returns "failed" if no such b exists.
@@ -567,17 +567,17 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
       ++ A functions that does nothing.
     noTrace: F -> Void
       ++ A function that does nothing.
-    traceEnter: N -> (F, AB) -> Void
+    traceEnter: NN -> (F, AB) -> Void
       ++ traceEnter(n)(x, a) returns void() and depending on the value
       ++ of n returns more and more information. Where a higer version
       ++ of n means more information. trace(0) is equivalent with
       ++ noTraceEnter.
-    traceLoop: N -> F -> Void
+    traceLoop: NN -> F -> Void
       ++ traceLoop(n)(x) just returns void() without any side
       ++ effect and depending on the value of n returns more and more
       ++ information. Where a higer version of n means more
       ++ information. trace(0) is equivalent with noTraceElement.
-    traceReturn: N -> F -> Void
+    traceReturn: NN -> F -> Void
       ++ traceReturn(n)(x) just returns void() without any side
       ++ effect and depending on the value of n returns more and more
       ++ information. Where a higer version of n means more
@@ -594,16 +594,16 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
       ++ reduce(u, ab) returns an element v such that
       ++ v is not reducible modulo ab and
       ++ "u reduces modulo ab to v".
-    greaterGrade?: P -> (F, F) -> Boolean
+    greaterGrade?: PP -> (F, F) -> Boolean
       ++ greaterGrade?(k)(x, y) returns qetaGrade(x, k)>qetaGrade(y,k).
    add
     grade ==> qetaGrade$F
     leadingCoefficient ==> qetaLeadingCoefficient$F
 
-    greaterGrade?(k: P): (F, F) -> Boolean == (x: F, y: F): Boolean +->
+    greaterGrade?(k: PP): (F, F) -> Boolean == (x: F, y: F): Boolean +->
         qetaGrade(x, k) > qetaGrade(y, k)
 
-    topReducible?(u: F, b: F, k: P): Boolean ==
+    topReducible?(u: F, b: F, k: PP): Boolean ==
         -- This is a very special test for top-reducibility.
         -- We already know that there is an appropriate element
         -- t.k (see selectReducer) that can potentially reduce
@@ -614,8 +614,8 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
         --assert(qetaIndex b = k)
         --assert(not zero? leadingCoefficient(b, k))
         --assert(not zero? leadingCoefficient(u, k))
-        grdu: Z := grade(u, k)
-        grdb: Z := grade(b, k)
+        grdu: ZZ := grade(u, k)
+        grdb: ZZ := grade(b, k)
         grdu < grdb => false
         lcu: C := leadingCoefficient(u, k)
         lcb: C := leadingCoefficient(b, k)
@@ -638,10 +638,10 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
     -- That reducer yields the element with biggest possible grade is
     -- ensured by the requirement that "basis" is appropriately sorted by
     -- greaterGrade?.
-    reducer(u: F, basis: H, grdt: Z, k: P): Union(F, "failed") ==
+    reducer(u: F, basis: H, grdt: ZZ, k: PP): Union(F, "failed") ==
         -- It is enough to reduce each component to grade > 0.
         grade(u, k, -1) < 0 => "failed"
-        i: Z := positiveRemainder(grade(u, k), grdt)
+        i: ZZ := positiveRemainder(grade(u, k), grdt)
         -- if zero? i there is no corresponding element in basis, but
         -- we can use the element 1, i.e. we reduce u by a power of t.
         zero? i => return (1$F)::Union(F, "failed")
@@ -653,7 +653,7 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
             if topReducible?(u, b, k) then return b::Union(F, "failed")
         "failed"
 
-    traceEnter(verbosity: N): (F, AB) -> Void == (f: F, ab: AB): Void +->
+    traceEnter(verbosity: NN): (F, AB) -> Void == (f: F, ab: AB): Void +->
         zero? verbosity => void() -- abort early
         tracePrint("-----------------------------red u", traceout(verbosity)(f))
         not (AB has XEtaAlgebraBasisCategory(C, F)) => void()
@@ -665,16 +665,16 @@ XEtaReductionCategory(C, F, AB): Category == Exports where
             tracePrint("red mults", [qetaGrades m for m in entries mults])
         if verbosity > 3 then
             be: V := basisElements ab
-            n: P := maxIndex()$F
-            v: Vector List List List Z :=
+            n: PP := maxIndex()$F
+            v: Vector List List List ZZ :=
                 l := [[[qetaGrades b for b in lb] for lb in entries be.k] for k in 1..n]
             tracePrint("red be", v)
 
-    traceLoop(verbosity: N): F -> Void == (f: F): Void +->
+    traceLoop(verbosity: NN): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
         tracePrint("red loop", traceout(verbosity)(f))
 
-    traceReturn(verbosity: N): F -> Void == (f: F): Void +->
+    traceReturn(verbosity: NN): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
         tracePrint("redx", traceout(verbosity)(f))
 
@@ -709,10 +709,10 @@ XEtaReduction(C, F, AB): Exports == Implementation where
             trLoop u
             kz := component(u, idx)
             kz <= 0 => return u -- no top-reduction possible
-            k: P := asP kz
+            k: PP := asPP kz
             -- u := reduceComponents(u, mul.k, be.k, k)
             t: F := mul.k
-            grdt: Z := grade(t, k)
+            grdt: ZZ := grade(t, k)
             basis: H := be.k
             --assert(grade(t, k)=grade(t)) -- i.e. qetaIndex(t)=k
             --assert(grade(t, k)>0) -- that is by construction of mul
@@ -723,10 +723,10 @@ XEtaReduction(C, F, AB): Exports == Implementation where
             --assert(not zero? positiveRemainder(grade(b), grade t) _
             --       for all b in basis) -- by construction of be
             (r := reducer(u, basis, grdt, k)) case "failed" => return u
-            grdu: Z := grade(u, k)
+            grdu: ZZ := grade(u, k)
             v: F := r :: F
-            j: Z := ((grdu - grade(v, k)) exquo grdt) :: Z
-            v: F := v*t^asN(j)
+            j: ZZ := ((grdu - grade(v, k)) exquo grdt) :: ZZ
+            v: F := v*t^asNN(j)
 
             -- cc: Record(quotient: C, remainder: C)
             cc := divide(leadingCoefficient(u, k), leadingCoefficient(v, k))
@@ -803,11 +803,11 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
       empty: () -> %
       basisElements: % -> V
   R: XEtaReductionCategory(C, F, AB)
-  G ==> Record(sgi: List List Z, elem: F)
-  FF ==> Record(sgi: List List Z, xf1: F, xf2: F)
-  Products ==> XHashTable(Z, List FF)
+  G ==> Record(sgi: List List ZZ, elem: F)
+  FF ==> Record(sgi: List List ZZ, xf1: F, xf2: F)
+  Products ==> XHashTable(ZZ, List FF)
   Exports ==> QEtaComputationCategory(F, AB) with
-    oneVerboseStep!: (N, N, N, N) -> (% -> %)
+    oneVerboseStep!: (NN, NN, NN, NN) -> (% -> %)
       ++ oneVerboseStep!(ny, n0, nl, nr) is equivalent with
       ++ oneTracedStep!(trace ny, traceEnter(n0)$R, traceLoop(nl)$R, traceReturn(nr)$R).
   Implementation ==> add
@@ -817,7 +817,7 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
     leadingCoefficient ==> qetaLeadingCoefficient$F
     xx ==> rep x
     import from Rep
-    n: P := maxIndex()$F
+    n: PP := maxIndex()$F
     coerce(x: %): OutputForm == xx::OutputForm
 
     algebraBasis(x: %): AB == xx.ab
@@ -832,12 +832,12 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
         smallerGrade?(ff1.sgi, ff2.sgi)$QEVAUX
 
     toG(f: F): G ==
-        ffsgi: List List Z := sort!(_>, [[grade(f, asP k), k] for k in 1..n])
+        ffsgi: List List ZZ := sort!(_>, [[grade(f, asPP k), k] for k in 1..n])
         [ffsgi, f]$G
 
     toFF(f1: F, f2: F): FF ==
-        ffsgi: List List Z :=
-            sort!(_>, [[grade(f1, asP k) + grade(f2, asP k), k] for k in 1..n])
+        ffsgi: List List ZZ :=
+            sort!(_>, [[grade(f1, asPP k) + grade(f2, asPP k), k] for k in 1..n])
         [ffsgi, f1, f2]$FF
 
     insertNew!(ff: FF, ffs: List FF): List FF ==
@@ -885,19 +885,19 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
     addNewBasisElementPairs!(u: F, x: %): Void ==
         addBasisElementPairs!(u, basisElementList x, x)
 
-    addComponentGapPairs!(products: Products, t: F, basis: H, k: P): Products ==
-        d: Z := grade(t, k)
+    addComponentGapPairs!(products: Products, t: F, basis: H, k: PP): Products ==
+        d: ZZ := grade(t, k)
         for bs in entries(basis) repeat -- bs: List F
             -- bs = all basis elements of same grade g (mod d)
             -- bs is non-empty and sorted by greaterGrade?
             b := first bs
             bas := rest bs
-            g: Z := grade(b, k)
+            g: ZZ := grade(b, k)
             while not empty? bas repeat
                 b := first bas
-                e: Z := grade(b, k)
-                j: Z := ((g - e) exquo d) :: Z
-                tj: F := t^asN(j)
+                e: ZZ := grade(b, k)
+                j: ZZ := ((g - e) exquo d) :: ZZ
+                tj: F := t^asNN(j)
                 --assert(grade(tj*b, k)=g)
                 --It might happen that qetaIndex(tj*b)~=k!!!
                 addPair!(products, tj, b)
@@ -916,7 +916,7 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
         -- That corresponds to the set S (line 13) in the algorithm samba
         -- as presented in \cite{doi:10.1016/j.jsc.2017.02.001}
         -- We do this for each component separately.
-        for kn in 1..n | key?(k := asP kn, mul) repeat
+        for kn in 1..n | key?(k := asPP kn, mul) repeat
             addComponentGapPairs!(products, mul.k, be.k, k)
 
     computePairs!(x: %): Void ==
@@ -928,18 +928,18 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
             basis := rest basis
         addGapPairs! x
 
-    updateNonMultiplier!(u: F, x: %, k: P): Void ==
+    updateNonMultiplier!(u: F, x: %, k: PP): Void ==
         -- Now we look at every potentially reducible element in
         -- the basis and move such element to the critical element list.
         mul: MUL := multipliers x
         t: F := mul.k
-        grdt: Z := grade(t, k)
-        grdu: Z := grade(u, k)
+        grdt: ZZ := grade(t, k)
+        grdu: ZZ := grade(u, k)
         -- update basis
         -- Since u is not top-reducible by any basis element, we can add
         -- u to the basis. We move elements that become top-reducible by u
         -- from the basis into the critical elements.
-        i: Z := positiveRemainder(grdu, grdt)
+        i: ZZ := positiveRemainder(grdu, grdt)
         -- i is not zero, because otherwise u would be reducible by t.
         basis: H := basisElements(x).k
         potentiallyReducible: List F := elt(basis, i, empty())
@@ -972,12 +972,12 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
         --    for all k in keys(multipliers x)]))
         idx: IDX := indexPermutation x
         kz := component(u, idx) --assert(not zero? kz)
-        kz > 0 => updateNonMultiplier!(u, x, asP kz)
-        k: P := asP(-kz)
+        kz > 0 => updateNonMultiplier!(u, x, asPP kz)
+        k: PP := asPP(-kz)
         -- There must still be an unassigned index.
         -- maybe we should reduce all the other multipliers by u.
-        i: P := n
-        while key?(i, idx) repeat i := asP(i - 1)
+        i: PP := n
+        while key?(i, idx) repeat i := asPP(i - 1)
         idx.i := k
         mul: MUL := multipliers x
         mul.k := u -- we've found a new multiplier
@@ -996,12 +996,12 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
 
     extractNext!(x: %): F ==
         p: Products := xx.pairs
-        sgic: List List Z := empty()
+        sgic: List List ZZ := empty()
         if not empty? xx.cbe then sgic := first(xx.cbe).sgi
         if not empty? p then
-            g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+            g: ZZ := reduce(min, indices p)$List(ZZ) -- minimal grade
             r: FF := first(p.g) -- the element of this grade
-            sgip: List List Z := r.sgi
+            sgip: List List ZZ := r.sgi
             if empty? sgic or smallerGrade?(sgip, sgic)$QEVAUX then
                 l: List FF := rest(p.g) -- remove u
                 if empty? l then remove!(g, p) else p.g := l
@@ -1026,16 +1026,16 @@ XEtaComputation(C, F, AB, R): Exports == Implementation where
         if not zero? u then update!(u, x)
         return x
 
-    trace(verbosity: N): % -> Void == (x: %): Void +->
+    trace(verbosity: NN): % -> Void == (x: %): Void +->
         zero? verbosity => void() -- abort early
         tracePrint("==================================step(#cbe,#pairs)",_
-            [#(xx.cbe), #(xx.pairs)]$List(Z))
+            [#(xx.cbe), #(xx.pairs)]$List(ZZ))
         one? verbosity => void()
-        tracePrint("+++ keys(pairs)", [sort keys xx.pairs]$List(Z))
+        tracePrint("+++ keys(pairs)", [sort keys xx.pairs]$List(ZZ))
         verbosity = 2 => void()
-        tracePrint("+++ grades(cbe)", [b.sgi for b in xx.cbe]$List(List List Z))
+        tracePrint("+++ grades(cbe)", [b.sgi for b in xx.cbe]$List(List List ZZ))
 
-    oneVerboseStep!(ny: N, n0: N, nl: N, nr: N): % -> % ==
+    oneVerboseStep!(ny: NN, n0: NN, nl: NN, nr: NN): % -> % ==
         oneTracedStep!(trace ny, traceEnter(n0)$R,
                        traceLoop(nl)$R, traceReturn(nr)$R)
 

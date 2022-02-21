@@ -77,13 +77,13 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-LZ ==> List Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+LZZ ==> List ZZ
 
-asP x ==> x pretend P
+asPP x ==> x pretend PP
 
 
 
@@ -131,11 +131,11 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
       ++ If t is a hashtable containing (for each cusp of Gamma_0(m)
       ++ the series expansions at the cusps, then etaQuotient(t) creates
       ++ a data structure that can be used for computations.
-    series: (%, P) -> L
+    series: (%, PP) -> L
       ++ series(x, n) returns the series corresponding to the n-th index.
       ++ Indices can run from 1 to maxIndex().
   Implementation ==> add
-    ncusps: P := asP(#cusps)
+    ncusps: PP := asPP(#cusps)
     Rep ==> DirectProduct(ncusps, L)
     xx ==> rep x
     yy ==> rep y
@@ -151,7 +151,7 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
     1: % == per(1$Rep)
     zero?(x: %): Boolean ==
         for kn in 1..ncusps repeat
-            k: P := asP kn
+            k: PP := asPP kn
             qetaGrade(x, k, 0) > 0 => return false
             not zero? xx.k.0 => return false
         return true
@@ -161,25 +161,25 @@ ModularFunctionExpansionsAtCusps(C, cusps): Exports == Implementation
     ((x: %) - (y: %)): % == per(xx - yy)
     ((x: %) * (y: %)): % == per(xx * yy)
     ((c: C) * (x: %)): % == per map((s: L): L +-> c * s, xx)
-    ((x: %) ^ (n: N)): % == per map((s: L): L +-> s^n, xx)
-    maxIndex(): P == ncusps
-    qetaIndex(x: %): P ==
+    ((x: %) ^ (n: NN)): % == per map((s: L): L +-> s^n, xx)
+    maxIndex(): PP == ncusps
+    qetaIndex(x: %): PP ==
         --assert(not zero? x) -- therefore for one k qetaGrade(x,k)>=0
-        maxGrade: Z := -1 -- dummy value
-        idx: N := 0
+        maxGrade: ZZ := -1 -- dummy value
+        idx: NN := 0
         for kn in 1 .. ncusps repeat
-            k: P := asP kn
+            k: PP := asPP kn
             if (mx := qetaGrade(x, k)) > maxGrade then
                 maxGrade := mx
-                idx: P := k
+                idx: PP := k
         return idx
-    qetaGrade(x: %, k: P): Z == - order(xx.k)
-    qetaGrade(x: %, k: P, mn: Z): Z == - order(xx.k, -mn)
-    qetaLeadingCoefficient(x: %, k: P): C == leadingCoefficient(xx.k)
-    series(x: %, k: P): L == xx.k
-    qetaGrades(x: %): LZ ==
-        zero? x => [-1$Z for k in 1..ncusps]
-        [qetaGrade(x, asP k) for k in 1..ncusps]
+    qetaGrade(x: %, k: PP): ZZ == - order(xx.k)
+    qetaGrade(x: %, k: PP, mn: ZZ): ZZ == - order(xx.k, -mn)
+    qetaLeadingCoefficient(x: %, k: PP): C == leadingCoefficient(xx.k)
+    series(x: %, k: PP): L == xx.k
+    qetaGrades(x: %): LZZ ==
+        zero? x => [-1$ZZ for k in 1..ncusps]
+        [qetaGrade(x, asPP k) for k in 1..ncusps]
     if C has Field then
         ((x: %) / (y: %)): % ==
             v: Vector L := new(ncusps, 0) -- new vector

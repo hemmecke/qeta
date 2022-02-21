@@ -79,12 +79,12 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 
-asN x ==> x pretend N
+asNN x ==> x pretend NN
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,9 +106,9 @@ QEtaAlgebraBasisCategory(C, F): Category == Exports where
       ++ multiplier(x) returns multiplier element.
     basis: % -> List F
       ++ basis(x) returns all basis elements.
-    basis: (%, Z) -> List F
+    basis: (%, ZZ) -> List F
       ++ basis(x, d) returns the basis elements of grade d.
-    numberOfGaps: % -> N
+    numberOfGaps: % -> NN
       ++ numberOfGaps(x) computes
       ++ reduce(+, [floor(x/n) for x in bas], 0)
       ++ where t=multiplier(x), n=qetaGrade(t) and bas=basis(x).
@@ -117,10 +117,10 @@ QEtaAlgebraBasisCategory(C, F): Category == Exports where
       ++ (see Weierstrass Gap Theorem) of the module generated
       ++ by bas over C[t].
    add -- default implementation
-     numberOfGaps(x: %): N ==
+     numberOfGaps(x: %): NN ==
          t: F := multiplier x
-         n: P := qetaGrade(t)::P
-         grades: List P := [qetaGrade(first basis(x, i))::P for i in 1..n-1]
+         n: PP := qetaGrade(t)::PP
+         grades: List PP := [qetaGrade(first basis(x, i))::PP for i in 1..n-1]
          numberOfGaps(n, grades)$QEtaAuxiliaryPackage
 
 
@@ -138,7 +138,7 @@ QEtaAlgebraBasisCategory(C, F): Category == Exports where
 QEtaAlgebraBasis(C, F): Exports == Implementation where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
-  H ==> XHashTable(Z, List F)
+  H ==> XHashTable(ZZ, List F)
   Exports ==> QEtaAlgebraBasisCategory(C, F) with
     initialize: F -> %
       ++ initialize(t) creates an empty basis that contains only
@@ -154,7 +154,7 @@ QEtaAlgebraBasis(C, F): Exports == Implementation where
     multiplier(x: %): F == xx.mul
     basisElements(x: %): H == xx.be
     basis(x: %): List F == concat entries xx.be
-    basis(x: %, d: Z): List F == elt(xx.be, d, empty()$List(F))
+    basis(x: %, d: ZZ): List F == elt(xx.be, d, empty()$List(F))
 
 
 )if LiterateDoc
@@ -190,7 +190,7 @@ QEtaExtendedAlgebraBasis(C, L, F, AB): Exports == Implementation where
     coerce(ab: AB): % == per ab
     multiplier(x: %): L == first multiplier xx
     basis(x: %): List L == [first f for f in basis xx]
-    basis(x: %, d: Z): List L == [first f for f in basis(xx, d)]
+    basis(x: %, d: ZZ): List L == [first f for f in basis(xx, d)]
 
 
 )if LiterateDoc
@@ -258,7 +258,7 @@ QEtaComputationCategory(F, AB): Category == Exports where
 
     noTrace: % -> Void
       ++ noTrace(x) just returns x without any side effect.
-    trace: N -> % -> Void
+    trace: NN -> % -> Void
       ++ trace(n)(x) returns x and depending on the value of n returns
       ++ more and more information. Where a higer version of n means
       ++ more information. trace(0) is equivalent with noTrace.
@@ -309,7 +309,7 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
   AB: Type -- QEtaAlgebraBasisCategory(C, F)
-  H ==> XHashTable(Z, List F)
+  H ==> XHashTable(ZZ, List F)
   Exports ==> with
     topReducible?: (F, F) -> Boolean
       ++ topReducible?(u, b) returns true iff there exists f in F such that
@@ -317,7 +317,7 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ grade = qetaGrade:
       ++ (grade u > grade v or
       ++ (grade u = grade v and euclideanSize lc u > euclideanSize lc v))
-    tailReducible?: (F, Z, F) -> Boolean
+    tailReducible?: (F, ZZ, F) -> Boolean
       ++ tailReducible?(u, n, b) returns true iff there exists f in F
       ++ such that for v = u - f*b,
       ++ c = qetaCoefficient(u, n), and
@@ -338,17 +338,17 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
       ++ A functions that does nothing.
     noTrace: F -> Void
       ++ A function that does nothing.
-    traceEnter: N -> (F, AB) -> Void
+    traceEnter: NN -> (F, AB) -> Void
       ++ traceEnter(n)(x, a) returns void() and depending on the value
       ++ of n returns more and more information. Where a higer version
       ++ of n means more information. trace(0) is equivalent with
       ++ noTraceEnter.
-    traceLoop: N -> F -> Void
+    traceLoop: NN -> F -> Void
       ++ traceLoop(n)(x) just returns void() without any side
       ++ effect and depending on the value of n returns more and more
       ++ information. Where a higer version of n means more
       ++ information. trace(0) is equivalent with noTraceElement.
-    traceReturn: N -> F -> Void
+    traceReturn: NN -> F -> Void
       ++ traceReturn(n)(x) just returns void() without any side
       ++ effect and depending on the value of n returns more and more
       ++ information. Where a higer version of n means more
@@ -400,14 +400,14 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
     topReducible?(u: F, b: F): Boolean ==
         --assert(not zero? b)
         --assert(not zero? u)
-        grdu: Z := grade u
-        grdb: Z := grade b
+        grdu: ZZ := grade u
+        grdb: ZZ := grade b
         grdu < grdb => false
         lcu: C := leadingCoefficient u
         lcb: C := leadingCoefficient b
         euclideanSize lcu >= euclideanSize lcb
 
-    tailReducible?(u: F, n: Z, b: F): Boolean ==
+    tailReducible?(u: F, n: ZZ, b: F): Boolean ==
         --assert(not zero? b)
         --assert(not zero? u)
         n < grade b => false
@@ -429,20 +429,20 @@ QEtaReductionCategory(C, F, AB): Category == Exports where
     tailReduce(u: F, ab: AB): F ==
         tracedTailReduce(noTraceEnter, noTrace, noTrace)(u, ab)
 
-    traceEnter(verbosity: N): (F, AB) -> Void == (f: F, ab: AB): Void +->
+    traceEnter(verbosity: NN): (F, AB) -> Void == (f: F, ab: AB): Void +->
         zero? verbosity => void() -- abort early
         tracePrint("-----------------------------red u", traceout(verbosity)(f))
         if verbosity > 1 and AB has QEtaAlgebraBasisCategory(C, F) then
-            n: Z := qetaGrade multiplier ab - 1
+            n: ZZ := qetaGrade multiplier ab - 1
             l: List List F := [basis(ab, i) for i in 1..n]
-            gs: List List Z := [[qetaGrade x for x in bs] for bs in l]
+            gs: List List ZZ := [[qetaGrade x for x in bs] for bs in l]
             tracePrint("red gs", gs)
 
-    traceLoop(verbosity: N): F -> Void == (f: F): Void +->
+    traceLoop(verbosity: NN): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
         tracePrint("red loop", traceout(verbosity)(f))
 
-    traceReturn(verbosity: N): F -> Void == (f: F): Void +->
+    traceReturn(verbosity: NN): F -> Void == (f: F): Void +->
         zero? verbosity => void() -- abort early
         tracePrint("redx", traceout(verbosity)(f))
 
@@ -472,8 +472,8 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
     leadingCoefficient ==> qetaLeadingCoefficient$F
     reducer(u: F, ab: AB): Union(F, "failed") ==
         zero? u => "failed"
-        grdt: Z := grade multiplier ab
-        i: Z := positiveRemainder(grade u, grdt)
+        grdt: ZZ := grade multiplier ab
+        i: ZZ := positiveRemainder(grade u, grdt)
         -- if zero? i there is no corresponding element in basis, but
         -- we can use the element 1, i.e. we reduce u by a power of t.
         zero? i => return (1$F)::Union(F, "failed")
@@ -485,10 +485,10 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
             if topReducible?(u, b) then return b::Union(F, "failed")
         "failed"
 
-    tailReducer(u: F, n: Z, ab: AB): Union(F, "failed") ==
+    tailReducer(u: F, n: ZZ, ab: AB): Union(F, "failed") ==
         zero? qetaCoefficient(u, n) => "failed"
-        grdt: Z := grade multiplier ab
-        i: Z := positiveRemainder(n, grdt)
+        grdt: ZZ := grade multiplier ab
+        i: ZZ := positiveRemainder(n, grdt)
         -- if zero? i there is no corresponding element in basis, but
         -- we can use the element 1, i.e. we reduce u by a power of t.
         zero? i => return (1$F)::Union(F, "failed")
@@ -506,13 +506,13 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
       (u: F, ab: AB): F +->
         trEnter(u, ab)
         t: F := multiplier ab
-        grdt: Z := grade t
+        grdt: ZZ := grade t
         while not ((r := reducer(u, ab)) case "failed") repeat
             trLoop u
-            grdu: Z := grade u
+            grdu: ZZ := grade u
             v: F := r :: F
-            j: Z := ((grdu - grade v) exquo grdt) :: Z
-            v := v*t^asN(j)
+            j: ZZ := ((grdu - grade v) exquo grdt) :: ZZ
+            v := v*t^asNN(j)
             -- cc: Record(quotient: C, remainder: C)
             cc := divide(leadingCoefficient u, leadingCoefficient v)
             u := u - (cc.quotient)*v
@@ -529,14 +529,14 @@ QEtaReduction(C, F, AB): QEtaReductionCategory(C, F, AB) == Impl where
       (u: F, ab: AB): F +->
         trEnter(u, ab)
         t: F := multiplier ab
-        grdt: Z := grade t
+        grdt: ZZ := grade t
         n := grade u -- non-top-reduction
         while n>0 repeat
             n := n-1
             while not ((r := tailReducer(u, n, ab)) case "failed") repeat
                 v := r :: F
-                j: Z := ((n - grade v) exquo grdt) :: Z
-                v := v*t^asN(j)
+                j: ZZ := ((n - grade v) exquo grdt) :: ZZ
+                v := v*t^asNN(j)
                 trLoop v
                 -- cc: Record(quotient: C, remainder: C)
                 cc := divide(qetaCoefficient(u, n), leadingCoefficient v)
@@ -677,7 +677,7 @@ of \algoSamba{}.
 ++ doi:10.1016/j.jsc.2017.02.001
 ++ http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf
 QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
-  H ==> XHashTable(Z, List F)
+  H ==> XHashTable(ZZ, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
   AB: QEtaAlgebraBasisCategory(C, F) with
@@ -688,7 +688,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
       ++ samba(t, m) returns a list z such that
       ++ C[t, m] and the C[t]-module generated by 1 and z are equal as sets.
       ++ Assume that qetaGrade(t)>0.
-    samba: (F, List F, Z) -> AB
+    samba: (F, List F, ZZ) -> AB
       ++ samnba(t, m, g) returns a list z such that
       ++ C[t, m] and the C[t]-module generated by 1 and z are equal as sets.
       ++ Assume that qetaGrade(t)>0.
@@ -708,7 +708,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
       ++ might lead to a basis element of smaller grade that does not
       ++ influence the number of gaps, but the property whether or not
       ++ an element reduces to zero modulo the resulting basis.
-    samba: (F, List F, Z, Y -> Y) -> AB
+    samba: (F, List F, ZZ, Y -> Y) -> AB
       ++ samba(t, m, g, oneStep!) repeats oneStep! as long as
       ++ there are critical elements in the internal "computation"
       ++ data structure. It returns earlier if the number of gaps in
@@ -723,7 +723,7 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
         while criticalElements? y repeat y := oneStep! y
         return algebraBasis y
 
-    continue?(grdt: Z, g: Z, v: Vector Z, y: Y): Boolean ==
+    continue?(grdt: ZZ, g: ZZ, v: Vector ZZ, y: Y): Boolean ==
         ab: AB := algebraBasis y
         basis: H := basisElements ab
         for bas in entries basis | unit? qetaLeadingCoefficient last bas repeat
@@ -732,27 +732,27 @@ QEtaSambaPackage(C, F, AB, Y): Exports == Implementation where
             -- element is a unit. Only then we count the grade of
             -- the first element of bas.
             grdb := qetaGrade first bas
-            k: Z := positiveRemainder(grdb, grdt)
+            k: ZZ := positiveRemainder(grdb, grdt)
             if grdb < v.k then v.k := grdb
-        numOfGaps: Z := 0
-        for j in 1..grdt-1 repeat numOfGaps := numOfGaps + floor(v.j /$Q grdt)
+        numOfGaps: ZZ := 0
+        for j in 1..grdt-1 repeat numOfGaps := numOfGaps + floor(v.j /$QQ grdt)
         tracePrint("numOfGaps", [numOfGaps,g])
         numOfGaps <= g => false
         criticalElements? y
 
-    samba(t: F, m: List F, g: Z, oneStep!: Y -> Y): AB ==
+    samba(t: F, m: List F, g: ZZ, oneStep!: Y -> Y): AB ==
         --assert(not empty? m)
         --assert(qetaGrade t > 0)
-        grdt: Z := qetaGrade t
-        l: List Z := [qetaGrade x for x in m]
+        grdt: ZZ := qetaGrade t
+        l: List ZZ := [qetaGrade x for x in m]
         tooBig := 1 + g + reduce(_+, l, 0)
         -- make initial entries too big
-        v: Vector Z := new(asN(grdt-1), grdt * tooBig)
+        v: Vector ZZ := new(asNN(grdt-1), grdt * tooBig)
         y: Y := initialize cons(t, m)
         while continue?(grdt, g, v, y) repeat y := oneStep! y
         return algebraBasis y
 
-    samba(t: F, m: List F, g: Z): AB == samba(t, m, g, oneStep!)
+    samba(t: F, m: List F, g: ZZ): AB == samba(t, m, g, oneStep!)
 
 )if LiterateDoc
 %$
@@ -783,7 +783,7 @@ critical elements that will not be discarded after each extension.
 ++ The pairs are only computed (and considered as critical elements)
 ++ when there are no reducible basis elements left to consider.
 QEtaComputation(C, F, AB, R): Exports == Implementation where
-  H ==> XHashTable(Z, List F)
+  H ==> XHashTable(ZZ, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
   AB: QEtaAlgebraBasisCategory(C, F) with
@@ -791,7 +791,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
       basisElements: % -> H
   R: QEtaReductionCategory(C, F, AB)
   FF ==> Record(f1: F, f2: F)
-  Products ==> XHashTable(Z, List FF)
+  Products ==> XHashTable(ZZ, List FF)
   Exports ==> QEtaComputationCategory(F, AB) with
     basis: % -> List F
       ++ basis x returns basis(algebraBasis x).
@@ -821,7 +821,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
       ++ critical elements accordingly. Note that older basis elements
       ++ might become critical elements in this process.
 
-    oneVerboseStep!: (N, N, N, N) -> (% -> %)
+    oneVerboseStep!: (NN, NN, NN, NN) -> (% -> %)
       ++ oneVerboseStep!(ny, n0, nl, nr) is equivalent with
       ++ oneTracedStep!(trace ny, traceEnter(n0)$R, traceLoop(nl)$R, traceReturn(nr)$R).
 
@@ -852,11 +852,11 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         for b in basis repeat addPair!(u, b, products)
 
     addGapPair!(t: F, b1: F, b2: F, products: Products): Products ==
-        --assert(((grade b2 - grade b1) exquo grade t) case Z)
+        --assert(((grade b2 - grade b1) exquo grade t) case ZZ)
         g := grade b2
-        j: Z := ((g - grade b1) exquo grade t) :: Z
+        j: ZZ := ((g - grade b1) exquo grade t) :: ZZ
         zero? j => products -- b2 anyway enters into cbe!!!
-        tj: F := t^asN(j)
+        tj: F := t^asNN(j)
         products.g := cons([tj, b1], elt(products, g, empty()))
         products
 
@@ -892,8 +892,8 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
     -- Destructively updates basis and critical elements
     update!(u: F, x: %): % ==
         t: F := multiplier xx.ab
-        grdt: Z := grade t
-        grdu: Z := grade u
+        grdt: ZZ := grade t
+        grdu: ZZ := grade u
         --assert(grade u > 0)
         --assert(grdt > 0)
         --assert(not zero?(positiveRemainder(grade u, grdt)
@@ -902,7 +902,7 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         -- Since u is not top-reducible by any basis element, we can add
         -- u to the basis. We move elements that become top-reducible by u
         -- from the basis into the critical elements.
-        i: Z := positiveRemainder(grdu, grdt) -- This is not zero!
+        i: ZZ := positiveRemainder(grdu, grdt) -- This is not zero!
         basis: H := basisElements(xx.ab)
         bas: List F := basis(xx.ab, i)
         red: List F := empty()
@@ -951,12 +951,12 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
 
     extractNext!(x: %): F ==
         p: Products := xx.pairs
-        grdc: Z := -1
-        grdp: Z := -1
+        grdc: ZZ := -1
+        grdp: ZZ := -1
         g := -1 -- dummy value
         if not empty? xx.cbe then grdc := grade first(xx.cbe)
         if not empty? p then
-            g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+            g: ZZ := reduce(min, indices p)$List(ZZ) -- minimal grade
             r: FF := first(p.g) -- the element of this grade
             grdp := grade(r.f1) + grade(r.f2)
         grdp < 0 or (grdc >=0 and grdc <= grdp) =>
@@ -984,14 +984,14 @@ QEtaComputation(C, F, AB, R): Exports == Implementation where
         if not zero? u then update!(u, x)
         return x
 
-    trace(n: N): % -> Void == (x: %): Void +->
+    trace(n: NN): % -> Void == (x: %): Void +->
         zero? n => void() -- abort early
         tracePrint("==================================step(#cbe,#pairs)",_
-            [#(xx.cbe), #(xx.pairs)]$List(Z))
+            [#(xx.cbe), #(xx.pairs)]$List(ZZ))
         if n > 1 then tracePrint("+++ grades(cbe, pairs)",_
-            [[qetaGrade b for b in xx.cbe], sort keys xx.pairs]$List(List Z))
+            [[qetaGrade b for b in xx.cbe], sort keys xx.pairs]$List(List ZZ))
 
-    oneVerboseStep!(ny: N, n0: N, nl: N, nr: N): % -> % ==
+    oneVerboseStep!(ny: NN, n0: NN, nl: NN, nr: NN): % -> % ==
         oneTracedStep!(trace ny, traceEnter(n0)$R,
                        traceLoop(nl)$R, traceReturn(nr)$R)
 
@@ -1021,7 +1021,7 @@ elements have been considered, pairs are taken into account.
 ++ In this variant, products of basis elements are computed if no
 ++ other critical elements are available.
 QEtaComputationDelayedPairs(C, F, AB, R): Exports == Implementation where
-  H ==> XHashTable(Z, List F)
+  H ==> XHashTable(ZZ, List F)
   C: EuclideanDomain
   F: QEtaGradedAlgebra C
   AB: QEtaAlgebraBasisCategory(C, F) with
@@ -1029,9 +1029,9 @@ QEtaComputationDelayedPairs(C, F, AB, R): Exports == Implementation where
       basisElements: % -> H
   R: QEtaReductionCategory(C, F, AB)
   FF ==> Record(f1: F, f2: F)
-  Products ==> XHashTable(Z, List FF)
+  Products ==> XHashTable(ZZ, List FF)
   Exports ==> QEtaComputationCategory(F, AB) with
-    oneVerboseStep!: (N, N, N, N) -> (% -> %)
+    oneVerboseStep!: (NN, NN, NN, NN) -> (% -> %)
       ++ oneVerboseStep!(ny, n0, nl, nr) is equivalent with
       ++ oneTracedStep!(trace ny, traceEnter(n0)$R, traceLoop(nl)$R, traceReturn(nr)$R).
 
@@ -1049,11 +1049,11 @@ QEtaComputationDelayedPairs(C, F, AB, R): Exports == Implementation where
             criticalBasisElements(x) := rest criticalBasisElements x
             f
         p: Products := products x
-        grdc: Z := -1
-        grdp: Z := -1
+        grdc: ZZ := -1
+        grdp: ZZ := -1
         g := -1 -- dummy value
         --assert(not empty? p)
-        g: Z := reduce(min, indices p)$List(Z) -- minimal grade
+        g: ZZ := reduce(min, indices p)$List(ZZ) -- minimal grade
         r: FF := first(p.g) -- the element of this grade
         l: List FF := rest(p.g) -- remove u
         if empty? l then remove!(g, p) else p.g := l

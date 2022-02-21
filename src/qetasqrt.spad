@@ -97,17 +97,17 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-MZ ==> Matrix Z -- will be a square matrix
-EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
-Rec ==> Record(red: MZ, triang: MZ)
-Pol ==> SparseUnivariatePolynomial Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+MZZ ==> Matrix ZZ -- will be a square matrix
+EXGCD ==> Record(coef1: ZZ, coef2: ZZ, generator: ZZ)
+Rec ==> Record(red: MZZ, triang: MZZ)
+Pol ==> SparseUnivariatePolynomial ZZ
 
-asN x ==> x pretend N
-asP x ==> x pretend P
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
 
 )if LiterateDoc
 
@@ -122,13 +122,13 @@ asP x ==> x pretend P
 ++ of a positive radical integer in terms of r (a n-th root of unity).
 ++ A radical integer is an integer that is not divisible by a square
 ++ of a prime.
-GaussRoot(R: Ring, r: R, n: P): with
-    squareRoot: P -> R
+GaussRoot(R: Ring, r: R, n: PP): with
+    squareRoot: PP -> R
         ++ squareRoot(x) returns an element z in R such that
         ++ z^2=x. It returns 0, if such an element z cannot be found in R.
         ++ The function assumes that x is a radical integer (squarefree).
   == add
-    minimalSquareRootOfUnity(x: P): P ==
+    minimalSquareRootOfUnity(x: PP): PP ==
         -- x is a radical integer (squarefree)
         -- See \cite[Section~IV.3]{Lang_AlgebraicNumberTheory_1986}.
         x = 2 => 8
@@ -138,27 +138,27 @@ GaussRoot(R: Ring, r: R, n: P): with
     -- gaussSumm corresponds to G(1, b) in
     -- \cite[Section~IV.3]{Lang_AlgebraicNumberTheory_1986}.
     -- We can achieve G(a, b) by calling gaussSum(g^a, b).
-    gaussSum(g: R, b: P): R ==
+    gaussSum(g: R, b: PP): R ==
         z: R := 1
-        for k in 1 .. asN(b-1) repeat z := z + g^(k^2)
+        for k in 1 .. asNN(b-1) repeat z := z + g^(k^2)
         return z
 
-    squareRoot(x: P): R ==
+    squareRoot(x: PP): R ==
         -- x>0 is a radical integer (squarefree)
         one? x => 1$R
-        b: P := minimalSquareRootOfUnity x
+        b: PP := minimalSquareRootOfUnity x
         -- need a b-th primitive root of unity for sqrt(x)
-        s: Union(Z, "failed") := n exquo b
+        s: Union(ZZ, "failed") := n exquo b
         s case "failed" => 0$R -- no b-th root of unity available
-        k: P := asP(s::Z)
+        k: PP := asPP(s::ZZ)
         g: R := r^k -- g is a primitive b-th root of unity
         x = 2 => return g-g^3 -- g is a primitive 8-th root of unity
-        m: Z := positiveRemainder(x, 4)
+        m: ZZ := positiveRemainder(x, 4)
         m=1 => return gaussSum(g, x)
         m=3 => return - g^x * gaussSum(g^4, x) -- G(4, x)/i = -i*G(4, x)
         --assert(even? x)
         --assert(b = 4*x)
-        y: P := asP(shift(x, -1)) -- y := x/2
+        y: PP := asPP(shift(x, -1)) -- y := x/2
         -- now we compute sqrt(y) and multiply with sqrt(2).
         return squareRoot(y) * squareRoot(2)
 

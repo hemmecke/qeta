@@ -80,13 +80,13 @@ ORBIT ==> modularOrbit $ MOD0
 abfmap(A, B, f, x) ==> map(f, x)$QEtaLaurentSeriesFunctions2(A, B)
 abffmap(A, B, f, x) ==> abfmap(A, B, f, x::L1(A))::A1(B)
 abmap(A, B, x) ==> abffmap(A, B, (c: A): B +-> c::B, x)
-zcmap(x) ==> abmap(Z, C, x)
-cqmap(x) ==> abmap(C, Q, x)
-zqmap(x) ==> abmap(Z, Q, x)
+zcmap(x) ==> abmap(ZZ, C, x)
+cqmap(x) ==> abmap(C, QQ, x)
+zqmap(x) ==> abmap(ZZ, QQ, x)
 
 PolC ==> Pol C; LC ==> A1 C
-PolZ ==> Pol Z; LZ ==> A1 Z
-PolQ ==> Pol Q; LQ ==> A1 Q
+PolZ ==> Pol ZZ; LZZ ==> A1 ZZ
+PolQ ==> Pol QQ; LQQ ==> A1 QQ
 
 smaller11(x: PolC, y: PolC):Boolean == _
   exponent leadingCoefficient x < exponent leadingCoefficient y
@@ -122,13 +122,13 @@ smallerT(x: PolC, y: PolC):Boolean == degree(x, 'T) < degree(y, 'T)
 nn := 22;
 idxs := etaFunctionIndices nn
 mspecs := mSPECSInfM0(nn, idxs);
-rgensExpected: List List Z := [_
+rgensExpected: List List ZZ := [_
     [- 4, 8, 4, - 8], [- 1, 1, 11, - 11], [7, - 3, 3, - 7],_
     [- 2, 6, 6, - 10], [0, 4, 8, - 12], [2, 2, 10, - 14], [4, 0, 12, - 16]];
 rgens := [pureExponents x for x in mspecs]
 assertEquals(rgens, rgensExpected)
 
-eqgensZ := [specEQI(Z)(b) for b in mspecs]
+eqgensZ := [specEQI(ZZ)(b) for b in mspecs]
 for x in eqgensZ repeat assertTrue(one? denom eulerExponent x)
 
 egensZ := [expansion x for x in eqgensZ];
@@ -185,11 +185,11 @@ assertEquals(# bas, 5)
 --
 -- First we define the partion series.
 
-ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
+ps := partitionSeries(1)$QFunctions(ZZ, LZZ) --: LZZ
 
 -- Then we select the sub-series given by the (11n+6)-th term.
 
-r11 := choose(11, 6, ps) --: LZ
+r11 := choose(11, 6, ps) --: LZZ
 r11Expected := _
   1188908248*q^10+342325709*q^9+92669720*q^8+23338469*q^7+5392783*q^6_
   +1121505*q^5+204226*q^4+31185*q^3+3718*q^2+297*q+11 --: Fraction PolZ
@@ -199,7 +199,7 @@ rspec := eqSPEC(1,[-1]); nn := 22; m := 11; t := 6;
 sspec := cofactInfM0(nn, rspec, m, t, idxs)
 assertEquals(sspec, eqSPEC(nn,[10,2,11,-22]))
 
-fZ := specM0A1(Z)(sspec,rspec,m,t)
+fZ := specM0A1(ZZ)(sspec,rspec,m,t)
 fZExpected := _
   1272909*q^14+944328*q^13+689282*q^12+485254*q^11+327415*q^10+214500*q^9+_
   135608*q^8+79211*q^7+44396*q^6+22286*q^5+10164*q^4+3696*q^3+1111*q^2+187*q+11
@@ -388,7 +388,7 @@ first jp, second jp
 -- \left(\frac{\eta(\tau)}{\eta(11\tau)}\right)^{12}$$ in terms of $q
 -- = \exp(2\pi i \tau)$.
 
-tz := expansion(specEQI(Z) eqSPEC(11,[12,-12])); --: LZ
+tz := expansion(specEQI(ZZ) eqSPEC(11,[12,-12])); --: LZZ
 tt := zcmap tz; --: L
 t := toX1(C, tt, T); --: X
 first t, second t
@@ -412,7 +412,7 @@ m3 := jp*t;  --: X
 m := jp; mp := j;
 while (d := qetaGrade(m)$X) > 0 repeat (_
     c := qetaLeadingCoefficient(m)$X;_
-    e := d::N;_
+    e := d::NN;_
     m := m-c*j^e;_
     mp := mp-c*jp^e)
 
@@ -479,7 +479,7 @@ powsExpected := [_
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 2, 1, 0, 1, 0,_
    1, 1, 0, 0, 1, 1],_
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],_
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]$List(List N)
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]$List(List NN)
 assertEquals(pows, powsExpected)
 
 -- The (absolute value of the) order and the power of 11 in the
@@ -498,19 +498,19 @@ assertEquals(gl, glExpected)
 --
 -- Let's do this step by step. We take the partition series.
 
-ps := partitionSeries(1)$QFunctions(Z, LZ) --: LZ
+ps := partitionSeries(1)$QFunctions(ZZ, LZZ) --: LZZ
 
 -- We also take the sub-series given by the (11n+6)-th term of ps as
 -- defined earlier. The coefficients of the series `r11` we want to
 -- check for divisibility by 11.
 
-r11 := choose(11, 6, ps) --: LZ
+r11 := choose(11, 6, ps) --: LZZ
 
 -- Putting all together (except the factor $t^v$) gives the following expression.
 
 
-q := monomial(1, 1)$LZ
-fz := q*eulerFunction(11)$QFunctions(Z, LZ)*r11; --: LZ
+q := monomial(1, 1)$LZZ
+fz := q*eulerFunction(11)$QFunctions(ZZ, LZZ)*r11; --: LZZ
 f := embed(zcmap fz, F)$X
 
 
@@ -524,7 +524,7 @@ f := embed(zcmap fz, F)$X
 
 qab := [cqmap first x for x in basis ab];
 qt := cqmap first t
-qreds := [zero? reduce(cqmap(first(t^v * f)), qt, qab)$QEtaTopReduction(Q, LQ)_
+qreds := [zero? reduce(cqmap(first(t^v * f)), qt, qab)$QEtaTopReduction(QQ, LQQ)_
           for v in 1..7]
 qredsExpected := [false, false, true, true, true, true, true]
 assertEquals(qreds, qredsExpected)
@@ -581,7 +581,7 @@ sort(smallerT, mr)
 tups := [(d:=degree(x, [T,J,Jp]); [d.1-2,d.2,d.3]) for x in rest sort(smaller11, mr)];
 assertEquals(#tups, 161)
 
-tupsExpected: List List Z := [_
+tupsExpected: List List ZZ := [_
   [0, 0, 0], [0, 0, 1], [0, 0, 2],_
   [1, 0, 0], [1, 0, 1], [1, 0, 2], [1, 0, 3],_
   [2, 0, 0], [2, 0, 1], [2, 0, 2], [2, 0, 3], [2, 0, 4],_
@@ -642,12 +642,12 @@ assertEquals(sort tups, tupsExpected)
 -- Size of numerator and denominators of the coefficients of the
 -- linear combination of the powerproducts.
 
-sz(x) ==> floor((log(abs(numer(x::Q)::Float))/log(10.0))::Float)::Z
+sz(x) ==> floor((log(abs(numer(x::QQ)::Float))/log(10.0))::Float)::ZZ
 sizes := remove(0, sort [sz x for x in coefficients r])
 assertEquals(min sizes, 2324)
 assertEquals(max sizes, 2395)
 degs := sort [degree(x, T) for x in mr]
-degsExpected: List N := _
+degsExpected: List NN := _
   [2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6,_
    6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8,_
    8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10,_
@@ -675,8 +675,8 @@ assertTrue(zero? z)
 
 -- approx. 30 seconds
 rq := r::Polynomial(Fraction Integer);
-zq := eval(rq, c+->c::LQ, fjjpt, [cqmap first f, cqmap i, cqmap ip, zqmap tz])_
-      $ PolynomialEvaluation(Q, LQ)
+zq := eval(rq, c+->c::LQQ, fjjpt, [cqmap first f, cqmap i, cqmap ip, zqmap tz])_
+      $ PolynomialEvaluation(QQ, LQQ)
 assertTrue(zero? zq)
 
 -- +
@@ -699,35 +699,35 @@ assertTrue(zero? zq)
 nn := 11
 idxs := etaFunctionIndices nn
 
-LQ ==> A1 Q
-XQ ==> X1 Q
-i0 := kleinJInvariant()$QFunctions(Q, LQ); --: LQ
-i1 := multiplyExponents(i0, 11); --: LQ
-xj0 := toX1(Q, i0, J0); --: XQ
-xj1 := toX1(Q, i1, J1); --: XQ
-tt := specM0A1(Q) eqSPEC(nn,[12,-12])
-xt := toX1(Q, tt,  T); --: XQ
+LQQ ==> A1 QQ
+XQ ==> X1 QQ
+i0 := kleinJInvariant()$QFunctions(QQ, LQQ); --: LQQ
+i1 := multiplyExponents(i0, 11); --: LQQ
+xj0 := toX1(QQ, i0, J0); --: XQ
+xj1 := toX1(QQ, i1, J1); --: XQ
+tt := specM0A1(QQ) eqSPEC(nn,[12,-12])
+xt := toX1(QQ, tt,  T); --: XQ
 xgens := [xt, xj0*xt^3, xj1*xt]; --: List XQ
-xab := samba(xt, xgens)$QXSAMBA1(Q);
+xab := samba(xt, xgens)$QXSAMBA1(QQ);
 assertEquals(# basis xab, 4)
 
 bas := sort(smallerGrade?, basis xab);
 degs := [[qetaGrade i, unitCanonical qetaLeadingCoefficient i] for i in bas]
-degsExpected := [[7, 1], [8, 1], [9, 1], [11, 1]]$List(List Q)
+degsExpected := [[7, 1], [8, 1], [9, 1], [11, 1]]$List(List QQ)
 assertEquals(degs, degsExpected)
 
 rspec := eqSPEC(1,[-1]); m := 11; t := 6;
 sspec := cofactInfM0(nn, rspec, m, t, idxs)
-xf := toX1(Q, specM0A1(Q)(sspec,rspec,m,t), F) --: X
+xf := toX1(QQ, specM0A1(QQ)(sspec,rspec,m,t), F) --: X
 
 +-- As we have seen above, $U(3)$ lies in the $\mathbb{Q}[t]$-module
 -- generated by 1 and the elements of the algebra basis.
 
-qreds := [zero? reduce(xt^v * xf, xab)$QXTOPRED1(Q) for v in 1..7]
+qreds := [zero? reduce(xt^v * xf, xab)$QXTOPRED1(QQ) for v in 1..7]
 qredsExpected := [false, true, true, true, true, true, true]
 assertEquals(qreds, qredsExpected)
 
-xr := reduce(xt^2 * xf, xab)$QXTOPRED1(Q);
+xr := reduce(xt^2 * xf, xab)$QXTOPRED1(QQ);
 assertTrue(zero? xr)
 pol := (second xr)::PolQ;
 cfq := coefficient(pol, 'F, 1)
@@ -764,9 +764,9 @@ assertTrue(member?(false, znums))
 -- Here $\mathbb{Z}$ is considered as a Euclidean domain wrt the
 -- absolute value as the Euclidean size function.
 
-C ==> Z
---LZ ==> A1 Z
---XZ ==> X1 Z
+C ==> ZZ
+--LZ ==> A1 ZZ
+--XZ ==> X1 ZZ
 nn := 22;
 idxs := etaFunctionIndices nn;
 mspecs := mSPECSInfM0(nn,idxs);
@@ -786,7 +786,7 @@ xf := toX1(C, specM0A1(C)(sspec,rspec,m,t), F)
 -- Interestingly, we have to multiply by 4, because otherwise the
 -- reduction would not return 0.
 
-xr := reduce(4*xf, xab)$QXTOPRED1(Z)
+xr := reduce(4*xf, xab)$QXTOPRED1(ZZ)
 assertTrue(zero? xr)
 
 pol := (second xr)::PolZ;
@@ -806,8 +806,8 @@ lcxr := [leadingCoefficient x for x in monomials(pol-4*F)];
 divisibility11 := removeDuplicates [positiveRemainder(x, 11) for x in lcxr]
 assertEquals(divisibility11, [0])
 
-e := eval(pol, c+->c::LZ, cons('F, msyms), cons(first xf, egens))_
-     $ PolynomialEvaluation(Z, A1(Z))
+e := eval(pol, c+->c::LZZ, cons('F, msyms), cons(first xf, egens))_
+     $ PolynomialEvaluation(ZZ, A1(ZZ))
 assertTrue(zero? e)
 
 -- +
@@ -874,12 +874,12 @@ assertEquals(-pol, polExpected)
 -- Introduce vectors in the second component so that we can track
 -- whether the just reduced element is divisible by 11.
 
-nn := 22::P; -- level
+nn := 22::PP; -- level
 idxs := etaFunctionIndices nn
-m := 11::P;
+m := 11::PP;
 rspec: SPEC := eqSPEC(1,[-1])
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
-t := first(first orbs) :: N
+t := first(first orbs) :: NN
 
 -- Let's compute the expansion (at $\infty$) of
 -- $$

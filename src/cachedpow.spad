@@ -32,8 +32,8 @@
 \end{abstract}
 )endif
 
-P ==> PositiveInteger
-Z ==> Integer
+PP ==> PositiveInteger
+ZZ ==> Integer
 
 )abbrev domain CPOWER CachedPower
 ++ Author: Ralf Hemmecke
@@ -42,21 +42,21 @@ Z ==> Integer
 ++ Each power is only computed once.
 CachedPower(S: SemiGroup): Exports == Implementation where
   Exports ==> Join(CoercibleTo S, CoercibleFrom S) with
-    power!: (%, P) -> S
+    power!: (%, PP) -> S
         ++ power!(x, n) extracts the n-th power of x, if that has
         ++ already been computed. Otherwise it computes the n-th power
         ++ by repeated squaring and stores all intermediately computed
         ++ powers of x including the n-th power in the cache and only
         ++ then returns the result.
     if S has MagmaWithUnit then
-        power!: (%, Z) -> S
+        power!: (%, ZZ) -> S
             ++ power!(x, n) extracts the n-th power of x, if that has
             ++ already been computed. Otherwise it computes the n-th
             ++ power by repeated squaring and stores all
             ++ intermediately computed powers of x including the n-th
             ++ power in the cache and only then returns the result.
   Implementation == add
-    Rep ==> XHashTable(Z, S)
+    Rep ==> XHashTable(ZZ, S)
     rep x ==> (x@%) pretend Rep
     per x ==> (x@Rep) pretend %
     coerce(x: %): S == rep(x).1
@@ -66,13 +66,13 @@ CachedPower(S: SemiGroup): Exports == Implementation where
         per cache
 
     --auxiliary function pow
-    pow!(x: %, n: Z): S ==
+    pow!(x: %, n: ZZ): S ==
         cache ==> rep x
         s: S := cache.1
         one? n => s
         key?(n, cache) => cache.n
         odd? n and key?(n-1, cache) => cache.n := s*cache(n-1)
-        n2: Z := shift(n, -1) -- n2 := floor(n/2)
+        n2: ZZ := shift(n, -1) -- n2 := floor(n/2)
         z: S := pow!(x, n2) -- set cache recursively
         n2 := 2*n2
         z := z * z
@@ -82,9 +82,9 @@ CachedPower(S: SemiGroup): Exports == Implementation where
         cache.n := z
 
     --exported function power
-    power!(x: %, n: P): S == pow!(x, n::Z)
+    power!(x: %, n: PP): S == pow!(x, n::ZZ)
     if S has MagmaWithUnit then
-        power!(x: %, n: Z): S ==
+        power!(x: %, n: ZZ): S ==
             zero? n => 1$S
             n > 0 => pow!(x, n)
             cache ==> rep x

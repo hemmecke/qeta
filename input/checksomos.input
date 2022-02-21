@@ -4,26 +4,26 @@
 level := 6
 f := [toEta(level, h k) for k in sort keys h6]
 g := etaRelations6
-divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
+divs: List ZZ := divisors(level)$IntegerNumberTheoryFunctions
 syms: List Symbol := indexedSymbols("E", divs)$QAuxiliaryTools
-dim: N := #syms
-D ==> HomogeneousDirectProduct(dim, N);
-xnf ==> extendedNormalForm$QEtaGroebner(Z, E)
+dim: NN := #syms
+D ==> HomogeneousDirectProduct(dim, NN);
+xnf ==> extendedNormalForm$QEtaGroebner(ZZ, E)
 --)set message type off
 toR ==> coerce$PolynomialConversion(C, E, syms)
 l := [xnf(toEta(level, h k), g, syms, k, "g") for k in sort keys h];
 l2 := [x for x in l | # monomials x < 3]
 # l2
 # g
-l := extendedNormalForms(f, g, syms, "f", "g")$QEtaGroebner(Z, E);
+l := extendedNormalForms(f, g, syms, "f", "g")$QEtaGroebner(ZZ, E);
 for x in l | # monomials x < 3 repeat (_
     print "================================="; print x)
 
 -- The same again but with lex instead of degrevlex
-Dlex ==> DirectProduct(dim, N)
+Dlex ==> DirectProduct(dim, NN)
 symslex := reverse syms -- lex wrt [E6>E3>E2>E1]
 glex := groebner(g);
 # glex
-llex := extendedNormalForms(f, glex, symslex, "f", "x")$QEtaGroebner(Z, Dlex);
+llex := extendedNormalForms(f, glex, symslex, "f", "x")$QEtaGroebner(ZZ, Dlex);
 for x in llex | # monomials x < 3 repeat (_
     print "================================="; print x)

@@ -42,9 +42,9 @@
   \begin{itemize}
   \item \code{QAuxiliaryToos} helps to create variables (symbols) with
     given indices and converts a polynomial from
-    \spadtype{Polynomial}\code{(Q)} to \spadtype{Polynomial}\code{(Z)}
-    by clearing denominators (where \code{Z==>}\spadtype{Integer} and
-    \code{Q==>}\spadtype{Fraction}\code{(Z)}).
+    \spadtype{Polynomial}\code{(QQ)} to \spadtype{Polynomial}\code{(ZZ)}
+    by clearing denominators (where \code{ZZ==>}\spadtype{Integer} and
+    \code{QQ==>}\spadtype{Fraction}\code{(ZZ)}).
 
   \item \code{QEtaLaurentSeriesFunctions2} helps to embed elements of
     \code{QEtaLaurentSeries(C1)} into \code{QEtaLaurentSeries(C2)}.
@@ -103,10 +103,10 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,39 +119,39 @@ We want variables that are easy to parse when written to a file.
 )abbrev package QAUXTOOL QAuxiliaryTools
 ++ Miscellaneous tools to deal with polynomials.
 QAuxiliaryTools(): with
-    indexedSymbol: (String, List Z) -> Symbol
+    indexedSymbol: (String, List ZZ) -> Symbol
         ++ indexedSymbol(s, l) returns a symbol with a name that
         ++ starts with the string s and is directly followed by the
         ++ numbers of l separated by underscores ("__").
-    indexedSymbols: (String, N) ->  List Symbol
+    indexedSymbols: (String, NN) ->  List Symbol
         ++ indexedSymbols(s, n) returns indexedSymbols(s, [i for i in 1..n])
-    indexedSymbols: (String, List Z) ->  List Symbol
+    indexedSymbols: (String, List ZZ) ->  List Symbol
         ++ indexedSymbols(s, l) returns indexedSymbols(s, [[n] for n in l]).
-    indexedSymbols: (String, List List Z) ->  List Symbol
+    indexedSymbols: (String, List List ZZ) ->  List Symbol
         ++ indexedSymbols(s, ll) returns [indexedSymbol(s,l) for l in ll].
-    clearDenominator: Polynomial Q -> Polynomial Z
+    clearDenominator: Polynomial QQ -> Polynomial ZZ
         ++ clearDenominator(p) multiplies the polynomial p over rational numbers
         ++ with the least common multiple of all its coefficients and
         ++ returns the result as a polynomial over the integers.
   == add
-    indexedSymbol(s: String, l: List Z): Symbol ==
+    indexedSymbol(s: String, l: List ZZ): Symbol ==
         empty? l => s :: Symbol
         str: String := concat(s, convert(first l)@String)
         for i in rest l repeat
             a: String := concat("__", convert(i)@String)
             str := concat(str, a)
         str :: Symbol
-    indexedSymbols(s: String, n: N): List Symbol ==
+    indexedSymbols(s: String, n: NN): List Symbol ==
         [indexedSymbol(s, [i]) for i in 1..n]
-    indexedSymbols(s: String, l: List Z): List Symbol ==
+    indexedSymbols(s: String, l: List ZZ): List Symbol ==
         [indexedSymbol(s, [i]) for i in l]
-    indexedSymbols(s: String, ll: List List Z): List Symbol ==
+    indexedSymbols(s: String, ll: List List ZZ): List Symbol ==
         [indexedSymbol(s, l) for l in ll]
-    clearDenominator(p: Polynomial Q): Polynomial Z ==
-        zero? p => 0$Polynomial(Z)
-        c: Z := lcm [denom x for x in coefficients p]
-        mon(x) ==> monomial(numer(c*leadingCoefficient x), degree x)$Polynomial(Z)
-        lm: List Polynomial Z := [mon(x) for x in monomials p]
+    clearDenominator(p: Polynomial QQ): Polynomial ZZ ==
+        zero? p => 0$Polynomial(ZZ)
+        c: ZZ := lcm [denom x for x in coefficients p]
+        mon(x) ==> monomial(numer(c*leadingCoefficient x), degree x)$Polynomial(ZZ)
+        lm: List Polynomial ZZ := [mon(x) for x in monomials p]
         reduce(_+, lm)
 
 )if LiterateDoc
@@ -195,7 +195,7 @@ product element.
 ++ For example, if dim = 2, vl = [A,B] and x::Vector(NNI) = [2,3],
 ++ then the element x (coerced to OutputForm) looks like A^2*B^3.
 Monomials(_
-  dim: N,_
+  dim: NN,_
   R: OrderedAbelianMonoid,
   D: DirectProductCategory(dim, R),_
   vl: List Symbol_
@@ -207,7 +207,7 @@ Monomials(_
         vs: List Symbol := vl
         zero? x => (1$Integer)::OutputForm
         fst: Boolean := true
-        k: N := 1
+        k: NN := 1
         while zero?(x.k) repeat
             vs := rest vs
             k := k + 1
@@ -237,7 +237,7 @@ exponents.
 PolynomialConversion(_
   C: Ring, _
   E: OrderedAbelianMonoid with (
-       directProduct: Vector N -> %; members: % -> List N),_
+       directProduct: Vector NN -> %; members: % -> List NN),_
   syms: List Symbol): with
     coerce: Polynomial C -> PolynomialRing(C, E)
     coerce: PolynomialRing(C, E) -> Polynomial C
@@ -247,7 +247,7 @@ PolynomialConversion(_
         r: R := 0
         while not zero? p repeat
             c: C := leadingCoefficient p
-            v: Vector N := vector degree(leadingMonomial p, syms)
+            v: Vector NN := vector degree(leadingMonomial p, syms)
             e: E := directProduct(v)$E
             p := reductum p
             r := r + monomial(c, e)
@@ -259,7 +259,7 @@ PolynomialConversion(_
             c: C := leadingCoefficient r
             e: E := leadingSupport r
             r := reductum r
-            exponents: List N := members e
+            exponents: List NN := members e
             p := p + monomial(c::Polynomial(C), syms, exponents)
         p
 
@@ -314,7 +314,7 @@ PolynomialTool(R: Ring): with
 
     -- Is it a polynomial just in variables starting with the character c?
     xPolynomial?(p: Polynomial R, c: Character): Boolean ==
-        degs: List N := degree(p, xVariables(p, c))
+        degs: List NN := degree(p, xVariables(p, c))
         zero? reduce(_+, degs, 0)
 
     -- Extract all polynomials just in variables that begin with the
@@ -337,7 +337,7 @@ A wrapper for \GB{} omputations.
 QEtaGroebner(C, E): Exports == Implementation where
   C: GcdDomain
   ExponentCat ==> OrderedAbelianMonoidSup with _
-    (directProduct: Vector N -> %; members: % -> List N)
+    (directProduct: Vector NN -> %; members: % -> List NN)
   E: ExponentCat
   Pol ==> Polynomial C
   LPol ==> List Pol

@@ -116,16 +116,16 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-LZ ==> List Z
-LLZ ==> List LZ
-INDICES ==> LLZ
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+LZZ ==> List ZZ
+LLZZ ==> List LZZ
+INDICES ==> LLZZ
 EQI C  ==> EtaQuotientInfinity C
 
-asN x ==> x pretend N
-asP x ==> x pretend P
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
 
 mSPECSInfMOD ==> etaQuotientMonoidInfinitySpecifications _
                    $ QEtaQuotientSpecifications4ti2(MOD)
@@ -159,7 +159,7 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         ++ relations among the variables in eqrels that start with
         ++ the character c. Here eqrels is supposed to be a list of
         ++ polynomial in Ei, Yi, and Mi variables.
-    etaLaurentIdealGenerators: (P, INDICES) -> LPol
+    etaLaurentIdealGenerators: (PP, INDICES) -> LPol
         ++ etaLaurentIdealGenerators(nn,idxs) computes generators for
         ++ the ideal of eta-functions and their inverses given by the
         ++ indices having no poles at the cusps given through MOD
@@ -238,7 +238,7 @@ QEtaIdealCategory(C, MOD): Category == Exports where
     -- that Fi=fi*cofactor(Ei,Yi) and the Mj represent eta-quotients.
     algebraicRelations(_
       idxs: INDICES, geqrels: LPol, c: Character): LPol ==
-        nn: P := asP lcm [first x for x in idxs]
+        nn: PP := asPP lcm [first x for x in idxs]
         mspecs: SPECS := mSPECSInfMOD(nn, idxs)
         eqigens: LPol := etaQuotientIdealGenerators mspecs
         igens := concat(eqigens, geqrels)
@@ -248,14 +248,14 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         fvars := [[x for x in variables p | (string x).1 = c] for p in geqrels]
         fsyms: List Symbol := removeDuplicates concat fvars
         syms: List Symbol := concat [ysyms, esyms, fsyms]
-        dim: N := # syms
-        dim1: N := # esyms + # ysyms -- want to eliminate those
-        E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
+        dim: NN := # syms
+        dim1: NN := # esyms + # ysyms -- want to eliminate those
+        E ==> SplitHomogeneousDirectProduct(dim, dim1, NN)
         gb := groebner(gens, syms)$QEtaGroebner(C, E)
         -- take only the polys that do not invole any Y variable
         xPolynomials(gb, c)$PolynomialTool(C)
 
-    etaLaurentIdealGenerators(nn: P, idxs: INDICES): LPol ==
+    etaLaurentIdealGenerators(nn: PP, idxs: INDICES): LPol ==
         mspecs: SPECS := mSPECSInfMOD(nn, idxs)
         eqigens: LPol := etaQuotientIdealGenerators mspecs
         etaLaurentIdealGenerators(idxs, mspecs, eqigens)
@@ -286,9 +286,9 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         -- make sure that there are no Ei and Yi in fsyms
         yesyms := concat(ysyms, esyms)
         syms := concat(yesyms, setDifference(fsyms, yesyms))
-        dim: N := # syms
-        dim1: N := # ysyms
-        E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
+        dim: NN := # syms
+        dim1: NN := # ysyms
+        E ==> SplitHomogeneousDirectProduct(dim, dim1, NN)
         nfs: LPol := normalForms(gens, yerels, syms)$QEtaGroebner(C, E)
         [yerels, nfs]
 
@@ -304,13 +304,13 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         p: Pol := 1
         for l in parts mspec repeat
             e := specExponent l
-            i: List Z := specIndex l
-            e > 0 => p := p * monomial(1$Pol, iSY(pv, i), asN e)
-            e < 0 => p := p * monomial(1$Pol, iSY(nv, i), asN abs e)
+            i: List ZZ := specIndex l
+            e > 0 => p := p * monomial(1$Pol, iSY(pv, i), asNN e)
+            e < 0 => p := p * monomial(1$Pol, iSY(nv, i), asNN abs e)
         return p
 
     etaRelations(idxs: INDICES): LPol ==
-        nn: P := asP lcm [first x for x in idxs]
+        nn: PP := asPP lcm [first x for x in idxs]
         etaRelations(idxs, etaLaurentIdealGenerators(nn, idxs))
 
     etaRelations(idxs: INDICES, eligens: LPol): LPol ==
@@ -319,9 +319,9 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         ysyms: List Symbol := indexedSymbols("Y", idxs)$QAuxiliaryTools
         esyms: List Symbol := indexedSymbols("E", idxs)$QAuxiliaryTools
         syms: List Symbol := concat(ysyms, esyms)
-        dim: N := # syms
-        dim1: N := # ysyms
-        E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
+        dim: NN := # syms
+        dim1: NN := # ysyms
+        E ==> SplitHomogeneousDirectProduct(dim, dim1, NN)
         gb := groebner(eligens, syms)$QEtaGroebner(C, E)
         -- take only the polys that do not invole any Y variable
         xPolynomials(gb, char "E")$PolynomialTool(C)

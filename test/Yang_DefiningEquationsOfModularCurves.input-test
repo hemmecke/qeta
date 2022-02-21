@@ -25,7 +25,7 @@
 --                       Cusp forms, Modular parameterization of rational
 --                       elliptic curves},
 --       abstract =     {We obtain defining equations of modular curves
---                       X0(N), X1(N), and X(N) by explicitly constructing
+--                       X0(NN), X1(NN), and X(NN) by explicitly constructing
 --                       modular functions using generalized Dedekind eta
 --                       functions. As applications, we describe a method of
 --                       obtaining a basis for the space of cusp forms of
@@ -50,20 +50,20 @@
 )set mess time off
 )read convenience.input )quiet
 
-C ==> Q
-LZ ==> List Z
-LLZ ==> List LZ
+C ==> QQ
+LZZ ==> List ZZ
+LLZZ ==> List LZZ
 
 oo ==> infinity()$Cusp
 
-CurveX1(nn: P, rx: LLZ, sx: C,_
-               ry: LLZ, sy: C,_
+CurveX1(nn: PP, rx: LLZZ, sx: C,_
+               ry: LLZZ, sy: C,_
                x: Symbol, y: Symbol,_
         pxy: Polynomial(C)): Boolean == (_
     rspecx := eqSPEC(nn, [cons(nn,r) for r in rx]);_
     rspecy := eqSPEC(nn, [cons(nn,r) for r in ry]);_
-    yx := specYM1EQ(rspecx); xiordx := minimalRootOfUnity(yx)::P;_
-    yy := specYM1EQ(rspecy); xiordy := minimalRootOfUnity(yy)::P;_
+    yx := specYM1EQ(rspecx); xiordx := minimalRootOfUnity(yx)::PP;_
+    yy := specYM1EQ(rspecy); xiordy := minimalRootOfUnity(yy)::PP;_
     xiord := lcm(xiordx,xiordy);_
     EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);_
     spitzen := cuspsM1 nn;_
@@ -82,7 +82,7 @@ CurveX1(nn: P, rx: LLZ, sx: C,_
     d := degree(polc, y);_
     polc := (inv(coefficient(polc, y, d)) * polc);_
     assertEquals(polc, pxy);_
-    pol := polc::Pol(Z);_
+    pol := polc::Pol(ZZ);_
     for i in 0..d repeat tracePrint("c", factor coefficient(pol,'y, i));_
     LC ==> leadingCoefficient;_
     mons := monomials pxy;_

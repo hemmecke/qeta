@@ -77,10 +77,10 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 OF ==> OutputForm
 
 )if LiterateDoc
@@ -119,9 +119,9 @@ QEtaAlgebra(C: CommutativeRing): Category ==
       ++ Commutative multiplication
     _*: (C, %) -> %
       ++ Multiplication by a coefficient.
-    _^: (%, N) -> %
+    _^: (%, NN) -> %
       ++ Exponentiation (repeated multiplication)
-    traceout: N -> % -> OutputForm
+    traceout: NN -> % -> OutputForm
       ++ traceout(verbosity)(x) coerces x into OutputForm for tracing
       ++ purposes. A higher verbosity value shows more information.
       ++ Smaller values might show only partial information.
@@ -143,23 +143,23 @@ Laurent polynomials).
 )abbrev category QEGALG QEtaGradedAlgebra
 ++ QEtaGradedAlgebra(C) lists the minimal signatures for running the
 ++ functions in the QEtaPackage. Mathematically seen is it a C-algebra
-++ that is Z-graded. Simplest example is a univariate polynomial ring
+++ that is ZZ-graded. Simplest example is a univariate polynomial ring
 ++ over C, but since it is expected that respective domains will be
 ++ created on the fly, we list here only the functions that are
 ++ actually used in QEtaSambaPackage.
 QEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
-    qetaGrade: % -> Z
+    qetaGrade: % -> ZZ
       ++ qetaGrade(x) returns the grade of an element.
       ++ The qetaGrade of 0 is undefined.
       ++ Any element x with qetaGrade(x)<0 will be considered to be zero.
-    qetaCoefficient: (%, Z) -> C
+    qetaCoefficient: (%, ZZ) -> C
       ++ qetaCoefficient(x, n) returns the coefficient corresponding
       ++ to grade n.
     qetaLeadingCoefficient: % -> C
       ++ qetaLeadingCoefficient(x) returns qetaCoefficient(x, qetaGrade x).
       ++ The qetaLeadingCoefficient of 0 is undefined.
    add
-    traceout(verbosity: N): % -> OF == (x: %): OF +->
+    traceout(verbosity: NN): % -> OF == (x: %): OF +->
       zero? verbosity => empty()
       one? verbosity => (qetaGrade x)::OF
       x::OF
@@ -175,26 +175,26 @@ in the the \algoPowerSamba{} algorithm}
 ++ A domain implementing XEtaGradedAlgebra(C) is supposed to work like the
 ++ direct product of n=maxIndex() copies of a QEtaAlgebra.
 XEtaGradedAlgebra(C: CommutativeRing): Category == QEtaAlgebra C with
-    maxIndex: () -> P
+    maxIndex: () -> PP
       ++ maxIndex() returns the number of components of this domain.
-    qetaIndex: % -> P
+    qetaIndex: % -> PP
       ++ qetaIndex(x) for nonzero x returns k such that
       ++ qetaGrade(x, k) = max [qetaGrade(x, j) for j in 1..maxIndex()]
       ++ and k is minimal with this property.
       ++ qetaIndex(0) is undefined.
-    qetaGrade: (%, P) -> Z
+    qetaGrade: (%, PP) -> ZZ
       ++ qetaGrade(x, k) returns the grade with the first nonzero entry
       ++ in the k-th component. If the grade is not bounded from below
       ++ this function might run into an infinite loop.
       ++ qetaGrade(0, k) is undefined.
-    qetaGrade: (%, P, Z) -> Z
+    qetaGrade: (%, PP, ZZ) -> ZZ
       ++ qetaGrade(x, k, mn) returns the maximum of qetaGrade(x, k) and
       ++ mn.
-    qetaLeadingCoefficient: (%, P) -> C
+    qetaLeadingCoefficient: (%, PP) -> C
       ++ qetaLeadingCoefficient(x, k) returns the coefficient
       ++ in the k-th component corresponding to qetaGrade(x).
       ++ The qetaLeadingCoefficient of 0 is undefined.
-    qetaGrades: % -> List Z
+    qetaGrades: % -> List ZZ
       ++ qetaGrades(x) returns [qetaGrade(x, k) for k in 1..maxIndex())]
       ++ for nonzero x and [-1 for k in 1..maxIndex()] for x=0.
     if C has Field then
@@ -253,12 +253,12 @@ QEtaExtendedAlgebra(_
     ((x: %) * (y: %)): % == embed(first x * first y, second x * second y)
 
     ((c: C) * (x: %)): % == embed(c * first x, c * second x)
-    ((x: %) ^ (n: N)): % == embed(first(x)^n, second(x)^n)
+    ((x: %) ^ (n: NN)): % == embed(first(x)^n, second(x)^n)
     if A has QEtaGradedAlgebra C then
-        qetaGrade(x: %): Z == qetaGrade first x
-        qetaCoefficient(x: %, n: Z): C == qetaCoefficient(first x, n)
+        qetaGrade(x: %): ZZ == qetaGrade first x
+        qetaCoefficient(x: %, n: ZZ): C == qetaCoefficient(first x, n)
         qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient first x
-        traceout(verbosity: N): % -> OF == (x: %): OF +->
+        traceout(verbosity: NN): % -> OF == (x: %): OF +->
             zero? verbosity => empty()
             one? verbosity => (qetaGrade first x)::OF
             verbosity = 2 =>
@@ -268,14 +268,14 @@ QEtaExtendedAlgebra(_
             verbosity = 4 => bracket [(qetaGrade first x)::OF, (second x)::OF]
             x::OF
     if A has XEtaGradedAlgebra C then
-        maxIndex(): P == maxIndex()$A
-        qetaIndex(x: %): P == qetaIndex first x
-        qetaGrade(x: %, k: P): Z == qetaGrade(first x, k)
-        qetaGrade(x: %, k: P, n: Z): Z == qetaGrade(first x, k, n)
-        qetaLeadingCoefficient(x: %, k: P): C ==
+        maxIndex(): PP == maxIndex()$A
+        qetaIndex(x: %): PP == qetaIndex first x
+        qetaGrade(x: %, k: PP): ZZ == qetaGrade(first x, k)
+        qetaGrade(x: %, k: PP, n: ZZ): ZZ == qetaGrade(first x, k, n)
+        qetaLeadingCoefficient(x: %, k: PP): C ==
             qetaLeadingCoefficient(first x, k)
-        qetaGrades(x: %): List Z == qetaGrades first x
-        traceout(verbosity: N): % -> OF == (x: %): OF +->
+        qetaGrades(x: %): List ZZ == qetaGrades first x
+        traceout(verbosity: NN): % -> OF == (x: %): OF +->
             zero? verbosity => empty()
             one? verbosity => (qetaGrades first x)::OF
             verbosity = 2 =>
@@ -325,22 +325,22 @@ QEtaAlgebraCachedPower(C, A): Exports == Implementation where
     ((x: %) - (y: %)): % == embed(toA x - toA y)
     ((x: %) * (y: %)): % == embed(toA x * toA y)
     ((c: C) * (x: %)): % == embed(c * toA x)
-    ((x: %) ^ (n: N)): % == embed(power!(rep x, n))
+    ((x: %) ^ (n: NN)): % == embed(power!(rep x, n))
     if A has QEtaAlgebra C then
-        traceout(verbosity: N): % -> OF ==
+        traceout(verbosity: NN): % -> OF ==
             (x: %): OF +-> traceout(verbosity)(toA x)
     if A has QEtaGradedAlgebra C then
-        qetaGrade(x: %): Z == qetaGrade toA x
-        qetaCoefficient(x: %, n: Z): C == qetaCoefficient(toA x, n)
+        qetaGrade(x: %): ZZ == qetaGrade toA x
+        qetaCoefficient(x: %, n: ZZ): C == qetaCoefficient(toA x, n)
         qetaLeadingCoefficient(x: %): C == qetaLeadingCoefficient toA x
     if A has XEtaGradedAlgebra C then
-        maxIndex(): P == maxIndex()$A
-        qetaIndex(x: %): P == qetaIndex toA x
-        qetaGrade(x: %, k: P): Z == qetaGrade(toA x, k)
-        qetaGrade(x: %, k: P, n: Z): Z == qetaGrade(toA x, k, n)
-        qetaLeadingCoefficient(x: %, k: P): C ==
+        maxIndex(): PP == maxIndex()$A
+        qetaIndex(x: %): PP == qetaIndex toA x
+        qetaGrade(x: %, k: PP): ZZ == qetaGrade(toA x, k)
+        qetaGrade(x: %, k: PP, n: ZZ): ZZ == qetaGrade(toA x, k, n)
+        qetaLeadingCoefficient(x: %, k: PP): C ==
             qetaLeadingCoefficient(toA x, k)
-        qetaGrades(x: %): List Z == qetaGrades toA x
+        qetaGrades(x: %): List ZZ == qetaGrades toA x
 
 
 )if LiterateDoc

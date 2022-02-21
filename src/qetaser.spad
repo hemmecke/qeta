@@ -82,12 +82,12 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 
-asZ x ==> x pretend Z
+asZZ x ==> x pretend ZZ
 
 UTS(C) ==> UnivariateTaylorSeries(C, 'q, 0$C)
 ULS(C) ==> UnivariateLaurentSeries(C, 'q, 0$C)
@@ -122,7 +122,7 @@ QEtaTaylorSeriesCategory(C: Ring): Category ==
     coerce: % -> UTS C
       ++ coerce(x) interprets x as a univariate Taylor series in the
       ++ variable q about the center 0.
-    multisect : (Z, Z, %) -> %
+    multisect : (ZZ, ZZ, %) -> %
       ++ multisect(a, b, x} selects the coefficients of q^((a+b)*n+a)
       ++ and changes this monomial to q^n.
     revert: % -> %
@@ -170,7 +170,7 @@ QEtaLaurentSeriesCategory(C: Ring): Category ==
       ++ No check is made.
     coerce: % -> ULS C
       ++ coerce(x) returns the element x as a Laurent series.
-    choose: (P, N, %) -> %
+    choose: (PP, NN, %) -> %
       ++ choose(m, t, x) returns the Laurent series z whose n-th
       ++ coefficient is the (m*n+t)-th coefficient of x, 0<=t<m.
       ++ It is an extension of multisect to Laurent series.
@@ -178,10 +178,10 @@ QEtaLaurentSeriesCategory(C: Ring): Category ==
       ++ qetaTaylorRep(x) returns the underlying Taylor representation
       ++ of the Laurent serires. This might return a taylor series that
       ++ has 0 as its constant coefficient.
-    laurent: (Z, QTS C) -> %
+    laurent: (ZZ, QTS C) -> %
       ++ laurent(n, s) creates a Laurent series by multiplying the
       ++ given Taylor series by q^n.
-    removeZeroes: (Z, %) -> %
+    removeZeroes: (ZZ, %) -> %
       ++ removeZeroes(n, x) removes at most n leading zeros from the
       ++ series x and stops as soon as it has found a non-zero leading
       ++ coefficient.
@@ -207,7 +207,7 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
   Exports ==> QEtaLaurentSeriesCategory C
   Implementation ==> ULS C add
     Rep ==> ULS C
-    Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
+    Rec ==> Record(expon: ZZ, ps: QTS C) -- hack!!!
     qetaTaylorRep(x: %): QTS C == (x pretend Rec).ps
     retractIfCan(x: %): Union(QTS C, "failed") ==
         (d := degree x) < 0 =>
@@ -216,7 +216,7 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
             qetaTaylorRep x
         z := qetaTaylorRep x
         zero? d => z
-        z * monomial(1, d::N)
+        z * monomial(1, d::NN)
     retract(x: %): QTS C ==
         (d := degree x) < 0 =>
             x := removeZeroes(-d, x)
@@ -224,21 +224,21 @@ QEtaLaurentSeries(C: Ring): Exports == Implementation where
             qetaTaylorRep x
         z := qetaTaylorRep x
         zero? d => z
-        z * monomial(1, d::N)
+        z * monomial(1, d::NN)
     coerce(s: ULS C): % == per s
     coerce(x: %): ULS C == rep x
-    choose(m: P, t: N, x: %): % ==
+    choose(m: PP, t: NN, x: %): % ==
         -- if possible, get rid of some initial zeros up to degree 0
         x := removeZeroes(-degree x, x)
         -- start with the actual selection of coefficients
-        ord: Z := order(x, max(0, degree x))
+        ord: ZZ := order(x, max(0, degree x))
         ord ~= degree x => error "choose$QEtaLaurentSeries: deg=ord expected"
-        nord: Z := ceiling((ord-t)/m)$Q
-        n: Z := nord*m + t - ord -- 0 <= n < m -- avoid calling "reductum"
+        nord: ZZ := ceiling((ord-t)/m)$QQ
+        n: ZZ := nord*m + t - ord -- 0 <= n < m -- avoid calling "reductum"
         laurent(nord, multisect(m-n, n, qetaTaylorRep x)$QTS(C))
-    laurent(n: Z, s: QTS C): % == per laurent(n, s pretend UTS(C))
-    laurent(n: Z, s: Stream C): % == laurent(n, series(s)$QTS(C))
-    removeZeroes(n: Z, x: %): % == per removeZeroes(n, rep x)
+    laurent(n: ZZ, s: QTS C): % == per laurent(n, s pretend UTS(C))
+    laurent(n: ZZ, s: Stream C): % == laurent(n, series(s)$QTS(C))
+    removeZeroes(n: ZZ, x: %): % == per removeZeroes(n, rep x)
     removeZeroes(x: %): % == per removeZeroes rep x
 
 
@@ -276,11 +276,11 @@ Finite0Series(C: CommutativeRing): Exports == Implementation where
       ++ coerce(x) returns the element x as a QEta Laurent series.
   Implementation ==> QLS C add
     Rep ==> QLS C
-    Rec ==> Record(expon: Z, ps: QTS C) -- hack!!!
+    Rec ==> Record(expon: ZZ, ps: QTS C) -- hack!!!
     coerce(s: QLS C): % == per s
     coerce(x: %): QLS C == rep x
     zero?(x: %): Boolean ==
-        d: Z := degree x -- (x pretend Rec).expon
+        d: ZZ := degree x -- (x pretend Rec).expon
         d > 0 => true
         not zero? coefficient(qetaTaylorRep x, 0) => false -- get out early
         -- remove zeroes until order becomes positive
@@ -289,15 +289,15 @@ Finite0Series(C: CommutativeRing): Exports == Implementation where
         xrec.expon := rec.expon
         xrec.ps    := rec.ps
         xrec.expon > 0 or empty? coefficients(xrec.ps)
-    order(x: %): Z ==
+    order(x: %): ZZ ==
         zero? x => 1 -- destructively set x
         order(x, 0)
-    qetaGrade(x: %): Z == - order x
-    qetaCoefficient(x: %, k: Z): C == coefficient(x, -k)
+    qetaGrade(x: %): ZZ == - order x
+    qetaCoefficient(x: %, k: ZZ): C == coefficient(x, -k)
     qetaLeadingCoefficient(x: %): C ==
         zero? x => 0 -- destructively set x
         leadingCoefficient x
-    choose(m: P, t: N, x: %): % ==
+    choose(m: PP, t: NN, x: %): % ==
         zero? x => 0
         per choose(m, t, rep x)
 
@@ -324,18 +324,18 @@ QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
       ++ qetaLaurentRep(x) returns the underlying Laurent representation
       ++ of the Puiseux seriers. This might return a taylor series that
       ++ has 0 as its constant coefficient.
-    rationalPower : % -> Q
+    rationalPower : % -> QQ
       ++ rationalPower(p(q)) returns a rational number r such that the
       ++ p(q) = l(q^r) for some Laurent series l.
-    puiseux: (Q, QLS C) -> %
+    puiseux: (QQ, QLS C) -> %
       ++ puiseux(r, s) creates a Puiseux series by replacing the
       ++ variable q of a by q^r.
   Implementation ==> UPS C add
     Rep ==> UPS C
-    Rec ==> Record(expon: Q, lSeries: QLS C)
+    Rec ==> Record(expon: QQ, lSeries: QLS C)
     qetaLaurentRep(x: %): QLS C == (x pretend Rec).lSeries
-    rationalPower(x: %): Q == (x pretend Rec).expon
-    puiseux(q: Q, qls: QLS C): % ==
+    rationalPower(x: %): QQ == (x pretend Rec).expon
+    puiseux(q: QQ, qls: QLS C): % ==
         rec: Rec := [q, qls]$Rec
         rec pretend %
 

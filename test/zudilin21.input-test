@@ -36,14 +36,14 @@
 -------------------------------------------------------------------
 -- -
 
-C ==> Q
+C ==> QQ
 MOD ==> MOD0
 
-VZ ==> Vector Z
-VQ ==> Vector Q
-MQ ==> Matrix Q
-RELS ==> VZ
-QINPUT ==> Record(qmat: MQ, zrels: RELS, qrhs: VQ)
+VZZ ==> Vector ZZ
+VQQ ==> Vector QQ
+MQQ ==> Matrix QQ
+RELS ==> VZZ
+QINPUT ==> Record(qmat: MQQ, zrels: RELS, qrhs: VQQ)
 
 setWeight(qin, w) ==> (_
   for i in 1..#(qin.zrels) repeat (_
@@ -106,11 +106,11 @@ f21epol63 := E7 / (2*E1^2*E3*E9*E21) _
         (3*E1^2*E7^2*E9^4 - E3^5*E7*E9*E21 + 7*E1*E3^2*E9*E21^4_
          + 3*E1^3*E7*E9^3*E63 - 3*E1*E3^5*E21*E63 + 3*E1^4*E9^2*E63^2)
 esyms := indexedSymbols("E", divisors nn);
-dim: N := #esyms;
-num21RZ := toRZ numer f21epol63;
-den21RZ := toRZ denom f21epol63;
-f21polzudilinRZ := (num21RZ exquo den21RZ)::RZ;
-f21 := rzToA1(C) f21polzudilinRZ
+dim: NN := #esyms;
+num21RZZ := toRZZ numer f21epol63;
+den21RZZ := toRZZ denom f21epol63;
+f21polzudilinRZ := (num21RZZ exquo den21RZZ)::RZZ;
+f21 := rzzA1(C) f21polzudilinRZ
 
 -- The following variables must be made invalid for
 -- further computation.
@@ -247,7 +247,7 @@ assertEquals(#zmodformzi, 138)
 
 -- +
  -- part of the Ligozat matrix that gives the order at infinity
-vdivs := vector(divisors nn)$VZ;
+vdivs := vector(divisors nn)$VZZ;
 vmodformgens := [vector x for x in zmodformzi];
 vmodformgenss := sort((x1,x2)+->dot(vdivs,x1)<dot(vdivs,x2), vmodformgens);
 rmodformgens := [members x for x in vmodformgenss];
@@ -291,7 +291,7 @@ cf21 := [coefficient(f21, i) for i in 0..ncoefs]
 -- $v$ of length `ncols(matmodforms)` such that
 -- `matmodformgens * v = cf21`
 
-rels: VZ := new(nrows matmodforms, 0); -- means equality
+rels: VZZ := new(nrows matmodforms, 0); -- means equality
 zmodforms := zsolve(matmodforms, rels, vector cf21)$X4ti2;
 zmodformszi := zmodforms.zinhom;
 zmodformszf := zmodforms.zfree;
@@ -355,31 +355,31 @@ xg21gens: List X1 C := [toX1(C, x, sy) for x in emodformgens for sy in qsyms];
 xg21 := -xg21gens.57 + 2*xg21gens.60 + xg21gens.100
 g21qpol := second(xg21)::Pol(C);
 esyms := indexedSymbols("E", divisors nn);
-dim: N := #esyms;
-qsymsRZ := [monRZ x for x in rmodformgens];
+dim: NN := #esyms;
+qsymsRZZ := [monRZZ x for x in rmodformgens];
 
-g21polRZ := EVALRZ(qsyms, qsymsRZ, g21qpol);
-g21 := rzToA1(C) g21polRZ;
+g21polRZZ := EVALRZZ(qsyms, qsymsRZZ, g21qpol);
+g21 := rzzA1(C) g21polRZZ;
 z0 := g21 - f21;
 assertEquals(order(z0, 301), 301)
 
-rez g21polRZ
+rezz g21polRZZ
 
 -- Find common denominator
 
-minEntries(x: DZ, y: DZ): DZ == (_
+minEntries(x: DZZ, y: DZZ): DZZ == (_
     directProduct vector [min(x.i, y.i) for i in 1..#x]);
 
-g21monsDZ := [degree mon for mon in monomials g21polRZ];
+g21monsDZZ := [degree mon for mon in monomials g21polRZZ];
 
-g21denDZ := - reduce(minEntries, g21monsDZ, 0$DZ)$List(DZ);
-assertEquals(g21denDZ::VZ, vector [0,1,1,0,0,1,1,1])
-g21denRZ := monomial(1, g21denDZ)$RZ;
-g21numRZ := g21polRZ * g21denRZ;
-rez g21numRZ
-rez g21denRZ
+g21denDZZ := - reduce(minEntries, g21monsDZZ, 0$DZZ)$List(DZZ);
+assertEquals(g21denDZZ::VZZ, vector [0,1,1,0,0,1,1,1])
+g21denRZZ := monomial(1, g21denDZZ)$RZZ;
+g21numRZ := g21polRZZ * g21denRZZ;
+rezz g21numRZ
+rezz g21denRZZ
 
-fRZtoE(x: RZ): Pol(C) == (_
+fRZtoE(x: RZZ): Pol(C) == (_
   c := leadingCoefficient(x);_
   dd := degree(x);_
   divs := divisors(42);_
@@ -398,9 +398,9 @@ assertEquals(enumpol,_
 -- eta-quotients by reduction via the algebra basis.
 
 fmpol
-msymsRZ := [specMonRZ x for x in mspecs42];
-fpolRZ := EVALRZ(msyms42, msymsRZ, fmpol);
-fm := rzToA1(C) fpolRZ;
+msymsRZZ := [specMonRZZ x for x in mspecs42];
+fpolRZZ := EVALRZZ(msyms42, msymsRZZ, fmpol);
+fm := rzzA1(C) fpolRZZ;
 z0 := fm - f
 assertTrue(zero? z0)
 assertEquals(order(z0, 301), 301)
@@ -409,9 +409,9 @@ assertEquals(order(z0, 301), 301)
 -- a relation for the corresponding modular function by
 -- multiplication with the cofactor.
 
-rfcofactorRZ := monRZ rfcofactor
-gpolRZ := g21polRZ * monRZ rfcofactor;
-g := rzToA1(C) gpolRZ;
+rfcofactorRZZ := monRZZ rfcofactor
+gpolRZZ := g21polRZZ * monRZZ rfcofactor;
+g := rzzA1(C) gpolRZZ;
 assertTrue(zero?(g - f))
 z0 := f - g21 * specM0A1(C) eqSPEC(nn, rfcofactor);
 assertTrue(zero? z0)
@@ -428,8 +428,8 @@ assertEquals(order(z0, 301), 301)
 nn := 42; spitzen := cuspsM0 nn;
 xiord := 24*nn;
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
-fmA42 := rzToAn(CX) fpolRZ;
-gA42 := rzToAn(CX) gpolRZ
+fmA42 := rzzAn(CX) fpolRZZ;
+gA42 := rzzAn(CX) gpolRZZ
 z0 := fmA42 - gA42
 assertTrue(zero? z0)
 

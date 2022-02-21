@@ -78,14 +78,14 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
 
-asN x ==> x pretend N
-asP x ==> x pretend P
-asZ x ==> x pretend Z
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
+asZZ x ==> x pretend ZZ
 
 )if LiterateDoc
 %$
@@ -121,7 +121,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
   SUP ==> SparseUnivariatePolynomial
 
   Exports ==> FiniteFieldCategory with
-    rank: () -> Z
+    rank: () -> ZZ
       ++ rank() returns the size of the current triangular set used
       ++ for the extension.
     extendBy!: SUP % -> % -- yields a root (lifted variable)
@@ -130,7 +130,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
       ++ assumed that p is irreducible with respect to the current
       ++ extension. The return value is a root of the given polynomial
       ++ (then considered to be an element of this domain.
-    minimalPolynomial: P -> SUP %
+    minimalPolynomial: PP -> SUP %
       ++ minimalPolynomial(n) for n < rank() returns the n-th extension
       ++ polynomial.
     -- charthRoot: % -> % -- not that x^p = x if p=char(K)
@@ -140,13 +140,13 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
       ++ getRelations() returns the triangular set that is used for
       ++ the extension. The list is sorted descendingly by the main
       ++ variable of the respective polynomial.
-    getRelation: P -> R
+    getRelation: PP -> R
       ++ getRelation(n) for n<= rank() returns the n-th extension
       ++ polynomial.
-    getGenerator: P -> %
+    getGenerator: PP -> %
       ++ getGenerator(n) for n < rank() returns a root of the n-th
       ++ extension polynomial.
-    size: () -> N
+    size: () -> NN
       ++ size() returns the number of elements in the current
       ++ extension. size() changes with every extension, i.e., with
       ++ every call to extendBy!(p).
@@ -160,17 +160,17 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
     xx ==> rep x
     yy ==> rep y
 
-    RZ ==> SUP R
+    RZZ ==> SUP R
     G1 ==> Record(gcd: NUP %, coef1: NUP %) -- for "inv" computation
 
     FUNION ==> Union("nil", "sqfr", "irred", "prime")
 
-    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: N)
+    FREC ==> Record(flag: FUNION, factor: SUP %, exponent: NN)
     FL ==> List FREC
 
     univar(r, v) ==> (univariate(r, v)$R) pretend SUP % -- (%, V) -> SUP %
     nunivar(r, v) ==> (univariate(r, v)$R) pretend NUP % -- (%, V) -> NUP %
-    multivar(s, v) ==> per(multivariate(s pretend RZ, v)$R) -- (NUP %, V) -> %
+    multivar(s, v) ==> per(multivariate(s pretend RZZ, v)$R) -- (NUP %, V) -> %
 
     -- In contrast to \cite{Steel_AlgebraicallyClosedFields_2010} we
     -- only allow irreducible polynomial to extend. In other words,
@@ -198,20 +198,20 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         --   one has a degree < di), we only have to replace the
         --   powers j >= di by the respective entries in arr(j-di).
         vars: List V,_
-        lvlsz: List Z,_
+        lvlsz: List ZZ,_
         ts: List R,_
         powers: List PrimitiveArray SUP %,
-        rnk: Z)
+        rnk: ZZ)
 
     -- The domain state is changed destructively.
     state: STATE := [_
         empty()$List(V),_
-        [size()$K]$List(Z),_
+        [size()$K]$List(ZZ),_
         empty()$List(R), _
         empty()$List(PrimitiveArray SUP %),_
         0]
 
-    rank(): Z == state.rnk
+    rank(): ZZ == state.rnk
 
     getRelations(): List R == state.ts
 
@@ -219,47 +219,47 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         print(getRelations()::OF)$OF
         print((state.powers)::OF)$OF
 
-    getRelation(n: P): R ==
+    getRelation(n: PP): R ==
         --assert(not zero? state.rnk)
         triset: List R := getRelations()::List(R)
-        triset(state.rnk - asZ(n) + 1)
+        triset(state.rnk - asZZ(n) + 1)
 
-    minimalPolynomial(n: P): SUP % ==
+    minimalPolynomial(n: PP): SUP % ==
         f: R := getRelation n
         univar(f, mvar f)
 
-    getPower(n: P): PrimitiveArray SUP % ==
+    getPower(n: PP): PrimitiveArray SUP % ==
         --assert(not zero? state.rnk)
-        (state.powers)(state.rnk - asZ(n) + 1)
+        (state.powers)(state.rnk - asZZ(n) + 1)
 
-    getGenerator(n: P): % ==
+    getGenerator(n: PP): % ==
         --assert(not zero? state.rnk)
         --assert(n <= state/rnk)
         v: V := index(n)$V
-        multivar(monomial(1, 1$N)$RZ, v)
+        multivar(monomial(1, 1$NN)$RZZ, v)
 
-    getLevelSizes(): List Z == state.lvlsz
+    getLevelSizes(): List ZZ == state.lvlsz
 
-    size(): N == asN first getLevelSizes()
+    size(): NN == asNN first getLevelSizes()
 
-    indexRec(n: Z, ls: List Z): % ==
+    indexRec(n: ZZ, ls: List ZZ): % ==
         --assert(not empty? ls)
         --assert(n < first ls)
         --assert(n >= 0)
         zero? n => 0
 
-        empty? ls => per((index(asP n)$K)::R) -- Base case; element of K
-        b: Z := first ls
+        empty? ls => per((index(asPP n)$K)::R) -- Base case; element of K
+        b: ZZ := first ls
         n < b => indexRec(n, rest ls)
 
-        k: P := asP(#ls)
+        k: PP := asPP(#ls)
         v: V := index(k)$V
         -- Now find the "digits" of n in base b
         s: NUP % := 0
-        j: N := 0
+        j: NN := 0
         while n > 0 repeat
-            rec: Record(quotient: Z, remainder: Z) := divide(n, b)
-            r: Z := rec.remainder
+            rec: Record(quotient: ZZ, remainder: ZZ) := divide(n, b)
+            r: ZZ := rec.remainder
             if not zero? r then
                 c: % := indexRec(r, ls)
                 s := s + monomial(c, j)$NUP(%)
@@ -267,21 +267,21 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
             j := j + 1
         multivar(s, v)
 
-    index(n: P): % ==
+    index(n: PP): % ==
         -- Important: Even after extending the field, i.e. growing ts,
         -- index(n) should give the same element as before.
         -- The basic ideas is that we consider the constant of the
         -- polynomial first.
         -- The following algorithm works recursively.
-        ls: List Z := getLevelSizes()
-        nn: Z := first ls
+        ls: List ZZ := getLevelSizes()
+        nn: ZZ := first ls
         -- Note that index expects n in the range 1..size(), but
         -- indexRec in the range 0..size()-1.
-        indexRec(positiveRemainder(asZ n - 1, nn), rest ls)
+        indexRec(positiveRemainder(asZZ n - 1, nn), rest ls)
 
-    lookupRec(r: R, triset: List R, ls: List Z): Z == -- local function
+    lookupRec(r: R, triset: List R, ls: List ZZ): ZZ == -- local function
         zero? r => 0
-        ground? r => asZ(lookup(ground r)$K)
+        ground? r => asZZ(lookup(ground r)$K)
 
         -- assert(#triset + 1 = #ls
         -- lookupRec returns values in the range 0..size()-1.
@@ -291,21 +291,21 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
             ls := rest ls
         triset := rest triset
         ls := rest ls
-        sz: Z := first ls
-        result: Z := lookupRec(leadingCoefficient(r, v), triset, ls)
-        d: Z := asZ mdeg r
+        sz: ZZ := first ls
+        result: ZZ := lookupRec(leadingCoefficient(r, v), triset, ls)
+        d: ZZ := asZZ mdeg r
         while not zero?(r := reductum r) repeat
-            e: N := asN(d - (d := asZ mdeg r))
-            c: Z := lookupRec(leadingCoefficient(r, v), triset, ls)
+            e: NN := asNN(d - (d := asZZ mdeg r))
+            c: ZZ := lookupRec(leadingCoefficient(r, v), triset, ls)
             result := result * sz^e + c
-        result * sz^asN(d)
+        result * sz^asNN(d)
 
-    lookup(x: %): P ==
+    lookup(x: %): PP ==
         -- lookup returns values in the range 1..size().
         import from R
         triset: List R := getRelations()
-        ls: List Z := getLevelSizes()
-        asP(1 + lookupRec(xx, triset, ls))
+        ls: List ZZ := getLevelSizes()
+        asPP(1 + lookupRec(xx, triset, ls))
 
     charthRoot(x: %): % == x^(size() quo characteristic())
 
@@ -313,7 +313,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         empty? triset => per((random()$K)::R)
         r: R := first triset
         v: V := mvar r
-        d: Z := asZ mdeg r
+        d: ZZ := asZZ mdeg r
         triset := rest triset
         z: NUP % := 0
         for i in 0..d-1 repeat z := monomial(randomLevel(triset), i) + z
@@ -343,25 +343,25 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
                 z := z + monomial(x * leadingCoefficient(uy), degree uy)
             return multivar(z, vy)
         --assert(vx = vy)
-        n: P := lookup vx
+        n: PP := lookup vx
         pow: PrimitiveArray SUP % := getPower n
         ux: SUP % := univar(xx, vx)
         uz: SUP % := ux * uy
         z: SUP % := 0
-        d: Z := asZ degree(getRelation n, vx)
+        d: ZZ := asZZ degree(getRelation n, vx)
         --assert(degree(uz) < 2*d-1)
-        while ((dd:Z := asZ degree uz) >= d) repeat
+        while ((dd:ZZ := asZZ degree uz) >= d) repeat
             z := z + leadingCoefficient(uz)*pow(dd-d)
             uz := reductum uz
         multivar(z + uz, vx)
 
-    ((x: %) ^ (n: P)): % == expt(x, n)$RepeatedSquaring(%)
-    ((x: %) ^ (n: N)): % ==
+    ((x: %) ^ (n: PP)): % == expt(x, n)$RepeatedSquaring(%)
+    ((x: %) ^ (n: NN)): % ==
         zero? n => 1
-        x^asP(n)
-    ((x: %) ^ (n: Z)): % ==
-        n < 0 => inv(x) ^ asP(-n)
-        x^asN(n)
+        x^asPP(n)
+    ((x: %) ^ (n: ZZ)): % ==
+        n < 0 => inv(x) ^ asPP(-n)
+        x^asNN(n)
 
     ((x: %) / (y: %)): % == x * inv y
     ((x: %) quo (y: %)): % == x / y
@@ -375,12 +375,12 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         ground? xx => per((inv(ground xx)$K)::R)
         v: V := mvar xx
         f: NUP % := nunivar(xx, v)
-        n: P := lookup v
+        n: PP := lookup v
         gn: R := getRelation n
         g: NUP % := nunivar(gn, v)
         cu: G1 := halfExtendedSubResultantGcd1(f, g)
         c: NUP % := cu.gcd
-        import from N
+        import from NN
         not zero? degree c => error "IFFTS: inv: gcd is not a constant"
         lcc: % := leadingCoefficient c
         inv(lcc) * multivar(cu.coef1, v)
@@ -392,7 +392,7 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
     associates?(x: %, y: %): Boolean ==
         if zero? x then zero? y else not(zero? y)
 
-    characteristic(): N == characteristic()$K
+    characteristic(): NN == characteristic()$K
     recip(x: %): Union(%, "failed") ==
         zero? x => "failed"
         inv x
@@ -428,14 +428,14 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
     createPrimitiveElement(): % ==
         error "IFFTS: 'createPrimitiveElement' not implemented"
     primitiveElement(): % == error "IFFTS: 'primitiveElement; not implemented"
-    discreteLog(x: %): N == error "IFFTS: 'discreteLog' not implemented"
-    discreteLog(x: %, y: %): Union(N, "failed") ==
+    discreteLog(x: %): NN == error "IFFTS: 'discreteLog' not implemented"
+    discreteLog(x: %, y: %): Union(NN, "failed") ==
         error "IFFTS: 'discreteLog' not implemented"
-    factorsOfCyclicGroupSize(): List Record(factor: Z, exponent: N) ==
+    factorsOfCyclicGroupSize(): List Record(factor: ZZ, exponent: NN) ==
         error "IFFTS: 'factorsOfCyclicGroupSize' not implemented"
     representationType(): Union("prime", "polynomial", "normal", "cyclic") ==
         error "IFFTS: 'representationType' not implemented"
-    tableForDiscreteLogarithm(n: Z): Table(P, N) ==
+    tableForDiscreteLogarithm(n: ZZ): Table(PP, NN) ==
         error "IFFTS: 'tableForDiscreteLogarithm' not implemented"
 
     --:     -- tableForDiscreteLogarithm(a, n) returns a table of the discrete
@@ -452,12 +452,12 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         -- The statement "v: V := new()" is wrong since it is possible
         -- that somebody else also used V to create a new variable, so
         -- we must say which variable we want.
-        v: V := index asP(state.rnk + 1) -- get/create variable with that index
+        v: V := index asPP(state.rnk + 1) -- get/create variable with that index
         x := monomial(1, 1)$SUP(%)
-        d: N := degree f
+        d: NN := degree f
         arr: PrimitiveArray SUP % := new(d, 0)
         arr.0 := - reductum f
-        i: N := 1
+        i: NN := 1
         while i < d repeat
             arr.i := x * arr.(i-1)
             if degree(arr.i) = d then
@@ -482,13 +482,13 @@ InnerFiniteFieldExtensionByTriangularSet(K): Exports == Implementation where
         -- The polynomials here are chosen to be relatively simple, but
         -- complicated enough to trigger a recomputation of the cache in
         -- ModMonic.
-        n: N := if d = 2 and characteristic() = 2 then 3 else 2
+        n: NN := if d = 2 and characteristic() = 2 then 3 else 2
         dbgPrint("IFFTS n", n)
         factor(monomial(1$%, n)$SUP(%) - 1$SUP(%)) -- create n-th root of unity
         dbgPrint("IFFTS n", -n)
         factor(monomial(1$%, n)$SUP(%) + 1$SUP(%)) -- nth-root of (-1)
         dbgPrint("IFFTS n", 0)
-        multivar(monomial(1, 1$N)$SUP(R), v)
+        multivar(monomial(1, 1$NN)$SUP(R), v)
 
 
 )if LiterateDoc

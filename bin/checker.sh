@@ -27,14 +27,14 @@ function fricas_program {
 )r etamacros
 
 S ==> Symbol
-PZ ==> SparseUnivariatePolynomial Z
-PQ ==> SparseUnivariatePolynomial Q
-Rec ==> Record(root: P, elem: PZ)
+PZZ ==> SparseUnivariatePolynomial ZZ
+PQQ ==> SparseUnivariatePolynomial QQ
+Rec ==> Record(root: PP, elem: PZZ)
 SEQUO ==> SymbolicEtaQuotient
-PL ==> PolynomialCategoryLifting(N, SingletonAsOrderedSet, C, PZ, PQ)
-CX ==> SimpleAlgebraicExtension(Q, PQ, pq)
+PL ==> PolynomialCategoryLifting(NN, SingletonAsOrderedSet, C, PZZ, PQQ)
+CX ==> SimpleAlgebraicExtension(QQ, PQQ, pq)
 LX ==> QEtaLaurentSeries CX
-EQX ==> EtaQuotientX(Q, mx, CX, xi, LX)
+EQX ==> EtaQuotientX(QQ, mx, CX, xi, LX)
 EQXA ==> EtaQuotientExpansionAlgebra(CX, LX, level)
 
 -- compute the basis of eta-quotients in terms of expansions
@@ -42,16 +42,16 @@ level := $LEVEL
 )r ../etafiles/Hemmecke/etaRelations$LEVEL
 erels := etaRelations$N
 
-divs: List P := DIVISORS level
+divs: List PP := DIVISORS level
 esyms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
 allmons := [monomials erel for erel in erels]
-alldegs := [[vector(degree(mon, esyms)::List(Z)) for mon in mons] for mons in allmons]
+alldegs := [[vector(degree(mon, esyms)::List(ZZ)) for mon in mons] for mons in allmons]
 allrdegs := [[d - first degs for d in degs] for degs in alldegs]
 allrs := [[members r for r in rdegs] for rdegs in allrdegs]
 alllse := [[etaQuotient(level, r)\$SEQUO for r in rs] for rs in allrs];
-mx: P := lcm [lcm [rootOfUnity e for e in lse] for lse in alllse]
-pz: PZ := cyclotomic(mx)\$CyclotomicPolynomialPackage
-pq: PQ := map(n+->monomial(1\$Q,1\$N)\$PQ, c+->c::Q::PQ, pz)\$PL
+mx: PP := lcm [lcm [rootOfUnity e for e in lse] for lse in alllse]
+pz: PZZ := cyclotomic(mx)\$CyclotomicPolynomialPackage
+pq: PQQ := map(n+->monomial(1\$QQ,1\$NN)\$PQQ, c+->c::QQ::PQQ, pz)\$PL
 xsym: Symbol := "x"::Symbol
 xi := generator()\$CX
 allle := [[etaQuotient(e)\$EQX for e in lse] for lse in alllse];

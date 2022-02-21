@@ -2,10 +2,10 @@
 )set mess time off
 )r etacompute
 
-C ==> Q
-VZ ==> Vector Z
-VQ ==> Vector Q
-MZ ==> Matrix Z
+C ==> QQ
+VZZ ==> Vector ZZ
+VQQ ==> Vector QQ
+MZZ ==> Matrix ZZ
 
 )set mess type off
 )set mess time off
@@ -24,8 +24,8 @@ esyms := indexedSymbols("E", divs);
 spitzen := CUSPS0 level;
 dimM := dimensionOfModularForms(wght)$GAMMA0(level);
 dim := #divs;
-vdivs := vector(divs)$VZ;
-grdsrt(x1: VZ, x2: VZ): Boolean == dot(vdivs,x1)$VZ < dot(vdivs,x2)$VZ
+vdivs := vector(divs)$VZZ;
+grdsrt(x1: VZZ, x2: VZZ): Boolean == dot(vdivs,x1)$VZZ < dot(vdivs,x2)$VZZ
 
 equalSeries?(f1: A1 C, f2: A1 C): Boolean ==
     fd := f1 - f2
@@ -56,23 +56,23 @@ computation(): Boolean ==
     if rnk < dim then
         dbgPrint("WARNING: rank smaller than dimension",
                  [ncoefs, #rmodformgens, rnk, dimM])
-    matmodforms: MZ := transpose matrix cmodformgens
-    vf := vector [coefficient(ff, i)::Z for i in 0..ncoefs]
-    rels: VZ := new(nrows matmodforms, 0)
+    matmodforms: MZZ := transpose matrix cmodformgens
+    vf := vector [coefficient(ff, i)::ZZ for i in 0..ncoefs]
+    rels: VZZ := new(nrows matmodforms, 0)
     zmodforms := zsolve(matmodforms, rels, vf)$X4ti2
     zmodformszi := zmodforms.zinhom
-    mons := [monRZ x for x in rmodformgens]
+    mons := [monRZZ x for x in rmodformgens]
     vPrint("divs", divs)
     if zero?(#zmodformszi) then
         vPrint("holomorphicRelationWithIntegerCoefficients", false)
       else
-        sv := (first zmodformszi)::VQ -- solution vector
+        sv := (first zmodformszi)::VQQ -- solution vector
         fz := reduce(_+, [sv.i * emodformgens.i for i in 1..#sv])
         not equalSeries?(fz, ff) => return false
         fzpol := reduce(_+, [sv.i * mons.i for i in 1..#sv])
         vPrint("holomorphicRelationWithIntegerCoefficients", true)
         vPrint("fzpol", fzpol)
-        vPrint("lzpol", rez fzpol)
+        vPrint("lzpol", rezz fzpol)
     sol := solve(matmodforms, vf)
     if sol.particular case "failed" then
         vPrint("holomorphicRelationWithRationalCoefficients", false)
@@ -83,7 +83,7 @@ computation(): Boolean ==
         fzpol := reduce(_+, [sv.i * mons.i for i in 1..#sv])
         vPrint("holomorphicRelationWithRationalCoefficients", true)
         vPrint("fqpol", fzpol)
-        vPrint("lqpol", rez fzpol)
+        vPrint("lqpol", rezz fzpol)
     true
 
 vPrint("SUCCESS", computation());

@@ -24,7 +24,7 @@
 -------------------------------------------------------------------
 -- -
 
-C ==> Q
+C ==> QQ
 LX ==> L1 CX
 MOD ==> MOD0
 ORBIT ==> modularOrbit $ MOD0
@@ -48,22 +48,22 @@ ORBIT ==> modularOrbit $ MOD0
 -------------------------------------------------------------------
 -- -
 
-nn := 10 :: P;
+nn := 10 :: PP;
 idxs := etaFunctionIndices nn
 rspec := eqSPEC [[1,-1]]
-m := 5 :: P;
+m := 5 :: PP;
 spitzen := cuspsM0 nn
 
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
-t := (first first orbs)::Z
+t := (first first orbs)::ZZ
 assertEquals(t, 4)
 
 sspec := cofactInfM0(nn, rspec, m, t, idxs)
 assertEquals(sspec, eqSPEC(10,[[1,6],[5,-5]]))
 
-minroot := 120 :: P
+minroot := 120 :: PP
 yf := specYM0EQ(sspec, rspec, m, t);
-xiord := minimalRootOfUnity(yf)::P
+xiord := minimalRootOfUnity(yf)::PP
 assertEquals(xiord, minroot)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 mf := expandM0AnCX yf
@@ -85,20 +85,20 @@ assertTrue zero?(mf+minusfive)
 -------------------------------------------------------------------
 -- -
 
-nn := 14 :: P;
+nn := 14 :: PP;
 idxs := etaFunctionIndices nn
 rspec := eqSPEC [[1,-1]];
-m := 7 :: P;
+m := 7 :: PP;
 spitzen := cuspsM0 nn
 
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
-t := (first first orbs) :: N
+t := (first first orbs) :: NN
 assertEquals(t, 5)
 
-sspec := cofactInfM0(nn, rspec, m, t, idxs) --: List Z
+sspec := cofactInfM0(nn, rspec, m, t, idxs) --: List ZZ
 assertEquals(sspec,  eqSPEC[[1,7], [2,1], [14,-7]])
 
-minroot := 168 :: P
+minroot := 168 :: PP
 
 -- TODO:
 -- c := etaCofactorSpace0(nn, mm, s, m, t)$QEtaCofactorSpace
@@ -139,7 +139,7 @@ assertTrue(zero?(mf - rhs))
 
 -- Check that the sifted computation equals modular computation as prefactor.
 
-nn := 14 :: P;
+nn := 14 :: PP;
 idxs := etaFunctionIndices nn
 xiord := 168
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
@@ -162,24 +162,24 @@ assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 -------------------------------------------------------------------
 -- -
 
-nn := 22 :: P;
+nn := 22 :: PP;
 idxs := etaFunctionIndices nn
---nn: P := 11; r: List Z := [0, 1]
---nn: P := 22; r: List Z := [-10,10,-9,10]
+--nn: PP := 11; r: List ZZ := [0, 1]
+--nn: PP := 22; r: List ZZ := [-10,10,-9,10]
 rspec := eqSPEC [[1, -1]]
-m := 11 :: P;
+m := 11 :: PP;
 spitzen := cuspsM0 nn
 
 orbs := [orb for tt in 0..m-1 | (orb := ORBIT(rspec,m,tt); one? # orb)]
-t := (first first orbs)::N
+t := (first first orbs)::NN
 assertEquals(t, 6)
 
 sspec := cofactInfM0(nn, rspec, m, t, idxs)
 assertEquals(pureExponents sspec, [10, 2, 11, -22])
 
-minroot := 264 :: P;
+minroot := 264 :: PP;
 yf := specYM0EQ(sspec, rspec, m, t);
-xiord:= minimalRootOfUnity(yf) :: P
+xiord:= minimalRootOfUnity(yf) :: PP
 assertEquals(xiord, minroot)
 EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi)
 mf := expandM0AnCX yf
@@ -197,7 +197,7 @@ mgens := [_
   [- 2,   6,  6, - 10],_
   [  0,   4,  8, - 12],_
   [  2,   2, 10, - 14],_
-  [  4,   0, 12, - 16]]$List(List Z)
+  [  4,   0, 12, - 16]]$List(List ZZ)
 mspecs := [eqSPEC(nn, x) for x in mgens];
 
 assertEquals(sort [pureExponents x for x in mSPECSInfM0(nn,idxs)], sort mgens)

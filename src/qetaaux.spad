@@ -70,23 +70,23 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
-P ==> PositiveInteger
-N ==> NonNegativeInteger
-Z ==> Integer
-Q ==> Fraction Z
-MZ ==> Matrix Z -- will be a square matrix
-MQ ==> Matrix Q -- matrixEtaOrder
-SL2Z ==> MZ -- represents SL_2(Z)
-EXGCD ==> Record(coef1: Z, coef2: Z, generator: Z)
-Rec ==> Record(red: SL2Z, triang: MZ)
-Pol ==> SparseUnivariatePolynomial Z
-LZ ==> List Z
-LLZ ==> List LZ
+PP ==> PositiveInteger
+NN ==> NonNegativeInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+MZZ ==> Matrix ZZ -- will be a square matrix
+MQQ ==> Matrix QQ -- matrixEtaOrder
+SL2Z ==> MZZ -- represents SL_2(ZZ)
+EXGCD ==> Record(coef1: ZZ, coef2: ZZ, generator: ZZ)
+Rec ==> Record(red: SL2Z, triang: MZZ)
+Pol ==> SparseUnivariatePolynomial ZZ
+LZZ ==> List ZZ
+LLZZ ==> List LZZ
 
 INTF ==> IntegerNumberTheoryFunctions
 
-asN x ==> x pretend N
-asP x ==> x pretend P
+asNN x ==> x pretend NN
+asPP x ==> x pretend PP
 
 )if LiterateDoc
 %$
@@ -109,13 +109,13 @@ vector to correspond to a modular eta-quotient is violated.
 ++ QEtaAuxiliaryPackage helps to do computations with
 ++ eta-quotients that are modular functions.
 QEtaAuxiliaryPackage: with
-    matrixAtkinLehner: (P, P) -> MZ
+    matrixAtkinLehner: (PP, PP) -> MZZ
       ++ matrixAtkinLehner(m, t) with t a Hall divisor
       ++ (https://en.wikipedia.org/wiki/Hall_subgroup) of m returns
       ++ the 2x2 matrix with entries [[t, -a], [m, t*b]] such that
       ++ n=m/t and t*b + n*a = 1, see
       ++ \cite{Kohnen_WeierstrassPointsAtInfinity_2004}.
-    modularGamma0: (P, List Z) -> Z
+    modularGamma0: (PP, List ZZ) -> ZZ
       ++ modularGamma0(nn, r) returns 0 if all conditions are
       ++ fulfilled. Otherwise it returns a positive number in the
       ++ range 1 to 4 that corresponds to the condition that is not
@@ -126,112 +126,112 @@ QEtaAuxiliaryPackage: with
       ++ \eqref{eq:productsquare} in qeta.tex.
       ++ It is equivalent to check whether there is an extension v of r
       ++ such that matrixModular(nn)*v is 0.
-    modularGamma0?: (P, List Z) -> Boolean
+    modularGamma0?: (PP, List ZZ) -> Boolean
       ++ modularGamma0(nn, r) returns true iff the eta-quotient
       ++ corresponding to r is a modular function for Gamma_0(nn). It
       ++ is equivalent to zero?(modularGamma0(nn, r)).
-    jacobiLowerStar: (Z, Z) -> Z
+    jacobiLowerStar: (ZZ, ZZ) -> ZZ
       ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
       ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
-    jacobiUpperStar: (Z, Z) -> Z
+    jacobiUpperStar: (ZZ, ZZ) -> ZZ
       ++ See, for example, Definition 2.26 in the PhD thesis of Silviu Radu.
       ++ http://www3.risc.jku.at/publications/download/risc_5453/main.pdf
-    upsilonExponent: (Z, Z, Z, Z) -> Z
+    upsilonExponent: (ZZ, ZZ, ZZ, ZZ) -> ZZ
       ++ upsilonExponent(a,b,c,d) returns z \in {0..23} such that
       ++ exp(\pi*i*z/12) is a multiplier in the transformation of an
-      ++ eta-function by the matrix [[a,b],[c,d]] from SL_2(Z).
+      ++ eta-function by the matrix [[a,b],[c,d]] from SL_2(ZZ).
       ++ A definition can be found in \cite[Lemma~2.27]{Radu_PhD_2010}.
-    upsilonExponent: MZ -> Z
-      ++ upsilonExponent(m) for a matrix m from SL_2(Z) returns
+    upsilonExponent: MZZ -> ZZ
+      ++ upsilonExponent(m) for a matrix m from SL_2(ZZ) returns
       ++ upsilonExponent(m(1,1), m(1,2), m(2,1), m(2,2)).
-    numberOfGaps: (P, List P) -> N
+    numberOfGaps: (PP, List PP) -> NN
       ++ numberOfGaps(n, l) computes
       ++ reduce(+, [floor(x/n) for x in l], 0).
-    splitMatrix: (SL2Z, Z, P, N) -> Rec
+    splitMatrix: (SL2Z, ZZ, PP, NN) -> Rec
       ++ splitMatrix(mat, delta, m, lambda) computes
       ++ splitMatrix(a, b, c, d) where the arguments are the matrix
       ++ entries of matrix [[delta, delta*lambda], [0, m]]*mat.
       ++ Input condition: determinant(mat)>0.
-    splitMatrix: (SL2Z, Z) -> Rec
+    splitMatrix: (SL2Z, ZZ) -> Rec
       ++ splitMatrix(mat, delta) computes splitMatrix(mat, delta, 1, 0).
       ++ Input condition: determinant(mat)>0.
-    splitMatrix: (Z, Z, Z, Z) -> Rec
+    splitMatrix: (ZZ, ZZ, ZZ, ZZ) -> Rec
       ++ splitMatrix(a, b, c, d) returns a record rec that contains
       ++ two matrices rec.red=m1 and rec.triang=m2 such that mat=m1*m2
       ++ according to \cide[Lemma~4.8]{Radu_PhD_2010}, but in a variation
       ++ as described in qeta.tex, i.e., such that 0<=m2(1,2)<det(mat)/g
       ++ where g = gcd(a, c) and mat=[[a,b],[c,d]].
       ++ Input condition: a*d-b*c>0.
-    rationalSquareRoot: Q -> Record(rat: Q, rootOf: P)
+    rationalSquareRoot: QQ -> Record(rat: QQ, rootOf: PP)
       ++ if z = rationalSquareRoot(x) then x = (z.rat)^2 * z.root
-    minimalSquareRootOfUnity: P -> P
+    minimalSquareRootOfUnity: PP -> PP
       ++ minimalSquareRootOfUnity(p) returns an integer n such that
       ++ in Z(x) (where x is a primitive n-th root of unity) there
       ++ exists an element y such that y^2=p.
       ++ p must be a radical integer, i.e., should not contain the
       ++ square of a prime.
-    fractionalPart: Q -> Q
+    fractionalPart: QQ -> QQ
       ++ fractionalPart(x) returns x - floor(x)::Fraction(Integer).
-    fractionalBernoulli1: Q -> Q
+    fractionalBernoulli1: QQ -> QQ
       ++ fractionalBernoulli1(x) computes t - 1/2 where t is the
       ++ fractional part of x, i.e., t = x - floor(x)
-    fractionalBernoulli2: Q -> Q
+    fractionalBernoulli2: QQ -> QQ
       ++ fractionalBernoulli2(x) computes t^2 - t + 1/6 where t is the
       ++ fractional part of x, i.e., t = x - floor(x)
-    sawTooth: Q -> Q
+    sawTooth: QQ -> QQ
       ++ sawTooth(x) is 0 if x is an integer and
       ++ fractionalBernoulli1(x) otherwise.
-    dedekindSum: (Z, Z) -> Q
+    dedekindSum: (ZZ, ZZ) -> QQ
        ++ dedekindSum(p,q) returns for two relatively prime integers
        ++ p and q the Dedekind sum as defined by
        ++ dedekindSum(p,q)=sum(sawTooth(1/q)*sawTooth(p*i/q), i=1..q-1).
-    generalizedDedekindSum: (P, Z, Z, Z, Z) -> Q
+    generalizedDedekindSum: (PP, ZZ, ZZ, ZZ, ZZ) -> QQ
        ++ generalizedDedekindSum(nn,g,h,p,q) returns the generalized
        ++ Dedekind sum as defined in
        ++ \cite[p~673]{Yang:GeneralizedDedekindEtaFunctions} by
        ++ generalizedDedekindSum(nn,g,h,p,q) =
        ++ sum(sawTooth((g+i*nn)/(q*nn))*sawTooth((g'+p*i*nn)/(q*nn)),i=1..q-1).
        ++ Condition: one? gcd(p,q).
-    kappaSchoeneberg: (P, Z, Z, Z, Z, Z, Z) -> Q
+    kappaSchoeneberg: (PP, ZZ, ZZ, ZZ, ZZ, ZZ, ZZ) -> QQ
       ++ kappaSchoeneberg(nn, g, h, a, b, c, d) returns a value x such
       ++ that \eta_{g,h}(mat*tau) = exp(2*%pi*%i*x) *
       ++ \eta_{g',h'}(tau) as given at the top of page 673 of
       ++ \cite{Yang_GeneralizedDedekindEtaFunctions_2004} where
       ++ mat=matrix[[a,b],[c,d]].
       ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
-    kappaSchoeneberg: (P, Z, Z, MZ) -> Q
+    kappaSchoeneberg: (PP, ZZ, ZZ, MZZ) -> QQ
       ++ kappaSchoeneberg(nn, g, h, mat) returns a value x such
       ++ that \eta_{g,h}(mat*tau) = exp(2*%pi*%i*x) *
       ++ \eta_{g',h'}(tau) as given at the top of page 673 of
       ++ \cite{Yang_GeneralizedDedekindEtaFunctions_2004}.
       ++ See also \eqref{eq:kappa_g-h-N-gamma-Schoeneberg}.
-    kappaYang: (P, Z, Z, Z, Z, Z, Z) -> Q
+    kappaYang: (PP, ZZ, ZZ, ZZ, ZZ, ZZ, ZZ) -> QQ
       ++ kappaYang(nn, g, h, a, b, c, d) returns a value x such that
       ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
       ++ in \cite[Theorem~1]{Yang_GeneralizedDedekindEtaFunctions_2004}
       ++ where mat = matrix [[a,b],[c,d]].
       ++ Condition: not zero? c.
-    kappaYang: (P, Z, Z, MZ) -> Q
+    kappaYang: (PP, ZZ, ZZ, MZZ) -> QQ
       ++ kappaYang(nn, g, h, mat) returns a value x such that
       ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
       ++ in \cite[Theorem~1]{Yang_GeneralizedDedekindEtaFunctions_2004}.
       ++ Condition: not zero? mat(2,1).
-    minimizeVector: (Vector Z, List Vector Z) -> Vector Z
+    minimizeVector: (Vector ZZ, List Vector ZZ) -> Vector ZZ
       ++ minizeVector(v, basis) computes
       ++ vps := concat [w for b in bas | (w:=v+b; dot(w,w)<dot(v,v)]
       ++ vms := concat [w for b in bas | (w:=v-b; dot(w,w)<dot(v,v)]
       ++ From these vectors it takes the one with minimal length as
       ++ the new v and iterates as long as concat(vps, vms) is not empty.
       ++ This minimal vector is eventually returned.
-    primePower: (P, P) -> N
+    primePower: (PP, PP) -> NN
       ++ primePower(d, p) returns e such that gcd(d/p^e, p)=1, i.e., the
       ++ highest power e such that p^e is a factor of d.
-    verticalConcat: (Matrix Q, Matrix Q) -> Matrix Q
+    verticalConcat: (Matrix QQ, Matrix QQ) -> Matrix QQ
       ++ verticalConcat(m1, m2) puts m1 on top of m2 while creating a
       ++ matrix big enough to hold all columns.
   == add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
-    FL ==> List Record(flag: fUnion, factor: Z, exponent: N)
+    FL ==> List Record(flag: fUnion, factor: ZZ, exponent: NN)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -240,36 +240,36 @@ QEtaAuxiliaryPackage: with
 
 )endif
 
-    primePower(d: P, p: P): N ==
-        e: N := 0;
-        x: Z := d
-        while not one? gcd(x, p) repeat (x := (x exquo p)::Z; e:=e+1)
+    primePower(d: PP, p: PP): NN ==
+        e: NN := 0;
+        x: ZZ := d
+        while not one? gcd(x, p) repeat (x := (x exquo p)::ZZ; e:=e+1)
         return e
 
-    matrixAtkinLehner(m: P, t: P): MZ ==
+    matrixAtkinLehner(m: PP, t: PP): MZZ ==
         -- t is a Hall divisor of m.
         -- https://en.wikipedia.org/wiki/Hall_subgroup
-        --assert((m exquo t) case Z)
-        n: Z := (m exquo t)::Z -- input condition is that t divides m
+        --assert((m exquo t) case ZZ)
+        n: ZZ := (m exquo t)::ZZ -- input condition is that t divides m
         --assert(one? gcd(n, t))
         exgcd: EXGCD := extendedEuclidean(n, t)
         matrix [[t, -exgcd.coef1], [m, t*exgcd.coef2]]
 
     -- These are the conditions (1) to (4) of
     -- \cite{HemmeckeRadu_EtaRelations_2019} that have to be fulfilled
-    -- by a vector r to lie in R^*(N).
-    modularGamma0(m: P, r: List Z): Z ==
-        divs: List Z := divisors(m)$INTF
-        rdivs: List Z := reverse divs
-        s: Z := 0
-        a: Z := 0
-        b: Z := 0
-        c: Factored Z := 1
+    -- by a vector r to lie in R^*(NN).
+    modularGamma0(m: PP, r: List ZZ): ZZ ==
+        divs: List ZZ := divisors(m)$INTF
+        rdivs: List ZZ := reverse divs
+        s: ZZ := 0
+        a: ZZ := 0
+        b: ZZ := 0
+        c: Factored ZZ := 1
         for ri in r for d in divs for rd in rdivs repeat
             s := s + ri
             a := a + ri * d  -- sigma_\infty
             b := b + ri * rd -- sigma_0
-            c := c * factor(d)^asN(abs ri)
+            c := c * factor(d)^asNN(abs ri)
         -- Check conditions 1, 2, 3, 4.
         not zero? s => 1
         not zero? positiveRemainder(a, 24) => 2
@@ -277,7 +277,7 @@ QEtaAuxiliaryPackage: with
         for fe in factors c repeat if odd?(fe.exponent) then return 4
         return 0
 
-    modularGamma0?(nn: P, r: List Z): Boolean ==
+    modularGamma0?(nn: PP, r: List ZZ): Boolean ==
         zero? modularGamma0(nn, r)
 
 )if LiterateDoc
@@ -288,7 +288,7 @@ QEtaAuxiliaryPackage: with
 
 )endif
 
-    jacobiLowerStar(c: Z, d: Z): Z == -- result either 1 or -1
+    jacobiLowerStar(c: ZZ, d: ZZ): ZZ == -- result either 1 or -1
         --assert(one? gcd(c,d))
         --aaawer(odd? d)
         -- See \cite[Def.~2.26]{Radu_PhD_2010}.
@@ -300,10 +300,10 @@ QEtaAuxiliaryPackage: with
         -- \end{cases}
         -- where $m x=\frac{\sign{x}-1}{2}$.
         zero? c => sign(d) -- note that d ~= 0 in this case
-        j: Z := jacobi(c, abs(d))$INTF
+        j: ZZ := jacobi(c, abs(d))$INTF
         if c>0 or d>0 then j else -j -- c=0 or d=0 does not happen
 
-    jacobiUpperStar(c: Z, d: Z): Z == -- result either 1 or -1
+    jacobiUpperStar(c: ZZ, d: ZZ): ZZ == -- result either 1 or -1
         --assert(one? gcd(c,d))
         --assert(odd? d)
         -- See \cite[Def.~2.26]{Radu_PhD_2010}.
@@ -315,55 +315,55 @@ QEtaAuxiliaryPackage: with
         zero? c => 1
         jacobi(c, abs(d))$INTF
 
-    upsilonExponent(a: Z, b: Z, c: Z, d: Z): Z ==
-        u: Z := c*(a+d)-b*d*(c^2-1)-3*c
-        v: Z := 3*(d-1)*(c-1)
+    upsilonExponent(a: ZZ, b: ZZ, c: ZZ, d: ZZ): ZZ ==
+        u: ZZ := c*(a+d)-b*d*(c^2-1)-3*c
+        v: ZZ := 3*(d-1)*(c-1)
         r(x) ==> positiveRemainder(x, 24)
         -- Note that we exp(2*\pi*i*n/24)=exp(\pi*i)=-1 for n=12.
         odd? c => if jacobiUpperStar(d, c) > 0 then r(u) else r(u+12)
         if jacobiLowerStar(c, d) > 0 then r(u-v) else r(u-v+12)
 
-    upsilonExponent(mat: MZ): Z ==
+    upsilonExponent(mat: MZZ): ZZ ==
         upsilonExponent(mat(1,1), mat(1,2), mat(2,1), mat(2,2))
 
-    numberOfGaps(n: P, list: List P): N ==
-        asN reduce(_+, [floor(x /$Q n) for x in list]$List(Z), 0)
+    numberOfGaps(n: PP, list: List PP): NN ==
+        asNN reduce(_+, [floor(x /$QQ n) for x in list]$List(ZZ), 0)
 
     -- Split matrix as in Lemma~\ref{thm:matrix-splitting} with
     -- z = delta*lambda.
-    splitMatrix(mat: SL2Z, delta: Z, m: P, lambda: N): Rec ==
-        z: Z := delta*lambda
-        w11: Z := delta*mat(1,1) + mat(2,1)*z
-        w12: Z := delta*mat(1,2) + mat(2,2)*z
-        w21: Z := mat(2,1)*m
-        w22: Z := mat(2,2)*m
+    splitMatrix(mat: SL2Z, delta: ZZ, m: PP, lambda: NN): Rec ==
+        z: ZZ := delta*lambda
+        w11: ZZ := delta*mat(1,1) + mat(2,1)*z
+        w12: ZZ := delta*mat(1,2) + mat(2,2)*z
+        w21: ZZ := mat(2,1)*m
+        w22: ZZ := mat(2,2)*m
         splitMatrix(w11, w12, w21, w22)
 
     -- Split matrix as in Lemma~\ref{thm:matrix-splitting} with
     -- z = 0 and m = 1.
-    splitMatrix(mat: SL2Z, delta: Z): Rec ==
+    splitMatrix(mat: SL2Z, delta: ZZ): Rec ==
         splitMatrix(mat(1,1) * delta, mat(1,2) * delta, mat(2,1), mat(2,2))
         -- Same as splitMatrix(mat, delta, 1, 0).
 
     -- Split matrix according to Section~\ref{sec:eta-transformation} in
     -- qeta.tex.
-    splitMatrix(a: Z, b: Z, c: Z, d: Z): Rec ==
+    splitMatrix(a: ZZ, b: ZZ, c: ZZ, d: ZZ): Rec ==
         exgcd: EXGCD := extendedEuclidean(a, c)
-        g: Z := exgcd.generator
-        d0: Z :=  exgcd.coef1 -- initial value for d1
-        b0: Z := -exgcd.coef2 -- initial value for b1
-        a1: Z := (a exquo g) :: Z
-        c1: Z := (c exquo g) :: Z
-        a2: Z := g
-        d2: Z := a1*d-b*c1
+        g: ZZ := exgcd.generator
+        d0: ZZ :=  exgcd.coef1 -- initial value for d1
+        b0: ZZ := -exgcd.coef2 -- initial value for b1
+        a1: ZZ := (a exquo g) :: ZZ
+        c1: ZZ := (c exquo g) :: ZZ
+        a2: ZZ := g
+        d2: ZZ := a1*d-b*c1
         -- Now try to find s such that 0 <= b*d1 - d*b1 - s*d2 < d2.
-        b2init: Z := b*d0 - d*b0
-        b2: Z := positiveRemainder(b2init, d2)
-        s: Z := ((b2init - b2) exquo d2) :: Z
-        b1: Z := b0 + s * a1
-        d1: Z := d0 + s * c1
-        m1: MZ := matrix([[a1, b1], [c1, d1]]$LLZ)
-        m2: MZ := matrix([[g, b2], [0, d2]]$LLZ)
+        b2init: ZZ := b*d0 - d*b0
+        b2: ZZ := positiveRemainder(b2init, d2)
+        s: ZZ := ((b2init - b2) exquo d2) :: ZZ
+        b1: ZZ := b0 + s * a1
+        d1: ZZ := d0 + s * c1
+        m1: MZZ := matrix([[a1, b1], [c1, d1]]$LLZZ)
+        m2: MZZ := matrix([[g, b2], [0, d2]]$LLZZ)
         [m1, m2]$Rec
 
 )if LiterateDoc
@@ -376,37 +376,37 @@ $a\in X_c$.
 )endif
 
     -- local
-    squarePart(fl: FL): Z ==
+    squarePart(fl: FL): ZZ ==
         -- if fl = factorList factor x and z=squarePart(fl) then
         -- z^2*r=expand(fl) for some squarefree r.
-        z: Z := 1
+        z: ZZ := 1
         for x in fl repeat
-            e: P := asP shift(x.exponent, -1)
+            e: PP := asPP shift(x.exponent, -1)
             z := (x.factor)^e * z
         return z
 
-    rationalSquareRoot(x: Q): Record(rat: Q, rootOf: P) ==
+    rationalSquareRoot(x: QQ): Record(rat: QQ, rootOf: PP) ==
         import from FL
-        fden: Factored Z := factor denom x
-        fnum: Factored Z := factor numer x
+        fden: Factored ZZ := factor denom x
+        fnum: Factored ZZ := factor numer x
         fl: FL := factorList fden
         for x in fl | odd?(x.exponent) repeat
             fnum := x.factor * fnum
             fden := x.factor * fden
         fl := factorList fnum
-        r: Z := 1
+        r: ZZ := 1
         for x in fl | odd? (x.exponent) repeat r := x.factor * r
-        return [squarePart(fl)/squarePart(factorList fden), asP r]
+        return [squarePart(fl)/squarePart(factorList fden), asPP r]
 
     -- local
     -- TODO: unused
-    square(x: Record(root: P, elem: Pol)): Vector Z ==
+    square(x: Record(root: PP, elem: Pol)): Vector ZZ ==
         pol: Pol := cyclotomic(x.root)$CyclotomicPolynomialPackage
-        C ==> SimpleAlgebraicExtension(Z, Pol, pol)
+        C ==> SimpleAlgebraicExtension(ZZ, Pol, pol)
         z: C := convert(x.elem)@C
-        convert(z*z)@Vector(Z)
+        convert(z*z)@Vector(ZZ)
 
-    minimalSquareRootOfUnity(x: P): P ==
+    minimalSquareRootOfUnity(x: PP): PP ==
         -- x is a radical integer (squarefree)
         -- See \cite[Section~IV.3]{Lang_AlgebraicNumberTheory_1986}.
         x = 2 => 8
@@ -422,58 +422,58 @@ $a\in X_c$.
 
 )endif
 
-    fractionalPart(x: Q): Q == -- local function
-        d: Z := denom x
+    fractionalPart(x: QQ): QQ == -- local function
+        d: ZZ := denom x
         positiveRemainder(numer x, d)/d
 
-    fractionalBernoulli1(x: Q): Q == fractionalPart x - 1/2
-    fractionalBernoulli2(x: Q): Q ==
-        t: Q := fractionalPart x
+    fractionalBernoulli1(x: QQ): QQ == fractionalPart x - 1/2
+    fractionalBernoulli2(x: QQ): QQ ==
+        t: QQ := fractionalPart x
         t^2 - t + 1/6
 
-    sawTooth(x: Q): Q ==
+    sawTooth(x: QQ): QQ ==
         one? denom x => 0
         fractionalBernoulli1 x
-    dedekindSum(p: Z, q: Z): Q ==
+    dedekindSum(p: ZZ, q: ZZ): QQ ==
         not one? gcd(p, q) => error "dedekindSum: input not coprime"
-        ds: Q := 0
+        ds: QQ := 0
         for i in 1..abs(q)-1 repeat
             ds := ds + sawTooth(i/q)*sawTooth(p*i/q)
         return ds
-    generalizedDedekindSum(nn: P, g: Z, h: Z, a: Z, c: Z): Q ==
+    generalizedDedekindSum(nn: PP, g: ZZ, h: ZZ, a: ZZ, c: ZZ): QQ ==
         not one? gcd(a, c) => error "generalizedDedekindSum: input not coprime"
-        gds: Q := 0
-        gg: Z := a*g + c*h
+        gds: QQ := 0
+        gg: ZZ := a*g + c*h
         for i in 0..abs(c)-1 repeat
             cn := c * nn
-            s1: Q := sawTooth((g+i*nn)/cn)
-            s2: Q := sawTooth((gg+a*i*nn)/cn)
+            s1: QQ := sawTooth((g+i*nn)/cn)
+            s2: QQ := sawTooth((gg+a*i*nn)/cn)
             gds := gds + s1*s2
         return gds
 
-    kappaSchoeneberg(nn: P, g: Z, h: Z, a: Z, b: Z, c: Z, d: Z): Q ==
+    kappaSchoeneberg(nn: PP, g: ZZ, h: ZZ, a: ZZ, b: ZZ, c: ZZ, d: ZZ): QQ ==
         zero? c => fractionalPart(b/(2*d)*fractionalBernoulli2(g/nn))
-        gprime: Z := a*g + c*h
+        gprime: ZZ := a*g + c*h
         x := a/(2*c)*fractionalBernoulli2(g/nn) _
              + d/(2*c)*fractionalBernoulli2(gprime/nn)
         gds := generalizedDedekindSum(nn, g, h, a, c)
         c < 0 => fractionalPart(x + gds)
         fractionalPart(x - gds)
 
-    kappaYang(nn: P, g: Z, h: Z, a: Z, b: Z, c: Z, d: Z): Q ==
-        r: Q := 1/2* ((g^2*a*b + 2*g*h*b*c + h^2*c*d)/nn^2 _
+    kappaYang(nn: PP, g: ZZ, h: ZZ, a: ZZ, b: ZZ, c: ZZ, d: ZZ): QQ ==
+        r: QQ := 1/2* ((g^2*a*b + 2*g*h*b*c + h^2*c*d)/nn^2 _
            - (g*b + h*(d-1))/nn) -- corresponds to delta/2 in Yang's paper
-        u: Z := c*(a+d-3)+b*d*(1-c^2)
+        u: ZZ := c*(a+d-3)+b*d*(1-c^2)
         odd? c => fractionalPart(u/12 + r)
         even? d => error "kappaYang: d is even"
-        v: Z := a*c*(1-d^2)+d*(b-c+3)
-        minusI: Q := -1/4
+        v: ZZ := a*c*(1-d^2)+d*(b-c+3)
+        minusI: QQ := -1/4
         fractionalPart(minusI + v/12 + r)
 
-    kappaSchoeneberg(nn: P, g: Z, h: Z, mat: MZ): Q ==
+    kappaSchoeneberg(nn: PP, g: ZZ, h: ZZ, mat: MZZ): QQ ==
         kappaSchoeneberg(nn, g, h, mat(1,1), mat(1,2), mat(2,1), mat(2,2))
 
-    kappaYang(nn: P, g: Z, h: Z, mat: MZ): Q ==
+    kappaYang(nn: PP, g: ZZ, h: ZZ, mat: MZZ): QQ ==
         kappaYang(nn, g, h, mat(1,1), mat(1,2), mat(2,1), mat(2,2))
 
 
@@ -484,7 +484,7 @@ $a\in X_c$.
     -- minimal vector, since there is a second optimization step in
     -- the place where we are going to use it to compute the cofactor
     -- specification.
-    minimizeVector(v: Vector Z, basis: List Vector Z): Vector Z ==
+    minimizeVector(v: Vector ZZ, basis: List Vector ZZ): Vector ZZ ==
         empty? basis => v
         w := v; lw := lv := dot(v, v)
         repeat
@@ -496,10 +496,10 @@ $a\in X_c$.
             v := w; lv := lw -- take this minimal w as the new v
         w
 
-    verticalConcat(mat1: MQ, mat2: MQ): MQ ==
+    verticalConcat(mat1: MQQ, mat2: MQQ): MQQ ==
         r1 := nrows mat1; c1 := ncols mat1
         r2 := nrows mat2; c2 := ncols mat2
-        mat: MQ := new(r1 + r2, max(c1, c2), 0)
+        mat: MQQ := new(r1 + r2, max(c1, c2), 0)
         for i in 1..r1 repeat for j in 1..c1 repeat mat(i, j) :=  mat1(i, j)
         for i in 1..r2 repeat for j in 1..c2 repeat mat(r1+i, j) :=  mat2(i, j)
         mat

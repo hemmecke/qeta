@@ -59,7 +59,7 @@
 
 )set mess type off
 )set mess time off
-C ==> Q
+C ==> QQ
 )read convenience.input )quiet
 )set stream calc 2
 
@@ -331,7 +331,7 @@ assertEquals(ORBIT(rspec,m,t),[1])
 id1:=findID0(nn,rspec,m,t);
 pretty(id1, qIdentity + expand + nonModular + asExpression)
 
-ipol1 := (inv coefficient id1 * identityPolynomial id1)::Pol(Z)
+ipol1 := (inv coefficient id1 * identityPolynomial id1)::Pol(ZZ)
 assertEquals(ipol1, 6*M1+F+25)
 
 -- +
@@ -394,13 +394,13 @@ assertEquals(commonFactor id, 1)
 
 ipol := inv coefficient id * identityPolynomial id;
 c := 13^7;
-pol := (ipol - 'F - c)::Pol(Z)
+pol := (ipol - 'F - c)::Pol(ZZ)
 assertEquals(content pol, 5)
 
 -- Let us check the 8th coefficient of the disected series.
 
 ser := eulerExpansion specEQI(C) rspec;
-c8 := coefficient(ser,13*8+1)::Z
+c8 := coefficient(ser,13*8+1)::ZZ
 assertTrue(not zero? positiveRemainder(c8, 5))
 assertTrue(zero? positiveRemainder(c8 + c, 5))
 
@@ -409,13 +409,13 @@ factor c8
 -- There are several coefficients of the disected series that
 -- are not divisible by 5.
 
-l := [[n,cc] for n in 0..100 | (cc := coefficient(ser, 13*n+1)::Z; not zero?(cc rem 5))]
+l := [[n,cc] for n in 0..100 | (cc := coefficient(ser, 13*n+1)::ZZ; not zero?(cc rem 5))]
 assertEquals(#l, 2)
 
 s13 := choose(13,1,ser)
-l := [[i,c] for i in 0..400|(c:=coefficient(s13,i)::Z; not zero?(c rem 5))]
+l := [[i,c] for i in 0..400|(c:=coefficient(s13,i)::ZZ; not zero?(c rem 5))]
 assertEquals([first x for x in l], [8,73,398])
-factor(coefficient(s13,2)::Z)
+factor(coefficient(s13,2)::ZZ)
 
 -- Expansion of the $q$-Pochhammer symbol corresponding
 -- to the inverse of the cofactor is a series that
@@ -425,7 +425,7 @@ factor(coefficient(s13,2)::Z)
 printSPEC inv sspec
 u := eulerExpansion specEQI(C) inv sspec
 
-l := [[i+8,c] for i in 0..400|(c:=coefficient(u,i)::Z; not zero? c and not zero?(c rem 5))]
+l := [[i+8,c] for i in 0..400|(c:=coefficient(u,i)::ZZ; not zero? c and not zero?(c rem 5))]
 assertEquals([first x for x in l], [8,73,398])
 
 -- When checking for a congruence, we only need to check
@@ -435,7 +435,7 @@ assertEquals([first x for x in l], [8,73,398])
 assertEquals(alphaInfinity id, -8)
 
 h := s13 + monomial(13^7,8)$L1(C) * u
-l := [[i,c] for i in 0..100|(c:=coefficient(h,i)::Z; not zero?(c rem 5))]
+l := [[i,c] for i in 0..100|(c:=coefficient(h,i)::ZZ; not zero?(c rem 5))]
 assertTrue(empty? l)
 
 u := eulerExpansion specEQI(C) inv sspec;
@@ -513,7 +513,7 @@ mspec := inv coSpecification id * first monoidSpecifications id;
 assertEquals(mspec, eqSPEC(nn,[[1,24]]))
 ipol := inv coefficient id * identityPolynomial id
 
-c := coefficient(ipol,[M1,F],[0,0])::Z
+c := coefficient(ipol,[M1,F],[0,0])::ZZ
 assertTrue(zero?(c rem 3))
 
 -- +
