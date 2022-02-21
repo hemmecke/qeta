@@ -119,7 +119,6 @@ Now some abbreviations for common domains.
 P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
-LSym ==> List Symbol
 LZ ==> List Z
 LLZ ==> List LZ
 INDICES ==> LLZ
@@ -214,7 +213,7 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         ++ the input and returns the resulting Groebner basis. It is
         ++ assumed that eligens is a list of polynomials in Ei and Yi
         ++ variables where the indices i are given by idxs.
-    laurentRelations: (LSym, LSym) -> LPol
+    laurentRelations: (List Symbol, List Symbol) -> LPol
         ++ laurentRelations(esyms, ysyms) returns
         ++ [e*y-1 for e in esyms for y in ysyms].
     relationsIdealGenerators: List A1 C -> LPol
@@ -244,11 +243,11 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         eqigens: LPol := etaQuotientIdealGenerators mspecs
         igens := concat(eqigens, geqrels)
         gens := etaLaurentIdealGenerators(idxs, mspecs, igens)
-        ysyms: LSym := indexedSymbols("Y", idxs)$QAuxiliaryTools
-        esyms: LSym := indexedSymbols("E", idxs)$QAuxiliaryTools
+        ysyms: List Symbol := indexedSymbols("Y", idxs)$QAuxiliaryTools
+        esyms: List Symbol := indexedSymbols("E", idxs)$QAuxiliaryTools
         fvars := [[x for x in variables p | (string x).1 = c] for p in geqrels]
-        fsyms: LSym := removeDuplicates concat fvars
-        syms: LSym := concat [ysyms, esyms, fsyms]
+        fsyms: List Symbol := removeDuplicates concat fvars
+        syms: List Symbol := concat [ysyms, esyms, fsyms]
         dim: N := # syms
         dim1: N := # esyms + # ysyms -- want to eliminate those
         E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
@@ -271,18 +270,18 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         -- respective Mi variables. Leave other variables as they are.
         PE ==> PolynomialEvaluation(C, Pol)
         geqMonomials := [etaQuotientMonomial mspec for mspec in mspecs]
-        msyms: LSym := indexedSymbols("M", #mspecs)$QAuxiliaryTools
-        vars: LSym := concat [variables x for x in igens]
+        msyms: List Symbol := indexedSymbols("M", #mspecs)$QAuxiliaryTools
+        vars: List Symbol := concat [variables x for x in igens]
         -- As an extension we allow a polynomial in igens to contain
         -- other variables than just the Mi
-        fsyms: LSym := setDifference(vars, msyms) -- remove the Mi
+        fsyms: List Symbol := setDifference(vars, msyms) -- remove the Mi
         fc(c: C): Pol == c::Pol
         vals: LPol := concat([f::Pol for f in fsyms], geqMonomials)
         syms := concat(fsyms, msyms)
         gens: LPol := [eval(x, fc, syms, vals)$PE for x in igens]
         -- now reduce modulo E*Y=1.
-        ysyms: LSym := indexedSymbols("Y", idxs)$QAuxiliaryTools
-        esyms: LSym := indexedSymbols("E", idxs)$QAuxiliaryTools
+        ysyms: List Symbol := indexedSymbols("Y", idxs)$QAuxiliaryTools
+        esyms: List Symbol := indexedSymbols("E", idxs)$QAuxiliaryTools
         yerels: LPol := laurentRelations(esyms, ysyms)
         -- make sure that there are no Ei and Yi in fsyms
         yesyms := concat(ysyms, esyms)
@@ -317,9 +316,9 @@ QEtaIdealCategory(C, MOD): Category == Exports where
     etaRelations(idxs: INDICES, eligens: LPol): LPol ==
         -- We only need to eliminate the Y_d variables from the
         -- etaLaurentIdealGenerators.
-        ysyms: LSym := indexedSymbols("Y", idxs)$QAuxiliaryTools
-        esyms: LSym := indexedSymbols("E", idxs)$QAuxiliaryTools
-        syms: LSym := concat(ysyms, esyms)
+        ysyms: List Symbol := indexedSymbols("Y", idxs)$QAuxiliaryTools
+        esyms: List Symbol := indexedSymbols("E", idxs)$QAuxiliaryTools
+        syms: List Symbol := concat(ysyms, esyms)
         dim: N := # syms
         dim1: N := # ysyms
         E ==> SplitHomogeneousDirectProduct(dim, dim1, N)
@@ -327,7 +326,7 @@ QEtaIdealCategory(C, MOD): Category == Exports where
         -- take only the polys that do not invole any Y variable
         xPolynomials(gb, char "E")$PolynomialTool(C)
 
-    laurentRelations(esyms: LSym, ysyms: LSym): LPol ==
+    laurentRelations(esyms: List Symbol, ysyms: List Symbol): LPol ==
         [monomial(1$Pol, [e, y], [1, 1]) - 1$Pol for e in esyms for y in ysyms]
 
 )if LiterateDoc

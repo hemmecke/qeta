@@ -73,16 +73,9 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 
 rep x ==> (x@%) pretend Rep
 per x ==> (x@Rep) pretend %
-P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
-Q ==> Fraction Z
 UP ==> SparseUnivariatePolynomial C
-SQ ==> SquareMatrix(n, Q)
-DQ ==> DirectProduct(n, Q)
-VZ ==> Vector Z
-VQ ==> Vector Q
-LSym ==> List Symbol
 
 asN x ==> x pretend N
 
@@ -131,10 +124,10 @@ CheckSomos: Exports == Implementation where
         import from QAuxiliaryTools
         FPol ==> Fraction Pol
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        usyms: LSym := indexedSymbols("u", divs)
-        esyms: LSym := indexedSymbols("E", divs)
+        usyms: List Symbol := indexedSymbols("u", divs)
+        esyms: List Symbol := indexedSymbols("E", divs)
         fc(c: Z): FPol == c::FPol
-        syms: LSym := cons("q"::Symbol, usyms)
+        syms: List Symbol := cons("q"::Symbol, usyms)
         evals: List FPol := [e::Pol::FPol for e in esyms]
         symt: Symbol := "t"::Symbol
         t: Pol := symt::Pol
@@ -157,8 +150,8 @@ CheckSomos: Exports == Implementation where
     fromEta(level: N, p: Pol): Pol ==
         import from QAuxiliaryTools
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        usyms: LSym := indexedSymbols("u", divs)
-        esyms: LSym := indexedSymbols("E", divs)
+        usyms: List Symbol := indexedSymbols("u", divs)
+        esyms: List Symbol := indexedSymbols("E", divs)
         fc(c: Z): Pol == c::Pol
         uvals: LPol := [u::Pol for u in usyms]
         symt: Symbol := "t"::Symbol
@@ -170,7 +163,7 @@ CheckSomos: Exports == Implementation where
     member?(level: N, somos: Pol, gb: LPol): Boolean ==
         E ==> HomogeneousDirectProduct(dim, N)
         divs: List Z := divisors(level)$IntegerNumberTheoryFunctions
-        esyms: LSym := indexedSymbols("E", divs)$QAuxiliaryTools
+        esyms: List Symbol := indexedSymbols("E", divs)$QAuxiliaryTools
         dim: N := #esyms
         lp: LPol := normalForms([somos], gb, esyms)$QEtaGroebner(Z, E)
         p: Pol := first lp

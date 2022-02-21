@@ -48,7 +48,7 @@ level := $LEVEL
 )read $FILE2
 
 divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
-syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
+syms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
 V ==> Vector R
@@ -58,8 +58,8 @@ toR ==> coerce\$PolynomialConversion(C, E, syms)
 f: List R := [toR p for p in $F]
 g: List R := [toR p for p in $G]
 
-printRelations(fdim: N, fsyms: LSym, f: List R, _
-               gdim: N, gsyms: LSym, g: List R): Void == (_
+printRelations(fdim: N, fsyms: List Symbol, f: List R, _
+               gdim: N, gsyms: List Symbol, g: List R): Void == (_
     ldim := fdim + gdim;_
     lsyms := concat(fsyms, gsyms);_
     DX := DirectProduct(ldim, N);_
@@ -77,8 +77,8 @@ printRelations(fdim: N, fsyms: LSym, f: List R, _
 fdim: N := #f;
 gdim: N := #g;
 
-fsyms: LSym := indexedSymbols("f", fdim)\$QAuxiliaryTools;
-gsyms: LSym := indexedSymbols("g", gdim)\$QAuxiliaryTools;
+fsyms: List Symbol := indexedSymbols("f", fdim)\$QAuxiliaryTools;
+gsyms: List Symbol := indexedSymbols("g", gdim)\$QAuxiliaryTools;
 
 "-- relations1 = relations2 --"::Symbol::OF
 vPrint("tdeg1", [totalDegree p for p in f]);

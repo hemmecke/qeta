@@ -107,7 +107,6 @@ P ==> PositiveInteger
 N ==> NonNegativeInteger
 Z ==> Integer
 Q ==> Fraction Z
-LSym ==> List Symbol
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -199,13 +198,13 @@ Monomials(_
   dim: N,_
   R: OrderedAbelianMonoid,
   D: DirectProductCategory(dim, R),_
-  vl: LSym_
+  vl: List Symbol_
  ): DirectProductCategory(dim, R) == D add
     --assert(dim = # vl)
     noOneTest? := not (R has one?: R -> Boolean)
     notOne? x ==> noOneTest? or not one? x
     coerce(x: %): OutputForm ==
-        vs: LSym := vl
+        vs: List Symbol := vl
         zero? x => (1$Integer)::OutputForm
         fst: Boolean := true
         k: N := 1
@@ -239,7 +238,7 @@ PolynomialConversion(_
   C: Ring, _
   E: OrderedAbelianMonoid with (
        directProduct: Vector N -> %; members: % -> List N),_
-  syms: LSym): with
+  syms: List Symbol): with
     coerce: Polynomial C -> PolynomialRing(C, E)
     coerce: PolynomialRing(C, E) -> Polynomial C
  == add
@@ -282,14 +281,14 @@ PolynomialEvaluation(_
       _*: (%, %) -> %; _
       _^: (%, NonNegativeInteger) -> %)_
  ): with
-    eval: (Polynomial C, C -> S, LSym, List S) -> S
-    eval: (C -> S, LSym, List S) -> Polynomial C -> S
+    eval: (Polynomial C, C -> S, List Symbol, List S) -> S
+    eval: (C -> S, List Symbol, List S) -> Polynomial C -> S
  == add
-    eval(p: Polynomial C, embed: C -> S, vars: LSym, vals: List S): S ==
+    eval(p: Polynomial C, embed: C -> S, vars: List Symbol, vals: List S): S ==
         E ==> IndexedExponents Symbol
         PE ==> PolynomialCategoryLifting(E, Symbol, C, Polynomial C, S)
         map((s:Symbol):S +-> vals.position(s, vars), embed, p)$PE
-    eval(embed: C -> S, vars: LSym, vals: List S): Polynomial C -> S ==
+    eval(embed: C -> S, vars: List Symbol, vals: List S): Polynomial C -> S ==
       (p: Polynomial C): S +-> eval(p, embed, vars, vals)
 
 )if LiterateDoc
@@ -345,31 +344,31 @@ QEtaGroebner(C, E): Exports == Implementation where
   R ==> PolynomialRing(C, E)
   X ==> Record(poly: R, repr: Vector R, mult: C)
   Exports ==> with
-    groebner: (LPol, LSym) -> LPol
+    groebner: (LPol, List Symbol) -> LPol
       ++ groebner(lpol, syms) considers the list of polynomials as
       ++ polynomials in syms, and computes a Groebner basis with
       ++ respect to the order given by E.
       ++ We assume that each of the polynomials in lpol is indeed a
       ++ polynomial in syms (and no other variables) and that E
       ++ corresponds to exactly #syms variables.
-    groebnerExtend: (LPol, LPol, LSym) -> LPol
+    groebnerExtend: (LPol, LPol, List Symbol) -> LPol
       ++ groebnerExtend(lpol, gb, syms) computes a Groebner basis of the
       ++ union of lpos and gb under the assumption that gb is already
       ++ a Groebner basis wrt. the order given by E.
       ++ We assume that each of the polynomials in lpol and gb is indeed a
       ++ polynomial in syms (and no other variables) and that E
       ++ corresponds to exactly #syms variables.
-    normalForms: (LPol, LPol, LSym) -> LPol
+    normalForms: (LPol, LPol, List Symbol) -> LPol
       ++ normalForms(lpol, gb, syms) reduces each polynomial from lpol
       ++ with respect to the Groebner basis given by gb.
       ++ We assume that each of the polynomials in lpol and gb is indeed a
       ++ polynomial in syms (and no other variables) and that E
       ++ corresponds to exactly #syms variables.
-    extendedNormalForm: (Pol, LPol, LSym, Symbol, String) -> Pol
+    extendedNormalForm: (Pol, LPol, List Symbol, Symbol, String) -> Pol
       ++ extendedNormalForm(pol, gb, syms, f, g) returns
       ++ extendedNormalForm(pol, gb, syms, f, gsyms) for
       ++ gsyms := indexedSymbols(g, #gb).
-    extendedNormalForm: (Pol, LPol, LSym, Symbol, LSym) -> Pol
+    extendedNormalForm: (Pol, LPol, List Symbol, Symbol, List Symbol) -> Pol
       ++ extendedNormalForm(pol, gb, syms, f, gsyms) reduces pol with
       ++ respect to gb and returns that reduced polynomial together
       ++ with its relations in terms of gb. The original polynomial
@@ -378,7 +377,7 @@ QEtaGroebner(C, E): Exports == Implementation where
       ++ We assume that each of the polynomials pol and gb is indeed a
       ++ polynomial in syms (and no other variables) and that E
       ++ corresponds to exactly #syms variables.
-    extendedNormalForms: (LPol, LPol, LSym, String, String) -> LPol
+    extendedNormalForms: (LPol, LPol, List Symbol, String, String) -> LPol
       ++ extendedNormalForms(lpol, gb, syms, f, g) returns
       ++ [extendedNormalForm(p, gb, syms, f, g)
       ++   for p in lpol for f in indexedSymbols(f, #lpol)]
@@ -386,7 +385,7 @@ QEtaGroebner(C, E): Exports == Implementation where
     -- local
     -- toPol(x, syms, sym, gsyms) returns a polynomial that describes
     -- the representation of x.poly in terms of x.repr
-    toPol(x: X, syms: LSym, sym: Symbol, gsyms: LSym): Pol ==
+    toPol(x: X, syms: List Symbol, sym: Symbol, gsyms: List Symbol): Pol ==
         import from PolynomialConversion(C, E, syms)
         p: Pol := (x.mult)*(sym::Pol) - (x.poly)::Pol
         for gsym in gsyms for r in members(x.repr) repeat
@@ -394,13 +393,13 @@ QEtaGroebner(C, E): Exports == Implementation where
         return primitivePart p
 
     -- exported
-    groebner(lpol: LPol, syms: LSym): LPol ==
+    groebner(lpol: LPol, syms: List Symbol): LPol ==
         import from PolynomialConversion(C, E, syms)
         rs: List R := [p::R for p in lpol]
         gb: List R := groebner(rs)$GroebnerPackage(C, E, R)
         [r::Pol for r in gb]
 
-    groebnerExtend(lpol: LPol, gb: LPol, syms: LSym): LPol ==
+    groebnerExtend(lpol: LPol, gb: LPol, syms: List Symbol): LPol ==
         import from PolynomialConversion(C, E, syms)
         import from GroebnerInternalPackage(C, E, R)
         rs: List R := [p::R for p in lpol]
@@ -409,33 +408,33 @@ QEtaGroebner(C, E): Exports == Implementation where
         mgb: List R := minGbasis(sort((x, y) +-> degree x > degree y, xgb))
         [r::Pol for r in mgb]
 
-    normalForms(lpol: LPol, gb: LPol, syms: LSym): LPol ==
+    normalForms(lpol: LPol, gb: LPol, syms: List Symbol): LPol ==
         import from PolynomialConversion(C, E, syms)
         import from GroebnerInternalPackage(C, E, R)
         rs: List R := [p::R for p in lpol]
         rgb: List R := [p::R for p in gb]
         [(primitivePart redPol(x, rgb))::Pol for x in rs]
 
-    extendedNormalForm(pol: Pol, gb: LPol, syms: LSym, f: Symbol, g: String): Pol ==
-        gsyms: LSym := indexedSymbols(g, #gb)$QAuxiliaryTools
+    extendedNormalForm(pol: Pol, gb: LPol, syms: List Symbol, f: Symbol, g: String): Pol ==
+        gsyms: List Symbol := indexedSymbols(g, #gb)$QAuxiliaryTools
         extendedNormalForm(pol, gb, syms, f, gsyms)
 
-    extendedNormalForm(pol: Pol, gb: LPol, syms: LSym, f: Symbol, gsyms: LSym): Pol ==
+    extendedNormalForm(pol: Pol, gb: LPol, syms: List Symbol, f: Symbol, gsyms: List Symbol): Pol ==
         import from PolynomialConversion(C, E, syms)
         import from ExtendedPolynomialReduction(C, E, R)
         rgb: List R := [p::R for p in gb]
         x: X := reduce(pol::R, rgb)
         toPol(x, syms, f, gsyms)
 
-    extendedNormalForms(lpol: LPol, gb: LPol, syms: LSym, f: String, g: String): LPol ==
+    extendedNormalForms(lpol: LPol, gb: LPol, syms: List Symbol, f: String, g: String): LPol ==
         import from PolynomialConversion(C, E, syms)
         import from ExtendedPolynomialReduction(C, E, R)
         rs: List R := [p::R for p in lpol]
         rgb: List R := [p::R for p in gb]
         lx: List X := [reduce(r, rgb) for r in rs]
         import from QAuxiliaryTools
-        fsyms: LSym := indexedSymbols(f, #lpol)
-        gsyms: LSym := indexedSymbols(g, #gb)
+        fsyms: List Symbol := indexedSymbols(f, #lpol)
+        gsyms: List Symbol := indexedSymbols(g, #gb)
         [toPol(x, syms, fsym, gsyms) for fsym in fsyms for x in lx]
 
 

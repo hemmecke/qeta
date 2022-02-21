@@ -43,7 +43,7 @@ level := $LEVEL
 erels := etaRelations$N
 
 divs: List P := DIVISORS level
-esyms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
+esyms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
 allmons := [monomials erel for erel in erels]
 alldegs := [[vector(degree(mon, esyms)::List(Z)) for mon in mons] for mons in allmons]
 allrdegs := [[d - first degs for d in degs] for degs in alldegs]

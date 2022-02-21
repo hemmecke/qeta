@@ -44,7 +44,7 @@ tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_
 level := $LEVEL
 )read $SOMOS/somos$LEVEL.input
 f: XHashTable(Symbol, Pol) := table();
-hkeys: LSym := keys h;
+hkeys: List Symbol := keys h;
 xkey(k: Symbol): String == (_
     b: Z := 10000;_
     s: String := string k;_
@@ -61,11 +61,11 @@ xkey(k: Symbol): String == (_
 
 xkeys: List String := [xkey k for k in hkeys] ;
 skeys: List String := sort xkeys;
-fkeys: LSym := [x(position(char ".", x)\$String+1..#x)::Symbol for x in skeys];
+fkeys: List Symbol := [x(position(char ".", x)\$String+1..#x)::Symbol for x in skeys];
 for k in fkeys repeat f(k) := toEta(level, h k)
 
 divs: List Z := divisors(level)\$IntegerNumberTheoryFunctions
-syms: LSym := indexedSymbols("E", divs)\$QAuxiliaryTools
+syms: List Symbol := indexedSymbols("E", divs)\$QAuxiliaryTools
 dim: N := #syms
 D ==> HomogeneousDirectProduct(dim, N);
 toR ==> coerce\$PC
