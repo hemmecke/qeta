@@ -47,7 +47,7 @@ done
 cat <<EOF  | $teecmd | timeout 60s fricas -nosman | sed '1,/OUTPUT STARTS HERE/d; /Type:/d; s/([0-9]*) -> //g; /   ([0-9]*)$/d'
 )cd $tmp
 )r projectlibs
-)r etamacros
+)r qetamacros
 )set stream calculate $calc
 
 tPrint(x)==display(x::Symbol::OF::Formatter(Format1D));_

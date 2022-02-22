@@ -122,7 +122,7 @@ cd tmp
 fricas
 # now inside a fricas session
 )read projectlibs
-)read etamacros
+)read qetamacros
 er 6
 ```
 

@@ -24,7 +24,7 @@ function fricas_program {
     FILE=$2
     cat <<EOF
 )r projectlibs
-)r etamacros
+)r qetamacros
 
 S ==> Symbol
 PZZ ==> SparseUnivariatePolynomial ZZ

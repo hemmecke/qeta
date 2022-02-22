@@ -110,7 +110,7 @@ PREREQS_SPAD=${patsubst %,%.spad,${SPADFILES}}
 # We also add convenience.input and modfuns.input so that we can
 # execute .input-test files as Jupyter notebooks in the tmp directory
 # without having to take care of the directory.
-PREREQS_INPUT=checksomos.input etacompute.input etamacros.input \
+PREREQS_INPUT=checksomos.input etacompute.input qetamacros.input \
   convenience.input modfuns.input
 PREREQS_SAGE=etagb.sage
 PREREQS_SCRIPT=mkdeps.pl
