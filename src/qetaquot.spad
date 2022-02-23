@@ -143,12 +143,12 @@ the respective width of the cusp is given.
 ++ $g_{r,m,\lambda}(\gamma \tau)$, $p_{r,m,t}(\gamma\tau)$,
 ++ $F_{s,r,m,t}(\gamma\tau)$. See \eqref{eq:g_r-m-lambda(gamma*tau)}
 ++ and \eqref{eq:F_s-r-m-t(gamma*tau)}.
-QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
+QEtaSeriesExpansion(C, xiord, CX, xi, QMOD): Exports == Implementation where
   C: IntegralDomain -- basic coefficient domain
   xiord: PP -- xiord-th root of unity needed.
   CX: Algebra C
   xi: CX --primitive xiord-th root of unity.
-  MOD: QEtaConditionsModularCategory
+  QMOD: QEtaConditionsModularCategory
   TX ==> QEtaTaylorSeries CX
   LX ==> QEtaLaurentSeries CX
   PX ==> QEtaPuiseuxSeries CX
@@ -170,7 +170,7 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
       ++ q-expansion of $p_{r,m,t}(\gamma \tau)$, see
       ++ \eqref{eq:p_r-m-t(gamma*tau)}. The $(c\tau+d)$ factor is
       ++ missing.
-    puiseuxExpansion: YMEQG MOD -> PX
+    puiseuxExpansion: YMEQG QMOD -> PX
       ++ puiseuxExpansion(y) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma \tau)$, see
       ++ \eqref{eq:F_s-r-m-t(gamma*tau)}.
@@ -185,23 +185,23 @@ QEtaSeriesExpansion(C, xiord, CX, xi, MOD): Exports == Implementation where
       ++ r=s/t, then we take only every t-th term and check that the
       ++ intermediate terms come indeed with a zero coefficient.
 
-    laurentExpansion: YMEQG MOD -> LX
+    laurentExpansion: YMEQG QMOD -> LX
       ++ laurentExpansion(y) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ given by y in the canonical
-      ++ variables given by the width of the cusp wrt. MOD.
-    laurentExpansionInfinity: YMEQG MOD -> LX
+      ++ variables given by the width of the cusp wrt. QMOD.
+    laurentExpansionInfinity: YMEQG QMOD -> LX
       ++ laurentExpansionInfinity(y) represents the q-expansion of
-      ++ $F_{s,r,m,t}(\tau)$ given by y wrt. MOD. See
+      ++ $F_{s,r,m,t}(\tau)$ given by y wrt. QMOD. See
       ++ \eqref{eq:F_s-r-m-t(tau)}.
-    laurentExpansions: (YMEQ MOD, List Cusp) -> QLX
+    laurentExpansions: (YMEQ QMOD, List Cusp) -> QLX
       ++ laurentExpansions(y, cusps) represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ at the given cusps (which should be
       ++ a subset of the cusps given by y) in the canonical variables
-      ++ given by the width of the cusp wrt. MOD.
-    laurentExpansions: YMEQ MOD -> QLX
+      ++ given by the width of the cusp wrt. QMOD.
+    laurentExpansions: YMEQ QMOD -> QLX
       ++ laurentExpansions y represents the q-expansion of
       ++ $F_{s,r,m,t}(\gamma\tau)$ at all cusps given by y in the
-      ++ canonical variables given by the width of the cusp wrt. MOD.
+      ++ canonical variables given by the width of the cusp wrt. QMOD.
 
     --TODO: The following function should live somewhere else.
     substitute: (LX, QQ, NN) -> PX
@@ -436,27 +436,27 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
         error "cannot invert m in coefficient ring"
 
     -- $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ -- for specific gamma
-    puiseuxExpansion(y: YMEQG MOD): PX ==
+    puiseuxExpansion(y: YMEQG QMOD): PX ==
 --        dbgPrint("puiseuxExpansion YMEQG", "enter"::Symbol)
         p: PX := puiseuxExpansion cofactor y
         for yb in basefactor y repeat p := p * puiseuxExpansion yb
         p
 
     -- $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ -- for specific gamma
-    laurentExpansion(y: YMEQG MOD): LX ==
+    laurentExpansion(y: YMEQG QMOD): LX ==
         yc: YEQG := cofactor y
         nn: PP := level definingSpecification yc
-        w: PP := width(nn, transformationMatrix yc)$MOD
+        w: PP := width(nn, transformationMatrix yc)$QMOD
         laurent(puiseuxExpansion y, w)
 
-    laurentExpansionInfinity(y: YMEQG MOD): LX ==
-        import from QEtaModularInfinity(CX, MOD)
+    laurentExpansionInfinity(y: YMEQG QMOD): LX ==
+        import from QEtaModularInfinity(CX, QMOD)
         sspec: SPEC := definingSpecification cofactor y
         yb := first basefactor y
         rspec: SPEC := definingSpecification yb
         laurentExpansionInfinity(sspec, rspec, multiplier yb, offset yb)
 
-    laurentExpansions(y: YMEQ MOD, spitzen: List Cusp): QLX ==
+    laurentExpansions(y: YMEQ QMOD, spitzen: List Cusp): QLX ==
         hser: QLX := empty()
         for cusp in spitzen repeat
             if infinity? cusp then
@@ -467,7 +467,7 @@ without the $(c\tau+d)$ part in \eqref{eq:g_r-m-t(gamma*tau)}.
 
     -- $g_{\bar{r}}(\gamma\tau)$ for all cusps of y
     -- $F_{\bar{s}, \bar{r},m,t}(\gamma\tau)$ for all cusps of y
-    laurentExpansions(y: YMEQ MOD): QLX == laurentExpansions(y, cusps y)
+    laurentExpansions(y: YMEQ QMOD): QLX == laurentExpansions(y, cusps y)
 
 
 

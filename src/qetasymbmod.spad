@@ -114,7 +114,7 @@ Domains in the second category are implemented in the file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Elements from the domain
-\code{SymbolicModularEtaQuotientGamma(MOD)} represent the
+\code{SymbolicModularEtaQuotientGamma(QMOD)} represent the
 product of an eta-quotient cofactor to an element of
 \code{SymbolicEtaQuotientGamma} in order to make the
 product a modular function for G.
@@ -127,12 +127,12 @@ $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
 
 -------------------------------------------------------------------
 )abbrev domain YMEQG SymbolicModularEtaQuotientGamma
-++ SymbolicModularEtaQuotientGamma(MOD)
+++ SymbolicModularEtaQuotientGamma(QMOD)
 ++ holds data to compute an eta-quotient
 ++ expansions of $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
 ++ See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
-SymbolicModularEtaQuotientGamma(MOD): Exports == Implementation where
-  MOD: QEtaConditionsModularCategory
+SymbolicModularEtaQuotientGamma(QMOD): Exports == Implementation where
+  QMOD: QEtaConditionsModularCategory
   YEQG ==> SymbolicEtaQuotientGamma
   Exports ==> SetCategory with
     etaQuotient: (SPEC, SPEC, PP, NN, SL2Z) -> %
@@ -158,7 +158,7 @@ SymbolicModularEtaQuotientGamma(MOD): Exports == Implementation where
     basefactor: % -> List YEQG
       ++ basefactor(x) returns the part of $F_{\bar{s},\bar{r},m,t}$
       ++ that is connected to the generating series of a(m*n+k) for
-      ++ k in modularOrbit(rspec,m,t)$MOD.
+      ++ k in modularOrbit(rspec,m,t)$QMOD.
     minimalRootOfUnity: % -> PP
       ++ minimalRootOfUnity(x) returns the lcm of
       ++ minimalRootOfUnity(cofactor(x)) and
@@ -194,10 +194,10 @@ SymbolicModularEtaQuotientGamma(MOD): Exports == Implementation where
 
     etaQuotient(sspec: SPEC, rspec: SPEC, m: PP, t: NN,
                            gamma: SL2Z): % ==
-        not modular?(sspec, rspec, m, t)$MOD =>
+        not modular?(sspec, rspec, m, t)$QMOD =>
             error "modular conditions are not fulfilled"
         cfactor: YEQG := etaQuotient(sspec, 1, 0, gamma)
-        orb: List NN := modularOrbit(rspec, m, t)$MOD
+        orb: List NN := modularOrbit(rspec, m, t)$QMOD
         bfactor: List YEQG := [etaQuotient(rspec, m, j, gamma) for j in orb]
         minRc: PP := minimalRootOfUnity cfactor -- cofactor
         minRb: ZZ := lcm [minimalRootOfUnity b for b in bfactor] -- basefactor
@@ -229,7 +229,7 @@ SymbolicModularEtaQuotientGamma(MOD): Exports == Implementation where
     orderMin(x: %): QQ ==
         yc: YEQG := cofactor x
         nn: PP := level definingSpecification yc
-        width(nn, transformationMatrix yc)$MOD * qExponentMin x
+        width(nn, transformationMatrix yc)$QMOD * qExponentMin x
 
 
 
@@ -242,9 +242,9 @@ SymbolicModularEtaQuotientGamma(MOD): Exports == Implementation where
 \label{sec:SymbolicModularEtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Elements from the domain \code{SymbolicModularEtaQuotient(MOD)}
+Elements from the domain \code{SymbolicModularEtaQuotient(QMOD)}
 represent the collection of elements of
-\code{SymbolicModularEtaQuotientGamma(MOD)} for several $\gamma$.
+\code{SymbolicModularEtaQuotientGamma(QMOD)} for several $\gamma$.
 
 It corresponds to the data from \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}
 for several $\gamma$ (corresponding to cusps of \code{G}.
@@ -253,37 +253,37 @@ for several $\gamma$ (corresponding to cusps of \code{G}.
 
 -------------------------------------------------------------------
 )abbrev domain YMEQ SymbolicModularEtaQuotient
-++ SymbolicModularEtaQuotient(MOD) holds data to compute an
+++ SymbolicModularEtaQuotient(QMOD) holds data to compute an
 ++ eta-quotient expansions of $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$
 ++ as several cusps. See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
-SymbolicModularEtaQuotient(MOD): Exports == Implementation where
-  MOD: QEtaConditionsModularCategory
+SymbolicModularEtaQuotient(QMOD): Exports == Implementation where
+  QMOD: QEtaConditionsModularCategory
   YMEQG ==> SymbolicModularEtaQuotientGamma
   YEQG ==> SymbolicEtaQuotientGamma
   Exports ==> SetCategory with
     etaQuotient: (SPEC, SPEC, PP, NN, List Cusp) -> %
       ++ etaQuotient(sspec,rspec,m,t,spitzen) represents the expansion
       ++ of $F_{sbar,rbar,m,t}(\gamma \tau)$ for all gamma
-      ++ corresponding to the given cusps of MOD. $rbar$ and $sbar$ are
+      ++ corresponding to the given cusps of QMOD. $rbar$ and $sbar$ are
       ++ given by rspec and sspec, repectively.
     etaQuotient: (SPEC, SPEC, PP, NN) -> %
       ++ etaQuotient(sspec,rspec,m,t) represents the expansion of
       ++ $F_{rbar,sbar,m,t}(\gamma \tau)$ for all gamma corresponding
-      ++ to the cusps of MOD. $rbar$ and $sbar$ are given by rspec and
+      ++ to the cusps of QMOD. $rbar$ and $sbar$ are given by rspec and
       ++ sspec, respectively.
     etaQuotient: (SPEC, List Cusp) -> %
       ++ etaQuotient(rspec,cusps) represents the expansion of
       ++ $g_{rbar}(\gamma \tau)$ for all gamma corresponding to the
-      ++ given cusps of MOD. $rbar$ is given by rspec.
+      ++ given cusps of QMOD. $rbar$ is given by rspec.
     etaQuotient: SPEC -> %
       ++ etaQuotient(rspec) represents the expansion of
       ++ $g_{rbar}(\gamma \tau)$ for all gamma corresponding to the
-      ++ cusps of MOD. $rbar$ is given by rspec.
+      ++ cusps of QMOD. $rbar$ is given by rspec.
     cusps: % -> List Cusp
       ++ cusps(x) either returns the value that was given to
-      ++ etaQuotient at creation time or cusps(nn)$MOD if the cusps where
+      ++ etaQuotient at creation time or cusps(nn)$QMOD if the cusps where
       ++ not given where nn is the level given through the cofactor of x.
-    elt: (%, Cusp) -> YMEQG MOD
+    elt: (%, Cusp) -> YMEQG QMOD
       ++ x.cusp returns the data corresponding to the respective
       ++ cusp.
     minimalRootOfUnity: % -> PP
@@ -311,7 +311,7 @@ SymbolicModularEtaQuotient(MOD): Exports == Implementation where
       ++ ordersMin(x) gives the exact orders.
 
   Implementation ==> add
-    HT ==> XHashTable(Cusp, YMEQG MOD)
+    HT ==> XHashTable(Cusp, YMEQG QMOD)
     Rep ==> Record(
               fsspec: SPEC,
               frspec: SPEC,
@@ -330,14 +330,14 @@ SymbolicModularEtaQuotient(MOD): Exports == Implementation where
         minroot: ZZ := 1
         nn: PP := level sspec
         for cusp in spitzen repeat
-            gamma: SL2Z := cuspToMatrix(nn, cusp)$MOD
-            e: YMEQG MOD := etaQuotient(sspec, rspec, m, t, gamma)
+            gamma: SL2Z := cuspToMatrix(nn, cusp)$QMOD
+            e: YMEQG QMOD := etaQuotient(sspec, rspec, m, t, gamma)
             h.cusp := e
             minroot := lcm(minroot, minimalRootOfUnity e)
         per [sspec, rspec, m, t, spitzen, h, asPP minroot]
 
     etaQuotient(sspec: SPEC, rspec: SPEC, m: PP, t: NN): % ==
-        etaQuotient(sspec, rspec, m, t, cusps(level sspec)$MOD)
+        etaQuotient(sspec, rspec, m, t, cusps(level sspec)$QMOD)
 
     etaQuotient(rspec: SPEC, spitzen: List Cusp): % ==
         sspec: SPEC := etaQuotientSpecification(level rspec, []$LZZ)
@@ -346,9 +346,9 @@ SymbolicModularEtaQuotient(MOD): Exports == Implementation where
     etaQuotient(rspec: SPEC): % ==
         nn: PP := level rspec
         sspec: SPEC := etaQuotientSpecification(nn, []$LZZ)
-        etaQuotient(sspec, rspec, 1, 0, cusps(nn)$MOD)
+        etaQuotient(sspec, rspec, 1, 0, cusps(nn)$QMOD)
 
-    elt(x: %, cusp: Cusp): YMEQG MOD == xx.fy.cusp
+    elt(x: %, cusp: Cusp): YMEQG QMOD == xx.fy.cusp
     minimalRootOfUnity(x: %): PP == xx.fminroot
     cusps(x: %): List Cusp == xx.fcusps
 
@@ -369,7 +369,7 @@ SymbolicModularEtaQuotient(MOD): Exports == Implementation where
         xx.fcusps = yy.fcusps
 
     one?(x: %): Boolean ==
-        import from YMEQG MOD
+        import from YMEQG QMOD
         import from YEQG
         c := first xx.fcusps
         one? first basefactor(x.c) and one? cofactor(x.c)

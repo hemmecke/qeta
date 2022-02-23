@@ -16,7 +16,7 @@ zqmap(x) ==> abmap(ZZ, QQ, x)
 
 -------------------------------------------------------------------
 -- macro that we use.
--- MOD:     actually a macro pointing to MOD1 or MOD2
+-- QMOD:     actually a macro pointing to QMOD1 or QMOD2
 
 -------------------------------------------------------------------
 -- Implicit global variables:
@@ -27,17 +27,18 @@ zqmap(x) ==> abmap(ZZ, QQ, x)
 -- CX:      An C-Algebra containing xi.
 -- Call macro EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi).
 -------------------------------------------------------------------
-QESXM(C, CX, MOD) ==> QEtaSeriesExpansion(C, xiord, CX, xi, MOD)
-QESXMOD(C, CX) ==> QESXM(C, CX, MOD)
+QESXM(C, CX, QMOD) ==> QEtaSeriesExpansion(C, xiord, CX, xi, QMOD)
+QESXMOD(C, CX) ==> QESXM(C, CX, QMOD)
 An CX ==> ModularFunctionExpansionsAtCusps(CX, spitzen)
 
 -------------------------------------------------------------------
 -- Expansion of symbolic (generalized) eta-quotient into laurent series.
-expandMAn(CX, MOD) y ==> (laurentExpansions(y, spitzen)$QESXM(C,CX,MOD))::An(CX)
-expandMODAn CX ==> expandMAn(CX, MOD)
-expandMODAnCX ==> expandMAn(CX, MOD)
-expandM0An CX ==> expandMAn(CX, MOD0)
-expandM1An CX ==> expandMAn(CX, MOD1)
+expandMAn(CX, QMOD) y ==>_
+  (laurentExpansions(y, spitzen)$QESXM(C,CX,QMOD))::An(CX)
+expandMODAn CX ==> expandMAn(CX, QMOD)
+expandMODAnCX ==> expandMAn(CX, QMOD)
+expandM0An CX ==> expandMAn(CX, QMOD0)
+expandM1An CX ==> expandMAn(CX, QMOD1)
 expandM0AnCX ==> expandM0An CX
 expandM1AnCX ==> expandM1An CX
 
@@ -50,9 +51,9 @@ specYM1EQn spec ==> specYM1EQ(spec, spitzen)
 -------------------------------------------------------------------
 -- Expansion of a specification int (generalized) eta-quotient into
 -- laurent series.
-specMAn(CX,MOD)(spec) ==> expandMAn(CX, MOD)(specYMEQ(MOD)(spec, spitzen))
-specM0An CX ==> specMAn(CX, MOD0)
-specM1An CX ==> specMAn(CX, MOD1)
+specMAn(CX,QMOD)(spec) ==> expandMAn(CX, QMOD)(specYMEQ(QMOD)(spec, spitzen))
+specM0An CX ==> specMAn(CX, QMOD0)
+specM1An CX ==> specMAn(CX, QMOD1)
 
 -------------------------------------------------------------------
 CAn CX ==> QEtaAlgebraCachedPower(CX, An CX) -- domain in cached version
@@ -102,9 +103,9 @@ algSUM(f, x) ==> reduce(_+, [f(mon) for mon in monomials x])
 
 -- We assum that mon is such that degree(mon): DZ.
 monToA1(C)(mon) ==> _
-  leadingCoefficient(mon)*specMA1(C,MOD)(eqSPEC(nn, members degree mon))
+  leadingCoefficient(mon)*specMA1(C,QMOD)(eqSPEC(nn, members degree mon))
 monToAn(CX)(mon) ==> _
-  leadingCoefficient(mon)*specMAn(CX,MOD)(eqSPEC(nn, members degree mon))
+  leadingCoefficient(mon)*specMAn(CX,QMOD)(eqSPEC(nn, members degree mon))
 
 -- rzzA1CX: RZZ -> A1 C
 rzzA1(C)(x) ==> algSUM(monToA1(C), x)

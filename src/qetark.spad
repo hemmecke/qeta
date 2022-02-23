@@ -147,8 +147,8 @@ INDICES ==> LLZZ
 Pol ==> Polynomial
 SUP ==> SparseUnivariatePolynomial
 QETAAUX ==> QEtaAuxiliaryPackage;
-QCONDM0 ==> QEtaConditionsModularGamma0
-QCONDM1 ==> QEtaConditionsModularGamma1
+QMOD0 ==> QEtaConditionsModularGamma0
+QMOD1 ==> QEtaConditionsModularGamma1
 
 asPP x ==> x pretend PP
 
@@ -170,7 +170,7 @@ SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 QES4TI2 ==> QEtaQuotientSpecifications4ti2
 
-specMODA1 C ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, MOD)
+specMODA1 C ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, QMOD)
 
 )if LiterateDoc
 %$
@@ -733,9 +733,9 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 ++ This package builds on the work of
 ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} and finds
 ++ identities with generalized eta-quotients.
-QEtaRamanujanKolberg(C,MOD): Exports == Implementation where
+QEtaRamanujanKolberg(C,QMOD): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain
-  MOD: QEtaConditionsModularCategory
+  QMOD: QEtaConditionsModularCategory
   IDENTITY ==> QEtaRamanujanKolbergIdentity C
   Exports ==> with
     findIdentity: (SPEC, SPEC, PP, NN, SPECS, QXAB1 C) -> IDENTITY
@@ -776,11 +776,11 @@ QEtaRamanujanKolberg(C,MOD): Exports == Implementation where
       ++ a Ramanujan-Kolberg identity. The basis elements are
       ++ taken from a previously computed identity, if possible.
   Implementation ==> add
-    cofactInf ==> etaCofactorInfinity $ QEtaModularGammaPackage(MOD)
+    cofactInf ==> etaCofactorInfinity $ QEtaModularGammaPackage(QMOD)
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: PP, t: NN,_
                  mspecs: SPECS, xab: QXAB1 C): IDENTITY ==
-        import from QEtaModularInfinity(C, MOD)
+        import from QEtaModularInfinity(C, QMOD)
         f: A1 C := modularEtaQuotientInfinity(sspec, rspec, m, t)
         -- For the following computation we attach a marker to the series.
         xf: X1 C := toX1(C, f, "F"::Symbol::Pol(C))
@@ -789,7 +789,7 @@ QEtaRamanujanKolberg(C,MOD): Exports == Implementation where
         -- the algebra-basis xab.
         xz: X1 C := reduce(xf, xab)$QXTOPRED1(C)
         -- If xz is non-zero, then no relation has been found.
-        orb: List NN := modularOrbit(rspec, m, t)$MOD
+        orb: List NN := modularOrbit(rspec, m, t)$QMOD
         not zero? xz => identity(sspec, rspec, m, orb, mspecs, 0$Pol(C), xab)
         identity(sspec, rspec, m, orb, mspecs, second(xz)::Pol(C), xab)
 
@@ -804,7 +804,7 @@ QEtaRamanujanKolberg(C,MOD): Exports == Implementation where
         xgens := [toX1(C, x, sym::Pol(C)) for x in ncegens for sym in msyms]
         -- Eventualle, we apply the samba algorithm to obtain an
         -- order-complete basis.
-        gen := genus(nn)$MOD
+        gen := genus(nn)$QMOD
         import from QXTOPRED1(C) -- necessary, because the next wouldn't compile
         xab: QXAB1(C) := samba(xgens.1, xgens, gen)$QXTOPSAMBA1(C)
         findIdentity(sspec, rspec, m, t, mspecs, xab)
@@ -817,7 +817,7 @@ QEtaRamanujanKolberg(C,MOD): Exports == Implementation where
                  bidxs: INDICES): IDENTITY ==
         -- We compute the basis for the modular generalized
         -- eta-quotients and take only the non-constants eta-quotients.
-        import from QES4TI2(MOD)
+        import from QES4TI2(QMOD)
         ncmSPECSInfM1 ==> nonConstantEtaQuotientMonoidInfinitySpecifications
         findIdentity(sspec, rspec, m, t, ncmSPECSInfM1(level sspec, bidxs))
 

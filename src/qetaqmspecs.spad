@@ -122,7 +122,7 @@ QEtaQuotientExponentVectorsAux: with
       ++ rs := sortByComponentGrade(m, gens) sorts gens such that if
       ++ ri:=vector(rs.i), rj:=vector(rs.j), and i<j then
       ++ smallerGrade?(toG(ri, t).sgi, toG(rj, t).sgi) holds where
-      ++ t:=transpose(matrixLigozat(m)$QCONDM0) and toG computes
+      ++ t:=transpose(matrixLigozat(m)$QMOD0) and toG computes
       ++ the respective sorted grades.
       ++ Informally, since the gens correspond to exponent vectors of
       ++ eta-quotients and t to the transpose of the Ligozat matrix,
@@ -170,8 +170,8 @@ QEtaQuotientExponentVectorsAux: with
 ++ QEtaQuotientSpecificationss4ti2 computes a monoid basis of
 ++ (specifications for) (generalized) eta-quotients with a pole at
 ++ most at infinity.
-QEtaQuotientSpecifications4ti2(MOD): Exports == Implementation where
-  MOD: QEtaConditionsModularCategory
+QEtaQuotientSpecifications4ti2(QMOD): Exports == Implementation where
+  QMOD: QEtaConditionsModularCategory
   Exports ==> with
     etaQuotientMonoidInfinitySpecifications: (PP, INDICES) -> SPECS
       ++ etaQuotientMonoidInfinitySpecifications(nn,idxs) returns
@@ -184,7 +184,7 @@ QEtaQuotientSpecifications4ti2(MOD): Exports == Implementation where
       ++ specifications of (generalized) eta-quotients that (together
       ++ with 1) generate the (multiplicative) monoid of all
       ++ (generalized) eta-quotients (corresponding to the indices
-      ++ given by idxs) that are modular functions wrt. MOD and have
+      ++ given by idxs) that are modular functions wrt. QMOD and have
       ++ at most poles at the cuspe given by polesat. Specifications s
       ++ that are known to represent constant modular function, are
       ++ included in the result as s and inv(s).
@@ -242,8 +242,8 @@ QEtaQuotientSpecifications4ti2(MOD): Exports == Implementation where
     -- assertTrue(modular?(b)) for b in bspecs
     sortByComponentGrade(nn: PP, idxs: INDICES, gens: List VZZ): LLZZ ==
         empty? gens => empty()
-        spitzen: CUSPS := cusps(nn)$MOD
-        t: MQQ := matrixEtaOrder(nn, spitzen, idxs)$MOD
+        spitzen: CUSPS := cusps(nn)$QMOD
+        t: MQQ := matrixEtaOrder(nn, spitzen, idxs)$QMOD
         ggens: List G := [toG(t, v) for v in gens]
         [members(g.rvec) for g in sort!(smallerGradeG?, ggens)]
 
@@ -277,7 +277,7 @@ QEtaQuotientSpecifications4ti2(MOD): Exports == Implementation where
     ---------------------------------------------------------------
 
     etaQuotientMonoidSolutions(nn: PP, polesat: CUSPS, idxs: INDICES): ZRESULT ==
-        zsolve(etaQuotientMonoidSystem(nn, polesat, idxs)$MOD)$X4ti2
+        zsolve(etaQuotientMonoidSystem(nn, polesat, idxs)$QMOD)$X4ti2
 
     homogeneousSpecifications(nn: PP, idxs: INDICES, zres: ZRESULT): SPECS ==
         sortedSpecifications(nn, idxs, zres.zhom)
@@ -313,10 +313,10 @@ QEtaQuotientSpecifications4ti2(MOD): Exports == Implementation where
         -- same entries as the one for infinity in matrixEtaOrder can
         -- be removed from matmod. Of course, we can then also remove
         -- the respective zero column.
-        spitzen: CUSPS := reverse!(cusps(nn)$MOD) -- first is infinity
+        spitzen: CUSPS := reverse!(cusps(nn)$QMOD) -- first is infinity
 
-        matmod: MQQ := matrixModular(nn, idxs)$MOD
-        matord: MQQ := matrixEtaOrder(nn, spitzen, idxs)$MOD
+        matmod: MQQ := matrixModular(nn, idxs)$QMOD
+        matord: MQQ := matrixEtaOrder(nn, spitzen, idxs)$QMOD
         -- Find a row of matmod that is equal to the first row in matord.
         p: ZZ := rowPos(row(matord, 1), matmod)
 
@@ -386,7 +386,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
       ++ respective unit vector.
   == add
     QEVAux ==> QEtaQuotientExponentVectorsAux
-    MOD0 ==> QEtaConditionsModularGamma0
+    QMOD0 ==> QEtaConditionsModularGamma0
 --    matrixModularGamma0: PP -> MZZ
 --      ++ matrixModularGamma0(nn) returns a matrix mat such that if
 --      ++ divs:=divisors(nn), n=#divisors(nn) and v is such that
@@ -406,7 +406,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
 
     -- local
     matrixModularGamma0(nn: PP): MZZ ==
-        matQ := matrixModular(nn, etaFunctionIndices(nn)$SPEC)$MOD0
+        matQ := matrixModular(nn, etaFunctionIndices(nn)$SPEC)$QMOD0
         mat: MZZ := new(nrows matQ, ncols matQ, 0)
         for i in 1..nrows matQ repeat for j in 1..ncols matQ repeat
             qsetelt!(mat, i, j, numer qelt(matQ, i, j))
@@ -432,7 +432,7 @@ QEtaQuotientMonoidExponentVectorsStar: with
         matmod0: MZZ := matrixModularGamma0(m)
         gens: List VZZ := integerNullSpace matmod0
         mat: MZZ := matrix [[x for x in entries v for d in divs] for v in gens]
-        ligozat: MZZ := matrixLigozat(m)$MOD0
+        ligozat: MZZ := matrixLigozat(m)$QMOD0
         ligozat := transpose ligozat
         ords := mat * ligozat
         rec: Record(lll: MZZ, trf: MZZ) := extendedLLL(ords)$LLLReduction

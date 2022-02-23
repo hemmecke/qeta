@@ -12,15 +12,15 @@ kleinJ(n: PP, gamma: SL2Z, w: PP): L1 CX ==
   not one? denom(uq) => error "kleinJ: denominator of u should vanish"
   not one? denom(vq) => error "kleinJ: denominator of v should vanish"
   v: NN := numer(vq)::NN
-  px: QEtaPuiseuxSeries CX := substitute(j, uq, v)$QESXM(C, CX, MOD0)
-  laurent(px, 1)$QESXM(C, CX, MOD0)
+  px: QEtaPuiseuxSeries CX := substitute(j, uq, v)$QESXM(C, CX, QMOD0)
+  laurent(px, 1)$QESXM(C, CX, QMOD0)
 
 -- expansion of j(n*tau) at all cusps of Gamma0(nn).
 kleinJn(nn: PP, n: NN): An(CX) == (_
   h := table()$XHashTable(Cusp, L1 CX);_
   for cusp in cuspsM0 nn repeat (_
     w := widthM0(nn, cusp);_
-    gamma := cuspToMatrix(nn,cusp)$MOD0;_
+    gamma := cuspToMatrix(nn,cusp)$QMOD0;_
     h.cusp  := kleinJ(n, gamma, w));_
   h :: An(CX))
 
@@ -36,8 +36,8 @@ traceMap(nn: PP, t: PP, r: List ZZ): A1 C ==
   idgamma: SL2Z := matrix [[1,0],[0,1]]
   rspec: SPEC := eqSPEC(nn*t, r)
   ye := etaQuotient(rspec, idgamma)$YEQG
-  p := puiseuxExpansion(ye)$QEtaSeriesExpansion(C, 1, C, 1, MOD0)
-  e := laurent(p, 1)$QEtaSeriesExpansion(C, 1, C, 1, MOD0)
+  p := puiseuxExpansion(ye)$QEtaSeriesExpansion(C, 1, C, 1, QMOD0)
+  e := laurent(p, 1)$QEtaSeriesExpansion(C, 1, C, 1, QMOD0)
   alw: Matrix ZZ := matrixAtkinLehner(nn*t, t)
   sm := splitMatrix(alw(1,1), alw(1,2), alw(2,1), alw(2,2))
   gamma := sm.red
@@ -48,8 +48,8 @@ traceMap(nn: PP, t: PP, r: List ZZ): A1 C ==
     print("minimalRootOfUnity yeg"::Symbol::OutputForm)
     print((minimalRootOfUnity yeg)::OutputForm)
     error "traceMap: need extension by root of unity"
-  pg := puiseuxExpansion(yeg)$QEtaSeriesExpansion(C, 2, C, -1, MOD0)
-  eg := laurent(pg, t)$QEtaSeriesExpansion(C, 2, C, -1, MOD0)
+  pg := puiseuxExpansion(yeg)$QEtaSeriesExpansion(C, 2, C, -1, QMOD0)
+  eg := laurent(pg, t)$QEtaSeriesExpansion(C, 2, C, -1, QMOD0)
   -- finally apply Ut operator
   uteg := choose(t, 0, eg)
   -- and add things up
