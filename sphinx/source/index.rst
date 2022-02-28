@@ -17,15 +17,13 @@ of modular functions.
 Overview
 --------
 
-The **QEta** package started with an implementation of the AB
-algorithm from the article
-`An algorithmic approach to Ramanujan-Kolberg identities
+The **QEta** package started at the end of 2015 with an implementation
+of the AB algorithm from the article `An algorithmic approach to
+Ramanujan-Kolberg identities
 <https://www.sciencedirect.com/science/article/pii/S0747717114000868>`_
-by Silviu Radu
-and the *Samba* algorithm from the article
-`Dancing Samba with Ramanujan Partition Congruences
-<https://doi.org/10.1016/j.jsc.2017.02.001>`_
-by Ralf Hemmecke.
+by Silviu Radu and the *Samba* algorithm from the article `Dancing
+Samba with Ramanujan Partition Congruences
+<https://doi.org/10.1016/j.jsc.2017.02.001>`_ by Ralf Hemmecke.
 
 In addition it implements the algorithm from the article
 `Construction of all Polynomial Relations among Dedekind Eta Functions
@@ -40,13 +38,18 @@ by Hemmecke, Paule, and Radu were done
 with the **QEta** package. See also the related `website
 <https://www.risc.jku.at/people/hemmecke/papers/integralbasis/>`_.
 
+In 2021 the extensions to Radu's algorithm for generalized
+eta-quotients described in the the article `Finding Modular Functions
+for Ramanujan-Type Identities
+<https://doi.org/10.1007/s00026-019-00457-4>`_ by Chen, Du, and Zhao
+have also been included in **QEta**.
+
 The underlying theory of the programs is described in the above
 articles which are also available as RISC_ reports
 `15-14 <http://www.risc.jku.at/publications/download/risc_5069/zzz3.pdf>`_,
 `16-06 <http://www.risc.jku.at/publications/download/risc_5338/DancingSambaRamanujan.pdf>`_,
 `18-03 <http://www.risc.jku.at/publications/download/risc_5561/etarelations.pdf>`_.
 `19-10 <https://www.risc.jku.at/publications/download/risc_6343/19-10.pdf>`_.
-
 
 The **QEta** package requires FriCAS_ 1.3.7.
 
