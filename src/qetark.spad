@@ -147,8 +147,8 @@ INDICES ==> LLZZ
 Pol ==> Polynomial
 SUP ==> SparseUnivariatePolynomial
 QETAAUX ==> QEtaAuxiliaryPackage;
-QMOD0 ==> QEtaConditionsModularGamma0
-QMOD1 ==> QEtaConditionsModularGamma1
+QMOD0 ==> QEtaModularGamma0
+QMOD1 ==> QEtaModularGamma1
 
 asPP x ==> x pretend PP
 
@@ -170,7 +170,8 @@ SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 QES4TI2 ==> QEtaQuotientSpecifications4ti2
 
-specMODA1 C ==> modularEtaQuotientInfinity $ QEtaModularInfinity(C, QMOD)
+specMODA1 C ==> _
+  modularEtaQuotientInfinity $ QEtaModularInfinityExpansion(C, QMOD)
 
 )if LiterateDoc
 %$
@@ -735,7 +736,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 ++ identities with generalized eta-quotients.
 QEtaRamanujanKolberg(C,QMOD): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain
-  QMOD: QEtaConditionsModularCategory
+  QMOD: QEtaModularCategory
   IDENTITY ==> QEtaRamanujanKolbergIdentity C
   Exports ==> with
     findIdentity: (SPEC, SPEC, PP, NN, SPECS, QXAB1 C) -> IDENTITY
@@ -776,11 +777,11 @@ QEtaRamanujanKolberg(C,QMOD): Exports == Implementation where
       ++ a Ramanujan-Kolberg identity. The basis elements are
       ++ taken from a previously computed identity, if possible.
   Implementation ==> add
-    cofactInf ==> etaCofactorInfinity $ QEtaModularGammaPackage(QMOD)
+    cofactInf ==> etaCofactorInfinity $ QEtaModularPackage(QMOD)
 
     findIdentity(sspec: SPEC, rspec: SPEC, m: PP, t: NN,_
                  mspecs: SPECS, xab: QXAB1 C): IDENTITY ==
-        import from QEtaModularInfinity(C, QMOD)
+        import from QEtaModularInfinityExpansion(C, QMOD)
         f: A1 C := modularEtaQuotientInfinity(sspec, rspec, m, t)
         -- For the following computation we attach a marker to the series.
         xf: X1 C := toX1(C, f, "F"::Symbol::Pol(C))

@@ -90,13 +90,13 @@ SPADFILES=4ti2 qfunct cachedpow cachedqpochpow \
   qetaser \
   qetagamma \
   qetacofactorconditions \
-  qetacondmod \
+  qetamod \
   qetaquotinf \
   qetasymb \
   qetasymbmod \
   qetaquot \
   qetamodfunexp \
-  qetamodgamma \
+  qetamodpkg \
   qetaqmspecs \
   qetatool \
   qetasamba \
