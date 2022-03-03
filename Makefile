@@ -119,10 +119,10 @@ PREREQS=${patsubst %,${TMP}/%,Makefile ${PREREQS_INPUT} ${PREREQS_SPAD} ${PREREQ
 prerequisites: ${PREREQS}
 	cd ${TMP}; for f in ${PREREQS_SPAD}; do echo $$f; done | perl mkdeps.pl > deps.mk
 
-QETAEXTS=aux bbl blg idx ilg ind log out synctex.gz toc
+QETAEXTS=aux bbl blg idx ilg ind log out synctex.gz tex toc
 clean:
 	-cd ${TMP} && ${MAKE} clean
-	rm -f $(patsubst %,qeta.%, ${QETAEXTS})
+	-cd ${TMP} && rm -f $(patsubst %,qeta.%, ${QETAEXTS})
 
 distclean: clean
 	-cd ${TMP} && ${MAKE} distclean
@@ -136,7 +136,7 @@ recompile-spad compile-spad doc localdoc github.io-local\
 ${TMP}/Makefile: Makefile.sub
 	${MKDIR_P} ${TMP}
 	cp -a $< $@
-${patsubst %,${TPROJECT}.%, bib sty}: ${TPROJECT}.%: ${PROJECT}.%
+${patsubst %,${TPROJECT}.%, bib sty tex}: ${TPROJECT}.%: ${PROJECT}.%
 	${MKDIR_P} ${TMP}
 	cp -a $< $@
 ${patsubst %,${TMP}/%,${PREREQS_INPUT}}: ${TMP}/%: input/%
@@ -207,11 +207,13 @@ pdfall: pdf
 
 # We generate qeta.pdf in the directory where qeta.tex lives so that
 # we can use forward and inverse search.
-pdf: ${patsubst %,${TPROJECT}.%, bib sty} ${TPROJECT}abstracts.tex \
+pdf: ${patsubst %,${TPROJECT}.%, bib sty tex} ${TPROJECT}abstracts.tex \
      ${patsubst %,${TMP}/%.pdf,${SPADFILES}}
-	TEXINPUTS=${TMP}:  pdflatex --synctex=1 ${PROJECT}.tex \
-	  && bibtex ${PROJECT}.aux \
+	cd ${TMP} \
+	  && TEXINPUTS=.:  pdflatex --synctex=1 ${PROJECT}.tex \
+	  && biber ${PROJECT} \
 	  && makeindex ${PROJECT}
+	cp ${TMP}/qeta.pdf .
 
 ${TPROJECT}abstracts.tex: ${patsubst %,${TMP}/%, ${PREREQS_SPAD}}
 	(echo '\\begin{description}'; \
