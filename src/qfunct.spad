@@ -32,7 +32,7 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 \date{17-Nov-2014}
 \maketitle
 \begin{abstract}
-  The package \code{QFunctions} implements a number of (univariate)
+  The package \qetatype{QFunctions} implements a number of (univariate)
   $q$-(Laurent) series for various well known functions like
   \begin{itemize}
   \item the $q$-Pochhammer symbol
@@ -44,7 +44,9 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
   \item the Eisenstein series $E_2$, $E_4$, and $E_6$ as $q$-series
     \url{https://en.wikipedia.org/wiki/Eisenstein_series}, and
   \item Klein's $j$-invariant as a $q$-series
-    \url{https://en.wikipedia.org/wiki/J-invariant}.
+    \url{https://en.wikipedia.org/wiki/J-invariant},
+  \item the expansion of the Jacobi triple product
+    \url{https://en.wikipedia.org/wiki/Jacobi_triple_product}.
   \end{itemize}
 \end{abstract}
 
@@ -155,9 +157,9 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
   asNN x ==> x pretend NN
   C ==> with
     qPochhammer: () -> L
-        ++ qPochhammer() = qPochhammer(1, 1, 1)
+      ++ qPochhammer() = qPochhammer(1, 1, 1)
     qPochhammer: R -> L
-        ++ qPochhammer(c) = qPochhammer(c, 0, 1)
+      ++ qPochhammer(c) = qPochhammer(c, 0, 1)
     eulerFunction2: PP -> L
       ++ Do not use this function! It is just another implementation
       ++ of eulerFunction.
@@ -165,61 +167,60 @@ QFunctions(R: Ring, L: UnivariateLaurentSeriesCategory R): C == I where
       ++ eulerStream is an auxiliary function for the computation of
       ++ eulerFunction and only exported for debugging purposes.
     eulerFunction: PP -> L
-        ++ For s>0, eulerFunction(s) = qPochhammer(1, s, s).
-        ++ https://en.wikipedia.org/wiki/Euler_function
-        ++ We use the Pentagonal number theorem to speed up
-        ++ its computation.
-        ++ https://en.wikipedia.org/wiki/Pentagonal_number_theorem
-        ++ eulerFunction(s) =
-        ++   1 + \sum_{n>0} (-1)^n (q^(s*n*(3*n+1)/2) + q^(s*n*(3*n-1)/2))
+      ++ For s>0, eulerFunction(s) = qPochhammer(1, s, s).
+      ++ https://en.wikipedia.org/wiki/Euler_function
+      ++ We use the Pentagonal number theorem to speed up
+      ++ its computation.
+      ++ https://en.wikipedia.org/wiki/Pentagonal_number_theorem
+      ++ eulerFunction(s) =
+      ++   1 + \sum_{n>0} (-1)^n (q^(s*n*(3*n+1)/2) + q^(s*n*(3*n-1)/2))
     eulerFunctionPower3: PP -> L
-        ++ eulerFunctionPower3(x) returns eulerFunction(x)^3, but uses
-        ++ the formula
-        ++ $\sum_{n=0}^\infty (-1)^n (2n+1) q^{\frac{1}{2}(n^2 + n)}$
-        ++ to compute the result more efficiently.
-        ++ See \cite{HirschhornHunt_SimpleProofOfTheRamanujanConjecture_1981}.
-        ++ http://eudml.org/doc/152366
+      ++ eulerFunctionPower3(x) returns eulerFunction(x)^3, but uses
+      ++ the formula
+      ++ $\sum_{n=0}^\infty (-1)^n (2n+1) q^{\frac{1}{2}(n^2 + n)}$
+      ++ to compute the result more efficiently.
+      ++ See \cite{HirschhornHunt_SimpleProofOfTheRamanujanConjecture_1981}.
+      ++ http://eudml.org/doc/152366
     partitionSeries: PP -> L
-        ++ partitionSeries(s) returns the partition generating series, i.e.,
-        ++ the coefficient of $q^(s*n)$ is the number of partitions of $n$
-        ++ (where $q$ is the variable from $L$).
-        ++ It holds: partitionSeries(s)*eulerFunction(s)=1.
+      ++ partitionSeries(s) returns the partition generating series, i.e.,
+      ++ the coefficient of $q^(s*n)$ is the number of partitions of $n$
+      ++ (where $q$ is the variable from $L$).
+      ++ It holds: partitionSeries(s)*eulerFunction(s)=1.
     qPochhammer: (R, NN) -> L
-        ++ qPochhammer(c, n) = qPochhammer(c, 0, 1, n)
+      ++ qPochhammer(c, n) = qPochhammer(c, 0, 1, n)
     qPochhammer: (R, ZZ, PP) -> L
-        ++ qPochhammer(c, r, s) returns the Laurent series given by
-        ++ \[(c\cdot q^r, q^s)=
-        ++ \[\prod_{k=0}^{\infty} (1-c\cdot q^r \cdot (q^s)^k)\]
-        ++ where q=monomial(1,1)$L.
+      ++ qPochhammer(c, r, s) returns the Laurent series given by
+      ++ \[(c\cdot q^r, q^s)=
+      ++ \[\prod_{k=0}^{\infty} (1-c\cdot q^r \cdot (q^s)^k)\]
+      ++ where q=monomial(1,1)$L.
     qPochhammer: (R, ZZ, ZZ, NN) -> L
-        ++ qPochhammer(c, r, s, n) returns the Laurent series
-        ++ $(c\cdot q^r, q^s)_n$ given by 1, if n=0;
-        ++ and
-        ++ \[\prod_{k=0}^{n-1} (1-c\cdot q^s \cdot (q^r)^k),\] otherwise,
-        ++ where q=monomial(1,1)$L.
+      ++ qPochhammer(c, r, s, n) returns the Laurent series
+      ++ $(c\cdot q^r, q^s)_n$ given by 1, if n=0;
+      ++ and
+      ++ \[\prod_{k=0}^{n-1} (1-c\cdot q^s \cdot (q^r)^k),\] otherwise,
+      ++ where q=monomial(1,1)$L.
     eisensteinE2: () -> L
-        ++ eisensteinE2() returns the normalized Eisenstein series
-        ++ E2 = 1 - 24 \sum_{n=1}^\infty \sigma_1(n) q^{2n}$ where
-        ++ $\sigma_1(n)$ is the sum of the divisors of $n$.
+      ++ eisensteinE2() returns the normalized Eisenstein series
+      ++ E2 = 1 - 24 \sum_{n=1}^\infty \sigma_1(n) q^{2n}$ where
+      ++ $\sigma_1(n)$ is the sum of the divisors of $n$.
     eisensteinE4: () -> L
-        ++ eisensteinE4() returns the normalized Eisenstein series
-        ++ E4 = 1 + 240 \sum_{n=1}^\infty \sigma_3(n) q^{2n}$ where
-        ++ $\sigma_3(n)$ is the sum of third powers of the divisors
-        ++ of $n$.
+      ++ eisensteinE4() returns the normalized Eisenstein series
+      ++ E4 = 1 + 240 \sum_{n=1}^\infty \sigma_3(n) q^{2n}$ where
+      ++ $\sigma_3(n)$ is the sum of third powers of the divisors
+      ++ of $n$.
     eisensteinE6: () -> L
-        ++ eisensteinE4() returns the normalized Eisenstein series
-        ++ E6 = 1 - 504 \sum_{n=1}^\infty \sigma_5(n) q^{2n}$ where
-        ++ $\sigma_3(n)$ is the sum of fifth powers of the divisors
-        ++ of $n$.
+      ++ eisensteinE4() returns the normalized Eisenstein series
+      ++ E6 = 1 - 504 \sum_{n=1}^\infty \sigma_5(n) q^{2n}$ where
+      ++ $\sigma_3(n)$ is the sum of fifth powers of the divisors
+      ++ of $n$.
     kleinJInvariant: () -> L
-        ++ kleinJInvariant() returns Klein's j-invariant as a Laurent
-        ++ series in q=2i\pi. It is given by 1728*E4^3/(E4^3-E6^2)
-        ++ where E4 and E6 are the respective normalized Eisenstein
-        ++ series.
+      ++ kleinJInvariant() returns Klein's j-invariant as a Laurent
+      ++ series in q=2i\pi. It is given by 1728*E4^3/(E4^3-E6^2)
+      ++ where E4 and E6 are the respective normalized Eisenstein
+      ++ series.
     generalizedEulerProduct: (PP, List ZZ) -> L
-        ++ generalizedEulerProduct(n, ts) computes the product of
-        ++ qPochhammer(1, t, n) for each t in ts)
-
+      ++ generalizedEulerProduct(n, ts) computes the product of
+      ++ qPochhammer(1, t, n) for each t in ts)
     jacobiFunction: (ZZ -> R, PP, NN) -> L
       ++ For d>0, 0<=g<d, jacobiFunction(f, d, g) returns
       ++ $\sum_{n=-\infty}^\infty (-1)^n f(n) q^{g n + d n (n-1) / 2}$
