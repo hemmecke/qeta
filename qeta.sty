@@ -104,10 +104,62 @@
   {\endMakeFramed\endtrivlist}
 
 \defSequentialEnvironment{Hemmecke}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The following is from rhxterm.sty(.nw)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\rhxtermarg{\rhxtermNoOptionalArgument}
+\def\rhxtermNewCommand#1#2{%
+  \newcommand{#1}[2][\rhxtermNoOptionalArgument]{%
+    \def\rhxtermgiven{##1}%
+    \ifx\rhxtermgiven\rhxtermarg \rhxtermTwoToThree{##2}{##2}{#2}%
+    \else                        \rhxtermTwoToThree{##1}{##2}{#2}%
+    \fi}}
+\def\rhxtermTwoToThree#1#2#3{%
+  #3{\rhxtermAtSplit{#2}{\rhxfirstoftwo}}%
+    {\rhxtermAtSplit{#1}{\rhxsecondoftwo}}%
+    {#2}}
+\def\rhxfirstoftwo#1#2{#1}
+\def\rhxsecondoftwo#1#2{#2}
+\makeatother
+\def\rhxtermAtSplit#1{\rhxtermSplitAtOther#1@#1@\rhxtermAtEnd}
+\def\rhxtermSplitAtOther#1@#2@#3\rhxtermAtEnd{%
+  \if &#3&\expandafter\rhxtermAtSplitLetter
+  \else   \expandafter\rhxtermApplyThird\fi
+  {#1}{#2}}
+\makeatletter
+\def\rhxtermAtSplitLetter#1#2{\rhxtermSplitAtLetter#1@#1@\rhxtermAtEnd}
+\def\rhxtermSplitAtLetter#1@#2@#3\rhxtermAtEnd{\rhxtermApplyThird{#1}{#2}}
+\def\rhxtermApplyThird#1#2#3{#3{#1}{#2}}
+\newcommand{\rhxDefineTerm}[3]{%
+  \hypertarget{dt:#1}{\defineTermStyle{#2}}%
+  \label{!#1}%
+  \index{#3|defineTermPage}%
+}
+\newcommand{\rhxUseTerm}[3]{%
+  \@ifundefined{r@!#1}% corresponds to \label{!#1} above
+    {\useTermStyle{#2}}%
+    {\hyperlink{dt:#1}{\useTermStyle{#2}}}%
+  \index{#3}%
+}
+\rhxtermNewCommand{\defineterm}{\rhxDefineTerm}
+\rhxtermNewCommand{\useterm}{\rhxUseTerm}
+\newcommand{\defineTermPage}[1]{\defineTermStyle{\hyperpage{#1}}}
+\newcommand{\defineTermStyle}[1]{\textbf{#1}}
+\newcommand{\useTermStyle}[1]{\emph{#1}}
+\@ifundefined{hyperlink}{\def\hyperlink#1#2{#2}}{}
+\@ifundefined{hypertarget}{\def\hypertarget#1#2{#2}}{}
+\@ifundefined{hyperpage}{\def\hyperpage#1{#1}}{}
+\let\rhxtermtableofcontents\tableofcontents
+\def\tableofcontents{{%
+    \renewcommand{\rhxDefineTerm}[3]{\defineTermStyle{##2}}%
+    \renewcommand{\rhxUseTerm}[3]{\useTermStyle{##2}}%
+    \rhxtermtableofcontents}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\defineNotation}[2][$$]{%
   \colorbox[rgb]{1,0.8,1}{\ensuremath{#2}}\index{#1@\ensuremath{#2}}}
+\renewcommand{\defineTermStyle}[1]{\colorbox[rgb]{1,0.8,1}{\textbf{#1}}}
+\renewcommand{\useTermStyle}[1]{#1}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[backend=biber]{biblatex}
