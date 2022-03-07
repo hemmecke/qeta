@@ -213,7 +213,7 @@ cases := [case1, case2, case4, case5];
 
 -- +
 -------------------------------------------------------------------
---TODOtest:time6-case1-mod3-9n5
+--test:time130-case1-mod3-9n5
 -------------------------------------------------------------------
 -- -
 
@@ -228,10 +228,8 @@ idxs := [[1], [3], [7], [21], [21, 1], [21, 2], [21, 3], [21, 4], [21, 5]]
 checkCongruence(QQ,QMOD1,nn,rspec,m,t,idxs,3,sspecExpected)
 )sys date
 
+)if false
 -------------------------------------------------------------------
-)co /home/hemmecke/g/fricas/src/algebra/vector.spad
-)co ../src/qetamodfunexp
-)co ../src/qetamodgamma
 QMODPKG ==> QEtaModularPackage
 YMEQ ==> SymbolicModularEtaQuotient
 --idxs := generalizedEtaFunctionIndices(nn)
@@ -257,8 +255,6 @@ v,rels
 )sys date
 z := zsolve([mat,rels,v]$ZINPUT)$X4ti2
 )sys date
-
-)fin
 
 rspec := eqSPEC [[7,2,-1],[7,3,-2]]; m := 9; t := 5
 nn := minLevelM1(rspec, m, t)
@@ -309,7 +305,10 @@ fsym: Symbol := "F"::Symbol
 xf := toX1(C, f, fsym::Pol(C))
 xz := reduce(xf, xab)$QXTOPRED1(C);
 assertTrue(zero? xz)
-assertEquals(content((second(xz)::Pol(C)) - F), 3)
+polC := second(xz)::Pol(C)
+c := inv coefficient(polC, 'F, 1)
+assertEquals(content((c*polC)::Pol(ZZ) - F), 3)
+)endif
 
 -- +
 -------------------------------------------------------------------
