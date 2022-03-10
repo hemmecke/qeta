@@ -1,18 +1,24 @@
 \documentclass{article}
 \usepackage{qeta}
+\externaldocument{qetasymb}
+
 
 \begin{document}
-\title{The QEta Package}
+\title{The QEta Package\\
+\textcolor{red}{THIS IS WORK IN PROGRESS}}
 \author{Ralf Hemmecke}
 \maketitle
 \begin{abstract}
-  The QEta package is a collection of programs written in the
-  FriCAS\footnote{FriCAS~1.3.7~\cite{FriCAS_FriCAS_2021}} computer
-  algebra system that allow to compute with Dedekind eta-function and
-  related $q$-series where $q=e^{2\pi i}$, see
-  \url{https://en.wikipedia.org/wiki/Dedekind_eta_function}.
-  Furthermore, we provide a number of functions connected to the
-  theory of modular functions.
+  QEta is a software package that implements an algorithm of
+  Cristian-Silviu Radu to find Ramanujan-Kolberg identities. QEta
+  includes the extension of Radu's algorithm to the case of
+  generalized eta-functions as given by Chen, Du, and Zhao in 2019.
+  %
+  Furthermore, QEta can find a basis of relations of (generalized)
+  Dedekind eta-functions as well as relations among dissections of
+  eta-quotients.
+  %
+  QEta is programmed in the computer algebra system \FriCAS{}.
 \end{abstract}
 
 \tableofcontents
@@ -33,10 +39,8 @@ The underlying theory of the programs is described in the articles
 \cite{Hemmecke_DancingSambaRamanujan_2018}, and
 \cite{HemmeckeRadu_EtaRelations_2019}.
 
-This package requires a version of FriCAS that is compiled from a
-commit after end of December, 2020. \ie, where \GB{} computations do
-no longer require variable names and the new formatting framework was
-introduced.
+Installation instructions can be found at
+\url{https://hemmecke.github.io/qeta}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Overview of the files}
@@ -47,7 +51,7 @@ respective \PathName{.spad} files. We mark the files that are only
 there for historical reasons by a star. They are not really necessary
 to compute the relation among eta-functions.
 
-\include{qetaabstracts}
+%\include{qetaabstracts}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Theoretical background}
@@ -56,29 +60,58 @@ to compute the relation among eta-functions.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Notation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-BEGIN \cite{HemmeckePauleRadu_IntegralBasis_2021}.
+\begin{Hemmecke}
+  See \cite{HemmeckePauleRadu_IntegralBasis_2021}.
+\end{Hemmecke}
 
 Let $\setH=\SetDef{\tau\in \setC}{\mathrm{Im}(\tau)>0}$ denote the
 complex upper half-plane.
 %
-In the following $N$ denotes a positive integer.
+In the following $N$ denotes a positive integer. We abbreviate
+\defineterm{congruence modulo $N$} by
+\begin{gather}
+  a \equiv_N b :\iff a \equiv b \pmod{N}
+\end{gather}
 %
 We define the groups
-\begin{gather*}
-  \mathrm{SL}_2(\setZ) = \SetDef{
+\begin{align}
+  \defineNotation[SL2Z]{\SL2Z}
+  &=
+  \SetDef{
     \begin{pmatrix}
       a & b\\
       c & d\\
-    \end{pmatrix}}{a,b,c,d\in\setZ \text{ and } ad-bc=1},\\
+    \end{pmatrix}}{a,b,c,d\in\setZ \text{ and } ad-bc=1},
+  \label{eq:SL2Z}
+  \\
   %
-  \Gamma_0(N) = \SetDef{
+  \defineNotation[Gamma0N]{\Gamma_0(N)}
+  &=
+  \SetDef{
     \begin{pmatrix}
       a & b\\
       c & d\\
-    \end{pmatrix} \in \mathrm{SL}_2(\setZ)}{c \equiv 0 \pmod{N}};
-\end{gather*}
-$\mathrm{SL}_2(\setZ) = \Gamma_0(1)$ acts on $\setH$ by
+    \end{pmatrix} \in \SL2Z}{c \equiv_N 0};
+  \label{eq:Gamma0}
+  \\
+  \defineNotation[Gamma1N]{\Gamma_1(N)}
+  &=
+  \SetDef{
+    \begin{pmatrix}
+      a & b\\
+      c & d
+    \end{pmatrix} \in \SL2Z}{c \equiv_N 0, a \equiv_N d \equiv_N 1}
+  \label{eq:Gamma1}
+\end{align}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{AdditionalInformation}
+See, for example,
+\url{https://en.wikipedia.org/wiki/Congruence_subgroup}.
+\end{AdditionalInformation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+$\SL2Z = \Gamma_0(1) = \Gamma_1(1)$ acts on $\setH$ by
 $
 \begin{smallpmatrix}
   a & b\\
@@ -94,10 +127,12 @@ $f:\setH\to\setChat:=\setC\cup\Set{\infty}$, namely
   (f|\gamma)(\tau) := f(\gamma \tau).
 \end{gather*}
 %
-A \emph{modular function for $\Gamma_0(N)$} is
-a meromorphic function $f:\setH\to\setChat$ such that
+
+Let $\Gamma$ be $\Gamma_0(N)$ or $\Gamma_1(N)$.
+A \defineterm{modular function} for $\Gamma$ is a meromorphic
+function $f:\setH\to\setChat$ such that
 \begin{enumerate}
-\item for all $\gamma \in \Gamma_0(N)$:
+\item for all $\gamma \in \Gamma$:
   \begin{math}
     f|\gamma = f;
   \end{math} and
@@ -107,20 +142,42 @@ a meromorphic function $f:\setH\to\setChat$ such that
     a&b\\c&d
   \end{smallpmatrix}
   \in \mathrm{SL}_2(\setZ)$ then $f\left(\frac{a \tau + b}{c \tau + d}\right)$
-  admits a Laurent series expansion in powers of $q^{1/w_N(c)}$, where
-  $w_N(c) := N/\gcd(c^2,N)$, of the form
+  admits a Laurent series expansion in powers of $q^{1/w_\gamma}$ of the form
   \begin{gather}
     \label{eq:f(gamma*tau)-expansion}
-    f(\gamma\tau) = \sum_{n=m}^\infty f_n q^{n/w_N(c)},
+    f(\gamma\tau) = \sum_{n=m}^\infty f_n q^{n/w_\gamma},
     \text{ where $q=\exp(2\pi i\tau)$, $m \in \setZ$.}
   \end{gather}
 \end{enumerate}
+
+For $\Gamma_0(N)$ the \defineterm{width} $w_\gamma$ is given by
+\begin{gather}
+  \defineNotation[w-gamma]{w_\gamma} = \frac{N}{\gcd(c^2, N)}
+  \label{eq:width0}
+\end{gather}
+whereas for $\Gamma_1(N)$ it is
+\begin{gather}
+  w_\gamma
+  =
+  \begin{cases}
+    1,                   & \text{if $N=4$ and $\gcd(c,4)=2$},\\
+    \frac{N}{\gcd(N,c)}, & \text{otherwise},
+  \end{cases}
+  \label{eq:width1}
+\end{gather}
+see Equation~(2.49) in
+\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} or Corollary~4
+(2) of \cite{ChoKooPark_ArithmeticRamanujanGoellnitzGordon_2009}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Because of
-$\gamma\infty:=\lim_{\mathrm{Im}{(\tau)}\to\infty}\gamma\tau = a/c$, we
-say that \eqref{eq:f(gamma*tau)-expansion} is a \emph{$q$-expansion of
-  $f$ at $a/c$}. Understanding $a/0=\infty$, this extends to defining
-$q$-expansions at $\infty$. Note that if
-$\gamma'\infty=\gamma\infty=a/c$ then $\gamma'=\gamma
+$\gamma\infty:=\lim_{\mathrm{Im}{(\tau)}\to\infty}\gamma\tau = a/c$,
+we say that \eqref{eq:f(gamma*tau)-expansion} is a
+\defineterm{q-expansion-of-f-at-a/c@$q$-expansion of $f$ at $a/c$}.
+Understanding $a/0=\infty$, this extends to defining $q$-expansions at
+$\infty$. Note that if $\gamma'\infty=\gamma\infty=a/c$ then
+$\gamma'=\gamma
 \begin{smallpmatrix}
   \pm 1 & h\\0 & \pm 1
 \end{smallpmatrix}
@@ -129,7 +186,7 @@ $ for some $h \in \setZ$ and, thus,
   \label{eq:f(gamma'*tau)-expansion}
   f(\gamma'\tau)
   =
-  \sum_{n=m}^\infty f_n \exp(\pm 2\pi i h /w_n(c))^n q^{n/w_N(c)};
+  \sum_{n=m}^\infty f_n \exp(\pm 2\pi i h /w_\gamma)^n q^{n/w_\gamma};
 \end{gather}
 \ie, we can (uniquely) extend the definition of $f$ to points on
 $\setHhat:=\setH\cup\setQ\cup\Set{\infty}$ as
@@ -142,101 +199,70 @@ $\setHhat:=\setH\cup\setQ\cup\Set{\infty}$ as
   \end{cases}
 \end{gather*}
 
-Let $M^\infty(N)$ be the set of modular functions for $\Gamma_0(N)$
+Let $M^\infty(\Gamma)$ be the set of modular functions for $\Gamma$
 that only have a pole (if any) at infinity.
 %
-An element $f\in M^\infty(N)$ has a representation as a Laurent series
-in $q$.
+An element $f\in M^\infty(\Gamma)$ has a representation as a Laurent
+series in $q$.
 
-We denote by $\pord(f)=-\ord_qf$ the \emph{pole order} (at infinity)
-of $f$; here $\ord_qf$ is defined as the index of the least non-zero
-coefficient in the expansion~\eqref{eq:f(gamma*tau)-expansion} of $f$
-in powers of $q$. In view of~\eqref{eq:f(gamma'*tau)-expansion} with
-$c=0$ and thus $w_N(c)=1$, we note that $q$-expansions at infinity are
-unique in \textit{integer} powers of $q$.
+We denote by $\defineNotation[pord]{\pord}(f)=-\ord_qf$ the
+\defineterm{pole order} (at infinity) of $f$; here $\ord_qf$ is
+defined as the index of the least non-zero coefficient in the
+expansion~\eqref{eq:f(gamma*tau)-expansion} of $f$ in powers of $q$.
+In view of~\eqref{eq:f(gamma'*tau)-expansion} with $\gamma$ being the
+identity matrix and thus $w_\gamma=1$, we note that $q$-expansions at
+infinity are unique in \textit{integer} powers of $q$.
 
-Denote by $M^\infty_{\setQ}(N)$ the elements of $M^\infty(N)$ whose
-$q$-series expansion have rational coefficients.
-%
-From Theorem 3.52 of \cite{Shimura_ArithmeticTheory_1994} it follows
-that $M^\infty(N)$ is generated as a $\setC$-vectorspace by elements
-of $M^\infty_{\setQ}(N)$.
-
-The action of $\mathrm{SL}_2(\setZ)$ on $\setH$ extends in an obvious
-way to an action on $\setHhat$. The orbits of the action of the
-subgroup $\Gamma_0(N)\subset \mathrm{SL}_2(\setZ)$ are denoted by
-\begin{gather*} [\tau]_N :=
-  \SetDef{\gamma\tau}{\gamma\in\Gamma_0(N)},\qquad\tau\in\setHhat.
+The action of $\SL2Z$ on $\setH$ extends in an obvious way to an
+action on $\setHhat$. The orbits of the action of the subgroup
+$\Gamma_0(N)\subset \SL2Z$ are denoted by
+\begin{gather*} [\tau]_\Gamma :=
+  \SetDef{\gamma\tau}{\gamma\in\Gamma},\qquad\tau\in\setHhat.
 \end{gather*}
 The set of all such orbits is denoted by
 \begin{gather*}
-  X_0(N) := \SetDef{[\tau]_N}{\tau\in\setHhat}.
+  \defineNotation[X-0]{X_0(N)} = \SetDef{[\tau]_{\Gamma_0(N)}}{\tau\in\setHhat}
+  \text{ and }
+  \defineNotation[X-1]{X_1(N)} := \SetDef{[\tau]_{\Gamma_1(N)}}{\tau\in\setHhat}.
 \end{gather*}
 There are only finitely many cosets with respect
 to $\Gamma_0(N)$; more precisely, for $N\ge2$,
 \begin{gather*}
-  [\mathrm{SL}_2(\setZ) : \Gamma_0(N)]
+  [\SL2Z : \Gamma_0(N)]
   =
   N \prod_{\text{prime $\divides{p}{N}$}} \Bigl(1+\frac{1}{p}\Bigr).
 \end{gather*}
 Owing to this fact together with the observation
-$\setQ\cup\{\infty\}=\SetDef{\gamma\infty}{\gamma\in\mathrm{SL}_2(\setZ)}$,
+$\setQ\cup\{\infty\}=\SetDef{\gamma\infty}{\gamma\in\SL2Z}$,
 %
-there are only finitely many orbits $[\tau]_N$ with
-$\tau\in\setQ\cup\Set{\infty}$. These orbits are called \emph{cusps}
-of $X_0(N)$.
+there are only finitely many orbits $[\tau]_{\Gamma_0(N)}$ with
+$\tau\in\setQ\cup\Set{\infty}$. These orbits are called
+\defineterm{cusps} of $X_0(N)$.
+Similarly, cusps of $X_1(N)$ are defined. Note that
+\begin{gather*}
+  [\SL2Z : \Gamma_1(N)]
+  =
+  N^2 \prod_{\text{prime $\divides{p}{N}$}} \Bigl(1+\frac{1}{p^2}\Bigr).
+\end{gather*}
 
-END \cite{HemmeckePauleRadu_IntegralBasis_2021}.
+See Section 2 of \cite{DiamondShurman_ModularForms_2005} for how the
+sets $X_0(N)$ and $X_1(N)$ can be given the structure of a compact
+Riemann surface. The genus $g_0(N)$ of $X_0(N)$ and $g_1(N)$ of
+$X_1(N)$ can be computed by a formula given in Section~6.1 and 6.2 of
+\cite{Stein_ModularFormas_2007}.
 
-\begin{gather}
-  \defineNotation[GL2+Z]{\mathrm{GL}_2^+(\setZ)}
-  :=
-  \SetDef{  \begin{pmatrix}
-    a & b\\
-    c & d
-  \end{pmatrix}}{a,b,c,d\in\setZ \land ad-bc>0}
-  \label{eq:GL2+Z}
-\end{gather}
+From Liouville's Theorem for compact Riemann surfaces follows that a
+\useterm{modular function} for $\Gamma$ that has no pole at any cusp
+of $\Gamma$, is constant. This fact, is intensively used in order to
+check that an element of $M^\infty(\Gamma)$ given by its $q$-expansion
+at infinity is zero or not.
 
-\begin{gather}
-  \defineNotation[SL2Z]{\SL2Z} := \SetDef{\gamma\in
-    \mathrm{GL}_2^+(\setZ)}{\det(\gamma)=1}
-  \label{eq:SL2Z}
-\end{gather}
 
-Let $N$ be a positive natural number. We abbreviate \emph{congruence
-  modulo N} by
-\begin{gather}
-  a \equiv_N b :\iff a \equiv b \pmod{N}
-\end{gather}
-and define a $\Gamma_0(N)$ as a
-subgroup of the special linear group $\SL2Z$ as follows.
-\begin{gather}
-\defineNotation[Gamma0N]{\Gamma_0(N)} := \SetDef{  \begin{pmatrix}
-    a & b\\
-    c & d
-  \end{pmatrix} \in \SL2Z}{c \equiv_N 0}
-  \label{eq:Gamma0}
-\end{gather}
 
-Let $N$ be a positive natural number and define a $\Gamma_1(N)$ as a
-subgroup of the special linear group $\SL2Z$ as follows.
-\begin{gather}
-\defineNotation[Gamma1N]{\Gamma_1(N)} := \SetDef{  \begin{pmatrix}
-    a & b\\
-    c & d
-  \end{pmatrix} \in \SL2Z}{c \equiv_N 0 \pmod{N}, a \equiv_N d \equiv_N 1}
-  \label{eq:Gamma1}
-\end{gather}
 
-See, for example,
-\url{https://en.wikipedia.org/wiki/Congruence_subgroup}.
-
-As in \cite{Radu_RamanujanKolberg_2015}, let $K(N)$ denote the set of
-modular functions for $\Gamma_0(N)$ and $K^\infty(N)$ the set of
-modular functions have a (multiple) pole, if any, at infinity only.
-Furthermore, let $E(N)$ be the set of eta-quotients that are
-modular functions, and let $E^\infty(N) := E(N)\cap K^\infty(N)$.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Dedekind eta-function}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\label{def:epsilon}
@@ -262,77 +288,1177 @@ Let
   \unityPowerTau{\frac{1}{24}} \eulerFunction{}
 \end{gather}
 with $\defineNotation[q]{q} = \unityPower{\tau} = \unityPowerTau{1}$
-denote the Dedekind eta-function.
+denote the \defineterm{Dedekind eta-function}.
 
-Note that $\qPochhammer{a}{q} = \prod_{n=0}^{\infty}(1-aq^n)$ denotes
-the $q$-Pochhammer symbol. Thus, we have
+Note that
+$\defineNotation[a-q]{\qPochhammer{a}{q}}=\prod_{n=0}^{\infty}(1-aq^n)$
+denotes the \defineterm{q-Pochhammer symbol@$q$-Pochhammer symbol}.
+More generally, we define recursively
+\begin{gather}
+  \defineNotation[a-k-q]{\qPochhammer{a_1,\ldots,a_k}{q}}
+  =
+  \qPochhammer{a_1,\ldots,a_{k-1}}{q} \qPochhammer{a_k}{q}.
+\end{gather}
+
+
+
+Thus, we have
 \begin{gather*}
   \eta(\tau) = \unityPowerTau{\frac{1}{24}} \eulerFunction{}
 \end{gather*}
 
-In the following $\defineNotation[N]{N}$ denotes a positive integer
-and $1=\delta_1<\delta_2\dots<\delta_{\defineNotation[n]{n}}=N$ the
-positive divisors of $N$. Let
-$\defineNotation[Delta]{\Delta}:=\Set{\delta_1,\ldots,\delta_n}$. For
-convenience, we allow to index $n$-dimensional vectors by the divisors
-of $N$, instead of the usual index set $\Set{1,\ldots,n}$.
-%
-For $\delta\in\Delta$ we consider the functions
-\begin{gather*}
+For any positive integer $\delta$ we define
+\begin{gather}
   \defineNotation[eta-delta]{\eta_\delta}: \setH \to \setC,\quad \tau
   \mapsto \eta(\delta\tau)
-\end{gather*}
+  \label{eq:eta_delta(tau)}
+\end{gather}
 None of these functions is identically zero.
 
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-When we write $\divisorsum{N}$ and $\divisorprod{N}$ we mean the sum
-and product over all \emph{positive} divisors of $N$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-We define
-\begin{align}
-  \defineNotation[sigmainfty]{\sigmainfty[N]{r}}
-  &:=
-    \divisorsum{N} \delta r_\delta.
-  \label{eq:sigmainfty}
-  \\
-  \defineNotation[sigmazero]{\sigmazero[N]{r}}
-  &:=
-    \divisorsum{N} \frac{N}{\delta} r_\delta.
-  \label{eq:sigmazero}
-\end{align}
-and further we define
-$\defineNotation[RN]{R(N)}$ to be the set of integer tuples
-$\defineNotation[r]{r} = (r_{\delta_1}, \ldots,
-r_{\delta_n})\in \setZ^n$.
+\subsection{Generalized Dedekind eta-function $\eta_{\delta,g}$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $\defineNotation[B]{B(x)} = x^2 - x + \frac{1}{6}$
+be the second Bernoulli function, $\{x\}$.
 %
-For $r\in R(N)$ let
+Denote the fractional part of $x$, by
+$\defineNotation[x-fractional]{\{x\}} = x - \lfloor x \rfloor$,
+$\defineNotation[x-floor]{\lfloor x \rfloor}$ denotes the greatest
+integer less than or equal to $x$.
+We define
+\begin{gather}
+    \defineNotation[P-2]{P_2(x)} = B(\{x\}) = \{x\}^2 - \{x\} + \frac{1}{6}.
+    \label{eq:P-2}
+\end{gather}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}
+\label{def:eta_delta-g^[R](tau)}
+\cite{Robins_GeneralizedDedekindEtaProducts_1994}
+%
+Let $0<\delta\in\setZ$ and $g\in\setZ$.
+%
+The \defineterm{generalized Dedekind eta-function} is given by
 \begin{align}
-  \defineNotation[g-r-tau]{g_r(\tau)}
+  \defineNotation[eta-delta-g-tau-Robins]{\eta_{\delta,g}(\tau)}
   &:=
-    \divisorprod{N} \eta(\delta\tau)^{r_\delta}
-    =
-    q^{{\sigmainfty[N]{r}}/{24}}
-      \divisorprod{N} \eulerFunction{\delta}^{r_\delta}.
-  \label{eq:g_r(tau)}
+  q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+  %
+  \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+  \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n).
+  \label{eq:eta_delta-g^[R](tau)-mod}
 \end{align}
 
-
-
-By $\defineNotation[R*N]{R^*(N)}$ we denote the subset of all tuples
-$r=(r_\delta)_{\delta\in\Delta}$ of $R(N)$ that fulfil the following
-conditions.
+\begin{AdditionalInformation}
+If $0<g<\delta$ then
 \begin{align}
- \divisorsum{N} r_\delta &= 0\label{eq:sum=0}\\
- \sigmainfty[N]{r} &\equiv_{24} 0\label{eq:sigmainfinity}\\
- \sigmazero[N]{r} &\equiv_{24} 0\label{eq:sigma0}\\
- \sqrt{\divisorprod{N}\delta^{r_\delta}} &\in \setQ\label{eq:productsquare}
+  \eta_{\delta,g}(\tau)
+  &=
+  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
+  %
+  \prod_{n=1}^\infty (1-q^{\delta (n-1)+\bar{g}})(1-q^{\delta n-\bar{g}})
+  \notag\\
+  &=
+  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
+  %
+  \qPochhammer{q^{\bar{g}}}{q^\delta} \qPochhammer{q^{\delta-\bar{g}}}{q^\delta}
+  =
+  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
+  %
+  \theta_{\delta,g}(\tau)
+  =
+  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
+  %
+  \jacobiFunction{q^g}{q^\delta} \eulerFunction{\delta}^{-1}
+  \label{eq:eta_delta-g^[R](tau)}
 \end{align}
+here $\bar{g}\in\Set{0,\ldots,\delta-1}$ is such that
+$\bar{g} \equiv_\delta g$,
+\end{AdditionalInformation}
+\end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Note that $R^*(N)$ is an additive monoid.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}\label{thm:eta_delta-g/2}
+  \begin{gather*}
+    \eta_{\delta,g+\delta}(\tau)
+      =
+      \eta_{\delta,-g}(\tau)
+      =
+      \eta_{\delta,g}(\tau).
+      \label{eq:eta_delta-g^[R](tau)-mod-delta}
+  \end{gather*}
+\end{Lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{proof}
+  If $g \equiv 0 \pmod{\delta}$, the statement follows from the
+  definition immediately.
+  Let $g \not\equiv 0 \pmod{\delta}$.
+  By the definition above we must only show that
+  $P_2\left(\frac{-g}{\delta}\right) =
+  P_2\left(\frac{\delta+g}{\delta}\right) =
+  P_2\left(\frac{g}{\delta}\right)$ for
+  $g \not\equiv 0 \pmod{\delta}$.
+%
+  By \eqref{eq:P-2}, we have $P_2(x+1) = P_2(x)$ for any real $x$.
+  Now suppose $0\le x<1$. Then
+  % \begin{gather*}
+  $
+    P_2(-x)
+    = P_2(1-x)
+    = (1-x)^2 - (1-x) + \frac{1}{6}
+%      = x^2 - x  + \frac{1}{6}
+    = P_2(x).
+    $
+    % \end{gather*}
+\end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Index Sets for Generalized Eta-Quotients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}
+  \label{def:index-set}
+  Let
+  $0<\defineNotation{M}\in\defineNotation[N]{\setN}=\Set{0,1,\ldots}$
+  be a natural number and
+  $\Delta=\SetDef{\delta}{\delta\in\setN,0<\divides{\delta}{M}}$ the
+  divisors of $M$.
+%
+  Furthermore, let $I_1 \subseteq \Delta$,
+  $I_2 \subseteq \SetDef{(\delta,g)}{\delta\in\Delta,0\le g\le
+    \delta}$. Then we call $\defineNotation[I]{I} = I_1 \cup I_2$ an
+  \defineterm{eta index set} of level $N$ for the specification of a
+  generalized eta-quotient.
+
+  In the following, if $I$ is an \useterm{eta index set}, then define
+  $\defineNotation[I-1]{I^{(1)}} := I\cap\setN$ and
+  $\defineNotation[I-2]{I^{(2)}} := I \cap \setN^2$.
+%
+  We call $I$ a \defineterm{purified eta index set} if for any
+  $(\delta,g) \in I^{(2)}$ the relation $0<g<\frac{\delta}{2}$ holds.
+\end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $I$ be an \useterm{eta index set}.
+%
+By Lemma~\ref{thm:eta_delta-g/2}, for any $(\delta, g) \in I^{(2)}$,
+there exists $0 \le g' \le \lfloor\frac{\delta}{2}\rfloor$ with
+$\eta_{\delta,g}=\eta_{\delta,g'}$.
+Furthermore, note that
+\begin{gather}
+  \eta_{\delta,0}(\tau)
+  = \eta(\delta\tau)^2
+  \qquad\text{and}\qquad
+  \eta_{\delta,\frac{\delta}{2}}(\tau)
+  = \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2}.
+  \label{eq:purify-eta}
+\end{gather}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Specification of (Generalized) Eta-Quotients}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}
+  \label{def:eta-specification}
+  A function
+  \begin{gather}
+    r: \setN \cup \setN^2 \to \setZ
+  \end{gather}
+  is called an \defineterm{eta specification} of level $M$ if
+  $I := \support(r)$ is an \useterm{eta index set} of level $M$.
+%
+  With the notation of Definition~\ref{def:index-set} The function $r$
+  specifies an eta-quotient in the following sense
+  \begin{align}
+    \defineNotation[g-r(tau)]{g_r(\tau)}
+    &= \prod_{i\in I} \eta_i(\tau)^{r_i}
+      = \prod_{\delta\in I^{(1)}} \eta(\delta\tau)^{r_\delta}
+      \prod_{(\delta,g)\in I^{(2)}} \eta_{\delta,g}(\tau)^{r_{\delta,g}}.
+      \label{eq:g_r(tau)}
+  \end{align}
+
+  We call $r$ a \defineterm{purified eta specification} if $I$ is a
+  \defineterm{purified eta index set}.
+\end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+By Lemma~\ref{thm:eta_delta-g/2} and \eqref{eq:purify-eta} any
+\useterm{eta specification} $r$ can be turned into a corresponding
+\useterm{purified eta specification} $r'$ such that $g_r= g_{r'}$.
+%
+Thus, in order to specify a generalized eta-quotient, we can assume
+(if necessary) that it is given with a \useterm{purified index set}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{weight and order $\rho$ at 0 and $\infty$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let $r$ be an \useterm{eta specification} of level $M$ with
+$I=\support(r)$. We define the functions $w$, $\rho_\infty$ and
+$\rho_0$ as follows:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[wgt]{\weight}(r)
+  &=
+    \sum_{\delta\in I^{(1)}} r_\delta
+    +
+    2 \cdot\sum_{(\delta,g)\in I^{(2)}, \divides{\delta}{g}} r_{\delta,g},
+  \\
+  \defineNotation[rhoinfty(r)]{\rho_\infty(r)}
+  &=
+    \frac{1}{24} \sum_{\delta\in I^{(1)}} \delta r_\delta
+    +
+    \frac{1}{2}
+    \sum_{(\delta,g)\in I^{(2)}}\delta P_2\Bigl(\frac{g}{\delta}\Bigr)r_{\delta,g},
+    \label{eq:rhoinfty}
+  \\
+  \defineNotation[rhozero(r)]{\rho_0(r)}
+  &=
+    \frac{1}{24} \sum_{\delta\in I^{(1)}} \frac{M}{\delta} r_\delta
+    +
+    \frac{1}{12} \sum_{(\delta,g)\in I^{(2)}} \frac{M}{\delta} r_{\delta,g}.
+    \label{eq:rhozero}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+By \eqref{eq:eta-expansion}, \eqref{eq:eta_delta(tau)} and
+\eqref{eq:eta_delta-g^[R](tau)}, $\rho_\infty(r)$ is the order of the
+eta-quotient $g_r(\tau)$ in terms of $q=e^{2\pi i \tau}$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}\label{thm:purified-rho-computation}
+  If $r$ is a \useterm{eta specification} and $r'$ its corresponding
+  \useterm{purified eta specification}, then
+  \begin{align*}
+    \weight(r) &= \weight(r'),
+    \\
+    \rho_\infty(r) &= \rho_\infty(r'),
+    \\
+    \rho_0(r) &= \rho_0(r').
+  \end{align*}
+\end{Lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{AdditionalInformation}
+\begin{proof}
+From Lemma~\ref{thm:eta_delta-g/2} and \eqref{eq:purify-eta} follows
+$\weight(r) = \weight(r')$ immediately.
+%
+By Lemma~\ref{thm:eta_delta-g/2}, we reduce the case $(\delta,\delta)$
+to $(\delta,0)$.
+
+Let $r_{\delta,0} \neq 0$, then for the respective summands from
+\eqref{eq:rhoinfty} we have
+\begin{gather*}
+  \frac{1}{24}\delta r_\delta
+  +
+  \frac{1}{2} \delta P_2\Bigl(\frac{0}{\delta}\Bigr)r_{\delta,0}
+  =
+  \frac{1}{24}\delta r_\delta
+  +
+  \frac{1}{2} \delta \frac{1}{6} r_{\delta,0}
+  =
+  \frac{1}{24}\delta (r_\delta + 2 r_{\delta,0})
+  =
+  \frac{1}{24} \delta r'_\delta.
+\end{gather*}
+
+Let $r_{\delta,\frac{\delta}{2}} \neq 0$, then for the respective
+summands from \eqref{eq:rhoinfty} we have
+\begin{align*}
+  \frac{1}{24} \frac{\delta}{2} r_{\delta/2}
+  +
+  \frac{1}{24} \delta r_{\delta}
+  +
+  \frac{1}{2} \delta P_2\Bigl(\frac{1}{2}\Bigr) r_{\delta,\delta/2}
+  &=
+    \frac{1}{24} \frac{\delta}{2} r_{\delta/2}
+    +
+    \frac{1}{24} \delta r_{\delta}
+    +
+    \frac{1}{2} \delta \Bigl(-\frac{1}{12}\Bigr) r_{\delta,\delta/2}
+  \\
+  &=
+    \frac{1}{24} \frac{\delta}{2} r_{\delta/2}
+    +
+    \frac{1}{24} \delta r_{\delta}
+    +
+    \frac{1}{24} \frac{\delta}{2} 2 r_{\delta,\delta/2}
+    -
+    \frac{1}{24} \delta 2 r_{\delta,\delta/2}
+  \\
+  &=
+    \frac{1}{24} \frac{\delta}{2} (r_{\delta/2} + 2 r_{\delta,\delta/2})
+    +
+    \frac{1}{24} \delta (r_{\delta} - 2 r_{\delta,\delta/2})
+  \\
+  &=
+    \frac{1}{24} \frac{\delta}{2} r'_{\delta/2}
+    +
+    \frac{1}{24} \delta r'_{\delta}.
+\end{align*}
+
+That proves $\rho_\infty(r) = \rho_\infty(r')$.
+Similar computations show that $\rho_0(r) = \rho_0(r')$.
+\end{proof}
+\end{AdditionalInformation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Problem description}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In the following $\Gamma$ is either $\Gamma_0(N)$ or $\Gamma_1(N)$ for
+the $N$ taken from the context.
+
+Let $r$ be an \useterm{eta specification} of level $M$ with
+$I=\support(r)$.
+%
+Furthermore, let $\defineNotation{t} < \defineNotation{m}$ be two
+natural numbers.
+
+Define the series $(a(n))_{n\in\setN}$ by
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  f(\tau)
+  &=
+    \sum_{n=0}^\infty a(n)q^n
+    :=
+    \unityPowerTau{-\rho_\infty(r)} g_r(\tau)
+    =
+    \unityPowerTau{-\rho_\infty(r)} \prod_{i\in I} \eta_i(\tau)
+  \notag
+  \\
+  &= \prod_{\delta\in I^{(1)}}
+    \left(\prod_{n=1}^{\infty}(1-q^{\delta n})\right)^{r_\delta}
+    \prod_{(\delta,g)\in I^{(2)}}
+    \left(
+    \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+    \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+    \right)^{r_{\delta,g}}
+  \label{eq:f(tau)}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Because of Lemma~\ref{thm:eta_delta-g/2} and \eqref{eq:purify-eta}, we
+can always find a \useterm{purified eta specification} $r'$ that gives
+rise to the same function $f(\tau)$ as $r$.
+
+If $r$ is purified, we can write
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{gather}
+  f(\tau)
+  =
+    \sum_{n=0}^\infty a(n)q^n
+  =
+  \prod_{\delta\in I^{(1)}} \qPochhammer{q^\delta}{q^\delta}^{r_\delta}
+  \prod_{(\delta,g)\in I^{(2)}}
+    \qPochhammer{q^g, q^{\delta-g}}{q^\delta}^{r_{\delta,g}}.
+\end{gather}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+Our problem consists in finding $N\in\setN$, a set
+$\modularOrbit{r,m,t} \subset \Set{0,\ldots,m-1}$ with
+$t\in\modularOrbit{r,m,t}$, an \useterm{eta specification}
+$s$ of level $N$, $\Gamma$-modular functions
+$e_1,\ldots,e_\ell$ (with at most a pole at infinity) and rational
+numbers $d_1,\ldots,d_\ell$ such that
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{gather}
+  \underbrace{
+    g_s(\tau)\,
+    q^\beta
+    \prod_{k\in\modularOrbit{r,m,t}} \sum_{n=0}^\infty a(mn+k) q^n
+    }_{=:\defineNotation[F-s,r,m,t-tau]{F_{s,r,m,t}(\tau)}}
+  =
+  \sum_{i=1}^\ell d_i e_i
+  \label{eq:Ramanujan-Kolberg-Identity}
+\end{gather}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+is a modular function for $\Gamma$ with a pole at most at infinity where
+\begin{gather}
+  \beta = \sum_{k\in\modularOrbit{r,m,t}} \frac{k + \rho_\infty(r)}{m}.
+  \label{eq:beta}
+\end{gather}
+
+This problem has first been solved algorithmically by Christian-Silviu
+Radu in \cite{Radu_RamanujanKolberg_2015} for the case of pure
+eta-quotients and the congruence subgroup $\Gamma_0(N)$.
+%
+An equation of the form \eqref{eq:Ramanujan-Kolberg-Identity} is
+called a \defineterm{Ramanujan-Kolberg identity}.
+
+In 2019 Radu's algorithm was also shown to be applicable to generalized
+eta-quotients and the group $\Gamma_1(N)$ in
+\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} by working out
+the respective modularity conditions.
+%
+In the generalized case we have $\modularOrbit{r,m,t}=\Set{t}$.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Radu's algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A sketch of Radu's algorithm \cite{Radu_RamanujanKolberg_2015} is given as
+follows. We mark the modifications for the generalized version
+according to \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+by ``CDZ'' in parentheses.
+
+\begin{enumerate}
+\item Determine $\mathcal{O}=\modularOrbit{r,m,t}$ by
+  Definition~\ref{def:modularOrbit}.
+  %
+  (CDZ: Take $\mathcal{O}=\Set{t}$.)
+
+\item Compute $N$ such that the conditons of
+  Definition~\ref{def:condition-co-eta-quotient-gamma0}
+  %
+  (CDZ: Definition~\ref{def:condition-co-eta-quotient-gamma1})
+  %
+  are fulfilled.
+
+\item Compute an \useterm{eta specification} $s$ of level $N$ such
+  that the conditions in Theorem~\ref{thm:RaduConditions}
+  %
+  (CDZ: Theorem~\ref{thm:condition-co-eta-quotient-gamma1})
+  %
+  for $F_{s,r,m,t}(\tau)$ to be a modular function for $\Gamma_0(N)$
+  %
+  (CDZ: $\Gamma_1(N)$)
+  %
+  are fulfilled. By setting up and solving an appropriate system of
+  Diophantine inequalities for the orders of $F_{s,r,m,t}$ at cusps
+  different from infinity, see
+  \cite[Proposition~3.2.8]{Ligozat_CourbesModulaires_1975} (CDZ:
+  \cite[Thm.~4]{Robins_GeneralizedDedekindEtaProducts_1994}), we can
+  assume that $F_{s,r,m,t}$ has at most a pole at infinity.
+\item Compute a basis $m_1,\ldots, m_k$ for the monoid of
+  $\Gamma_0(N)$-modular eta-quotients according
+  to Lemma~\ref{thm:modular-eta-quotient-gamma0}.
+  %
+  (CDZ: $\Gamma_1(N)$-modular generalized eta-quotients according
+  to Lemma~\ref{thm:modular-eta-quotient-gamma1} )
+  %
+  with a pole at most at infinity.
+
+\item Apply algorithm \algoSamba{}
+  \cite{Hemmecke_DancingSambaRamanujan_2018} to this basis to obtain
+  an order-complete basis $B=\Set{b_0,\ldots,b_{\ell-1}}$ such that
+  $\setQ[m_1,\ldots,m_k] = \Module[{\setC[m_1]}]{B}$.
+
+\item Follow reduction steps in
+  \cite{Hemmecke_DancingSambaRamanujan_2018} to find polynomials
+  $c_0,\ldots,c_{\ell-1} \in \setQ[x]$ such that
+  \begin{gather*}
+    F_{s,r,m,t}(\tau) = \sum_{i=0}^{\ell-1} c_i(m_1)b_i
+  \end{gather*} which can easily turned into
+  \eqref{eq:Ramanujan-Kolberg-Identity}.
+\end{enumerate}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Modularity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{$\Gamma_0(M)$ modularity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{Lemma}\cite[Thm. 1.64]{Ono_WebOfModularity_2004}
+  \label{thm:modular-eta-quotient-gamma0}
+  Let $r$ be an \useterm{eta specifications} of level $M$
+  with $I := \support(r) \subset \setN$. If the conditions
+  \begin{align}
+    \weight(r) &= 0, \label{eq:sum=0}\\
+    \rho_\infty(r) &\in \setZ, \label{eq:pure-rhoinfinity}\\
+    \rho_0(r) &\in \setZ, \label{eq:pure-rho0}\\
+    \sqrt{\prod_{\delta\in I}\delta^{r_\delta}}&\in\setQ\label{eq:productsquare}
+  \end{align}
+  are fulfilled, then $g_r(\tau)$ is a modular function for
+  $\Gamma_0(M)$.
+\end{Lemma}
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{$\Gamma_1(M)$ modularity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+According to \cite[Thm.~3]{Robins_GeneralizedDedekindEtaProducts_1994}
+a generalized eta-quotient of the form
+\begin{gather}
+  \prod_{\substack{\divides{\delta}{M}\\ 0\le g < \delta}}
+  \eta_{\delta,g}(\tau)^{a_{\delta,g}}
+  \qquad
+  \text{with}
+  \qquad
+  \defineNotation[a-delta-g]{a_{\delta,g}}\in
+  \begin{cases}
+    \frac{1}{2}\setZ & \text{if $g=0$ or $g=\frac{\delta}{2}$},\\
+    \setZ & \text{otherwise}.
+  \end{cases}
+  \label{eq:generalized-eta-quotient-a}
+\end{gather}
+is a modular function for $\Gamma_1(M)$ if
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{gather}
+  \sum_{\divides{\delta}{M}} a_{g,0} = 0\\
+  \sum_{\substack{\divides{\delta}{M}\\0 \le g \le \frac{\delta}{2}}}
+  \delta P_2\Bigl(\frac{g}{\delta}\Bigr) a_{\delta,g} \equiv_2 0\\
+  \sum_{\substack{\divides{\delta}{M}\\0 \le g \le \frac{\delta}{2}}}
+  \frac{M}{\delta} P_2(0) a_{\delta,g} \equiv_2 0.
+\end{gather}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Obviously, for any generalized eta-quotient of the form
+\eqref{eq:generalized-eta-quotient-a} we can always find an
+\useterm{eta specificateion} $r$ of level $M$ giving the same function
+$g_r(\tau)$ according to \eqref{eq:g_r(tau)}. Then the above
+conditions translate to the following Lemma.
+
+\begin{Lemma}
+  \label{thm:modular-eta-quotient-gamma1}
+  Let $r$ be an \useterm{eta specifications} of level $M$ If the
+  conditions
+  \begin{align}
+    \weight(r) &= 0,  \label{eq:generalized-weight}\\
+    \rho_\infty(r) &\in \setZ, \label{eq:rhoinfinity}\\
+    \rho_0(r) &\in \setZ. \label{eq:rho0}
+  \end{align}
+  are fulfilled, then $g_r(\tau)$ is a modular function for
+  $\Gamma_1(M)$.
+\end{Lemma}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{AdditionalInformation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Order at cusps}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Order at cusps, case $\Gamma_0(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}
+  \cite[Proposition~3.2.8]{Ligozat_CourbesModulaires_1975}
+  \label{thm:eta-order-0}
+  Let $0<M\in\setN$ and $r$ be an \useterm{eta specification} of level
+  $M$ with $\support(r)\subset\setN$.
+  %
+  Let
+  $\gamma = \begin{smallpmatrix} a & b\\ c & d\\ \end{smallpmatrix}
+  \in \SL2Z$.
+  %
+  Then the order of the expansion of $g_r(\gamma\tau)$ in the
+  uniformizing variable $q^{1/w_\gamma}$ where $w_\gamma$ is defined by
+  \eqref{eq:width0} is given by
+  \begin{gather}
+    \frac{1}{24}\sum_{\delta\in\support(r)} \frac{M}{\gcd(M, c^2)}
+                       \frac{\gcd(c,\delta)^2}{\delta} \, r_\delta,
+    \label{eq:order-gamma0}
+  \end{gather}
+\end{Lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Order at cusps, case $\Gamma_1(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Similar to the matrix by Ligozat, we can build a matrix to determine
+the order of a (modular for $\Gamma_1(N)$) generallized eta-quotient
+at all cusps of $\Gamma_1(N)$.
+%
+Let us state a result of Robins about the order of an eta-quotient at
+a cusp of $\Gamma_1(N)$. See also
+\cite[Lemma~2.6]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}
+  \label{thm:matrixEtaOrderRobins}
+  \cite[Thm~4]{Robins_GeneralizedDedekindEtaProducts_1994}
+  %
+  Let $0<M\in\setN$ and $r$ be an \useterm{eta specification} of level
+  $M$ with $I = \support(r)$.
+  %
+  Let
+  $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)\in\SL2Z$.
+  Let
+  $\lambda,\mu,\epsilon$ with $\divides{\epsilon}{M}$ and
+  \begin{gather}
+    \gcd(\lambda,M)=\gcd(\lambda,\mu)=\gcd(\mu,M)=1
+  \end{gather}
+  be such that
+  $\frac{\lambda}{\mu\epsilon}$ is a cusp that is
+  $\Gamma_1(M)$-equivalent to the cusp $\frac{a}{c}$ of $\Gamma_1(M)$.
+  %
+  Then the order of the expansion of $g_r(\gamma\tau)$ in the
+  uniformizing variable $q^{\epsilon/M}$ is
+  \begin{gather}
+    \frac{M}{24} \sum_{\delta\in I^{(1)}}
+    \frac{\gcd(\delta,\epsilon)^2}{\delta\epsilon} r_\delta +
+    \frac{M}{2} \sum_{(\delta,g)\in I^{(2)}}
+    \frac{\gcd(\delta,\epsilon)^2}{\delta\epsilon} P_2\Bigl(\frac{\lambda
+      g}{\gcd(\delta,\epsilon)}\Bigr) r_{\delta,g}.
+    \label{eq:order-gamma1}
+%    \label{eq:order-rbar-non-adjusted}
+  \end{gather}
+\end{Lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Note that $\epsilon = \gcd(c, M)$ and that if $M\ne4$ or
+$\gcd(c,4)\ne2$, then according to \eqref{eq:width1},
+$w_\gamma=\frac{M}{\epsilon}$.
+
+Consider \eqref{eq:order-gamma1} at the cusps $\infty$ and
+$0$ (which are $\Gamma_1(M)$-equivalent to $\frac{1}{M}$ and $1$,
+respectively).
+%
+For the cusp $\infty$ we get $\lambda=\mu=1$ and $\epsilon=M$, \ie,
+the expression \eqref{eq:order-gamma1} is equal to $\rho_\infty(r)$.
+
+For the cusp $0$ we get $\lambda=\mu=1$ and $\epsilon=1$. \ie, the
+expression \eqref{eq:order-gamma1} is equal to $\rho_0(r)$, since
+$P_2(g)=P_2(0)=\frac{1}{6}$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{AdditionalInformation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Conditions for $N$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us recall the respective conditiones here.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Conditions for $N$, case $\Gamma_0(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\cite[Def.~35]{Radu_RamanujanKolberg_2015}
+  \label{def:condition-co-eta-quotient-gamma0}
+  Let
+  $\defineNotation[M]{M}, \defineNotation[N]{N},
+  \defineNotation[m]{m}, \defineNotation{t} \in \setN$ with $M,N>0$,
+  $t<m$.
+  %
+  Let $r$ be an \useterm{eta specification} of level $M$
+  with $I := \support(r) \subset \setN$.
+  %
+  Furthermore let $\defineNotation[kappa]{\kappa} :=\gcd(1-m^2,
+  24)\ge1$
+  %
+  and $e, u\in\setZ$ be such that $u$ is odd and
+  $\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$.
+
+
+  We define the following conditions
+  \begin{gather}
+    \forall \delta \in I^{(1)}:
+    \divides{\delta}{M} \land r_\delta\ne0 \implies \divides{\delta}{mN},
+    \tag{N1}
+    \label{eq:delta|M=>delta|mN}
+    \\
+    \forall p:
+    p\text{ prime } \land \divides{p}{m} \implies \divides{p}{N},
+    \tag{N2}
+    \label{eq:p|m=>p|N}
+    \\
+    \frac{\kappa N}{8} \weight(r) \in \setZ,
+    \tag{N3}
+    \label{eq:sum-r}
+    \\
+    \frac{\kappa m N^2}{M} \rho_0(r) \in \setZ,
+    \tag{N4}
+    \label{eq:rv24}
+    \\
+    \frac{N \gcd(24 \kappa(t + \rho_\infty(r)),24m)}{24m} \in \setZ,
+    \tag{N5}
+    \label{eq:w|N}
+    \\
+    \divides{2}{m} \implies (\divides{4}{\kappa N} \land \divides{8}{N e})
+    \lor
+    (\divides{2}{e} \land \divides{8}{N(u-1)}).
+    \tag{N6}
+    \label{eq:even-m}
+  \end{gather}
+\end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For the first two conditions \eqref{eq:delta|M=>delta|mN} and
+\eqref{eq:p|m=>p|N} see Definition~34 in
+\cite{Radu_RamanujanKolberg_2015}.
+
+\begin{AdditionalInformation}
+  See also conditions (13) and 14 in
+  \cite{Radu_AlgorithmicApproachRamanujanCongruences_2009} or
+  Section~4.2 in \cite{Radu_PhD_2010}.
+\end{AdditionalInformation}
+
+Actually, the condition $\divides{\delta}{M}$ is superfluous, because
+it is implicitly given through the fact that $r$ is an \useterm{eta
+  specification} of level $M$.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Conditions for $N$, case $\Gamma_1(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We follow here Section~10 of
+\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+%
+Most formulas are merely reformulations of the respective formulas in
+\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+%
+Below, we use the notation CDZ($n$) to refer to condition $n$ in
+Section~10 of \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+
+\begin{Definition}
+  \cite[Sect.~10]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+  \label{def:condition-co-eta-quotient-gamma1}
+
+  Let $M, N, m, t \in \setN$ with $M,N>0$, $t<m$.
+  %
+  Let $r$ be a \useterm{purified eta specification} of
+  level $M$ with $I := \support(r)$.
+  %
+  Furthermore let $\kappa :=\gcd(1-m^2, 24)\ge1$,
+  %
+  $e, u\in\setZ$ be such that $u$ is odd and
+  $\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$ and let
+  %
+  \begin{gather*}
+    \defineNotation[Sbar-n]{\bar{\setS}_{n}}
+    :=
+    \SetDef{[y^2]_n}{y \in \setZ \land \gcd(y, n)=1, y\equiv_N 1}
+    \subseteq
+    \setZ_n.
+  \end{gather*}
+
+  We defne the following conditions
+  \begingroup
+  \def\CDZ#1{CDZ(#1)}
+  \begin{gather}
+    \divides{M}{N},
+      %
+    \qquad
+    \text{see \CDZ{1}}
+    \\
+    \forall p:
+    p\text{ prime } \land \divides{p}{m} \implies \divides{p}{N},
+    \qquad
+    \text{= \eqref{eq:p|m=>p|N}, \CDZ{2}}
+    \label{eq:conditionPrimeDivisors?(nn,m)}
+    \\
+    \frac{\kappa N}{8}  \weight(r) \in \setZ,
+    \qquad
+    \text{= \eqref{eq:sum-r}, \CDZ{6}}
+    \label{eq:conditionSumExponentsPure?(nn,rspec,m)}
+    \\
+    \frac{\kappa N}{4} \sum_{(\delta,g) \in I^{(2)}} r_{\delta,g} \in \setZ,
+    \qquad
+    \text{see \CDZ{4}}
+    \label{eq:conditionSumExponentsProperGeneralized?(nn,rspec,m)}
+    \\
+    \frac{\kappa N}{2} \sum_{(\delta,g) \in I^{(2)}} \frac{g}{\delta}
+    r_{\delta,g}
+    \in \setZ,
+    \qquad
+    \text{see \CDZ{3}}
+    \label{eq:conditionGSigma0?(nn,rspec,m)}
+    \\
+%    \kappa m N \divisorsum{M} \frac{N}{\delta} r_{\delta,0} \equiv_{24} 0,
+    \frac{\kappa m \, N^2}{24} \sum_{\delta\in I^{(I)}}
+    \frac{r_\delta}{\delta}  \in \setZ,
+    \qquad
+    \text{see \eqref{eq:rv24}, \CDZ{7}}
+    \label{eq:conditionSigma0Pure?(nn,mm,r,m)}
+    \\
+%    \kappa m N \gensum[M] \frac{N}{\delta} r_{\delta,g} \equiv_{12} 0,
+    \frac{\kappa m \, N^2}{12} \sum_{(\delta,g)\in I^{(2)}}
+    \frac{r_{\delta,g}}{\delta} \in \setZ,
+    \qquad
+    \text{see \CDZ{5}}
+    \label{eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}
+    \\
+    \frac{N \gcd(24 \kappa M (t + \rho_\infty(r)), 24 m M)}{24 m M} \in \setZ,
+    \qquad
+    \text{see \eqref{eq:w|N}, \CDZ{8}}
+    \label{eq:conditionNDivosor?(nn,rspec,m,t)}
+    \\
+    \divides{2}{m} \implies (\divides{4}{\kappa N} \land \divides{8}{N e})
+    \lor
+    (\divides{2}{e} \land \divides{8}{N(u-1)}),
+    \qquad
+    \text{= \eqref{eq:even-m}, \CDZ{9}}
+    \label{eq:conditionEvenMultiplier?(nn,rspec,m)}
+    \\
+    \forall x\in\bar{\setS}_{24mM}: (x-1) (t + \rho_\infty(r))
+    \equiv_m 0,
+    \qquad
+    \text{see \CDZ{10}}.
+    \label{eq:conditionOrbitLength?(nn,mm,r,rtilde,m,t)}
+  \end{gather}
+  \endgroup
+\end{Definition}
+
+
+
+
+
+
+Note that the conditions from Definitions
+\ref{def:condition-co-eta-quotient-gamma0} and
+\ref{def:condition-co-eta-quotient-gamma1} are clearly fulfilled for
+$N=24mN$.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Cofactor conditions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Cofactor conditions for $\Gamma_0(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{AdditionalInformation}
+\begin{Lemma}\label{thm:y^2-1}
+  Let $y\in \setZ$ be such that $gcd(y, 6)=1$ then
+  $y^2 \equiv_{24} 1$, \ie, $ \frac{y^2-1}{24} \in \setZ$.
+\end{Lemma}
+\begin{proof}
+  Let $y = 6k + l$ with $l \in \Set{0,\ldots,5}$. Then
+  $\gcd(y, 6)=\gcd(l,6)=1$ only holds for $l=1$ or $l=5$.
+  %
+  Since $36 k^2 + 12 k l + l^2 = 12k(3k+l) + l^2$, and $12k(3k+l)$ is
+  divisible by 24 for $l=1$ or $l=5$, the statement of the Lemma
+  follows from the fact that $1^2\equiv_{24} 5^2 \equiv_{24} 1$.
+\end{proof}
+\end{AdditionalInformation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\cite[Def.~40]{Radu_RamanujanKolberg_2015}
+  Let $n \in \setN$, $n>1$. For $x \in \setZ$ we denote by
+  $[x]_n\in \setZ_n$ the residue class of $x$ modulo $n$ and define
+  \begin{gather*}
+    \defineNotation[S-n]{\setS_{n}}
+    :=
+    \SetDef{[y^2]_n}{y \in \setZ \land \gcd(y, n)=1}
+    \subseteq
+    \setZ_n.
+  \end{gather*}
+\end{Definition}
+
+\begin{AdditionalInformation}
+Let $x \in \setZ$ be such that $[x]_{24_m} \in \setS_{24m}$. Then
+there exists $y \in \setZ$ with $\gcd(y, 24m)=1$ and
+$[x]_{24m}=[y^2]_{24m}$, \ie, $x = y^2 + k (24m)$ for some $k\in
+\setZ$. From Lemma~\ref{thm:y^2-1} follows that
+$\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
+\end{AdditionalInformation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}\cite[Def.~41]{Radu_RamanujanKolberg_2015}
+  Let $r$ be an \useterm{eta specification} of level $M$ with
+  $\support(r) \subset \setN$ and let $t<m$ be two natural numbers.
+  %
+  The mapping
+  \begin{align*}
+    \defineNotation[odotbar-r]{\bar{\odot}_r}
+    &: \setS_{24m} \times \Set{0,\ldots,m-1} \to \Set{0,\ldots,m-1},
+    \qquad
+    ([x]_{24m}, t) \mapsto [x]_{24m}  \mathbin{\bar{\odot}_r} t
+  \end{align*}
+  is uniquely given by
+  \begin{gather}
+    [x]_{24m} \mathbin{\bar{\odot}_r} t
+    :=
+    \left( t x + (x-1) \rho_\infty(r) \right) \bmod{m}
+  \end{gather}
+\end{Definition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}
+  \label{def:modularOrbit}
+  (Definition 42 and Lemma 43 of \cite{Radu_RamanujanKolberg_2015})
+  Let $r$ be an \useterm{eta specification} of level $M$ with
+  $\support(r) \subset \setN$ and let $t<m$ be two natural numbers.
+%
+  We define
+  %
+  \begin{align}
+    \defineNotation[O-r-m-t]{\modularOrbit{r,m,t}}
+    &:=
+      \setS_{24m}  \mathbin{\bar{\odot}_r} t
+      =
+      \SetDef{x \mathbin{\bar{\odot}_r} t}{x \in \setS_{24m}}.
+  \end{align}
+\end{Definition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Lemma}
+  \label{thm:orbit-sum}
+  \cite[Lemma~43]{Radu_RamanujanKolberg_2015}
+  Let $r,m,t$ as in Definition~\ref{def:modularOrbit}, then
+  \begin{gather}
+  \forall x \in \setS_{24m}:
+  \modularOrbit{r,m,t}
+    = x \mathbin{\bar{\odot}_r} \modularOrbit{r,m,t}
+    := \SetDef{x \mathbin{\bar{\odot}_r} k}{k\in \modularOrbit{r,m,t}},
+    \\
+    \frac{24}{m}\sum_{k \in \modularOrbit{r,m,t}} (k + \rho_\infty(r)) \in \setZ.
+    \label{eq:orbit-rum}
+  \end{gather}
+\end{Lemma}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Definition}
+  \label{def:cofactor-conditions}
+  Let $M, N, m, t \in \setN$ with $M,N>0$, $t<m$.
+  %
+  Let $r$ be an \useterm{eta specification} of level $M$ and $s$ be an
+  \useterm{eta specification} of level $N$.
+  %
+  Let $\mathcal{O} \subset \Set{0,\ldots,m-1}$ and
+  $\mu=\sizeOfSet{\mathcal{O}}$.
+  %
+  We define the followig conditions
+  %
+  \begin{gather}
+    \weight(s) + \mu \weight(r)
+    = 0,
+    \label{eq:cofactor-weight}
+%    \label{eq:CDZ-sum=0}
+    \\
+    \rho_\infty(s) + \mu \, m \,\rho_\infty(r) +
+     \frac{1-m^2}{m}\sum_{k \in \modularOrbit{r,m,t}} (k + \rho_\infty(r))
+    \in \setZ,
+    \label{eq:cofactor-rho-infinity}
+%    \label{eq:CDZ-sigmainfinity=0}
+    \\
+    \rho_0(s) + \frac{\mu \,m\, N}{M} \rho_0(r)
+    \in \setZ.
+    \label{eq:cofactor-rho-zero}
+%    \label{eq:CDZ-sigma0=0}
+  \end{gather}
+\end{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Theorem}\cite[Thm.~45]{Radu_RamanujanKolberg_2015}
+  \label{thm:RaduConditions}
+  Let $M, N, m, t, r$ fulfil the conditions of
+  Definition~\ref{def:condition-co-eta-quotient-gamma0}.
+  %
+  Let $s$ be an \useterm{eta specification} of level $N$,
+  $\mathcal{O}=\modularOrbit{r,m,t}$ and
+  $\mu=\sizeOfSet{\mathcal{O}}$.
+  %
+  Additionally, let $\support(r), \support(s) \subset \setN$.
+  %
+  Then $F_{s,r,m,t}(\tau)$ as defined in
+  \eqref{eq:Ramanujan-Kolberg-Identity} is a modular function for
+  $\Gamma_0(N)$ iff \eqref{eq:cofactor-weight},
+  \eqref{eq:cofactor-rho-infinity}, \eqref{eq:cofactor-rho-zero}, and
+  \begin{gather}
+    \sqrt{
+    \prod_{\delta\in\support(s)}\delta^{s_\delta}
+    \prod_{\delta\in\support(r)} (m \delta)^{\mu r_\delta}
+    }
+    \in \setQ\label{eq:Radu-productsquare}
+  \end{gather}
+  hold.
+\end{Theorem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Cofactor conditions for $\Gamma_1(N)$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Theorem}
+  \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
+  \label{thm:condition-co-eta-quotient-gamma1}
+  Let $M, N, m, t, r$ fulfil the conditions of
+  Definition~\ref{def:condition-co-eta-quotient-gamma1}.
+  %
+  Let $s$ be an \useterm{eta specification} of level $N$,
+  $\mathcal{O}=\Set{t}$ and $\mu=1$.
+  %
+  Then $F_{s,r,m,t}(\tau)$ as defined by
+  \eqref{eq:Ramanujan-Kolberg-Identity} is a modular function for
+  $\Gamma_1(N)$ iff \eqref{eq:cofactor-weight},
+  \eqref{eq:cofactor-rho-infinity}, \eqref{eq:cofactor-rho-zero}, and
+  for any integer $0<a<12N$ with $\gcd(a,6)=1$ and $a \equiv_N 1$,
+  \begin{gather}
+    \divisorprod{N} \jacobisymbol{\delta}{a}^{\abs{s_{\delta,0}}}
+    \divisorprod{M} \jacobisymbol{m \delta}{a}^{\abs{r_{\delta,0}}}
+    \unityPower{\frac{a-1}{2}
+      \left[
+      \gensum[N] \left( \frac{g}{\delta} - \frac{1}{2}\right) s_{\delta,g}
+      +
+      \gensum[M] \left( \frac{g}{\delta} - \frac{1}{2}\right) r_{\delta,g}
+      \right]
+    }
+    =
+    1.
+    \label{eq:CDZ-productsquare}
+  \end{gather}
+  Note that in \eqref{eq:CDZ-productsquare} the expression
+  $\jacobisymbol{\delta}{a}$ denotes the Jacobi symbol.
+\end{Theorem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The SubAlgebra Module Basis Algorithm:
+  \algoSamba{}}%
+\label{sec:Algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In this section we present an algorithm that computes a $C[t]$-module
+basis for a subalgebra of $C[x]$ and prove its termination and
+correctness. The algorithm \algoSamba{} is presented in a form that
+allows for relatively simple proofs.
+\medskip
+
+\noindent
+Input: $t, f_1, \ldots, f_r \in R^*$, $\deg t > 0$, $\lc t = 1$.
+
+\noindent
+Output:
+$B = \Set{g_0, g_1, \ldots, g_s} \subset A= C[t, f_1, \ldots, f_r]$
+such that for $f\in R$ holds $\applyReduce{f}{t}{B} = 0$ iff
+$f \in A$.
+\begin{pseudoalgorithm}
+$B := \Set{1}$
+$B_{\mathrm{crit}} := \Set{f_1, \ldots, f_r}$
+$d := \deg t$
+$P := \emptyset$
+$S := \emptyset$
+while $B_{\mathrm{crit}} \cup P \cup S \neq \emptyset$ do
+    $u := \textrm{``take one element from }B_{\mathrm{crit}} \cup P \cup S\textrm{ and remove it from }B_{\mathrm{crit}}\textrm{, }P\textrm{, and }S\textrm{''}$
+    $u' := \applyReduce{u}{t}{B}\label{algo:samba-reduce}$
+    if $u' \neq 0$ then
+        $B_{\mathrm{crit}} := B_{\mathrm{crit}} \cup \SetDef{b\in B}{\dividesMod[d]{u'}{b}}$
+        $B := (B \setminus B_{\mathrm{crit}}) \cup \Set{u'}\label{algo:samba-add}$
+        $P := \SetDef{b_1b_2}{b_1,b_2\in B\setminus\Set{1}}$
+        $S := \SetDef{t^ab}{\forall a\in\setN,b\in B \exists b'\in B: \deg(t^ab)=\deg(b')}\label{algo:samba-gap}$
+return $B$
+\end{pseudoalgorithm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Hemmecke}
+  CONTINUE HERE
+\end{Hemmecke}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Hemmecke}
+  CONTINUE HERE
+\end{Hemmecke}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Hemmecke}
+\begin{gather}
+  \defineNotation[GL2+Z]{\mathrm{GL}_2^+(\setZ)}
+  :=
+  \SetDef{  \begin{pmatrix}
+    a & b\\
+    c & d
+  \end{pmatrix}}{a,b,c,d\in\setZ \land ad-bc>0}
+  \label{eq:GL2+Z}
+\end{gather}
+\end{Hemmecke}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+As in \cite{Radu_RamanujanKolberg_2015}, let $K(N)$ denote the set of
+modular functions for $\Gamma_0(N)$ and $K^\infty(N)$ the set of
+modular functions have a (multiple) pole, if any, at infinity only.
+Furthermore, let $E(N)$ be the set of eta-quotients that are
+modular functions, and let $E^\infty(N) := E(N)\cap K^\infty(N)$.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Splitting of $W \in \mathrm{GL}_2^+(\setZ)$ into
@@ -572,23 +1698,6 @@ Then $\upsilon(\gamma'\gamma'')^2 = \upsilon(\gamma')^2 \upsilon(\gamma'')^2$.
 \label{sec:eta-transformation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-In the following let
-$\defineNotation[m]{m},
-\defineNotation[M]{M},
-N \in \setN \setminus \Set{0}$, and
-$r \in R(M)$
-be subject to the following conditions
-\begin{gather}
-  \text{for every prime $p$ with $\divides{p}{m}$ follows $\divides{p}{N}$,}
-  \label{eq:p|m=>p|N}\\
-  \text{and, if $\divides{\delta}{M}$ and $r_\delta\ne0$, then
-    $\divides{\delta}{mN}$.}
-  \label{eq:delta|M=>delta|mN}
-\end{gather}
-
-For the above conditions see (13) and (14) in
-\cite{Radu_AlgorithmicApproachRamanujanCongruences_2009} or
-Section~4.2 in \cite{Radu_PhD_2010}.
 
 Furthermore, let
 $\defineNotation[lambda]{\lambda}\in\Set{0,\ldots,m-1}$ and
@@ -790,17 +1899,6 @@ have $\kappa_\delta=0$ for any $\delta$.
 For the following definition see \cite[Lemma~2.37]{Radu_PhD_2010} and
 \cite[Definition~2.9]{Radu_PhD_2010}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Definition}\label{def:width0}
-  Let
-  $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)
-  \in \SL2Z$ and $N$ be a positive integer. Then
-  \begin{gather}
-    \defineNotation[w-gamma]{w_\gamma} = \frac{N}{\gcd(c^2, N)}
-    \label{eq:width0}
-  \end{gather}
-  is called the \emph{width of $\gamma$ with respect to $\Gamma_0(N)$}.
-\end{Definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Note that for
@@ -1673,136 +2771,6 @@ following correspondence.
 \subsubsection{Find ``$\Gamma_0(N)$-modular'' cofactor for $p_{r,m,t}(\tau)$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Definition}\cite[Def.~35]{Radu_RamanujanKolberg_2015}
-  \label{def:condition-co-eta-quotient-gamma0}
-  Let $\Delta^*$ be the set of all tuples $(N, M, r, m, t)$ such that
-  $N, M, m \in \setN\setminus\Set{0}$,
-  %
-  $t \in \Set{0,\ldots,m-1}$,
-  %
-  $r \in R(M)$
-  %
-  fulfil conditions \eqref{eq:p|m=>p|N} and \eqref{eq:delta|M=>delta|mN}
-  and for
-  %
-  $\kappa:=\gcd(1-m^2, 24)\ge1$,
-  %
-  $w' := \gcd(\kappa(24t + \sigmainfty[M]{r}),24m)$,
-  %
-  $w := \frac{24m}{w'}$
-  %
-  the following conditions hold:
-  \begin{gather}
-  \kappa \frac{m N^2}{M} \sigmazero[M]{r} \equiv_{24} 0,\label{eq:rv24}\\
-  \kappa N \divisorsum{M} r_\delta \equiv_8 0,\label{eq:sum-r}\\
-  \divides{w}{N},\label{eq:w|N}\\
-  \divides{2}{m} \implies (\divides{4}{\kappa N} \land \divides{8}{N e})
-  \lor
-  (\divides{2}{e} \land \divides{8}{N(u-1)})\label{eq:even-m}
-\end{gather}
-where $e, u\in\setZ$ are such that $u$ is odd and
-$\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$.
-\end{Definition}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Lemma}\label{thm:y^2-1}
-  Let $y\in \setZ$ be such that $gcd(y, 6)=1$ then
-  $y^2 \equiv_{24} 1$, \ie, $ \frac{y^2-1}{24} \in \setZ$.
-\end{Lemma}
-\begin{proof}
-  Let $y = 6k + l$ with $l \in \Set{0,\ldots,5}$. Then
-  $\gcd(y, 6)=\gcd(l,6)=1$ only holds for $l=1$ or $l=5$.
-  %
-  Since $36 k^2 + 12 k l + l^2 = 12k(3k+l) + l^2$, and $12k(3k+l)$ is
-  divisible by 24 for $l=1$ or $l=5$, the statement of the Lemma
-  follows from the fact that $1^2\equiv_{24} 5^2 \equiv_{24} 1$.
-\end{proof}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Definition}\cite[Def.~40]{Radu_RamanujanKolberg_2015}
-  Let $n \in \setN$, $n>1$. For $x \in \setZ$ we denote by
-  $[x]_n\in \setZ_n$ the residue class of $x$ modulo $n$ and define
-  \begin{gather*}
-    \defineNotation[S-n]{\setS_{n}}
-    :=
-    \SetDef{[y^2]_n}{y \in \setZ \land \gcd(y, n)=1}
-    \subseteq
-    \setZ_n.
-  \end{gather*}
-\end{Definition}
-
-Let $x \in \setZ$ be such that $[x]_{24_m} \in \setS_{24m}$. Then
-there exists $y \in \setZ$ with $\gcd(y, 24m)=1$ and
-$[x]_{24m}=[y^2]_{24m}$, \ie, $x = y^2 + k (24m)$ for some $k\in
-\setZ$. From Lemma~\ref{thm:y^2-1} follows that
-$\frac{x-1}{24}=\frac{y^2-1}{24} + km \in\setZ$.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Definition}\cite[Def.~41]{Radu_RamanujanKolberg_2015}
-  Let $r \in R(M)$.
-  %
-  The mapping
-  \begin{align*}
-    \defineNotation[odotbar-r]{\bar{\odot}_r}
-    &: \setS_{24m} \times \Set{0,\ldots,m-1} \to \Set{0,\ldots,m-1},
-    \qquad
-    ([x]_{24m}, t) \mapsto [x]_{24m}  \mathbin{\bar{\odot}_r} t
-  \end{align*}
-  is uniquely given by
-  \begin{gather}
-    [x]_{24m} \mathbin{\bar{\odot}_r} t
-    :=
-    \left( t x + \frac{x-1}{24} \sigmainfty[M]{r} \right) \bmod{m}
-  \end{gather}
-\end{Definition}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Definition}
-  (Definition 42 and Lemma 43 of \cite{Radu_RamanujanKolberg_2015})
-  For $t\in\Set{0,\ldots,m-1}$, $r \in R(M)$ we define
-  %
-  \begin{align}
-    \defineNotation[O-r-m-t]{\modularOrbit{r,m,t}}
-    &:=
-      \setS_{24m}  \mathbin{\bar{\odot}_r} t
-      =
-      \SetDef{x \mathbin{\bar{\odot}_r} t}{x \in \setS_{24m}},
-    \\
-    %
-    \defineNotation[chi-r-m-t]{\chi_{r,m,t}}
-    &:=
-      \prod_{t' \in \modularOrbit{r,m,t}}
-        \unityPower{\frac{(1-m^2)(24 t'+ \sigmainfty[M]{r})}{24 m}}.
-  \end{align}
-\end{Definition}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Lemma}
-  \label{thm:orbit-sum}
-  \cite[Lemma~43]{Radu_RamanujanKolberg_2015}
-  \begin{gather}
-      \sum_{t' \in \modularOrbit{r,m,t}} (24 t'+ \sigmainfty[M]{r}) \equiv_m 0.
-    \label{eq:orbit-rum}
-  \end{gather}
-\end{Lemma}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Lemma}
-  \label{thm:stable-O-r-m-t}
-  \label{thm:chi-exponent}
-  \cite[Lemma~43]{Radu_RamanujanKolberg_2015}
-  Let $t\in\Set{0,\ldots,m-1}$, $r \in R(M)$. Then
-  \begin{enumerate}
-  \item for any $x \in \setS_{24m}$ we have
-    $\modularOrbit{r,m,t}
-    = x \mathbin{\bar{\odot}_r} \modularOrbit{r,m,t}
-    = \SetDef{x \mathbin{\bar{\odot}_r} t'}{t'\in \modularOrbit{r,m,t}}$,
-  \item $\chi_{r,m,t}=\unityPower{\frac{\nu}{24}}$ for some
-    $\nu \in \Set{0,\ldots,23}$.
-  \end{enumerate}
-\end{Lemma}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}\cite[Def.~44]{Radu_RamanujanKolberg_2015}
@@ -1898,42 +2866,6 @@ The parts of \eqref{eq:P_r-m-t(gamma*tau)} are implemented via
 \textcolor{blue}{\code{SymbolicEtaQuotientOrbitProductGamma}}
 (Section~\ref{sec:SymbolicEtaQuotientOrbitProductGamma}).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Transformation of $F_{s,r,m,t}$ under $\SL2Z$}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Theorem}\cite[Thm.~45]{Radu_RamanujanKolberg_2015}
-  \label{thm:RaduConditions}
-  Let $(N, M, r, m, t) \in \Delta^*$ according to
-  Definition~\ref{def:condition-co-eta-quotient-gamma0}, $s\in R(N)$,
-  $\nu$ and $\mu$ be integers such that
-  $\chi_{s,m,t}=\unityPower{\frac{\nu}{24}}$, and
-  $\mu=\sizeOfSet{\modularOrbit{r,m,t}}$, then $F_{s,r,m,t}(\tau)$ is
-  a modular function on $\Gamma_0(N)$ iff the following conditions
-  hold:
-  \begin{align}
-    \divisorsum{N} s_\delta + \mu \divisorsum{M} r_\delta
-    &=
-      0,
-    \label{eq:Radu-sum=0}\\
-    \sigmainfty[N]{s} + \mu \, m \,\sigmainfty[M]{r} + \nu
-    &\equiv_{24} 0
-    \label{eq:Radu-sigmainfinity}\\
-    \sigmazero[N]{s} + \frac{\mu \,m\, N}{M} \sigmazero[M]{r}
-    &\equiv_{24} 0,
-    \label{eq:Radu-sigma0}\\
-    \sqrt{
-    \divisorprod{N}\delta^{s_\delta}
-    \divisorprod{M} (m \delta)^{\mu r_\delta}
-    } &\in \setQ\label{eq:Radu-productsquare}
-  \end{align}
-\end{Theorem}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Let $N, s, M, r, m, t, \nu, \mu$ fulfil all the conditions of
-Theorem~\ref{thm:RaduConditions}. Then the exponent of the factor
-$c\tau+d$ is zero, \ie, this factor vanishes.
 
 \begin{align}
   \defineNotation[F-s-r-m-t-gamma-tau]{F_{s,r,m,t}(\gamma\tau)}
@@ -2589,19 +3521,6 @@ In the following we always use $q = e^{2\pi i \tau}$ for $\tau \in
 %
 Let $N \in \setN$ and $\zeta_N$ be a primitive $N$-th root of unity.
 
-Let $\defineNotation[B]{B(x)} = x^2 - x + \frac{1}{6}$
-be the second Bernoulli function, $\{x\}$.
-%
-Denote the fractional part of $x$, by
-$\defineNotation[x-fractional]{\{x\}} = x - \lfloor x \rfloor$,
-$\defineNotation[x-floor]{\lfloor x \rfloor}$ denotes the greatest
-integer less than or equal to $x$.
-We define
-\begin{gather}
-    \defineNotation[P-2]{P_2(x)} = B(\{x\}) = \{x\}^2 - \{x\} + \frac{1}{6}.
-\end{gather}
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{Definition}
   (\cite{Schoeneberg_EllipticModularFunctions_1974},
@@ -2839,92 +3758,6 @@ do not write the argument):
 \end{gather}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Generalized eta-function $\eta_{\delta,g}^{[R]}$ (Robins)}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Another definition can be found in
-\cite{Robins_GeneralizedDedekindEtaProducts_1994} and
-\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Definition}
-\cite{Robins_GeneralizedDedekindEtaProducts_1994}
-Let $\delta$ be a positive natural number and $0 \le g < \delta$ be a
-residue class (mod $\delta$).
-%
-We consider the generalized eta-function which is given by
-\begin{align}
-  \defineNotation[eta-delta-g-tau-Robins]{\eta_{\delta,g}^{[R]}(\tau)}
-  &:=
-  q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
-  %
-  \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
-  \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n).
-  \label{eq:eta_delta-g^[R](tau)-mod}
-\end{align}
-If $0<g<\delta$ then
-\begin{align}
-  \eta_{\delta,g}^{[R]}(\tau)
-  &=
-  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
-  %
-  \prod_{n=1}^\infty (1-q^{\delta (n-1)+\bar{g}})(1-q^{\delta n-\bar{g}})
-  \notag\\
-  &=
-  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
-  %
-  \qPochhammer{q^{\bar{g}}}{q^\delta} \qPochhammer{q^{\delta-\bar{g}}}{q^\delta}
-  =
-  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
-  %
-  \theta_{\delta,g}(\tau)
-  =
-  q^{\frac{\delta}{2}P_2(\frac{\bar{g}}{\delta})}
-  %
-  \jacobiFunction{q^g}{q^\delta} \eulerFunction{\delta}^{-1}
-  \label{eq:eta_delta-g^[R](tau)}
-\end{align}
-where $\bar{g}\in\Set{0,\ldots,\delta-1}$ is such that
-$\bar{g} \equiv_\delta g$,
-\end{Definition}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Lemma}
-  If $g \equiv 0 \pmod{N}$, then
-  \begin{gather*}
-    \eta_{\delta,g+\delta}^{[R]}(\tau)
-      =
-      \eta_{\delta,-g}^{[R]}(\tau)
-      =
-      \eta_{\delta,g}^{[R]}(\tau).
-      \label{eq:eta_delta-g^[R](tau)-mod-delta}
-  \end{gather*}
-\end{Lemma}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{proof}
-  By the definition above we must only show that
-  $P_2\left(\frac{-g}{\delta}\right) =
-  P_2\left(\frac{\delta+g}{\delta}\right) =
-  P_2\left(\frac{g}{\delta}\right)$ for
-  $g \not\equiv 0 \pmod{\delta}$.
-%
-  Clearly, we have $P_2(x+1) = P_2(x)$ for any real $x$.
-  Now suppose $0\le x<1$. Then
-  % \begin{gather*}
-  $
-    P_2(-x)
-    = P_2(1-x)
-    = (1-x)^2 - (1-x) + \frac{1}{6}
-%      = x^2 - x  + \frac{1}{6}
-    = P_2(x).
-    $
-    % \end{gather*}
-\end{proof}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Generalized eta-function $E_{g,h}^{[Y]}$ (Yang)}
@@ -2999,10 +3832,10 @@ For $g \not\equiv_N 0$ define
       =
       \eta_{g,0}^{[S]}(N \tau)
       =
-      \eta_{N,g}^{[R]}(\tau)
+      \eta_{N,g}(\tau)
     \\
     %
-    \eta_{\delta,g}^{[R]}(\tau)
+    \eta_{\delta,g}(\tau)
     &=
     \prod_{i=0}^{k-1} E_{\delta i + g}(\tau)
   \end{align*}
@@ -3072,7 +3905,7 @@ Furthermore, for $m, M, N\in\setN$, $\divides{\delta}{M}$,
 $t \in \Set{0,\ldots,m-1}$,
 $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)\in\SL2Z$,
 
-Since $\eta_{\delta,0}^{[R]}(\tau) = \eta(\delta\tau)^2$ and we already have
+Since $\eta_{\delta,0}(\tau) = \eta(\delta\tau)^2$ and we already have
 a transformation formula for the pure eta-function given by
 \eqref{eq:eta_delta(gamma*tau)}, we only need to consider
 transformation rules with $g \not\equiv_\delta 0$.
@@ -3202,7 +4035,7 @@ if $g\not\equiv_N 0$ and $g'\not\equiv_N 0$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{The function $\eta_{\delta,g,m,\lambda}^{[R]}$ and its
+\subsubsection{The function $\eta_{\delta,g,m,\lambda}$ and its
   transformation under $\SL2Z$}
 \label{sec:[eta-delta-g-m-lambda-gamma-tau-Robins}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3228,7 +4061,7 @@ respectively, we define:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
   \defineNotation[eta-delta-g-m-lambda-gamma-tau-Robins]
-    {\eta_{\delta,g,m,\lambda}^{[R]}(\gamma\tau)}
+    {\eta_{\delta,g,m,\lambda}(\gamma\tau)}
   &=
     \eta_{g,0,\delta}^{[S]}(W\tau)
 %  \notag\\
@@ -3331,352 +4164,11 @@ following correspondence.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Transformations of Generalized Eta-Quotients}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-In view of $\eta_{\delta,g}^{[R]}(\tau) = \eta_{\delta,\delta-g}^{[R]}(\tau)$ we
-can say that a generalized eta-quotient is a product of the form
-\begin{gather*}
-  \prod_{\substack{\divides{\delta}{N}\\ 0\le g \le \lfloor\delta/2\rfloor}}
-       \eta_{\delta,g}^{[R]}(\tau)^{a_{\delta,g}}
-\end{gather*}
-where
-\begin{gather*}
-  \defineNotation[a-delta-g]{a_{\delta,g}}\in
-  \begin{cases}
-    \frac{1}{2}\setZ & \text{if $g=0$ or $g=\frac{\delta}{2}$},\\
-    \setZ & \text{otherwise}.
-  \end{cases}
-\end{gather*}
-Since $\eta_{\delta,0}^{[R]}(\tau) = \eta(\delta\tau)^2$ and
-$\eta_{\delta,\frac{\delta}{2}}^{[R]}(\tau)
-=
-\frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2},
-$
-we can remove some redundancy from
-\eqref{eq:redundant-generalized-eta-quotient} by rewriting (in case of
-$\divides{2}{\delta}$)
-\begin{gather*}
-  \eta_{\delta,\frac{\delta}{2}}^{[R]}(\tau)
-  =
-  \frac{\eta_{\frac{\delta}{2}, 0}^{[R]}(\tau)}{\eta_{\delta,0}^{[R]}(\tau)}
-\end{gather*}
-and thus represent a generalized eta-quotient by
-\begin{gather}
-  \prod_{\substack{\divides{\delta}{N}\\0\le g < \delta/2}}
-       \eta_{\delta,g}^{[R]}(\tau)^{a_{\delta,g}}.
-  \label{eq:redundant-generalized-eta-quotient}
-\end{gather}
-
-By $\eta_{\delta,0}^{[R]}(\tau) = \eta(\delta\tau)^2$ and if we set
-$\defineNotation[r-delta-0]{r_{\delta,0}} = 2 a_{\delta,0}$ and
-$\defineNotation[r-delta-g]{r_{\delta,g}}=a_{\delta,g}$ for
-$0<g<\frac{\delta}{2}$, we can represent a generalized eta-quotient as
-a product of a (pure) eta-quotient and a proper generalized
-eta-quotient.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Definition}
-  \label{def:rbar}
-  When
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{gather}
-    \defineNotation[rbar]{\bar{r}}
-    =
-    (r_{\delta,g})_{\divides{\delta}{N}, 0\le g < \delta/2}.
-    \label{eq:rbar}
-  \end{gather}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  is an integer tuple, indexed by the index pairs
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{gather}
-    (\delta_1,0), (\delta_2,0), \ldots, (\delta_n,0),
-    (\delta_2,1),\ldots, \Bigl(\delta_2,
-    \Bigl\lceil\frac{\delta_2}{2} \Bigr\rceil-1\Bigr),
-    \ldots,
-    (\delta_n,1),
-    \ldots,
-    \Bigl(\delta_n,\Bigl\lceil\frac{\delta_n}{2}\Bigr\rceil-1\Bigr)
-    \label{eq:sorted-indices}
-  \end{gather}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  where $\delta_1<\delta_2< \ldots < \delta_n$ are the positive
-  divisors of $N$, we denote by $r$ the part of the tuple that has a
-  zero in the second index, \ie,
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{gather}
-    r = (r_{\delta,0})_{\divides{\delta}{N}}
-  \end{gather}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  By $\tilde{r}$ we denote the other part, \ie,
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{gather}
-    \defineNotation[rtilde]{\tilde{r}}
-    =
-    (r_{\delta,g})_{\divides{\delta}{N}, 0 < g < \delta/2}.
-    \label{eq:rtilde}
-  \end{gather}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  Note that $\delta_1=1$ and $\delta_n=N$. Therefore, $(\delta_1,1)$
-  is missing from the above list, since 1 is not smaller than
-  $\delta_1=1$.
-
-  By $\defineNotation[RbarN]{\bar{R}(N)}$ we denote the tuples with
-  integer entries given in \eqref{eq:rbar}, \ie, an element
-  $\bar{r} \in \bar{R}(N)$ represents exponents of the eta-product
-  $g_{\bar{r}}(\tau)$ given in \eqref{eq:g_rbar(tau)}.
-
-  We someimes write $r_\delta$ instead of $r_{\delta,0}$, since it
-  corresponds to the integer exponent of the (pure) eta-function
-  $\eta(\delta\tau)$.
-
-  According to \eqref{eq:sorted-indices} we have
-  $\bar{r} = (r, \tilde{r})$.
-\end{Definition}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-For ease of notation we use the following abbreviations:
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{alignat*}{2}
-%  \defineNotation[sum-tilde]{\protect\widetilde{\protect\sum\limits_N}}
-  \defineNotation[sum-tilde]{\gensum}
-  &=
-  \sum_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}
-  &\qquad\text{and}\qquad
-  \defineNotation[prod-tilde]{\genprod}
-  &=
-  \prod_{\substack{\divides{\delta}{N}\\0<g<\frac{\delta}{2}}}.
-\end{alignat*}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-
-Let $\bar{r} = (r, \tilde{r})\in\bar{R}(N)$ as defined in
-Definition~\ref{def:rbar}, then we have
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{gather}
-  \defineNotation[g-rbar-tau]{g_{\bar{r}}(\tau)}
-  =
-  g_r(\tau) \cdot g_{\tilde{r}}(\tau)
-  =
-  \prod_{\delta|N} \eta(\delta\tau)^{r_{\delta,0}}
-  \genprod \eta_{\delta,g}^{[R]}(\tau)^{r_{\delta,g}}
-  \label{eq:g_rbar(tau)}
-\end{gather}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-where
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  \defineNotation[g-rtilde-tau]{g_{\tilde{r}}(\tau)}
-  &=
-  \genprod \eta_{\delta,g}^{[R]}(\tau)^{r_{\delta,g}}
-  \label{eq:g_rtilde(tau)}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-is a proper generalized eta-quotient.
-
-
-
-
-Let us define the following abbreviations:
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  \defineNotation[sigmainftytilde(rtilde)]{\sigmainftytilde[M]{\tilde{r}}}
-  &=
-  \gensum[M] \delta P_2\Bigl(\frac{g}{\delta}\Bigr) r_{\delta,g},
-  \label{eq:sigmainftytilde}
-  \\
-  %
-  \defineNotation[sigmainftybar(rbar)]{\sigmainftybar[M]{\bar{r}}}
-  &= \sigmainfty[M]{r} + 12 \sigmainftytilde[M]{\tilde{r}}
-  =
-  \divisorsum{M} \delta r_{\delta,0}
-  + 12 \gensum[M] \delta P_2\Bigl(\frac{g}{\delta}\Bigr) r_{\delta,g},
-  \label{eq:sigmainftybar}
-  \\
-  \defineNotation[sigmazerotilde(rtilde)]{\sigmazerotilde[M]{\tilde{r}}}
-  &=
-  \gensum[M] \frac{M}{\delta} r_{\delta,g},
-  \label{eq:sigmazerotilde}
-  \\
-  %
-  \defineNotation[sigmazerobar(rbar)]{\sigmazerobar[M]{\bar{r}}}
-  &= \sigmazero[M]{r} + 2 \sigmazerotilde[M]{\tilde{r}}
-  =
-  \divisorsum{M} \frac{M}{\delta} r_{\delta,0}
-  + 2 \gensum[M] \frac{M}{\delta} r_{\delta,g}.
-  \label{eq:sigmazerobar}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-According to \cite[Thm.~3]{Robins_GeneralizedDedekindEtaProducts_1994}
-a generalized eta-quotient of the form
-\eqref{eq:redundant-generalized-eta-quotient} is a modular function
-for $\Gamma_1(N)$ if
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{gather}
-  \sum_{\divides{\delta}{N}} a_{g,0} = 0\\
-  \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
-  \delta P_2\Bigl(\frac{g}{\delta}\Bigr) a_{\delta,g} \equiv_2 0\\
-  \sum_{\substack{\divides{\delta}{N}\\0 \le g \le \frac{\delta}{2}}}
-  \frac{N}{\delta} P_2(0) a_{\delta,g} \equiv_2 0.
-\end{gather}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Translated for an eta-quotient $g_{\bar{r}}$ given by
-\eqref{eq:g_rbar(tau)}, the above reads as
-\begin{align}
-  \sum_{\divides{\delta}{N}} r_{g,0} = 0,
-  \label{eq:generalized-weight}
-\end{align}
-which means that the weight (of the eta-quotient) should be 0,
-\begin{align}
-  \sigmainftybar[N]{\bar{r}} =
-  \sum_{\divides{\delta}{N}}
-  \delta r_{\delta,0}
-  +
-  12 \gensum \delta P_2\Bigl(\frac{g}{\delta}\Bigr) r_{\delta,g}
-  &\equiv_{24} 0
-  \label{eq:generalized-sigmaInfinity}
-\end{align}
-and
-\begin{align}
-\sum_{\divides{\delta}{N}}
-  \frac{N}{\delta} P_2(0) \frac{r_{\delta,g}}{2}
-  +
-  \gensum \frac{N}{\delta} P_2(0) r_{\delta,g} \equiv_2 0
-  \notag\\
-  %
-  \sigmazerobar[N]{\bar{r}} =
-  \sum_{\divides{\delta}{N}}
-  \frac{N}{\delta} r_{\delta,0}
-  +
-  2 \gensum \frac{N}{\delta} r_{\delta,g} \equiv_{24} 0.
-  \label{eq:generalized-sigma0}
-\end{align}
-
 Compare \eqref{eq:generalized-sigmaInfinity} and
 \eqref{eq:generalized-sigma0} with the implementation of
 \code{sigmaInfinity} and \code{sigma0} in \code{QEtaAuxiliaryPackage}
 as well as \code{conditionSigma0?} in \code{QEtaCofactorSpace}.
 
-
-Similar to the matrix by Ligozat, we can build a matrix to determine
-the order of a (modular for $\Gamma_1(N)$) generallized eta-quotient
-at all cusps of $\Gamma_1(N)$.
-
-
-Let us state a result of Robins about the order of an eta-quotient at
-a cusp of $\Gamma_1(N)$. See also
-\cite[Lemma~2.6]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{Theorem}
-  \label{thm:matrixEtaOrderRobins}
-  \cite[Thm~4]{Robins_GeneralizedDedekindEtaProducts_1994}
-  %
-  Let $\bar{r}\in \bar{R}(N)$ and $g_{\bar{r}}(\tau)$ be an
-  eta-quotient as specified in \eqref{eq:g_rbar(tau)}.
-  Let
-  $\gamma=\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)\in\SL2Z$.
-  Let
-  $\lambda,\mu,\epsilon$ with $\divides{\epsilon}{N}$ and
-  \begin{gather}
-    \gcd(\lambda,N)=\gcd(\lambda,\mu)=\gcd(\mu,N)=1
-  \end{gather}
-  be such that
-  $\frac{\lambda}{\mu\epsilon}$ is a cusp that is
-  $\Gamma_1(N)$-equivalent to the cusp $\frac{a}{c}$ of $\Gamma_1(N)$.
-  %
-  Then the order of the transformation $g_{\bar{r}}(\gamma\tau)$ in
-  the uniformizing variable $q^{\epsilon/N}$ is
-  \begin{gather}
-    \frac{N}{24}  \sum_{\divides{\delta}{N}}
-    \frac{\gcd(\delta,\epsilon)^2}{\delta\epsilon} r_\delta
-    +
-    \frac{N}{2}  \gensum
-    \frac{\gcd(\delta,\epsilon)^2}{\delta\epsilon}
-    P_2\Bigl(\frac{\lambda g}{\gcd(\delta,\epsilon)}\Bigr)r_{\delta,g}
-    \label{eq:order-rbar-non-adjusted}
-  \end{gather}
-\end{Theorem}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Note that $\epsilon = \gcd(c, N)$.
-%
-The width $w_\gamma$ of a cusp $\frac{a}{c}$ of $\Gamma_1(N)$ is given
-by
-\begin{gather}
-  w_\gamma
-  =
-  \begin{cases}
-    1,                   & \text{if $N=4$ and $\gcd(c,2)=2$},\\
-    \frac{N}{\gcd(N,c)}, & \text{otherwise},
-  \end{cases}
-  \label{eq:width1}
-\end{gather}
-see Equation (2.49) in
-\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} or Corollary
-4 (2) of \cite{ChoKooPark_ArithmeticRamanujanGoellnitzGordon_2009}
-
-
-Consider \eqref{eq:order-rbar-non-adjusted} at the cusps $\infty$ and
-$0$ (which are $\Gamma_1(N)$-equivalent to $\frac{1}{N}$ and $1$,
-respectively).
-%
-For the cusp $\infty$ we get $\lambda=\mu=1$ and $\epsilon=N$, \ie,
-$\frac{\sigmainftybar[N]{\bar{r}}}{24}$.
-% \begin{gather}
-%   \frac{1}{24}
-%   \left(
-%     \sum_{\divides{\delta}{N}} \delta r_\delta
-%     +
-%     12 \gensum \delta  P_2\Bigl(\frac{g}{\delta}\Bigr)r_{\delta,g}
-%   \right).
-%   \label{eq:modularGamma1-sigmaInfinity}
-% \end{gather}
-
-For the cusp $0$ we get $\lambda=\mu=1$ and $\epsilon=1$. \ie,
-$\frac{\sigmazerobar[N]{\bar{r}}}{24}$,
-% \begin{gather}
-%   \frac{1}{24}
-%   \left(
-%     \sum_{\divides{\delta}{N}} \frac{N}{\delta} r_\delta
-%     +
-%     2 \gensum \frac{N}{\delta} r_{\delta,g}
-%   \right)
-%   \label{eq:modularGamma1-sigma0}
-% \end{gather}
-since $P_2(g)=P_2(0)=\frac{1}{6}$.
-
-
-In other words, since these orders must be integers, we recover the
-conditions \ref{eq:generalized-sigmaInfinity} and
-\ref{eq:generalized-sigma0} from above.
 
 
 Note that \code{matrixEtaOrder} is the collection of coefficients of
@@ -3734,7 +4226,7 @@ formula.
   \defineNotation[g-rtilde-gamma-m-lambda-tau]{g_{\tilde{r},m,\lambda}(\gamma\tau)}
   &=
     \genprod[M]
-    \eta_{\delta,g,m,\lambda}^{[R]}(\gamma\tau)^{r_{\delta,g}}
+    \eta_{\delta,g,m,\lambda}(\gamma\tau)^{r_{\delta,g}}
   \notag\\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \begin{split}
@@ -3779,7 +4271,7 @@ the Jacobi function can be expanded into
       }{q_{\delta,m,\lambda}}
   =
     \jacobiFunction{\zeta_\delta^{b' g} x^{\alpha}}{x^{\beta}}
-    \label{eq:mimimalRootOfUnity-g_rtilde-m-lambda}
+    \label{eq:minimalRootOfUnity-g_rtilde-m-lambda}
 \end{align}
 where
 $x = q_{\delta,m,\lambda}^{1/\beta} =
@@ -3791,7 +4283,7 @@ $x = q_{\delta,m,\lambda}^{1/\beta} =
 The parts of \eqref{eq:g_rtilde-m-lambda(gamma*tau)} are
 implemented via
 \textcolor{blue}{\code{SymbolicProperGeneralizedEtaQuotientLambdaGamma}}
-(Section~\ref{sec:SymbolicProperGeneralizedEtaQuotientLambdaGamma}).
+(Section~\ref{sec:SymbolicEtaQuotientLambdaGamma}).
 %
 If \code{e = properGeneralizedEtaQuotient(rspec,m,lambda,gamma)}, then
 we have the following correspondence.
@@ -4077,124 +4569,6 @@ following correspondence.
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Find ``$\Gamma_1(N)$-modular'' cofactor for $p_{\bar{r},m,t}(\tau)$}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-We follow here Section~10 of
-\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-%
-Most formulas are merely reformulations of the respective formulas in
-\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-%
-Below, we use the notation CDZ($n$) to refer to condition $n$ in
-Section~10 of \cite[Sect.~10,
-cond~9]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
-
-\begin{Definition}
-  \cite[Sect.~10]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
-  \label{def:condition-co-eta-quotient-gamma1}
-
-  Let $\bar{\Delta}^*$ be the set of all tuples
-  $(N, M, \bar{r}, m, t)$ such that
-  $N, M, m \in \setN\setminus\Set{0}$,
-  %
-  $t \in \Set{0,\ldots,m-1}$,
-  %
-  $\bar{r}=(r,\tilde{r}) \in \bar{R}(M)$,
-  %
-  and for
-  %
-  $\kappa:=\gcd(1-m^2, 24)\ge1$,
-  %
-  $\bar{w}' := \gcd(\kappa M (24t + \sigmainftybar[M]{\bar{r}}), 24 m M)$,
-  %
-  $\bar{w} := \frac{24 m M}{\bar{w}'}$,
-  %
-  and $e, u\in\setZ$ such that $u$ is odd and
-  $\divisorprod{M} \delta^{\abs{r_\delta}}=2^e u$.
-  %
-  \begin{gather*}
-    \defineNotation[Sbar-n]{\bar{\setS}_{n}}
-    :=
-    \SetDef{[y^2]_n}{y \in \setZ \land \gcd(y, n)=1, y\equiv_N 1}
-    \subseteq
-    \setZ_n.
-  \end{gather*}
-  the following conditions hold:
-  \begingroup
-  \def\CDZ#1{CDZ(#1)}
-  \begin{gather}
-    \divides{M}{N},
-      %
-    \qquad
-    \text{see \CDZ{1}}
-    \\
-    \text{if $\divides{\delta}{M}$ and $r_{\delta,0}\ne0$, then
-      $\divides{\delta}{mN}$,}
-    \qquad
-    \text{see \eqref{eq:p|m=>p|N}, \CDZ{2}}
-    \label{eq:conditionPrimeDivisors?(nn,m)}
-    \\
-    \kappa N \divisorsum{M} r_{\delta,0} \equiv_8 0,
-    \qquad
-    \text{see \eqref{eq:sum-r}, \CDZ{6}}
-    \label{eq:conditionSumExponentsPure?(nn,rspec,m)}
-    \\
-    \kappa N \gensum[M] r_{\delta,g} \equiv_{4} 0,
-    \qquad
-    \text{see \CDZ{4}}
-    \label{eq:conditionSumExponentsProperGeneralized?(nn,rspec,m)}
-    \\
-%    \kappa m N \divisorsum{M} \frac{N}{\delta} r_{\delta,0} \equiv_{24} 0,
-    \kappa \frac{m \, N^2}{M} \sigmazero[M]{r}
-    \equiv_{24} 0,
-    \qquad
-    \text{see \eqref{eq:rv24}, \CDZ{7}}
-    \label{eq:conditionSigma0Pure?(nn,mm,r,m)}
-    \\
-%    \kappa m N \gensum[M] \frac{N}{\delta} r_{\delta,g} \equiv_{12} 0,
-    \kappa \frac{m \, N^2}{M} \sigmazerotilde[M]{\tilde{r}} \equiv_{12} 0,
-    \qquad
-    \text{see \CDZ{5}}
-    \label{eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}
-    \\
-    \kappa N \gensum[M] \frac{g}{\delta} r_{\delta,g} \equiv_2 0,
-    \qquad
-    \text{see \CDZ{3}}
-    \label{eq:conditionGSigma0?(nn,rspec,m)}
-    \\
-    \divides{\bar{w}}{N},
-    \qquad
-    \text{see \eqref{eq:w|N}, \CDZ{8}}
-    \label{eq:conditionNDivosor?(nn,rspec,m,t)}
-    \\
-    \divides{2}{m} \implies (\divides{4}{\kappa N} \land \divides{8}{N e})
-    \lor
-    (\divides{2}{e} \land \divides{8}{N(u-1)}),
-    \qquad
-    \text{see \eqref{eq:even-m}, \CDZ{9}}
-    \label{eq:conditionEvenMultiplier?(nn,rspec,m)}
-    \\
-    \forall x\in\bar{\setS}_{24mM}: \frac{x-1}{24}
-    \sigmainftybar[M]{\bar{r}}
-    % \left(
-    %   \divisorsum{M} \delta r_{\delta,0}
-    %   +
-    %   12 \gensum[M] \delta P_2\left(\frac{g}{\delta}\right) r_{\delta,g}
-    %   + 24 t
-    % \right)
-    \equiv_m 0,
-    \qquad
-    \text{see \CDZ{10}}.
-    \label{eq:conditionOrbitLength?(nn,mm,r,rtilde,m,t)}
-  \end{gather}
-  \endgroup
-\end{Definition}
-
-
-
-
 
 
 
@@ -4204,7 +4578,7 @@ From \eqref{eq:g_r(tau)}, \eqref{eq:eta_delta-g^[R](tau)},
 \begin{align}
   \defineNotation[F-sbar-rbar-m-t]{F_{\bar{s}, \bar{r}, m, t}(\tau)}
   &:= \divisorprod{N} \eta(\delta\tau)^{s_{\delta}}
-    \genprod[N] \eta_{\delta,g}^{[R]}(\tau)^{s_{\delta,g}}
+    \genprod[N] \eta_{\delta,g}(\tau)^{s_{\delta,g}}
     \cdot p_{\bar{r},m,t}(\tau)
   \notag\\
   &=
@@ -4235,82 +4609,6 @@ Similar to Theorem~\ref{thm:RaduConditions} we have the following
 theorem.
 
 
-\begin{Theorem}
-  \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
-  \label{thm:condition-co-eta-quotient-gamma1}
-  Let $(N, M, \bar{r}, m, t) \in \bar{\Delta}^*$ according to
-  Definition~\ref{def:condition-co-eta-quotient-gamma1}.
-  %
-  Furthermore, let $s \in \bar{R}(N)$ and
-  $F_{\bar{s},\bar{r},m,t}(\tau)$ as defined by
-  \eqref{eq:F_sbar-rbar-m-t(tau)} is a modular function for
-  $\Gamma_1(N)$ if and only if $s$ satisfies the following conditions:
-  \begin{gather}
-    \divisorsum{n} s_{\delta,0} + \divisorsum{M} r_{\delta,0} = 0,
-    \label{eq:CDZ-sum=0}
-    \\
-    \sigmainftybar[N]{\bar{s}}
-    % \left(
-    %   \divisorsum{N} \delta s_{\delta,0}
-    %   +
-    %   12 \gensum[N] \delta P_2\left(\frac{g}{\delta}\right) s_{\delta,g}
-    % \right)
-    +
-    m \, \sigmainftybar[M]{\bar{r}}
-    +
-    \frac{1-m^2}{m} (24t + \sigmainftybar[M]{\bar{r}})
-    % \left(
-    %   \divisorsum{M} \frac{r_{\delta,0}}{\delta}
-    %   +
-    %   12 \gensum[M] \delta P_2\left(\frac{g}{\delta}\right) r_{\delta,g}
-    % \right)
-    \equiv_{24}
-    0,
-    \label{eq:CDZ-sigmainfinity=0}
-    \\
-    \sigmazerobar[N]{\bar{s}}
-    % \left(
-    %   \divisorsum{N} \frac{s_{\delta,0}}{\delta}
-    %   +
-    %   2 \gensum[N] \frac{s_{\delta,g}}{\delta}
-    % \right)
-    +
-    \frac{N \, m}{M}
-    \sigmazerobar[M]{\bar{r}}
-    % \left(
-    %   \divisorsum{M} \frac{r_{\delta,0}}{\delta}
-    %   +
-    %   2 \gensum[M] \frac{r_{\delta,g}}{\delta}
-    % \right)
-    \equiv_{24}
-    0,
-    \label{eq:CDZ-sigma0=0}
-  \end{gather}
-  and for any integer $0<a<12N$ with $\gcd(a,6)=1$ and $a \equiv_N 1$,
-  \begin{gather}
-    \divisorprod{N} \jacobisymbol{\delta}{a}^{\abs{s_{\delta,0}}}
-    \divisorprod{M} \jacobisymbol{m \delta}{a}^{\abs{r_{\delta,0}}}
-    \unityPower{\frac{a-1}{2}
-      \left[
-      \gensum[N] \left( \frac{g}{\delta} - \frac{1}{2}\right) s_{\delta,g}
-      +
-      \gensum[M] \left( \frac{g}{\delta} - \frac{1}{2}\right) r_{\delta,g}
-      \right]
-    }
-    =
-    1.
-    \label{eq:CDZ-productsquare}
-  \end{gather}
-  Note that in \eqref{eq:CDZ-sigma0=0} the expression
-  $\jacobisymbol{\delta}{a}$ denotes the Jacobi symbol.
-\end{Theorem}
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Find ``$\Gamma_1(N)$-modular'' cofactor with only pole
   at $\infty$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4399,6 +4697,4 @@ in order to find $c_1,\ldots, c_k$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\printbibliography
-\printindex
 \end{document}
