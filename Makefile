@@ -98,6 +98,7 @@ SPADFILES=4ti2 qfunct cachedpow cachedqpochpow \
   qetamodfunexp \
   qetamodpkg \
   qetaqmspecs \
+  qetarep \
   qetatool \
   qetasamba \
   qetasomos \

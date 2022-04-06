@@ -1,0 +1,194 @@
+-------------------------------------------------------------------
+---
+--- FriCAS QEta
+--- Copyright (C) 2022  Ralf Hemmecke <ralf@hemmecke.org>
+---
+-------------------------------------------------------------------
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------
+
+OF==>OutputForm
+display77(x) ==> display((x::OF)::Formatter(Format1D))
+yof x ==> x :: Symbol :: OF
+dbgPrint(x,y) ==> display77([yof ":> ", yof x, y::OF]$List(OF))
+tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
+
+)if LiterateDoc
+\documentclass{article}
+\usepackage{qeta}
+\externaldocument{qeta}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Recognize (generalized) eta quotients from $q$-series}
+\author{Ralf Hemmecke}
+\date{06-Apr-2022}
+\maketitle
+\begin{abstract}
+  The package \qetatype{QEtaRepresentaion} tries to recognize a
+  generalized eta-quotient from its $q$-series representation.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helper macros}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Now some abbreviations for common domains.
+)endif
+
+PP ==> PositiveInteger
+ZZ ==> Integer
+QQ ==> Fraction ZZ
+LZZ ==> List ZZ
+LLZZ ==> List LZZ
+INDICES ==> LLZZ
+EQI ==> EtaQuotientInfinity
+SPEC ==> QEtaSpecification
+eqSPEC ==> etaQuotientSpecification $ SPEC
+
+)if LiterateDoc
+%$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{P QEtaRepresentation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The package \texttt{QEtaRepresentation} implements functions that try
+to recognize generalized eta-quotients from (truncated) $q$-series.
+
+The algorithm for eta-quotients is simple. If the given $q$-series $f$
+starts with $1+e*q^\delta+O(\delta+1)$ then, we collect the
+specification $[[\delta,-e]]$ (which corresponds to
+$\eta(\delta\tau)^e$), replace $f$ by $f \eta(\delta\tau)^e$ and
+repeat the process up to the required precision.
+
+A similar algorithm is used for generalized eta-quotients, but then a
+level $N$ is given and we try to replace $f$ by $f J(N,\delta)^e$
+where $J$ stands for the \texttt{jacobiFunction} as defined in the
+\texttt{QFunctions} package and collect the specification
+$[[nn,\delta,-e],[nn,\delta,-e]]$.
+
+)endif
+
+
+)abbrev package QETAREP QEtaRepresentation
+++ QEtaRepresentation implements functions to represent a $q$-series
+++ as a (generalized) eta-quotient.
+QEtaRepresentation(): Exports == Implementation where
+  C ==> ZZ
+  L1 C ==> QEtaLaurentSeries C
+  REC ==> Record(fspec: SPEC, fexp: QQ, fser: L1 C)
+  Exports ==> with
+    etaQuotientSpecification: (L1 C, PP) -> REC
+      ++ etaSpecification(s,n) assumes that s=q^a*t and t is a Taylor
+      ++ series with constant term 1 and returns [spec,e,r], i.e., an
+      ++ eta-quotient specification together with a series r such that
+      ++ if u=etaQuotientInfintiy(spec), then t and eulerExpansion(u)
+      ++ have the same coefficients up to the coefficient of q^n,
+      ++ a=e+eulerExponent(u), and t=r*eulerExpansion(u).
+      ++
+      ++ Only pure eta-quotients are returned. In fact, the call
+      ++ etaSpecification(s,n) is equivalent to
+      ++ etaSpecification(idxs,s,n) for idxs=[[d] for d in 1..n].
+      ++
+      ++ The function basically fails if order(eulerExpansion(r),n)<n.
+
+    etaQuotientSpecification: (PP, L1 C, PP) -> REC
+      ++ etaSpecification(nn,s,n) assumes that s=q^a*t and t is a
+      ++ Taylor series with constant term 1 and returns [spec,e,r],
+      ++ i.e., an eta-quotient specification together with a series r
+      ++ such that if u=etaQuotientInfintiy(spec), then t and
+      ++ eulerExpansion(u) have the same coefficients up to the
+      ++ coefficient of q^n, a=e+eulerExponent(u), and
+      ++ t=r*eulerExpansion(u).
+      ++
+      ++ The specification may contain generalized eta-quotients and
+      ++ will be of level nn. In fact, it is equivalent to
+      ++ etaQuotientSpecification(idxs, s, n) for
+      ++ idxs:=concat(eidxs,pidxs) where
+      ++ pidxs=[[nn,g] for g in 1..floor((nn-1)/2)] and
+      ++ eidx=[nn/2,nn] if nn is even and eidxs=[nn] for odd nn.
+      ++
+      ++ The function basically fails if order(eulerExpansion(r),n)<n.
+
+    etaQuotientSpecification:(INDICES, L1 C, PP) -> REC
+      ++ etaSpecification(idxs,s,n) assumes that s=q^a*t and t is a
+      ++ Taylor series with constant term 1 and returns [spec,e,r],
+      ++ i.e., an eta-quotient specification together with a series r
+      ++ such that if u=etaQuotientInfintiy(spec), then t and
+      ++ eulerExpansion(u) have the same coefficients up to the
+      ++ coefficient of q^n, a=e+eulerExponent(u), and
+      ++ t=r*eulerExpansion(u).
+      ++
+      ++ The specification will contain only indices from idxs.
+      ++
+      ++ The function basically fails if order(eulerExpansion(r),n)<n.
+
+  Implementation ==> add
+
+    -- local
+    -- find index returns empty list if order(s-1,n+1)>n or
+    -- no proper index can be found.
+    findIndex(idxs: INDICES, s: L1 C, n: PP): LZZ ==
+      d: ZZ := order(s-1,n+1)
+      d > n => empty()
+      -- We look for an entry [d] ord [nn,d] where nn>2*d in idxs.
+      for idx in idxs repeat
+          one?(#idx) =>
+             idx.1=d => return idx
+          idx.2=d and idx.1>2*d => return idx
+      return empty() -- nothing found
+
+    etaQuotientSpecification(idxs: INDICES, s: L1 C, n: PP): REC ==
+        -- Since we require s to be of the form q^a*(1+O(q)) we can
+        -- apply the unrestricted order function without having to
+        -- fear that it runs indefinitely.
+        r: L1 C := removeZeroes(n+1, s) -- there is a non-zero coefficient
+        a: ZZ := order r
+        r := r * monomial(1, -a)
+        not one? leadingCoefficient r =>
+            error "series must have leading coefficient equal to 1"
+        spec: SPEC := 1
+        while not empty?(idx := findIndex(idxs, r, n)) repeat
+            t: L1 C := r-1
+            d: ZZ := order(t,n+1)
+            c: C := - leadingCoefficient t
+            ispec: SPEC := etaQuotientSpecification [concat(idx, c)]
+            spec := spec * ispec
+            h := eulerExpansion(etaQuotientInfinity(inv ispec)$EQI(C))
+            r := r * h
+        return [spec, a/1 - (1/24)*sigmaInfinity(spec), r]$REC
+
+    etaQuotientSpecification(nn: PP, s: L1 C, n: PP): REC ==
+        d: ZZ := floor(((nn::ZZ)-1)/2)$QQ
+        idxs: LLZZ := cons([nn],[[nn, g] for g in 1..d])
+        if even? nn then idxs := cons([floor((nn::ZZ)/2)$QQ],idxs)
+        etaQuotientSpecification(idxs, s, n)
+
+    etaQuotientSpecification(s: L1 C, n: PP): REC ==
+        idxs: LLZZ := [[d] for d in 1..n]
+        etaQuotientSpecification(idxs, s, n)
+
+)if LiterateDoc
+\end{document}
+)endif

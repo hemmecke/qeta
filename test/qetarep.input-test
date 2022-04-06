@@ -1,0 +1,214 @@
+-- -*- coding: utf-8 -*-
+-- $$\newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}$$
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # Recognize eta-quotient
+
+
+-- This worksheet demonstrates that some generalized eta-quotients
+-- with index $(\delta,g)$ can be expressed by an ordinary
+-- eta-quotient.
+--
+-- Let $N$ be a positive integer and
+-- $\delta$ be a positive divisor of $N$.
+-- Furthermore let $0 \le g \le \delta$.
+--
+-- With $P_2(x) = \{x\}^2 - \{x\} + \frac{1}{6}$
+-- (where $\{x\}= x-\lfloor x \rfloor$ is the fractional
+-- part of x) define
+-- \begin{align}
+--   \eta_{\delta,g}(\tau)
+--   &:=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+--   \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+--   \notag\\
+--   &=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \prod_{n=1}^\infty (1-q^{\delta (n-1)+g})(1-q^{\delta n-g})
+--   \notag\\
+--   &=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \qPochhammer{q^{g}}{q^\delta} \qPochhammer{q^{\delta-g}}{q^\delta}.
+-- \end{align}
+--
+-- Clearly,
+-- $$
+-- \eta_{\delta,g} = \eta_{\delta, \delta - g}.
+-- $$
+--
+-- Since
+-- \begin{align}
+--   \eta_{\delta,0}(\tau)
+--   &=
+--   \eta(\delta\tau)^2
+--   \\
+--   \eta_{\delta,\frac{\delta}{2}}(\tau)
+--   &=
+--   \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2},
+-- \end{align}
+-- we can restrict $g$ to $0 < g < \frac{\delta}{2}$, if we
+-- take ordinary eta-functions into account.
+--
+-- Because of
+-- \begin{align}
+--   P_2\!\left(\frac{g}{\delta}\right)
+--     &=
+--   \sum_{i=0}^{k-1} k P_2\!\left(\frac{g + \delta i}{\delta k}\right)
+-- \end{align}
+-- and
+-- \begin{align}
+--   \qPochhammer{q^{g}}{q^\delta}
+--     &=
+--   \prod_{m=1}^\infty \bigl(1-q^{\delta m + g}\bigr)
+--     =
+--   \prod_{n=1}^\infty \prod_{i=0}^{k-1} \bigl(1-q^{\delta (k n + i) + g}\bigr)
+--     =
+--   \prod_{i=0}^{k-1} \prod_{n=1}^\infty \bigl(1-q^{N n + \delta i + g}\bigr)
+--     =
+--   \prod_{i=0}^{k-1} \qPochhammer{q^{\delta i + g}}{q^N}
+-- \end{align}
+-- we have
+-- \begin{align}
+--     \eta_{\delta,g}(\tau)
+--     &=
+--     \prod_{i=0}^{k-1} \eta_{N,\delta i + g}(\tau).
+-- \end{align}
+-- Therefore, it is enough if for some level $N$ we only
+-- consider $\eta_{N,g}$, since the potential
+-- $\eta_{\delta,g}$ for $\delta | N$ are redundant.
+--
+-- The implementation, however, allows to work with all possible index pairs
+-- $(\delta, g)$ for $\delta | N$.
+
+-- # Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+
+-- +
+)set mess type off
+)set mess time off
+C ==> QQ
+
+)read convenience.input )quiet
+)set stream calc 2
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+)set output algebra on
+)set output formatted off
+
+-- # Rogers Ramanujan Continued Fraction
+
+-- +
+-------------------------------------------------------------------
+--test:RogersRamanujaR
+-------------------------------------------------------------------
+-- -
+
+
+-- Rogers-Ramanujan continued fraction.
+-- \begin{gather*}
+--   R(q)
+--     =
+--   q^{\frac15}
+--   \dfrac{1}{1+\dfrac{q}{1+\dfrac{q^2}{1+\dfrac{q^3}{1+\ddots}}}}
+--     =
+--   q^{\frac15}
+--   \frac{\qPochhammer{q,q^4}{q^5}}
+--        {\qPochhammer{q^2,q^3}{q^5}}
+--     =
+--   \frac{\eta_{5,1}(\tau)}{\eta_{5,2}(\tau)}
+-- \end{gather*}
+--
+-- \begin{align}
+-- \frac{1}{R(q)^5} - R(q)^5
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- %\tag{1.2}
+-- \end{align}
+--
+-- \begin{align}
+-- \frac{\eta_{5;2}(\tau)^5}{\eta_{5;1}(\tau)^5}
+-- -
+-- \frac{\eta_{5;1}(\tau)^5}{\eta_{5;2}(\tau)^5}
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- %\tag{1.5}
+-- \end{align}
+--
+-- We try to recognize $\frac{\eta(\tau)^6}{\eta(5\tau)^6}$
+-- from the $q$-series.
+
+)set stream calc 30
+rrspec := eqSPEC [[5,1,1],[5,2,-1]];
+rr5 := expansion specEQI(ZZ)(rrspec^5)
+ir5 := expansion specEQI(ZZ)(inv(rrspec^5))
+)set stream calc 40
+f := ir5 - rr5 - 11
+
+rec := etaQuotientSpecification([[1],[5]],f,20)
+assertEquals(rec.fspec, eqSPEC [[1,6],[5,-6]])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Sum = eta-quotient
+
+-- +
+-------------------------------------------------------------------
+--test:GH
+-------------------------------------------------------------------
+-- -
+-- \begin{align}
+-- G(q)
+-- &=
+-- \sum_{n=0}^\infty \frac{q^{n^2}}{(q;q)_n}
+-- =
+-- \prod_{n=0}^\infty \frac{1}{(1-q^{5n+1})(1-q^{5n+4})}
+-- =
+-- \frac{1}{\qPochhammer{q,q^4}{q^5}}
+-- \\
+-- H(q)
+-- &=
+-- \sum_{n=0}^\infty \frac{q^{n(n+1)}}{(q;q)_n}
+-- =
+-- \prod_{n=0}^\infty \frac{1}{(1-q^{5n+2})(1-q^{5n+3})}
+-- =
+-- \frac{1}{\qPochhammer{q^2,q^3}{q^5}}
+-- \end{align}
+
+q := monomial(1,1)$L1(ZZ);
+qp ==> qPochhammer $ QFunctions(ZZ, L1 ZZ );
+
+g := reduce(+,[q^(n^2)/qp(1,1,1,n) for n in 0..20]);
+rec := etaQuotientSpecification(5,g,20)
+assertEquals(rec.fspec, eqSPEC [[5,1,-1]])
+gg := eulerExpansion specEQI(ZZ)(rec.fspec);
+assertEquals(order(g-gg,400),400)
+
+h := reduce(+,[q^(n*(n+1))/qp(1,1,1,n) for n in 0..20]);
+rec := etaQuotientSpecification(5,h,20)
+assertEquals(rec.fspec, eqSPEC [[5,2,-1]])
+hh := eulerExpansion specEQI(ZZ)(rec.fspec);
+assertEquals(order(h-hh,400), 400)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
