@@ -83,6 +83,7 @@ ZZ ==> Integer
 QQ ==> Fraction ZZ
 MZZ ==> Matrix ZZ -- consider only 2x2 matricies
 SL2Z ==> MZZ -- matrices with determinant = 1
+VZZ ==> Vector ZZ
 LZZ ==> List ZZ
 LLZZ ==> List LZZ
 LSL2Z ==> List SL2Z
@@ -436,7 +437,7 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
       ++ respective (delta, g) pair. Note that the pure eta-functions
       ++ are indexed via (delta, -1).
  == add
-    HT ==> XHashTable(LZZ, SymbolicEtaGamma)
+    HT ==> XHashTable(VZZ, SymbolicEtaGamma)
       -- mapping delta to \eta_{\delta,m,\lambda}
     Rep ==> Record(
               fspec: SPEC,   -- the defining specification of the eta-quotient
@@ -472,7 +473,7 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
             g: ZZ := specSubindex l
             e: ZZ := specExponent l
             ed := eta(delta, g, m, lambda, gamma)$SymbolicEtaGamma
-            h[delta, g] := ed
+            h(vector [delta, g]) := ed
             rat := rat * rationalPrefactor(ed)^e
             qexponent  := qexponent  + e * qExponent(ed)
             uexponent  := uexponent  + e * unityExponent(ed)
@@ -483,7 +484,7 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
         per [spec, m, lambda, gamma, rat, uexponent, qexponent, cdexponent, h]
 
     definingSpecification(x: %): SPEC == xx.fspec
-    elt(x: %, idx: LZZ): SymbolicEtaGamma == xx.feta.idx
+    elt(x: %, idx: LZZ): SymbolicEtaGamma == (xx.feta)(vector idx)
     multiplier(x: %): PP == xx.fmultiplier
     lambda(x: %): NN == xx.flambda
     transformationMatrix(x: %): SL2Z == xx.fgamma

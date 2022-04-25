@@ -85,6 +85,7 @@ PP ==> PositiveInteger
 NN ==> NonNegativeInteger
 ZZ ==> Integer
 QQ ==> Fraction ZZ
+VZZ ==> Vector ZZ
 LZZ ==> List ZZ
 LLZZ ==> List LZZ
 INDICES ==> LLZZ
@@ -326,7 +327,7 @@ QEtaSpecification: Exports == Implementation where
         per [mm, rpure, []]
 
     etaQuotientSpecification(mm: PP, rbar: LLZZ): % ==
-        h: XHashTable(List ZZ, ZZ) := table() -- to store index,exponent pairs
+        h: XHashTable(VZZ, ZZ) := table() -- to store index,exponent pairs
         for l in rbar | not empty? l repeat
             d: ZZ := first l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
@@ -340,7 +341,8 @@ QEtaSpecification: Exports == Implementation where
                 e := l.3
                 if g < -1 then error "g<-1 not allowed"
             if 2*g>d then g := d-g
-            setelt!(h, [d, g], e + elt(h, [d, g], 0))
+            vdg: VZZ := vector [d, g]
+            setelt!(h, vdg, e + elt(h, vdg, 0))
         -- Now extract the data from the hashtable.
         rpure: LLZZ := empty() -- pure part
         rtilde: LLZZ := empty() -- generalized part
@@ -357,26 +359,31 @@ QEtaSpecification: Exports == Implementation where
 
     purify(x: %): % ==
         mm: PP := level x
-        h: XHashTable(LZZ, ZZ) := table() -- to store index,exponent pairs
+        h: XHashTable(VZZ, ZZ) := table() -- to store index,exponent pairs
         for l in parts x | not empty? l repeat
             d: ZZ := specDelta l
             d <= 0 or not DIVISIBLEBY?(d, mm) => error "d does not divide level"
             g := specSubindex l -- = -1 for in the pure case
             e := specExponent l
-            g = -1 => h.[d,g] := elt(h, [d,g], 0) + e -- iterate
+            vdg: VZZ := vector [d, g]
+            g = -1 => h.vdg := elt(h, vdg, 0) + e -- iterate
             g := positiveRemainder(g, d)
             if 2*g > d then g := d - g
             --Note that \eta_{2g,g}(t)=\eta(g*t)^2/\eta(2*g*t)^2.
             d = 2*g => -- iterate
-                h.[d,-1] := elt(h, [d,-1], 0) - 2*e -- Note that here i=mm*2*g.
-                h.[g,-1] := elt(h, [g,-1], 0) + 2*e
+                vdg := vector [d, -1]
+                h.vdg := elt(h, vdg, 0) - 2*e -- Note that here i=mm*2*g.
+                vdg := vector [g, -1]
+                h.vdg := elt(h, vdg, 0) + 2*e
             -- Note that \eta_{\delta,0}(\tau)=\eta(\delta\tau)^2.
-            zero? g => h.[d,-1] := elt(h, [d,-1], 0) + 2*e
-            h.[d,g] := elt(h, [d,g], 0) + e
+            zero? g =>
+                vdg := vector [d, -1]
+                h.vdg := elt(h, vdg, 0) + 2*e
+            h.vdg := elt(h, vdg, 0) + e
         -- Now extract the data from the hashtable.
         for idx in keys h repeat
             if not zero?(z := h.idx) then
-                l: LZZ := concat(idx,z)
+                l: LZZ := [idx.1, idx.2, z] -- [delta, g, e]
                 if idx.2 = -1 then rpure: LLZZ  := cons(l, rpure)
                               else rtilde: LLZZ := cons(l, rtilde)
         rpure  := sort((a:LZZ,b:LZZ):Boolean +-> a<b, rpure)
