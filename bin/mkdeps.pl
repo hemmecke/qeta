@@ -57,6 +57,7 @@ sub write_dependencies {
     $l="";
     for $d (sort keys %D) {$l = "$l $d"}
     $l =~ s/\.spad/.compile/g;
+    $fn =~ s/\.spad/.compile/;
     if ($l ne "") {print "$fn:$l\n"}
 }
 

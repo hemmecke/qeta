@@ -379,13 +379,13 @@ stamp-sphinx: ${ROOT}/sphinx/source/conf.py
 	${STAMP} $@
 
 # Generate the API documentation into ${API_DIR}/*.rst files.
-stamp-api: abbrev-lines.list stamp-sphinx compile-spad
+stamp-api: compile-spad abbrev-lines.list stamp-sphinx
 	-rm -rf sphinx/build ${API_DIR}
 	$(MKDIR_P) ${API_DIR}
 	((echo ')compile "sphinx/api.spad"'; \
 	  echo ')read projectlibs'; \
 	  echo ")cd ${API_DIR}"; \
-	  echo 'documentAll("${ROOT}/tmp/$<")') \
+	  echo 'documentAll("${ROOT}/tmp/abbrev-lines.list")') \
 	  | $(FRICAS)) > $@
 
 # Call sphinx-build to compile the .rst files into .html files.
