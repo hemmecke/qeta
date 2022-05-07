@@ -46,7 +46,7 @@ SHOW_ON_GITHUB_URL=${PACKAGE_SOURCE_VIEW}/sphinx/source/{path}
 EDIT_ON_GITHUB_URL=${PACKAGE_SOURCE_EDIT}/sphinx/source/{path}
 ###################################################################
 PACKAGE_NAME=QEta
-PACKAGE_VERSION=2.1
+PACKAGE_VERSION=3.0
 PACKAGE_TARNAME=qeta
 PACKAGE_BUGREPORT=ralf@hemmecke.org
 ###################################################################
