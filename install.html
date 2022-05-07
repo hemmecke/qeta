@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QEta installation &#8212; QEta</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FriCAS Installation" href="fricasinstall.html" />
+    <link rel="prev" title="QEta 3.0" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="fricasinstall.html" title="FriCAS Installation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="QEta 3.0"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">QEta</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">QEta installation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="qeta-installation">
+<span id="id1"></span><h1>QEta installation<a class="headerlink" href="#qeta-installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="requirement-fricas">
+<h2>Requirement FriCAS<a class="headerlink" href="#requirement-fricas" title="Permalink to this headline">¶</a></h2>
+<p><strong>QEta</strong> is built on <a class="reference external" href="https://fricas.github.io">FriCAS</a>. If you do not yet have it follow the
+instructions at <a class="reference internal" href="fricasinstall.html#fricas-installation"><span class="std std-ref">FriCAS Installation</span></a> for an installation in a
+Linux environment.</p>
+</div>
+<div class="section" id="installation-steps-for-the-qeta-package">
+<h2>Installation steps for the QEta package<a class="headerlink" href="#installation-steps-for-the-qeta-package" title="Permalink to this headline">¶</a></h2>
+<p>Clone the git repository and compile the sources.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FDIR=$HOME/fricas
+mkdir -p $FDIR
+cd $FDIR
+git clone https://github.com/hemmecke/qeta.git
+cd $FDIR/qeta
+make compile-spad
+</pre></div>
+</div>
+</div>
+<div class="section" id="optional-adapt-some-directories">
+<h2>(optional) Adapt some directories<a class="headerlink" href="#optional-adapt-some-directories" title="Permalink to this headline">¶</a></h2>
+<p>Adapt directories in the test files (extension <code class="docutils literal notranslate"><span class="pre">.input-test</span></code>) so
+that they match your setting.</p>
+<p>This is only needed if you intend to work with these test/demo files.
+These files belong to the QEta testsuite, but might be interesting to
+look into if you want to learn how to call some command.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FDIR=$HOME/fricas
+q=&quot;$FDIR/qeta&quot;
+cd $q
+for f in $(ls test/*.input-test); do \
+  echo $f; \
+  sed -i &quot;s|^)read /home/.*jfricas-test-support.*|)read $q/input/jfricas-test-support.input )quiet|&quot; $f; \
+done
+sed -i &quot;s|^)cd g/qeta/tmp|)cd $q/tmp|&quot; $q/input/jfricas-test-support.input
+</pre></div>
+</div>
+<p>Look, for
+example, into <a class="reference external" href="https://github.com/hemmecke/qeta/blob/master/test/RogersRamanujanContinuedFraction.input-test">RogersRamanujanContinuedFraction.input-test</a>
+where we show that for the Rogers-Ramanujan continued fraction</p>
+<div class="math notranslate nohighlight">
+\[\begin{gather*}
+R(q)
+=
+q^{\frac15}
+\dfrac{1}{1+\dfrac{q}{1+\dfrac{q^2}{1+\dfrac{q^3}{1+\ddots}}}}
+=
+q^{\frac15}
+\frac{(q,q^4;q^5)_\infty}{(q^2,q^3;q^5)_\infty}
+=
+\frac{\eta_{5,1}(\tau)}{\eta_{5,2}(\tau)}
+\end{gather*}\]</div>
+<p>we have the identity</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+U_5\!\left(\frac{R(q)^5}{R(q^5)}\right)
+&amp;=
+U_5\!\left(\frac{R(q^5)}{R(q)^5}\right)
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(U_5\)</span> is the operator that acts as follows:</p>
+<div class="math notranslate nohighlight">
+\[\begin{gather*}
+U_5\left(\sum_{n=k}^\infty a(n)q^n\right)
+=
+\sum_{n=\lceil k/5 \rceil}^\infty a(5n)q^n
+\end{gather*}\]</div>
+</div>
+<div class="section" id="install-4ti2">
+<h2>Install <a class="reference external" href="https://4ti2.github.io">4ti2</a><a class="headerlink" href="#install-4ti2" title="Permalink to this headline">¶</a></h2>
+<p><strong>QEta</strong> builds on <a class="reference external" href="https://4ti2.github.io">4ti2</a> in order to solve integer linear problems.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo apt install 4ti2
+</pre></div>
+</div>
+</div>
+<div class="section" id="optional-install-sagemath">
+<h2>(optional) Install <a class="reference external" href="https://sagemath.org">SageMath</a><a class="headerlink" href="#optional-install-sagemath" title="Permalink to this headline">¶</a></h2>
+<p><strong>QEta</strong> uses a command (run from the terminal)</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make LEVELS=&#39;6 9&#39; er
+</pre></div>
+</div>
+<p>to compute relations among eta quotients of certain levels.
+<strong>QEta</strong> employs the Gröbner engine (slimgb) of the <a class="reference external" href="https://www.singular.uni-kl.de/">Singular</a> computer
+algebra system through its <a class="reference external" href="https://sagemath.org">SageMath</a> interface, since this seems to be
+more efficient than the built-in <a class="reference external" href="https://fricas.github.io">FriCAS</a> Gröbner engine.</p>
+<p>Inside a <a class="reference external" href="https://fricas.github.io">FriCAS</a> session <strong>QEta</strong> does not (yet) reach out to call
+function from <a class="reference external" href="https://sagemath.org">SageMath</a>, i.e. installation of <a class="reference external" href="https://sagemath.org">SageMath</a> is not
+strictly needed and may just consume diskspace on your computer.
+The following command may take 20 min to complete.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>apt install sagemath
+</pre></div>
+</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">QEta installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirement-fricas">Requirement FriCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-steps-for-the-qeta-package">Installation steps for the QEta package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-adapt-some-directories">(optional) Adapt some directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-4ti2">Install 4ti2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-install-sagemath">(optional) Install SageMath</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fricasinstall.html">FriCAS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">QEta API</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/install.rst.txt"
+           rel="nofollow">Show Source</a></li>
+    <li><a href="https://github.com/hemmecke/qeta/blob/master/sphinx/source/install.rst"
+           rel="nofollow">Show on GitHub</a></li>
+    <li><a href="https://github.com/hemmecke/qeta/edit/master/sphinx/source/install.rst"
+           rel="nofollow">Edit on GitHub</a></li>
+  </ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="fricasinstall.html" title="FriCAS Installation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="QEta 3.0"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">QEta</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">QEta installation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015-2020, Ralf Hemmecke.
+    </div>
+  </body>
+</html>

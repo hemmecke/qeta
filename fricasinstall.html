@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FriCAS Installation &#8212; QEta</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="QEta API" href="api/index.html" />
+    <link rel="prev" title="QEta installation" href="install.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="api/index.html" title="QEta API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="QEta installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">QEta</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FriCAS Installation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="fricas-installation">
+<span id="id1"></span><h1>FriCAS Installation<a class="headerlink" href="#fricas-installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="default-installation">
+<h2>Default installation<a class="headerlink" href="#default-installation" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://fricas.github.io">FriCAS</a> comes with an
+<a class="reference external" href="https://fricas.github.io/download.html">Installation Guide</a>
+of how to compile/install it from the
+<a class="reference external" href="https://github.com/fricas/fricas/releases">official FriCAS release</a>.
+Unfortunately, this binary distribution does not work nicely together
+with <a class="reference external" href="https://jfricas.readthedocs.io">jFriCAS</a>  (which is the <a class="reference external" href="https://jupyter.org">Jupyter</a> interface of <a class="reference external" href="https://fricas.github.io">FriCAS</a>).
+Although <strong>QEta</strong> would work perfectly with that distribution, we
+recommend another way to install <a class="reference external" href="https://fricas.github.io">FriCAS</a>.</p>
+</div>
+<div class="section" id="recommended-installation">
+<h2>Recommended installation<a class="headerlink" href="#recommended-installation" title="Permalink to this headline">¶</a></h2>
+<p>Use the following steps to get a running <a class="reference external" href="https://fricas.github.io">FriCAS</a> 1.3.7 together
+with a <a class="reference external" href="https://jupyter.org">Jupyter</a> notebook interface. It will install <a class="reference external" href="https://fricas.github.io">FriCAS</a> in your
+HOME directory (no root access is required) <code class="docutils literal notranslate"><span class="pre">$HOM/fricas</span></code>.</p>
+<p>Download and unpack
+<a class="reference external" href="http://hemmecke.org/fricas/dist/1.3.7/fricas-1.3.7-hunchentoot-bionic.tar.bzip2">fricas-1.3.7-hunchentoot-bionic.tar.bzip2</a>.
+<em>Note that the</em> <code class="docutils literal notranslate"><span class="pre">md5sum</span></code> <em>command just checks the integrity of the tarball.</em></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FDIR=$HOME/fricas
+mkdir -p $FDIR
+cd $FDIR
+wget http://hemmecke.org/fricas/dist/1.3.7/fricas-1.3.7-hunchentoot-bionic.tar.bzip2
+echo &quot;970806b96de599016af71699c5567336 fricas-1.3.7-hunchentoot-bionic.tar.bzip2&quot; | md5sum -c
+tar xjf fricas-1.3.7-hunchentoot-bionic.tar.bzip2
+</pre></div>
+</div>
+<p>Adapt the <code class="docutils literal notranslate"><span class="pre">fricas</span></code> and <code class="docutils literal notranslate"><span class="pre">efricas</span></code> scripts to point to the right paths.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>F=$FDIR
+L=$F/usr/local
+sed -i &quot;s|^exec_prefix=|FRICAS_PREFIX=\&quot;$L\&quot;\nexport FRICAS_PREFIX\nexec_prefix=|&quot; $L/bin/fricas
+sed -i &quot;s|^FRICASCMD=&#39;/usr/local|FRICAS_PREFIX=\&quot;$L\&quot;\nexport FRICAS_PREFIX\nexec_prefix=\&quot;\${FRICAS_PREFIX:-/usr/local}\&quot;\nFRICAS=\&quot;\${exec_prefix}\&quot;&#39;|;s|^export FRICASCMD|export FRICAS\nFRICASCMD=\&quot;\$FRICAS\&quot;\nexport FRICASCMD|;s|quote \&quot;/usr/local|quote \&quot;$L|&quot; $L/bin/efricas
+</pre></div>
+</div>
+<p>If you use the default setting of <code class="docutils literal notranslate"><span class="pre">FDIR</span></code> from above, the relevant
+lines in your <code class="docutils literal notranslate"><span class="pre">$L/bin/fricas</span></code> file should look like this.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FRICAS_PREFIX=&quot;$HOME/fricas/usr/local&quot;
+export FRICAS_PREFIX
+exec_prefix=&quot;${FRICAS_PREFIX:-/usr/local}&quot;
+</pre></div>
+</div>
+<p>And in the <code class="docutils literal notranslate"><span class="pre">efricas</span></code> script like this.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FRICAS_PREFIX=&quot;$HOME/fricas/usr/local&quot;
+export FRICAS_PREFIX
+exec_prefix=&quot;${FRICAS_PREFIX:-/usr/local}&quot;
+FRICAS=&quot;${exec_prefix}&quot;&#39;/lib/fricas/target/x86_64-linux-gnu/bin/fricas&#39;
+export FRICAS
+FRICASCMD=&quot;$FRICAS&quot;
+export FRICASCMD
+</pre></div>
+</div>
+<p>Start FriCAS with one of the following commands.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$FDIR/usr/local/bin/fricas
+$FDIR/usr/local/bin/efricas
+</pre></div>
+</div>
+<p>Of course, you must have Emacs installed for the <code class="docutils literal notranslate"><span class="pre">efricas</span></code>
+script to work correctly.</p>
+<p>You might have to install</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo apt install xfonts-75dpi xfonts-100dpi
+</pre></div>
+</div>
+<p>and restart the X server (log out and log in again) in case the font
+in HyperDoc does not look pretty.</p>
+<p>That is, however, not necessary, if you do not intend to use HyperDoc
+a lot and rather look at the <a class="reference external" href="https://fricas.github.io">FriCAS</a> homepage in order to find
+relavant information.</p>
+<p>Set the PATH in <code class="docutils literal notranslate"><span class="pre">$HOME/.bashrc</span></code>.</p>
+<p>Edit the file <code class="docutils literal notranslate"><span class="pre">$HOME/.bashrc</span></code> (or whatever your shell initialization
+resource is) and put in somthing like the following in order to make
+all fricas scripts available.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FDIR=$HOME/fricas
+export PATH=$FDIR/usr/local/bin:$PATH
+</pre></div>
+</div>
+<p><strong>Issues with libssl1.0.0.</strong></p>
+<p>If you see</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Error opening shared object &quot;libssl.so.1.0.0&quot;:
+libssl.so.1.0.0: cannot open shared object file: No such file or directory.
+</pre></div>
+</div>
+<p>and you have (on a newer linux distro), for example
+libssl1.1, available, then issue the following command.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo ln -s /usr/lib/x86_64-linux-gnu/libssl.so.1.1 /usr/lib/x86_64-linux-gnu/libssl.so.1.0.0
+</pre></div>
+</div>
+<p>On Ubuntu 22.04 it would be</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo ln -s /usr/lib/x86_64-linux-gnu/libssl.so.3 /usr/lib/x86_64-linux-gnu/libssl.so.1.0.0
+</pre></div>
+</div>
+<p>If you have no sudo right do the following.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ln -s /usr/lib/x86_64-linux-gnu/libssl.so.3 $L/lib/libssl.so.1.0.0
+sed -i &quot;s|^export FRICAS\$|export FRICAS\nLD_LIBRARY_PATH=\&quot;\$LD_LIBRARY_PATH:$L/lib\&quot;\nexport LD_LIBRARY_PATH|&quot; $L/bin/fricas
+sed -i &quot;s|^export FRICAS\$|export FRICAS\nLD_LIBRARY_PATH=\&quot;\$LD_LIBRARY_PATH:$L/lib\&quot;\nexport LD_LIBRARY_PATH|&quot; $L/bin/efricas
+</pre></div>
+</div>
+<p>That is your <code class="docutils literal notranslate"><span class="pre">fricas</span></code> and <code class="docutils literal notranslate"><span class="pre">efricas</span></code> scripts should have the
+following inside.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH:$HOME/fricas/usr/local/lib&quot;
+export LD_LIBRARY_PATH
+</pre></div>
+</div>
+<p>If you cannot solve this problem, because you do not have root access
+on your machine or cannot install libssl, then remove the <code class="docutils literal notranslate"><span class="pre">$FDIR</span></code>
+directory, replace the line</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>wget http://hemmecke.org/fricas/dist/1.3.7/fricas-1.3.7-hunchentoot-bionic.tar.bzip2
+</pre></div>
+</div>
+<p>from above by</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>wget https://github.com/fricas/fricas/releases/download/1.3.7/fricas-1.3.7.amd64.tar.bz2
+</pre></div>
+</div>
+<p>and repeat the steps from above. That would give you the default
+installation of <a class="reference external" href="https://fricas.github.io">FriCAS</a>.
+In that case, however, jFriCAS cannot made to work and you can stop
+here with the installation of <a class="reference external" href="https://fricas.github.io">FriCAS</a>.</p>
+</div>
+<div class="section" id="jfricas-installation">
+<h2>jFriCAS installation<a class="headerlink" href="#jfricas-installation" title="Permalink to this headline">¶</a></h2>
+<p>Of course, <a class="reference external" href="https://jfricas.readthedocs.io">jFriCAS</a> needs <a class="reference external" href="https://jupyter.org">Jupyter</a> in a reasonably recent version (at
+least 4).</p>
+<p>Install prerequisites if not yet available (needs root access, but it
+may already be installed on your system).</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo apt install python3-pip python3-venv
+</pre></div>
+</div>
+<p>Prepare directories and download jfricas.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FDIR=$HOME/fricas
+mkdir -p $FDIR/venv
+cd $FDIR
+git clone https://github.com/hemmecke/jfricas
+</pre></div>
+</div>
+<p>Install prerequisites, Jupyter and jfricas.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python3 -m venv $FDIR/venv/jfricas
+source $FDIR/venv/jfricas/bin/activate
+pip3 install wheel jupyter
+cd $FDIR/jfricas
+pip3 install .
+jupyter kernelspec list
+</pre></div>
+</div>
+<p>The output of the last command should show something similar to the
+following.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Available kernels:
+  jfricas     /home/hemmecke/fricas/venv/jfricas/share/jupyter/kernels/jfricas
+  python3     /home/hemmecke/fricas/venv/jfricas/share/jupyter/kernels/python3
+</pre></div>
+</div>
+<p>Create the script <code class="docutils literal notranslate"><span class="pre">jfricas</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cat &gt; $FDIR/usr/local/bin/jfricas &lt;&lt;EOF
+source $FDIR/venv/jfricas/bin/activate
+jupyter notebook \$1
+EOF
+chmod +x $FDIR/usr/local/bin/jfricas
+</pre></div>
+</div>
+<p>Start a new terminal or set the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> on the commandline like above
+and start <code class="docutils literal notranslate"><span class="pre">jfricas</span></code> from any directory.
+Note that inside jupyter the place from where you start
+<code class="docutils literal notranslate"><span class="pre">jfricas</span></code> is the place where your notebooks will be stored.</p>
+<p>If you want to enjoy nice looking output, then type the following
+inside a notebook cell.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>)set output algebra off
+setFormat!(FormatMathJax)$JFriCASSupport
+</pre></div>
+</div>
+<p>You can go back to standard 2D ASCII output as follows.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>)set output formatted off
+)set output algebra on
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-jupytext">
+<h2>Install JupyText<a class="headerlink" href="#install-jupytext" title="Permalink to this headline">¶</a></h2>
+<p>Ordinary Jupyter notebooks use a special format in order to store
+their content. They have the file extension <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code>. It is an
+incredible feature to be able to load and store notebooks as ordinary
+FriCAS <code class="docutils literal notranslate"><span class="pre">.input</span></code> files. You can even synchronize between the
+<code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> and <code class="docutils literal notranslate"><span class="pre">.input</span></code> formats.</p>
+<p>There are two types of cells in Jupyter Markdown documentation
+cells and execution cells. With the help of JupyText, Markdown
+cells will appear inside an <code class="docutils literal notranslate"><span class="pre">.input</span></code> file as <a class="reference external" href="https://fricas.github.io">FriCAS</a>
+comments and execution cells appear without the <code class="docutils literal notranslate"><span class="pre">&quot;--</span> <span class="pre">&quot;</span></code>
+comment prefix.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>source $FDIR/venv/jfricas/bin/activate
+pip3 install jupytext
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">$HOME/.jupyter/jupyter_notebook_config.py</span></code> does not yet exist,
+generate it.
+<em>Note that this is outside the</em> <code class="docutils literal notranslate"><span class="pre">$FDIR</span></code> <em>directory.</em></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>jupyter notebook --generate-config
+</pre></div>
+</div>
+<p>Make Jupytext available.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sed -i &#39;s|^# *c.NotebookApp.contents_manager_class =.*|c.NotebookApp.contents_manager_class = &quot;jupytext.TextFileContentsManager&quot;|;s|^# *c.NotebookApp.use_redirect_file = .*|c.NotebookApp.use_redirect_file = False|&#39; $HOME/.jupyter/jupyter_notebook_config.py
+</pre></div>
+</div>
+<p>Enable the spad language and set the respective parameters.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cd $HOME
+J=$(find $FDIR/venv -type d | grep &#39;/site-packages/jupytext$&#39;)
+</pre></div>
+</div>
+<p>Edit the file <code class="docutils literal notranslate"><span class="pre">$J/languages.py</span></code> and change appropriately.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#+BEGIN_ASCII
+# Jupyter magic commands that are also languages
+_JUPYTER_LANGUAGES = [&#39;spad&#39;, &quot;R&quot;, ...]
+
+# Supported file extensions (and languages)
+# Please add more languages here (and add a few tests) - see CONTRIBUTING.md
+_SCRIPT_EXTENSIONS = {
+   &quot;.py&quot;: {&quot;language&quot;: &quot;python&quot;, &quot;comment&quot;: &quot;#&quot;},
+    &#39;.input&#39;: {&#39;language&#39;: &#39;spad&#39;, &#39;comment&#39;: &#39;--&#39;},
+    &#39;.input-test&#39;: {&#39;language&#39;: &#39;spad&#39;, &#39;comment&#39;: &#39;--&#39;},
+    ...
+}
+</pre></div>
+</div>
+<p>Put the following input into the file <code class="docutils literal notranslate"><span class="pre">$FDIR/foo.input</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-- # FriCAS demo notebook
+
+)set output algebra off
+setFormat!(FormatMathJax)$JFriCASSupport
+
+-- Here we compute $\frac{d^2}{dx^2} sin(x^3)$.
+
+D(sin(x^3),x,2)
+
+-- We compute the indefinite integral $\int \sin x \cdot e^x dx$.
+
+integrate(exp(x)*sin(x), x)
+</pre></div>
+</div>
+<p>Then start via <code class="docutils literal notranslate"><span class="pre">jfricas</span></code>, load <code class="docutils literal notranslate"><span class="pre">foo.input</span></code> and enjoy.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cd $FDIR
+jfricas
+</pre></div>
+</div>
+<p>You can also download or clone the demo notebooks from
+<a class="reference external" href="https://github.com/fricas/fricas-notebooks/">https://github.com/fricas/fricas-notebooks/</a> and compare them with what
+you see at
+<a class="reference external" href="https://fricas.github.io/fricas-notebooks/index.html">FriCAS Demos and Tutorials</a>.</p>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">QEta installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FriCAS Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#default-installation">Default installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recommended-installation">Recommended installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jfricas-installation">jFriCAS installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-jupytext">Install JupyText</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">QEta API</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/fricasinstall.rst.txt"
+           rel="nofollow">Show Source</a></li>
+    <li><a href="https://github.com/hemmecke/qeta/blob/master/sphinx/source/fricasinstall.rst"
+           rel="nofollow">Show on GitHub</a></li>
+    <li><a href="https://github.com/hemmecke/qeta/edit/master/sphinx/source/fricasinstall.rst"
+           rel="nofollow">Edit on GitHub</a></li>
+  </ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="api/index.html" title="QEta API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="QEta installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">QEta</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FriCAS Installation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015-2020, Ralf Hemmecke.
+    </div>
+  </body>
+</html>
