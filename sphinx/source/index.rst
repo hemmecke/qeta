@@ -30,8 +30,6 @@ by Silviu Radu (2015) and the *Samba* algorithm from the article `"Dancing
 Samba with Ramanujan Partition Congruences"
 <https://doi.org/10.1016/j.jsc.2017.02.001>`_ by Ralf Hemmecke (2018).
 
-In the last article appears
-
 In addition it implements the algorithm from the article
 `"Construction of all Polynomial Relations among Dedekind Eta Functions
 of Level N" <https://doi.org/10.1016/j.jsc.2018.10.001>`_
