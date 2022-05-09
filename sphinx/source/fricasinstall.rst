@@ -94,7 +94,8 @@ all fricas scripts available.
    FDIR=$HOME/fricas
    export PATH=$FDIR/usr/local/bin:$PATH
 
-**Issues with libssl1.0.0.**
+Issues with libssl1.0.0
+^^^^^^^^^^^^^^^^^^^^^^^
 
 If you see
 ::
@@ -143,6 +144,16 @@ and repeat the steps from above. That would give you the default
 installation of FriCAS_.
 In that case, however, jFriCAS cannot made to work and you can stop
 here with the installation of FriCAS_.
+
+
+Install GMP
+^^^^^^^^^^^
+
+For best performance you should install the GMP library (otherwise
+FriCAS will use slower routines for arithmetic on large numbers).
+::
+
+   sudo apt install libgmp-dev
 
 
 
