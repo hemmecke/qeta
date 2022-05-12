@@ -1,0 +1,1340 @@
+-- -*- coding: utf-8 -*-
+-- $
+-- \newcommand{\setC}{\mathbb{C}}
+-- \newcommand{\setH}{\mathbb{H}}
+-- \newcommand{\setN}{\mathbb{N}}
+-- \newcommand{\setQ}{\mathbb{Q}}
+-- \newcommand{\setZ}{\mathbb{Z}}
+-- \newcommand{\modularOrbit}[1]{\mathcal{O}_{#1}}
+-- \newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}
+-- $
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- # QEta Tutorial
+
+
+-- This file contains a short tutorial of the features
+-- of [QEta](https://hemmecke.github.io/qeta).
+-- Follow the instructions on the
+-- [QEta website](https://hemmecke.github.io/qeta)
+-- in order to install it.
+--
+-- This notebook itself is available in a text form as
+-- [QEtaTutorial.input-test](https://github.com/hemmecke/qeta/blob/master/test/QEtaTutorial.input-test).
+-- You just have to rename the file extension to `.input`
+-- in order to run it through the computer algebra system
+-- [FriCAS](https://fricas.github.io).
+--
+-- In order to test the commands appearing here,
+-- the tutorial contains a number of commands like
+-- `assertTrue` or `assertEquals`, that can be run
+-- automatically as a testsuite check.
+
+-- ## Init
+
+-- +
+-------------------------------------------------------------------
+--setup
+-------------------------------------------------------------------
+-- -
+
+-- To work with **QEta**, you first have to compile and load it.
+-- Compilation must only be done once from a terminal, inside
+-- the directory where the **QEta** source code resides.
+-- In the following we assume that the **QEta** source code lives
+-- in the `fricas/qeta` subdirectory of your home directory.
+--
+--     cd $HOME/fricas/qeta
+--     make compile-spad
+--
+-- That will compile everything into `fricas/qeta/tmp`.
+--
+-- To load **QEta**, do the following inside a Jupyter notebook
+-- (running the FriCAS kernel).
+--
+--     )cd
+--     )cd fricas/qeta/tmp
+--     )set messaget time off
+--     )set message type off
+--     )read projectlibs.input )quiet
+--     )read qetamacros.input )quiet
+
+-- If you want the output look nicer in the Jupyter notebook,
+-- then issue the following commands.
+--
+--     )set output algebra off
+--     setFormat!(FormatMathJax)$JFriCASSupport
+
+-- In `qetamacros.input` quite a number of macros are defined
+-- that make working with **QEta** functions a bit simpler.
+-- Inside this notebook, we use the abbreviations defined there.
+
+-- In addition to these macros, we define here some abbreviations
+-- for some numbers so that it is clearer what the output option is.
+
+C ==> QQ
+RKI ==> QEtaRamanujanKolbergIdentity(C)
+oo ==> infinity()$Cusp
+qIdentity     ==> 2^0
+expand        ==> 2^1
+nonModular    ==> 2^2
+asExpression  ==> 2^3
+withSubscript ==> 2^4
+)set stream calc 2
+
+-- +
+-------------------------------------------------------------------
+--endsetup
+-------------------------------------------------------------------
+-- -
+
+-- The following cell should only be evaluated, if you want
+-- the traditional 2D ASCII output of FriCAS.
+
+)set output formatted off
+)set output algebra on
+
+-- ## Ramanujan congruences
+
+-- +
+-------------------------------------------------------------------
+--test:RamanujanCongruences
+-------------------------------------------------------------------
+-- -
+
+-- Ramanujan discovered that
+-- \begin{align}
+--   p(5n+4) &\equiv 0 \pmod{5}\label{eq:p5}\\
+--   p(7n+5) &\equiv 0 \pmod{7}\label{eq:p7}\\
+--   p(11n+6) &\equiv 0 \pmod{11}\label{eq:p11}
+-- \end{align}
+-- for all natural numbers $n\in\setN$ where $p(n)$ denotes the number
+-- of partitions of $n$.
+-- See https://en.wikipedia.org/wiki/Ramanujan%27s_congruences.
+
+-- In **QEta** a sequence $(a(n))_{n\geq0}$ given by its
+-- generating series as
+-- \begin{align*}
+-- \sum_{n=0}^\infty a(n)q^n
+-- &=
+-- \prod_{\delta|M} \qPochhammer{q^\delta}{q^\delta}^{r_\delta}
+-- \end{align*}
+-- can be specified by the $(\delta, r_\delta)$ pairs.
+--
+-- For the partition function we have $M=1$ and $r_1=-1$,
+-- so we specify the following.
+
+mm := 1; rspec := eqSPEC [[1,-1]]
+
+-- In the following, we always use that $q=\exp(2\pi i \tau)$.
+
+-- ### $p(5n+4) \equiv 0 \pmod{5}$
+
+-- We want an expansion in terms of eta-functions
+-- $\eta(\tau)$ and $\eta(5\tau)$.
+
+idxs := [[1],[5]];
+
+-- We compute an identities for
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(mn+t)q^n
+-- \end{gather*}
+-- in terms of eta-quotients.
+-- This identity is an identity of modular functions
+-- for $\Gamma_0(5)$.
+
+id := findIdM0(5, rspec, 5, 4, idxs);
+
+pretty(id, expand + asExpression)
+
+-- ### $p(7n+5) \equiv 0 \pmod{7}$
+
+-- We can do similar steps for the Ramanujan congruence
+-- modulo 7.
+
+idxs := [[1],[7]];
+id := findIdM0(7, rspec, 7, 5, idxs);
+pretty(id, expand + asExpression)
+
+-- The variable `id`, in fact, contains all the data to show
+-- the identity in different formats.
+
+-- For example, adding the `nonModular` option, brings the
+-- cofactor of the generating function to the right-hand side.
+
+pretty(id, expand + asExpression + nonModular)
+
+-- The option `qIdentity` shows $q$-Pochhammer symbols instead
+-- of Dedekind eta-functions.
+
+pretty(id, expand + asExpression + nonModular + qIdentity)
+
+-- Since this might sometimes be a too lengthy expression,
+-- we can remove the `asExpression` option and show the identity
+-- with variables where $u_k$ stands for $\qPochhammer{q^k}{q^k}$.
+
+pretty(id, expand + nonModular + qIdentity)
+
+pretty(id, expand + nonModular + qIdentity + withSubscript)
+
+-- Of course, any combination of these options work.
+
+pretty(id, expand + nonModular + withSubscript)
+
+-- In the above formula, $E_\delta$ stands for $\eta(\delta\tau)$.
+
+-- If you need the output for further computation in another
+-- system, you can temporarily switch to
+-- one-dimensional output.
+
+setFormat!(Format1D)$JFriCASSupport
+pretty(id, expand + nonModular)
+setDefault!(defaultPrologue$Format1D,defaultEpilogue$Format1D)$Formatter(Format1D);
+setFormat!(FormatMathJax)$JFriCASSupport
+
+-- Or you can define a macro and then use it.
+
+print1D x ==> display((x::OutputForm)::Formatter(Format1D))
+print1D pretty(id, expand + nonModular)
+
+-- ### $p(11n+6) \equiv 0 \pmod{11}$ (with $\Gamma_0(22)$)
+
+-- The modulo 11 case is a bit more complicated, since
+-- for $\Gamma_0(11)$ we cannot find an identity.
+
+idxs := [[1],[11]];
+id := findIdM0(11, rspec, 11, 6, idxs);
+
+-- This fact is encoded in **QEta** by returning the trivial identity
+-- $0=0$.
+
+pretty(id, qIdentity + expand + nonModular + withSubscript)
+assertEquals(identityPolynomial id, 0);
+
+-- If one needs this in another procedure, one can ask for the
+-- `idenityPolynomial(id)`. If this is 0, then there is no identity
+-- for the respective parameter, i.e. here for $\Gamma_0(11)$
+-- and in terms of eta-functions $\eta(\tau)$ and $\eta(11\tau)$.
+
+-- We can, however, resort to level 22 and then an identity can
+-- be found.
+
+idxs := [[1],[2],[11],[22]];
+id := findIdM0(22, rspec, 11, 6, idxs);
+
+pretty(id, expand + asExpression + qIdentity + nonModular)
+
+-- Even though there are denominators of 4 and 8 in this
+-- representation, it clearly shows that the left-hand side is
+-- divisible by 11.
+--
+-- In fact, the original generating series multiplied by some
+-- cofactor gives a modular function for $\Gamma_0(22)$.
+-- (left-hand side).
+--
+-- It can be represented by a linear combination of eta-quotients with
+-- coefficients in $\setQ$, (right-hand side).
+
+pretty(id, expand + withSubscript)
+
+-- In fact,
+-- [Radu's original algorithm](https://doi.org/10.1016/j.jsc.2014.09.018)
+-- `AB`, as well as
+-- the
+-- [`samba` algorithm](https://doi.org/10.1016/j.jsc.2017.02.001))
+-- (which is implemented in **QEta**)
+-- return a representation as a linear combination of
+-- finitely many eta-quotients over $\setQ[t]$ where $t$
+-- itself is an eta-quotient.
+
+pretty(id, withSubscript)
+
+-- From the "identity polynomial", we see that $p(11n+6)$ is
+-- divisible by 11, i.e. all terms not involving $F$ are
+-- divisible by 11.
+--
+-- Here $F$ corresponds to the left-hand side from above.
+
+11^4*identityPolynomial(id)=0
+
+-- $M_1$ corresponds to the $t$ and the $M_i$ are eta-quotients
+-- with the following specifications.
+
+mspecs := monoidSpecifications id
+
+-- So $M_1=t$ stands for
+-- $\frac{\eta(2\tau)^8 \eta(11\tau)^4}{\eta(\tau)\eta(22\tau)^8}$, etc.
+-- It can be shown easily by functions from **QEta**.
+
+[etaQuotient(x, varEta$RKI) for x in mspecs]
+[qEtaQuotient(x, varPochhammer$RKI) for x in mspecs]
+
+-- ### $p(11n+6) \equiv 0 \pmod{11}$ (with $\Gamma_1(11)$)
+
+-- **QEta** allows to find an identity for the generating
+-- function of $p(11n+6)$ in term of generalized
+-- eta-quotients by an implementation of ideas of
+-- [Chen, Du, and Zhao](https://doi.org/10.1007/s00026-019-00457-4).
+-- This also yields a witness identity for the divisibility
+-- by 11.
+
+idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]];
+id := findIdM1(11, rspec, 11, 6, idxs);
+pretty(id, expand + asExpression + qIdentity + nonModular)
+
+identityPolynomial id
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Kolberg identity for $p(5n+1)$
+
+-- +
+-------------------------------------------------------------------
+--test:KolbergIdentity
+-------------------------------------------------------------------
+-- -
+
+-- [Kolberg (1957)](https://doi.org/10.7146/math.scand.a-10492)
+-- found an identity for the generating function of $p(5n+1)$.
+-- That, however, also involves the generating function for
+-- $p(5n+2)$.
+
+mm := 1; rspec := eqSPEC [[1,-1]];
+
+idxs := [[1],[5]];
+id := findIdM0(5, rspec, 5, 1, idxs);
+pretty(id, expand + asExpression + qIdentity + nonModular)
+
+-- The above identity is based on transformations
+-- with respect to $\Gamma_0(5)$.
+-- In such transformations
+-- $\sum_{n=0}^\infty a(5n+1)q^n$
+-- and
+-- $\sum_{n=0}^\infty a(5n+2)q^n$
+-- cannot be considered separately.
+-- Since they lie in the same orbit with respect to
+-- $\Gamma_0(5)$, only their product can be turned into a
+-- modular function for $\Gamma_0(5)$.
+--
+-- If we consider $\Gamma_1(5)$ and allow
+-- generalized eta-quotients, we get the following
+-- identity.
+
+id1 := findIdM1(5, rspec, 5, 1, [[1],[5],[5,1]]);
+pretty(id1, expand + asExpression + qIdentity + nonModular)
+
+-- Let us take this example for an explanation of what the
+-- variable `id` actually contains.
+
+id
+pretty(id,0)
+
+-- We can extract that information also individually from
+-- the `id` variable.
+
+coSpecification id
+definingSpecification id
+multiplier id
+orbit id
+monoidSpecifications id
+identityPolynomial id
+coefficient id
+alphaInfinity id
+alphaOrbitInfinity id
+
+-- There are more function available that you can apply
+-- to the `id` variable.
+-- <!--
+-- A specification of these function can be found at the
+-- [API description of the domain QEtaRamanujanKolbergIdentity](https://hemmecke.github.io/qeta/api/QEtaRamanujanKolbergIdentity).
+-- -->
+
+-- For example, we can transform the identity into an
+-- equation of FriCAS expressions that can then be
+-- manipulated further.
+
+)set message type on
+eexpr1 := equationX(id, 'p)
+uexpr1 := qequationX(id, 'p)
+)set message type off
+
+-- We can do the same for the generating series of $p(5n+3)$.
+
+id3 := findIdM0(5, rspec, 5, 3, idxs);
+eexpr3 := equationX(id3, 'p)
+uexpr3 := qequationX(id3, 'p)
+
+-- From looking at the right-hand side we easily see that we
+-- can eliminate the $M1$ variable.
+
+eq1 := 25*q*u[5]^10/u[1]^12 * (3*uexpr1 - 2*uexpr3)
+
+-- Let us compare this with the identity for the generating
+-- series of $p(5n+4)$.
+
+id4 := findIdM0(5, rspec, 5, 4, idxs);
+uexpr4 := qequationX(id4, 'p)
+
+-- With a few manipulation we find an identity that already
+-- appears as equation (4.4) in
+-- [Kolberg (1957)](https://doi.org/10.7146/math.scand.a-10492).
+
+eq1 - q*((u[5]^5/u[1]^6)*uexpr4)^2
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Relations among 5-dissections of $p(n)$
+
+-- +
+-------------------------------------------------------------------
+--test:RelationsAmong5Dissections
+-------------------------------------------------------------------
+-- -
+
+-- ### Setting up
+
+-- The above relation can also be found automatically by
+-- **QEta**. The idea is to find a relation for the involved
+-- generating functions in terms of eta-quotients.
+--
+-- Whereas the relation given in the previous section
+-- can be computed while working with ordinary Dedekind
+-- eta-functions, for other relations of this type, we
+-- must employ generalized eta-functions and their
+-- transformations with respect to $\Gamma_1(N)$.
+--
+-- Let us first setup a few helpers, i.e. compute
+-- the identities for the generating functions of
+-- $p(5n+t)$ into the variable `id`.
+
+idxs := [[1],[5],[5,1]]; rspec := eqSPEC [[1,-1]];
+id := findIdM1(5, idxs, rspec, 5, 0, idxs);
+ids := [findIdM1(5, idxs, rspec, 5, t, id) for t in 0..4];
+
+-- ### Generators for relations ideal
+
+QEtaIdeal ==> QEtaIdealHemmeckeCached
+QI1 ==> QEtaIdeal(C,QMOD1)
+idpol(id: RKI, f:Symbol): Pol C == (_
+  sspec := coSpecification id;_
+  mon: Pol(C) := f*etaQuotientMonomial(sspec,char"E",char"Y")$QI1;_
+  ipol: Pol(C) := inv coefficient id * identityPolynomial id - 'F::Pol(C);_
+  mon+ipol)
+
+-- In the following relations we can replace $M1$ by its corresponding
+-- eta-quotient.
+
+[equationX(ids.i,'p) for i in 1..5]
+
+-- We have
+
+mspecs := monoidSpecifications ids.1
+[etaQuotient(x, varEta$RKI) for x in mspecs]
+
+-- Then we introduce $Y_k$ to replace $1/E_k$ and replace the
+-- (fractional) $q$-factor together with the generating series
+-- for $p(5n+k)$ by the variable $f_k$.
+
+fs := [concat("f",string(i-1))::Symbol_
+       = q^alphaOrbitInfinity(ids.i) * orbitProductX(ids.i,'p)_
+           for i in 1..5]
+
+-- With that substitution and bringing everything to one
+-- side. we obtain the following set of polynomials that
+-- represent the relations among the $f_k$ and eta-functions.
+
+fsyms := [lhs x for x in fs];
+mps := [idpol(id,f) for id in ids for f in fsyms]
+
+mspecs := monoidSpecifications first ids;
+eqrels := etaLaurentIdealGenerators(idxs, mspecs, mps)$QI1
+
+assertEquals(eqrels, [_
+  E1*Y1-1, E5*Y5-1, E5_1*Y5_1-1,_
+  -E1^7*Y5^6*Y5_1^2*f0+E1^5*Y5^5*Y5_1^10-3,_
+  -E1^8*Y5^7*Y5_1^4*f1+E1^5*Y5^5*Y5_1^10+2,_
+  -1/2*E1^9*Y5^8*Y5_1^6*f2+E1^5*Y5^5*Y5_1^10-1/2,_
+  E1^10*Y5^9*Y5_1^8*f3-3*E1^5*Y5^5*Y5_1^10-1,_
+  E1^6*Y5^5*f4-5])
+
+-- ### Eliminate generalized eta-quotients
+
+-- The following computation takes about 200 sec and
+-- eliminates the variables $E_k$ and $Y_k$ so that
+-- only the relations among the $f_k$ survive.
+
+)set message time on
+algrels := algebraicRelations(idxs, eqrels, char "f")$QI1;
+)set message time off
+galgrels := [clearDenominator x for x in algrels]
+assertEquals(galgrels, [_
+  4*f4^4+4*f0*f3*f4^2+(-9*f1*f3^2-9*f0^2*f2)*f4+10*f0^2*f3^2,_
+  4*f1*f4^2+(-6*f2*f3-3*f0^2)*f4+5*f0*f1*f3,_
+  4*f2*f4^2+(-3*f3^2-6*f0*f1)*f4+5*f0*f2*f3,_
+  -f3*f4-f0*f2+2*f1^2, -f4^2-2*f0*f3+3*f1*f2, -f0*f4-f1*f3+2*f2^2])
+
+
+-- ### Selected results
+
+-- Among the relations is relation (4.4) of a paper of
+-- [Kolberg (1957)](https://doi.org/10.7146/math.scand.a-10492)
+-- that we have found manually in the previous section.
+
+galgrels.5
+
+
+-- Shown as a relation among the generating series,
+-- it is as follows.
+
+simplify(eval(galgrels.5, fs)) * q^(-7/12)
+
+-- The following identities involve other pairs.
+-- See congruence at bottom of page 86 in
+-- [Kolberg (1957)](https://doi.org/10.7146/math.scand.a-10492).
+
+simplify(eval(galgrels.4, fs)) * q^(-23/60)
+
+simplify(eval(galgrels.6, fs)) * q^(-47/60)
+
+simplify(eval(galgrels.3, fs)) * q^(-39/40)
+simplify(eval(galgrels.2, fs)) * q^(-31/40)
+simplify(eval(galgrels.1, fs)) * q^(-7/6)
+
+-- Altogether, `galgrels` is a Gröbner basis for the
+-- ideal of all relations among these generating series.
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Ideal of relations among eta-functions
+
+-- +
+-------------------------------------------------------------------
+--test:EtaRelations
+-------------------------------------------------------------------
+-- -
+
+-- With similar ideas as above, we can also compute the ideal
+-- of all relations among eta-functions.
+-- The corresponding theory is described in
+-- [“Construction of all Polynomial Relations among Dedekind Eta Functions of Level N”](https://doi.org/10.1016/j.jsc.2018.10.001).
+--
+-- In **QEta** there exists the functions `etaRelations` to
+-- do the computation.
+
+idxs := etaFunctionIndices 6;
+er := etaRelations(idxs) $ QEtaIdealHemmeckeCached(QQ, QMOD0);
+dens := [lcm [denom leadingCoefficient m_
+         for m in monomials r] for r in er];
+[d*r for d in dens for r in er]
+
+-- For bigger levels $N$ the computation becomes increasingly
+-- more involved since it is based on
+-- * computing a monoid basis for the monoid of all eta-quotients
+--   with the help of the program [4ti2](https://4ti2.github.io),
+-- * setting up relations in variables $E_\delta$ and $Y_\delta$
+--   ($\delta$ ranging over all divisors of $N$,
+--   and $E_\delta$ and $Y_\delta$ representing
+--   $\eta(\delta\tau)$ and $1/\eta(\delta\tau)$, respectively),
+-- * eliminating the $Y_\delta$ variables from the system.
+--
+-- Let us consider the case $N=16$.
+
+-- We first compute the the monoid basis.
+
+nn := 16
+idxs := etaFunctionIndices nn
+mspecs := mSPECSInfM0(nn, idxs);
+[etaQuotient(x, varEta$RKI) for x in mspecs]
+
+-- These eta-quotients have the following $q$-expansion.
+
+)set stream calc 4
+[specM0A1(QQ)(x) for x in mspecs]
+
+-- From these expansions the samba algorithm
+-- (see [“Dancing Samba with Ramanujan Partition Congruences”](https://doi.org/10.1016/j.jsc.2017.02.001))
+-- is used to compute an algebra basis of $\setQ[M_1,\ldots,M_4]$
+-- where the $M_k$ represent the eta-quotients above.
+
+QEtaIdeal ==> QEtaIdealHemmeckeCached
+QI0 ==> QEtaIdeal(QQ,QMOD0)
+eqigens := etaQuotientIdealGenerators(mspecs)$QI0
+
+-- Let the elements in the above list be denoted by $z_1,z_2,z_3$.
+-- In terms of the $q$-series we have
+-- \begin{gather*}
+-- \setQ[M_1,\ldots,M_4] =
+-- \{p_0 + p_1 z_1 + p_2 z_2 + p_3 z_3 \mid
+--   p_0,p_1,p_2,p_3\in \setQ[M_1] \}
+-- \end{gather*}
+
+-- By substituting the $M_k$ variables with the respective
+-- eta-functions $E_\delta$, and their inverses $Y_\delta$,
+-- we arrive at the following system.
+
+eligens := etaLaurentIdealGenerators(idxs, mspecs, eqigens)$QI0
+
+-- Now, we must "only" eliminate the $Y_\delta$ variables.
+-- For that we can use the **QEta** interface to the built-in
+-- Gröbner engine of FriCAS.
+--
+-- The following code, basically constructs the domain
+-- $EE$ of exponent vectors that are sorted via degrevlex
+-- among the $Y_\delta$ and $E_\delta$ variables and with
+-- anything in the $Y$-block being bigger than anything in
+-- the $E$-block.
+
+ysyms := indexedSymbols("Y", idxs)$QAuxiliaryTools;
+esyms := indexedSymbols("E", idxs)$QAuxiliaryTools;
+syms := concat [ysyms, esyms];
+dim: NN := # syms;
+dim1: NN := # ysyms; -- want to eliminate those
+EE ==> SplitHomogeneousDirectProduct(dim, dim1, NN)
+
+-- We compute the Gröbner basis for that order.
+
+gb := groebner(eligens, syms)$QEtaGroebner(QQ, EE);
+
+-- And eventually only take the polynomials that do not
+-- have any $Y_\delta$ in them.
+
+xPolynomials(gb, char "E")$PolynomialTool(C)
+
+-- Admittedly, the Gröbner engine of FriCAS is not the fastest
+-- on the market. To do the elimination, it might make sense to
+-- output the generators of the ideal in a format that can
+-- easily be read by other computer algebra systems.
+
+
+print1D x ==> display((x::OutputForm)::Formatter(Format1D))
+print1D eligens
+
+-- Clearly, we are not restricted to pure
+-- Dedekind eta-functions, but can also consider
+-- relations among generalized eta-functions.
+--
+-- For simplicity, let us consider level 5.
+
+idxs := generalizedEtaFunctionIndices 5
+
+ger := etaRelations(idxs) $ QEtaIdealHemmeckeCached(QQ, QMOD1);
+
+dens := [lcm [denom leadingCoefficient m_
+         for m in monomials r] for r in ger];
+rels := [d*r for d in dens for r in ger]
+
+-- Naturally, we find the relation
+-- \begin{align*}
+-- \eta(\tau) = \eta(5\tau) \, \eta_{5,1}(\tau) \, \eta_{5,2}(\tau)
+-- \end{align*}
+-- as the last expression in the above list.
+
+-- If we take the last-but-one polynomial from the above list
+-- and divide every term by $E_{5,1}^5 E_{5,2}^5 E_5^6$ we get
+-- the following list of terms.
+
+[x/E5_1^5/E5_2^5/E5^6 for x in monomials(rels(#rels-1))]
+
+-- By the relation, we have presented before,
+-- the last element in the above list is
+-- equal to 11.
+--
+-- In fact, we have computed, the relation
+-- for the Rogers-Ramanujan continued fraction.
+--
+-- \begin{align*}
+-- \frac{1}{R(q)^5} - R(q)^5 =
+-- \frac{\eta_{5;2}(\tau)^5}{\eta_{5;1}(\tau)^5}
+-- -
+-- \frac{\eta_{5;1}(\tau)^5}{\eta_{5;2}(\tau)^5}
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- %\tag{1.5}
+-- \end{align*}
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Rogers-Ramanujan Continued Fraction
+
+-- +
+-------------------------------------------------------------------
+--test:RogersRamanujanContinuedFraction
+-------------------------------------------------------------------
+-- -
+
+-- Define
+-- \begin{align}
+-- G(q)
+-- &=
+-- \sum_{n=0}^\infty \frac{q^{n^2}}{(q;q)_n} =
+-- \prod_{n=0}^\infty \frac{1}{(1-q^{5n+1})(1-q^{5n+4})} =
+-- \frac{1}{\qPochhammer{q,q^4}{q^5}}
+-- \\
+-- H(q)
+-- &=
+-- \sum_{n=0}^\infty \frac{q^{n(n+1)}}{(q;q)_n} =
+-- \prod_{n=0}^\infty \frac{1}{(1-q^{5n+2})(1-q^{5n+3})} =
+-- \frac{1}{\qPochhammer{q^2,q^3}{q^5}}
+-- \end{align}
+
+-- and Rogers-Ramanujan continued fraction.
+-- \begin{gather*}
+--   R(q) =
+--   q^{\frac15}
+--   \dfrac{1}{1+\dfrac{q}{1+\dfrac{q^2}{1+\dfrac{q^3}{1+\ddots}}}} =
+--   q^{\frac15}
+--   \frac{\qPochhammer{q,q^4}{q^5}}
+--        {\qPochhammer{q^2,q^3}{q^5}} =
+--   \frac{\eta_{5,1}(\tau)}{\eta_{5,2}(\tau)}
+-- \end{gather*}
+
+-- Let us consider 5-dissections of
+-- $\frac{R(q)^5}{q} = \frac{H(q)^5}{G(q)^5} =
+-- \frac{\qPochhammer{q,q^4}{q^5}^5}
+--        {\qPochhammer{q^2,q^3}{q^5}^5}$
+-- and
+-- $\frac{q}{R(q)^5} = \frac{G(q)^5}{H(q)^5} =
+-- \frac{\qPochhammer{q^2,q^3}{q^5}^5}
+--        {\qPochhammer{q,q^4}{q^5}^5}$.
+--
+-- For the input into the algorithms of **QEta** they are
+-- specified as follows.
+
+-- +
+idxs := [[5,1],[5,2]];
+rrspec := eqSPEC [[5,1,1],[5,2,-1]];
+r5spec := rrspec^5
+ir5spec := inv r5spec
+
+idrp := findIdM1(5,r5spec,5,0,idxs);
+e1 := inv(coefficient idrp)*qequationX(idrp,a[1])
+
+idrn := findIdM1(5,ir5spec,5,0,idxs);
+e2 := inv(coefficient idrn)*qequationX(idrn,a[2])
+-- -
+
+-- Interestingly, the right-hand side of the above equations
+-- look equal. However, since they were done by different
+-- computations, the $M_1$ could stand for different
+-- eta-quotients. It turns out, they are same.
+
+(monoidSpecifications(idrp) = monoidSpecifications(idrn))@Boolean
+
+-- Thus, both left-hand sides must be equal.
+-- Note that in **QEta** $u_{5,1}$ and $u_{5,2}$ stand for the
+-- $q$-Pochhammer symbols $\qPochhammer{q,q^4}{q^5}$ and
+-- $\qPochhammer{q^2,q^3}{q^5}$.
+--
+-- Therefore, after multiplying with some variables we get
+-- the following.
+
+rhs(e1-e2)
+q^2 * u[5,1]^(-1) * u[5,2]^(-11) * (lhs(e1)=lhs(e2))
+
+-- It says that
+-- \begin{align*}
+-- \frac{G(q)}{H(q)} \, U_5\!\left(\frac{H(q)^5}{G(q)^5}\right)
+-- &=
+-- \frac{H(q)}{G(q)} \, U_5\!\left(\frac{G(q)^5}{H(q)^5}\right)
+-- \end{align*}
+-- or
+-- \begin{align*}
+-- U_5\!\left(\frac{R(q)^5}{R(q^5)}\right)
+-- &=
+-- U_5\!\left(\frac{R(q^5)}{R(q)^5}\right)
+-- \end{align*}
+--
+-- where $U_5$ is the operator that acts as follows:
+-- \begin{gather*}
+-- U_5\left(\sum_{n=k}^\infty a(n)q^n\right)
+-- = \sum_{n=\lceil k/5 \rceil}^\infty a(5n)q^n.
+-- \end{gather*}
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Further functions
+
+-- +
+-------------------------------------------------------------------
+--test:Specification
+-------------------------------------------------------------------
+-- -
+
+-- ## Specification of eta-quotients
+
+-- Let $M$ be a positive integer and
+-- $\delta$ be a positive divisor of $M$.
+--
+-- The Dedekind eta-function is defined as
+-- \begin{align*}
+--   \eta: \setH \to \setC, \quad
+--   \tau \mapsto q^{\frac{1}{24}} \prod_{n=1}^{\infty}(1-q^n)
+--   &=
+--   q^{\frac{1}{24}} \qPochhammer{q}{q}
+-- \end{align*}
+-- where $\setH=\{\tau\in \setC \mid \mathrm{Im}(\tau)>0 \}$
+-- denotes the complex upper half-plane and
+-- $q=\exp(2\pi i\tau)$.
+--
+-- Furthermore let $0 \le g \le \delta$.
+--
+-- With $P_2(x) = \{x\}^2 - \{x\} + \frac{1}{6}$
+-- (where $\{x\}= x-\lfloor x \rfloor$ is the fractional
+-- part of x) define the generalized eta-function
+-- \begin{align*}
+--   \eta_{\delta,g}(\tau)
+--   &:=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \prod_{\substack{n>0\\n\equiv g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+--   \prod_{\substack{n>0\\n\equiv -g\ (\mathrm{mod}\ \delta)}} (1-q^n)
+-- \end{align*}
+-- For $0<g<\delta$ we have
+-- \begin{align}
+--   \eta_{\delta,g}(\tau)
+--   &=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \prod_{n=1}^\infty (1-q^{\delta (n-1)+g})(1-q^{\delta n-g})
+--   \notag\\
+--   &=
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \qPochhammer{q^{g}}{q^\delta} \qPochhammer{q^{\delta-g}}{q^\delta}  =
+--   q^{\frac{\delta}{2}P_2(\frac{g}{\delta})}
+--   %
+--   \qPochhammer{q^{g},q^{\delta-g}}{q^\delta}.
+-- \end{align}
+--
+-- Note that
+-- \begin{gather}
+--   \eta_{\delta,0}(\tau) =
+--   \eta_{\delta,\delta}(\tau) = \eta(\delta\tau)^2
+--   \qquad\text{and}\qquad
+--   \eta_{\delta,\frac{\delta}{2}}(\tau) =
+--   \frac{\eta(\frac{\delta}{2}\tau)^2}{\eta(\delta\tau)^2}.
+--   \label{eq:purify-eta}
+-- \end{gather}
+
+-- Let a generating series be defined as follows.
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(n)q^n =
+-- \prod_{\delta|M} \qPochhammer{q^\delta}{q^\delta}^{r_\delta}
+-- \prod_{\substack{\delta | M \\ 0 < g < \delta/2}}
+-- \qPochhammer{q^g, q^{\delta-g}}{q^\delta}^{r_{\delta,g}}
+-- \end{gather*}
+--
+-- **QEta** finds an identities for
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(mn+t)q^n
+-- \end{gather*}
+-- in terms of generalized eta-quotients.
+
+-- In **QEta** such a sequence $(a(n))_{n\geq0}$ is specified
+-- by the respective list of
+-- pairs $(\delta, r_\delta)$ and
+-- triples $(\delta,g,r_{\delta,g})$.
+--
+-- In fact, such a list is called an "eta-specification"
+-- and actually specifices a product of eta functions as
+-- \begin{align*}
+--     g_r(\tau)
+--     &= \prod_{i\in I} \eta_i(\tau)^{r_i}
+--       = \prod_{\delta\in I^{(1)}} \eta(\delta\tau)^{r_\delta}
+--       \prod_{(\delta,g)\in I^{(2)}} \eta_{\delta,g}(\tau)^{r_{\delta,g}}
+-- %      \label{eq:g_r(tau)}
+-- \end{align*}
+-- where $I$, $I^{(1)}$ and $I^{(2)}$ denote the respective
+-- "index part" from the pairs and triples of the above list.
+
+-- To simplify input in **QEta**, whenever a series like
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(mn+t)q^n
+-- \end{gather*}
+-- is to be specified, then it is done by
+-- `(rspec, m, t)`
+-- where `rspec` is an eta-specification and
+-- $t<m$ are natural numbers.
+-- **QEta** takes care of the additional fractional
+-- $q$-powers that are actually also involved.
+
+-- So, the specification `[[1,-5],[3,7],[5,1,-2],[15,3,1]]`
+-- means the following.
+
+rspec := eqSPEC [[1,-5],[3,7],[5,1,-2],[15,3,1]]
+
+level rspec
+
+etaQuotient(rspec, varEta$RKI) =_
+  qEtaQuotient(rspec, varPochhammer$RKI)
+
+-- We can check whether this eta-quotient is actually
+-- a modular function.
+
+-- Since that specification involves generalize eta-functions,
+-- **QEta** refuses to check for modularity with respect to
+-- $\Gamma_0(15)$,
+-- i.e. if we uncomment the following line and evaluate,
+-- we get an error.
+
+-- +
+-- modular?(rspec)$QMOD0
+-- -
+
+-- It is also not a modular function for $\Gamma_1(15)$.
+
+modular?(rspec)$QMOD1
+
+-- **QEta** can find a cofactor eta-quotient that
+-- (when multiplied to `rspec`, the result is
+-- a modular function for $\Gamma_1(15)$.
+
+sspec:=cofactInfM1(15,rspec,1,0,[[1],[3],[5],[15],[15,1],[15,2],[15,3]])
+
+-- Note that in **QEta** the specifications themselves form
+-- a (multiplicative) group, just like the corresponding
+-- eta-quotients do. Thus, we can multiply and divide them.
+
+spec := sspec * rspec
+etaQuotient(spec, varEta$RKI)
+modular?(spec)$QMOD1
+
+-- In particular when dealing with dissections
+-- we should expect that we must consider eta-functions
+-- with bigger indices.
+-- **QEta** suggests that to find an eta-quotient cofactor
+-- $c$ (and a certain fractional $q$-power) to make
+-- \begin{gather*}
+-- q^\beta c \sum_{n=0}^\infty a(mn+t)q^n
+-- \end{gather*}
+-- modular for $\Gamma_1(N)$ where
+-- \begin{align*}
+-- \sum_{n=0}^\infty a(n)q^n
+-- &=
+-- \qPochhammer{q^2,q^5}{q^7}^{-1}
+-- \qPochhammer{q^3, q^4}{q^7}^{-2},
+-- \end{align*}
+-- we need at least $N=21$.
+-- See Section 2 of
+-- [Chen, Du, Zhao: "Finding Modular Functions for Ramanujan-Type Identities"](https://doi.org/10.1007/s00026-019-00457-4).
+
+rspec := eqSPEC [[7,2,-1],[7,3,-2]]
+m := 9; t := 5;
+nn := minLevelM1(rspec, m, t)
+
+-- However, even if we find a cofactor eta-quotient so that
+-- we arrive at a modular function, there might not be
+-- enough eta-quotients in that level to find
+-- a $\setQ$-linear combination of those for this modular
+-- function.
+
+rspec := eqSPEC [[1,-1]]; m := 11; t := 6;
+nn := minLevelM1(rspec, m, t)
+idxs := etaFunctionIndices nn
+sspec := cofactInfM0(nn, rspec, m, t, idxs)
+
+-- At least, we know that this is a modular function
+-- for $\Gamma_0(11)$ with only a pole at $\infty$.
+
+sump := sum('p(11*n+6)*q^n,n=0,%Infinity);
+ai := alphaInfinity(sspec,rspec,m,[t]);
+e := ai-rhoInfinity(sspec);
+qQuotient(sspec, varEta$RKI, e) * sump =_
+  qQuotient(sspec, varPochhammer$RKI, ai) * sump
+
+-- As a $q$-expansion it looks like this.
+
+specM0A1(QQ)(sspec, rspec, m, t)
+
+-- The monoid of modular eta-quotients of level 11
+-- having at most a pole at $\infty$ is generated
+-- by only one element with the following expansion.
+
+mspecs := mSPECSInfM0(level sspec, idxs)
+[etaQuotient(x, varEta$RKI) for x in mspecs]
+[specM0A1(QQ)(x) for x in mspecs]
+
+-- From that is clear that we are not able to represent
+-- a function with a 4-fold pole by a function with a 5-fold
+-- pole at infinity.
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Expansion into $q$-series
+
+-- +
+-------------------------------------------------------------------
+--test:qseries-expansion
+-------------------------------------------------------------------
+-- -
+
+-- Any specification of a (generalized) eta-quotient can be
+-- expanded (at $\infty$) into a $q$-series (with possibly
+-- fractional exponents according to the definition of the
+-- (generalized) Dedekind eta-function given in the previous
+-- section.
+
+rspec := eqSPEC [[7,2,-1],[7,3,-2]]
+specEQI(QQ)(rspec)
+
+rspec := eqSPEC [[1,-1]]
+specEQI(QQ)(rspec)
+
+-- **QEta** can also deal with $q$-Pochhammer symbols, since it just
+-- means to ignore the respective fractional $q$-power prefactor of an
+-- eta-quotient.
+
+rspec := eqSPEC [[7,2,-1],[7,3,-2]]
+qQuotient(rspec, varPochhammer$RKI, 0) =_
+  eulerExpansion specEQI(QQ)(rspec)
+
+-- To arrive at the $q$ expansion of the generating
+-- series for $p(7n+5)$, we can enter the following.
+
+rspec := eqSPEC [[1,-1]]; m := 7; t := 5;
+sump := sum('p(7*n+5)*q^n,n=0,%Infinity);
+sump = choose(m, t, eulerExpansion specEQI(QQ)(rspec))
+
+-- If the specification happens to be a modular function,
+-- then **QEta** offers another way to compute the
+-- series expansion at $\infty$.
+
+rspec := eqSPEC [[5,1,-1],[5,2,-11]];
+etaQuotient(rspec, varEta$RKI)
+modular?(rspec)$QMOD1
+specM1A1(QQ)(rspec)
+specEQI(QQ)(rspec)
+
+-- Note that this function, obviously must have poles at cusps
+-- different from $\infty$, i.e. at $0$.
+
+cusps(5)$QMOD0
+
+-- If we want to investigate
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(mn+t)q^n
+-- \end{gather*}
+-- for the sequence $(a(n))_{n\in\setN}$ given by
+-- \begin{gather*}
+-- \sum_{n=0}^\infty a(n)q^n =
+-- \qPochhammer{q,q^4}{q^5}^{-1}
+-- \qPochhammer{q^2, q^3}{q^5}^{-11},
+-- \end{gather*}
+-- we first compute an eta-quotient cofactor to
+-- turn the product into a modular function for
+-- $\Gamma_1(5)$ with only a pole at $\infty$.
+--
+-- As said above the tuple `(sspec, rspec, m, t)`
+-- actually (implicityly) involves a certian
+-- factor $q^\beta$ that is determined by
+-- `(rspec,m,t)`. Details can be found in
+-- equation labelled `eq:beta` in the file
+-- [qeta.tex](https://github.com/hemmecke/qeta/blob/master/qeta.tex).
+-- It is describe by the second term in the definition of
+-- $\alpha$ in the abstract of
+-- [Radu's article](https://doi.org/10.1016/j.jsc.2014.09.018) or
+-- the $q$-factor in equation (10.4) of the article of
+-- [Chen, Du, and Zhao](https://doi.org/10.1007/s00026-019-00457-4).
+
+idxs := [[5,1],[5,2]]
+sspec := cofactInfM1(5, rspec, 5, 4, idxs)
+modular?(sspec,rspec,5,4)$QMOD1
+
+-- In fact, `(sspec,rspec,5,4)` represents the
+-- followin expression.
+
+ai := alphaInfinity(sspec,rspec,5,[4])$SPEC;
+beta := ai-rhoInfinity(sspec);
+qQuotient(sspec, varEta$RKI, beta) * sum('a(5*n+4)*q^n,n=0,%Infinity)
+
+-- The expansion can then be done like this.
+
+specM1A1(QQ)(sspec,rspec,5,4)
+
+-- That expansion suggests that there is a congruence modulo
+-- 5 hidden in the coefficients. And indeed, here is a
+-- corresponding witness identity.
+
+id := findIdM1(5, rspec, 5, 4, idxs);
+pretty(id, qIdentity + asExpression + expand + nonModular)
+
+-- Choosing other index sets, one can also get an identity
+-- with eta-quotients with those indices.
+
+id := findIdM1(5, rspec, 5, 4, [[1],[5],[5,1]]);
+pretty(id, qIdentity + asExpression + expand + nonModular)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## $\Gamma_0(N)$, $\Gamma_1(N)$, cusps and more
+
+-- +
+-------------------------------------------------------------------
+--test:Gamma
+-------------------------------------------------------------------
+-- -
+
+-- **QEta** provides the domains
+-- [CongruenceSubgroupGamma0](https://hemmecke.github.io/qeta/api/CongruenceSubgroupGamma0.html)
+-- and
+-- [CongruenceSubgroupGamma1](https://hemmecke.github.io/qeta/api/CongruenceSubgroupGamma1.html)
+-- for a number of functions connected to
+-- $\Gamma_0(N)$ and $\Gamma_1(N)$.
+-- These domains are abbreviated by `GAMMA0` and `GAMMA1`,
+-- respectively through `qetamacros.input`.
+
+nn := 22
+genus()$GAMMA0(nn)
+numberOfCusps()$GAMMA0(nn)
+spitzen := cusps()$GAMMA0(nn)
+
+ws := [width(c)$GAMMA0(nn) for c in spitzen]
+assertEquals(ws, [22,2,11,1])
+
+[cuspToMatrix(c)$GAMMA0(nn) for c in spitzen]
+
+doubleCosetRepresentatives()$GAMMA0(nn)
+
+-- We can do similar things for $\Gamma_1(22)$.
+
+nn := 22
+genus()$GAMMA1(nn)
+numberOfCusps()$GAMMA1(nn)
+spitzen := cusps()$GAMMA1(nn)
+
+[width(c)$GAMMA1(nn) for c in spitzen]
+
+[cuspToMatrix(c)$GAMMA1(nn) for c in spitzen]
+
+doubleCosetRepresentatives()$GAMMA1(nn)
+
+-- Which of the cusps of $\Gamma_1(22)$ are
+-- $\Gamma_0(22)$-equivalent to $\infty$.
+
+cs := [c for c in spitzen | equivalentCusps?(oo, c)$GAMMA0(nn)]
+assertEquals(cs, [cusp(3,22),cusp(5,22),cusp(7,22),cusp(9,22),oo])
+
+-- So when we "normalize" these cusps,
+-- they should all look the same.
+-- When we do this over all cusps of $\Gamma_1(22)$,
+-- they collapse to the cusps of $\Gamma_0(22)$.
+
+assertEquals([normalizeCusp(c)$GAMMA0(nn) for c in cs], [oo,oo,oo,oo,oo])
+ll := [normalizeCusp(c)$GAMMA0(nn) for c in spitzen]
+cs := cusps()$GAMMA0(nn)
+assertEquals(ll, [cs.n for n in [1,2,3,1,3,4,1,3,2,1,4,3,2,4,1,2,4,2,3,4]])
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Expansion at cusps
+
+-- +
+-------------------------------------------------------------------
+--test:expansion-at-cusps
+-------------------------------------------------------------------
+-- -
+
+-- Let us consider the Rogers-Ramanujan continued fraction.
+-- \begin{gather*}
+--   R(q) =
+--   q^{\frac15}
+--   \dfrac{1}{1+\dfrac{q}{1+\dfrac{q^2}{1+\dfrac{q^3}{1+\ddots}}}} =
+--   q^{\frac15}
+--   \frac{\qPochhammer{q,q^4}{q^5}}
+--        {\qPochhammer{q^2,q^3}{q^5}} =
+--   \frac{\eta_{5,1}(\tau)}{\eta_{5,2}(\tau)}
+-- \end{gather*}
+
+rspec := eqSPEC [[5,1,1],[5,2,-1]];
+r5spec := rspec^5
+modular?(r5spec)$QMOD1
+
+-- **QEta** precomputes data about eta-quotients into a
+-- data structure called "symbolic eta-qutient".
+-- The transformation of a specification into such a
+-- data structure is done by
+-- `specYM1EQ` (**spec**ification to s**Y**mbolic **M**odular
+-- (for $\Gamma_1$) **E**ta-**Q**uotient).
+-- Since the data structure is rather big, we put a semicolon
+-- at the end of the line, so that nothing is printed.
+
+yr5 := specYM1EQ r5spec;
+
+-- For specifications without dissections,
+-- the order at the cusps can be directly read of from
+-- the following command.
+
+cusps(yr5)
+ordersMin yr5
+
+-- Let us check the following identity.
+
+-- \begin{align*}
+-- \frac{1}{R(q)^5} - R(q)^5
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- \end{align*}
+--
+-- \begin{align}
+-- \frac{\eta_{5;2}(\tau)^5}{\eta_{5;1}(\tau)^5}
+-- -
+-- \frac{\eta_{5;1}(\tau)^5}{\eta_{5;2}(\tau)^5}
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- %\tag{1.5}
+-- \end{align}
+
+espec := eqSPEC [[1,6],[5,-6]]
+modular?(espec)$QMOD1
+ye := specYM1EQ espec;
+ordersMin ye
+
+-- Obviously, we have poles not only at $\infty$.
+-- Let us show another identity from which the above
+-- will follow, namely:
+-- \begin{align*}
+-- \frac{1}{R(q)^{10}} -
+-- 11 \frac{1}{R(q)^5} - \frac{\eta(\tau)^6}{\eta(5\tau)^6 R(q)^5}
+-- &= 1
+-- \end{align*}
+--
+-- \begin{align}
+-- \frac{\eta_{5;2}(\tau)^{10}}{\eta_{5;1}(\tau)^{10}} -
+-- 11 \frac{\eta_{5;2}(\tau)^5}{\eta_{5;1}(\tau)^5}
+--   - \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+--     \frac{\eta_{5;2}(\tau)^5}{\eta_{5;1}(\tau)^5}
+-- &=
+-- 1
+-- \end{align}
+
+i10spec := rspec^(-10);
+i5spec := rspec^(-5);
+gspec := espec*i5spec;
+
+-- All parts of the equation are modular functions for $\Gamma_1(5)$.
+-- Even more, they only have poles at the cusp $\infty$.
+
+[modular?(i5spec)$QMOD1, modular?(gspec)$QMOD1]
+
+yi5  := specYM1EQ i5spec;
+yi10 := specYM1EQ i10spec;
+yg   := specYM1EQ gspec;
+ordersMin yi5
+ordersMin yi10
+ordersMin yg
+
+-- So we only need to check whether the principal part of the
+-- $q$-expansion at infinity of the left-hand side vanishes and
+-- the constant term is 1. This is indeed the case.
+
+specM1A1(ZZ)(i10spec) - 11*specM1A1(ZZ)(i5spec) - specM1A1(ZZ)(gspec)
+
+-- **QEta** does not only implement the expansion of a
+-- modular function at the cusp infinity, but also at other
+-- cusps. For example, the expansion of $R(q)^5$ at all cusps
+-- of $\Gamma_1(5)$ is given below.
+--
+-- The expansion at all cusps cannot be done with series over
+-- $\setQ$, but needs an extension with a root of unity $\xi$.
+-- In our case, $\setQ[\xi]$ works where $\xi^20=1$.
+
+xiord := minimalRootOfUnity yr5
+
+-- Let us first read another set of macros provided by **QEta**.
+
+)read convenience.input )quiet
+
+C ==> QQ
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(yr5)
+)set stream calc 3
+r5 := expandM1AnCX yr5
+
+-- Now we can also show the original identity directly by
+-- checking that the principle part (including the constant term)
+-- vanishes at all cusps.
+
+one := 1$An(CX)
+
+left := one/r5 - r5
+
+right := 11*one + expandM1AnCX ye
+
+assertTrue(zero?(left - right))
+
+-- Similarly, we can check
+-- \begin{align*}
+-- PQ + \frac{9}{PQ} = \frac{Q^3}{P^3} + \frac{P^3}{Q^3}
+-- \end{align*}
+-- where
+-- $P = \frac{\eta(\tau)^2}{\eta(3\tau)^2}$
+-- and
+-- $Q = \frac{\eta(2\tau)^2}{\eta(6\tau)^2}$.
+--
+-- This time, we confirm the identity at the cusps of $\Gamma_0(6)$.
+--
+-- Unfortunately, the identity does not consist of terms that
+-- are modular for $\Gamma_0(6)$, so we divide by $PQ$ and
+-- check this identity.
+
+pspec   := eqSPEC [[1,2],[3,-2]];
+qspec   := eqSPEC [[2,2],[6,-2]];
+pqspec  := pspec*qspec
+s1 := pqspec^(-2)
+s2 := qspec^3/pspec^3/pqspec
+s3 := pspec^3/qspec^3/pqspec
+[modular?(x)$QMOD0 for x in [s1,s2,s3]]
+
+-- Here we actually need no field extension.
+
+ys := [specYM0EQ(s) for s in [s1,s2,s3]];
+xiord := lcm [minimalRootOfUnity y for y in ys]
+C ==> QQ
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+spitzen := cusps(ys.1)
+one := 1$An(CX);
+)set stream calc 3
+
+exs := [expandM0AnCX y for y in ys];
+left := one + 9*exs.1
+right := exs.2 + exs.3
+assertTrue(zero?(left - right))
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
