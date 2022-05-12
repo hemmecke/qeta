@@ -143,21 +143,17 @@ NN ==> NonNegativeInteger
 ZZ ==> Integer
 QQ ==> Fraction ZZ
 LZZ ==> List ZZ
-LLZZ ==> List LZZ
-INDICES ==> LLZZ
+INDICES ==> List LZZ
 
 Pol ==> Polynomial
 SUP ==> SparseUnivariatePolynomial
 QETAAUX ==> QEtaAuxiliaryPackage;
-QMOD0 ==> QEtaModularGamma0
-QMOD1 ==> QEtaModularGamma1
 
 asPP x ==> x pretend PP
 
-T1 C  ==> QEtaTaylorSeries C
-L1 C  ==> QEtaLaurentSeries C
+T1 C ==> QEtaTaylorSeries C
+L1 C ==> QEtaLaurentSeries C
 A1 C ==> Finite0Series C
-EQI C ==> EtaQuotientInfinity C
 CA1 C ==> QEtaAlgebraCachedPower(C, A1 C) -- computation domain (cached)
 CPol C ==> QEtaAlgebraCachedPower(C, Pol C) -- computation pols in (cached)
 X1 C ==> QEtaExtendedAlgebra(C, CA1 C, CPol C)
@@ -170,7 +166,6 @@ QXTOPSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXTOPCOMP1 C)
 
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
-QES4TI2 ==> QEtaQuotientSpecifications4ti2
 
 specMODA1 C ==> _
   modularEtaQuotientInfinity $ QEtaModularInfinityExpansion(C, QMOD)
@@ -196,6 +191,8 @@ for easier manipulation.
 
 
 )abbrev domain QETARKI QEtaRamanujanKolbergIdentity
+++ QEtaRamanujanKolbergIdentity is a container that holds all relevant
+++ data describing a Ramanujan-Kolberg identity.
 QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain (EntireRing if without xab)
   L ==> List
@@ -452,7 +449,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         bas: OF :=  oeq("monoidSpecifications", monoidSpecifications x)
         idpol: OF := oeq("identityPolynomial", identityPolynomial x)
         cf: OF := oeq("coefficient", coefficient x)
-        alpha: OF := oeq("alpha", alphaInfinity x)
+        alpha: OF := oeq("alphaInfinity", alphaInfinity x)
         vconcat [cospec, defspec, m, orb, bas, idpol, cf, alpha]
 
     -- local
@@ -820,7 +817,7 @@ QEtaRamanujanKolberg(C,QMOD): Exports == Implementation where
                  bidxs: INDICES): IDENTITY ==
         -- We compute the basis for the modular generalized
         -- eta-quotients and take only the non-constants eta-quotients.
-        import from QES4TI2(QMOD)
+        import from QEtaQuotientSpecifications4ti2(QMOD)
         ncmSPECSInfMOD ==> nonConstantEtaQuotientMonoidInfinitySpecifications
         findIdentity(sspec, rspec, m, t, ncmSPECSInfMOD(level sspec, bidxs))
 
