@@ -272,7 +272,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ already in the abstract of \cite{Radu_RamanujanKolberg_2015}.
     alphaOrbitInfinity: % -> QQ
       ++ alphaOrbitInfinity(x)=
-      ++ alphaInfinity-(1/24)*sigmaInfinity(coSpecification(x))
+      ++ alphaInfinity-rhoInfinity(coSpecification(x))
     orbitProduct: % -> OutputForm
       ++ orbitProduct(x) returns the orbit product as an OutputForm.
 
@@ -304,7 +304,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ multiplied with a q power with exponent e.
     qEtaQuotient: (SPEC, (ZZ, ZZ) -> OutputForm) -> OutputForm
       ++ qEtauotient(rspec, v) returns qQuotient(rspec, v, e) with
-      ++ e=sigmaInfinity(rspec)/24.
+      ++ e=rhoInfinity(rspec).
 
     f: (%, ZZ, (ZZ, ZZ) -> OutputForm, C, QQ, SPEC) -> OutputForm
 
@@ -421,7 +421,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     constant?(spec: SPEC): Boolean ==
         --assume that spec represents a modular eta-quotient with
         --a pole at most at infinity
-        sigmaInfinity spec >= 0
+        rhoInfinity spec >= 0
 
     nonConstantMonoidSpecifications(mspecs: SPECS): SPECS ==
         [mspec for mspec in mspecs | not constant? mspec]
@@ -436,8 +436,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     -- exponent without the cofactor
     alphaOrbitInfinity(x: %): QQ ==
-        sbarhat: QQ := sigmaInfinity coSpecification x
-        alphaInfinity(x)::QQ - (1/24)*sbarhat
+        alphaInfinity(x)::QQ - rhoInfinity coSpecification x
 
     -- output stuff
     oeq(x, y) ==> ((concat(x,"(x)")$String)::Symbol::OF) = (y::OF)
@@ -535,7 +534,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         q^(e::OF) * eq
 
     qEtaQuotient(rspec: SPEC, v: (ZZ, ZZ) -> OF): OF ==
-        qQuotient(rspec, v, (1/24)*sigmaInfinity(rspec))
+        qQuotient(rspec, v, rhoInfinity(rspec))
 
 
 
@@ -559,7 +558,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     f(x: %, fmt: ZZ, v: (ZZ, ZZ) -> OF, c: C, e: QQ, rspec: SPEC): OF ==
         e := e + alphaOrbitInfinity x
         rspec := rspec * coSpecification x
-        if withQFactor? fmt then e: QQ := e + (1/24)*sigmaInfinity(rspec)
+        if withQFactor? fmt then e: QQ := e + rhoInfinity(rspec)
         cofact: OF := qQuotient(rspec, v, e)
         out: OF := orbitProduct x
         if not(zero? e and one? rspec) then out := cofact * out
@@ -573,7 +572,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     etaRelationMonomial(c: SUP C, rspec: SPEC,
                         fmt: ZZ, v: (ZZ, ZZ) -> OF, e: QQ): OF ==
         pol: OF := outputForm(c, "t"::Symbol::OF)
-        if withQFactor? fmt then e := e + (1/24)*sigmaInfinity(rspec)
+        if withQFactor? fmt then e := e + rhoInfinity(rspec)
         eq: OF := qQuotient(rspec, v, e)
         one? c => eq
         one? rspec => pol

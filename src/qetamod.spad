@@ -146,7 +146,7 @@ ECS ==> Record(indices:INDICES, particular:Union(VZZ,"failed"), basis:List VZZ)
 -- m               m
 -- mm              M
 -- nn              N
--- sigmaInfty      \sigmainfty{r}
+-- rhoInfty        \rho_\infty{r}
 -- kappa(m)        \kappa
 
 )if LiterateDoc
@@ -398,13 +398,6 @@ QEtaModularGamma0: Exports == Implementation where
         (even? m => 1; 8) * (DIVISIBLEBY?(3, m) => 1; 3)
 
     -- local
-    odotBar(a2: ZZ, sigmaInfty: ZZ, m: PP, t: NN): NN ==
-        --assert(one? positiveRemainder(a2, 24))
-        -- \cite[Def.~41]{Radu_RamanujanKolberg_2015}
-        z: ZZ := positiveRemainder(t*a2+(((a2-1) exquo 24)::ZZ)*sigmaInfty, m)
-        asNN z
-
-    -- local
     -- Return true iff \eqref{eq:Radu-productsquare} holds.
     checkSquare?(sspec: SPEC, rspec: SPEC, m: PP, orbitSize: ZZ): Boolean ==
         --assert(pure? sspec)
@@ -441,7 +434,7 @@ QEtaModularGamma0: Exports == Implementation where
         not conditionMmN?(nn, rspec, m) => false -- \eqref{eq:delta|M=>delta|mN}
         not conditionPrimeDivisors?(nn, m) => false -- \eqref{eq:p|m=>p|N}
         not conditionSumExponentsPure?(nn, rspec, m) => false --\eqref{eq:sum-r}
-        not conditionSigma0Pure?(nn, rspec, m) => false -- \eqref{eq:sv24}
+        not conditionRho0Pure?(nn, rspec, m) => false -- \eqref{eq:rv24}
         not conditionNDivisor?(nn, rspec, m, t) => false -- \eqref{eq:w|N}
         conditionEvenMultiplier?(nn, rspec, m) -- \eqref{eq:even-m}
 
@@ -526,36 +519,34 @@ QEtaModularGamma0: Exports == Implementation where
         orb: List NN := modularOrbit(rspec, m, t)
         orbitSize: ZZ := # orb
 
-        --\eqref{eq:Radu-sum=0}
+        --\eqref{eq:cofactor-weight}
         not zero?(reduce(_+, s, 0) + orbitSize * reduce(_+, r, 0)) =>
-            warnPrint("eq:Radu-sum=0 sspec", sspec)
-            warnPrint("eq:Radu-sum=0 rspec", rspec)
-            warnPrint("eq:Radu-sum=0 orbitSize", orbitSize)
+            warnPrint("eq:sum=0 sspec", sspec)
+            warnPrint("eq:sum=0 rspec", rspec)
+            warnPrint("eq:sum=0 orbitSize", orbitSize)
             false
 
-        --\eqref{eq:Radu-sigmainfinity}
-        shat: ZZ := numer sigmaInfinity sspec
-        rhat: ZZ := numer sigmaInfinity rspec
-        nu: ZZ := chiExponent(rspec, m, t, orb)
-        z: ZZ := shat + orbitSize * m * rhat + nu
-        not DIVISIBLEBY?(24, z) =>
-            warnPrint("eq:Radu-sigmainfinity sspec", sspec)
-            warnPrint("eq:Radu-sigmainfinity rspec", rspec)
-            warnPrint("eq:Radu-sigmainfinity orbitSize", orbitSize)
-            warnPrint("eq:Radu-sigmainfinity nu", nu)
+        --\eqref{eq:cofactor-rho-infinity}
+        shat: QQ := rhoInfinity sspec
+        rhat: QQ := rhoInfinity rspec
+        alpha: QQ := reduce(_+, orb, 0)::QQ + rhat * orbitSize
+        z: QQ := shat + orbitSize * m * rhat + (1-m^2)/m*alpha
+        not one? denom z =>
+            warnPrint("eq:pure-rhoinfinity sspec", sspec)
+            warnPrint("eq:pure-rhoinfinity rspec", rspec)
+            warnPrint("eq:pure-rhoinfinity orbitSize", orbitSize)
+            warnPrint("eq:pure-rhoinfinity alpha", alpha)
             false
 
-        --\eqref{eq:Radu-sigma0}
-        sv: ZZ := sigma0 sspec
-        rv: ZZ := sigma0 rspec
-        -- conditionCoEtaQuotientGamma0?(nn, rspec, m, t) \implies f \in ZZ
-        -- See conditionMmN?(nn, rspec, m).
-        f: ZZ := ((m * nn) exquo mm)::ZZ
-
-        not DIVISIBLEBY?(24, sv + orbitSize * f * rv) =>
-            warnPrint("eq:Radu-sigma0 sspec", sspec)
-            warnPrint("eq:Radu-sigma0 rspec", rspec)
-            warnPrint("eq:Radu-sigma0 orbitSize", orbitSize)
+        --\eqref{eq:cofactor-rho-zero}
+        sv: QQ := rho0 sspec
+        rv: QQ := rho0 rspec
+        -- conditionCoEtaQuotientGamma0?(nn, rspec, m, t) implies that
+        -- m*nn/mm is an integer. See conditionMmN?(nn, rspec, m).
+        not one? denom(sv + orbitSize * m*nn/mm * rv) =>
+            warnPrint("eq:Radu-rho0 sspec", sspec)
+            warnPrint("eq:Radu-rho0 rspec", rspec)
+            warnPrint("eq:Radu-rho0 orbitSize", orbitSize)
             false
 
         --\eqref{eq:Radu-productsquare}
@@ -567,16 +558,26 @@ QEtaModularGamma0: Exports == Implementation where
 
         true
 
+    -- local
+    odotBar(a2: ZZ, rhoInfty: QQ, m: PP, t: NN): NN ==
+        --assert(one? positiveRemainder(a2, 24))
+        -- \cite[Def.~41]{Radu_RamanujanKolberg_2015}
+        k: QQ := (a2-1)*rhoInfty
+        not one? denom k => error "odotBar: not an integer"
+        z: ZZ := positiveRemainder(t*a2+numer(k), m)
+        asNN z
+
     -- The following function computes \modularOrbit{r, m, t} with the
     -- optimization given by Radu in \cite[Lemma 4.35]{Radu_PhD_2010},
     -- i.e., we do not need to check all entries of \setS_{24m}, but
     -- only those that are not equivalent mod w.
     modularOrbit(rspec: SPEC, m: PP, t: NN): List NN ==
         not pure? rspec => error "orbit computation only for pure eta-quotients"
-        --assert(one?(denom sigmaInfinity rspec)), because it is a pure EQ
-        sigmaInfty := numer sigmaInfinity rspec
+        --assert(one?(denom(24*rhoInfinity(rspec))), because it is a pure EQ
+        rhoInfty: QQ := rhoInfinity rspec
+        rhoInfty24: ZZ := numer(24*rhoInfty)
         m24: ZZ := 24*m
-        g := gcd(kappa(m)*(24*t + sigmaInfty), m24)
+        g := gcd(kappa(m)*(24*t + rhoInfty24), m24)
         w: PP := asPP((m24 exquo g)::ZZ)
         result: List NN := empty()
         for a in 0..w-1 | one? gcd(a, w) repeat
@@ -587,7 +588,7 @@ QEtaModularGamma0: Exports == Implementation where
             -- all prime divisors of g that do not divide a and do not
             -- divide w. In other words, the above while loop also
             -- terminates without the "y < m24" condition.
-            e := odotBar(positiveRemainder(y^2, m24), sigmaInfty, m, t)
+            e := odotBar(positiveRemainder(y^2, m24), rhoInfty, m, t)
             if not member?(e, result) then result := cons(e, result)
         result
 
@@ -599,24 +600,27 @@ QEtaModularGamma0: Exports == Implementation where
         mat: MQQ := matrixModular(nn, idxs)
 
         -- Setup right-hand side.
-        nr: NN := nrows mat
-        v: VQQ := new(nr, 0)
+        v: VQQ := new(nrows mat, 0)
 
-        -- eq:Radu-sum=0
+        -----------------------------------------------------------
+        -- \eqref{eq:cofactor-weight}
         w: ZZ := reduce(_+, pureExponents rspec, 0)$List(ZZ)
         orb: List NN := modularOrbit(rspec, m, t)
         orbitSize: ZZ := # orb
         v.1 := (- orbitSize * w)::QQ
 
-        -- eq:Radu-sigmainfinity
-        nu: QQ := chiExponent(rspec, m, t, orb)::QQ
-        v2: QQ := -(1/24) * (nu + orbitSize * m * sigmaInfinity rspec)
+        -----------------------------------------------------------
+        -- \eqref{eq:cofactor-rho-infinity}
+        orhoI: QQ := orbitSize * rhoInfinity(rspec)
+        beta: QQ := (1/m)*(reduce(_+, orb, 0)::QQ + orhoI) -- \eqref{eq:beta}
+        v2: QQ := - (m * orhoI + (1-m^2)*beta)
         v.2 := fractionalPart(v2)$QETAAUX
-
-        -- eq:Radu-sigma0
+        -----------------------------------------------------------
+        -- \eqref{eq:rho-zero}
         mm: PP := level rspec
-        v3: QQ := -(orbitSize * m * nn * sigma0 rspec)/(24*mm)
+        v3: QQ := - (orbitSize * m * nn) / mm * rho0(rspec)
         v.3 := fractionalPart(v3)$QETAAUX
+        -----------------------------------------------------------
 
         -- now the stuff connected to eq:Radu-productsquare
         fl: FL := factorList factor nn
@@ -727,7 +731,7 @@ QEtaModularGamma1: Exports == Implementation where
     import from QEtaCofactorConditions
 
     -- local
-    alphaAux(rspec: SPEC, t: NN): QQ == (24*t)::QQ + sigmaInfinity rspec
+    alphaAux(rspec: SPEC, t: NN): QQ == t::QQ + rhoInfinity rspec
 
     -- local
     -- \cite[Def.~35]{Radu_RamanujanKolberg_2015}
@@ -785,12 +789,12 @@ QEtaModularGamma1: Exports == Implementation where
         not conditionSumExponentsProperGeneralized?(nn, rspec, m) => false
 
         -- CDZ(7)
-        -- qeta.tex {eq:rv24}, {eq:conditionSigma0Pure?(nn,rspec,m)}
-        not conditionSigma0Pure?(nn, rspec, m) => false
+        -- qeta.tex {eq:rv24}, {eq:conditionRho0Pure?(nn,rspec,m)}
+        not conditionRho0Pure?(nn, rspec, m) => false
 
         -- CDZ(5)
-        -- qeta.tex {eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}
-        not conditionSigma0ProperGeneralized?(nn, rspec, m) => false
+        -- qeta.tex {eq:conditionRho0ProperGeneralized?(nn,rspec,m)}
+        not conditionRho0ProperGeneralized?(nn, rspec, m) => false
 
         -- CDZ(3)
         -- qeta.tex {eq:conditionGSigma0?(nn,rspec,m)}
@@ -889,7 +893,7 @@ QEtaModularGamma1: Exports == Implementation where
         not conditionCoEtaQuotient?(level sspec, rspec, m, t) => false
         -- \cite[Thm~10.1]{ChenDuZhao_FindingModularFunctionsRamanujan_2019}
         -- Condition (1)
-        -- Condition \eqref{eq:CDZ-sum=0}
+        -- Condition \eqref{eq:cofactor-weight}
         ws: ZZ := reduce(_+, pureExponents sspec, 0)$LZZ
         wr: ZZ := reduce(_+, pureExponents rspec, 0)$LZZ
         not zero?(ws + wr) =>
@@ -898,29 +902,28 @@ QEtaModularGamma1: Exports == Implementation where
             false
 
         -- Condition (2)
-        -- Condition \eqref{eq:CDZ-sigma0=0}
-        rbarv: ZZ := sigma0 rspec
-        sbarv: ZZ := sigma0 sspec
+        -- Condition \eqref{eq:cofactor-rho-zero}
+        -- Note that the orbit size \mu=1 in \eqref{eq:cofactor-rho-zero}.
+        rv: QQ := rho0 rspec
+        sv: QQ := rho0 sspec
         nn: PP := level sspec
         mm: PP := level rspec
-        cc: ZZ := (nn exquo mm)::ZZ
-        z: ZZ := sbarv + cc*m*rbarv -- Note that mm divides nn.
-        not DIVISIBLEBY?(24, z) =>
+        z: QQ := sv + m*nn/mm*rv -- Note that mm divides nn.
+        not one? denom z =>
             warnPrint("Chen: Theorem 10.1(2) sspec", sspec)
             warnPrint("Chen: Theorem 10.1(2) rspec", rspec)
             warnPrint("Chen: Theorem 10.1(2) z", z)
             false
 
         -- Condition (3)
-        -- Condition \eqref{eq:CDZ-sigmainfinity=0}
-        rbarhat: QQ := sigmaInfinity rspec
-        sbarhat: QQ := sigmaInfinity sspec
+        -- Condition \eqref{eq:cofactor-rho-infinity}
+        rhat: QQ := rhoInfinity rspec
+        shat: QQ := rhoInfinity sspec
         alpha: QQ := alphaAux(rspec, t)
-        q: QQ := sbarhat + m*rbarhat - ((m^2-1)/m)*alpha
-        not one? denom q or not DIVISIBLEBY?(24, z) => --shouldn't happen
+        not one? denom(shat + m * rhat + (1-m^2)/m*alpha) => --shouldn't happen
             warnPrint("Chen: Theorem 10.1(3) sspec", sspec)
             warnPrint("Chen: Theorem 10.1(3) rspec", rspec)
-            warnPrint("Chen: Theorem 10.1(3) q", q)
+            warnPrint("Chen: Theorem 10.1(3) alpha", alpha)
             false
 
         -- Condition (4)
@@ -996,26 +999,28 @@ QEtaModularGamma1: Exports == Implementation where
             error "conditionCoEtaQuotient?(Gaamma1) not met"
 
         mat: MQQ := matrixModular(nn, idxs)
+
+        -- Setup right-hand side.
         v: VQQ := new(nrows mat, 0)
-        nspec: SPEC := purify rspec -- we must normalize!!!
+
+        nspec: SPEC := purify rspec -- we must normalize generalized eqSPECs!!!
         -----------------------------------------------------------
-        -- CDZ Condition (1), \eqref{eq:CDZ-sum=0}
-        v.1 := (- reduce(_+, pureExponents nspec, 0))::QQ -- fill right-hand side
+        -- CDZ Condition (1), \eqref{eq:cofactor-weight}
+        -- Note that obitSize=1.
+        orb: List NN := [t]
+        orbitSize: ZZ := 1
+        v.1 := (- reduce(_+, pureExponents nspec, 0))::QQ
         -----------------------------------------------------------
-        -- For the following two lines:
-        -- Since matrixModular refers to mod 1 instead of mod 24,
-        -- we must divide the sigma-expression by 24.
+        -- CDZ Condition (3), \eqref{eq:cofactor-rho-infinity}
+        orhoI: QQ := orbitSize * rhoInfinity(rspec)
+        beta: QQ := (1/m)*(reduce(_+, orb, 0)::QQ + orhoI) -- \eqref{eq:beta}
+        v2: QQ := - (m * orhoI + (1-m^2)*beta)
+        v.2 := fractionalPart(v2)$QETAAUX
         -----------------------------------------------------------
-        -- CDZ Condition (3), \eqref{eq:CDZ-sigmainfinity=0}
-        -- We transform \eqref{eq:CDZ-sigmainfinity=0} into
-        -- 1/m * (m^2 sigma + (1 - m^2)*24*t + (1-m^2) * sigma)
-        -- = 1/m * (24*t*(1-m^2) + sigma)
-        rval: QQ := - (1/(24*m))*((24*t*(1-m^2))::QQ + sigmaInfinity(nspec))
-        v.2 := fractionalPart(rval)$QETAAUX
-        -----------------------------------------------------------
-        -- CDZ Condition (2), \eqref{eq:CDZ-sigma0=0}
-        rval := - nn * m * sigma0(nspec) / (24 * level(nspec))
-        v.3 := fractionalPart(rval)$QETAAUX
+        -- CDZ Condition (2), \eqref{eq:rho-zero}
+        mm: PP := level rspec
+        v3: QQ := - (orbitSize * m * nn) / mm * rho0(rspec)
+        v.3 := fractionalPart(v3)$QETAAUX
         -----------------------------------------------------------
         -- CDZ condition (4), \eqref{eq:CDZ-productsquare}
         qin: QINPUT := [mat, new(#v, 0)$VZZ, v]

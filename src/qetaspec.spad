@@ -189,27 +189,21 @@ QEtaSpecification: Exports == Implementation where
       ++ pure?(x) returns true if x contains no proper generalized
       ++ eta-functions, i.e., if empty?(generalizedParts(x)).
 
-    sigmaInfinity: % -> QQ
-      ++ sigmaInfinity(x) returns the value corresponding to
-      ++ \eqref{eq:sigmainftybar} in qeta.tex or to
-      ++ \eqref{eq:sigmainfty} for the pure eta-quotient case.
-    sigma0: % -> ZZ
-      ++ sigma0(x) returns the value corresponding to
-      ++ \eqref{eq:sigmazerobar} in qeta.tex or to
-      ++ \eqref{eq:sigmazero} for the pure eta-quotient case.
-    sigmaInfinityPure: % -> ZZ
-      ++ sigmaInfinityPure(x) returns the value of sigmaInfinity(x)
-      ++ considering onlyt the pureParts of x.
-      ++ See \eqref{eq:sigmainfty} in qeta.tex.
-    sigma0Pure: % -> ZZ
-      ++ sigma0Pure(x) returns the value of sigma0(x)
-      ++ considering onlyt the pureParts of x.
-      ++ See \eqref{eq:sigmazero} in qeta.tex.
-      ++ See \eqref{eq:sigmainftytilde} in qeta.tex.
-    sigma0ProperGeneralized: % -> ZZ
-      ++ sigma0ProperGeneralized(x) returns the value of sigma0(x)
+    rhoInfinity: % -> QQ
+      ++ rhoInfinity(x) returns the value corresponding to
+      ++ \eqref{eq:rhoinfty} in qeta.tex.
+    rho0: % -> QQ
+      ++ rho0(x) returns the value corresponding to
+      ++ \eqref{eq:rhozero} in qeta.tex.
+    rho0Pure: % -> QQ
+      ++ rho0Pure(x) returns the value of rho0(x)
+      ++ considering only the pureParts of x.
+      ++ See \eqref{eq:rhozero} in qeta.tex.
+    rho0ProperGeneralized: % -> QQ
+      ++ rho0ProperGeneralized(x) returns the value of rho0(x)
       ++ considering only the properGeneralizedParts of x.
-      ++ See \eqref{eq:sigmazerotilde} in qeta.tex.
+      ++ See \eqref{eq:rhozero} in qeta.tex.
+
 
     modularGamma0: % -> ZZ
       ++ modularGamma0(x) returns 0 if all conditions are fulfilled
@@ -218,8 +212,8 @@ QEtaSpecification: Exports == Implementation where
       ++ that corresponds to the condition that is not met. This
       ++ corresponds to the conditions given for R(N,i,j,k,l) on page
       ++ 226 of \cite{Radu_RamanujanKolberg_2015} and to the
-      ++ conditions \eqref{eq:sum=0}, \eqref{eq:sigmainfinity},
-      ++ \eqref{eq:sigma0}, and \eqref{eq:productsquare} in qeta.tex.
+      ++ conditions \eqref{eq:sum=0}, \eqref{eq:pure-rhoinfinity},
+      ++ \eqref{eq:rho0}, and \eqref{eq:productsquare} in qeta.tex.
       ++ It is an error if pure?(x) is false.
     modularGamma0?: % -> Boolean
       ++ modularGamma0?(x) returns true iff x corresponds to a
@@ -231,8 +225,8 @@ QEtaSpecification: Exports == Implementation where
       ++ generalized eta-quotient that is modular for
       ++ Gamma1(level(x)). It returns 1, if condition
       ++ \eqref{eq:generalized-weight} is not met, 2, if condition
-      ++ \eqref{eq:generalized-sigmaInfinity} is not met, and 3 if
-      ++ condition \eqref{eq:generalized-sigma0} does not hold.
+      ++ \eqref{eq:rhoInfinity} is not met, and 3 if
+      ++ condition \eqref{eq:rho0} does not hold.
     modularGamma1?: % -> Boolean
       ++ modularGamma1?(x) returns true iff the generalized
       ++ eta-quotient corresponding to x is a modular function for
@@ -293,7 +287,7 @@ QEtaSpecification: Exports == Implementation where
 
     alphaInfinity: (%, %, PP, List NN) -> ZZ
       ++ alphaInfinity(sspec,rspec,m,orb) implements the definition
-      ++ \eqref{eq:alphabarInfinity} and \eqref{eq:alphaInfinity},
+      ++ \eqref{eq:alphaInfinity},
       ++ i.e., the definition of Radu in
       ++ \cite{Radu_RamanujanKolberg_2015},
       ++ DOI=10.1016/j.jsc.2017.02.001,
@@ -451,37 +445,38 @@ QEtaSpecification: Exports == Implementation where
         t: QQ := fractionalPart x
         t^2 - t + 1/6
 
-    sigmaInfinityPure(x: %): ZZ ==
+    -- local
+    rhoInfinityPure(x: %): QQ ==
         res: ZZ := 0
         for l in pureParts x repeat res := res + specDelta(l) * specExponent(l)
-        res
+        res/24
 
     -- local
-    sigmaInfinityProperGeneralized(x: %): QQ ==
+    rhoInfinityProperGeneralized(x: %): QQ ==
         res: QQ := 0
         for l in properGeneralizedParts x repeat --assert(#l=3)
             d := specDelta l; g := specSubindex l; e := specExponent l
             res := res + d * e * fractionalBernoulli2(g/d)
-        res
+        (1/24)*res
 
-    sigmaInfinity(x: %): QQ ==
-        sigmaInfinityPure(x)::QQ + 12*sigmaInfinityProperGeneralized x
+    rhoInfinity(x: %): QQ ==
+        rhoInfinityPure(x) + 12*rhoInfinityProperGeneralized x
 
-    sigma0Pure(x: %): ZZ ==
+    rho0Pure(x: %): QQ ==
         mm: ZZ := level x
         res: ZZ := 0
         for l in pureParts x repeat
             res := res + specExponent(l) * ((mm exquo specDelta(l))::ZZ)
-        res
+        res/24
 
-    sigma0ProperGeneralized(x): ZZ ==
+    rho0ProperGeneralized(x: %): QQ ==
         mm: ZZ := level x
         res: ZZ := 0
         for l in properGeneralizedParts x repeat --assert(#l=3)
             res := res + specExponent(l) * ((mm exquo specDelta(l))::ZZ)
-        res
+        res/24
 
-    sigma0(x: %): ZZ == sigma0Pure x + 2*sigma0ProperGeneralized x
+    rho0(x: %): QQ == rho0Pure x + 2*rho0ProperGeneralized x
 
     -- These are the conditions (1) to (4) of
     -- \cite{HemmeckeRadu_EtaRelations_2019} that have to be fulfilled
@@ -505,10 +500,9 @@ QEtaSpecification: Exports == Implementation where
         for l in pureParts x repeat w := w + specExponent l
         not zero? w => 1 -- non-zero weight
         -- order at inifinity is an integer
-        rhat: QQ := sigmaInfinity x
-        not one? denom rhat or not DIVISIBLEBY?(24, numer rhat) => 2
+        not one? denom rhoInfinity x => 2
         -- order at 0 is an integer
-        not DIVISIBLEBY?(24, sigma0 x) => 3
+        not one? denom rho0 x => 3
         return 0 -- modular function for Gamma1(nn)
 
     modularGamma1?(x: %): Boolean == zero? modularGamma1 x
@@ -569,11 +563,9 @@ QEtaSpecification: Exports == Implementation where
         reverse! indices
 
     alphaInfinity(sspec: %, rspec: %, m: PP, orb: List NN): ZZ ==
-        sbarhat: QQ := sigmaInfinity sspec
-        rbarhat: QQ := sigmaInfinity rspec
-        l: List QQ := [24*k::QQ + rbarhat for k in orb]
-        orbsumrbarhat: QQ := reduce(_+, l, 0)
-        alpha: QQ := (1/24)*(sbarhat + (1/m)*orbsumrbarhat)
+        shat: QQ := rhoInfinity sspec
+        rhat: QQ := rhoInfinity rspec
+        alpha: QQ := shat + reduce(_+, orb, 0)/m + (#orb/m)*rhat
         not one? denom alpha => error "alpha not an integer"
         return numer alpha
 

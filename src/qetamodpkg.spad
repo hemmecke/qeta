@@ -262,8 +262,7 @@ QEtaModularPackage(QMOD): Exports == Implementation where
         sspec: SPEC := etaQuotientSpecification(nn, idxs, sinitial)
         spitzen: List Cusp := cusps(nn)$QMOD
         yall: YMEQ QMOD := etaQuotient(sspec, rspec, m, t, spitzen)
-        constant? yall =>
-            sspec
+        constant? yall => return sspec
 
         -- y can still represent a constant function.
         -- We only make an actual test at the cusp infinity for all others
@@ -329,18 +328,18 @@ QEtaModularPackage(QMOD): Exports == Implementation where
         -- grade. Note that grade = -order.
         -- Since in the computation of alphaInfinity (see
         -- QEtaSpecification) only the cofactor part changes, it is
-        -- sufficient if we try to maximize sigmaInfinity(sspec) where
+        -- sufficient if we try to maximize rhoInfinity(sspec) where
         -- sspec is given through s via
         -- sbar:=etaQuotientSpecification(nn,idxs,s)
         sspec := etaQuotientSpecification(nn, idxs, s)
-        sigmainf: QQ := sigmaInfinity sspec
+        rhoinf: QQ := rhoInfinity sspec
         while not empty?(adjustments := rest adjustments) repeat
             s := sinitial + hmat * first(adjustments)
             tspec := etaQuotientSpecification(nn, idxs, s)
-            si: QQ := sigmaInfinity tspec
-            if si > sigmainf then
+            ri: QQ := rhoInfinity tspec
+            if ri > rhoinf then
                 sspec := tspec
-                sigmainf := si
+                rhoinf := ri
         return sspec
 
 

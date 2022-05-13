@@ -128,7 +128,7 @@ asPP x ==> x pretend PP
 -- m               m
 -- mm              M
 -- nn              N
--- sigmaInfty      \sigmainfty{r}
+-- rhoInfty        \rho_\infty{r}
 -- kappa(m)        \kappa
 
 )if LiterateDoc
@@ -172,21 +172,21 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
       ++ \eqref{eq:conditionSumExponentsProperGeneralized?(nn,rspec,m)}.
 
-    conditionSigma0Pure?: (PP, SPEC, PP) -> Boolean
-      ++ conditionSigma0?(nn, rspec, m) returns true if
-      ++ (kappa(m)*m*nn^2/mm)*sigma0(rspec) = 0 mod 24. This
-      ++ corresponds to \eqref{eq:sv24} and
-      ++ \eqref{{eq:conditionSigma0Pure?(nn,mm,r,m)} in qeta.tex and
+    conditionRho0Pure?: (PP, SPEC, PP) -> Boolean
+      ++ conditionRho0?(nn, rspec, m) returns true if
+      ++ (kappa(m)*m*nn^2/mm)*rho0(rspec) is an integer. This
+      ++ corresponds to \eqref{eq:rv24} and
+      ++ \eqref{{eq:conditionRho0Pure?(nn,mm,r,m)} in qeta.tex and
       ++ to the first condition on page~241 of
       ++ \cite{Radu_RamanujanKolberg_2015} (Definition 35).
 
-    conditionSigma0ProperGeneralized?: (PP, SPEC, PP) -> Boolean
-      ++ conditionSigma0?(nn, rspec, m) returns true if
+    conditionRho0ProperGeneralized?: (PP, SPEC, PP) -> Boolean
+      ++ conditionRho0?(nn, rspec, m) returns true if
       ++ (kappa(m)*m*nn^2) *
       ++ sum(e/d for [d,g,e] in properGeneralizedParts x) = 0 mod 12.
       ++ This corresponds to condition 5 on page 37 of Chapter 10 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}. See
-      ++ \eqref{eq:conditionSigma0ProperGeneralized?(nn,rspec,m)}.
+      ++ \eqref{eq:conditionRho0ProperGeneralized?(nn,rspec,m)}.
 
     conditionGSigma0?: (PP, SPEC, PP) -> Boolean
       ++ conditionGSigma0?(nn, rspec, m) returns true if
@@ -198,8 +198,8 @@ QEtaCofactorConditions: Exports == Implementation where
 
     conditionNDivisor?: (PP, SPEC, PP, NN) -> Boolean
       ++ conditionNDivisor?(nn, rspec, m, t) returns true if the
-      ++ expression (24*m*mm)/gcd(mm*kappa(m)*alpha, 24*m*mm) is a
-      ++ divisor of nn where alpha=sigmaInfinity(rspec) + 24*t. This
+      ++ expression (24*m*mm)/gcd(24*mm*kappa(m)*alpha, 24*m*mm) is a
+      ++ divisor of nn where alpha=rhoInfinity(rspec) + t. This
       ++ corresponds to condition 8 on page 37 of Chapter 10 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} and
       ++ to \eqref{eq:w|N} and
@@ -224,11 +224,6 @@ QEtaCofactorConditions: Exports == Implementation where
       ++ condition 10 on page 37 of Chapter 10 of
       ++ \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
 
-    chiExponent: (SPEC, PP, NN, List NN) -> ZZ
-      ++ chiExponent(rspec,m,t,orb) computes e such that
-      ++ $\exp(2\pi i e / 24) = \chi_{r,m,t)$ where r is given
-      ++ by the pure eta-quotient specification rspec.
-
   Implementation ==> add
     fUnion ==> Union("nil", "sqfr", "irred", "prime")
     FL ==> List Record(flag: fUnion, factor: ZZ, exponent: NN)
@@ -240,11 +235,6 @@ QEtaCofactorConditions: Exports == Implementation where
     -- \cite[Def.~35]{Radu_RamanujanKolberg_2015}
     kappa(m: PP): PP == -- gcd(1-m^2, 24)
         (even? m => 1; 8) * (DIVISIBLEBY?(3, m) => 1; 3)
-
-    chiExponent(rspec: SPEC, m: PP, t: NN, orb: List NN): ZZ ==
-        sigmaInfty := numer sigmaInfinity rspec
-        x: ZZ := 24*reduce(_+, orb, 0) + sigmaInfty * #orb
-        positiveRemainder((1-m^2)*((x exquo m)::ZZ), 24)
 
     conditionPrimeDivisors?(nn: PP, m: PP): Boolean ==
         fm: Factored ZZ := factor m
@@ -274,18 +264,16 @@ QEtaCofactorConditions: Exports == Implementation where
         DIVISIBLEBY?(8, kappa(m)*nn*rsum)
 
     -- CDZ condition 7 (p. 37)
-    conditionSigma0Pure?(nn: PP, rspec: SPEC, m: PP): Boolean ==
+    conditionRho0Pure?(nn: PP, rspec: SPEC, m: PP): Boolean ==
         mm: PP := level rspec
-        rv: ZZ := sigma0Pure rspec
-        h: ZZ := (nn exquo mm)::ZZ
-        DIVISIBLEBY?(24, kappa(m)*m*nn*h*rv)
+        q: QQ := kappa(m)*m*nn*nn/mm
+        one? denom(q*rho0Pure(rspec))
 
     -- CDZ condition 5 (p. 37)
-    conditionSigma0ProperGeneralized?(nn: PP, rspec: SPEC, m: PP): Boolean ==
+    conditionRho0ProperGeneralized?(nn: PP, rspec: SPEC, m: PP): Boolean ==
         mm: PP := level rspec
-        rv: ZZ := sigma0ProperGeneralized rspec
-        h: ZZ := (nn exquo mm)::ZZ
-        DIVISIBLEBY?(12, kappa(m)*m*nn*h*rv)
+        q: QQ := kappa(m)*m*nn*nn/mm
+        one? denom(q*rho0ProperGeneralized(rspec))
 
     -- CDZ condition 3 (p. 37)
     conditionGSigma0?(nn: PP, rspec: SPEC, m: PP): Boolean ==
@@ -297,12 +285,12 @@ QEtaCofactorConditions: Exports == Implementation where
         one? denom x and even? numer x
 
     -- local
-    alphaAux(rspec: SPEC, t: NN): QQ == (24*t)::QQ + sigmaInfinity rspec
+    alphaAux(rspec: SPEC, t: NN): QQ == t::QQ + rhoInfinity rspec
 
     -- CDZ condition 8 (p. 37)
     conditionNDivisor?(nn: PP, rspec: SPEC, m: PP,t: NN): Boolean ==
         mm: PP := level rspec
-        a: ZZ := kappa(m)*numer(mm*alphaAux(rspec, t))
+        a: ZZ := kappa(m)*numer(24*mm*alphaAux(rspec, t))
         n: ZZ := 24*m*mm
         w: ZZ := (n exquo gcd(a, n)) :: ZZ
         DIVISIBLEBY?(w, nn)
@@ -328,7 +316,7 @@ QEtaCofactorConditions: Exports == Implementation where
         for i in 0.. (n quo nn) repeat
             j := nn*i+1 -- (j = 1 (mod nn)) (j^2-1 is in S_{n})
             one? gcd(j, n) => -- then 24|(j^2-1)
-               x: QQ := ((j^2 - 1)/24) * a
+               x: QQ := (j^2 - 1) * a
                not one? denom x => error "x should be integral"
                not zero?(numer(x) rem m) => return false
         return true
