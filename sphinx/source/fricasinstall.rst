@@ -157,9 +157,10 @@ FriCAS will use slower routines for arithmetic on large numbers).
 
 
 
-jFriCAS installation
---------------------
+(optional) jFriCAS installation
+-------------------------------
 
+jFriCAS_ is the Jupyter_ notebook interface to FriCAS_.
 Of course, jFriCAS_ needs Jupyter_ in a reasonably recent version (at
 least 4).
 
@@ -223,8 +224,8 @@ You can go back to standard 2D ASCII output as follows.
 
 
 
-Install JupyText
-----------------
+(optional) Install JupyText
+---------------------------
 
 Ordinary Jupyter notebooks use a special format in order to store
 their content. They have the file extension ``.ipynb``. It is an
@@ -309,7 +310,38 @@ you see at
 `FriCAS Demos and Tutorials <https://fricas.github.io/fricas-notebooks/index.html>`_.
 
 
+
+(optional) Install frimacs
+--------------------------
+
+frimacs_ is an Emacs_ mode for FriCAS with special features to
+edit ``.input`` and ``.spad`` files as well as executing a FriCAS_
+session inside an Emacs_ buffer.
+
+Install as follows.
+::
+
+   cd
+   git clone https://github.com/pdo/frimacs.git
+
+Then add the line
+::
+
+   (load-file "/home/hemmecke/frimacs/frimacs.el")
+
+to your ``.emacs`` or ``.emacs.d/init.el`` file.
+
+To start a FriCAS_ session use
+::
+
+   M-x run-fricas
+
+
+
+
 .. _FriCAS: https://fricas.github.io
 .. _jFriCAS: https://jfricas.readthedocs.io
 .. _Jupyter: https://jupyter.org
 .. _JupyText: https://jupytext.readthedocs.io
+.. _Emacs: https://www.gnu.org/software/emacs
+.. _frimacs: https://github.com/pdo/frimacs
