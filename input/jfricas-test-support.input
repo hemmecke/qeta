@@ -15,4 +15,19 @@ assertTrue x ==> (if x then true else (print x; false))
 )r projectlibs )quiet
 )r qetamacros.input )quiet
 
+-- Print "((q;q)_\infty)^2" without the outer pair of parentheses.
+setHandler!(operatorHandlers()$FormatMathJax,_
+            2 ,_
+            "SUB",_
+            subscript(maxPrecedence()$FormatMathJax)$FormatMathJax)_
+      $ OperatorHandlers((Integer, List OutputForm) -> OutputBox)
+
+-- QEta uses oo as symbol for the cusp infinity. In MathJax, we
+-- can print it as "\infty".
+setHandler!(operatorHandlers()$FormatMathJax,_
+            0 ,_
+            "oo",_
+            formatConstant("\infty ")$FormatMathJax)_
+      $ OperatorHandlers((Integer, List OutputForm) -> OutputBox)
+
 setFormat!(FormatMathJax)$JFriCASSupport
