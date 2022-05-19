@@ -240,3 +240,26 @@ for nn in 1..30 repeat (_
 
 --+
 --endtest
+
+
+-- +
+--test:rightCosetRepresentatives
+-- -
+
+-- We test that for two distinct cosets x and y, there is no
+-- $g \in \Gamma_0(N)$ such that $x = g y$, or rather that
+-- $x y^{-1} \not\in \Gamma_0(N)$.
+
+checkRightCosets(nn: PP): Void == (_
+  rcr := rightCosetRepresentatives()$GAMMA1(nn);_
+  assertEquals(#rcr, index()$GAMMA1(nn));_
+  while not empty? rcr repeat (_
+    r := first rcr;_
+    rcr := rest rcr;_
+    y := matrix [[r(2,2), -r(1,2)],[-r(2,1), r(1,1)]];_
+    for x in rcr repeat assertTrue(not member?(x*y)$GAMMA1(nn))))
+
+for nn in 2..9 repeat checkRightCosets(nn)
+
+--+
+--endtest
