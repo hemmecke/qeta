@@ -73,6 +73,8 @@ generating series.
 
    \sum_{n=0}^\infty p(n) q^n = \prod_{n=1}^\infty (1 − q^n)^{-1}
 
+More deails and a description of how to work with **QEta** can be
+found in the QEtaTutorial_.
 
 The **QEta** package requires FriCAS_ 1.3.7. See :ref:`QEta installation`
 for installation instructions.
@@ -88,10 +90,10 @@ Contents
    fricasinstall
    api/index
 
-
 Links
 -----
 
+* QEtaTutorial_
 * |home page|
 * |git repository|
 * Bug reports: |PACKAGE_BUGREPORT|
@@ -99,3 +101,4 @@ Links
 
 .. _FriCAS: https://fricas.github.io
 .. _RISC: https://risc.jku.at
+.. _QEtaTutorial: https://hemmecke.github.io/qeta/QEtaTutorial.html
