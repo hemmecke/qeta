@@ -390,18 +390,13 @@ assertEquals(_
 
 assertTrue(zero?(eval((c:C):X1(C)+->c*1$X1(C),msyms,xgens)(mpol) - xf))
 
-
-
-
 -- ## Find the relation by just one function
 
 idxs := [[1],[11],[11,1],[11,2],[11,3],[11,4]];
 id := findIdM1(nn, rspec, m, t, idxs);
 pretty(id, qIdentity + expand + nonModular + withSubscript)
 
--- +
 assertEquals(- 11*identityPolynomial id + F, mpol)
-
 
 
 -- +
@@ -979,104 +974,13 @@ af := specM1A1(C)(sspec,rspec,m,t)
 mspecs := monoidSpecifications id
 egens := [specM1A1(C) spec for spec in mspecs];
 mpol := inv(coefficient id) * identityPolynomial id
+-- -
 
 -- Check the series.
 
 msyms := indexedSymbols("M", #egens)
 ev ==> eval((c:C):A1(C)+->c*1$A1(C),cons('F,msyms),cons(af,egens))
 assertTrue(zero? ev identityPolynomial id)
-
--- +
--------------------------------------------------------------------
---endtest
--------------------------------------------------------------------
--- -
-
--- # $\Delta_2(25n+24)$
-
--- +
--------------------------------------------------------------------
---test:theorem-10-5-1
--------------------------------------------------------------------
--- -
-
--- Investigate the identities of Theorem 9.1 of
--- \cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
---
--- Let
--- \begin{align*}
--- \sum_{n=0}^\infty \Delta_k(n) q^n
--- &=
--- \frac{
---       (q^2;q^2)_\infty (q^{2k+1};q^{2k+1})_\infty
---      }{
---       (q;q)_\infty^5 (q^{4k+2};q^{4k+2})_\infty
---      }.
--- \end{align*}
--- In \cite{AndrewsPaule_MacMahonsPartitionAnalysisXI_2007}
--- it is conjectured that
--- $$
--- \Delta_2(25n+24) \equiv 0 \pmod{5}.
--- $$
--- We show that by a witness identity.
-
-m := 25; t := 24
-rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-nn := minLevelM1(rspec,m,t)
-idxs := [[1],[2],[5],[10],[5,1],[10,1]]
-id := findIdM1(nn, rspec, m, t, idxs);
-pretty(id, qIdentity + expand + nonModular + withSubscript)
-assertEquals(# monomials identityPolynomial id, 59)
-
--- Let
--- \begin{align*}
--- \sum_{n=0}^\infty a(n) q^n
--- &=
--- \frac{
---       (q;q)_\infty^2 (q^2;q^2)_\infty
---      }{
---       (q^{10};q^{10})_\infty
---      }.
--- \end{align*}
--- Then, because of $(1-q^n)^5\equiv 1-q^{5n} \pmod{5}$,
--- we have
--- $\Delta_2(n)\equiv a(n) \pmod{5}$ for all natural $n$.
---
--- In \cite{AndrewsPaule_MacMahonsPartitionAnalysisXI_2007}
--- it is conjectured that
--- $$
--- \Delta_2(25n+24) -\equiv 0 \pmod{5}.
--- $$
-
--- A relation for the series $a(n)$ is much smaller than
--- the one for $\Delta_2(n)$.
-
-m := 25; t := 24
---rspec := eqSPEC [[1,-3],[2,1],[5,1],[10,-1]]
-rspec := eqSPEC [[1,2],[2,1],[10,-1]]
-nn := minLevelM1(rspec,m,t)
-idxs := [[1],[2],[5],[10],[10,1]]
-id := findIdM1(nn, rspec, m, t, idxs);
-pretty(id, qIdentity + expand + nonModular + withSubscript)
-
-
-pol := (-10*M1-5)*M3+10*M1^2+F;
-assertEquals(5*identityPolynomial id, pol)
-
-sspec := coSpecification id
-af := specM1A1(C)(sspec,rspec,m,t)
-mspecs := monoidSpecifications id
-egens := [specM1A1(C) spec for spec in mspecs];
-mpol := inv(coefficient id) * identityPolynomial id
-
--- Check the series.
-
-msyms := indexedSymbols("M", #egens)
-ev ==> eval((c:C):A1(C)+->c*1$A1(C),cons('F,msyms),cons(af,egens))
-assertTrue(zero? ev identityPolynomial id)
-
-
-
 
 -- +
 -------------------------------------------------------------------
