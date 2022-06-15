@@ -138,6 +138,8 @@ per x ==> (x@Rep) pretend %
 Now some abbreviations for common domains.
 )endif
 
+OF ==> OutputForm
+
 PP ==> PositiveInteger
 NN ==> NonNegativeInteger
 ZZ ==> Integer
@@ -197,7 +199,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
   C: EuclideanDomain -- basic coefficient domain (EntireRing if without xab)
   L ==> List
   EX ==> Expression C
-  Exports ==> CoercibleTo OutputForm with
+  Exports ==> CoercibleTo OF with
     -- constructor
     identity: (SPEC, SPEC, PP, List NN, SPECS, Pol C, QXAB1(C)) -> %
       ++ identity(sspec, rspec, m, orb, bspecss, rel, xab) returns a
@@ -273,8 +275,13 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     alphaOrbitInfinity: % -> QQ
       ++ alphaOrbitInfinity(x)=
       ++ alphaInfinity-rhoInfinity(coSpecification(x))
-    orbitProduct: % -> OutputForm
-      ++ orbitProduct(x) returns the orbit product as an OutputForm.
+    orbitProduct: % -> OF
+      ++ orbitProduct(x) is the same as orbitProduct(x, a, n) where
+      ++ a and n are the outputforms of the symbols "a" and "n".
+    orbitProduct: (%, OF, OF) -> OF
+      ++ orbitProduct(x, a, n) returns the orbit product as an OutputForm
+      ++ where the series coefficients are printed as a(n) and n is the
+      ++ summation variable.
 
     algebraBasis: % -> QXAB1(C)
       ++ algebraBasis(x) returns the algebra basis that was given at
@@ -284,29 +291,29 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     -- The var-functions are helper functions for printing etaQuotients.
     -- They print the i-th variable.
-    var: Symbol -> (ZZ, ZZ) -> OutputForm
-    varsub: Symbol -> (ZZ, ZZ) -> OutputForm
-    varEta: (ZZ, ZZ) -> OutputForm
-    varPochhammer: (ZZ, ZZ) -> OutputForm
+    var: Symbol -> (ZZ, ZZ) -> OF
+    varsub: Symbol -> (ZZ, ZZ) -> OF
+    varEta: (ZZ, ZZ) -> OF
+    varPochhammer: (ZZ, ZZ) -> OF
 
-    varPower: (LZZ, (ZZ, ZZ) -> OutputForm) -> OutputForm
-    monomial: (SPEC, (ZZ, ZZ) -> OutputForm) -> OutputForm
-    monomialQuotient: (SPEC,  (ZZ, ZZ) -> OutputForm) -> OutputForm
+    varPower: (LZZ, (ZZ, ZZ) -> OF) -> OF
+    monomial: (SPEC, (ZZ, ZZ) -> OF) -> OF
+    monomialQuotient: (SPEC,  (ZZ, ZZ) -> OF) -> OF
 
-    etaQuotient: (SPEC, (ZZ, ZZ) -> OutputForm) -> OutputForm
+    etaQuotient: (SPEC, (ZZ, ZZ) -> OF) -> OF
       ++ etaQuotient(rspec, v, e) returns the generalized eta-quotient
       ++ given by rspec where each part is
       ++ formatted by the function v.
-    qQuotient: (SPEC, (ZZ, ZZ) -> OutputForm, QQ) -> OutputForm
+    qQuotient: (SPEC, (ZZ, ZZ) -> OF, QQ) -> OF
       ++ qQuotient(rspec, v, e) returns the generalized eta-quotient
       ++ given by rspec where each part is
       ++ formatted by the function v. The whole eta-quatient comes
       ++ multiplied with a q power with exponent e.
-    qEtaQuotient: (SPEC, (ZZ, ZZ) -> OutputForm) -> OutputForm
+    qEtaQuotient: (SPEC, (ZZ, ZZ) -> OF) -> OF
       ++ qEtauotient(rspec, v) returns qQuotient(rspec, v, e) with
       ++ e=rhoInfinity(rspec).
 
-    f: (%, ZZ, (ZZ, ZZ) -> OutputForm, C, QQ, SPEC) -> OutputForm
+    f: (%, ZZ, (ZZ, ZZ) -> OF, C, QQ, SPEC, OF, OF) -> OF
 
     etaRelationMonomial: (SUP C, SPEC, ZZ, (ZZ, ZZ) -> OF, QQ) -> OF
       ++ etaRelationMonomial(ci, rspec, fmt, v, e) return an
@@ -314,30 +321,38 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ multiplied by q^e with variables given through v and in a
       ++ form given by fmt.
 
-    etaRelation: (List SUP C, SPECS, ZZ, (ZZ, ZZ) -> OF, C, QQ, SPEC) -> OutputForm
+    etaRelation: (List SUP C, SPECS, ZZ, (ZZ, ZZ) -> OF, C, QQ, SPEC) -> OF
       ++ etaRelation(cis, bas, fmt, v, c, e, sspec) returns the
       ++ eta-relation part multiplied by c*q^e*etaQuotient(sspec).
 
-    pretty: (%, ZZ, (ZZ, ZZ) -> OF, C, QQ, SPEC) -> Equation OutputForm
-      ++ pretty(x, fmt, v, c, e, sspec) outputs x as computed in
+    pretty: (%, ZZ, (ZZ, ZZ) -> OF, C, QQ, SPEC, OF, OF) -> Equation OF
+      ++ pretty(x, fmt, v, c, e, sspec, a, n) outputs x as computed in
       ++ eta-quotients, but multiplied by c*q^e*etaQuotient(sspec).
 
-    pretty: (%, ZZ, (ZZ, ZZ) -> OutputForm) -> Equation OutputForm
-      ++ pretty(x, fmt, v) outputs x as computed with respect to a
-      ++ style given by the fmt parameter. If the lowest bit is set
-      ++ in fmt then, the q factor is shown. If the bit 1 is
-      ++ set, then the t parameter is replaces by the respective
-      ++ eta-quotient, so that the coefficients will just be elements
-      ++ of the coefficient domain.
+    pretty: (%, ZZ, (ZZ, ZZ) -> OF) -> Equation OF
+      ++ pretty(x, fmt, v) returns the same as
+      ++ pretty(x,fmt,v,"a"::Symbol::OutputForm,"n"::Symbol::OutputForm).
+    pretty: (%, ZZ, (ZZ, ZZ) -> OF, OF, OF) -> Equation OF
+      ++ pretty(x,fmt,v,a,n) outputs x as computed with respect to a
+      ++ style given by the fmt parameter. If the lowest bit is set in
+      ++ fmt then, the q factor is shown. If the bit 1 is set, then
+      ++ the t parameter is replaced by the respective eta-quotient,
+      ++ so that the coefficients will just be elements of the
+      ++ coefficient domain. The summation index is n and the
+      ++ coefficients under the sum are a(n).
 
-    pretty: (%, ZZ) -> Equation OutputForm
-      ++ pretty(x, fmt) returns pretty(x, fmt, v) where v is a
-      ++ variable indexing function chosen by bit 3 and 4 of fmt
+    pretty: (%, ZZ) -> Equation OF
+      ++ pretty(x, fmt) returns the same as
+      ++ pretty(x,fmt,"a"::Symbol::OutputForm,"n"::Symbol::OutputForm).
+    pretty: (%, ZZ, OF, OF) -> Equation OF
+      ++ pretty(x, fmt, a, n) returns pretty(x, fmt, v, a, n) where v
+      ++ is a variable indexing function chosen by bit 3 and 4 of fmt
       ++ according to the rules. If bit3=0, then variables are used.
       ++ If bit0=0, then the variable is "E" otherwise it is "u". If
       ++ bit4=0, then no subscripts are uses, bit4=1 means subscripts.
       ++ If bit3=1, then expressions are used. If bit0=0, then
-      ++ v=varEta. If bit0=1, then v=varPochhammer.
+      ++ v=varEta. If bit0=1, then v=varPochhammer. The summation
+      ++ index is n and the coefficients under the sum are a(n).
 
 -------------------------------------------------------------------
 
@@ -440,7 +455,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
     -- output stuff
     oeq(x, y) ==> ((concat(x,"(x)")$String)::Symbol::OF) = (y::OF)
-    coerce(x: %): OutputForm ==
+    coerce(x: %): OF ==
         cospec: OF := oeq("coSpecification", coSpecification x)
         defspec: OF := oeq("definingSpecification", definingSpecification x)
         m: OF := oeq("multiplier", multiplier x)
@@ -461,14 +476,14 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
         sum(out*q^n, n=0::OF, "%Infinity"::Symbol::OF)
 
     -- \prod_{k\in orb} {sum_{n=0}^\infty a(mn+k) q^n
-    orbitProduct(x: %): OF ==
-        n: OF := "n"::Symbol::OF
-        a: OF := "a"::Symbol::OF
+    orbitProduct(x: %, a: OF, n: OF): OF ==
         orb: List NN := sort orbit x
         t := first orb
         out: OF := sum(a, n, multiplier x, t)
         for k in rest orb repeat out := out * sum(a, n, multiplier x, k)
         out
+
+    orbitProduct(x: %): OF == orbitProduct(x, "a"::Symbol::OF, "n"::Symbol::OF)
 
 -------------------------------------------------------------------
 
@@ -555,12 +570,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 
 -------------------------------------------------------------------
 
-    f(x: %, fmt: ZZ, v: (ZZ, ZZ) -> OF, c: C, e: QQ, rspec: SPEC): OF ==
+    f(x:%, fmt:ZZ, v:(ZZ,ZZ)->OF, c:C, e:QQ, rspec:SPEC, a:OF, n:OF): OF ==
         e := e + alphaOrbitInfinity x
         rspec := rspec * coSpecification x
         if withQFactor? fmt then e: QQ := e + rhoInfinity(rspec)
         cofact: OF := qQuotient(rspec, v, e)
-        out: OF := orbitProduct x
+        out: OF := orbitProduct(x, a, n)
         if not(zero? e and one? rspec) then out := cofact * out
         cf: C := c * coefficient x
         one? cf => out
@@ -590,30 +605,35 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- fmt is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
     -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
-    pretty(x: %, fmt: ZZ, v: (ZZ,ZZ)->OF, cf: C, e: QQ, sspec: SPEC): Equation OF ==
+    pretty(x: %, fmt: ZZ, v: (ZZ, ZZ) -> OF, cf: C, e: QQ, sspec: SPEC,
+           a: OF, n: OF): Equation OF ==
         cis: List SUP C := moduleCoefficients x
         bas: SPECS := moduleBasis x
         if expand? fmt then
             t: SPEC := first monoidSpecifications x
-            lots: List List Record(k: NN, c: C) := [listOfTerms ci for ci in cis]
+            lots: List List Record(k:NN, c:C) := [listOfTerms ci for ci in cis]
             --assert(#bas=#cis)
             --assert(#bas=#lots)
             cis := concat [[(rec.c)::SUP(C) for rec in lot] for lot in lots]
             bas := concat [[b * t^(rec.k) for rec in lot]
                            for lot in lots for b in bas]
         er: OF := etaRelation(cis, bas, fmt, v, cf, e, sspec)
-        (f(x, fmt, v, cf, e, sspec) = er)$Equation(OF)
+        (f(x, fmt, v, cf, e, sspec, a, n) = er)$Equation(OF)
 
     -- format is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
     -- bit 1: 0 = format with t, 1 = expand t into eta-quotient
     -- bit 2: 0 = modular function identity, 1 = only orbit product on LHS
-    pretty(x: %, fmt: ZZ, v: (ZZ, ZZ) -> OF): Equation OF ==
+    pretty(x: %, fmt: ZZ, v: (ZZ, ZZ) -> OF, a: OF, n: OF): Equation OF ==
         modularFunctionIdentity? fmt =>
-            pretty(x, fmt, v, 1, 0, etaQuotientSpecification(1,[]))
+            pretty(x, fmt, v, 1, 0, etaQuotientSpecification(1,[]), a, n)
         invcf: Union(C, "failed") := 1$C exquo coefficient(x)
         icf: C := if invcf case "failed" then 1$C else invcf::C
-        pretty(x, fmt, v, icf, - alphaOrbitInfinity x, inv coSpecification x)
+        sspec: QEtaSpecification := inv coSpecification x
+        pretty(x, fmt, v, icf, - alphaOrbitInfinity x, sspec, a, n)
+
+    pretty(x: %, fmt: ZZ, v: (ZZ, ZZ) -> OF): Equation OF ==
+        pretty(x, fmt, v, "a"::Symbol::OF, "n"::Symbol::OF)
 
     -- format is divided in several bits
     -- bit 0: 0 = eta format,  1 = q format
@@ -621,7 +641,7 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- bit 2: 0 = modular function identity, 1 = only orbit product on LHS
     -- bit 3: 0 = variables, 1 = expression
     -- bit 4: 0 = normal indexed variables, 1 = subscripted variables
-    pretty(x: %, fmt: ZZ): Equation OF ==
+    pretty(x: %, fmt: ZZ, a: OF, n: OF): Equation OF ==
         v: (ZZ, ZZ) -> OF :=
             withQFactor? fmt =>
                 asExpression? fmt => varPochhammer @ ((ZZ,ZZ)->OF)
@@ -630,7 +650,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             asExpression? fmt => varEta @ ((ZZ,ZZ)->OF)
             varsubscript? fmt => varsub("E"::Symbol)
             var("E"::Symbol)
-        pretty(x, fmt, v)
+        pretty(x, fmt, v, a, n)
+
+    pretty(x: %, fmt: ZZ): Equation OF ==
+        pretty(x, fmt, "a"::Symbol::OF, "n"::Symbol::OF)
 
 -------------------------------------------------------------------
 -- Return parts as expressions, polynomial, or rational functions.
