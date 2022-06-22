@@ -267,14 +267,14 @@ Edit the file ``$J/languages.py`` and change appropriately.
 
    #+BEGIN_ASCII
    # Jupyter magic commands that are also languages
-   _JUPYTER_LANGUAGES = ['spad', "R", ...]
+   _JUPYTER_LANGUAGES = ["spad", "R", ...]
 
    # Supported file extensions (and languages)
    # Please add more languages here (and add a few tests) - see CONTRIBUTING.md
    _SCRIPT_EXTENSIONS = {
       ".py": {"language": "python", "comment": "#"},
-       '.input': {'language': 'spad', 'comment': '--'},
-       '.input-test': {'language': 'spad', 'comment': '--'},
+       ".input": {"language": "spad", "comment": "--"},
+       ".input-test": {"language": "spad", "comment": "--"},
        ...
    }
 
