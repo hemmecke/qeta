@@ -360,6 +360,11 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- representations of the data.
 
     if C has Comparable then
+        monomial: (SPEC, Symbol) -> Pol C
+        monomialQuotient: (SPEC, Symbol) -> Fraction Pol C
+        etaQuotient: (SPEC, Symbol) -> Fraction Pol C
+        qcofactor: % -> Fraction Pol C
+
         monomialX: (SPEC, Symbol) -> EX
         monomialQuotientX: (SPEC, Symbol) -> EX
         etaQuotientX: (SPEC, Symbol) -> EX
@@ -672,13 +677,32 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             e: NN := specExponent(l)::NN
             (sub(v, d, g)::Pol(C))^e
 
-        monomialX(rspec: SPEC, v: Symbol): EX ==
-            one? rspec => 1$EX
+        monomial(rspec: SPEC, v: Symbol): Pol C ==
+            one? rspec => 1$Pol(C)
             vs: List Pol C := [vPower(v, l) for l in parts rspec]
-            reduce(_*, vs)::EX
+            reduce(_*, vs)
+
+        monomialQuotient(rspec: SPEC, v: Symbol): Fraction Pol C ==
+            monomial(numer rspec, v) / monomial(denom rspec, v)
+
+        etaQuotient(rspec: SPEC, v: Symbol): Fraction Pol C ==
+            monomialQuotient(rspec, v)
+
+        qcofactor(x: %): Fraction Pol C ==
+            eq: Fraction Pol C := etaQuotient(coSpecification x, "u"::Symbol)
+            alpha: ZZ := alphaInfinity x
+            zero? alpha => eq
+            q: Fraction Pol C := "q"::Symbol::Pol(C)::Fraction(Pol(C))
+            alpha > 0 => eq * q^asPP(alpha)
+            eq / q^asPP(-alpha)
+
+-------------------------------------------------------------------
+
+        monomialX(rspec: SPEC, v: Symbol): EX ==
+            monomial(rspec, v)::EX
 
         monomialQuotientX(rspec: SPEC, v: Symbol): EX ==
-            monomialX(numer rspec, v) / monomialX(denom rspec, v)
+            monomialQuotient(rspec, v)::EX
 
         etaQuotientX(rspec: SPEC, v: Symbol): EX ==
             monomialQuotientX(rspec, v)
@@ -707,15 +731,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             qvar: EX := "q"::Symbol::EX
             qvar^e * eq
 
-        qcofactorX(x: %): EX ==
-            eq: EX := etaQuotientX(coSpecification x, "u"::Symbol)
-            alpha: ZZ := alphaInfinity x
-            zero? alpha => eq
-            q: EX := "q"::Symbol::EX
-            q^alpha * eq
+        qcofactorX(x: %): EX == qcofactor(x)::EX
 
         equationX(x: %, s: Symbol): Equation EX ==
-            l := coefficient(x)::EX * cofactorX(x)::EX * orbitProductX(x, s)
+            l := coefficient(x)::EX * cofactorX(x) * orbitProductX(x, s)
             l = - coefficient(identityPolynomial(x), 'F, 0)::EX
 
         equationX(x: %): Equation EX == equationX(x, "a"::Symbol)
