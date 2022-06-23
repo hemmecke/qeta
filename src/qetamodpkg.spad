@@ -159,6 +159,17 @@ QEtaModularPackage(QMOD): Exports == Implementation where
       ++ etaQuotient(sspec,rspec,m,t)$SymbolicModularEtaQuotient(QMOD)
       ++ corresponds to a modular function with poles only at infinity
       ++ and with smallest pole order.
+    etaCofactorInfinity: (PP, SPECS, INDICES) -> SPEC
+      ++ etaCofactorInfinity(nn,rspecs,idxs) returns a specification
+      ++ sspec such that sspec has only indices from idxs and for
+      ++ every rspec from rspecs modular?(sspec,rspec,1,0)$QMOD is
+      ++ true and
+      ++ etaQuotient(sspec,rspec,1,0)$SymbolicModularEtaQuotient(QMOD)
+      ++ corresponds to a modular function with poles only at infinity
+      ++ and with smallest pole order. It is an error if all rspecs
+      ++ cannot be made modular by a common cofactor, i.e., we require
+      ++ that for every rspec in rspecs the specification
+      ++ (rspec/rspecs.1) specifies a modular eta-quotient.
   Implementation ==> add
     C ==> QQ
     lift2C x ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(ZZ, C)
@@ -342,6 +353,88 @@ QEtaModularPackage(QMOD): Exports == Implementation where
                 rhoinf := ri
         return sspec
 
+    etaCofactorInfinity(nn: PP, rspecs: SPECS, idxs: INDICES): SPEC ==
+        empty? rspecs => error "no specifications given"
+        -- make sure that we have specs with the same level nn.
+        nspecs: SPECS := empty()
+        for rspec in rspecs repeat
+            not zero?(nn rem level rspec) =>
+                error "specification level is not divide the given level"
+            nspecs := cons(etaQuotientSpecification(nn, parts rspec), nspecs)
+        spec := first nspecs
+        for rspec in nspecs repeat
+            not modular?(rspec/spec)$QMOD => error "cannot make result modular"
+
+        ecs: ECS := etaCofactorSpace(nn, spec, 1, 0, idxs)$QMOD
+        ecs.particular case "failed" =>
+            error "etaCofactorInfinity: cannot make modular"
+        idxs := ecs.indices -- because idxs can be empty initially
+        hbasis: LVZZ := ecs.basis -- a basis for the homogeneous solutions
+        rinitial: VZZ := (ecs.particular)::VZZ
+        sinitial: VZZ := minimizeVector(rinitial, hbasis)$QETAAUX
+
+        sspec: SPEC := etaQuotientSpecification(nn, idxs, sinitial)
+        spitzen := cusps(nn)$QMOD
+        grds: VZZ := vector qetaGrades(sspec, spec, 1, 0, spitzen)
+        for rspec in rest nspecs repeat
+            for i in 1..#grds _
+            for g in qetaGrades(sspec, rspec, 1, 0, spitzen) repeat
+                grds.i := max(grds.i, g)
+        ords: LZZ := [-g for g in members grds for c in spitzen | not infinity? c]
+        bspecs := [etaQuotientSpecification(nn, idxs, x) for x in hbasis]
+        --- See \eqref{eq:remove-non-infinity-poles}.
+        rspitzen := remove!(infinity()$Cusp, spitzen)
+        zin: ZINPUT := etaCofactorInfinitySpaceSystem(bspecs, ords, rspitzen)
+        -- Now we have a system (mat, b) and look for a solution v such
+        -- that mat*v>=b, where >= means "in each component".
+        zin := reduceSystem zin -- remove identical rows
+        -- We first solve mat*x=v for x.
+        v: VZZ := zin.zrhs
+        z: ZRESULT := zsolve([zin.zmat, new(#v,0), v]$ZINPUT)$X4ti2
+        hmat: MZZ := transpose matrix [members x for x in hbasis]
+        not empty?(z.zinhom) =>
+            s := sinitial + hmat * first(z.zinhom)
+            sspec := etaQuotientSpecification(nn, idxs, s)
+            return sspec
+
+        -- If there is no solution, we try the more involved mat*x>=u.
+        z := zsolve(zin)$X4ti2
+        -- We are interested in the inhomogeneous solutions, since
+        -- they yield an adjustment such that the resulting cofactor
+        -- vector sbar leads to an element in M^\infty(nn) for the
+        -- etaQuotient(sspec,rspec,m,t).
+        --
+        -- There can be several inhomogeneous solutions. Any of them
+        -- is fine, but we want the resulting series to be of a small
+        -- qetaGrade (= small poleorder = big order) at infinity. So we
+        -- compute the series expansion at infinity for each of the
+        -- inhomogeneous solutions and take the minimal qetaGrade.
+        adjustments := z.zinhom
+        empty? adjustments => error "cannot find cofactor"
+        s := sinitial + hmat * first(adjustments)
+        -- The order of the expansion at infinity of the modular
+        -- function given by (sspec, rspec, m, t) can be approximated
+        -- by alphaInfinity. See its definition in QEtaCofactorSpace.
+        -- Even though it might not be the correct order since
+        -- a(m*n+t) can be zero for an initial segment of natural
+        -- numbers n, alphaInfinity can be used to determine which of
+        -- the possible inhomogeneous candidates gives a minimal
+        -- grade. Note that grade = -order.
+        -- Since in the computation of alphaInfinity (see
+        -- QEtaSpecification) only the cofactor part changes, it is
+        -- sufficient if we try to maximize rhoInfinity(sspec) where
+        -- sspec is given through s via
+        -- sbar:=etaQuotientSpecification(nn,idxs,s)
+        sspec := etaQuotientSpecification(nn, idxs, s)
+        rhoinf: QQ := rhoInfinity sspec
+        while not empty?(adjustments := rest adjustments) repeat
+            s := sinitial + hmat * first(adjustments)
+            tspec := etaQuotientSpecification(nn, idxs, s)
+            ri: QQ := rhoInfinity tspec
+            if ri > rhoinf then
+                sspec := tspec
+                rhoinf := ri
+        return sspec
 
 
 
