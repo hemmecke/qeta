@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 ---
 --- FriCAS QEta
---- Copyright (C) 2020-2021  Ralf Hemmecke <ralf@hemmecke.org>
+--- Copyright (C) 2020-2022  Ralf Hemmecke <ralf@hemmecke.org>
 ---
 -------------------------------------------------------------------
 -- This program is free software: you can redistribute it and/or modify
@@ -149,7 +149,7 @@ INDICES ==> List LZZ
 
 Pol ==> Polynomial
 SUP ==> SparseUnivariatePolynomial
-QETAAUX ==> QEtaAuxiliaryPackage;
+QETAAUX ==> QEtaAuxiliaryPackage
 
 asPP x ==> x pretend PP
 
@@ -292,14 +292,25 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
     -- The var-functions are helper functions for printing etaQuotients.
     -- They print the i-th variable.
     var: Symbol -> (ZZ, ZZ) -> OF
+       ++ var(v)(d,g) generates vd_g as an OutputForm.
+       ++ If g=-1 it becomes just vd.
     varsub: Symbol -> (ZZ, ZZ) -> OF
+       ++ varsub(v)(d,g) generates subscript(v,[d,g]) as an OutputForm.
+       ++ If g=-1 it becomes just subscript(v,[d]).
     varEta: (ZZ, ZZ) -> OF
+       ++ varEta(d,g) generates $\eta_{d,g}(\tau)$ as an OutputForm.
+       ++ If g=-1 it becomes just $\eta(d\tau)$
     varPochhammer: (ZZ, ZZ) -> OF
-
+       ++ varPochhammer(d,g) generates $(q^g,q^{d-g};q^d)_\infty$ as
+       ++ an OutputForm. If g=-1 it becomes $(q^d;q^d)_\infty$.
     varPower: (LZZ, (ZZ, ZZ) -> OF) -> OF
+       ++ varPower([d,g,e], v) returns v(d,g)^e as an OutputForm.
     monomial: (SPEC, (ZZ, ZZ) -> OF) -> OF
+       ++ monomial(spec,v) applies v to parts(spec) and multiplies
+       ++ the results together.
     monomialQuotient: (SPEC,  (ZZ, ZZ) -> OF) -> OF
-
+       ++ monomialQuotient(spec,v) essentually returns
+       ++ monomial(numer(spec))/monomial(denom(spec))
     etaQuotient: (SPEC, (ZZ, ZZ) -> OF) -> OF
       ++ etaQuotient(rspec, v, e) returns the generalized eta-quotient
       ++ given by rspec where each part is
@@ -314,6 +325,10 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ e=rhoInfinity(rspec).
 
     f: (%, ZZ, (ZZ, ZZ) -> OF, C, QQ, SPEC, OF, OF) -> OF
+      ++ f(id,fmt.v,c,e,rspec,a,n) returns the dissection part of the
+      ++ equation, multiplied by the eta-quotient given by rspec and
+      ++ c*q^e. The coefficient under the sum is named by a and the
+      ++ summation variable is denoted by n.
 
     etaRelationMonomial: (SUP C, SPEC, ZZ, (ZZ, ZZ) -> OF, QQ) -> OF
       ++ etaRelationMonomial(ci, rspec, fmt, v, e) return an
@@ -355,28 +370,65 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
       ++ index is n and the coefficients under the sum are a(n).
 
 -------------------------------------------------------------------
-
     -- Functions with X at their end give expressions or polynomial
     -- representations of the data.
 
-    if C has Comparable then
+    if C has Ring then -- because of requirements for Polynomial
         monomial: (SPEC, Symbol) -> Pol C
-        monomialQuotient: (SPEC, Symbol) -> Fraction Pol C
-        etaQuotient: (SPEC, Symbol) -> Fraction Pol C
-        qcofactor: % -> Fraction Pol C
+          ++ monomial(spec,v) assumes that all exponents in the
+          ++ specification are positive and returns a product of
+          ++ powers of specification parts. If [d,g,e] is in
+          ++ parts(spec), then the result is v[d,g]^e where v[d,g] is
+          ++ the symbol v subscripted by [d,g].
 
+    if C has IntegralDomain then -- because of requirements for Fraction
+        monomialQuotient: (SPEC, Symbol) -> Fraction Pol C
+          ++ monomialQuotient(spec,v) returns
+          ++ monomial(numer(spec),v)/monomial(denom(spec),v).
+        etaQuotient: (SPEC, Symbol) -> Fraction Pol C
+          ++ etaQuotient(spec,v) returns the same as
+          ++ monomialQuotient(spec,v).
+        qcofactor: % -> Fraction Pol C
+          ++ qcofactor(x) returns
+          ++ q^alphaInfinity(x)*etaQuotient(coSpecification(x),"u"::Symbol).
+
+        -- Expression(C) results
+    if C has IntegralDomain and C has Comparable then
         monomialX: (SPEC, Symbol) -> EX
+          ++ monomialX(spec,v) returns
+          ++ monomial(spec,v)::Expression(C).
         monomialQuotientX: (SPEC, Symbol) -> EX
+          ++ monomialQuotientX(spec,v) returns
+          ++ monomialQuotient(spec,v)::Expression(C).
         etaQuotientX: (SPEC, Symbol) -> EX
+          ++ etaQuotientX(spec,v) returns monomialQuotientX(spec,v).
         sumX: (BasicOperator, Symbol, PP, NN) -> EX
+          ++ sumX(a,n,m,t) returns the expression for
+          ++ $\sum_{n=0}^\infty{a(m{n}+t)q^n}$.
         orbitProductX: % -> EX
+          ++ orbitProductX(x) returns orbitProductX(x,"a"::Symbol).
         orbitProductX: (%, Symbol) -> EX
+          ++ orbitProductX(x,a) returns the respective orbit product
+          ++ part of x as an expression with summation variable n and
+          ++ series variable a(m n + k) where m is the respective
+          ++ multiplier and k is in orbit(x).
         cofactorX: % -> EX
+          ++ q^alphaOrbbitInfinity(x) *
+          ++ etaQuotient(coSpecification(x),"E"::Symbol).
         qcofactorX: % -> EX
+          ++ qcofactorX(x) returns qcofactor(x)::Expression(C).
         equationX: (%, Symbol) -> Equation EX
+          ++ equationX(x,a) returns the result stored in x as an
+          ++ equation of expressions in "E" variables and with a
+          ++ (fractional) power of the q variable.
         equationX: % -> Equation EX
+          ++ equationX(x) returns equationX(x,"a"::Symbol).
         qequationX: (%, Symbol) -> Equation EX
+          ++ qequationX(x,a) returns the result stored in x as an
+          ++ equation of expressions in "u" variables and with a power
+          ++ of the q variable.
         qequationX: % -> Equation EX
+          ++ qequationX(x) returns qequationX(x,"a"::Symbol).
 
     -- some auxiliary functions that might have to be moved elsewhere
     nonConstantMonoidSpecifications: SPECS -> SPECS
@@ -663,12 +715,12 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
 -------------------------------------------------------------------
 -- Return parts as expressions, polynomial, or rational functions.
 
-    if C has Comparable then
+    -- local
+    sub(v: Symbol, d: ZZ, g: ZZ): Symbol ==
+        g = -1 => subscript(v, [d::OF]$List(OF))
+        subscript(v, [d::OF, g::OF]$List(OF))
 
-        -- local
-        sub(v: Symbol, d: ZZ, g: ZZ): Symbol ==
-            g = -1 => subscript(v, [d::OF]$List(OF))
-            subscript(v, [d::OF, g::OF]$List(OF))
+    if C has Ring then
 
         -- local
         vPower(v: Symbol, l: LZZ): Pol C ==
@@ -681,6 +733,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             one? rspec => 1$Pol(C)
             vs: List Pol C := [vPower(v, l) for l in parts rspec]
             reduce(_*, vs)
+
+    if C has IntegralDomain then
 
         monomialQuotient(rspec: SPEC, v: Symbol): Fraction Pol C ==
             monomial(numer rspec, v) / monomial(denom rspec, v)
@@ -697,6 +751,8 @@ QEtaRamanujanKolbergIdentity(C): Exports == Implementation where
             eq / q^asPP(-alpha)
 
 -------------------------------------------------------------------
+
+    if C has IntegralDomain and C has Comparable then
 
         monomialX(rspec: SPEC, v: Symbol): EX ==
             monomial(rspec, v)::EX
