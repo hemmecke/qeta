@@ -265,7 +265,7 @@ pretty(id, withSubscript)
 mspecs := monoidSpecifications id
 
 -- So $M_1=t$ stands for
--- $\frac{\eta(2\tau)^8 \eta(11\tau)^4}{\eta(\tau)\eta(22\tau)^8}$, etc.
+-- $\frac{\eta(2\tau)^8 \eta(11\tau)^4}{\eta(\tau)^4\eta(22\tau)^8}$, etc.
 -- It can be shown easily by functions from **QEta**.
 
 [etaQuotient(x, varEta$RKI) for x in mspecs]
@@ -425,7 +425,7 @@ ids := [findIdM1(5, idxs, rspec, 5, t, id) for t in 0..4];
 
 QEtaIdeal ==> QEtaIdealHemmeckeCached
 QI1 ==> QEtaIdeal(C,QMOD1)
-idpol(id: RKI, f:Symbol): Pol C == (_
+idpol(id: RKI, f: Symbol): Pol C == (_
   sspec := coSpecification id;_
   mon: Pol(C) := f*etaQuotientMonomial(sspec,char"E",char"Y")$QI1;_
   ipol: Pol(C) := inv coefficient id * identityPolynomial id - 'F::Pol(C);_
@@ -1195,7 +1195,7 @@ modular?(r5spec)$QMOD1
 yr5 := specYM1EQ r5spec;
 
 -- For specifications without dissections,
--- the order at the cusps can be directly read of from
+-- the order at the cusps can be directly read off from
 -- the following command.
 
 cusps(yr5)
@@ -1270,7 +1270,7 @@ specM1A1(ZZ)(i10spec) - 11*specM1A1(ZZ)(i5spec) - specM1A1(ZZ)(gspec)
 --
 -- The expansion at all cusps cannot be done with series over
 -- $\setQ$, but needs an extension with a root of unity $\xi$.
--- In our case, $\setQ[\xi]$ works where $\xi^20=1$.
+-- In our case, $\setQ[\xi]$ works where $\xi^{20}=1$.
 
 xiord := minimalRootOfUnity yr5
 
@@ -1333,6 +1333,56 @@ exs := [expandM0AnCX y for y in ys];
 left := one + 9*exs.1
 right := exs.2 + exs.3
 assertTrue(zero?(left - right))
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Recognize series as (generalized) eta-quotients
+
+-- +
+-------------------------------------------------------------------
+--test:recognize-eta-quotients
+-------------------------------------------------------------------
+-- -
+
+-- **QEta** is able to guess a representation of a $q$-series
+-- in terms of a (generalized) eta-quotient.
+-- As an example we use the identity of the
+-- Rogers-Ramanujan continued fraction.
+-- \begin{align}
+-- \frac{\eta_{5;2}(\tau)^5}{\eta_{5;1}(\tau)^5}
+-- -
+-- \frac{\eta_{5;1}(\tau)^5}{\eta_{5;2}(\tau)^5}
+-- &=
+-- 11 + \frac{\eta(\tau)^6}{\eta(5\tau)^6}
+-- %\tag{1.5}
+-- \end{align}
+--
+-- We try to recognize $\frac{\eta(\tau)^6}{\eta(5\tau)^6}$
+-- from the $q$-series.
+
+)set stream calc 30
+rrspec := eqSPEC [[5,1,1],[5,2,-1]];
+rr5 := expansion specEQI(ZZ)(rrspec^5);
+ir5 := expansion specEQI(ZZ)(inv(rrspec^5));
+)set stream calc 40
+f := ir5 - rr5 - 11
+
+rec := etaQuotientSpecification([[1],[5]],f,20)
+assertEquals(rec.fspec, eqSPEC [[1,6],[5,-6]])
+
+-- Of course `rec.fspec` is just a guess and must be
+-- verified by other means.
+
+-- Similarly, we can guess a generalized eta-quotient by
+-- simply listing the indices that we allow in the
+-- eta-quotient.
+
+rec := etaQuotientSpecification([[5,1],[5,2]],f,20)
+assertEquals(rec.fspec, eqSPEC [[5,1,6],[5,2,6]])
 
 -- +
 -------------------------------------------------------------------
