@@ -77,13 +77,13 @@ The package \texttt{QEtaRepresentation} implements functions that try
 to recognize generalized eta-quotients from (truncated) $q$-series.
 
 The algorithm for eta-quotients is simple. If the given $q$-series $f$
-starts with $1+e*q^\delta+O(\delta+1)$ then, we collect the
+starts with $1+e \cdot q^\delta+O(q^{\delta+1})$ then, we collect the
 specification $[[\delta,-e]]$ (which corresponds to
-$\eta(\delta\tau)^e$), replace $f$ by $f \eta(\delta\tau)^e$ and
+$\eta(\delta\tau)^e$), replace $f$ by $f \cdot \eta(\delta\tau)^e$ and
 repeat the process up to the required precision.
 
 A similar algorithm is used for generalized eta-quotients, but then a
-level $N$ is given and we try to replace $f$ by $f J(N,\delta)^e$
+level $N$ is given and we try to replace $f$ by $f \cdot J(N,\delta)^e$
 where $J$ stands for the \texttt{jacobiFunction} as defined in the
 \texttt{QFunctions} package and collect the specification
 $[[nn,\delta,-e],[nn,\delta,-e]]$.
@@ -111,7 +111,9 @@ QEtaRepresentation(): Exports == Implementation where
       ++ etaSpecification(s,n) is equivalent to
       ++ etaSpecification(idxs,s,n) for idxs=[[d] for d in 1..n].
       ++
-      ++ The function basically fails if order(eulerExpansion(r),n)<n.
+      ++ If order(eulerExpansion(r)-1,n)<n, then the function has not
+      ++ succeeded and only returns a specification it has found so
+      ++ far.
 
     etaQuotientSpecification: (PP, L1 C, PP) -> REC
       ++ etaSpecification(nn,s,n) assumes that s=q^a*t and t is a
@@ -129,7 +131,9 @@ QEtaRepresentation(): Exports == Implementation where
       ++ pidxs=[[nn,g] for g in 1..floor((nn-1)/2)] and
       ++ eidx=[nn/2,nn] if nn is even and eidxs=[nn] for odd nn.
       ++
-      ++ The function basically fails if order(eulerExpansion(r),n)<n.
+      ++ If order(eulerExpansion(r)-1,n)<n, then the function has not
+      ++ succeeded and only returns a specification it has found so
+      ++ far.
 
     etaQuotientSpecification:(INDICES, L1 C, PP) -> REC
       ++ etaSpecification(idxs,s,n) assumes that s=q^a*t and t is a
@@ -142,7 +146,9 @@ QEtaRepresentation(): Exports == Implementation where
       ++
       ++ The specification will contain only indices from idxs.
       ++
-      ++ The function basically fails if order(eulerExpansion(r),n)<n.
+      ++ If order(eulerExpansion(r)-1,n)<n, then the function has not
+      ++ succeeded and only returns a specification it has found so
+      ++ far.
 
   Implementation ==> add
 
@@ -152,7 +158,7 @@ QEtaRepresentation(): Exports == Implementation where
     findIndex(idxs: INDICES, s: L1 C, n: PP): LZZ ==
       d: ZZ := order(s-1,n+1)
       d > n => empty()
-      -- We look for an entry [d] ord [nn,d] where nn>2*d in idxs.
+      -- We look for an entry [d] or [nn,d] where nn>2*d in idxs.
       for idx in idxs repeat
           one?(#idx) =>
              idx.1=d => return idx
