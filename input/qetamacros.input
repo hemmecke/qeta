@@ -2,6 +2,10 @@
 -- General macros for the compuation with eta-quotions in the QEta package
 -------------------------------------------------------------------
 
+-------------------------------------------------------------------
+-- This first section is for debugging and tracing purposes.
+-- It is not essentially needed.
+-------------------------------------------------------------------
 OF==>OutputForm
 display77(x) ==> display((x::OF)::Formatter(Format1D))
 yof x ==> x :: Symbol :: OF
@@ -11,12 +15,17 @@ vPrint(x,y) ==> display77(hconcat([yof x,yof":=",y::OF]$List(OF)))
   -- print variable assignment in 1D
 
 -------------------------------------------------------------------
+-- Short-hands for a few common domains.
+-------------------------------------------------------------------
 NN ==> NonNegativeInteger
 PP ==> PositiveInteger
 ZZ ==> Integer
 QQ ==> Fraction ZZ
 SL2Z ==> Matrix ZZ -- 2x2 matricies with determinant = 1
 
+-------------------------------------------------------------------
+-- The domain for the specification of (generalized) eta-quotients
+-------------------------------------------------------------------
 SPEC ==> QEtaSpecification
 SPECS ==> List SPEC
 
@@ -33,20 +42,21 @@ printSPEC spec ==> printQPOCH spec = printETA spec
 eqSPEC ==> etaQuotientSpecification $ SPEC
 
 -------------------------------------------------------------------
--- The following macros are parametrized by the coefficient domain C.
+-- Domains related to \Gamma_0(N) and \Gamma_1(N).
 -------------------------------------------------------------------
--- related to Gröbner basis computation
--- The domain D (DirectProduct) has to be set to specify the term order.
--- The list of variables have to be given through `syms`.
-Pol C  ==> Polynomial C
-LPol C  ==> List Pol C
-
 GAMMA0 ==> CongruenceSubgroupGamma0
 GAMMA1 ==> CongruenceSubgroupGamma1
 QMOD0 ==> QEtaModularGamma0
 QMOD1 ==> QEtaModularGamma1
+
+-------------------------------------------------------------------
+-- Too many function from that package. Should import it.
+-------------------------------------------------------------------
 QETAAUX ==> QEtaAuxiliaryPackage
 
+-------------------------------------------------------------------
+-- Functions connected to cusps of \Gamma_0 and \Gamma_1.
+-------------------------------------------------------------------
 -- cusps(nn)$QMOD
 -- cusps(nn)$QMOD0 = cusps()$GAMMA0
 -- cusps(nn)$QMOD1 = cusps()$GAMMA1
@@ -63,7 +73,14 @@ widthM0  ==> width $ QMOD0
 widthM1  ==> width $ QMOD1
 
 -------------------------------------------------------------------
--- The type of laurent series that we use for expansion.
+-- The following macros are parametrized by the coefficient domain C.
+-- Pol is not essentially necessary
+-------------------------------------------------------------------
+Pol C  ==> Polynomial C
+LPol C  ==> List Pol C
+
+-------------------------------------------------------------------
+-- The type of Laurent series that we use for expansion.
 -- Should be possible to replace this with SparseUnivariateLaurentSeries.
 -- However, our series are dense anyway.
 -------------------------------------------------------------------
@@ -73,13 +90,14 @@ L1 C  ==> QEtaLaurentSeries C
 A1 C ==> Finite0Series C -- actual computation domain
 EQI C ==> EtaQuotientInfinity C
 CA1 C ==> QEtaAlgebraCachedPower(C, A1 C) -- computation domain (cached)
-CPol C ==> QEtaAlgebraCachedPower(C, Pol C) -- computation pols in (cached)
+CPol C ==> QEtaAlgebraCachedPower(C, Pol C) -- computation pols (cached)
 X1 C ==> QEtaExtendedAlgebra(C, CA1 C, CPol C)
 toX1(C, a, b) ==> embed(a::CA1(C), b::CPol(C))$X1(C)
 
 
 -------------------------------------------------------------------
 -- Symbolic modular (generalized) eta-quotients
+-------------------------------------------------------------------
 YMEQ  ==> SymbolicModularEtaQuotient
 YMEQG ==> SymbolicModularEtaQuotientGamma
 -- implicitly using the QMOD parameter
@@ -88,6 +106,7 @@ YMODEQG ==> YMEQG QMOD
 
 -------------------------------------------------------------------
 -- Creation of symbolic eta-quotients for one transformation matrix
+-------------------------------------------------------------------
 -- y := etaQuotient(sspec,rspec,m,t,gamma)
 -- y := etaQuotient(rspec,gamma)
 -- y := etaQuotient(rspec)
@@ -97,7 +116,9 @@ specYMODEQG ==> specYMEQG QMOD
 specYM0EQG  ==> specYMEQG QMOD0
 specYM1EQG  ==> specYMEQG QMOD1
 
+-------------------------------------------------------------------
 -- Creation of symbolic eta-quotients for several cusps
+-------------------------------------------------------------------
 -- y := etaQuotient(sspec,rspec,m,t,spitzen)
 -- y := etaQuotient(sspec,rspec,m,t)
 -- y := etaQuotient(rspec,spitzen)
@@ -110,6 +131,7 @@ specYM1EQ  ==> specYMEQ QMOD1
 
 -------------------------------------------------------------------
 -- Creation of eta-quotient expansions from specifications
+-------------------------------------------------------------------
 -- a1 := modularEtaQuotientInfinity(rspec)
 -- a1 := modularEtaQuotientInfinity(sspec,rspec,m,t)
 specEQI C ==> etaQuotientInfinity $ EQI(C)
@@ -122,6 +144,7 @@ specM1A1 C  ==> specMA1(C, QMOD1)
 
 -------------------------------------------------------------------
 -- Creation of symbolic eta-quotients (non-modular)
+-------------------------------------------------------------------
 -- y1 := etaQuotient(spec,m,t,gamma)
 -- y1 := etaQuotient(spec,gamma)
 -- y1 := etaQuotient(spec) -- for gamma=id
@@ -129,6 +152,7 @@ specYEQG ==> etaQuotient $ YEQG
 
 -------------------------------------------------------------------
 -- Creation of eta-quotient monoid
+-------------------------------------------------------------------
 -- mspecs := etaQuotientMonoidInfinitySpecifications(nn, idxs)
 -- mspecs := nonConstantEtaQuotientMonoidInfinitySpecifications(nn, idxs)
 mSPECSInf QMOD ==> etaQuotientMonoidInfinitySpecifications _
@@ -138,6 +162,7 @@ mSPECSInfMOD ==> mSPECSInf QMOD
 mSPECSInfM0 ==> mSPECSInf QMOD0
 mSPECSInfM1 ==> mSPECSInf QMOD1
 
+-- non-constant eta-quotients
 ncmSPECSInf QMOD ==> nonConstantEtaQuotientMonoidInfinitySpecifications _
                       $ QEtaQuotientSpecifications4ti2(QMOD)
 -- implicitly using the QMOD parameter
@@ -147,6 +172,7 @@ ncmSPECSInfM1 ==> ncmSPECSInf QMOD1
 
 -------------------------------------------------------------------
 -- In which level must we compute?
+-------------------------------------------------------------------
 -- nn := minimalLevelCoEtaQuotient(rspec, m, t)$QMOD
 minLevel QMOD ==> minimalLevelCoEtaQuotient $ QMOD
 minLevelMOD ==> minLevel QMOD
@@ -155,6 +181,7 @@ minLevelM1  ==> minLevel QMOD1
 
 -------------------------------------------------------------------
 -- What is the cofactor for Gamma0/1?
+-------------------------------------------------------------------
 -- sspec := etacofactorInfinity(nn, rspec, m, t, sidxs)
 cofactInf QMOD ==> etaCofactorInfinity $ QEtaModularPackage(QMOD)
 cofactInfMOD ==> cofactInf QMOD
@@ -163,6 +190,8 @@ cofactInfM1  ==> cofactInf QMOD1
 
 -------------------------------------------------------------------
 -- Given nn, rsoec, m, t, find an identity.
+-- (implicitly using C as coefficient domain)
+-------------------------------------------------------------------
 -- id := findIdM1(nn, sidxs, rspec, m, t, bidxs)
 -- qIdentity ==> 1
 -- expand ==> 2
@@ -176,7 +205,9 @@ findIdM0  ==> findId QMOD0
 findIdM1  ==> findId QMOD1
 
 -------------------------------------------------------------------
+-- Domains/packages connected to the samba algorithm
 -- We always use CachedPower versions
+-------------------------------------------------------------------
 QAB1 C ==> QEtaAlgebraBasis(C, CA1 C)
 QTOPRED1 C ==> QEtaTopReduction(C, CA1 C, QAB1 C)
 QTOPCOMP1 C ==> QEtaComputation(C, CA1 C, QAB1 C, QTOPRED1 C)
@@ -207,10 +238,12 @@ QXSAMBADP1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QXCOMPDP1 C)
 QFXRED1 C ==> QEtaExtendedReduction(C, CA1 C, X1 C, QXAB1 C)
 QFXCOMP1 C ==> QEtaComputation(C, X1 C, QXAB1 C, QFXRED1 C)
 QFXSAMBA1 C ==> QEtaSambaPackage(C, X1 C, QXAB1 C, QFXCOMP1 C)
+
 -------------------------------------------------------------------
 -- related to computation with eta-quotients having poles at any cusp
 -- Must set:
 -- xiord: order of the root of unity
+-------------------------------------------------------------------
 xisym: Symbol := "ξ"::Symbol;
 UPxi C ==> UnivariatePolynomial(xisym, C);
 SUPZ2SUP(C, x) ==> map(coerce, x)$SparseUnivariatePolynomialFunctions2(ZZ, C)
