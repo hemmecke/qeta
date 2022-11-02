@@ -307,6 +307,7 @@ QEtaModularPackage(QMOD): Exports == Implementation where
         -- Now we have a system (mat, v) and look for a solution x such
         -- that mat*x>=v, where >= means "in each component".
         zin := reduceSystem zin -- remove identical rows
+
         -- We first solve mat*x=v for x.
         v: VZZ := zin.zrhs
         z: ZRESULT := zsolve([zin.zmat, new(#v,0), v]$ZINPUT)$X4ti2
@@ -314,6 +315,7 @@ QEtaModularPackage(QMOD): Exports == Implementation where
         not empty?(z.zinhom) =>
             s := sinitial + hmat * first(z.zinhom)
             sspec := etaQuotientSpecification(nn, idxs, s)
+            tracePrint("==sspec", sspec)
             return sspec
 
         -- If there is no solution, we try the more involved mat*x>=v.
@@ -381,6 +383,7 @@ QEtaModularPackage(QMOD): Exports == Implementation where
             if tord > totalord then
                 sspec := tspec
                 totalord := tord
+        tracePrint(">=sspec", sspec)
         return sspec
 
     etaCofactorInfinity(nn:PP, rspec:SPEC, m:PP, t:NN, idxs:INDICES): SPEC ==
