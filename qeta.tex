@@ -677,7 +677,7 @@ If $r$ is purified, we can write
   =
     \sum_{n=0}^\infty a(n)q^n
   =
-  \prod_{\delta\in I^{(1)}} \qPochhammer{q^\delta}{q^\delta}^{r_\delta}
+  \prod_{\delta\in I^{(1)}} \eulerFunction{\delta}^{r_\delta}
   \prod_{(\delta,g)\in I^{(2)}}
     \qPochhammer{q^g, q^{\delta-g}}{q^\delta}^{r_{\delta,g}}.
 \end{gather}
@@ -2023,7 +2023,7 @@ Then \eqref{eq:eta_delta(gamma*tau)} turns into
 \left(\frac{h_\delta}{\delta}\right)^{\!\frac{1}{2}}
 \,
   \unityPower{\frac{v_\delta + \kappa_\delta}{24}}
-  x^{e_\delta/24} \cdot \eulerFunction[q_\delta]{}
+  q^{u_\delta/24} \cdot \eulerFunction[q^{u_\delta} \unityPower{v_\delta}]{}
 \label{eq:eta_delta(gamma*tau)-expansion}
 \end{align}
 where the values are given through \eqref{eq:h_delta},
@@ -2032,8 +2032,8 @@ where the values are given through \eqref{eq:h_delta},
 
 
 
-The parts of \eqref{eq:eta_delta(gamma*tau)} are implemented via
-\textcolor{blue}{\code{SymbolicEtaGamma}}
+The parts of \eqref{eq:eta_delta(gamma*tau)-expansion} are implemented
+via \textcolor{blue}{\code{SymbolicEtaGamma}}
 (Section~\ref{sec:SymbolicEtaGamma}).
 \\
 If \code{e = eta(nn, delta, gamma)}, then we have the following
@@ -2202,7 +2202,13 @@ Therefore,
     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
     \unityPower{\frac{ v_{\delta,m\lambda} + \kappa_{\gamma_{\delta,m,\lambda}}}{24}}
     q^{u_{\delta,m,\lambda}/24}
-    \eulerFunction[q_{\delta,m,\lambda}]{}
+    \eulerFunction[q_{\delta,m,\lambda}]{}\notag\\
+  &=
+    (c\tau+d)^{1/2}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
+    \unityPower{\frac{ v_{\delta,m\lambda} + \kappa_{\gamma_{\delta,m,\lambda}}}{24}}
+    q^{u_{\delta,m,\lambda}/24}
+    \eulerFunction[q^{u_{\delta,m,\lambda}}\,\unityPower{v_{\delta,m,\lambda}}]{}
     \label{eq:eta_delta-m-lambda(gamma*tau)}
 \end{align}
 where
@@ -2354,10 +2360,6 @@ correspondence.
   \text{\code{unityExponent(e) : Q}}
   &=
     \divisorsum{N} \frac{r_\delta(v_\delta + \kappa_\delta)}{24},
-  \\
-  \text{\code{xExponent(e) : Q}}
-  &=
-    \divisorsum{N} \frac{r_\delta e_\delta}{24},
   \\
   \text{\code{qExponent(e) : Q}}
   &=
@@ -3247,7 +3249,7 @@ If we substitute $q \gets q^\delta$, $z \gets z q^g$, then we have
   \\
   &=
     \qPochhammer{zq^g}{q^\delta} \qPochhammer{z^{-1}q^{\delta-g}}{q^\delta}
-    \eulerFunction[q^\delta]{}
+    \eulerFunction{\delta}
   \\
   &=
     \sum_{n=-\infty}^\infty (-1)^nz^nq^{gn + \delta \binom{n}{2}}.
@@ -3265,7 +3267,7 @@ For $g=0$, we substitute $q \gets q^\delta$ and split the sum. Then we have
     (1-q^{\delta n})
   =
     \qPochhammer{z}{q^\delta} \qPochhammer{z^{-1}q^{\delta}}{q^\delta}
-    \eulerFunction[q^\delta]{}
+    \eulerFunction{\delta}
   \notag\\
   &=
     \sum_{n=-\infty}^\infty (-1)^nz^nq^{\delta \binom{n}{2}}
@@ -3302,7 +3304,7 @@ split the sum. Then we have
   \notag\\
   &=
     \qPochhammer{zq^g}{q^{2g}} \qPochhammer{z^{-1}q^g}{q^{2g}}
-    \eulerFunction[q^{2g}]{}
+    \eulerFunction{2g}
   \notag\\
   &=
     \sum_{n=-\infty}^\infty (-1)^nz^nq^{gn + 2g n (n-1)/2}.
@@ -4596,7 +4598,7 @@ From \eqref{eq:g_r(tau)}, \eqref{eq:eta_delta-g^[R](tau)},
     q^{\bar{\alpha}}
     \cdot
     \divisorprod{M}
-    \eulerFunction[q^\delta]{}^{s_\delta}
+    \eulerFunction{\delta}^{s_\delta}
     \cdot
     \genprod[M]
     \left(
