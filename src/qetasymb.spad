@@ -598,9 +598,9 @@ SymbolicEtaQuotientGamma: SetCategory with
     minimalRootOfUnity: % -> PP
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function
-      ++ $p_{r,m,t}(\gamma\tau)$ corresponding to
+      ++ $p_{r,m,t}(\gamma \tau)$ corresponding to
       ++ x=etaQuotient(mm,divs,r,m,t,gamma) (neglecting the
-      ++ (c*\tau+d)^* factor) lives in Q[w][[z]] where w is a n-th
+      ++ (c*\tau+d)^* factor) lives in Q[w][[z]] where w is an n-th
       ++ root of unity and z a fractional q power.
     elt: (%, NN) -> SymbolicEtaQuotientLambdaGamma
       ++ x.lambda returns the data corresponding to the respective
@@ -671,10 +671,12 @@ SymbolicEtaQuotientGamma: SetCategory with
             if g = -1 then
                 minroot := lcm(minroot, denom vdelta ydg)
               else
-                g1 := gamma1 ydg
-                beta := denom(g1(1,1)*g/d)
-                minroot := lcm(minroot, denom(vdelta(ydg) * (1/beta)))
-                minroot := lcm(minroot, denom(g1(1,2)*g/d))
+                -- We include both cases of \eqref{eq:Jacobi_a-b-q}.
+                g1: SL2Z := gamma1 ydg
+                gd := g1(1,1)*g/d -- this might be an integer
+                hd := g1(1,2)*g/d
+                minroot := lcm(minroot, denom(fractionalPart(gd) * vdelta(ydg)))
+                minroot := lcm(minroot, denom hd)
         asPP minroot
 
     etaQuotient(rspec: SPEC, m: PP, t: NN, gamma: SL2Z): % ==
