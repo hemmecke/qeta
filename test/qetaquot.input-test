@@ -25,7 +25,6 @@
 -- -
 
 C ==> QQ
-LX ==> L1 CX
 QMOD ==> QMOD0
 ORBIT ==> modularOrbit $ QMOD0
 )read convenience.input )quiet
@@ -218,6 +217,113 @@ repr := 11*(_
 ZERO := F - repr;
 
 assertTrue zero? ZERO
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+
+-- # Expansion of eta function as Puiseux series
+
+-- ## Pure eta function
+
+-- +
+-------------------------------------------------------------------
+--test:eta_delta-m-lambda-puiseux
+-------------------------------------------------------------------
+-- -
+
+-- It corresponds to \eqref{eq:eta_delta-m-lambda^[R](gamma*tau)}.
+
+-- Compute the expansion of eta((t+1)/2) under the transformation with
+-- matrix[[1,0],[5,1]].
+
+rspec := eqSPEC [[1,1]]; delta := 1 :: PP;
+m := 2 :: PP; lambda := 1 :: NN;
+gamma := matrix [[1,0],[5,1]]
+
+-- We only have a puiseuxExpansion function for
+-- SymbolicEtaQuotientLambdaGamma, so we do not compute an element of
+-- SymbolicEtaGamma, but rather an element of
+-- SymbolicEtaQuotientLambdaGamma.
+-- Since there is only one part in
+
+parts rspec
+
+-- we can easily extract from
+
+y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
+
+-- the respective element of SymbolicEtaGamma.
+
+yy := y[delta,-1] -- SymbolicEtaGamma
+
+-- Their Puiseux expansion is therefore the same.
+
+-- Before we can compute the expansion, we must determine in which
+-- coefficient ring we can do it.
+
+-- Since $\kappa_{\gamma_{\delta,m,\lambda}}$ from
+-- \eqref{eq:eta_delta-m-lambda^[R](gamma*tau)} is an integer, we
+-- determine by which $n$-th root of unity $\xi$ we must extend our
+-- coefficient ring (rational numbers) so that all coefficients of the
+-- expansion (without the $(c\tau+d)$ factor live in
+-- $\mathbb{Q}[\xi]$.
+
+assertEquals(gamma1 yy, matrix[[3,1],[5,2]])
+kappa := (upsilonExponent(gamma1 yy)$QETAAUX)::QQ
+assertEquals(kappa,22)
+assertEquals(udelta yy, 2)
+assertEquals(vdelta yy, 0)
+rat := rationalPrefactor y
+rr := rationalSquareRoot(rat)$QETAAUX
+
+-- For second factor
+-- $\left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^(1/2)$ in
+-- \eqref{eq:eta_delta-m-lambda^[R](gamma*tau)} we need a 8-th root of unity.
+
+minroot := minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
+
+ue := unityExponent y -- third factor
+assertEquals(ue, 1/24*(vdelta yy + kappa))
+
+xiord := lcm(minroot, denom ue)
+assertEquals(xiord,24)
+
+-- Now we can define the coefficient ring CX and the root xi and
+-- compute the expansion.
+
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+px := puiseuxExpansion(y,0) $ QESXM(C,CX,QMOD0)
+
+-- Note that in our case, the 0 in the argument is actually
+-- superfluous, but QEta has no implementation to expand `yy`.
+
+-- Furthermore, the `QMOD0` parameter is actually not used, but QEta
+-- did not bother to implement a domain that does not need that
+-- parameter.
+
+-- Let us continue with some checks.
+
+qe := qExponent y -- 4th factor
+cde := cdExponent y -- first factor
+
+assertEquals(order px, qe)
+assertEquals(cde, 1/2)
+
+-- Compute the actual root
+-- $\left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^(1/2)$ in
+-- $\mathbb{Q}[\xi]$.
+
+s2 := squareRoot(rr.rootOf)$GaussRoot(CX,xi,xiord)
+assertEquals(s2^2, rr.rootOf)
+
+c := s2*xi^(ue*xiord)
+
+assertEquals(c,-xi^7+xi)
+assertEquals(leadingCoefficient(px),c)
+assertEquals(leadingCoefficient(reductum px),-c)
+assertEquals(leadingCoefficient(reductum reductum px),-c)
 
 -- +
 -------------------------------------------------------------------
