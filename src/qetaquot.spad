@@ -151,6 +151,7 @@ QEtaSeriesExpansion(C, xiord, CX, xi, QMOD): Exports == Implementation where
   LX ==> QEtaLaurentSeries CX
   PX ==> QEtaPuiseuxSeries CX
   QLX ==> XHashTable(Cusp, LX)
+  YEG ==> SymbolicEtaGamma
   YEQLG ==> SymbolicEtaQuotientLambdaGamma
   YEQG  ==> SymbolicEtaQuotientGamma
   YMEQG ==> SymbolicModularEtaQuotientGamma
@@ -246,28 +247,32 @@ QEtaSeriesExpansion(C, xiord, CX, xi, QMOD): Exports == Implementation where
 
     -- local
     -- Note that according to
-    -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)-0} and
+    -- \eqref{eq:Jacobi_a-b-q} and
     -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)} the respective
     -- $(1-\zeta_\delta^{-b'g})$ factor is taken care of in the
     -- jacobiFunction arguments if a'g is divisibly by \delta.
     -- So we only have the $exp(2\pi i \cdot 1/2*P_1(b'g/delta))$
     -- contribution, which we here encode.
+    alphaSchoenebergContributionToEta(y: YEG, delta: PP, g: PP, e: ZZ): CX ==
+        g1 := gamma1 y
+        gd: QQ := fractionalPart(g1(1,1)*g/delta)$QETAAUX -- note that h=0
+        hd: QQ := fractionalPart(g1(1,2)*g/delta)$QETAAUX
+        not zero? numer gd or zero? numer hd or zero? e => 1
+        -- Note that xi is a xiord-th root of unity so, we have
+        -- to multiply the (rational) exponent of xi by xiord.
+        uexp: QQ := (xiord/2)*fractionalBernoulli1(hd)$QETAAUX
+        not one? denom uexp =>
+            errorPrint("xiord * Bernoulli1", uexp)
+            error "QEtaSeriesExpansion: alphaSchoenebergContribution"
+        xipow(e * numer uexp)
+
+    -- local
     alphaSchoenebergContribution(y: YEQLG): CX ==
         cx: CX := 1
         for l in properGeneralizedParts definingSpecification y repeat
             delta := specDelta l; g := asPP specSubindex l; e := specExponent l
-            ygeg := y[delta,g]
-            g1 := gamma1 ygeg
-            gd: QQ := fractionalPart(g1(1,1)*g/delta)$QETAAUX -- note that h=0
-            hd: QQ := fractionalPart(g1(1,2)*g/delta)$QETAAUX
-            if zero? numer gd and not zero? numer hd and not zero? e then
-                -- Note that xi is a xiord-th root of unity so, we have
-                -- to multiply the (rational) exponent of xi by xiord.
-                uexp: QQ := (xiord/2)*fractionalBernoulli1(hd)$QETAAUX
-                not one? denom uexp =>
-                    errorPrint("xiord * Bernoulli1", uexp)
-                    error "QEtaSeriesExpansion: alphaSchoenebergContribution"
-                cx := cx * xipow(e * numer uexp)
+            yeg := y[delta,g]
+            cx := cx * alphaSchoenebergContributionToEta(yeg,delta,g,e)
         cx
 
     -- local
