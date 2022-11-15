@@ -265,6 +265,14 @@ SymbolicEtaGamma: SetCategory with
       ++ factor.
     pure?: % -> Boolean
       ++ pure?(x) returns true if x corresponds to a pure eta function.
+    minimalRootOfUnity: % -> PP
+      ++ minimalRootOfUnity(x) returns the smallest positive integer n
+      ++ such that the expansion of the function
+      ++ $\eta_{\delta,m,\lambda}(\gamma \tau)$ or
+      ++ $\eta_{\delta,g,m,\lambda}^{[R]}(\gamma \tau)$ corresponding
+      ++ to x=eta(delta,g,m,lambda,gamma) (neglecting the (c*\tau+d)^*
+      ++ factor) lives in Q[w][[z]] where w is an n-th root of unity
+      ++ and z a fractional q power.
  == add
     Rec ==> Record(red: SL2Z, triang: MZZ)
     Rep ==> Record(
@@ -308,10 +316,11 @@ SymbolicEtaGamma: SetCategory with
           else -- proper generalized eta
             rat: QQ := 1
             kappa: QQ := kappaSchoeneberg(delta, g, 0, gamma1)$QETAAUX
-            gprime: ZZ := gamma1(1,1)*g -- $a' g$
-            hprime: ZZ := gamma1(1,2)*g -- $b' g$
-            p2: QQ := (1/2)*fractionalBernoulli2(gprime/delta)
-            uexponent: QQ := fractionalPart(kappa + vdelta * p2)
+            gd: QQ := gamma1(1,1)*g/delta -- $a' g / delta$
+            hd: QQ := gamma1(1,2)*g/delta -- $b' g / delta$
+            p2: QQ := (1/2)*fractionalBernoulli2(gd)
+            alpha := alphaSchoenebergContribution(gd, hd)$QETAAUX
+            uexponent: QQ := fractionalPart(kappa + vdelta * p2 + alpha)
             qexponent: QQ := udelta * p2
             cdexponent: QQ := 0
         per [delta, g, m, lambda, gamma,_
@@ -347,8 +356,27 @@ SymbolicEtaGamma: SetCategory with
         lambda x ~= lambda y => false
         transformationMatrix x = transformationMatrix y
 
-
-
+    minimalRootOfUnity(x: %): PP ==
+        d: PP := delta x
+        g: ZZ := subindex x
+        minroot := denom vdelta x -- contribution of q_{\delta,m,\lambda}
+        minroot := lcm(minroot, denom unityExponent x)
+        g = -1 => -- \eqref{eq:eta_delta-m-lambda(gamma*tau)}
+            rat := rationalPrefactor x
+            rr: Record(rat: QQ, rootOf: PP) := rationalSquareRoot(rat)$QETAAUX
+            -- second factor of the summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
+            asPP lcm(minroot, minimalSquareRootOfUnity(rr.rootOf)$QETAAUX)
+        -- generalized case: \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}
+        g1 := gamma1 x
+        gd: QQ := fractionalPart(g1(1,1)*g/d)$QETAAUX -- note that h=0
+        hd: QQ := fractionalPart(g1(1,2)*g/d)$QETAAUX
+        -- see \eqref{eq:Jacobi-a-b-q}, a=gd, b=hd
+        if not one? denom gd or one? denom hd then
+            minroot := lcm(minroot, denom hd) -- contrib of \unityPower(-b)
+          else
+            -- contribution of \unityPower(b)*q_{\delta,m,\lambda}^a
+            minroot := lcm(minroot, denom(hd + vdelta(x) * fractionalPart(gd)))
+        asPP minroot
 
 
 
