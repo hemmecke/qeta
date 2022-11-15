@@ -1796,7 +1796,7 @@ $\tau'\in\setH$ and
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $\eta_{\delta,m,\lambda}$ under $\SL2Z$}
-  \label{sec:transformation-eta_delta-m-lambda}
+\label{sec:eta_delta-m-lambda}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In the following let
@@ -1940,48 +1940,9 @@ $\unityPower{\frac{\kappa_{\gamma_{\delta,m,\lambda}}}{24}} =
 
 The parts of \eqref{eq:eta_delta-m-lambda(gamma*tau)} are implemented
 via \textcolor{blue}{\code{SymbolicEtaGamma}} (see
-\PathName{qetasymb.spad}).
-\\
-If \code{y=eta(mm,delta,-1,m,lambda,gamma)}, then we have the
-following correspondence.
-\begin{align*}
-  \text{\code{gamma1(y) : SL2Z}}
-  &=
-    \gamma_{\delta,m,\lambda} = \begin{pmatrix}a'&b'\\c'&d'\end{pmatrix}
-  \\
-  \text{\code{gamma2(y) : MZ}}
-  &=
-    \begin{pmatrix}a''&b''\\0&d''\end{pmatrix}
-  \\
-  \text{\code{rationalPrefactor(y) : Q}}
-  &=
-    \frac{h_{\delta,m,\lambda}}{\delta},
-  \\
-  \text{\code{udelta(y) : Q}}
-  &=
-    u_{\delta,m,\lambda},
-  \\
-  \text{\code{vdelta(y) : Q}}
-  &=
-    v_{\delta,m,\lambda},
-  \\
-  \text{\code{upsilonExponent(gamma1(y))$QETAAUX : Z}}
-  &=
-    \kappa_{\gamma_{\delta,m,\lambda}}.
-  \\
-  \text{\code{unityExponent(y) : Q}}
-  &=
-    \frac{v_{\delta,m,\lambda} + \kappa_{\gamma_{\delta,m,\lambda}}}{24}.
-  \\
-  \text{\code{qExponent(y) : Q}}
-  &=
-    \frac{u_{\delta,m,\lambda}}{24}
-  \\
-  \text{\code{cdExponent(y) : Q}}
-  &=
-    \frac{1}{2}
-\end{align*}
-%$
+\PathName{qetasymb.spad}) via
+\code{y=eta(mm,delta,-1,m,lambda,gamma)}.
+See Section~\ref{sec:eta-i-m-lambda} for detail.
 
 For an example of a series expansion see
 \code{test:eta_delta-m-lambda-puiseux} in
@@ -2268,16 +2229,12 @@ representatives mod $c$, we have
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The function $\eta_{\delta,g,m,\lambda}$ and its
-  transformation under $\SL2Z$}
-\label{sec:[eta-delta-g-m-lambda-gamma-tau-Robins}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transformation of $\eta_{\delta,g,m,\lambda}$ under $\SL2Z$}
-  \label{sec:transformation-eta_delta-g-m-lambda}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{sec:eta-delta-g-m-lambda-Robins}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 From Definitions \ref{def:eta_delta-g^[R](tau)} and
 \ref{eq:def:eta_g-h^[S](tau)} it follows
@@ -2371,15 +2328,106 @@ respectively, and by using \eqref{eq:eta_g-h-N^[S](gamma*tau)},
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-
-
-
-
 The parts of \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)} are
+implemented via \textcolor{blue}{\code{SymbolicEtaGamma}} (see
+\PathName{qetasymb.spad}) via \code{y=eta(mm,delta,g,m,lambda,gamma)}.
+See Section~\ref{sec:eta-i-m-lambda} for detail.
+
+For an example of a series expansion see
+\code{test:eta_delta-g-m-lambda-puiseux} in
+\PathName{test/qetaquot.input-test}.
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformation of $\eta_{i,m,\lambda}$ under $\SL2Z$ for
+  an $i$ in an eta index set}
+\label{sec:eta-i-m-lambda}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We can write \eqref{eq:eta_delta-m-lambda(gamma*tau)}
+and \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)} as
+\begin{align}
+  \eta_{\delta,m,\lambda}(\gamma \tau)
+  &=
+    (c\tau+d)^{1/2}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
+    \unityPower{v_{\delta,-1,m,\lambda}}
+    \unityPowerTau{u_{\delta,-1,m,\lambda}}
+    \eulerFunction[q_{\delta,m,\lambda}]{},
+    \label{eq:eta_delta-m-lambda(gamma*tau)-YEG}
+  \\
+  \eta_{\delta,g,m,\lambda}(\gamma\tau)
+  &=
+    \unityPower{v_{\delta,g,m,\lambda}}
+    \cdot
+    \unityPowerTau{u_{\delta,g,m,\lambda}}
+    \cdot
+    \jacobiSchoeneberg{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
+    \label{eq:eta_delta-g-m-lambda^[R](gamma*tau)-YEG}
+\end{align}
+where
+\begin{align}
+  \defineNotation[u-delta-g-m-lambda-gamma]{u_{\delta,g,m,\lambda,\gamma}}
+  &=
+  \begin{cases}
+    \frac{u_{\delta,m,\lambda}}{24},
+    & \text{if $g=-1$},
+    \\
+    \frac{u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right),
+    & \text{if $g>0$},
+  \end{cases}
+  \label{eq:u_delta-g-m-lambda-gamma}
+  \\
+  \defineNotation[v-delta-g-m-lambda-gamma]{v_{\delta,g,m,\lambda,\gamma}}
+  &=
+  \begin{cases}
+    \frac{ v_{\delta,m\lambda} + \kappa_{\gamma_{\delta,m,\lambda}}}{24},
+    & \text{if $g=-1$},
+    \\
+    \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
+    +
+    \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+    +
+    \alphaSchoenebergContribution{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}
+    & \text{if $g>0$}.
+  \end{cases}
+  \label{eq:v_delta-g-m-lambda-gamma}
+\end{align}
+
+If we additionally set
+\begin{align}
+  \defineNotation[chi-delta-g]{\chi_{\delta,g}}
+  &=
+    \begin{cases}
+      \frac{1}{2}
+      & \text{if $g=-1$},
+      \\
+      0
+      & \text{if $g>0$},
+    \end{cases}
+    \label{eq:chi_delta-g}
+  \\
+  \defineNotation[rho-delta-g-m-lambda]{\rho_{\delta,g,m,\lambda}}
+  &=
+    \begin{cases}
+      \frac{h_{\delta,m,\lambda}}{\delta}
+      & \text{if $g=-1$},
+      \\
+      1
+      & \text{if $g>0$},
+    \end{cases}
+    \label{eq:rho_delta-g-m-lambda}
+\end{align}
+then he parts of
+\eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG} and
+\eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)-YEG} are
 implemented via \textcolor{blue}{\code{SymbolicEtaGamma}}
 (\PathName{qetasymb.spad}).
-\\
 If \code{y=eta(delta,g,m,lambda,gamma)}, then we have the following
 correspondence.
 \begin{align*}
@@ -2393,7 +2441,7 @@ correspondence.
   \\
   \text{\code{rationalPrefactor(y) : Q}}
   &=
-    1
+    \rho_{\delta,g,m,\lambda}
   \\
   \text{\code{udelta(y) : Q}}
   &=
@@ -2405,19 +2453,15 @@ correspondence.
   \\
   \text{\code{unityExponent(y) : Q}}
   &=
-    \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-    +
-    \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-    +
-    \alphaSchoenebergContribution{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}
-     \\
+    v_{\delta,g,m,\lambda,\gamma}
+  \\
   \text{\code{qExponent(y) : Q}}
   &=
-    \frac{u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+    u_{\delta,g,m,\lambda,\gamma}
   \\
   \text{\code{cdExponent(y) : Q}}
   &=
-    0
+    \chi_{\delta,g}
 \end{align*}
 
 For an example of a series expansion see
@@ -2464,6 +2508,7 @@ where $g_r$ is given through \eqref{eq:g_r(tau)}.
 
 By \eqref{eq:eta_delta-m-lambda(tau)} and
 \eqref{eq:eta_delta-g-m-lambda(tau)}, we can write for any $i\in I$
+(by slight abuse of notation)
 \begin{gather}
   \eta_i\!\left(
     \begin{pmatrix}1& \lambda\\0&m\end{pmatrix}
@@ -2472,114 +2517,53 @@ By \eqref{eq:eta_delta-m-lambda(tau)} and
   \eta_{i,m,\lambda}(\tau)
 \end{gather}
 and therefore by \eqref{eq:g_r(tau)} and the transformation formulas
-\eqref{eq:eta_delta-m-lambda(gamma*tau)} and
-\eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}
+\eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG} and
+\eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)-YEG}
 \begin{align}
   \defineNotation[g-r-m-lambda-gamma-tau]{g_{r,m,\lambda}(\gamma\tau)}
-    &= \prod_{\delta\in I^{(1)}}
-          \eta_{\delta,m,\lambda}
-            \!\left(\gamma \tau\right)^{r_\delta}
-      \cdot
-      \prod_{(\delta,g)\in I^{(2)}}
-        \eta_{\delta,g,m,\lambda}\!\left(\gamma \tau\right)^{r_{\delta,g}}
-    \notag\\
-  \begin{split}
   &=
-    (c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}} \cdot
-%    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainfty{r}\Bigr)}
-%    \cdot
-    \unityPower{\sum_{\delta\in I^{(1)}} \frac{r_\delta(v_{\delta,m,\lambda} +
-    \kappa_{\gamma_{\delta,m,\lambda}})}{24}} \times\\
-  & \qquad\times
-    \prod_{\delta\in I^{(1)}}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
+    (c\tau+d)^{\chi} \cdot
+    \unityPower{v_{m,\lambda,\gamma}}
     \cdot
-    \unityPowerTau{\frac{\sum_{\delta\in I^{(1)}} r_\delta u_{\delta,m,\lambda}}{24}}
+    \rho_{m,\lambda}^{(1/2)}
     \cdot
-    \prod_{\delta\in I^{(1)}}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
-    \times\\
-    %% and now the generalized part
-  & \qquad\times
-    \unityPower{
-    \sum_{(\delta,g)\in I^{(2)}}
-      r_{\delta,g}\left(\kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-      +
-      \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-      +
-      \alphaSchoenebergContribution{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}
-      \right)
-    }
-    \cdot
-    \\
-    &\qquad\qquad
-    \unityPowerTau{
-    \sum_{(\delta,g)\in I^{(2)}}
-    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
-    \cdot
-    \prod_{(\delta,g)\in I^{(2)}}
-    \jacobiSchoeneberg{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}^{r_{\delta,g}}
-    \times\\
-    %% and now the generalized part
-  & \qquad\times
-  \prod_{(\delta,g)\in I^{(2)}}
-  \eulerFunction[q_{\delta,m,\lambda}]{}^{-r_{\delta,g}}
-\end{split}
-    \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-    (c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}} \cdot
-    \unityPower{\kappa}
-    \times
-    \prod_{\delta\in I^{(1)}}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
-    \times
-    \\
-    &\qquad \times
-    \unityPowerTau{\alpha}
-    \cdot
-    \prod_{\delta\in I^{(1)}}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
-    \times
-    \prod_{(\delta,g)\in I^{(2)}}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{-r_{\delta,g}}
+    \unityPowerTau{u_{m,\lambda,\gamma}}
     \times
     \\
     & \qquad\times
+    \prod_{\delta\in I^{(1)}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
+    \cdot
+    \prod_{(\delta,g)\in I^{(2)}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{-r_{\delta,g}}
+    \cdot
     \prod_{(\delta,g)\in I^{(2)}}
     \jacobiSchoeneberg{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}^{r_{\delta,g}}
-  \end{split}
   \label{eq:g_r-m-lambda(gamma*tau)}
 \end{align}
 where
 \begin{align}
-  \begin{split}
-  \kappa
-    &=
-    \sum_{\delta\in I^{(1)}} \frac{r_\delta(v_{\delta,m,\lambda} +
-      \kappa_{\gamma_{\delta,m,\lambda}})}{24} +
-    \\
-    &\qquad
-    +
-    \sum_{(\delta,g)\in I^{(2)}}
-      r_{\delta,g}\left(\kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-      +
-      \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-      +
-      \alphaSchoenebergContribution{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}
-    \right)
-  \end{split}
-  \label{eq:g_r-m-lambda(gamma*tau)-unityExponent}
+  \defineNotation[chi]{\chi}
+  &=
+    \sum_{\delta\in I^{(1)}} \frac{r_\delta}{2}
+    =
+    \sum_{i\in I} \chi_i,
+    \label{eq:g_r-m-lambda(gamma*tau)-cdExponent}
   \\
-  \alpha
-    &=
-    \frac{\sum_{\delta\in I^{(1)}} r_\delta u_{\delta,m,\lambda}}{24}
-      +
-      \sum_{(\delta,g)\in I^{(2)}}
-        \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2}
-        P_2\left(\frac{a' g}{\delta}\right)
-  \label{eq:g_r-m-lambda(gamma*tau)-qExponent}
+  \defineNotation[rho-m-lambda]{\rho_{m,\lambda}}
+  &=
+    \prod_{i\in I} \rho_{i,m,\lambda},
+    \label{eq:g_r-m-lambda(gamma*tau)-rationalPrefactor}
+  \\
+  \defineNotation[u-m-lambda-gamma]{u_{m,\lambda,\gamma}}
+  &=
+    \sum_{i\in I} u_{i,m,\lambda,\gamma},
+    \label{eq:g_r-m-lambda(gamma*tau)-qExponent}
+  \\
+  \defineNotation[v-m-lambda-gamma]{v_{m,\lambda,\gamma}}
+  &=
+    \sum_{i\in I} v_{i,m,\lambda,\gamma}.
+    \label{eq:g_r-m-lambda(gamma*tau)-unityExponent}
 \end{align}
 
 
@@ -2590,33 +2574,42 @@ where
 
 The parts of \eqref{eq:g_r-m-lambda(gamma*tau)} are implemented via
 \textcolor{blue}{\code{SymbolicEtaQuotientLambdaGamma}}
-(Section~\ref{sec:SymbolicEtaQuotientLambdaGamma}).
-\\
+(\PathName{qetasymb.spad}).
+
 If \code{e = etaQuotient(mm, delta, m, lambda, gamma)}, then we have the
 following correspondence.
+
 \begin{align*}
-  \text{\code{rationalPrefactor(e) : Q}}
+  \text{\code{rationalPrefactor(y) : Q}}
   &=
-    \divisorprod{M}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!r_\delta},
+    \rho_{m,\lambda}
   \\
-  \text{\code{unityExponent(e) : Q}}
+  \text{\code{unityExponent(y) : Q}}
   &=
-    \divisorsum{M} \frac{r_\delta(v_{\delta,m,\lambda} + \kappa_{\delta,m,\lambda})}{24}
+    v_{m,\lambda,\gamma}
   \\
-  \text{\code{qExponent(e) : Q}}
+  \text{\code{qExponent(y) : Q}}
   &=
-    \divisorsum{M} \frac{r_\delta u_{\delta,m,\lambda}}{24}
+    u_{m,\lambda,\gamma}
+  \\
+  \text{\code{cdExponent(y) : Q}}
+  &=
+    \chi
 \end{align*}
+
 
 Note that
 \begin{align}
   \defineNotation[p-gamma-lambda]{p(\gamma,\lambda)}
   &=
-    \divisorsum{M} \frac{r_\delta u_{\delta,m,\lambda}}{24}
+    \sum_{\delta \in I^{(1)}} \frac{r_\delta u_{\delta,m,\lambda}}{24}
+  \label{eq:p_gamma-lambda}
 \end{align}
 where $p(\gamma,\lambda)$ is as defined in Lemma~3.4 (equation~(50))
 of \cite{Radu_AlgorithmicApproachRamanujanCongruences_2009}.
+Furthermore $\defineNotation[p-star-gamma-lambda]{p^*(\gamma)}$ agrees
+with $u_{1,0,\gamma}$ if $r$ is the \useterm{eta specification} of the
+cofactor eta-quotient.
 
 
 
