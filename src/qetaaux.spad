@@ -219,6 +219,11 @@ QEtaAuxiliaryPackage: with
       ++ E_{g,h}(mat*tau) = exp(2*%pi*%i*x) * E_{g',h'}(tau) as given
       ++ in \cite[Theorem~1]{Yang_GeneralizedDedekindEtaFunctions_2004}.
       ++ Condition: not zero? mat(2,1).
+    alphaSchoenebergContribution: (QQ, QQ) -> QQ
+      ++ alphaSchoenebergContribution(a,b) returns
+      ++ fractionalBernoulli1(b) if a is an integer and b is different
+      ++ from zero, otherwise it returns 1.
+      ++ See \eqref{eq:alpha-Schoeneberg-Contribution} in qeta.tex.
     minimizeVector: (Vector ZZ, List Vector ZZ) -> Vector ZZ
       ++ minizeVector(v, basis) computes
       ++ vps := concat [w for b in bas | (w:=v+b; dot(w,w)<dot(v,v)]
@@ -480,6 +485,9 @@ $a\in X_c$.
     kappaYang(nn: PP, g: ZZ, h: ZZ, mat: MZZ): QQ ==
         kappaYang(nn, g, h, mat(1,1), mat(1,2), mat(2,1), mat(2,2))
 
+    alphaSchoenebergContribution(a: QQ, b: QQ): QQ ==
+        not one? denom a or one? denom b => 1
+        (1/2)*fractionalBernoulli1(b)
 
     -- By adding interger multiples of elements of b we try to make
     -- the length of a vector v as small as possible in a cheap way.
