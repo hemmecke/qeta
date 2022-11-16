@@ -234,43 +234,45 @@ SymbolicEtaGamma: SetCategory with
     rationalPrefactor: % -> QQ -- (h_delta/delta)
       ++ rationalPrefactor(x) returns the square of the second product
       ++ in \eqref{eq:eta_delta-m-lambda(gamma*tau)} if pure?(x).
-      ++ See \ref{thm:c*tau+d}.
+      ++ See \ref{eq:rho_delta-g-m-lambda}.
       ++ If not pure?(x) then rationalPrefactor(x)=1.
     qExponent: % -> QQ
-      ++ qExponent(x) returns the (fractional) exponent for the order
-      ++ of the expansion of x in the original variable q, see
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)} and
-      ++ \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}.
+      ++ qExponent(x) returns the (fractional) exponent
+      ++ $u_{\delta,g,m,\lambda,\gamma}$ for the order of the
+      ++ expansion of x in the original variable q, see
+      ++ \eqref{eq:u_delta-g-m-lambda-gamma}.
     unityExponent: % -> QQ
-      ++ unityExponent(x) returns the (fractional) exponent for the
-      ++ unity factor of the expansion of x, see
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)} and
-      ++ \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}.
-      ++
-      ++ Note that in \eqref{eq:eta_delta-m-lambda(gamma*tau)}
-      ++ $\kappa_{gamma_{\delta,m,\lambda}}$ is an integer, so we have
-      ++ for v=vdelta(x); kappa=upsilonExponent(gamma1(x));
-      ++ d=denom((v+kappa)/24) that lcm(d,v)=d.
+      ++ unityExponent(x) returns the fractional part of the exponent
+      ++ $v_{\delta,g,m,\lambda,\gamma}$ for the unity factor of the
+      ++ expansion of x, see \eqref{eq:v_delta-g-m-lambda-gamma}.
     udelta: % -> QQ
-      ++ Returns $u_{\delta,m,\lambda}$. See
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+      ++ Returns $u_{\delta,m,\lambda}$.
       ++ See \eqref{eq:uv_delta}
     vdelta: % -> QQ
-      ++ Returns $v_{\delta,m,\lambda}$. See
-      ++ \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+      ++ Returns $v_{\delta,m,\lambda}$.
       ++ See \eqref{eq:uv_delta}.
     cdExponent: % -> QQ
       ++ If pure?(x) cdExponent(x)=1/2, otherwise cdExponent(x)=0. The
       ++ return value corresponds to the exponent of the (c*\tau+d)
-      ++ factor.
+      ++ factor. See \eqref{eq:chi_delta-g}.
     pure?: % -> Boolean
       ++ pure?(x) returns true if x corresponds to a pure eta function.
+    minimalRootOfUnityWithoutUnityExponent: % -> PP
+      ++ minimalRootOfUnity(x) returns the smallest positive integer n
+      ++ such that the expansion of the function
+      ++ $\eta_{\delta,m,\lambda}(\gamma \tau)$ or
+      ++ $\eta_{\delta,g,m,\lambda}^{[R]}(\gamma \tau)$ corresponding
+      ++ to x=eta(delta,g,m,lambda,gamma) (neglecting the (c*\tau+d)
+      ++ factor and the denominator of v_{\delta,g,m,\lambda,\gamma}
+      ++ from \eqref{v_delta-g-m-lambda-gamma}, i.e. unityExponent(x))
+      ++ lives in Q[w][[z]] where w is an n-th root of unity and z a
+      ++ fractional q power.
     minimalRootOfUnity: % -> PP
       ++ minimalRootOfUnity(x) returns the smallest positive integer n
       ++ such that the expansion of the function
       ++ $\eta_{\delta,m,\lambda}(\gamma \tau)$ or
       ++ $\eta_{\delta,g,m,\lambda}^{[R]}(\gamma \tau)$ corresponding
-      ++ to x=eta(delta,g,m,lambda,gamma) (neglecting the (c*\tau+d)^*
+      ++ to x=eta(delta,g,m,lambda,gamma) (neglecting the (c*\tau+d)
       ++ factor) lives in Q[w][[z]] where w is an n-th root of unity
       ++ and z a fractional q power.
  == add
@@ -356,11 +358,10 @@ SymbolicEtaGamma: SetCategory with
         lambda x ~= lambda y => false
         transformationMatrix x = transformationMatrix y
 
-    minimalRootOfUnity(x: %): PP ==
+    minimalRootOfUnityWithoutUnityExponent(x: %): PP ==
+        minroot := denom vdelta x -- contribution of q_{\delta,m,\lambda}
         d: PP := delta x
         g: ZZ := subindex x
-        minroot := denom vdelta x -- contribution of q_{\delta,m,\lambda}
-        minroot := lcm(minroot, denom unityExponent x)
         g = -1 => -- \eqref{eq:eta_delta-m-lambda(gamma*tau)}
             rat := rationalPrefactor x
             rr: Record(rat: QQ, rootOf: PP) := rationalSquareRoot(rat)$QETAAUX
@@ -377,6 +378,9 @@ SymbolicEtaGamma: SetCategory with
             minroot := lcm(minroot, denom(vdelta(x) * fractionalPart(gd)))
         asPP minroot
 
+    minimalRootOfUnity(x: %): PP ==
+        minroot := minimalRootOfUnityWithoutUnityExponent x
+        asPP lcm(minroot, denom unityExponent x)
 
 
 )if LiterateDoc
