@@ -246,36 +246,6 @@ QEtaSeriesExpansion(C, xiord, CX, xi, QMOD): Exports == Implementation where
         error "cannot take root in coefficient ring"
 
     -- local
-    -- Note that according to
-    -- \eqref{eq:Jacobi_a-b-q} and
-    -- \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)} the respective
-    -- $(1-\zeta_\delta^{-b'g})$ factor is taken care of in the
-    -- jacobiFunction arguments if a'g is divisibly by \delta.
-    -- So we only have the $exp(2\pi i \cdot 1/2*P_1(b'g/delta))$
-    -- contribution, which we here encode.
-    alphaSchoenebergContributionToEta(y: YEG, delta: PP, g: PP, e: ZZ): CX ==
-        g1 := gamma1 y
-        gd: QQ := fractionalPart(g1(1,1)*g/delta)$QETAAUX -- note that h=0
-        hd: QQ := fractionalPart(g1(1,2)*g/delta)$QETAAUX
-        not zero? numer gd or zero? numer hd or zero? e => 1
-        -- Note that xi is a xiord-th root of unity so, we have
-        -- to multiply the (rational) exponent of xi by xiord.
-        uexp: QQ := (xiord/2)*fractionalBernoulli1(hd)$QETAAUX
-        not one? denom uexp =>
-            errorPrint("xiord * Bernoulli1", uexp)
-            error "QEtaSeriesExpansion: alphaSchoenebergContribution"
-        xipow(e * numer uexp)
-
-    -- local
-    alphaSchoenebergContribution(y: YEQLG): CX ==
-        cx: CX := 1
-        for l in properGeneralizedParts definingSpecification y repeat
-            delta := specDelta l; g := asPP specSubindex l; e := specExponent l
-            yeg := y[delta,g]
-            cx := cx * alphaSchoenebergContributionToEta(yeg,delta,g,e)
-        cx
-
-    -- local
     -- Compute $\tilde{r}_\delta$ from $\tilde{r}$. See definition
     -- below \eqref{eq:p_rbar-m-lambda(gamma*tau)}, i.e.
     -- $\tilde{r}_\delta := \sum_{0 < g < \frac{\delta}{2}} r_{\delta,g}$.
@@ -401,7 +371,6 @@ without the $(c\tau+d)$-part.
         -- leading coefficient
         cx: CX := xipow numer uexp * squareRoot rationalPrefactor y
           -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
-        cx := cx * alphaSchoenebergContribution y
         monomial(cx, qExponent y) * qPochhammer y
 
 
