@@ -1,4 +1,14 @@
 -- -*- coding: utf-8 -*-
+-- $$
+-- \newcommand{\NearParens}[2]{#1\!\left(#2\right)}
+-- \newcommand{\unityPowerSymbol}{\varepsilon}
+-- \newcommand{\unityPower}[1]{\NearParens{\unityPowerSymbol}{#1}}
+-- \newcommand{\unityPowerTau}[1]{\NearParens{\unityPowerSymbol^\tau}{#1}}
+-- \newcommand{\qPochhammer}[3][\infty]{\left( #2;#3 \right)_{#1}}
+-- \newcommand{\eulerFunction}[2][q]{\left({#1}^{#2}\right)_{\infty}}
+-- \newcommand{\jacobiFunction}[2]{\NearParens{J}{#1,#2}}
+-- \newcommand{\jacobiSchoeneberg}[3]{\NearParens{J^{[S]}}{#1,#2,#3}}
+-- $$
 -- Via jupytext this file can be shown as a jupyter notebook.
 
 )read /home/hemmecke/g/qeta/input/jfricas-test-support.input
@@ -30,6 +40,7 @@ ORBIT ==> modularOrbit $ QMOD0
 )read convenience.input )quiet
 )set mess type on
 )set mess time on
+)set stream calc 2
 
 -- +
 -------------------------------------------------------------------
@@ -132,7 +143,7 @@ assertTrue(zero?(mf - rhs))
 
 -- +
 -------------------------------------------------------------------
---test:Ramanujan7_4-4
+--test:Ramanujan7-4-4
 -------------------------------------------------------------------
 -- -
 
@@ -222,23 +233,25 @@ assertTrue zero? ZERO
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
 
--- # Expansion of eta function as Puiseux series
+-- # Expansion of dissected eta-function as Puiseux series
 
 -- ## Pure eta function
 
 -- +
 -------------------------------------------------------------------
---test:eta_delta-m-lambda-puiseux
+--test:eta-delta-m-lambda-puiseux
 -------------------------------------------------------------------
 -- -
 
--- It corresponds to \eqref{eq:eta_delta-m-lambda^[R](gamma*tau)}.
+-- It corresponds to \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
 
--- Compute the expansion of eta((t+1)/2) under the transformation with
--- matrix[[1,0],[5,1]].
+-- Compute the expansion of $\eta((\tau+1)/2)$ under the
+-- transformation with `matrix[[1,0],[5,1]]`.
 
-rspec := eqSPEC [[1,1]]; delta := 1 :: PP;
+delta := 1 :: PP;
+rspec := eqSPEC [[delta,1]];
 m := 2 :: PP; lambda := 1 :: NN;
 gamma := matrix [[1,0],[5,1]]
 
@@ -248,7 +261,7 @@ gamma := matrix [[1,0],[5,1]]
 -- SymbolicEtaQuotientLambdaGamma.
 -- Since there is only one part in
 
-parts rspec
+assertEquals(parts rspec, [[delta,-1,1]])
 
 -- we can easily extract from
 
@@ -258,37 +271,21 @@ y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
 
 yy := y[delta,-1] -- SymbolicEtaGamma
 
--- Their Puiseux expansion is therefore the same.
+-- The Puiseux expansion of y and yy are the same.
 
 -- Before we can compute the expansion, we must determine in which
 -- coefficient ring we can do it.
 
--- Since $\kappa_{\gamma_{\delta,m,\lambda}}$ from
--- \eqref{eq:eta_delta-m-lambda^[R](gamma*tau)} is an integer, we
--- determine by which $n$-th root of unity $\xi$ we must extend our
+-- We determine by which $n$-th root of unity $\xi$ we must extend our
 -- coefficient ring (rational numbers) so that all coefficients of the
 -- expansion (without the $(c\tau+d)$ factor live in
 -- $\mathbb{Q}[\xi]$.
 
-assertEquals(gamma1 yy, matrix[[3,1],[5,2]])
-kappa := (upsilonExponent(gamma1 yy)$QETAAUX)::QQ
-assertEquals(kappa,22)
-assertEquals(udelta yy, 2)
-assertEquals(vdelta yy, 0)
-rat := rationalPrefactor y
-rr := rationalSquareRoot(rat)$QETAAUX
+-- This is given by the function `minimalRootOfUnity`.
 
--- For second factor
--- $\left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^(1/2)$ in
--- \eqref{eq:eta_delta-m-lambda^[R](gamma*tau)} we need a 8-th root of unity.
-
-minroot := minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
-
-ue := unityExponent y -- third factor
-assertEquals(ue, 1/24*(vdelta yy + kappa))
-
-xiord := lcm(minroot, denom ue)
+xiord := minimalRootOfUnity(y)
 assertEquals(xiord,24)
+assertEquals(minimalRootOfUnity yy, xiord)
 
 -- Now we can define the coefficient ring CX and the root xi and
 -- compute the expansion.
@@ -305,9 +302,11 @@ px := puiseuxExpansion(y,0) $ QESXM(C,CX,QMOD0)
 
 -- Let us continue with some checks.
 
+ue := unityExponent y
 qe := qExponent y -- 4th factor
 cde := cdExponent y -- first factor
 
+assertEquals(ue, 11/12)
 assertEquals(order px, qe)
 assertEquals(cde, 1/2)
 
@@ -315,8 +314,9 @@ assertEquals(cde, 1/2)
 -- $\left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^(1/2)$ in
 -- $\mathbb{Q}[\xi]$.
 
-s2 := squareRoot(rr.rootOf)$GaussRoot(CX,xi,xiord)
-assertEquals(s2^2, rr.rootOf)
+rpf := rationalPrefactor y
+s2 := squareRoot(rpf)$GaussRoot(CX,xi,xiord)
+assertEquals(s2^2, rpf)
 
 c := s2*xi^(ue*xiord)
 
@@ -324,6 +324,260 @@ assertEquals(c,-xi^7+xi)
 assertEquals(leadingCoefficient(px),c)
 assertEquals(leadingCoefficient(reductum px),-c)
 assertEquals(leadingCoefficient(reductum reductum px),-c)
+
+-- ### The parts of the expansion
+
+-- The left-hand side of \eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG}
+-- consists of five parts. We copy this formula here, but the details
+-- must be looked up in `qeta.tex`.
+
+-- \begin{align}
+--   \eta_{\delta,m,\lambda}(\gamma \tau)
+--   &=
+--     (c\tau+d)^{1/2}
+--     \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}
+--     \unityPower{v_{\delta,-1,m,\lambda}}
+--     \unityPowerTau{u_{\delta,-1,m,\lambda}}
+--     \eulerFunction[q_{\delta,m,\lambda}]{},
+--     %\label{eq:eta_delta-m-lambda(gamma*tau)-YEG}
+-- \end{align}
+
+-- These factors can be computed as follows.
+-- We here choose different parameters than above.
+
+delta := 2 :: PP;
+rspec := eqSPEC [[delta,1]];
+m := 3 :: PP; lambda := 2 :: NN;
+gamma := matrix [[1,1],[4,5]]
+y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
+xiord := minimalRootOfUnity(y)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+px := puiseuxExpansion(y,0) $ QESXM(C,CX,QMOD0)
+
+assertEquals(xiord, 12)
+
+-- The exponent for $(c\tau+d)$:
+
+assertEquals(cdExponent y, 1/2)
+
+-- $h_{\delta,m,\lambda}/\delta$
+
+rpf := rationalPrefactor y
+s2 := squareRoot(rpf)$GaussRoot(CX,xi,xiord)
+assertEquals(rpf, 3)
+assertEquals(s2^2, rpf)
+
+-- $v_{\delta,-1,m,\lambda}$
+
+ue := unityExponent y
+assertEquals(ue, 1/4)
+
+-- $u_{\delta,-1,m,\lambda}$
+
+qe := qExponent y
+assertEquals(qe, 1/4)
+
+-- $(u_{\delta,m,\lambda}, v_{\delta,m,\lambda})$
+
+yy := y[delta,-1] -- SymbolicEtaGamma
+assertEquals([udelta yy, vdelta yy], [6,0]$List(QQ))
+
+-- The part \eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG} describing
+-- the $q$-Pochhammer symbol, i.e.,
+-- $\eulerFunction[q_{\delta,m,\lambda}]{}$ is computed as follows.
+
+qp := qPochhammerPart(y) $ QESXM(C,CX,QMOD0)
+
+-- Putting all together, we should get the Puiseux series that we
+-- computed above.
+
+z := px - monomial(s2*xi^(xiord*ue), qe)$QEtaPuiseuxSeries(CX) * qp
+assertEquals(order(z, 100), 100)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- ## Generalized eta function
+
+-- +
+-------------------------------------------------------------------
+--test:eta-delta-g-m-lambda-puiseux
+-------------------------------------------------------------------
+-- -
+
+-- It corresponds to \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}.
+
+-- Compute the expansion of $\eta_{5,2}((\tau+2)/3)$ under the
+-- transformation with `matrix[[1,0],[9,1]]`.
+
+delta := 5 :: PP; g := 2 :: NN;
+rspec := eqSPEC [[delta,g,1]];
+m := 3 :: PP; lambda := 2 :: NN;
+gamma := matrix [[1,0],[9,1]]
+
+-- We only have a puiseuxExpansion function for
+-- SymbolicEtaQuotientLambdaGamma, so we do not compute an element of
+-- SymbolicEtaGamma, but rather an element of
+-- SymbolicEtaQuotientLambdaGamma.
+-- Since there is only one part in
+
+assertEquals(parts rspec, [[delta,g,1]])
+
+-- we can easily extract from
+
+y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
+
+-- the respective element of SymbolicEtaGamma.
+
+yy := y[delta,g] -- SymbolicEtaGamma
+
+-- The Puiseux expansion of y and yy are the same.
+
+-- Before we can compute the expansion, we must determine in which
+-- coefficient ring we can do it.
+
+-- We determine by which $n$-th root of unity $\xi$ we must extend our
+-- coefficient ring (rational numbers) so that all coefficients of the
+-- expansion (without the $(c\tau+d)$ factor live in
+-- $\mathbb{Q}[\xi]$.
+
+-- This is given by the function `minimalRootOfUnity`.
+
+xiord := minimalRootOfUnity(y)
+assertEquals(xiord,180)
+assertEquals(xiord,minimalRootOfUnity yy)
+
+-- Now we can define the coefficient ring CX and the root xi and
+-- compute the expansion.
+
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+px := puiseuxExpansion(y,0) $ QESXM(C,CX,QMOD1)
+
+-- Note that in our case, the 0 in the argument is actually
+-- superfluous, but QEta has no implementation to expand `yy`.
+
+-- Furthermore, the `QMOD1` parameter is actually not used, but QEta
+-- did not bother to implement a domain that does not need that
+-- parameter.
+
+-- Let us continue with some checks.
+
+qe := qExponent y
+assertEquals(order px, qe)
+
+-- Generalized eta-quotients have no $(c\tau+d)$ factor.
+
+cde := cdExponent y
+assertEquals(cde, 0)
+
+-- And there is also no rational prefactor different from 1.
+
+assertEquals(rationalPrefactor y, 1)
+
+-- There is a root-of-unity factor
+
+ue := unityExponent y
+assertEquals(ue, 31/36)
+
+-- The actual series expansion without the above factors is
+
+qp := qPochhammerPart(y) $ QESXM(C,CX,QMOD0)
+
+-- Let us check the first 3 coefficients of the series expansion of
+-- px.
+
+g1 := gamma1 yy
+gd := g1(1,1)*g/delta
+hd := g1(1,2)*g/delta
+c := xi^(xiord*unityExponent(yy))
+
+-- In case gd is an inteter, we must multiply an additional
+-- $(1-\xi^{-h}$ where $\xi$ is the respective $n$-th root of unity and
+-- $h$ is `hd` multiplied by $n$. Note that $n$ is `xiord`.
+
+if one? denom gd then c := c * (1-xi^(xiord*(-hd)))
+
+c0 := -xi^35-xi^11+xi^5
+c1 := 2*xi^47+xi^41-2*xi^29-2*xi^23+xi^11+2*xi^5
+c2 := 2*xi^47-2*xi^41+xi^23-2*xi^17+xi^5
+assertEquals(c, c0)
+assertEquals(leadingCoefficient(px),c)
+assertEquals(leadingCoefficient(reductum px), c1)
+assertEquals(leadingCoefficient(reductum reductum px), c2)
+
+-- ### The parts of the expansion
+
+-- The left-hand side of
+-- \eqref{eq:eta_delta-g-m-lambda(gamma*tau)-YEG} consists of five
+-- parts. We copy this formula here, but the details must be looked up
+-- in `qeta.tex`.
+
+-- \begin{align}
+--   \eta_{\delta,g,m,\lambda}(\gamma\tau)
+--   &=
+--     \unityPower{v_{\delta,g,m,\lambda}}
+--     \cdot
+--     \unityPowerTau{u_{\delta,g,m,\lambda}}
+--     \cdot
+--     \jacobiSchoeneberg{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+--     \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
+--     %\label{eq:eta_delta-g-m-lambda^[R](gamma*tau)-YEG}
+-- \end{align}
+
+-- These factors can be computed as follows.
+-- We here choose different parameters than above.
+
+delta := 7 :: PP; g := 3 :: NN;
+rspec := eqSPEC [[delta,g,1]];
+m := 5 :: PP; lambda := 3 :: NN;
+gamma := matrix [[1,0],[4,1]]
+
+y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
+
+xiord := minimalRootOfUnity(y)
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+px := puiseuxExpansion(y,0) $ QESXM(C,CX,QMOD0)
+
+assertEquals(xiord, 420)
+
+-- The exponent for $(c\tau+d)$:
+
+assertEquals(cdExponent y, 0)
+
+-- $h_{\delta,m,\lambda}/\delta$
+
+rpf := rationalPrefactor y
+assertEquals(rpf, 1)
+
+-- $v_{\delta,-1,m,\lambda}$
+
+ue := unityExponent y
+assertEquals(ue, 341/420)
+
+-- $u_{\delta,-1,m,\lambda}$
+
+qe := qExponent y
+assertEquals(qe, 1/420)
+
+-- $(u_{\delta,m,\lambda}, v_{\delta,m,\lambda})$
+
+yy := y[delta,g] -- SymbolicEtaGamma
+assertEquals([udelta yy, vdelta yy], [1/35,16/35]$List(QQ))
+
+-- The part \eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG} describing
+-- the $q$-Pochhammer symbol, i.e.,
+-- $\eulerFunction[q_{\delta,m,\lambda}]{}$ is computed as follows.
+
+qp := qPochhammerPart(y) $ QESXM(C,CX,QMOD0)
+
+-- Putting all together, we should get the Puiseux series that we
+-- computed above.
+
+z := px - monomial(xi^(xiord*ue), qe)$QEtaPuiseuxSeries(CX) * qp
+assertEquals(order(z, 10), 10)
 
 -- +
 -------------------------------------------------------------------
