@@ -159,6 +159,10 @@ QEtaSeriesExpansion(C, xiord, CX, xi, QMOD): Exports == Implementation where
 
   -- building block for series expansions
   Exports ==> CoercibleTo OutputForm with
+    qPochhammerPart: YEQLG -> PX
+      ++ qPochhammerPart(y) returns the qPochhammer part of formula
+      ++ \eqref{eq:g_r-m-lambda(gamma*tau)}, i.e. a series of order 0
+      ++ with constant term 1.
     puiseuxExpansion: (YEQLG, QQ) -> PX
       ++ puiseuxExpansion(y, e) computes the Puiseux expansion of
       ++ $g_{r,m,\lambda(\gamma \tau)$ in terms of $q$ multiplied by
@@ -297,7 +301,7 @@ without the $(c\tau+d)$-part.
     -- It includes the pure and properGeneralized part, because we
     -- employ the jacobiProduct to compute it.
     --assert(CX has Field)
-    qPochhammer(y: YEQLG): PX ==
+    qPochhammerPart(y: YEQLG): PX ==
         -- We first compute the first q-Pochhammer product (with
         -- exponent $r_\delta - \tilde{r}_\delta$, see
         -- \eqref{eq:p_rbar-m-lambda(gamma*tau)}.
@@ -371,7 +375,7 @@ without the $(c\tau+d)$-part.
         -- leading coefficient
         cx: CX := xipow numer uexp * squareRoot rationalPrefactor y
           -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
-        monomial(cx, qExponent y) * qPochhammer y
+        monomial(cx, qExponent y) * qPochhammerPart y
 
 
 )if LiterateDoc
