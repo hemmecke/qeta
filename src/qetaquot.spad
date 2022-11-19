@@ -238,17 +238,6 @@ QEtaSeriesExpansion(C, xiord, CX, xi, QMOD): Exports == Implementation where
         efp: LX := eulerFunctionPower(1, rd)$CachedQPochhammerPower(CX, LX)
         substitute(efp, u, v)
 
-    -- We assume that CX has been chosen in such a way that the square
-    -- root of the argument of squareRoot can be expressed in it.
-    squareRoot(fq: QQ): CX ==
-        rr: Record(rat: QQ, rootOf: PP) := rationalSquareRoot(fq)$QETAAUX
-        sqrt: CX := squareRoot(rr.rootOf)$GaussRoot(CX, xi, xiord)
-        C has Algebra QQ  => sqrt * ((rr.rat)::C::CX)
-        CX has Algebra QQ => sqrt * ((rr.rat)::CX)
-        -- Otherwise we can only continue if we have no denominators.
-        one? denom(rr.rat) => numer(rr.rat)::CX * sqrt
-        error "cannot take root in coefficient ring"
-
     -- local
     -- Compute $\tilde{r}_\delta$ from $\tilde{r}$. See definition
     -- below \eqref{eq:p_rbar-m-lambda(gamma*tau)}, i.e.
@@ -373,7 +362,8 @@ without the $(c\tau+d)$-part.
             errorPrint("xiord * unityExponent y", uexp)
             error "QEtaSeriesExpansion: denominator for xi does not vanish"
         -- leading coefficient
-        cx: CX := xipow numer uexp * squareRoot rationalPrefactor y
+        sqrty: CX := squareRoot(rationalPrefactor y)$GaussRoot(CX,xi,xiord)
+        cx: CX := xipow numer uexp * sqrty
           -- Take \eqref{eq:eta_g-h^[S](tau)-prefactor} into account (in cx).
         monomial(cx, qExponent y) * qPochhammerPart y
 

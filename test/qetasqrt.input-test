@@ -1,0 +1,64 @@
+-- -*- coding: utf-8 -*-
+-- Via jupytext this file can be shown as a jupyter notebook.
+
+)read /home/hemmecke/g/qeta/input/jfricas-test-support.input )quiet
+
+-- +
+--setup
+-- -
+
+)set mess type on
+)set mess time on
+
+-- +
+--endsetup
+
+)set output algebra on
+)set output formatted off
+
+-- +
+--test:rationalSquareRoot
+-- -
+
+RQZ ==> Record(rat: QQ, radical: ZZ)
+rsr ==> rationalSquareRoot $ MinimalSquareRoot
+chkrsr x ==> (z: RQZ := rsr x; assertEquals(x, (z.rat)^2*z.radical))
+chkrsr 1
+chkrsr(-1)
+chkrsr 16
+chkrsr(1/16)
+chkrsr(9/16)
+chkrsr(7*6^2/(5^3*11^2))
+
+-- +
+--endtest
+
+-- +
+--test:minimal-root-of-unity
+-- -
+
+mr ==> minimalRootOfUnityForSquareRootOf $ MinimalSquareRoot
+ae(x,y) ==> assertEquals(mr x, y)
+ae(1, 1)
+ae(-1, 4)
+ae(2, 8)
+ae(-2, 8)
+ae(3, 12)
+ae(-3, 12)
+ae(4, 1)
+ae(-4, 4)
+ae(5, 5)
+ae(-5, 20)
+ae(6, 24)
+ae(-6, 24)
+
+ae(1/6, 24)
+ae(-1/6, 24)
+
+ae(3/7, 21)
+ae(-3/7, 84)
+
+ae(-9/49, 4)
+
+-- +
+--endtest

@@ -351,9 +351,8 @@ SymbolicEtaGamma: SetCategory with
         g > 0 => asPP minroot
         -- here g = -1 -- \eqref{eq:eta_delta-m-lambda(gamma*tau)}
         rat := rationalPrefactor x
-        rr: Record(rat: QQ, rootOf: PP) := rationalSquareRoot(rat)$QETAAUX
-        -- second factor of the summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
-        asPP lcm(minroot, minimalSquareRootOfUnity(rr.rootOf)$QETAAUX)
+        import from MinimalSquareRoot
+        asPP lcm(minroot, minimalRootOfUnityForSquareRootOf rat)
 
 
 )if LiterateDoc
@@ -501,10 +500,8 @@ SymbolicEtaQuotientLambdaGamma: SetCategory with
     qExponent(x: %): QQ == xx.fqExponent
     cdExponent(x: %): QQ == xx.fcdExponent
     minimalRootOfUnityWithoutUnityExponent(x: %): PP ==
-        rat := rationalPrefactor x
-        rr: Record(rat: QQ, rootOf: PP) := rationalSquareRoot(rat)$QETAAUX
-        -- second factor of the summand of \eqref{eq:p_rbar-m-t(gamma*tau)}
-        minroot: ZZ :=  minimalSquareRootOfUnity(rr.rootOf)$QETAAUX
+        import from MinimalSquareRoot
+        minroot: ZZ :=  minimalRootOfUnityForSquareRootOf rationalPrefactor x
         h: HT := xx.feta
         for y in entries h repeat
             minroot := lcm(minroot, minimalRootOfUnityWithoutPrefactors y)

@@ -165,14 +165,6 @@ QEtaAuxiliaryPackage: with
       ++ as described in qeta.tex, i.e., such that 0<=m2(1,2)<det(mat)/g
       ++ where g = gcd(a, c) and mat=[[a,b],[c,d]].
       ++ Input condition: a*d-b*c>0.
-    rationalSquareRoot: QQ -> Record(rat: QQ, rootOf: PP)
-      ++ if z = rationalSquareRoot(x) then x = (z.rat)^2 * z.root
-    minimalSquareRootOfUnity: PP -> PP
-      ++ minimalSquareRootOfUnity(p) returns an integer n such that
-      ++ in Z(x) (where x is a primitive n-th root of unity) there
-      ++ exists an element y such that y^2=p.
-      ++ p must be a radical integer, i.e., should not contain the
-      ++ square of a prime.
     fractionalPart: QQ -> QQ
       ++ fractionalPart(x) returns x - floor(x)::Fraction(Integer).
     fractionalBernoulli1: QQ -> QQ
@@ -238,8 +230,6 @@ QEtaAuxiliaryPackage: with
       ++ verticalConcat(m1, m2) puts m1 on top of m2 while creating a
       ++ matrix big enough to hold all columns.
   == add
-    fUnion ==> Union("nil", "sqfr", "irred", "prime")
-    FL ==> List Record(flag: fUnion, factor: ZZ, exponent: NN)
 
 )if LiterateDoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -384,43 +374,12 @@ $a\in X_c$.
 )endif
 
     -- local
-    squarePart(fl: FL): ZZ ==
-        -- if fl = factorList factor x and z=squarePart(fl) then
-        -- z^2*r=expand(fl) for some squarefree r.
-        z: ZZ := 1
-        for x in fl repeat
-            e: NN := asNN shift(x.exponent, -1)
-            z := (x.factor)^e * z
-        return z
-
-    rationalSquareRoot(x: QQ): Record(rat: QQ, rootOf: PP) ==
-        import from FL
-        fden: Factored ZZ := factor denom x
-        fnum: Factored ZZ := factor numer x
-        fl: FL := factorList fden
-        for x in fl | odd?(x.exponent) repeat
-            fnum := x.factor * fnum
-            fden := x.factor * fden
-        fl := factorList fnum
-        r: ZZ := 1
-        for x in fl | odd? (x.exponent) repeat r := x.factor * r
-        -- Note that the odd bit will be shifted away in squarePart.
-        return [squarePart(fl)/squarePart(factorList fden), asPP r]
-
-    -- local
     -- TODO: unused
     square(x: Record(root: PP, elem: Pol)): Vector ZZ ==
         pol: Pol := cyclotomic(x.root)$CyclotomicPolynomialPackage
         C ==> SimpleAlgebraicExtension(ZZ, Pol, pol)
         z: C := convert(x.elem)@C
         convert(z*z)@Vector(ZZ)
-
-    minimalSquareRootOfUnity(x: PP): PP ==
-        -- x is a radical integer (squarefree)
-        -- See \cite[Section~IV.3]{Lang_AlgebraicNumberTheory_1986}.
-        x = 2 => 8
-        positiveRemainder(x, 4)=1 => x
-        4*x
 
 )if LiterateDoc
 %$
