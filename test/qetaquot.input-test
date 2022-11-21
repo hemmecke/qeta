@@ -583,3 +583,67 @@ assertEquals(order(z, 10), 10)
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # Transformation of dissected eta-quotient
+
+-- ## One particular $\lambda$
+
+-- +
+-------------------------------------------------------------------
+--test:g-r-m-lambda-gamma-puiseux
+-------------------------------------------------------------------
+-- -
+
+-- It corresponds to \eqref{eq:g_r-m-lambda(gamma*tau)}.
+
+-- Compute the expansion of $g_{r,m,\lambda}(\tau)$ under the
+-- transformation with `matrix[[0,1],[-1,0]]`.
+
+rspec := eqSPEC [[1,-1],[3,1]];
+m:=250; lambda := 1
+gamma := matrix[[0,1],[-1,0]]
+
+y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
+
+-- We determine by which $n$-th root of unity $\xi$ we must extend our
+-- coefficient ring (rational numbers) so that all coefficients of the
+-- expansion (without the $(c\tau+d)$ factor live in
+-- $\mathbb{Q}[\xi]$.
+
+-- This is given by the function `minimalRootOfUnity`.
+
+xiord := minimalRootOfUnity y
+assertEquals(xiord,3000) -- lambda=1
+
+-- Now we can define the coefficient ring CX and the root xi and
+-- compute the expansion.
+
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+px := puiseuxExpansion(y,0)$ QESXM(C,CX,QMOD0)
+
+-- The `QMOD0` parameter is actually not used, but QEta
+-- did not bother to implement a domain that does not need that
+-- parameter.
+
+-- Let us continue with some checks.
+
+assertTrue(zero? cdExponent y)
+
+ue := unityExponent y
+assertEquals(ue, 2917/3000)
+
+rpf := rationalPrefactor y
+s2 := squareRoot(rpf) $ GaussRoot(CX, xi, xiord)
+assertEquals(s2^2, rpf)
+
+qe := qExponent y -- 4th factor
+assertEquals(order px, qe)
+
+qp := qPochhammerPart(y) $ QESXM(C,CX,QMOD0)
+z := px - monomial(s2*xi^(xiord*ue), qe)$QEtaPuiseuxSeries(CX) * qp
+assertEquals(order(z, 10), 10)
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
