@@ -643,6 +643,71 @@ assertEquals(order px, qe)
 qp := qPochhammerPart(y) $ QESXM(C,CX,QMOD0)
 z := px - monomial(s2*xi^(xiord*ue), qe)$QEtaPuiseuxSeries(CX) * qp
 assertEquals(order(z, 10), 10)
+
+-- +
+-------------------------------------------------------------------
+--endtest
+-------------------------------------------------------------------
+-- -
+
+-- # Transformation of dissected eta-quotient
+
+-- ## Sum over all $\lambda$
+
+-- +
+-------------------------------------------------------------------
+--test:p-r-m-k-gamma-puiseux
+-------------------------------------------------------------------
+-- -
+
+-- It corresponds to \eqref{eq:p_r-m-k(gamma*tau)}.
+
+-- Compute the expansion of $p_{r,m,k}(\tau)$ under the transformation
+-- with `matrix[[0,1],[-1,0]]`.
+
+rspec := eqSPEC [[1,-1],[3,1]];
+m:=250; k := 2
+gamma := matrix[[0,1],[-1,0]]
+
+orb := sort ORBIT(rspec,m,k)
+assertEquals(orb, [2,102])
+
+y2 := etaQuotient(rspec,m,k,gamma)$SymbolicEtaQuotientGamma;
+y102 := etaQuotient(rspec,m,102,gamma)$SymbolicEtaQuotientGamma;
+
+xiord2 := minimalRootOfUnity y2
+xiord102 := minimalRootOfUnity y102
+xiord := lcm(xiord2, xiord102)
+assertEquals(xiord,1500) -- lambda=1
+
+-- Now we can define the coefficient ring CX and the root xi and
+-- compute the expansion.
+
+EXTENDEDCOEFFICIENTRING(C, xiord, CX, xi);
+px2 := puiseuxExpansion(y2)$ QESXM(C,CX,QMOD0)
+px102 := puiseuxExpansion(y102)$ QESXM(C,CX,QMOD0)
+z := px2 - px102
+assert(order z, 11/360)
+
+-- The `QMOD0` parameter is actually not used, but QEta
+-- did not bother to implement a domain that does not need that
+-- parameter.
+
+ue2 := unityExponent y2
+ue102 := unityExponent y102
+
+rho := rhoInfinity(rspec)
+assertEquals(ue2, fractionalPart(-(2+rho)/m))
+
+qemin2 := qExponentMin y2
+qemin102 := qExponentMin y102
+assertEquals(qemin2,qemin102)
+
+ys := [etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma_
+       for lambda in 0..m-1];
+qes := [[i,qe] for y in ys for i in 1.. | (qe := qExponent(y); qe = qemin2)]
+assertEquals(entries complete qes, [[1, qemin2]])
+
 -- +
 -------------------------------------------------------------------
 --endtest
