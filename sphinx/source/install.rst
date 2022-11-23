@@ -30,20 +30,25 @@ Clone the git repository and compile the sources.
 Adapt directories in the test files (extension ``.input-test``) so
 that they match your setting.
 
-This is only needed if you intend to work with these test/demo files.
-These files belong to the QEta testsuite, but might be interesting to
-look into if you want to learn how to call some command.
+This is only needed if you intend to work with these test/demo files
+and if you have installed QEta into a different directory than
+::
+
+   $HOME/fricas/qeta
+
+These test/demo files belong to the QEta testsuite, but might be
+interesting to look into if you want to learn how to call some
+command.
 
 ::
 
-   FDIR=$HOME/fricas
-   q="$FDIR/qeta"
-   cd $q
-   for f in $(ls test/*.input-test); do \
-     echo $f; \
-     sed -i "s|^)read /home/.*jfricas-test-support.*|)read $q/input/jfricas-test-support.input )quiet|" $f; \
-   done
-   sed -i "s|^)cd g/qeta/tmp|)cd $q/tmp|" $q/input/jfricas-test-support.input
+   # Change QETADIR to the absolute QEta installation path.
+   QETADIR=$HOME/fricas/qeta
+   OLD=fricas/input/jfricas-test-support
+   NEW=$QETADIR/input/jfricas-test-support
+   cd $QETADIR
+   sed -i "s|^)read $OLD.*|)read $NEW.input )quiet|" worksheet/*.input test/*.input-test
+   sed -i "s|^)cd fricas/qeta/tmp|)cd $QETADIR/tmp|" worksheet/*.input input/*.input
 
 
 Look, for
