@@ -2732,531 +2732,6 @@ The transformation formula for $F_{s,r,m,k}(\tau)$ (given by
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Generalized eta-functions}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Transformation $g_{\bar{r},m,\lambda}$ under $\SL2Z$}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Let us take a generalized eta-quotient $g_{\bar{r}}$ of the form
-\eqref{eq:g_rbar(tau)}.
-Similar to what has been done above for pure eta-quotients, we first
-need the transformation of
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  \defineNotation[g-rtilde-m-lambda-tau]{g_{\tilde{r},m,\lambda}(\tau)}
-  &:=
-  g_{\tilde{r}}
-    \left(
-    \begin{pmatrix}1&\lambda\\0&m\end{pmatrix}\tau
-    \right)
-  \label{eq:g_rtilde-m-lambda(tau)}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-and then get with \eqref{eq:g_r-m-lambda(gamma*tau)} a transformation
-formula for
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  \defineNotation[g-rbar-m-lambda-tau]{g_{\bar{r},m,\lambda}(\tau)}
-  &:=
-    g_{r,m,\lambda}(\tau)
-    \cdot
-    g_{\tilde{r},m,\lambda}(\tau).
-  \label{eq:g_rbar-m-lambda(tau)}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-With $W$, $\gamma_{\delta,m,\lambda}$, and $\tau_{\delta,m,\lambda}$
-defined as in in \eqref{eq:W_delta-m-lambda},
-\eqref{eq:gamma_delta-m-lambda}, and \eqref{eq:tau_delta-m-lambda},
-respectively, and the transformation formula
-\eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}, we have the following
-formula.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  \defineNotation[g-rtilde-gamma-m-lambda-tau]{g_{\tilde{r},m,\lambda}(\gamma\tau)}
-  &=
-    \genprod[M]
-    \eta_{\delta,g,m,\lambda}(\gamma\tau)^{r_{\delta,g}}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-    \unityPower{
-      \gensum[M]
-      r_{\delta,g}
-      \left(
-      \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-      +
-      \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-      \right)}
-  \cdot
-  \unityPowerTau{
-    \gensum[M]
-    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
-  \times
-  \\
-  &\qquad\qquad
-  \times
-  \genprod[M]
-  \left(
-    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
-  \right)^{r_{\delta,g}}
-  \end{split}
-  \label{eq:g_rtilde-m-lambda(gamma*tau)}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Note that formula \eqref{eq:g_rtilde-m-lambda(gamma*tau)} corresponds
-to the proper generalized eta-quotient part of (2.25) in
-\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
-
-If $\left\{\frac{a'g}{\delta}\right\} = \frac{\alpha}{\beta} \ne 0$,
-the Jacobi function can be expanded into
-\begin{align}
-  \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
-  &=
-  \jacobiFunction{
-      \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
-      }{q_{\delta,m,\lambda}}
-  =
-    \jacobiFunction{\zeta_\delta^{b' g} x^{\alpha}}{x^{\beta}}
-    \label{eq:minimalRootOfUnity-g_rtilde-m-lambda}
-\end{align}
-where
-$x = q_{\delta,m,\lambda}^{1/\beta} =
-\unityPower{\frac{v_{\delta,m,\lambda}}{\beta}} q^{u_{\delta,m,\lambda}/\beta}$.
-
-
-
-
-The parts of \eqref{eq:g_rtilde-m-lambda(gamma*tau)} are
-implemented via
-\textcolor{blue}{\code{SymbolicProperGeneralizedEtaQuotientLambdaGamma}}
-(Section~\ref{sec:SymbolicEtaQuotientLambdaGamma}).
-%
-If \code{e = properGeneralizedEtaQuotient(rspec,m,lambda,gamma)}, then
-we have the following correspondence.
-\begin{align*}
-  \text{\code{unityExponent(e) : Q}}
-  &=
-    \gensum[M]
-    r_{\delta,g}
-    \left(
-    \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-    +
-    \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-    \right)
-  \\
-  \text{\code{qExponenbt(e) : Q}}
-  &=
-    \gensum[M]
-    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-\end{align*}
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Transformations of $\sum_{n=0}^\infty \bar{a}(mn+t) q^n$}
-\label{sec:p_rbar-m-t}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-In the following let $m$, $M$, $N$ be such that the conditions 1-10 of
-Section~10 in
-\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} are
-fulfilled.
-Furthermore let $\bar{r}\in\bar{R}(M)$.
-%
-We follow the derivation from Section~\ref{sec:p_r-m-t} and
-define
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align*}
-  \bar{f}(\tau)
-  &=
-  \sum_{n=0}^\infty \bar{a}(n) q^n
-    =
-    \unityPowerTau{-\frac{\sigmainfty[M]{\bar{r}}}{24}} g_{\bar{r}}(\tau),
-  \\
-  %
-  \bar{f}_t(\tau)
-  &=
-    \unityPowerTau{- t} \bar{f}(\tau)
-    =
-    \unityPowerTau{-\frac{24t + \sigmainfty[M]{\bar{r}}}{24}} g_{\bar{r}}(\tau).
-\end{align*}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Recall that from \eqref{eq:U_m-f_t} that
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  (U_m\bar{f}_t)(\tau)
-  &=
-  \frac{1}{m} \sum_{\lambda=0}^{m-1}\bar{f}_t\left(\frac{\tau+\lambda}{m}\right)
-  =
-    \sum_{n=0}^\infty \bar{a}(mn+t) q^n.
-  \label{eq:U_m-fbar_t}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-We can also evaluate $(U_m\bar{f}_t)(\tau)$ in another way.
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align*}
-  (U_m\bar{f}_t)(\tau)
-  &=
-  \frac{1}{m} \sum_{\lambda=0}^{m-1}\bar{f}_t\left(\frac{\tau+\lambda}{m}\right)
-%  \\
-%  &
-    =
-    \frac{1}{m} \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{(\tau+\lambda) (24 t + \sigmainftybar[M]{\bar{r}})}{24 m}}
-    g_{\bar{r}}\!\left(\frac{\tau+\lambda}{m}\right)
-  \\
-% &=
-% \frac{1}{m} \sum_{\lambda=0}^{m-1}
-% \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sigmainfty{r}}
-% g_r\left(\frac{\tau+\lambda}{m}\right)\\
-  &=
-  \frac{1}{m}
-  \unityPowerTau{-\frac{24t+\sigmainftybar[M]{\bar{r}}}{24m}}
-  \sum_{\lambda=0}^{m-1}
-  \unityPower{-\frac{\lambda (24t+\sigmainftybar[M]{\bar{r}})}{24m}}
-  g_{\bar{r},m,\lambda}(\tau)
-\end{align*}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-In the following we consider the function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align}
-  \defineNotation[p-rbar-m-t-tau]{p_{\bar{r},m,t}(\tau)}
-  &:= \unityPowerTau{\frac{24t+\sigmainfty[M]{\bar{r}}}{24m} } (U_mf_t)(\tau)
-  =
-    \frac{1}{m} \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m} (24t+\sigmainftybar[M]{\bar{r}})}
-    g_{\bar{r},m,\lambda}(\tau)
-  \label{eq:p_rbar-m-t(tau)}
-\end{align}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-and its transformations under $\SL2Z$.
-
-Note that $g_{\bar{r}} = g_{\bar{r},1,0}=p_{\bar{r},1,0}$.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Transformation of $p_{\bar{r},m,t}$ under $\SL2Z$}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-From its definition~\eqref{eq:p_rbar-m-t(tau)} and
-\eqref{eq:g_r-m-lambda(gamma*tau)},
-\eqref{eq:g_rtilde-m-lambda(gamma*tau)}, we can easily find a formula
-for the transformation of $p_{\bar{r},m,t}$ under $\SL2Z$.
-
-\begin{align}
-  \defineNotation[p-rbar-m-t-gamma-tau]{p_{\bar{r},m,t}(\gamma\tau)}
-  &:=\frac{1}{m} \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)}
-    g_{\bar{r},m,\lambda}(\gamma\tau)
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
-    \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)}
-    \cdot
-    \unityPower{\divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
-                + \kappa_{\gamma_{\delta,m,\lambda}})}{24}}
-  \times\\
-  & \qquad\times
-    \divisorprod{M}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
-    \cdot
-    \unityPowerTau{\frac{\divisorsum{M} r_\delta u_{\delta,m,\lambda}}{24}}
-    \cdot
-    \divisorprod{M}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
-  \times\\
-  & \qquad\times
-    \unityPower{
-      \gensum[M]
-      r_{\delta,g}
-      \left(
-      \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-      +
-      \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-      \right)}
-  \cdot
-  \unityPowerTau{
-    \gensum[M]
-    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
-  \times
-  \\
-  &\qquad\qquad
-  \times
-  \genprod[M]
-  \left(
-    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
-  \right)^{r_{\delta,g}}
-  \end{split}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
-  \times\\
-  & \qquad\times
-  \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)
-      + \divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
-        + \kappa_{\gamma_{\delta,m,\lambda}})}{24}
-      +
-      \gensum[M]
-      r_{\delta,g}
-      \left(
-        \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-        +
-        \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-      \right)}
-  \times\\
-  & \qquad\qquad\times
-    \divisorprod{M}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
-    \cdot
-    \unityPowerTau{
-    \frac{\divisorsum{M} r_\delta
-        u_{\delta,m,\lambda}}{24}
-      +
-    \gensum[M]
-    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a'
-        g}{\delta}\right)
-    }
-  \times
-  \\
-  &\qquad\qquad
-  \times
-  \divisorprod{M}
-  \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
-  \cdot
-  \genprod[M]
-  \left(
-    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
-    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
-  \right)^{r_{\delta,g}}
-  \end{split}
-  \notag\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \begin{split}
-  &=
-    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
-  \times\\
-  & \qquad\times
-  \sum_{\lambda=0}^{m-1}
-    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)
-      + \divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
-        + \kappa_{\gamma_{\delta,m,\lambda}})}{24}
-      +
-      \gensum[M]
-      r_{\delta,g}
-      \left(
-        \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
-        +
-        \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
-      \right)}
-  \times\\
-  & \qquad\qquad\times
-    \divisorprod{M}
-    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
-    \cdot
-    \unityPowerTau{
-    \frac{\divisorsum{M} r_\delta
-        u_{\delta,m,\lambda}}{24}
-      +
-    \gensum[M]
-    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a'
-        g}{\delta}\right)
-    }
-  \times
-  \\
-  &\qquad\qquad
-  \times
-  \divisorprod{M}
-  \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta - \tilde{r}_\delta}
-  \cdot
-  \genprod[M]
-  \jacobiAlpha{\frac{a' g}{\delta}}
-              {\frac{b' g}{\delta}}
-              {q_{\delta,m,\lambda}}^{r_{\delta,g}}
-  \end{split}
-  \label{eq:p_rbar-m-t(gamma*tau)}
-\end{align}
-where
-$\tilde{r}_\delta := \sum_{0 < g < \frac{\delta}{2}} r_{\delta,g}$.
-
-
-The parts of \eqref{eq:p_rbar-m-t(gamma*tau)} are implemented via
-\textcolor{blue}{\code{SymbolicGeneralizedEtaQuotientGamma}}
-(Section~\ref{sec:SymbolicGeneralizedEtaQuotientGamma}).
-\\
-If \code{e = generalizedEtaQuotient(mm, rbar, m, t, gamma)}, then we have the
-following correspondence.
-\begin{align*}
-  \text{\code{unityExponent(e) : Q}}
-  &=
-    -\frac{24t+\sigmainftybar[M]{\bar{r}}}{24m}
-\end{align*}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-From \eqref{eq:g_r(tau)}, \eqref{eq:eta_delta-g^[R](tau)},
-\eqref{eq:g_rbar(tau)}, \eqref{eq:U_m-fbar_t} and
-\eqref{eq:p_rbar-m-t(tau)}, we can define
-\begin{align}
-  \defineNotation[F-sbar-rbar-m-t]{F_{\bar{s}, \bar{r}, m, t}(\tau)}
-  &:= \divisorprod{N} \eta(\delta\tau)^{s_{\delta}}
-    \genprod[N] \eta_{\delta,g}(\tau)^{s_{\delta,g}}
-    \cdot p_{\bar{r},m,t}(\tau)
-  \notag\\
-  &=
-    q^{\bar{\alpha}}
-    \cdot
-    \divisorprod{M}
-    \eulerFunction{\delta}^{s_\delta}
-    \cdot
-    \genprod[M]
-    \left(
-    \qPochhammer{q^g}{q^\delta} \qPochhammer{q^g}{q^\delta}
-    \right)^{s_{\delta,g}}
-    \sum_{n=0}^\infty \bar{a}(mn+t) q^n
-    \label{eq:F_sbar-rbar-m-t(tau)}
-\end{align}
-where
-\begin{align}
-  \bar{\alpha}
-  &=
-    \frac{\sigmazerobar[N]{\bar{s}}}{24}
-    +
-    \frac{24t+\sigmainftybar[M]{\bar{r}}}{24m}
-    \label{eq:alphabarInfinity}
-\end{align}
-is defined as a generalization of \eqref{eq:alphaInfinity}.
-
-Similar to Theorem~\ref{thm:RaduConditions} we have the following
-theorem.
-
-
-\subsubsection{Find ``$\Gamma_1(N)$-modular'' cofactor with only pole
-  at $\infty$}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Suppose $\bar{s}$ is a solution (a column vector with \code{#idxs}
-components) of the system from
-Theorem~\ref{thm:condition-co-eta-quotient-gamma1} for given $\bar{r}$
-and $\bar{b_i}$, $i=1,\ldots,k$ form a basis of solutions for the
-corresponding homogeneous system. Note that the $\bar{b}_i$ describe
-$\Gamma_1(N)$-modular generalized eta-quotients (with possible poles
-at any cusp).
-
-Furthermore assume that $A$ is the matrix that determines the order of
-the expansion of generalized eta-quotients corresponding to an
-exponent vector (like $\bar{b}_i$). $A$ can be computed by
-\code{matrixEtaOrder(nn,spitzen,idxs)}. The matrix $A$ is indexed by
-the cusps in \code{spitzen} (rows) and the indices $(\delta,g)$ from
-\code{idxs} (columns).
-
-Then $A \bar{b}_i$ is a column vector that gives the order of the
-$q$-expansion (corresponding to $\bar{b}_i$) at each cusp that is in
-\code{spitzen}.
-
-Let $v$ be the column vector of the orders (at all cusps) of
-$F_{\bar{s},\bar{r},m,t}(\tau)$.
-
-By adding a $\setZ$-linear
-combination of the $\bar{b}_i$ to $\bar{s}$ we find
-$c_1,\ldots,c_k$ such that
-\begin{gather}
-  v' + A'(c_1\bar{b}_1+\dots+c_k\bar{b}_k)
-  =
-  v' + A'(\bar{b}_1,\ldots,\bar{b}_k) c
-  =
-  v' + G' c
-  \ge 0
-\end{gather}
-where the prime means removing the component for the cusp $\infty$
-and $o_i':= A' \bar{b}_i$, $O':=(o_1',\ldots,o_k')$,
-$c = (c_1,\ldots, c_k)^T$.
-
-Thus we must solve the following system
-\begin{gather}
-  \label{eq:remove-non-infinity-poles}
-  O' c \ge -v'
-\end{gather}
-in order to find $c_1,\ldots, c_k$.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\iffalse
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The following was the text when we worked with grades (=poleorders)
-% instead of orders.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-By subtracting a $\setZ$-linear
-combination of the $\bar{b}_i$ from $\bar{s}$ we find
-$c_1,\ldots,c_k$ such that
-\begin{gather}
-  v' - A'(c_1\bar{b}_1+\dots+c_k\bar{b}_k)
-  =
-  v' - A'(\bar{b}_1,\ldots,\bar{b}_k) c
-  =
-  - u' + G' c
-  \ge 0
-\end{gather}
-where the prime means removing the component for the cusp $\infty$
-and $u':=-v'$, $g_i':= - A' \bar{b}_i$, $G':=(g_1',\ldots,g_k')$,
-$c = (c_1,\ldots, c_k)^T$.
-
-In the implementation we work with grades (which is the negation of
-the expansion order and corresponds to the pole order of the
-expansion). Thus we must solve the following system
-\begin{gather}
-  \label{eq:remove-non-infinity-poles}
-  G' c \ge u'
-\end{gather}
-in order to find $c_1,\ldots, c_k$.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\fi
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
@@ -3611,6 +3086,573 @@ expansion of $p_{r,m,t}(\gamma \tau)$. See
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Hemmecke}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Generalized eta-functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Transformation $g_{\bar{r},m,\lambda}$ under $\SL2Z$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let us take a generalized eta-quotient $g_{\bar{r}}$ of the form
+\eqref{eq:g_rbar(tau)}.
+Similar to what has been done above for pure eta-quotients, we first
+need the transformation of
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[g-rtilde-m-lambda-tau]{g_{\tilde{r},m,\lambda}(\tau)}
+  &:=
+  g_{\tilde{r}}
+    \left(
+    \begin{pmatrix}1&\lambda\\0&m\end{pmatrix}\tau
+    \right)
+  \label{eq:g_rtilde-m-lambda(tau)}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+and then get with \eqref{eq:g_r-m-lambda(gamma*tau)} a transformation
+formula for
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[g-rbar-m-lambda-tau]{g_{\bar{r},m,\lambda}(\tau)}
+  &:=
+    g_{r,m,\lambda}(\tau)
+    \cdot
+    g_{\tilde{r},m,\lambda}(\tau).
+  \label{eq:g_rbar-m-lambda(tau)}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+With $W$, $\gamma_{\delta,m,\lambda}$, and $\tau_{\delta,m,\lambda}$
+defined as in in \eqref{eq:W_delta-m-lambda},
+\eqref{eq:gamma_delta-m-lambda}, and \eqref{eq:tau_delta-m-lambda},
+respectively, and the transformation formula
+\eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}, we have the following
+formula.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[g-rtilde-gamma-m-lambda-tau]{g_{\tilde{r},m,\lambda}(\gamma\tau)}
+  &=
+    \genprod[M]
+    \eta_{\delta,g,m,\lambda}(\gamma\tau)^{r_{\delta,g}}
+  \notag\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{split}
+  &=
+    \unityPower{
+      \gensum[M]
+      r_{\delta,g}
+      \left(
+      \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
+      +
+      \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+      \right)}
+  \cdot
+  \unityPowerTau{
+    \gensum[M]
+    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
+  \times
+  \\
+  &\qquad\qquad
+  \times
+  \genprod[M]
+  \left(
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
+  \right)^{r_{\delta,g}}
+  \end{split}
+  \label{eq:g_rtilde-m-lambda(gamma*tau)}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Note that formula \eqref{eq:g_rtilde-m-lambda(gamma*tau)} corresponds
+to the proper generalized eta-quotient part of (2.25) in
+\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019}.
+
+If $\left\{\frac{a'g}{\delta}\right\} = \frac{\alpha}{\beta} \ne 0$,
+the Jacobi function can be expanded into
+\begin{align}
+  \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+  &=
+  \jacobiFunction{
+      \zeta_\delta^{b' g} q_{\delta,m,\lambda}^{\left\{\frac{a' g}{\delta}\right\}}
+      }{q_{\delta,m,\lambda}}
+  =
+    \jacobiFunction{\zeta_\delta^{b' g} x^{\alpha}}{x^{\beta}}
+    \label{eq:minimalRootOfUnity-g_rtilde-m-lambda}
+\end{align}
+where
+$x = q_{\delta,m,\lambda}^{1/\beta} =
+\unityPower{\frac{v_{\delta,m,\lambda}}{\beta}} q^{u_{\delta,m,\lambda}/\beta}$.
+
+
+
+
+The parts of \eqref{eq:g_rtilde-m-lambda(gamma*tau)} are
+implemented via
+\textcolor{blue}{\code{SymbolicProperGeneralizedEtaQuotientLambdaGamma}}
+(Section~\ref{sec:SymbolicEtaQuotientLambdaGamma}).
+%
+If \code{e = properGeneralizedEtaQuotient(rspec,m,lambda,gamma)}, then
+we have the following correspondence.
+\begin{align*}
+  \text{\code{unityExponent(e) : Q}}
+  &=
+    \gensum[M]
+    r_{\delta,g}
+    \left(
+    \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
+    +
+    \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+    \right)
+  \\
+  \text{\code{qExponenbt(e) : Q}}
+  &=
+    \gensum[M]
+    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+\end{align*}
+
+\end{Hemmecke}
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Hemmecke}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Transformations of $\sum_{n=0}^\infty \bar{a}(mn+t) q^n$}
+\label{sec:p_rbar-m-t}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In the following let $m$, $M$, $N$ be such that the conditions 1-10 of
+Section~10 in
+\cite{ChenDuZhao_FindingModularFunctionsRamanujan_2019} are
+fulfilled.
+Furthermore let $\bar{r}\in\bar{R}(M)$.
+%
+We follow the derivation from Section~\ref{sec:p_r-m-t} and
+define
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align*}
+  \bar{f}(\tau)
+  &=
+  \sum_{n=0}^\infty \bar{a}(n) q^n
+    =
+    \unityPowerTau{-\frac{\sigmainfty[M]{\bar{r}}}{24}} g_{\bar{r}}(\tau),
+  \\
+  %
+  \bar{f}_t(\tau)
+  &=
+    \unityPowerTau{- t} \bar{f}(\tau)
+    =
+    \unityPowerTau{-\frac{24t + \sigmainfty[M]{\bar{r}}}{24}} g_{\bar{r}}(\tau).
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Recall that from \eqref{eq:U_m-f_t} that
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  (U_m\bar{f}_t)(\tau)
+  &=
+  \frac{1}{m} \sum_{\lambda=0}^{m-1}\bar{f}_t\left(\frac{\tau+\lambda}{m}\right)
+  =
+    \sum_{n=0}^\infty \bar{a}(mn+t) q^n.
+  \label{eq:U_m-fbar_t}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We can also evaluate $(U_m\bar{f}_t)(\tau)$ in another way.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align*}
+  (U_m\bar{f}_t)(\tau)
+  &=
+  \frac{1}{m} \sum_{\lambda=0}^{m-1}\bar{f}_t\left(\frac{\tau+\lambda}{m}\right)
+%  \\
+%  &
+    =
+    \frac{1}{m} \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{(\tau+\lambda) (24 t + \sigmainftybar[M]{\bar{r}})}{24 m}}
+    g_{\bar{r}}\!\left(\frac{\tau+\lambda}{m}\right)
+  \\
+% &=
+% \frac{1}{m} \sum_{\lambda=0}^{m-1}
+% \unityPower{-\frac{t\tau+t\lambda}{m} - \frac{\tau+\lambda}{24m} \sigmainfty{r}}
+% g_r\left(\frac{\tau+\lambda}{m}\right)\\
+  &=
+  \frac{1}{m}
+  \unityPowerTau{-\frac{24t+\sigmainftybar[M]{\bar{r}}}{24m}}
+  \sum_{\lambda=0}^{m-1}
+  \unityPower{-\frac{\lambda (24t+\sigmainftybar[M]{\bar{r}})}{24m}}
+  g_{\bar{r},m,\lambda}(\tau)
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+In the following we consider the function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \defineNotation[p-rbar-m-t-tau]{p_{\bar{r},m,t}(\tau)}
+  &:= \unityPowerTau{\frac{24t+\sigmainfty[M]{\bar{r}}}{24m} } (U_mf_t)(\tau)
+  =
+    \frac{1}{m} \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m} (24t+\sigmainftybar[M]{\bar{r}})}
+    g_{\bar{r},m,\lambda}(\tau)
+  \label{eq:p_rbar-m-t(tau)}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+and its transformations under $\SL2Z$.
+
+Note that $g_{\bar{r}} = g_{\bar{r},1,0}=p_{\bar{r},1,0}$.
+
+\end{Hemmecke}
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Hemmecke}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Transformation of $p_{\bar{r},m,t}$ under $\SL2Z$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+From its definition~\eqref{eq:p_rbar-m-t(tau)} and
+\eqref{eq:g_r-m-lambda(gamma*tau)},
+\eqref{eq:g_rtilde-m-lambda(gamma*tau)}, we can easily find a formula
+for the transformation of $p_{\bar{r},m,t}$ under $\SL2Z$.
+
+\begin{align}
+  \defineNotation[p-rbar-m-t-gamma-tau]{p_{\bar{r},m,t}(\gamma\tau)}
+  &:=\frac{1}{m} \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)}
+    g_{\bar{r},m,\lambda}(\gamma\tau)
+  \notag\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{split}
+  &=
+    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
+    \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)}
+    \cdot
+    \unityPower{\divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
+                + \kappa_{\gamma_{\delta,m,\lambda}})}{24}}
+  \times\\
+  & \qquad\times
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
+    \cdot
+    \unityPowerTau{\frac{\divisorsum{M} r_\delta u_{\delta,m,\lambda}}{24}}
+    \cdot
+    \divisorprod{M}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
+  \times\\
+  & \qquad\times
+    \unityPower{
+      \gensum[M]
+      r_{\delta,g}
+      \left(
+      \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
+      +
+      \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+      \right)}
+  \cdot
+  \unityPowerTau{
+    \gensum[M]
+    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)}
+  \times
+  \\
+  &\qquad\qquad
+  \times
+  \genprod[M]
+  \left(
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
+  \right)^{r_{\delta,g}}
+  \end{split}
+  \notag\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{split}
+  &=
+    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
+  \times\\
+  & \qquad\times
+  \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)
+      + \divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
+        + \kappa_{\gamma_{\delta,m,\lambda}})}{24}
+      +
+      \gensum[M]
+      r_{\delta,g}
+      \left(
+        \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
+        +
+        \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+      \right)}
+  \times\\
+  & \qquad\qquad\times
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
+    \cdot
+    \unityPowerTau{
+    \frac{\divisorsum{M} r_\delta
+        u_{\delta,m,\lambda}}{24}
+      +
+    \gensum[M]
+    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a'
+        g}{\delta}\right)
+    }
+  \times
+  \\
+  &\qquad\qquad
+  \times
+  \divisorprod{M}
+  \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta}
+  \cdot
+  \genprod[M]
+  \left(
+    \jacobiAlpha{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+    \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}
+  \right)^{r_{\delta,g}}
+  \end{split}
+  \notag\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{split}
+  &=
+    \frac{(c\tau+d)^{\divisorsum{M} \frac{r_\delta}{2}}}{m}
+  \times\\
+  & \qquad\times
+  \sum_{\lambda=0}^{m-1}
+    \unityPower{-\frac{\lambda}{24m}\Bigl(24t+\sigmainftybar[M]{\bar{r}}\Bigr)
+      + \divisorsum{M}\frac{r_\delta(v_{\delta,m\lambda}
+        + \kappa_{\gamma_{\delta,m,\lambda}})}{24}
+      +
+      \gensum[M]
+      r_{\delta,g}
+      \left(
+        \kappa_{g,0,\delta,\gamma_{\delta,m,\lambda}}^{[S]}
+        +
+        \frac{v_{\delta,m,\lambda}}{2} P_2\left(\frac{a' g}{\delta}\right)
+      \right)}
+  \times\\
+  & \qquad\qquad\times
+    \divisorprod{M}
+    \left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{\!\frac{r_\delta}{2}}
+    \cdot
+    \unityPowerTau{
+    \frac{\divisorsum{M} r_\delta
+        u_{\delta,m,\lambda}}{24}
+      +
+    \gensum[M]
+    \frac{r_{\delta,g} u_{\delta,m,\lambda}}{2} P_2\left(\frac{a'
+        g}{\delta}\right)
+    }
+  \times
+  \\
+  &\qquad\qquad
+  \times
+  \divisorprod{M}
+  \eulerFunction[q_{\delta,m,\lambda}]{}^{r_\delta - \tilde{r}_\delta}
+  \cdot
+  \genprod[M]
+  \jacobiAlpha{\frac{a' g}{\delta}}
+              {\frac{b' g}{\delta}}
+              {q_{\delta,m,\lambda}}^{r_{\delta,g}}
+  \end{split}
+  \label{eq:p_rbar-m-t(gamma*tau)}
+\end{align}
+where
+$\tilde{r}_\delta := \sum_{0 < g < \frac{\delta}{2}} r_{\delta,g}$.
+
+
+The parts of \eqref{eq:p_rbar-m-t(gamma*tau)} are implemented via
+\textcolor{blue}{\code{SymbolicGeneralizedEtaQuotientGamma}}
+(Section~\ref{sec:SymbolicGeneralizedEtaQuotientGamma}).
+\\
+If \code{e = generalizedEtaQuotient(mm, rbar, m, t, gamma)}, then we have the
+following correspondence.
+\begin{align*}
+  \text{\code{unityExponent(e) : Q}}
+  &=
+    -\frac{24t+\sigmainftybar[M]{\bar{r}}}{24m}
+\end{align*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+From \eqref{eq:g_r(tau)}, \eqref{eq:eta_delta-g^[R](tau)},
+\eqref{eq:g_rbar(tau)}, \eqref{eq:U_m-fbar_t} and
+\eqref{eq:p_rbar-m-t(tau)}, we can define
+\begin{align}
+  \defineNotation[F-sbar-rbar-m-t]{F_{\bar{s}, \bar{r}, m, t}(\tau)}
+  &:= \divisorprod{N} \eta(\delta\tau)^{s_{\delta}}
+    \genprod[N] \eta_{\delta,g}(\tau)^{s_{\delta,g}}
+    \cdot p_{\bar{r},m,t}(\tau)
+  \notag\\
+  &=
+    q^{\bar{\alpha}}
+    \cdot
+    \divisorprod{M}
+    \eulerFunction{\delta}^{s_\delta}
+    \cdot
+    \genprod[M]
+    \left(
+    \qPochhammer{q^g}{q^\delta} \qPochhammer{q^g}{q^\delta}
+    \right)^{s_{\delta,g}}
+    \sum_{n=0}^\infty \bar{a}(mn+t) q^n
+    \label{eq:F_sbar-rbar-m-t(tau)}
+\end{align}
+where
+\begin{align}
+  \bar{\alpha}
+  &=
+    \frac{\sigmazerobar[N]{\bar{s}}}{24}
+    +
+    \frac{24t+\sigmainftybar[M]{\bar{r}}}{24m}
+    \label{eq:alphabarInfinity}
+\end{align}
+is defined as a generalization of \eqref{eq:alphaInfinity}.
+
+Similar to Theorem~\ref{thm:RaduConditions} we have the following
+theorem.
+
+
+\end{Hemmecke}
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{Hemmecke}
+\subsubsection{Find ``$\Gamma_1(N)$-modular'' cofactor with only pole
+  at $\infty$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Suppose $\bar{s}$ is a solution (a column vector with \code{#idxs}
+components) of the system from
+Theorem~\ref{thm:condition-co-eta-quotient-gamma1} for given $\bar{r}$
+and $\bar{b_i}$, $i=1,\ldots,k$ form a basis of solutions for the
+corresponding homogeneous system. Note that the $\bar{b}_i$ describe
+$\Gamma_1(N)$-modular generalized eta-quotients (with possible poles
+at any cusp).
+
+Furthermore assume that $A$ is the matrix that determines the order of
+the expansion of generalized eta-quotients corresponding to an
+exponent vector (like $\bar{b}_i$). $A$ can be computed by
+\code{matrixEtaOrder(nn,spitzen,idxs)}. The matrix $A$ is indexed by
+the cusps in \code{spitzen} (rows) and the indices $(\delta,g)$ from
+\code{idxs} (columns).
+
+Then $A \bar{b}_i$ is a column vector that gives the order of the
+$q$-expansion (corresponding to $\bar{b}_i$) at each cusp that is in
+\code{spitzen}.
+
+Let $v$ be the column vector of the orders (at all cusps) of
+$F_{\bar{s},\bar{r},m,t}(\tau)$.
+
+By adding a $\setZ$-linear
+combination of the $\bar{b}_i$ to $\bar{s}$ we find
+$c_1,\ldots,c_k$ such that
+\begin{gather}
+  v' + A'(c_1\bar{b}_1+\dots+c_k\bar{b}_k)
+  =
+  v' + A'(\bar{b}_1,\ldots,\bar{b}_k) c
+  =
+  v' + G' c
+  \ge 0
+\end{gather}
+where the prime means removing the component for the cusp $\infty$
+and $o_i':= A' \bar{b}_i$, $O':=(o_1',\ldots,o_k')$,
+$c = (c_1,\ldots, c_k)^T$.
+
+Thus we must solve the following system
+\begin{gather}
+  \label{eq:remove-non-infinity-poles}
+  O' c \ge -v'
+\end{gather}
+in order to find $c_1,\ldots, c_k$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\iffalse
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The following was the text when we worked with grades (=poleorders)
+% instead of orders.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+By subtracting a $\setZ$-linear
+combination of the $\bar{b}_i$ from $\bar{s}$ we find
+$c_1,\ldots,c_k$ such that
+\begin{gather}
+  v' - A'(c_1\bar{b}_1+\dots+c_k\bar{b}_k)
+  =
+  v' - A'(\bar{b}_1,\ldots,\bar{b}_k) c
+  =
+  - u' + G' c
+  \ge 0
+\end{gather}
+where the prime means removing the component for the cusp $\infty$
+and $u':=-v'$, $g_i':= - A' \bar{b}_i$, $G':=(g_1',\ldots,g_k')$,
+$c = (c_1,\ldots, c_k)^T$.
+
+In the implementation we work with grades (which is the negation of
+the expansion order and corresponds to the pole order of the
+expansion). Thus we must solve the following system
+\begin{gather}
+  \label{eq:remove-non-infinity-poles}
+  G' c \ge u'
+\end{gather}
+in order to find $c_1,\ldots, c_k$.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\fi
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{Hemmecke}
+
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
