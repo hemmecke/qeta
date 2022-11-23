@@ -43,8 +43,10 @@ tracePrint(x,y) ==> display77(hconcat([yof"-- ",yof x,yof":=",y::OF]$List(OF)))
 \begin{abstract}
   The domains \qetatype{SymbolicModularEtaQuotientGamma}(QMOD) and
   \qetatype{SymbolicModularEtaQuotient}(QMOD) provide functions to
-  construct the expansion of generallized Dedekind eta-quotients that
-  are modular functions wrt. QMOD at the given cusps.
+  construct the expansion of (generallized) Dedekind eta-quotients
+  that are modular functions wrt. \code{QMOD} at the given cusps
+  where \code{QMOD} represents either $\Gamma_0(N)$ or
+  $\Gamma_1(N)$.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -94,11 +96,11 @@ In fact, we have two types of domains, namely,
 Domains in the first category are marked with the prefix
 \code{Symbolic}.
 %
-These \emph{Symbolic} domains actually only serve the purpose to
-compute an upper bound for $k$ so that the the series expansions all
-live in $\setQ[\xi][x]$ where $\xi=\exp\bigl(\frac{2\pi i}{k}\bigr)$
-is a $k$-th primitive root of unity and $x$ is a fractional power of
-$q$.
+These \emph{Symbolic} domains actually only serve the purpose of
+computing an upper bound for$k$ so that the the series expansions
+all live in $\setQ[\xi][x]$ where
+$\xi=\exp\bigl(\frac{2\pi i}{k}\bigr)$ is a $k$-th primitive root
+of unity and $x$ is a fractional power of $q$.
 
 Domains in the second category are implemented in the file
 \PathName{qetaquot.spad}.
@@ -110,7 +112,7 @@ Domains in the second category are implemented in the file
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicModularEtaQuotientGamma
-  $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$}
+  $F_{s,r,m,t}(\gamma\tau)$}
 \label{sec:SymbolicModularEtaQuotientGamma}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -118,87 +120,89 @@ Elements from the domain
 \code{SymbolicModularEtaQuotientGamma(QMOD)} represent the
 product of an eta-quotient cofactor to an element of
 \code{SymbolicEtaQuotientGamma} in order to make the
-product a modular function for G.
+product a modular function with respect to \code{QMOD}.
 
-It corresponds to the data from \eqref{eq:F_sbar-rbar-m-t(gamma*tau)},
+It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)},
 \ie, it computes the building blocks for
-$F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
+$F_{s,r,m,t}(\gamma\tau)$ for a particular matrix $\gamma\in\SL2Z$.
 
 )endif
 
 -------------------------------------------------------------------
 )abbrev domain YMEQG SymbolicModularEtaQuotientGamma
-++ SymbolicModularEtaQuotientGamma(QMOD)
-++ holds data to compute an eta-quotient
-++ expansions of $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$.
-++ See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
+++ SymbolicModularEtaQuotientGamma(QMOD) holds data to compute an
+++ eta-quotient expansions of $F_{s,r,m,t}(\gamma \tau)$ for a
+++ particular matrix $\gamma\in\SL2Z$.. See
+++ \eqref{eq:F_s-r-m-t(gamma*tau)}.
 SymbolicModularEtaQuotientGamma(QMOD): Exports == Implementation where
   QMOD: QEtaModularCategory
   YEQG ==> SymbolicEtaQuotientGamma
   Exports ==> SetCategory with
     etaQuotient: (SPEC, SPEC, PP, NN, SL2Z) -> %
       ++ etaQuotient(sspec, rspec, m, t, gamma) represents
-      ++ the expansion of $F_{\bar{s},\bar{r},m,t}(\gamma\tau)$ where
-      ++ \bar{s} and \bar{r} are given through sspec and rspec.
+      ++ the expansion of $F_{s,r,m,t}(\gamma \tau)$ where
+      ++ s and r are given through sspec and rspec.
     etaQuotient: (SPEC, SL2Z) -> %
-      ++ generalizedEtaQuotient(rspec, gamma) represents
-      ++ the expansion of $g_{\bar{r}}(\gamma\tau)$ where
-      ++ \bar{r} is given through rspec.
+      ++ generalizedEtaQuotient(rspec, gamma) represents the expansion
+      ++ of $g_r(\gamma \tau)$ where r is given through rspec.
     etaQuotient: SPEC -> %
-      ++ etaQuotient(rspec) represents the expansion of
-      ++ $g_{\bar{r}}(\tau)$ where \bar{r} is given through rspec. It
-      ++ is the same as
+      ++ etaQuotient(rspec) represents the expansion of $g_r(\tau)$
+      ++ where r is given through rspec. It is the same as
       ++ generalizedEtaQuotient(rspec,matrix[[1,0],[0,1]]).
     coerce: YEQG -> %
       ++ coerce(y) turns an element of SymbolicEtaQuotientGamma into
       ++ this domain.
     cofactor: % -> YEQG
-      ++ cofactor(x) returns the cofactor part to make
-      ++ $F_{\bar{s},\bar{r},m,t}$ a modular function for
-      ++ $\Gamma_1(N)$.
+      ++ cofactor(x) returns the cofactor part to make $F_{s,r,m,t}$ a
+      ++ modular function for $\Gamma_0(N)$ or $\Gamma_1(N)$
+      ++ (depending on the parameter QMOD.
     basefactor: % -> List YEQG
-      ++ basefactor(x) returns the part of $F_{\bar{s},\bar{r},m,t}$
+      ++ basefactor(x) returns the part of $F_{s,r,m,t}(\gamma \tau)$
       ++ that is connected to the generating series of a(m*n+k) for
-      ++ k in modularOrbit(rspec,m,t)$QMOD.
+      ++ k in modularOrbit(rspec,m,t) (from QMOD).
     minimalRootOfUnity: % -> PP
       ++ minimalRootOfUnity(x) returns the lcm of
       ++ minimalRootOfUnity(cofactor(x)) and
-      ++ minimalRootOfUnity(basefactor(x)).
+      ++ lcm([minimalRootOfUnity b for b in basefactor(x)]).
     one?: % -> Boolean
       ++ one?(x) returns true if the generalized eta-quotient
       ++ corresponding to x represents 1. This is the case if
-      ++ one?(basefactor(x)) and one?(cofactor(x)).
+      ++ one?(basefactor(x)) and one?(cofactor(x)). If this function
+      ++ returns false, then it is not guaranteed that x does not
+      ++ represent the constant series 1; it might still be the case
+      ++ that basefactor(x) represents the inverse of cofactor(x).
     qExponentMin: % -> QQ
       ++ qExponentMin(x) returns the order of the q-expansion in terms
       ++ of the original q. Note that this exponent is only a lower
       ++ bound for the q-expansion. The coefficient corresponding to
       ++ this q-power may be zero.
+      ++ Only for cases where multiplier(basefactor(x))=1
+      ++ qExponent(x) is equal to the true order (in q) of the expansion.
     orderMin: % -> QQ
       ++ orderMin(z) returns the expected order of the x-expansion in
-      ++ terms of x=q^(1/w) where w is the widths of the cusp of G
-      ++ corresponding to transformationMatrix(x). Note that this is a
-      ++ lower bound of the order. If u=ceiling(orderMin(z)) then even
-      ++ this integer is a lower bound of the order of the expansion
-      ++ of z in terms of x=q^(1/w), since the coefficient
-      ++ corresponding to x^u may be zero. Further note that due to
-      ++ estimation it does not necessarily return an integer, but a
-      ++ rational number. Only for cases where
-      ++ multiplier(basefactor(z))=1 and one?(cofactor(z)),
-      ++ orderMin(z) is equal to the true order of the expansion.
+      ++ terms of x=q^(1/w) where w is the width of the cusp of the
+      ++ group corresponding to QMOD that corresponds to
+      ++ transformationMatrix(x). Note that this is a lower bound of
+      ++ the order. If u=ceiling(orderMin(z)) then even this integer
+      ++ is a lower bound of the order of the expansion of z in terms
+      ++ of x=q^(1/w), since the coefficient corresponding to x^u may
+      ++ be zero. Further note that due to estimation it does not
+      ++ necessarily return an integer, but a rational number. Only
+      ++ for cases where multiplier(basefactor(z))=1 orderMin(z) is
+      ++ equal to the true order of the expansion.
   Implementation ==> add
     Rep ==> Record(
-              fcofactor: YEQG, -- g_sbar
-              fbasefactor: List YEQG, -- p_rbar-m-t
+              fcofactor: YEQG, -- g_s
+              fbasefactor: List YEQG, -- P_r-m-t = \prod_k p_r-m-k
               fminroot: PP -- minimal root of unity needed for coefficients
             )
     import from Rep
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(sspec: SPEC, rspec: SPEC, m: PP, t: NN,
-                           gamma: SL2Z): % ==
+    etaQuotient(sspec: SPEC, rspec: SPEC, m: PP, t: NN, gamma: SL2Z): % ==
         not modular?(sspec, rspec, m, t)$QMOD =>
-            error "modular conditions are not fulfilled"
+            error "YMEQG: modular conditions are not fulfilled"
         cfactor: YEQG := etaQuotient(sspec, 1, 0, gamma)
         orb: List NN := modularOrbit(rspec, m, t)$QMOD
         bfactor: List YEQG := [etaQuotient(rspec, m, j, gamma) for j in orb]
@@ -241,7 +245,7 @@ SymbolicModularEtaQuotientGamma(QMOD): Exports == Implementation where
 %$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{D SymbolicModularEtaQuotient
-  $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$ for several $\gamma$}
+  $F_{s,r,m,t}(\gamma\tau)$ for several $\gamma$}
 \label{sec:SymbolicModularEtaQuotient}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -249,16 +253,17 @@ Elements from the domain \code{SymbolicModularEtaQuotient(QMOD)}
 represent the collection of elements of
 \code{SymbolicModularEtaQuotientGamma(QMOD)} for several $\gamma$.
 
-It corresponds to the data from \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}
-for several $\gamma$ (corresponding to cusps of \code{G}.
+It corresponds to the data from \eqref{eq:F_s-r-m-t(gamma*tau)} for
+several $\gamma\in\SL2Z$ (corresponding to cusps given via
+\code{QMOD}).
 
 )endif
 
 -------------------------------------------------------------------
 )abbrev domain YMEQ SymbolicModularEtaQuotient
 ++ SymbolicModularEtaQuotient(QMOD) holds data to compute an
-++ eta-quotient expansions of $F_{\bar{s}, \bar{r}, m, t}(\gamma\tau)$
-++ as several cusps. See \eqref{eq:F_sbar-rbar-m-t(gamma*tau)}.
+++ eta-quotient expansions of $F_{s,r,m,t}(\gamma \tau)$
+++ as several cusps. See \eqref{eq:F_s-r-m-t(gamma*tau)}.
 SymbolicModularEtaQuotient(QMOD): Exports == Implementation where
   QMOD: QEtaModularCategory
   YMEQG ==> SymbolicModularEtaQuotientGamma
@@ -266,22 +271,22 @@ SymbolicModularEtaQuotient(QMOD): Exports == Implementation where
   Exports ==> SetCategory with
     etaQuotient: (SPEC, SPEC, PP, NN, List Cusp) -> %
       ++ etaQuotient(sspec,rspec,m,t,spitzen) represents the expansion
-      ++ of $F_{sbar,rbar,m,t}(\gamma \tau)$ for all gamma
-      ++ corresponding to the given cusps of QMOD. $rbar$ and $sbar$ are
-      ++ given by rspec and sspec, repectively.
+      ++ of $F_{s,r,m,t}(\gamma \tau)$ for all gamma corresponding to
+      ++ the cusps of QMOD given by spitzen. $r$ and $s$ are given by
+      ++ rspec and sspec, repectively.
     etaQuotient: (SPEC, SPEC, PP, NN) -> %
       ++ etaQuotient(sspec,rspec,m,t) represents the expansion of
-      ++ $F_{rbar,sbar,m,t}(\gamma \tau)$ for all gamma corresponding
-      ++ to the cusps of QMOD. $rbar$ and $sbar$ are given by rspec and
+      ++ $F_{r,s,m,t}(\gamma \tau)$ for all gamma corresponding
+      ++ to the cusps of QMOD. $r$ and $s$ are given by rspec and
       ++ sspec, respectively.
     etaQuotient: (SPEC, List Cusp) -> %
-      ++ etaQuotient(rspec,cusps) represents the expansion of
-      ++ $g_{rbar}(\gamma \tau)$ for all gamma corresponding to the
-      ++ given cusps of QMOD. $rbar$ is given by rspec.
+      ++ etaQuotient(rspec,spitzen) represents the expansion of
+      ++ $g_r(\gamma \tau)$ for all gamma corresponding to the
+      ++ cusps of QMOD given by spitzen. $r$ is given by rspec.
     etaQuotient: SPEC -> %
       ++ etaQuotient(rspec) represents the expansion of
-      ++ $g_{rbar}(\gamma \tau)$ for all gamma corresponding to the
-      ++ cusps of QMOD. $rbar$ is given by rspec.
+      ++ $g_r(\gamma \tau)$ for all gamma corresponding to the
+      ++ cusps of QMOD. $r$ is given by rspec.
     cusps: % -> List Cusp
       ++ cusps(x) either returns the value that was given to
       ++ etaQuotient at creation time or cusps(nn)$QMOD if the cusps where
@@ -304,31 +309,31 @@ SymbolicModularEtaQuotient(QMOD): Exports == Implementation where
       ++ number. The result is [orderMin(x.c) for c in cusps x].
     constant?: % -> Boolean
       ++ constant?(x) returns true if ordersMin(x) returns a list of
-      ++ entries that are properly bigger than -1. Note that
-      ++ ordersMin(x) gives an upper bound of the order
-      ++ for each cusp. Since x represents a modular function, with
-      ++ only poles at the cusps, it means that the function must be
-      ++ constant. Since we rely on estimates, x can represent a
-      ++ constant even if constant?(x) is false. If, however,
-      ++ multiplier(x)=1 then x represents simply an eta-quotient and
-      ++ ordersMin(x) gives the exact orders.
+      ++ entries that are all properly bigger than -1. Note that
+      ++ ordersMin(x) gives an upper bound of the order for each cusp.
+      ++ Since x represents a modular function, with only poles at the
+      ++ cusps, it means that the function must be constant. Since we
+      ++ rely on estimates, x can represent a constant even if
+      ++ constant?(x) is false. If, however, multiplier(x)=1 then x
+      ++ represents simply an eta-quotient and ordersMin(x) gives the
+      ++ exact orders.
 
   Implementation ==> add
     HT ==> XHashTable(Cusp, YMEQG QMOD)
     Rep ==> Record(
               fsspec: SPEC,
               frspec: SPEC,
-              fmultiplier: PP,-- the multiplier m
-              foffset: NN,    -- the offset t \in 0..(m-1)
-              fcusps: List Cusp, -- cusps of Gamma_1(N) or given cusps
-              fy: HT,     -- mapping gamma to YM1GEQG
+              fmultiplier: PP,   -- the multiplier m
+              foffset: NN,       -- the offset t \in 0..(m-1)
+              fcusps: List Cusp, -- cusps of QMOD or given cusps
+              fy: HT,            -- mapping gamma to YMEQG(QMOD)
               fminroot: PP -- minimal root of unity needed for the coefficients
             )
     import from Rep
     xx ==> rep x
     yy ==> rep y
 
-    etaQuotient(sspec: SPEC, rspec: SPEC, m: PP, t: NN, spitzen: List Cusp): % ==
+    etaQuotient(sspec: SPEC, rspec: SPEC, m: PP, t: NN, spitzen: List Cusp):%==
         h: HT := empty()
         minroot: ZZ := 1
         nn: PP := level sspec
