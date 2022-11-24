@@ -1,5 +1,6 @@
 -- -*- coding: utf-8 -*-
 -- $$
+-- \newcommand{\SL}[2]{\mathrm{SL}_{#1}(\mathbb{#2})}
 -- \newcommand{\NearParens}[2]{#1\!\left(#2\right)}
 -- \newcommand{\unityPowerSymbol}{\varepsilon}
 -- \newcommand{\unityPower}[1]{\NearParens{\unityPowerSymbol}{#1}}
@@ -29,6 +30,8 @@
 -- The computation of such an expansion is given by $F_{r,s,m,t}$ (see
 -- documentation in `src/qeta.tex`).
 
+-- # Setup
+
 -- +
 -------------------------------------------------------------------
 --setup
@@ -52,6 +55,8 @@ ORBIT ==> modularOrbit $ QMOD0
 )set output algebra on
 )set output formatted off
 
+
+-- # Ramanujan 5
 
 -- +
 -------------------------------------------------------------------
@@ -89,6 +94,9 @@ assertTrue zero?(mf+minusfive)
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # Ramanujan 7
 
 -- +
 -------------------------------------------------------------------
@@ -166,6 +174,9 @@ assertTrue(zero?(m1 - m2)) -- check different construction of m1 and m2.
 -------------------------------------------------------------------
 --endtest
 -------------------------------------------------------------------
+-- -
+
+-- # Ramanujan 11
 
 -- +
 -------------------------------------------------------------------
@@ -246,20 +257,27 @@ assertTrue zero? ZERO
 -------------------------------------------------------------------
 -- -
 
--- It corresponds to \eqref{eq:eta_delta-m-lambda(gamma*tau)}.
+-- It corresponds to `\eqref{eq:eta_delta-m-lambda(gamma*tau)}` in [qeta.tex](https://github.com/hemmecke/qeta/blob/master/qeta.tex).
 
--- Compute the expansion of $\eta((\tau+1)/2)$ under the
--- transformation with `matrix[[1,0],[5,1]]`.
+-- Compute the expansion of
+-- $\eta\!\left(\frac{\tau+1}{2}\right)$
+-- under the transformation with
+-- $\gamma=
+-- \left(
+--   \begin{smallmatrix}1&0\\5&1\end{smallmatrix}\right)
+-- \in \SL2Z$.
 
 delta := 1 :: PP;
 rspec := eqSPEC [[delta,1]];
 m := 2 :: PP; lambda := 1 :: NN;
 gamma := matrix [[1,0],[5,1]]
 
--- We only have a puiseuxExpansion function for
--- SymbolicEtaQuotientLambdaGamma, so we do not compute an element of
--- SymbolicEtaGamma, but rather an element of
--- SymbolicEtaQuotientLambdaGamma.
+-- We only have a `puiseuxExpansion` function for
+-- [SymbolicEtaQuotientLambdaGamma](https://fricas.github.io/api/SymbolicEtaQuotientLambdaGamma.html)
+-- (see [QEtaSeriesExpansion](https://hemmecke.github.io/qeta/api/QEtaSeriesExpansion.html)),
+-- so we do not compute an element of
+-- [SymbolicEtaGamma](https://fricas.github.io/api/SymbolicEtaGamma.html), but rather an element of
+-- [SymbolicEtaQuotientLambdaGamma](https://fricas.github.io/api/SymbolicEtaQuotientLambdaGamma.html).
 -- Since there is only one part in
 
 assertEquals(parts rspec, [[delta,-1,1]])
@@ -268,7 +286,7 @@ assertEquals(parts rspec, [[delta,-1,1]])
 
 y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
 
--- the respective element of SymbolicEtaGamma.
+-- the respective element of [SymbolicEtaGamma](https://hemmecke.github.io/qeta/api/SymbolicEtaGamma.html).
 
 yy := y[delta,-1] -- SymbolicEtaGamma
 
@@ -279,7 +297,7 @@ yy := y[delta,-1] -- SymbolicEtaGamma
 
 -- We determine by which $n$-th root of unity $\xi$ we must extend our
 -- coefficient ring (rational numbers) so that all coefficients of the
--- expansion (without the $(c\tau+d)$ factor live in
+-- expansion (without the $(c\tau+d)$ factor) live in
 -- $\mathbb{Q}[\xi]$.
 
 -- This is given by the function `minimalRootOfUnity`.
@@ -296,24 +314,32 @@ px := puiseuxExpansion(y,0) $ QESXM(C,CX,QMOD0)
 
 -- Note that in our case, the 0 in the argument is actually
 -- superfluous, but QEta has no implementation to expand `yy`.
+-- This second parameter is only important in the computation
+-- of the sum of these eta-quotients over all
+-- $\lambda \in \{0,\ldots,m-1\}$.
 
 -- Furthermore, the `QMOD0` parameter is actually not used, but QEta
 -- did not bother to implement a domain that does not need that
 -- parameter.
 
 -- Let us continue with some checks.
+-- The following values correspond to
+-- `\eqref{eq:g_r-m-lambda(gamma*tau)-cdExponent}`,
+-- `\eqref{eq:g_r-m-lambda(gamma*tau)-qExponent}`,
+-- `\eqref{eq:g_r-m-lambda(gamma*tau)-unityExponent}`.
 
+cde := cdExponent y
+qe := qExponent y
 ue := unityExponent y
-qe := qExponent y -- 4th factor
-cde := cdExponent y -- first factor
 
-assertEquals(ue, 11/12)
-assertEquals(order px, qe)
 assertEquals(cde, 1/2)
+assertEquals(order px, qe)
+assertEquals(ue, 11/12)
 
 -- Compute the actual root
 -- $\left(\frac{h_{\delta,m,\lambda}}{\delta}\right)^{1/2}$ in
--- $\mathbb{Q}[\xi]$.
+-- $\mathbb{Q}[\xi]$. see
+-- `\eqref{eq:g_r-m-lambda(gamma*tau)-rationalPrefactor}`.
 
 rpf := rationalPrefactor y
 s2 := squareRoot(rpf)$GaussRoot(CX,xi,xiord)
@@ -328,9 +354,11 @@ assertEquals(leadingCoefficient(reductum reductum px),-c)
 
 -- ### The parts of the expansion
 
--- The left-hand side of \eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG}
+-- The left-hand side of
+-- `\eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG}`
 -- consists of five parts. We copy this formula here, but the details
--- must be looked up in `qeta.tex`.
+-- must be looked up
+-- in [qeta.tex](https://github.com/hemmecke/qeta/blob/master/qeta.tex).
 
 -- \begin{align}
 --   \eta_{\delta,m,\lambda}(\gamma \tau)
@@ -383,7 +411,7 @@ assertEquals(qe, 1/4)
 yy := y[delta,-1] -- SymbolicEtaGamma
 assertEquals([udelta yy, vdelta yy], [6,0]$List(QQ))
 
--- The part \eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG} describing
+-- The part `\eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG}` describing
 -- the $q$-Pochhammer symbol, i.e.,
 -- $\eulerFunction[q_{\delta,m,\lambda}]{}$ is computed as follows.
 
@@ -409,20 +437,28 @@ assertEquals(order(z, 100), 100)
 -------------------------------------------------------------------
 -- -
 
--- It corresponds to \eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}.
+-- It corresponds to `\eqref{eq:eta_delta-g-m-lambda^[R](gamma*tau)}`
+-- in [qeta.tex](https://github.com/hemmecke/qeta/blob/master/qeta.tex).
 
--- Compute the expansion of $\eta_{5,2}((\tau+2)/3)$ under the
--- transformation with `matrix[[1,0],[9,1]]`.
+-- Compute the expansion of
+-- $\eta_{5,2}\!\left(\frac{\tau+2}{3}\right)$
+-- under the transformation with
+-- $\gamma=
+-- \left(
+--   \begin{smallmatrix}1&0\\9&1\end{smallmatrix}\right)
+-- \in \SL2Z$.
 
 delta := 5 :: PP; g := 2 :: NN;
 rspec := eqSPEC [[delta,g,1]];
 m := 3 :: PP; lambda := 2 :: NN;
 gamma := matrix [[1,0],[9,1]]
 
--- We only have a puiseuxExpansion function for
--- SymbolicEtaQuotientLambdaGamma, so we do not compute an element of
--- SymbolicEtaGamma, but rather an element of
--- SymbolicEtaQuotientLambdaGamma.
+-- We only have a `puiseuxExpansion` function for
+-- [SymbolicEtaQuotientLambdaGamma](https://fricas.github.io/api/SymbolicEtaQuotientLambdaGamma.html)
+-- (see [QEtaSeriesExpansion](https://hemmecke.github.io/qeta/api/QEtaSeriesExpansion.html)),
+-- so we do not compute an element of
+-- [SymbolicEtaGamma](https://fricas.github.io/api/SymbolicEtaGamma.html), but rather an element of
+-- [SymbolicEtaQuotientLambdaGamma](https://fricas.github.io/api/SymbolicEtaQuotientLambdaGamma.html).
 -- Since there is only one part in
 
 assertEquals(parts rspec, [[delta,g,1]])
@@ -435,14 +471,14 @@ y := etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma;
 
 yy := y[delta,g] -- SymbolicEtaGamma
 
--- The Puiseux expansion of y and yy are the same.
+-- The Puiseux expansion of `y` and `yy` are the same.
 
 -- Before we can compute the expansion, we must determine in which
 -- coefficient ring we can do it.
 
 -- We determine by which $n$-th root of unity $\xi$ we must extend our
 -- coefficient ring (rational numbers) so that all coefficients of the
--- expansion (without the $(c\tau+d)$ factor live in
+-- expansion (without the $(c\tau+d)$ factor) live in
 -- $\mathbb{Q}[\xi]$.
 
 -- This is given by the function `minimalRootOfUnity`.
@@ -512,9 +548,9 @@ assertEquals(leadingCoefficient(reductum reductum px), c2)
 -- ### The parts of the expansion
 
 -- The left-hand side of
--- \eqref{eq:eta_delta-g-m-lambda(gamma*tau)-YEG} consists of five
--- parts. We copy this formula here, but the details must be looked up
--- in `qeta.tex`.
+-- `\eqref{eq:eta_delta-g-m-lambda(gamma*tau)-YEG}` consists of five parts.
+-- We copy this formula here, but the details must be looked up
+-- in [qeta.tex](https://github.com/hemmecke/qeta/blob/master/qeta.tex).
 
 -- \begin{align}
 --   \eta_{\delta,g,m,\lambda}(\gamma\tau)
@@ -553,12 +589,12 @@ assertEquals(cdExponent y, 0)
 rpf := rationalPrefactor y
 assertEquals(rpf, 1)
 
--- $v_{\delta,-1,m,\lambda}$
+-- $v_{\delta,g,m,\lambda}$
 
 ue := unityExponent y
 assertEquals(ue, 341/420)
 
--- $u_{\delta,-1,m,\lambda}$
+-- $u_{\delta,g,m,\lambda}$
 
 qe := qExponent y
 assertEquals(qe, 1/420)
@@ -568,9 +604,12 @@ assertEquals(qe, 1/420)
 yy := y[delta,g] -- SymbolicEtaGamma
 assertEquals([udelta yy, vdelta yy], [1/35,16/35]$List(QQ))
 
--- The part \eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG} describing
--- the $q$-Pochhammer symbol, i.e.,
--- $\eulerFunction[q_{\delta,m,\lambda}]{}$ is computed as follows.
+-- The part
+-- `\eqref{eq:eta_delta-m-lambda(gamma*tau)-YEG}`
+-- describing the $q$-Pochhammer symbol, i.e.,
+-- $\jacobiSchoeneberg{\frac{a' g}{\delta}}{\frac{b' g}{\delta}}{q_{\delta,m,\lambda}}
+-- \eulerFunction[q_{\delta,m,\lambda}]{}^{-1}$
+-- is computed as follows.
 
 qp := qPochhammerPart(y) $ QESXM(C,CX,QMOD0)
 
@@ -596,10 +635,11 @@ assertEquals(order(z, 10), 10)
 -------------------------------------------------------------------
 -- -
 
--- It corresponds to \eqref{eq:g_r-m-lambda(gamma*tau)}.
+-- It corresponds to `\eqref{eq:g_r-m-lambda(gamma*tau)}`
+-- in [qeta.tex](https://github.com/hemmecke/qeta/blob/master/qeta.tex).
 
--- Compute the expansion of $g_{r,m,\lambda}(\tau)$ under the
--- transformation with `matrix[[0,1],[-1,0]]`.
+-- Compute the expansion of
+-- $g_{r,m,\lambda}\!\left(-\frac{1}{\tau}\right)$.
 
 rspec := eqSPEC [[1,-1],[3,1]];
 m:=250; lambda := 1
@@ -641,6 +681,8 @@ assertEquals(s2^2, rpf)
 qe := qExponent y -- 4th factor
 assertEquals(order px, qe)
 
+-- Putting everything together, we should get the zero series.
+
 qp := qPochhammerPart(y) $ QESXM(C,CX,QMOD0)
 z := px - monomial(s2*xi^(xiord*ue), qe)$QEtaPuiseuxSeries(CX) * qp
 assertEquals(order(z, 10), 10)
@@ -651,8 +693,6 @@ assertEquals(order(z, 10), 10)
 -------------------------------------------------------------------
 -- -
 
--- # Transformation of dissected eta-quotient
-
 -- ## Sum over all $\lambda$
 
 -- +
@@ -661,10 +701,11 @@ assertEquals(order(z, 10), 10)
 -------------------------------------------------------------------
 -- -
 
--- It corresponds to \eqref{eq:p_r-m-k(gamma*tau)}.
+-- It corresponds to `\eqref{eq:p_r-m-k(gamma*tau)}`in
+-- [qeta.tex](https://github.com/hemmecke/qeta/blob/master/qeta.tex).
 
--- Compute the expansion of $p_{r,m,k}(\tau)$ under the transformation
--- with `matrix[[0,1],[-1,0]]`.
+-- Compute the expansion of
+-- $p_{r,m,\lambda}\!\left(-\frac{1}{\tau}\right)$.
 
 rspec := eqSPEC [[1,-1],[3,1]];
 m:=250; k := 2
@@ -690,12 +731,9 @@ px102 := puiseuxExpansion(y102)$ QESXM(C,CX,QMOD0)
 z := px2 - px102
 assertEquals(order z, 11/360)
 
--- The `QMOD0` parameter is actually not used, but QEta
--- did not bother to implement a domain that does not need that
--- parameter.
-
 ue2 := unityExponent y2
 ue102 := unityExponent y102
+assertEquals([ue2,ue102],[119/120,71/120])
 
 rho := rhoInfinity(rspec)
 assertEquals(ue2, fractionalPart(-(2+rho)/m))
@@ -708,6 +746,7 @@ ys := [etaQuotient(rspec,m,lambda,gamma)$SymbolicEtaQuotientLambdaGamma_
        for lambda in 0..m-1];
 qes := [[i,qe] for y in ys for i in 1.. | (qe := qExponent(y); qe = qemin2)]
 assertEquals(entries complete qes, [[1, qemin2]])
+
 
 -- +
 -------------------------------------------------------------------
