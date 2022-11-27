@@ -162,7 +162,7 @@ idxs := [[5,1],[5,2]]
 id1 := findIdM1(5,rspecs.1,5,t,idxs);
 --pretty(id1, qIdentity + withSubscript)
 eq1 := inv(coefficient id1)*equationX(id1,a[1])
-commonFactor id1
+assertEquals(commonFactor id1, 5)
 
 -- ### Divisibility property of $G(q) H(q)^{11} = q^{-2} \frac{1}{\eta_{5;1}(\tau) \eta_{5;2}(\tau)^{11}}$
 
@@ -179,7 +179,7 @@ idxs := [[5,1],[5,2]]
 id2 := findIdM1(5,rspecs.2,5,t,idxs);
 --pretty(id2, qIdentity + withSubscript)
 eq2 := inv(coefficient id2)*equationX(id2,a[2])
-commonFactor id2
+assertEquals(commonFactor id2, 5)
 
 -- ### Curious divisibility by $5^3$
 
@@ -195,6 +195,8 @@ monoidSpecifications(id2)
 M[1] = ERMe(monoidSpecifications(id1).1)
 
 equ := 5^(-3)*(eq1 - eq2)
+
+assertEquals(content(rhs(eq1-eq2)::Polynomial(ZZ)),5^3)
 
 -- Written in a more symmetric form this gives
 -- \begin{align*}
@@ -265,7 +267,7 @@ pretty(id3, qIdentity + withSubscript)
 't=ERMe(monoidSpecifications(id3).1) = 1/('R(q)^5)
 -- qEtaQuotient(rspecs.3,varPochhammer$RKI)
 
-commonFactor(id3)
+assertEquals(commonFactor(id3), 5)
 
 -- ### Divisibility for $(5n+t)$-disection ($t=1,2,3,4$) of $\frac{R(q)^5}{q} = \frac{\qPochhammer{q,q^4}{q^5}^5}{\qPochhammer{q^2,q^3}{q^5}^5}$ and $\frac{q}{R(q)^5}$
 
@@ -290,6 +292,8 @@ e2 := inv(coefficient idrn)*qequationX(idrn,a[2])
 
 e1+e2
 
+assertEquals(rhs(e1+e2), -25)
+
 m1spec := monoidSpecifications(idrp).1
 M1 = printSPEC m1spec
 m1 := specEQI(QQ)(monoidSpecifications(idrp).1)
@@ -310,9 +314,8 @@ qetaGrades a1, qetaGrades a2
 
 a1 + a2
 
--- +
--- a1 + a2 - 25 * specM1AnCX(m1spec)
--- -
+ym1 := specYM1EQ(m1spec);
+assertTrue(zero?(a1 + a2 + 25 * 1$An(CX)))
 
 -- ### Divisibility for $(5n)$-disection of $\frac{R(q)^5}{q} = \frac{\qPochhammer{q,q^4}{q^5}^5}{\qPochhammer{q^2,q^3}{q^5}^5}$ and $\frac{q}{R(q)^5}$
 
@@ -335,6 +338,10 @@ e2 := inv(coefficient idrn)*qequationX(idrn,a[2])
 -- -
 
 e1+e2
+
+-- The above congruence modulo 2 follows immediately
+-- from the equality of `e1` and `e2`, see below.
+
 e1-e2
 
 -- It says for
@@ -380,7 +387,16 @@ spitzen := cusps(y1)
 a1 := expandM1AnCX y1
 a2 := expandM1AnCX y2
 qetaGrades a1, qetaGrades a2
-a1 - a2
+
+c := first cusps(y1);
+s1 := definingSpecification first basefactor y1 c
+s2 := definingSpecification first basefactor y2 c
+assertEquals(s1, inv s2)
+s1 := definingSpecification cofactor y1 c
+s2 := definingSpecification cofactor y2 c
+assertEquals(s1, eqSPEC[[5,2,12]])
+assertEquals(s2, eqSPEC[[5,1,2],[5,2,10]])
+assertTrue(zero?(a1 - a2))
 
 -- ### Expansion at infinity gives 0 up to high order
 
@@ -393,7 +409,9 @@ irrser := inv rrser
 ir5ser := inv r5ser
 ir55ser := choose(5,0,ir5ser)
 
-irrser*r55ser - rrser*ir55ser
+ser := irrser*r55ser - rrser*ir55ser
+cs := removeDuplicates [ser.i for i in 0..200]
+assertEquals(cs,[0])
 
 -- ### Check series expansion at all cusps
 
@@ -415,7 +433,12 @@ modularGamma1? ixspec
 -- We do not need a cofactor to make the 5-disection
 -- modular in $\Gamma_1(25)$.
 
-(etaCofactorSpace(25,xspec,5,0,idxs)$QMOD1).particular
+v := (etaCofactorSpace(25,xspec,5,0,idxs)$QMOD1).particular
+iv := (etaCofactorSpace(25,ixspec,5,0,idxs)$QMOD1).particular
+assertEquals(v::Vector(ZZ), vector [0,0])
+assertEquals(iv::Vector(ZZ), vector [0,0])
+
+-- Thus, we can choose 1 as a cofactor for both dissections.
 
 -- +
 sspec := eqSPEC(25,[]$List(ZZ))
