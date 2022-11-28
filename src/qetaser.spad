@@ -177,7 +177,7 @@ QEtaLaurentSeriesCategory(C: Ring): Category ==
       ++ It is an extension of multisect to Laurent series.
     qetaTaylorRep: % -> QTS C
       ++ qetaTaylorRep(x) returns the underlying Taylor representation
-      ++ of the Laurent serires. This might return a taylor series that
+      ++ of the Laurent serires. This might return a Taylor series that
       ++ has 0 as its constant coefficient.
     laurent: (ZZ, QTS C) -> %
       ++ laurent(n, s) creates a Laurent series by multiplying the
@@ -323,14 +323,18 @@ QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
   Exports ==> UnivariatePuiseuxSeriesCategory C with
     qetaLaurentRep: % -> QLS C
       ++ qetaLaurentRep(x) returns the underlying Laurent representation
-      ++ of the Puiseux seriers. This might return a taylor series that
-      ++ has 0 as its constant coefficient.
+      ++ of the Puiseux series. This might return a Laurent series that
+      ++ has 0 as its leading coefficient.
     rationalPower : % -> QQ
       ++ rationalPower(p(q)) returns a rational number r such that the
       ++ p(q) = l(q^r) for some Laurent series l.
     puiseux: (QQ, QLS C) -> %
       ++ puiseux(r, s) creates a Puiseux series by replacing the
       ++ variable q of a by q^r.
+    removeZeroes: (%, QQ) -> %
+      ++ removeZeroes(x, ord) returns a Puiseux series z with initial
+      ++ zeroes removed. Such that either degree(z)>ord or
+      ++ degree(z)<=ord and leadingCoefficient(z)~=0.
   Implementation ==> UPS C add
     Rep ==> UPS C
     Rec ==> Record(expon: QQ, lSeries: QLS C)
@@ -339,6 +343,14 @@ QEtaPuiseuxSeries(C: Ring): Exports == Implementation where
     puiseux(q: QQ, qls: QLS C): % ==
         rec: Rec := [q, qls]$Rec
         rec pretend %
+    removeZeroes(x: %, ord: QQ): % ==
+        r: QQ := rationalPower x
+        lx: QLS C := qetaLaurentRep x
+        -- r*d=degree(x)
+        while r * (d: ZZ := degree lx) <= ord repeat --
+            not zero? coefficient(lx, d) => break
+            lx := removeZeroes(1, lx)
+        puiseux(r, lx)
 
 
 
