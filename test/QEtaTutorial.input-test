@@ -68,8 +68,10 @@
 --     )set output algebra off
 --     setFormat!(FormatMathJax)$JFriCASSupport
 
--- In `qetamacros.input` quite a number of macros are defined
--- that make working with **QEta** functions a bit simpler.
+-- In
+-- [qetamacros.input](https://github.com/hemmecke/qeta/blob/master/input/qetamacros.input)
+-- quite a number of macros are defined that make working with
+-- **QEta** functions a bit simpler.
 -- Inside this notebook, we use the abbreviations defined there.
 
 -- In addition to these macros, we define here some abbreviations
@@ -130,12 +132,13 @@ withSubscript ==> 2^4
 
 mm := 1; rspec := eqSPEC [[1,-1]]
 
--- In the our treatise we always use that $q=\exp(2\pi i \tau)$.
+-- In our treatise we always use that $q=\exp(2\pi i \tau)$.
 
 -- ### $p(5n+4) \equiv 0 \pmod{5}$
 
 -- We want an expansion in terms of eta-functions
--- $\eta(\tau)$ and $\eta(5\tau)$.
+-- $\eta(\tau)$ and $\eta(5\tau)$, so we use the
+-- following indices.
 
 idxs := [[1],[5]];
 
@@ -146,8 +149,24 @@ idxs := [[1],[5]];
 -- in terms of eta-quotients.
 -- This identity is an identity of modular functions
 -- for $\Gamma_0(5)$.
+--
+-- The function to call is `findIdM0` as specified in
+-- `qetamacros.input`. It takes 5 parameters
+--
+--   1. the $N$ from $\Gamma_0(N)$,
+--   2. the specification of the generating series `rspec`,
+--   3. the dissection factor $m$,
+--   4. the dissection offset $t$,
+--   5. the indices `idxs` for the eta-functions to be used.
+--
+-- The variable `id` will contain all relevant data, but
+-- this data structure is usually rather big and uninteresting
+-- as a whole, so we add a semicolon at the end of the command
+-- in order to prevent its printing.
 
 id := findIdM0(5, rspec, 5, 4, idxs);
+
+-- The actual relation can be shown by the following command.
 
 pretty(id, expand + asExpression)
 
@@ -160,6 +179,7 @@ pretty(id, expand + asExpression)
 -- have to be given as concrete arguments to `QEtaRamanujanKolberg`.
 -- Usage of the macro `findIdM0` shortens the
 -- otherwise quite lengthy function call.
+-- Note that the 0 in the name corresponds to $\Gamma_0(N)$.
 
 -- ### $p(7n+5) \equiv 0 \pmod{7}$
 
@@ -348,6 +368,38 @@ pretty(id1, expand + asExpression + qIdentity + nonModular)
 
 id
 pretty(id,0)
+
+-- `definingSpecification` describes the generating function
+-- for $(a(n))_{n\ge0}$.
+--
+-- `multiplier` is the factor $m$ of the dissection $a(m n + k)$.
+--
+-- `orbit` gives the list of offsets $k'$ that must be
+-- considered together with the initially given offset $l$.
+--
+-- `coSpecification` describes the (generalized) eta-quotient
+-- that must be multiplied to the dissected generating series
+-- in order to arrive at a modular function.
+--
+-- `coefficient` is the constant coefficient of the left hand side.
+-- **QEta** does not generally divide by this coefficient, since
+-- **QEta** can work with coefficient rings that are not fields.
+--
+-- `monoidSpecifications` describe the eta-quotients that can
+-- potentially appear of the right-hand side of the identity,
+-- where the first element can appear in any non-negative power
+-- while the others may only appear linearly.
+--
+-- `identityPolynomial` is a condensed version of the identity
+-- where $F$ stands for the modular function on the left-hand side
+-- and the $M_i$ are the eta-quotients given by `monoidSpecifications`.
+--
+-- `alphaInfinity` gives the order of $q$ of the left-hand side
+-- when expanded as a $q$-series while `alphaOrbitInfinity` only
+-- give the part of the $q$ exponent that is (technically) connected
+-- to the orbit product of the dissected generating series.
+--
+-- In the output of `pretty` the symbol `t` stands for `M1`.
 
 -- We can extract that information also individually from
 -- the `id` variable.
@@ -1289,7 +1341,7 @@ specM1A1(ZZ)(i10spec) - 11*specM1A1(ZZ)(i5spec) - specM1A1(ZZ)(gspec)
 -- $\setQ$, but needs an extension with a primitive root
 -- of unity $\xi$.
 -- In our case, $\setQ[\xi]$ works as the ring of coefficients
--- +when $\xi^{10}=1$.
+-- when $\xi^{10}=1$.
 
 xiord := minimalRootOfUnity yr5;
 assertEquals(xiord,10)
